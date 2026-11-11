@@ -11,8 +11,8 @@
  * last argument and default to `defaultPlaytestDeps` (Web Crypto and the system clock), so a
  * test can replay a whole game from a seed (`engine-golden.test.ts`).
  *
- * Rules: the London mulligan and the free multiplayer mulligan (CR 103.5, 103.5c), commanders
- * in the command zone (CR 903.6, 903.9b).
+ * Rules: the London mulligan and the free multiplayer mulligan (CR 103.5, 103.5c), the
+ * first-turn draw (CR 103.8a, 103.8c), commanders in the command zone (CR 903.6, 903.9b).
  * Not responsible for: turning deck rows into physical cards (`store.ts`), whether a mulligan
  * is still allowed (`PlaytestModal.tsx`), keep advice (`keep-rules.ts`), draw evidence
  * (`draw-progress-evidence.ts`) or the log export (`action-log-export.ts`).
@@ -149,6 +149,11 @@ export interface PlaytestEngine {
   // Turn & phase
   readonly turn: number;
   readonly phase: Phase;
+  /**
+   * True when the game began with more than two players (CR 800.1). Then the starting player
+   * draws on turn 1 (CR 103.8c); in a two-player game they skip that draw (CR 103.8a).
+   */
+  readonly multiplayer: boolean;
 
   /** Mulligans taken for the opening hand. */
   readonly mulliganCount: number;
@@ -206,10 +211,13 @@ export function createPlaytestState(
 
   return {
     turn: 1,
+    // The game waits in the Draw step of turn 1 while the player mulligans; the turn-1 draw,
+    // when the table owes one, is taken on leaving that step (`takeFirstTurnDraw`).
     phase: "Draw" as const,
+    // Commander defaults, like STARTING_LIFE: a multiplayer table, so a free first mulligan.
+    // The store passes the session's own values (`free-mulligan.ts`, FORMAT_CONFIG).
+    multiplayer: true,
     mulliganCount: 0,
-    // Commander default, like STARTING_LIFE; per-format values live in
-    // FORMAT_CONFIG.firstMulliganFree.
     firstMulliganFree: true,
     cardsToBottom: 0,
     lifeTotal: overrides.lifeTotal ?? STARTING_LIFE,
@@ -438,6 +446,61 @@ export function applyBottomCards(
   }, `Put ${chosen.map((card) => card.name).join(", ")} on the bottom of the library`);
 }
 
+// ─── First-turn draw ──────────────────────────────────────────────────────
+/** The zones and log a move starts from once any turn-1 draw still owed is taken. */
+type AfterFirstTurnDraw = Pick<
+  PlaytestEngine,
+  "hand" | "library" | "actionLog" | "nextActionId"
+>;
+
+/**
+ * True while a multiplayer game has not yet left the Draw step of turn 1, so the starting
+ * player's turn-1 draw is still to come. CR 103.8c: in a multiplayer game no player skips the
+ * draw step of their first turn. CR 103.8a: in a two-player game the starting player does.
+ */
+function owesFirstTurnDraw(state: PlaytestEngine): boolean {
+  return (
+    state.multiplayer &&
+    state.turn === 1 &&
+    PHASES.indexOf(state.phase) <= PHASES.indexOf("Draw")
+  );
+}
+
+/**
+ * Takes the turn-1 draw a multiplayer game owes, for a move that leaves the Draw step of turn 1.
+ *
+ * The deal waits in that step so the player can mulligan first: mulligans come before the first
+ * turn (CR 103.5, 103.8). The step's draw (CR 504.1) is therefore taken when the game leaves the
+ * step, once the opening hand is kept. It gets its own log line of turn 1, ahead of the move's
+ * line, and shares the move's undo entry.
+ *
+ * @param state - the state the move starts from
+ * @returns the state's zones and log, with the top card drawn and logged when the draw is owed
+ * and the library is not empty
+ */
+function takeFirstTurnDraw(state: PlaytestEngine): AfterFirstTurnDraw {
+  const { hand, library, actionLog, nextActionId } = state;
+  if (!owesFirstTurnDraw(state) || library.length === 0) {
+    return { hand, library, actionLog, nextActionId };
+  }
+  const [drawn, ...rest] = library;
+  return {
+    hand: [...hand, drawn],
+    library: rest,
+    actionLog: [
+      ...actionLog,
+      {
+        id: nextActionId,
+        turn: state.turn,
+        phase: state.phase,
+        description: "Drew a card for turn 1",
+        kind: "draw",
+      },
+    ],
+    nextActionId: nextActionId + 1,
+  };
+}
+
 // ─── Phase progression ────────────────────────────────────────────────────
 export function applyNextPhase(
   state: PlaytestEngine,
@@ -464,10 +527,12 @@ export function applyNextPhase(
   // Advance to next phase
   const nextPhase = PHASES[currentIndex + 1];
   if (nextPhase === undefined) return state;
+  // Leaving the Draw step of turn 1 takes the draw a multiplayer game owes (CR 103.8c).
+  const firstTurnDraw = state.phase === "Draw" ? takeFirstTurnDraw(state) : {};
   return pushHistory(
     state,
     deps.clock,
-    { phase: nextPhase },
+    { ...firstTurnDraw, phase: nextPhase },
     `Advanced to ${nextPhase}`
   );
 }
@@ -484,28 +549,34 @@ export function applyNextTurn(
     tapped: false,
   }));
 
-  // Draw a card if library not empty
-  let newHand = state.hand;
-  let newLibrary = state.library;
+  // Leaving turn 1 leaves its Draw step too: a multiplayer game takes the turn-1 draw it still
+  // owes (CR 103.8c) before the new turn's own.
+  const start = takeFirstTurnDraw(state);
 
-  if (state.library.length > 0) {
-    const [drawn, ...rest] = state.library;
-    newHand = [...state.hand, drawn];
+  // Draw a card if library not empty
+  let newHand = start.hand;
+  let newLibrary = start.library;
+  const drawsForNewTurn = start.library.length > 0;
+
+  if (drawsForNewTurn) {
+    const [drawn, ...rest] = start.library;
+    newHand = [...start.hand, drawn];
     newLibrary = rest;
   }
 
   return pushHistory(state, deps.clock, {
+    ...start,
     turn: state.turn + 1,
     phase: "Draw" as const,
     hand: newHand,
     library: newLibrary,
     battlefield: untappedBattlefield,
-  }, state.library.length > 0
+  }, drawsForNewTurn
     ? `Started turn ${state.turn + 1} and drew a card`
     : `Started turn ${state.turn + 1}`, {
     turn: state.turn + 1,
     phase: "Draw",
-    ...(state.library.length > 0 ? { kind: "draw" as const } : {}),
+    ...(drawsForNewTurn ? { kind: "draw" as const } : {}),
   });
 }
 
@@ -984,6 +1055,9 @@ function toBattlefieldCard(card: DeckCard | BattlefieldCard): BattlefieldCard {
  * `history` keeps the ten most recent snapshots, but each snapshot keeps its own `history`, so
  * undo can still walk back to the deal and every earlier state stays in memory (pinned in
  * `engine.characterization.test.ts`).
+ *
+ * A patch may already carry log lines of its own (the turn-1 draw a move takes on the way,
+ * `takeFirstTurnDraw`); the new line follows them, and the whole move is one undo entry.
  */
 function pushHistory(
   state: PlaytestEngine,
@@ -997,11 +1071,13 @@ function pushHistory(
     >
   >
 ): PlaytestEngine {
+  const priorLog = updates.actionLog ?? state.actionLog;
+  const priorNextId = updates.nextActionId ?? state.nextActionId;
   const actionLog = actionDescription
     ? [
-        ...state.actionLog,
+        ...priorLog,
         {
-          id: state.nextActionId,
+          id: priorNextId,
           turn: evidence?.turn ?? state.turn,
           phase: evidence?.phase ?? state.phase,
           description: actionDescription,
@@ -1016,7 +1092,7 @@ function pushHistory(
     ...state,
     ...updates,
     ...(actionLog ? { actionLog } : {}),
-    nextActionId: actionDescription ? state.nextActionId + 1 : state.nextActionId,
+    nextActionId: actionDescription ? priorNextId + 1 : priorNextId,
   };
 
   const historyEntry: UndoHistoryEntry = { timestamp: clock.now(), state };

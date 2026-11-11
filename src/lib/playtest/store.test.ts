@@ -229,6 +229,26 @@ describe("usePlaytestStore", () => {
     expect(usePlaytestStore.getState().engine?.firstMulliganFree).toBe(true);
   });
 
+  // The table size decides the first-turn draw (CR 103.8a, 103.8c). No pod
+  // size is stored, so an unanswered question falls back on the format's
+  // usual table.
+  it.each([
+    { format: "commander", options: {}, multiplayer: true },
+    {
+      format: "commander",
+      options: { multiplayer: false },
+      multiplayer: false,
+    },
+    { format: "modern", options: {}, multiplayer: false },
+  ] as const)(
+    "deals a $format game with options $options as multiplayer: $multiplayer",
+    ({ format, options, multiplayer }) => {
+      usePlaytestStore.getState().startPlaytest(makeDeck({ format }), options);
+
+      expect(usePlaytestStore.getState().engine?.multiplayer).toBe(multiplayer);
+    }
+  );
+
   it("restarts under the multiplayer choice the session started with", () => {
     usePlaytestStore
       .getState()
@@ -237,6 +257,7 @@ describe("usePlaytestStore", () => {
     usePlaytestStore.getState().resetPlaytest();
 
     expect(usePlaytestStore.getState().engine?.firstMulliganFree).toBe(false);
+    expect(usePlaytestStore.getState().engine?.multiplayer).toBe(false);
   });
 
   it("asks a Modern player to bottom a card after the first mulligan, then keeps six", () => {

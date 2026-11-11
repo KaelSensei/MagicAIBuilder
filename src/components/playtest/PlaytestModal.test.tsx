@@ -434,6 +434,8 @@ describe("PlaytestModal", () => {
     });
 
     // Casting the commander takes it from the command zone, not from the library.
+    // By turn 2 a multiplayer Commander game has seen the seven, the turn-1 draw
+    // (CR 103.8c) and the turn-2 draw: nine cards, none extra.
     it("does not record a cast commander as a card seen", async () => {
       const fetchSpy = vi
         .spyOn(globalThis, "fetch")
@@ -449,7 +451,7 @@ describe("PlaytestModal", () => {
         fetchSpy.mock.calls.find(([, init]) => init?.method === "POST")?.[1]?.body;
       await waitFor(() => expect(postedSession()).toBeDefined());
       expect(JSON.parse(String(postedSession()))).toMatchObject({
-        cardsSeen: 8,
+        cardsSeen: 9,
         additionalCardsSeen: 0,
       });
     });

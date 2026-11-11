@@ -192,12 +192,15 @@ describe("mulligan timing", () => {
   });
 });
 
+// CR 103.8c: in a multiplayer game no player skips the draw step of their first
+// turn. Flipped by B2-49: the engine used to skip it whatever the player count.
 describe("first-turn draw", () => {
-  it("currently starts a multiplayer game in the Draw step of turn 1 without drawing (pinned; see B2-49)", () => {
-    const multiplayer = dealt({ firstMulliganFree: true });
+  it("deals a multiplayer game into the Draw step of turn 1 and draws its card when the game leaves that step (CR 103.8c)", () => {
+    const multiplayer = dealt({ multiplayer: true });
 
     const main = applyNextPhase(multiplayer);
 
+    // The deal itself draws nothing: the mulligans come before the first turn.
     expect(multiplayer).toMatchObject({
       turn: 1,
       phase: "Draw",
@@ -205,16 +208,18 @@ describe("first-turn draw", () => {
     });
     expect(multiplayer.hand).toHaveLength(7);
     expect(main.phase).toBe("Main1");
-    expect(main.hand).toHaveLength(7);
+    expect(ids(main.hand)).toEqual(
+      ids([...multiplayer.hand, multiplayer.library[0]])
+    );
   });
 
-  it("currently reads a multiplayer turn-1 draw as drawing extra (pinned; see B2-49)", () => {
-    const drewOnTurnOne = applyDrawCard(dealt({ firstMulliganFree: true }));
+  it("reads a multiplayer turn-1 draw as a natural draw (CR 103.8c)", () => {
+    const drewOnTurnOne = applyDrawCard(dealt({ multiplayer: true }));
 
     expect(analyzeEngineDrawProgress(drewOnTurnOne)).toEqual({
       cardsSeen: 8,
-      additionalCardsSeen: 1,
-      status: "drawing-extra",
+      additionalCardsSeen: 0,
+      status: "natural",
     });
   });
 });
@@ -263,9 +268,10 @@ describe("turn and step progression", () => {
 });
 
 describe("createPlaytestState overrides", () => {
-  it("defaults to the Commander rules: 40 life and a free first mulligan", () => {
+  it("defaults to the Commander rules: 40 life, a multiplayer table and a free first mulligan", () => {
     expect(dealt()).toMatchObject({
       lifeTotal: 40,
+      multiplayer: true,
       firstMulliganFree: true,
       commanderIds: [],
     });
