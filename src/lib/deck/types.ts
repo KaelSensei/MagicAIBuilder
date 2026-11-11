@@ -104,7 +104,6 @@ export interface Deck {
   feedbackQuestion?: string | null;
 }
 
-export type ViewMode = "grid" | "list";
 export type ColorMode = "or" | "and" | "exact";
 export type CmcMode = "range" | "exact" | "min" | "max";
 export type InteractionType =

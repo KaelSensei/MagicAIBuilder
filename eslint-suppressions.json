@@ -1416,11 +1416,6 @@
       "count": 1
     }
   },
-  "src/hooks/useCardSearch.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    }
-  },
   "src/modules/combos/client/useCombos.test.ts": {
     "no-restricted-syntax": {
       "count": 1
@@ -1567,10 +1562,7 @@
   },
   "src/lib/collection/shopping-list.ts": {
     "@typescript-eslint/max-params": {
-      "count": 5
-    },
-    "max-lines": {
-      "count": 1
+      "count": 4
     }
   },
   "src/lib/collection/store.collection-route.test.ts": {
@@ -1681,7 +1673,7 @@
   },
   "src/lib/deck/multiples.ts": {
     "@typescript-eslint/max-params": {
-      "count": 2
+      "count": 1
     }
   },
   "src/lib/deck/proxy-print-html.ts": {

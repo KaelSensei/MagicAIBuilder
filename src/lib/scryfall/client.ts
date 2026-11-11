@@ -257,16 +257,6 @@ export async function fetchLocalizedPrintingsByNames(
   return cards;
 }
 
-/** Get all Game Changers (cached 24h via TanStack Query) */
-export async function getGameChangers(): Promise<ScryfallSearchResponse> {
-  return searchCards("is:gamechanger");
-}
-
-/** Get commander banlist */
-export async function getCommanderBanlist(): Promise<ScryfallSearchResponse> {
-  return searchCards("banned:commander");
-}
-
 /**
  * Fetch all printings of a card by exact name (unique=prints).
  *

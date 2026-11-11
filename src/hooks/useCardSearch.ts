@@ -1,8 +1,16 @@
 "use client";
-// TanStack Query hook for Scryfall card search
-import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
-import { searchCards, autocompleteCardName } from "@/lib/scryfall/client";
-import type { ScryfallSearchResponse } from "@/lib/scryfall/types";
+/**
+ * The TanStack Query hook behind the builder's card search: one Scryfall
+ * search page per query, cached for five minutes.
+ *
+ * Card catalog context, browser side. `useCardSearchResults` composes it with
+ * the "Collection only" filter; the request itself goes through the Scryfall
+ * client's queue (`lib/scryfall/client`).
+ *
+ * @module hooks/useCardSearch
+ */
+import { useQuery } from "@tanstack/react-query";
+import { searchCards } from "@/lib/scryfall/client";
 
 /** How long a search answer stays fresh before TanStack Query refetches it. */
 export const STALE_TIME_5MIN = 5 * 60 * 1000;
@@ -22,36 +30,5 @@ export function useCardSearch(query: string) {
       if (error instanceof Error && error.message.includes("404")) return false;
       return failureCount < 2;
     },
-  });
-}
-
-/** Infinite paginated card search */
-export function useCardSearchInfinite(query: string) {
-  return useInfiniteQuery<ScryfallSearchResponse>({
-    queryKey: ["scryfall", "search", "infinite", query],
-    queryFn: ({ pageParam }) =>
-      searchCards(query, pageParam as number),
-    enabled: query.trim().length >= MIN_SEARCH_QUERY_LENGTH,
-    staleTime: STALE_TIME_5MIN,
-    initialPageParam: 1,
-    getNextPageParam: (lastPage) => {
-      if (!lastPage.has_more) return undefined;
-      // Extract page number from next_page URL
-      if (lastPage.next_page) {
-        const url = new URL(lastPage.next_page);
-        return Number.parseInt(url.searchParams.get("page") ?? "2", 10);
-      }
-      return undefined;
-    },
-  });
-}
-
-/** Autocomplete card names */
-export function useCardAutocomplete(partial: string) {
-  return useQuery({
-    queryKey: ["scryfall", "autocomplete", partial],
-    queryFn: () => autocompleteCardName(partial),
-    enabled: partial.trim().length >= MIN_SEARCH_QUERY_LENGTH,
-    staleTime: STALE_TIME_5MIN,
   });
 }

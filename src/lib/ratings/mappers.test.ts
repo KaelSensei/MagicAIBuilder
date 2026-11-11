@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { toDeckRating, toDeckReview, toDeckReviews, type DeckRatingRow } from "./mappers";
+import { toDeckRating, toDeckReview, type DeckRatingRow } from "./mappers";
 
 const BASE_ROW: DeckRatingRow = {
   id: "r-1",
@@ -52,20 +52,5 @@ describe("toDeckReview", () => {
   it("defaults a null body to an empty string", () => {
     const row: DeckRatingRow = { ...BASE_ROW, title: "Title only", body: null };
     expect(toDeckReview(row)?.body).toBe("");
-  });
-});
-
-describe("toDeckReviews", () => {
-  it("keeps only titled rows and preserves order", () => {
-    const rows: DeckRatingRow[] = [
-      { ...BASE_ROW, id: "r-1", title: "First" },
-      { ...BASE_ROW, id: "r-2", title: null },
-      { ...BASE_ROW, id: "r-3", title: "Second" },
-    ];
-    expect(toDeckReviews(rows).map((r) => r.id)).toEqual(["r-1", "r-3"]);
-  });
-
-  it("returns an empty array when no row has a review", () => {
-    expect(toDeckReviews([BASE_ROW])).toEqual([]);
   });
 });
