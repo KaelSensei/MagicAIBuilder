@@ -27,7 +27,7 @@ export type UpstreamResult<T> =
 
 async function getJson(url: string): Promise<UpstreamResult<unknown>> {
   try {
-    const response = await scheduleScryfallRequest(() => httpGet(url));
+    const response = await scheduleScryfallRequest(url, () => httpGet(url));
     const data: unknown = await response.json();
     return { kind: "found", data };
   } catch (error) {

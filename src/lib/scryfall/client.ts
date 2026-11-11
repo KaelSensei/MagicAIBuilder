@@ -64,7 +64,7 @@ function rateLimitedFetch(
   url: string,
   options?: RequestInit
 ): Promise<Response> {
-  return scheduleScryfallRequest(() =>
+  return scheduleScryfallRequest(url, () =>
     fetch(url, {
       ...options,
       headers: {
