@@ -9,9 +9,14 @@ const mocks = vi.hoisted(() => ({
   findMany: vi.fn(),
   requireAuth: vi.fn(),
 }));
+const db = await vi.hoisted(async () => {
+  const { createAiUsageDb } = await import("@/test/ai-usage-db");
+  return createAiUsageDb();
+});
 
+// The route reserves a metered AI call before it reaches the model.
 vi.mock("@/lib/db/prisma", () => ({
-  prisma: { playtestSession: { findMany: mocks.findMany } },
+  prisma: { ...db, playtestSession: { findMany: mocks.findMany } },
 }));
 vi.mock("@/lib/auth/helpers", () => ({ requireAuth: mocks.requireAuth }));
 vi.mock("@/lib/rate-limit", () => ({
@@ -19,6 +24,7 @@ vi.mock("@/lib/rate-limit", () => ({
 }));
 
 import { buildSuggestionDiff } from "@/lib/ai/suggestion-review";
+import { resetAiUsageDb } from "@/test/ai-usage-db";
 import { POST } from "./route";
 
 /** The part of the Anthropic request body that carries the prompt. */
@@ -73,6 +79,7 @@ async function promptSentFor(request: Request): Promise<string> {
 
 describe("POST /api/ai/suggest card names", () => {
   beforeEach(() => {
+    resetAiUsageDb(db);
     mocks.requireAuth.mockResolvedValue({
       session: { user: { id: "user-1" } },
       error: null,
