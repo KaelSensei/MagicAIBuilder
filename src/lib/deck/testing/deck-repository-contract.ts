@@ -109,6 +109,33 @@ const RACING_CARDS = ["Writer 1", "Writer 2", "Writer 3", "Writer 4"].map(
 const RACE_ROUNDS = [1, 2, 3, 4, 5];
 
 /**
+ * Checks that a harness seeds a deck the way the contract cases assume: at
+ * version 0, dated {@link SEEDED_AT}, with one row per card and `cardIds` in
+ * the order the cards were given. Cases such as `const [, forestId] =
+ * deck.cardIds` act on the wrong row when a harness breaks that order.
+ *
+ * Each harness is written for its adapter, so each adapter's test file runs
+ * this in a case of its own.
+ *
+ * @param harness - the harness under test
+ * @returns resolves when the seeded deck matches; rejects with the mismatch
+ */
+export async function expectSeedsAsTheContractAssumes(
+  harness: DeckRepositoryHarness
+): Promise<void> {
+  const deck = await harness.seedDeck([SIGNET, FOREST]);
+  const stored = await harness.storedDeck(deck.deckId);
+
+  expect(deck.version).toBe(0);
+  expect(stored).toMatchObject({ version: 0, updatedAt: SEEDED_AT });
+  const nameOfRow = new Map(stored?.cards.map((card) => [card.id, card.name]));
+  expect(deck.cardIds.map((id) => nameOfRow.get(id))).toEqual([
+    "Arcane Signet",
+    "Forest",
+  ]);
+}
+
+/**
  * Registers the contract cases in the current `describe` block.
  *
  * @param makeHarness - Builds the adapter under test; called before each
