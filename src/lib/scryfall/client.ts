@@ -1,4 +1,4 @@
-// Scryfall API client with rate limiting (max 10 req/s = 100ms between requests)
+// Scryfall API client, paced to Scryfall's published limits by request-queue.ts
 // Cards by id and search pages are read through the shared server cache
 // (/api/cache/cards, 24h; /api/cache/search, 1h). Only the server writes it, from
 // Scryfall answers it fetched itself; this client never writes it back.

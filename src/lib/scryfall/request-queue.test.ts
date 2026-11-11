@@ -29,6 +29,31 @@ describe("Scryfall request pacing", () => {
     vi.useRealTimers();
   });
 
+  // https://scryfall.com/docs/api/rate-limits (read 2026-11-10): 2 per second.
+  it.each([
+    "https://api.scryfall.com/cards/search?q=sol",
+    "https://api.scryfall.com/cards/named?exact=Sol%20Ring",
+    "https://api.scryfall.com/cards/random",
+    "https://api.scryfall.com/cards/collection",
+  ])("starts two requests to %s 500 ms apart", async (url) => {
+    expect(await startTimes([url, url])).toEqual([0, 500]);
+  });
+
+  it("starts two /cards/manifest requests 6 seconds apart", async () => {
+    const manifest = "https://api.scryfall.com/cards/manifest";
+
+    expect(await startTimes([manifest, manifest])).toEqual([0, 6_000]);
+  });
+
+  // The page lists each endpoint's limit on its own line, so a search does
+  // not hold a named lookup back, nor a named lookup the next search.
+  it("spaces a card endpoint from its own previous request only", async () => {
+    const search = "https://api.scryfall.com/cards/search?q=sol";
+    const named = "https://api.scryfall.com/cards/named?exact=Sol%20Ring";
+
+    expect(await startTimes([search, named, search])).toEqual([0, 100, 500]);
+  });
+
   it("starts requests to other methods 100 ms apart", async () => {
     expect(await startTimes([CARD_BY_ID, CARD_BY_ID, CARD_BY_ID])).toEqual([
       0, 100, 200,
