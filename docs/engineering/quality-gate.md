@@ -4,14 +4,14 @@
 
 ## What blocks today
 
-| Gate                                                   | Where it runs                                                      | What fails it                                                    |
-| ------------------------------------------------------ | ------------------------------------------------------------------ | ---------------------------------------------------------------- |
-| `pnpm audit --prod --audit-level=high`                 | `.github/workflows/ci.yml`                                         | a high or critical advisory in the production dependency tree    |
-| `pnpm lint` (`next lint`)                              | `ci.yml`; `next lint --fix` on staged files in the pre-commit hook | a lint error. Warnings do not fail CI; `CLAUDE.md` requires zero |
-| `npx tsc --noEmit`                                     | `ci.yml`                                                           | a type error                                                     |
-| `pnpm test:coverage`                                   | `ci.yml`                                                           | a failing test. No coverage threshold is enforced                |
-| `pnpm build`                                           | `ci.yml`                                                           | a build error                                                    |
-| Playwright suite in Docker (`scripts/e2e-pre-push.sh`) | `.husky/pre-push`, on the developer's machine only                 | a failing E2E test blocks the push. No CI workflow runs it       |
+| Gate                                                    | Where it runs                                                   | What fails it                                                 |
+| ------------------------------------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------- |
+| `pnpm audit --prod --audit-level=high`                  | `.github/workflows/ci.yml`                                      | a high or critical advisory in the production dependency tree |
+| `pnpm lint` (ESLint 9 flat config, `eslint.config.mjs`) | `ci.yml`; `eslint --fix` on staged files in the pre-commit hook | any lint error or warning (`--max-warnings 0`)                |
+| `npx tsc --noEmit`                                      | `ci.yml`                                                        | a type error                                                  |
+| `pnpm test:coverage`                                    | `ci.yml`                                                        | a failing test. No coverage threshold is enforced             |
+| `pnpm build`                                            | `ci.yml`                                                        | a build error                                                 |
+| Playwright suite in Docker (`scripts/e2e-pre-push.sh`)  | `.husky/pre-push`, on the developer's machine only              | a failing E2E test blocks the push. No CI workflow runs it    |
 
 Branch protection, read with `gh api` on 2026-11-10: `main` requires the check `Lint, Typecheck, Test, Build` and an up-to-date branch. `dev` and `staging` have no protection rule; their PRs run the same check, and it must be green before a merge.
 
@@ -63,7 +63,7 @@ None of these exist yet. They land in stages ([ADR 0007](../adr/0007-architectur
 
 | Stage | Gate                                                                                                                                                                                                                                               | Will block                                      | Status  |
 | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- | ------- |
-| 1     | ESLint 9 flat config replaces `next lint` and `.eslintrc.json` (`next lint` is deprecated, and removed in Next 16). A prerequisite for stages 3–4                                                                                                  | as today                                        | planned |
+| 1     | ESLint 9 flat config replaces `next lint` and `.eslintrc.json` (`next lint` is deprecated, and removed in Next 16). A prerequisite for stages 3–4. Done in #1351                                                                                   | as today                                        | done    |
 | 2     | The `server-only` package, with a Vitest stub                                                                                                                                                                                                      | a build that pulls server code into the browser | planned |
 | 3     | dependency-cruiser (`pnpm arch`). Runtime cycles fail at once (there are none); the 3 existing type-only cycles and the known layer and context violations start in a recorded baseline that may only shrink. It also generates the Mermaid graphs | a cycle or a new violation                      | planned |
 | 4     | ESLint `max-lines`, `max-lines-per-function` and `complexity`, with bulk suppressions as a ratchet                                                                                                                                                 | a new file over a limit, or a file that grows   | planned |

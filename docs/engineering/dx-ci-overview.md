@@ -104,16 +104,10 @@ On every `git commit`, automatically runs:
 - `eslint --fix` on staged `.ts` / `.tsx` files (rules in `eslint.config.mjs`)
 - `prettier --write` on `.json`, `.md`, `.yml`, `.yaml`
 
-<<<<<<< HEAD
-=======
-> Note: `next lint --fix` is used instead of `eslint --fix` directly — ESLint v9 cannot locate
-> `.eslintrc.json` when called standalone, but Next.js resolves it correctly.
-
 ### Pre-push (Husky)
 
 On every `git push`, `.husky/pre-push` runs `scripts/e2e-pre-push.sh`: the full Playwright suite in Docker (`docker-compose.e2e.yml`). A failing test blocks the push. `SKIP_E2E=1` skips it in an emergency. This is the only place the E2E suite runs; see [quality-gate.md](quality-gate.md#e2e-gate).
 
->>>>>>> 225c6e21 (docs(engineering): reconcile the quality gate with CLAUDE.md and with CI)
 ### Useful scripts
 
 ```bash
