@@ -91,7 +91,8 @@
     "owned": "Owned",
     "ownedCount": "Owned (×{count})",
     "buy": "Buy",
-    "notOwned": "Not in your collection — need to buy",
+    "ownedDetail": "Owned: {owned, plural, one {# copy} other {# copies}} of this printing in your collection",
+    "buyDetail": "Buy: {missing, plural, one {# more copy} other {# more copies}} of this printing needed, {owned} in your collection",
     "inCollection": "In Collection ×{count}"
   },
   "dialog": {
