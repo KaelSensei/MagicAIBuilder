@@ -1,5 +1,7 @@
 import { createTranslator, type AbstractIntlMessages } from "next-intl";
+import enDeck from "@/messages/en/deck.json";
 import enMetadata from "@/messages/en/metadata.json";
+import frDeck from "@/messages/fr/deck.json";
 import frMetadata from "@/messages/fr/metadata.json";
 
 /**
@@ -17,10 +19,14 @@ import frMetadata from "@/messages/fr/metadata.json";
  * removed or renamed, and asserts the text a crawler would read.
  */
 
-/** The served locales' catalogs, as `src/i18n/request.ts` assembles them. */
+/**
+ * The served locales' catalogs, as `src/i18n/request.ts` assembles them.
+ * Only the namespaces that metadata reads are loaded: `metadata` for titles
+ * and descriptions, `deck` for the deck page's social image text.
+ */
 const CATALOGS: ReadonlyMap<string, AbstractIntlMessages> = new Map([
-  ["en", { metadata: enMetadata }],
-  ["fr", { metadata: frMetadata }],
+  ["en", { metadata: enMetadata, deck: enDeck }],
+  ["fr", { metadata: frMetadata, deck: frDeck }],
 ]);
 
 /** The explicit-locale form of `getTranslations`, the one metadata uses. */

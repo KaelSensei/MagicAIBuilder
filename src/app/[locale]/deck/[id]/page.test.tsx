@@ -4,32 +4,17 @@ import type { PublicCard, PublicDeck } from "@/lib/deck/public-deck";
 const fetchPublicDeck = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/deck/public-deck", () => ({ fetchPublicDeck }));
 vi.mock("next/headers", () => ({ headers: async () => new Headers() }));
-vi.mock("next/navigation", () => ({ notFound: () => { throw new Error("NOT_FOUND"); } }));
+vi.mock("next/navigation", () => ({
+  notFound: () => {
+    throw new Error("NOT_FOUND");
+  },
+}));
 vi.mock("next-intl/server", () => import("@/test/server-intl"));
 vi.mock("@/lib/auth/config", () => ({ auth: async () => null }));
 vi.mock("@/components/layout/Header", () => ({ Header: () => null }));
-vi.mock("@/components/profile/PublicDeckView", () => ({ PublicDeckView: () => null }));
-vi.mock("next-intl/server", async () => {
-  const { createTranslator } = await import("next-intl");
-  const catalogs = {
-    en: (await import("@/messages/en/deck.json")).default,
-    fr: (await import("@/messages/fr/deck.json")).default,
-  };
-  return {
-    getTranslations: async ({
-      locale,
-      namespace,
-    }: {
-      locale: "en" | "fr";
-      namespace: "deck.socialImage";
-    }) =>
-      createTranslator({
-        locale,
-        messages: { deck: catalogs[locale] },
-        namespace,
-      }),
-  };
-});
+vi.mock("@/components/profile/PublicDeckView", () => ({
+  PublicDeckView: () => null,
+}));
 
 import PublicDeckPage, { generateMetadata } from "./page";
 import { deckImageVersion } from "@/lib/seo/deck-image";
@@ -172,7 +157,8 @@ it("keeps a missing deck as not found", async () => {
   ).rejects.toThrow("NOT_FOUND");
 });
 
-const PUBLIC_DECK = {
+/** A deck whose author has a display name, as the social image prints it. */
+const SOCIAL_DECK = {
   id: "deck-1",
   name: "Atraxa Superfriends",
   description: null,
@@ -199,10 +185,10 @@ const PUBLIC_DECK = {
 };
 
 /** The image URL carries a version of what it prints, so a chat app re-fetches it after an edit. */
-const DECK_IMAGE_URL = `/og/deck/deck-1?v=${deckImageVersion(PUBLIC_DECK)}`;
+const DECK_IMAGE_URL = `/og/deck/deck-1?v=${deckImageVersion(SOCIAL_DECK)}`;
 
 it("points Open Graph and Twitter at the deck image built from stored data", async () => {
-  fetchPublicDeck.mockResolvedValue(PUBLIC_DECK);
+  fetchPublicDeck.mockResolvedValue(SOCIAL_DECK);
 
   const metadata = await generateMetadata({
     params: Promise.resolve({ locale: "en", id: "deck-1" }),
@@ -226,7 +212,7 @@ it("points Open Graph and Twitter at the deck image built from stored data", asy
 });
 
 it("describes the deck image in the page's language", async () => {
-  fetchPublicDeck.mockResolvedValue(PUBLIC_DECK);
+  fetchPublicDeck.mockResolvedValue(SOCIAL_DECK);
 
   const metadata = await generateMetadata({
     params: Promise.resolve({ locale: "fr", id: "deck-1" }),
