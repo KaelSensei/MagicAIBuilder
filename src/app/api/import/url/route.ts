@@ -5,6 +5,7 @@ import { BOT_CHALLENGE_MESSAGE } from "@/lib/http";
 import { MOXFIELD_REFUSED_CODE, MoxfieldRefusedError } from "@/lib/import/moxfield-refusal";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
+import { rateLimitResponse } from "@/lib/api/route-kit";
 
 const RATE_LIMIT = 10;        // max requests
 const RATE_WINDOW = 60_000;   // per 60 seconds
@@ -20,12 +21,9 @@ export async function POST(request: Request) {
   const ip = getClientIp(request);
   const rl = checkRateLimit(`import:${ip}`, RATE_LIMIT, RATE_WINDOW);
   if (!rl.allowed) {
-    return NextResponse.json(
-      { error: `Too many requests. Please wait ${Math.ceil(rl.retryAfterMs / 1000)}s before retrying.` },
-      {
-        status: 429,
-        headers: { "Retry-After": String(Math.ceil(rl.retryAfterMs / 1000)) },
-      }
+    return rateLimitResponse(
+      rl,
+      (seconds) => `Too many requests. Please wait ${seconds}s before retrying.`
     );
   }
 
