@@ -1,20 +1,19 @@
-import { test, expect, type APIRequestContext } from "@playwright/test";
+import type { APIRequestContext } from "@playwright/test";
+import { test, expect, type SeededDecks } from "./fixtures";
 import { suppressOnboarding } from "./helpers";
 
 /**
  * Seeds a public deck whose commanderName is set the way setCommander sets it,
- * so the listing's SQL slug match has something to find.
+ * so the listing's SQL slug match has something to find. The `seededDeck`
+ * fixture creates the deck and deletes it after the test.
  */
 async function seedCommanderDeck(
   request: APIRequestContext,
+  seededDeck: SeededDecks,
   name: string,
   commanderName: string
 ): Promise<string> {
-  const created = await request.post("/api/decks", {
-    data: { name, format: "commander" },
-  });
-  expect(created.ok(), await created.text()).toBe(true);
-  const { id } = (await created.json()) as { id: string };
+  const id = await seededDeck.create({ name });
 
   const patched = await request.patch(`/api/decks/${id}`, {
     data: { commanderName, isPublic: true },
@@ -71,12 +70,14 @@ test.describe("Commander deck discovery — anonymous viewer", () => {
 
   test("finds a public deck by its commander slug, apostrophes and all", async ({
     request,
+    seededDeck,
   }) => {
     // Exercises the SQL slug expression against real Postgres — the unit tests
     // can only mock it. The name carries a comma and an apostrophe, the two
     // characters commanderToSlug strips.
     const deckId = await seedCommanderDeck(
       request,
+      seededDeck,
       "Discovery Fixture",
       "Kroxa, Titan of Death's Hunger"
     );

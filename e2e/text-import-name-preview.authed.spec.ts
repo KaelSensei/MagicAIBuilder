@@ -1,5 +1,5 @@
 import { expect, test } from "./fixtures";
-import { openBuilder } from "./helpers";
+import { getThroughApi, openBuilder } from "./helpers";
 
 test("pasted-list preview warns about unknown cards before import", async ({
   page,
@@ -36,7 +36,7 @@ test("pasted-list preview warns about unknown cards before import", async ({
   await dialog.getByRole("button", { name: "Preview decklist" }).click();
 
   await expect(dialog.getByRole("alert")).toContainText("Definitely Not A Card");
-  const before = await request.get(`/api/decks/${deckId}`);
+  const before = await getThroughApi(request, `/api/decks/${deckId}`);
   expect(before.ok()).toBe(true);
   const beforeDeck: { cards: readonly unknown[] } = await before.json();
   expect(beforeDeck.cards).toHaveLength(0);
@@ -47,7 +47,7 @@ test("pasted-list preview warns about unknown cards before import", async ({
   );
   await dialog.getByRole("button", { name: "Import this preview" }).click();
   expect((await added).ok()).toBe(true);
-  const after = await request.get(`/api/decks/${deckId}`);
+  const after = await getThroughApi(request, `/api/decks/${deckId}`);
   expect(after.ok()).toBe(true);
   const afterDeck: { cards: readonly { name: string }[] } = await after.json();
   expect(afterDeck.cards.map((card) => card.name)).toEqual(["Sol Ring"]);

@@ -1,6 +1,8 @@
 /**
  * Shared steps for the Playwright specs: page set-up, and the deck and card
- * calls that seed test data through the app's own API.
+ * calls that seed and read test data through the app's own API. Only the
+ * idempotent calls, reads and the teardown delete, are resent after a
+ * connection reset (see `IDEMPOTENT_MAX_RETRIES`).
  *
  * The e2e Postgres volume is wiped between gate runs, so every test seeds what
  * it needs. Write calls work because `PLAYWRIGHT_TEST=1` bypasses auth on the
@@ -9,7 +11,7 @@
  *
  * @module e2e/helpers
  */
-import type { APIRequestContext, Page } from "@playwright/test";
+import type { APIRequestContext, APIResponse, Page } from "@playwright/test";
 
 /** localStorage key the app uses to remember the first-run onboarding was dismissed */
 const ONBOARDING_LS_KEY = "mab-onboarding-done";
@@ -115,32 +117,71 @@ export interface DeckSeed {
 }
 
 /**
- * Retries for the teardown `DELETE` of a seeded deck, on a connection reset only.
+ * How many times an idempotent call to the app, a `GET` or the teardown
+ * `DELETE`, is resent after a connection reset. No other failure is retried.
  *
- * Why: the teardown is the `request` context's first call after the browser
- * phase. It reuses a keep-alive socket that has been idle for longer than the
- * dev server's keep-alive timeout (it answers `keep-alive: timeout=5`). When the
- * server closes that socket just as the `DELETE` is written on it, the call
- * fails with `read ECONNRESET` although the test itself passed. The gate failed
- * that way on `deck-open-retry.authed.spec.ts:27` on 2026-11-10 (audit TT-02).
+ * Why a call resets: Playwright gives each `request` context its own
+ * keep-alive agent (playwright-core 1.65, `APIRequestContext._ensureAgent`).
+ * A call made after a browser phase reuses a socket that has been idle for
+ * longer than the dev server's keep-alive timeout (it answers
+ * `keep-alive: timeout=5`). When the server closes that socket just as the
+ * request is written on it, the call fails with `ECONNRESET` (`read
+ * ECONNRESET` or `socket hang up`) although the app did nothing wrong. The gate
+ * failed that way on a teardown `DELETE` at `deck-open-retry.authed.spec.ts:27`
+ * on 2026-11-10 (audit TT-02), and on a `GET /api/decks/<id>` at
+ * `deck-editor-zones.spec.ts:186` on 2026-11-11.
  *
  * Playwright's `maxRetries` resends on a fresh socket after `ECONNRESET` only,
  * waiting 250 ms then 500 ms (playwright-core 1.65,
- * `APIRequestContext._sendRequestWithRetries`; documented at
- * https://playwright.dev/docs/api/class-apirequestcontext#api-request-context-delete,
- * read 2026-11-11). It never retries an HTTP error status, and a server that
- * is down answers `ECONNREFUSED`, which still fails at once. So this adds no
- * test retry and cannot hide a broken route.
+ * `APIRequestContext._sendRequestWithRetries`; the `maxRetries` option of
+ * `get` and `delete` at
+ * https://playwright.dev/docs/api/class-apirequestcontext, read 2026-11-11). It
+ * never retries an HTTP error status, and a server that is down answers
+ * `ECONNREFUSED`, which still fails at once. So this adds no test retry and
+ * cannot hide a broken route.
+ *
+ * Why only reads and deletes: after a reset the client cannot tell whether the
+ * server had already handled the request. A `next dev` restart under memory
+ * pressure, the other cause TT-02 names, can cut a request the server has
+ * already applied. `GET` and `DELETE` are idempotent (RFC 9110 §9.2.2): a second
+ * delivery leaves the server as one did, and the teardown treats the 404 it may
+ * then get as success. A resent `POST` or `PATCH` could apply a write twice,
+ * for example add the same card again, and the test would then assert against
+ * data it never meant to create. Writes therefore keep Playwright's default of
+ * no retry and fail loudly on a reset.
  *
  * Two, as TT-02 sets: the first resend covers the race; the second covers a
  * resend that meets a server still busy, as it was during the 2026-11-10
- * reset. The worst case adds 750 ms to a teardown.
+ * reset. The worst case adds 750 ms to a call.
  */
-const TEARDOWN_MAX_RETRIES = 2;
+const IDEMPOTENT_MAX_RETRIES = 2;
 
 /** Narrows a parsed JSON body to an object, so its fields can be read without a cast. */
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
+}
+
+/**
+ * Sends a `GET` to the app and resends it on a fresh socket if the connection
+ * resets (see {@link IDEMPOTENT_MAX_RETRIES}). Use it for any read that
+ * follows a browser phase or another idle stretch, which can leave the
+ * `request` context's socket stale. A test's first call opens a fresh socket
+ * and does not need it, though it does no harm there.
+ *
+ * The response comes back whatever its status: asserting it is the test's
+ * job, and an error status is never retried.
+ *
+ * @param request Playwright API context bound to the app's baseURL.
+ * @param path An app path, such as `/api/decks/<id>`.
+ * @returns The answer to the first attempt that was not reset.
+ * @throws Error when every attempt resets, and at once on any other network
+ *   error, such as `ECONNREFUSED` from a server that is down.
+ */
+export async function getThroughApi(
+  request: APIRequestContext,
+  path: string
+): Promise<APIResponse> {
+  return request.get(path, { maxRetries: IDEMPOTENT_MAX_RETRIES });
 }
 
 /**
@@ -218,7 +259,7 @@ export async function addCardsThroughApi(
     }
   }
 
-  const loaded = await request.get(`/api/decks/${deckId}`);
+  const loaded = await getThroughApi(request, `/api/decks/${deckId}`);
   if (!loaded.ok()) {
     throw new Error(
       `seeded deck load failed: ${loaded.status()} ${await loaded.text()}`
@@ -236,7 +277,7 @@ export async function addCardsThroughApi(
 
 /**
  * Deletes a deck after its test, resending once or twice if the connection
- * resets (see {@link TEARDOWN_MAX_RETRIES}).
+ * resets (see {@link IDEMPOTENT_MAX_RETRIES}).
  *
  * A 404 counts as deleted: the deck is gone, whether a reset hid the answer to
  * a first attempt the server did handle, or the test deleted the deck itself.
@@ -250,36 +291,12 @@ export async function deleteDeckThroughApi(
   deckId: string
 ): Promise<void> {
   const deleted = await request.delete(`/api/decks/${deckId}`, {
-    maxRetries: TEARDOWN_MAX_RETRIES,
+    maxRetries: IDEMPOTENT_MAX_RETRIES,
   });
   if (deleted.ok() || deleted.status() === 404) return;
   throw new Error(
     `deck delete failed: ${deleted.status()} ${await deleted.text()}`
   );
-}
-
-/**
- * Create a deck owned by the Playwright user and fill it with fixture cards.
- *
- * Tests that need a non-empty deck cannot use {@link openBuilder}, which
- * creates an empty one — a playtest of an empty deck draws no cards at all.
- * The deck is not deleted afterwards; a test that wants that uses the
- * `seededDeck` fixture from `fixtures.ts` with {@link fixtureCards}.
- *
- * @param request Playwright API context bound to the app's baseURL.
- * @param cardCount How many cards to add.
- * @returns The seeded deck id.
- */
-export async function seedDeckWithCards(
-  request: APIRequestContext,
-  cardCount: number
-): Promise<string> {
-  const deckId = await createDeckThroughApi(
-    request,
-    `Playtest Deck ${cardCount}`
-  );
-  await addCardsThroughApi(request, deckId, fixtureCards(cardCount));
-  return deckId;
 }
 
 /**

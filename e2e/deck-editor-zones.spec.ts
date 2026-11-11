@@ -1,6 +1,6 @@
 import { test, expect } from "./fixtures";
 import type { Page } from "@playwright/test";
-import { suppressOnboarding, type DeckSeed } from "./helpers";
+import { getThroughApi, suppressOnboarding, type DeckSeed } from "./helpers";
 
 async function useListView(page: Page): Promise<void> {
   await page.getByTitle("List view").nth(1).click();
@@ -64,7 +64,7 @@ test.describe("Deck Editor zones", () => {
     await page.getByTitle("Move to Considering").click();
     expect((await zoneUpdate).ok()).toBe(true);
 
-    const loaded = await request.get(`/api/decks/${deckId}`);
+    const loaded = await getThroughApi(request, `/api/decks/${deckId}`);
     expect(loaded.ok()).toBe(true);
     const deck = (await loaded.json()) as {
       cards: readonly { name: string; zone: string }[];
@@ -112,7 +112,7 @@ test.describe("Deck Editor zones", () => {
     await expect(page.getByText("Could not move card. Try again.")).toBeVisible();
     await expect(sideboardCard).toBeVisible();
 
-    const loaded = await request.get(`/api/decks/${deckId}`);
+    const loaded = await getThroughApi(request, `/api/decks/${deckId}`);
     expect(loaded.ok()).toBe(true);
     expect(await loaded.json()).toEqual(expect.objectContaining({
       cards: expect.arrayContaining([
@@ -183,7 +183,7 @@ test.describe("Deck Editor zones", () => {
     await page.getByRole("button", { name: /Grizzly Bears —/i }).first().click();
     expect((await addedCard).ok()).toBe(true);
 
-    const loaded = await request.get(`/api/decks/${deckId}`);
+    const loaded = await getThroughApi(request, `/api/decks/${deckId}`);
     expect(loaded.ok()).toBe(true);
     const deck = (await loaded.json()) as {
       cards: readonly { name: string; zone: string }[];

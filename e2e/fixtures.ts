@@ -6,7 +6,7 @@
  * the app's API and deletes them when the test ends, passed or failed. Specs
  * therefore need no `try { … } finally { request.delete(…) }`, and the teardown
  * survives the connection reset that used to fail it (audit TT-02; the retry
- * policy is documented on `TEARDOWN_MAX_RETRIES` in `helpers.ts`).
+ * policy is documented on `IDEMPOTENT_MAX_RETRIES` in `helpers.ts`).
  *
  * @module e2e/fixtures
  */
