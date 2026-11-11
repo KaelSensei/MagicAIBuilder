@@ -4,15 +4,15 @@
 
 ## What blocks today
 
-| Gate                                                    | Where it runs                                                   | What fails it                                                 |
-| ------------------------------------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------- |
-| `pnpm audit --prod --audit-level=high`                  | `.github/workflows/ci.yml`                                      | a high or critical advisory in the production dependency tree |
-| `pnpm lint` (ESLint 9 flat config, `eslint.config.mjs`) | `ci.yml`; `eslint --fix` on staged files in the pre-commit hook | any lint error or warning (`--max-warnings 0`)                |
-| `pnpm arch` (dependency-cruiser)                        | `ci.yml`                                                        | a cycle or a new boundary violation                           |
-| `npx tsc --noEmit`                                      | `ci.yml`                                                        | a type error                                                  |
-| `pnpm test:coverage`                                    | `ci.yml`                                                        | a failing test. No coverage threshold is enforced             |
-| `pnpm build`                                            | `ci.yml`                                                        | a build error                                                 |
-| Playwright suite in Docker (`scripts/e2e-pre-push.sh`)  | `.husky/pre-push`; CI in `e2e.yml` (see _E2E gate_)             | a failing E2E test blocks the push; `e2e.yml` is not required |
+| Gate                                                    | Where it runs                                                   | What fails it                                                                                                   |
+| ------------------------------------------------------- | --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `pnpm audit --prod --audit-level=high`                  | `.github/workflows/ci.yml`                                      | a high or critical advisory in the production dependency tree                                                   |
+| `pnpm lint` (ESLint 9 flat config, `eslint.config.mjs`) | `ci.yml`; `eslint --fix` on staged files in the pre-commit hook | any lint error or warning (`--max-warnings 0`)                                                                  |
+| `pnpm arch` (dependency-cruiser)                        | `ci.yml`                                                        | a cycle or a new boundary violation                                                                             |
+| `npx tsc --noEmit`                                      | `ci.yml`                                                        | a type error                                                                                                    |
+| `pnpm test:coverage`                                    | `ci.yml`                                                        | a failing test, or coverage under a layer floor in `src/modules/` (see _Coverage_; no file matches a floor yet) |
+| `pnpm build`                                            | `ci.yml`                                                        | a build error                                                                                                   |
+| Playwright suite in Docker (`scripts/e2e-pre-push.sh`)  | `.husky/pre-push`; CI in `e2e.yml` (see _E2E gate_)             | a failing E2E test blocks the push; `e2e.yml` is not required                                                   |
 
 Branch protection, read with `gh api` on 2026-11-10: `main` requires the check `Lint, Typecheck, Test, Build` and an up-to-date branch. `dev` and `staging` have no protection rule; their PRs run the same check, and it must be green before a merge.
 
@@ -30,17 +30,30 @@ Branch protection, read with `gh api` on 2026-11-10: `main` requires the check `
 
 A regression against these targets is a finding to fix or to explain in the PR. It does not block the merge while Sonar is advisory. When the owner makes Sonar blocking again, this table and `CLAUDE.md` change in the same PR.
 
-| Metric                                         | Target | Last recorded (2026-08-15) |
-| ---------------------------------------------- | ------ | -------------------------- |
-| Coverage, SonarCloud scope                     | ≥ 90%  | 94.5%                      |
-| Bugs                                           | 0      | 0                          |
-| Vulnerabilities                                | 0      | 0                          |
-| Open issues                                    | 0      | 0                          |
-| Code smells                                    | ≤ 10   | —                          |
-| Duplicated lines                               | ≤ 3.0% | ≤ 3.0%                     |
-| Reliability, security, maintainability ratings | A      | A                          |
+| Metric                                         | Target | Last recorded (`main`, 2026-11-08) |
+| ---------------------------------------------- | ------ | ---------------------------------- |
+| Coverage, SonarCloud scope                     | ≥ 90%  | 93.8%                              |
+| Bugs                                           | 0      | 0                                  |
+| Vulnerabilities                                | 0      | 0                                  |
+| Open issues                                    | 0      | 0                                  |
+| Code smells                                    | ≤ 10   | 0                                  |
+| Duplicated lines                               | ≤ 3.0% | 0.6%                               |
+| Reliability, security, maintainability ratings | A      | A                                  |
 
-**The SonarCloud coverage figure is not the repository's coverage.** `sonar-project.properties` excludes `src/app/**` and `src/components/**` from it. Vitest measures all of `src`: 48.5% on 2026-08-23 (the breakdown is in the comment in `vitest.config.ts`).
+The column is the CI analysis of `main` at `a6db8d1b`, read on 2026-11-11 from the [measures history](https://sonarcloud.io/api/measures/search_history?component=KaelSensei_MagicAIBuilder&metrics=coverage,bugs,vulnerabilities,violations,code_smells,duplicated_lines_density&from=2026-11-08). The three later analyses filed under `main` (2026-11-11) came from `pnpm sonar` in a feature checkout: `scripts/sonar.mjs` sets no branch name, so a local run overwrites the `main` figures. Before quoting a `main` figure, check that the analysed revision is on `main`.
+
+## Coverage
+
+Two figures, with two scopes. They must not be compared. The decision and its reasons are in [ADR 0010](../adr/0010-coverage-scope-by-layer.md).
+
+| Figure                       | Scope                                                                                                 | Last measured                                                | Source                                                                                                                                   |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Vitest, `pnpm test:coverage` | all of `src`, except generated files, type-only files, `src/lib/db/prisma.ts` and `src/middleware.ts` | 83.01% lines, 86.19% branches, 88.74% functions (2026-11-11) | CI run [43040973372](https://github.com/KaelSensei/MagicAIBuilder/actions/runs/43040973372) (PR #1386; its `src` is `dev` at `de2bedff`) |
+| SonarCloud                   | `src`, except `src/app/**`, `src/components/**`, `src/modules/*/ui/**` and `src/generated/**`         | 93.8%: 95.7% lines, 88.4% branches (2026-11-08)              | the analysis of `main` at `a6db8d1b` (see above)                                                                                         |
+
+The Vitest figure is the repository's coverage. By folder, from the same run: `src/lib` about 98% of lines, `src/hooks` about 95%, `src/components` about 75% (32 of 201 files at 0%), `src/app` about 71% (17 of 108 files at 0%). The comment in `vitest.config.ts` keeps this breakdown, and ADR 0010 says how it was derived.
+
+**Floors per layer.** `pnpm test:coverage` fails when `src/modules/*/domain/**` falls under 90% of lines or branches, or `src/modules/*/application/**` under 80%. A floor is checked on all the files its glob matches, across contexts. No file matches yet, so nothing can fail today; a floor binds from the first file a context moves into that layer. The other layers, and the folders that have not moved, have no floor. `pnpm test` and the pre-push hook do not check floors. To check one context locally, narrow the run: `pnpm test:coverage --coverage.include='src/modules/<context>/**' src/modules/<context>`.
 
 ## Pre-PR checklist
 
@@ -96,6 +109,7 @@ A gate marked `planned` does not exist yet. The gates land in stages ([ADR 0007]
 | 6     | `pnpm arch` joins the pre-PR gate in `CLAUDE.md`                                                                                                                                                                                                   | as stage 3                                      | done    |
 | —     | `eslint-plugin-jsdoc`: `require-jsdoc` on exports, then `informative-docs`, starting in `src/modules/**` ([ADR 0006](../adr/0006-comment-and-documentation-standard.md))                                                                           | a missing or restating doc comment              | planned |
 | —     | A lint rule for the typed `vi.mock(import("…"))` form and against new `vi.mock` of internal modules ([ADR 0005](../adr/0005-testing-strategy-fakes-contracts-and-characterization.md)). Done; see [Lint ratchet](#lint-ratchet)                    | a string-path or internal mock                  | done    |
+| —     | Coverage floors per layer in `src/modules/`: `domain/` at 90% and `application/` at 80% of lines and branches ([ADR 0010](../adr/0010-coverage-scope-by-layer.md)). Done; see [Coverage](#coverage)                                                | coverage under a floor, once a file matches it  | done    |
 | —     | StrykerJS mutation testing on `domain/` folders: nightly, then incremental on changed files ([ADR 0005](../adr/0005-testing-strategy-fakes-contracts-and-characterization.md))                                                                     | nothing at first: advisory                      | planned |
 | —     | Docs drift tests: glossary terms exist in code, the ADR index is complete, the dependency graph is generated ([ADR 0006](../adr/0006-comment-and-documentation-standard.md))                                                                       | a stale glossary, index or graph                | planned |
 
