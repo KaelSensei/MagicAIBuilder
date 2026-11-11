@@ -34,7 +34,7 @@ change; a major upgrade is its own PR.
   (`docs/adr/0004-anti-corruption-layers-for-external-providers.md`). Domain code never imports a
   provider type such as `ScryfallCard`.
 - **Route handlers stay route handlers.** Do not convert them to Server Actions.
-- **Planned tooling is not there yet.** dependency-cruiser, the ESLint flat config, size limits,
+- **Planned tooling is not there yet.** The ESLint flat config, size limits,
   `eslint-plugin-jsdoc`, MSW, Knip and Stryker are planned
   (`docs/engineering/quality-gate.md`, "Planned gates"). Do not write code or docs that assume
   they exist.

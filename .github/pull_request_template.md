@@ -48,6 +48,7 @@ $ TZ=UTC npx vitest run <file> -t "<test name>"
 
 - `npx tsc --noEmit`:
 - `pnpm lint`:
+- `pnpm arch`:
 - Focused tests (`<command>`): <N> passed
 - `pnpm test`:
 - SonarCloud (advisory):

@@ -8,6 +8,7 @@
 | ------------------------------------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------- |
 | `pnpm audit --prod --audit-level=high`                  | `.github/workflows/ci.yml`                                      | a high or critical advisory in the production dependency tree |
 | `pnpm lint` (ESLint 9 flat config, `eslint.config.mjs`) | `ci.yml`; `eslint --fix` on staged files in the pre-commit hook | any lint error or warning (`--max-warnings 0`)                |
+| `pnpm arch` (dependency-cruiser)                        | `ci.yml`                                                        | a cycle or a new boundary violation                           |
 | `npx tsc --noEmit`                                      | `ci.yml`                                                        | a type error                                                  |
 | `pnpm test:coverage`                                    | `ci.yml`                                                        | a failing test. No coverage threshold is enforced             |
 | `pnpm build`                                            | `ci.yml`                                                        | a build error                                                 |
@@ -48,6 +49,7 @@ Run in this order — see `CLAUDE.md` for the authoritative list:
 ```bash
 npx tsc --noEmit      # zero errors
 pnpm lint             # zero warnings
+pnpm arch             # zero errors
 pnpm test:coverage    # all passing — must run BEFORE sonar
 pnpm sonar            # or rely on CI if it hangs locally
 ```
@@ -57,18 +59,41 @@ Then record the SonarCloud result in the PR. It is advisory, so open issues do n
 
 > `pnpm sonar` does **not** regenerate coverage. Run `pnpm test:coverage` first, or the quality gate reads a stale `lcov` file.
 
+## Architecture gate
+
+`pnpm arch` runs dependency-cruiser twice on `src/`, test files excluded ([ADR 0007](../adr/0007-architecture-enforcement-in-stages.md), stage 3). Each rule's message says how to fix a breach.
+
+| Half | Configuration                     | Graph                                                      | Fails on                                                                                                                                                                                                                                                         |
+| ---- | --------------------------------- | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1    | `.dependency-cruiser.cjs`         | every import, type-only ones included                      | a cycle; `src/lib` importing `src/components`, `src/hooks` or `src/app`; a component or hook importing `src/app` or Prisma; a breach of the `src/modules/<context>/` layers or entry points ([ADR 0002](../adr/0002-module-entry-points-index-server-client.md)) |
+| 2    | `.dependency-cruiser.runtime.cjs` | the imports left once TypeScript erases the type-only ones | a runtime cycle; a `"use client"` module that reaches a module marked `server-only`, directly or through other imports                                                                                                                                           |
+
+The layer rules are the ones ESLint checks import by import; dependency-cruiser adds cycles and the transitive view. The `src/modules/` rules match nothing until the first context moves in.
+
+**Known violations.** The first half ignores the violations recorded in `.dependency-cruiser-known-violations.json`: the 11 layer violations and the 3 type-only cycles that existed when the gate arrived (21 entries, because the cycle through `src/lib/deck/types.ts` is a knot of 8 loops). Any other violation fails. A recorded violation that no longer occurs fails too, so the file shrinks in the pull request that fixes it:
+
+```bash
+pnpm exec depcruise src --config .dependency-cruiser.cjs --baseline --baseline-mode shrink-only
+```
+
+Never grow the file to get a change through; a pull request that adds an entry says why. The second half reads no baseline: both of its rules hold today.
+
+**Information only.** A module that imports nothing and that nothing imports is listed under `no-orphans`. It never fails the run; deleting a feature is an owner decision.
+
+**The graph.** `pnpm arch:graph` regenerates [dependency-graph.generated.md](dependency-graph.generated.md), the folder-level import graph in Mermaid.
+
 ## Planned gates
 
-None of these exist yet. They land in stages ([ADR 0007](../adr/0007-architecture-enforcement-in-stages.md)), each in its own PR, which updates this table, `CLAUDE.md` and the agent rules. Until a gate exists, review checks its rule by hand.
+A gate marked `planned` does not exist yet. The gates land in stages ([ADR 0007](../adr/0007-architecture-enforcement-in-stages.md)), each in its own PR, which updates this table, `CLAUDE.md` and the agent rules. Until a gate exists, review checks its rule by hand.
 
 | Stage | Gate                                                                                                                                                                                                                                               | Will block                                      | Status  |
 | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- | ------- |
 | 1     | ESLint 9 flat config replaces `next lint` and `.eslintrc.json` (`next lint` is deprecated, and removed in Next 16). A prerequisite for stages 3–4. Done in #1351                                                                                   | as today                                        | done    |
-| 2     | The `server-only` package, with a Vitest stub                                                                                                                                                                                                      | a build that pulls server code into the browser | planned |
-| 3     | dependency-cruiser (`pnpm arch`). Runtime cycles fail at once (there are none); the 3 existing type-only cycles and the known layer and context violations start in a recorded baseline that may only shrink. It also generates the Mermaid graphs | a cycle or a new violation                      | planned |
+| 2     | The `server-only` package, with a Vitest stub. Done in #1356                                                                                                                                                                                       | a build that pulls server code into the browser | done    |
+| 3     | dependency-cruiser (`pnpm arch`). Runtime cycles fail at once (there are none); the 3 existing type-only cycles and the known layer and context violations start in a recorded baseline that may only shrink. It also generates the Mermaid graphs | a cycle or a new violation                      | done    |
 | 4     | ESLint `max-lines`, `max-lines-per-function` and `complexity`, with bulk suppressions as a ratchet                                                                                                                                                 | a new file over a limit, or a file that grows   | planned |
 | 5     | Knip: unused files, dependencies and exports                                                                                                                                                                                                       | nothing: an advisory report                     | planned |
-| 6     | `pnpm arch` joins the pre-PR gate in `CLAUDE.md`                                                                                                                                                                                                   | as stage 3                                      | planned |
+| 6     | `pnpm arch` joins the pre-PR gate in `CLAUDE.md`                                                                                                                                                                                                   | as stage 3                                      | done    |
 | —     | `eslint-plugin-jsdoc`: `require-jsdoc` on exports, then `informative-docs`, starting in `src/modules/**` ([ADR 0006](../adr/0006-comment-and-documentation-standard.md))                                                                           | a missing or restating doc comment              | planned |
 | —     | A lint rule for the typed `vi.mock(import("…"))` form and against new `vi.mock` of internal modules ([ADR 0005](../adr/0005-testing-strategy-fakes-contracts-and-characterization.md))                                                             | a string-path or internal mock                  | planned |
 | —     | StrykerJS mutation testing on `domain/` folders: nightly, then incremental on changed files ([ADR 0005](../adr/0005-testing-strategy-fakes-contracts-and-characterization.md))                                                                     | nothing at first: advisory                      | planned |

@@ -57,6 +57,7 @@ pnpm install --frozen-lockfile
 → pnpm audit --prod --audit-level=high       (blocks)
 → pnpm audit --prod --audit-level=moderate   (report only)
 → pnpm lint                                  (eslint flat config; any warning fails)
+→ pnpm arch                                  (dependency-cruiser; a cycle or a new boundary violation fails)
 → npx tsc --noEmit
 → pnpm test:coverage                         (vitest; no coverage threshold)
 → pnpm build
@@ -114,6 +115,8 @@ On every `git push`, `.husky/pre-push` runs `scripts/e2e-pre-push.sh`: the full 
 pnpm dev              # local dev server
 pnpm dev:local        # local dev server on 127.0.0.1:3000
 pnpm lint             # full lint
+pnpm arch             # architecture gate (dependency-cruiser)
+pnpm arch:graph       # regenerate docs/engineering/dependency-graph.generated.md
 pnpm test             # unit tests
 pnpm test:coverage    # tests + coverage report
 pnpm build            # production build

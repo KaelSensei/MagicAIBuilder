@@ -72,7 +72,7 @@ A slice is done when every item below holds, or the pull request says why an ite
 
 |   # | Item                                                                                                                                                |
 | --: | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-|  16 | The pre-PR gate of `CLAUDE.md` passes: `npx tsc --noEmit` with zero errors, `pnpm lint` with zero warnings, `pnpm test` passing.                    |
+|  16 | The pre-PR gate of `CLAUDE.md` passes: `npx tsc --noEmit` and `pnpm arch` with zero errors, `pnpm lint` with zero warnings, `pnpm test` passing.    |
 |  17 | `pnpm sonar` was run when credentials allow, and the SonarCloud status is recorded. It is advisory.                                                 |
 |  18 | The pre-push Docker E2E gate passed, or its exception is documented.                                                                                |
 |  19 | For a documentation-only slice: Prettier formatted the files, every relative link resolves and every Mermaid block parses. No Red test is required. |
