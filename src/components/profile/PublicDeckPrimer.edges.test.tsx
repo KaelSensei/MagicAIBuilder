@@ -14,6 +14,9 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { PublicDeckPrimer } from "./PublicDeckPrimer";
 
+/** An author's link to another site: no opener, no referrer, and not endorsed for search. */
+const EXTERNAL_REL = "noopener noreferrer nofollow ugc";
+
 function renderPrimer(description: string): void {
   render(<PublicDeckPrimer description={description} />);
 }
@@ -51,14 +54,14 @@ describe("PublicDeckPrimer links", () => {
     ["http:", "http://example.com/guide"],
     ["https:", "https://example.com/guide"],
   ])(
-    "opens an %s link in a new tab without referrer or opener",
+    "opens an %s link in a new tab, without referrer or opener, marked as user content",
     (_scheme, destination) => {
       renderPrimer(`Read [the guide](${destination}).`);
 
       const link = screen.getByRole("link", { name: "the guide" });
       expect(link).toHaveAttribute("href", destination);
       expect(link).toHaveAttribute("target", "_blank");
-      expect(link).toHaveAttribute("rel", "noreferrer noopener");
+      expect(link).toHaveAttribute("rel", EXTERNAL_REL);
     }
   );
 
@@ -83,7 +86,7 @@ describe("PublicDeckPrimer links", () => {
     const link = screen.getByRole("link", { name: "the guide" });
     expect(link).toHaveAttribute("href", "https://evil.example/phish");
     expect(link).toHaveAttribute("target", "_blank");
-    expect(link).toHaveAttribute("rel", "noreferrer noopener");
+    expect(link).toHaveAttribute("rel", EXTERNAL_REL);
   });
 
   it("opens a backslash spelling of another host as an external link, which browsers read as //host", () => {
@@ -92,7 +95,7 @@ describe("PublicDeckPrimer links", () => {
     const link = screen.getByRole("link", { name: "the guide" });
     expect(link).toHaveAttribute("href", "https://evil.example/phish");
     expect(link).toHaveAttribute("target", "_blank");
-    expect(link).toHaveAttribute("rel", "noreferrer noopener");
+    expect(link).toHaveAttribute("rel", EXTERNAL_REL);
   });
 
   it("opens an upper-case HTTPS link in a new tab, at its canonical lower-case address", () => {
@@ -101,7 +104,7 @@ describe("PublicDeckPrimer links", () => {
     const link = screen.getByRole("link", { name: "the guide" });
     expect(link).toHaveAttribute("href", "https://example.com/GUIDE");
     expect(link).toHaveAttribute("target", "_blank");
-    expect(link).toHaveAttribute("rel", "noreferrer noopener");
+    expect(link).toHaveAttribute("rel", EXTERNAL_REL);
   });
 
   it("ends a destination at its first closing parenthesis and keeps the rest as text", () => {

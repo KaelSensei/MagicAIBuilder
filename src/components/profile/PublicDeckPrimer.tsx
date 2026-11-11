@@ -36,6 +36,16 @@ type PrimerBlock =
 const PRIMER_LINK_CLASS =
   "font-medium text-[var(--accent-text)] underline underline-offset-2";
 
+/**
+ * `rel` of an author's link to another site. `noopener` and `noreferrer` keep the new tab from
+ * reaching back into this page and from learning its URL. `ugc` and `nofollow` tell search
+ * engines the deck owner wrote the link and the site does not vouch for it: Google recommends
+ * `ugc` for user-generated links and accepts several values together.
+ * Source: https://developers.google.com/search/docs/crawling-indexing/qualify-outbound-links
+ * (read 2026-11-11).
+ */
+const EXTERNAL_LINK_REL = "noopener noreferrer nofollow ugc";
+
 function destinationEndings(text: string): readonly number[] {
   // Precompute destination endings so malformed nested links cannot rescan
   // the remaining text for every opening bracket.
@@ -95,7 +105,7 @@ function PrimerLink({
         <a
           href={link.href}
           target="_blank"
-          rel="noreferrer noopener"
+          rel={EXTERNAL_LINK_REL}
           className={PRIMER_LINK_CLASS}
         >
           {label}
