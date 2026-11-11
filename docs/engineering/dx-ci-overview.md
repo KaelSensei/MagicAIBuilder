@@ -23,7 +23,7 @@
 | Component | Service                       | Plan               |
 | --------- | ----------------------------- | ------------------ |
 | App       | Vercel                        | Hobby (free)       |
-| Database  | Supabase                      | Free tier (512 MB) |
+| Database  | Supabase                      | Free tier (500 MB) |
 | URL       | `magic-ai-builder.vercel.app` | No custom domain   |
 
 **DB connection:**

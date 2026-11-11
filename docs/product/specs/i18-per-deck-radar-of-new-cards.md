@@ -68,7 +68,7 @@ The spoiler-season market is large and **entirely set-centric**. Nothing found o
 ## Non-goals
 
 - Notifications, digests or e-mail. Explicitly deferred until the on-demand flow is validated; I-08 owns notifications.
-- Spoiler-season coverage of unreleased cards. The corpus is a released, dated set.
+- Spoiler-season coverage of unreleased cards. The corpus is a released, dated set. [I-73](i73-every-set-release-ready-on-day-one.md#open-questions) proposes that preview printings join the corpus, labelled by their release status; that is owner decision [D-81](../owner-decisions.md#product-scope-and-non-goals), and this non-goal stands until it is decided (2026-11-10).
 - Automatic deck modification, under any setting.
 - Ranking decks against each other.
 
@@ -81,14 +81,14 @@ The spoiler-season market is large and **entirely set-centric**. Nothing found o
 
 ## Delivery slices
 
-| #   | Slice                                                                  | Depends on |
-| --- | ---------------------------------------------------------------------- | ---------- |
-| 1   | Dated set corpus fetch and cache, no deck logic                        | —          |
-| 2   | Per-deck legality filter over the corpus                               | 1          |
-| 3   | Reasons from EDHREC inclusion and Spellbook combos, with source labels | 2          |
-| 4   | Diff-based adoption and per-deck dismissals                            | 2          |
-| 5   | Deduplication, reprint handling and the compute ceiling                | 3          |
-| 6   | _(Later, separate decision)_ opt-in notifications                      | 4, 5, I-08 |
+| #   | Slice                                                                                                                                               | Depends on                                       |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| 1   | Dated set corpus from I-67's sets and printings, no deck logic _(re-pointed 2026-11-10 to I-67 slices 2 and 4)_                                     | I-67 slices 2 and 4                              |
+| 2   | Per-deck legality filter over the corpus                                                                                                            | 1                                                |
+| 3   | Reasons from EDHREC inclusion and Spellbook combos, with source labels                                                                              | 2                                                |
+| 4   | Diff-based adoption and per-deck dismissals                                                                                                         | 2                                                |
+| 5   | Deduplication, reprint handling and the compute ceiling                                                                                             | 3                                                |
+| 6   | _(Later, separate decision)_ opt-in notifications _(2026-11-10: the per-set release digest is I-73 slice 7; this slice keeps notices for one deck)_ | 4, 5; I-63 slices 1 to 3, and slice 10 for email |
 
 ## Open questions
 

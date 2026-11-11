@@ -53,6 +53,7 @@ This initiative is therefore mostly **data plus editorial**, not new engine work
 3.3 Applying a bundle creates or updates a **distinct working copy**. The sealed list is never modified.
 3.4 Applying a bundle is reversible in one action, restoring the working copy to its pre-bundle state.
 3.5 A bundle states which cards it could not apply and why — colour identity, legality, or a card already present.
+3.6 _Added 2026-11-11:_ on a working copy, a card the player does not own offers [I-76](i76-complete-this-deck-from-my-collection.md) slice 10's owned substitute, and open slots go to I-76's proposal route. No new slice here.
 
 ### 4. Prices are estimates
 
@@ -87,14 +88,14 @@ BundleApply    deckId, bundleId, appliedAt, revertedAt?, beforeSnapshotId
 
 ## Delivery slices
 
-| #   | Slice                                                         | Depends on |
-| --- | ------------------------------------------------------------- | ---------- |
-| 1   | Catalogue model and one dated set imported, read-only display | —          |
-| 2   | Open-as-working-copy and the sealed diff via the I-07 engine  | 1          |
-| 3   | Bundle model and application with the not-applied report      | 2          |
-| 4   | One-action revert via `beforeSnapshotId`                      | 3          |
-| 5   | Budget bands, estimate labelling and unpriced disclosure      | 3          |
-| 6   | Hand-off to the I-06 acquisition plan for the missing cards   | 5          |
+| #   | Slice                                                                                                                                      | Depends on                         |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------- |
+| 1   | Catalogue model and read-only display _(re-pointed 2026-11-10: the first dated set arrives through I-67 slice 13, which needs this model)_ | —                                  |
+| 2   | Open-as-working-copy and the sealed diff via the I-07 engine                                                                               | 1; I-67 slice 13 for the first set |
+| 3   | Bundle model and application with the not-applied report                                                                                   | 2                                  |
+| 4   | One-action revert via `beforeSnapshotId`                                                                                                   | 3                                  |
+| 5   | Budget bands, estimate labelling and unpriced disclosure                                                                                   | 3                                  |
+| 6   | Hand-off to the I-06 acquisition plan for the missing cards                                                                                | 5                                  |
 
 Slices 1 and 2 are useful alone: a dated precon catalogue with a diff is shippable value before any bundle exists.
 
@@ -102,4 +103,4 @@ Slices 1 and 2 are useful alone: a dated precon catalogue with a diff is shippab
 
 - Who curates the bundles? Editorial content needs an owner and a refresh cadence, or it dates badly — the same failure mode as `design-system.md`.
 - Does the catalogue share its storage with I-16's candidate corpus? Precons are the most trustworthy candidate source, so one table serving both is attractive.
-- Universes Beyond sets ship four precons at a time (the Star Trek set, 2026-11-13, is the immediate example). Is per-set bulk import a day-one requirement?
+- Universes Beyond sets ship four precons at a time (the Star Trek set, 2026-11-13, is the immediate example). Is per-set bulk import a day-one requirement? _Answered 2026-11-10 by [I-73](i73-every-set-release-ready-on-day-one.md#changes-requested-of-other-specs): yes. I-67 slice 13 imports a set's decks when MTGJSON publishes them, and I-73 slice 9 checks it._

@@ -117,7 +117,7 @@ Verified on `dev` (commit `49983a9`) on 2026-11-09:
 
 8.1 Free for everyone: everything in 6.4, per-deck figures with intervals over the last 12 months, and every published aggregate. Nothing paid changes what another player sees: no paid ranking or visibility.
 8.2 Candidates: real-game trends across deck versions, the mismatch view across all of a player's decks, cross-deck comparison, and analysis over the whole history. The raw list and export always cover everything.
-8.3 Why it could sell: Playgroup, Lifetap and The Pod Companion give statistics away; Rhystic charges for them (search summary) [14]. None found ties a result to a deck version or to declared against computed bracket. Only a deckbuilder holds the versions.
+8.3 Why it could sell: Playgroup, Lifetap and The Pod Companion give statistics away; Rhystic charges for them (search summary) [14]. None found in competitive or casual Magic multiplayer ties a result to a deck version or to declared against computed bracket. Only a deckbuilder holds the versions. _Corrected 2026-11-11:_ this said "None found ties a result to a deck version" without the Magic qualifier. Arkham Cards groups decks into campaigns, tracks scenario results and upgrades decks between scenarios; that is co-op, and whether each result is frozen to a deck version was not verified [32].
 
 ## Data model / API
 
@@ -160,18 +160,18 @@ Routes, all scoped to the caller as `playtest-sessions` is: `POST|GET /api/games
 
 ## Delivery slices
 
-| #   | Slice                                                                                                     | Depends on                                                          |
-| --- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| 1   | `PodGame` and `PodGameSeat`; "Log a game" from the deck page with labelled opponents, seats and outcome   | —                                                                   |
-| 2   | Deck version at log time: card-list hash, snapshot reuse or game snapshot (reusable by I-07's record bar) | 1                                                                   |
-| 3   | Edit, delete, JSON and CSV export, account-deletion conversion, privacy-notice text                       | 1; I-29 slice 0 for the notice page                                 |
-| 4   | Personal per-deck figures: fair share, intervals, 10-game floor, goldfish kept apart                      | 1                                                                   |
-| 5   | Declared and computed bracket frozen with scorer version; mismatch and spread                             | 2; I-15 slice 1 for sheet values (the form picker works without it) |
-| 6   | Logging from a pod: linked players, confirm and detach, frozen sheets, pod history                        | 5; I-15 slice 3                                                     |
-| 7   | Version trends, mismatch view, whole-history analysis                                                     | 4, 5; I-21 slice 5 for the verdict; I-30 decision before any gating |
-| 8   | Contribution opt-in and the weekly aggregate job with thresholds; nothing published                       | 3, 5                                                                |
-| 9   | Publish passing cells on I-34 data pages                                                                  | 8; I-34 page slices; legal answers to open question 2               |
-| 10  | Import from a life-counter export such as Lifetap's                                                       | **Blocked** until the export format is verified; 1                  |
+| #   | Slice                                                                                                                                                                             | Depends on                                                          |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| 1   | `PodGame` and `PodGameSeat`; "Log a game" from the deck page with labelled opponents, seats and outcome                                                                           | —                                                                   |
+| 2   | Deck version at log time: card-list hash, snapshot reuse or game snapshot (reusable by I-07's record bar) _(the canonical list is I-29 slice 2's; one owner, decided 2026-11-10)_ | 1; I-29 slice 2                                                     |
+| 3   | Edit, delete, JSON and CSV export, account-deletion conversion, privacy-notice text                                                                                               | 1; I-29 slice 0 for the notice page                                 |
+| 4   | Personal per-deck figures: fair share, intervals, 10-game floor, goldfish kept apart                                                                                              | 1                                                                   |
+| 5   | Declared and computed bracket frozen with scorer version; mismatch and spread                                                                                                     | 2; I-15 slice 1 for sheet values (the form picker works without it) |
+| 6   | Logging from a pod: linked players, confirm and detach, frozen sheets, pod history                                                                                                | 5; I-15 slice 3                                                     |
+| 7   | Version trends, mismatch view, whole-history analysis                                                                                                                             | 4, 5; I-21 slice 5 for the verdict; I-30 decision before any gating |
+| 8   | Contribution opt-in and the weekly aggregate job with thresholds; nothing published                                                                                               | 3, 5                                                                |
+| 9   | Publish passing cells on I-34 data pages                                                                                                                                          | 8; I-34 page slices; legal answers to open question 2               |
+| 10  | Import from a life-counter export such as Lifetap's                                                                                                                               | **Blocked** until the export format is verified; 1                  |
 
 Slices 1 to 4 ship alone as a private game log. Slice 8 runs before slice 9 so the thresholds can be checked on real data before anything is public.
 
@@ -217,3 +217,4 @@ Read 2026-11-09 unless dated. [4], [6], [21], [22], [28] and [29] were re-checke
 29. EDHTop16 GraphQL endpoint, plain query sent 2026-11-09. https://edhtop16.com/api/graphql
 30. Playgroup.gg, Hugh, First of Many (search summary). https://playgroup.gg/commanders/5200-hugh-first-of-many
 31. EDHTop16, Narset, Enlightened Master (events Nov 2025–Oct 2026). https://edhtop16.com/commander/Narset%2C%20Enlightened%20Master
+32. Arkham Cards on the App Store, v6.3.7, seen 2026-11-10; added 2026-11-11. https://apps.apple.com/us/app/arkham-cards/id1424000351

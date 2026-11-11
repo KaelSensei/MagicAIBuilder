@@ -65,10 +65,12 @@ Rank the initiative on those three, not on coverage percentage, which is table s
 - `GET /api/collection/buildable?mode=all|free&cursor=` → ranked candidates with `{ source, coverage: { owned, total }, missing: { count, knownPriceSubtotal, unpricedCount } }`.
 - Read-only. The route must be incapable of writing: no ownership, deck or intent mutation in its code path.
 - A commitment index (printing → decks using it) is required for free-cards mode. Derive it from existing deck rows; do not introduce a second source of truth for ownership.
+- Added 2026-11-11 ([I-76](i76-complete-this-deck-from-my-collection.md)): copies in a deck's main and command zones commit a card; Considering and sideboard copies do not. The index reads deck rows and collection rows, as `GET /api/collection/usage` already does, so it needs no other slice.
 
 ## Non-goals
 
 - Generating a full 100-card list from the collection. That is I-02 with a collection constraint, not this initiative.
+  - Noted 2026-11-11: completing an existing partial deck slot by slot is [I-76](i76-complete-this-deck-from-my-collection.md) and is not this non-goal; generating a list from nothing stays I-02.
 - Arena wildcard optimisation. Explicitly out, per the roadmap's non-goals.
 - Buying. The acquisition plan in I-06 owns that, and this initiative hands off to it.
 - Ranking against Oracle identity alone — blocked until I-06's printing-level ownership lands.
@@ -88,10 +90,12 @@ Rank the initiative on those three, not on coverage percentage, which is table s
 | 1   | Coverage computation over a fixed candidate corpus, Oracle legality, no UI | 0          |
 | 2   | Read-only ranked route with pagination and unpriced disclosure             | 1          |
 | 3   | Collection-page surface showing rank, coverage and missing cost            | 2          |
-| 4   | Commitment index and free-cards mode                                       | 2          |
+| 4   | Commitment index from deck and collection rows (re-pointed 2026-11-11)     | —          |
 | 5   | Provenance labels and the generated-candidate rule                         | 3          |
+| 6   | Owned copies shown as free or committed in search and on deck rows         | 4          |
+| 7   | Free-cards ranking mode (moved from slice 4 on 2026-11-11)                 | 2, 4       |
 
-Slice 0 is the whole risk of this initiative. Validate demand before starting slice 1: the roadmap already marks this effort as medium-to-large.
+Slice 0 is the whole risk of this initiative. Slices 4 and 6 need only deck and collection rows, so they may go ahead of slice 0; slice 6 is the roadmap's scope item, added to this table on 2026-11-11 to keep the numbering. Validate demand before starting slice 1: the roadmap already marks this effort as medium-to-large.
 
 ## Open questions
 
