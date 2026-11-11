@@ -22,7 +22,13 @@ type PrimerBlock =
       readonly items: readonly string[];
     };
 
-const SAFE_PROTOCOLS = new Set(["http:", "https:", "mailto:"]);
+/**
+ * Schemes an author's link may use. OWASP allow-lists http and https only for an untrusted URL
+ * in an `href` ("Allow-list http and HTTPS URLs only"), so `mailto:` stays plain text.
+ * Source: https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html
+ * (read 2026-11-11).
+ */
+const SAFE_PROTOCOLS = new Set(["http:", "https:"]);
 
 function destinationEndings(text: string): readonly number[] {
   // Precompute destination endings so malformed nested links cannot rescan

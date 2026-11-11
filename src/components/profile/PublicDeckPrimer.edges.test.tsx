@@ -4,7 +4,7 @@
  *
  * Community context. `PublicDeckPrimer` renders a public deck's description, which its owner
  * writes and every visitor reads, so its link policy is a security boundary: only `http:`,
- * `https:`, `mailto:`, a path starting with `/` and a fragment starting with `#` become links.
+ * `https:`, a path starting with `/` and a fragment starting with `#` become links.
  * COM-19 moves the parser into the community domain; these tests pin what it does today,
  * including two gaps (a protocol-relative URL passes as a path; an upper-case scheme loses
  * `target` and `rel`) and the duplicate heading ids B2-22 will fix.
@@ -29,6 +29,7 @@ describe("PublicDeckPrimer links (characterization)", () => {
     ["a data: URL", "data:text/html,<b>hi</b>"],
     ["a vbscript: URL", "vbscript:msgbox(1)"],
     ["a file: URL", "file:///etc/passwd"],
+    ["a mailto: address", "mailto:owner@example.com"],
   ])("renders the label as plain text for %s", (_case, destination) => {
     renderPrimer(`See [the trick](${destination}) now.`);
 
@@ -61,7 +62,6 @@ describe("PublicDeckPrimer links (characterization)", () => {
   );
 
   it.each([
-    ["a mailto: address", "mailto:owner@example.com"],
     ["a site path", "/decks/42"],
     ["a fragment", "#primer-game-plan"],
   ])(
