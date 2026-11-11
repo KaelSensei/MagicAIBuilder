@@ -5,6 +5,7 @@
  * from a deck + a set of owned scryfallIds.
  */
 import type { DeckCard } from "@/lib/deck/types";
+import { isBasicLand } from "@/lib/scryfall/type-line";
 
 export type {
   AcquisitionDeckRequirement,
@@ -61,10 +62,6 @@ interface ShoppingListOptions {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function isBasicLand(card: DeckCard): boolean {
-  return card.typeLine.toLowerCase().includes("basic land");
-}
-
 function collectAllCards(
   deckCards: readonly DeckCard[],
   commander: DeckCard | null,
@@ -97,7 +94,7 @@ export function getDeckCardStatuses(
   const remainingProxy = new Map<string, number>();
   for (const card of collectAllCards(deckCards, commander, partner)) {
     const scryfallId = card.scryfallId ?? card.id;
-    const isBasic = isBasicLand(card);
+    const isBasic = isBasicLand(card.typeLine);
     const physicalAvailable =
       remainingPhysical.get(scryfallId) ?? quantities[scryfallId] ?? 0;
     const proxyAvailable =
@@ -191,7 +188,7 @@ export function buildShoppingList(
   const requirements = new Map<string, ShoppingListItem>();
 
   for (const card of allCards) {
-    if (!includeBasics && isBasicLand(card)) continue;
+    if (!includeBasics && isBasicLand(card.typeLine)) continue;
     const scryfallId = card.scryfallId ?? card.id;
     const existing = requirements.get(scryfallId);
     requirements.set(scryfallId, {
@@ -278,7 +275,8 @@ export function computeCollectionStats(
 
   for (const card of allCards) {
     const isOwned =
-      isBasicLand(card) || ownedScryfallIds.has(card.scryfallId ?? card.id);
+      isBasicLand(card.typeLine) ||
+      ownedScryfallIds.has(card.scryfallId ?? card.id);
     if (isOwned) {
       ownedCount++;
     } else {

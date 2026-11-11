@@ -1,3 +1,8 @@
+/**
+ * Card package preview API
+ * POST /api/community/card-packages/:packageId/preview — which package cards a deck can take, and why the others are blocked
+ */
+
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { readJsonBody } from "@/lib/api/json-body";
@@ -6,6 +11,7 @@ import { previewCardPackage } from "@/lib/community/card-package-preview";
 import { verifyPackageCards } from "@/lib/community/verified-package-cards";
 import { prisma } from "@/lib/db/prisma";
 import { logger } from "@/lib/logger";
+import { isBasicLand } from "@/lib/scryfall/type-line";
 
 const PreviewRequestSchema = z.object({ deckId: z.string().min(1).max(50) });
 const DeckFormatSchema = z.enum([
@@ -101,7 +107,7 @@ export async function POST(request: Request, context: RouteContext) {
         existingCards: deck.cards.map((card) => ({
           name: card.name,
           quantity: card.quantity,
-          isBasicLand: card.typeLine.toLowerCase().includes("basic land"),
+          isBasicLand: isBasicLand(card.typeLine),
         })),
       })
     );

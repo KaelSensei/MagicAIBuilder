@@ -1,8 +1,12 @@
 "use client";
 
+/**
+ * CardPackageCreator — saves selected deck cards as a reusable community card package.
+ */
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import type { DeckCard } from "@/lib/deck/types";
+import { isBasicLand } from "@/lib/scryfall/type-line";
 
 interface CardPackageCreatorProps {
   readonly cards: readonly DeckCard[];
@@ -48,7 +52,7 @@ export function CardPackageCreator({ cards, onCreated }: CardPackageCreatorProps
             quantity: card.quantity,
             colorIdentity: card.colorIdentity,
             isBanned: card.isBanned,
-            isBasicLand: card.typeLine.toLowerCase().includes("basic land"),
+            isBasicLand: isBasicLand(card.typeLine),
             imageUri: card.imageUri,
           })),
         }),

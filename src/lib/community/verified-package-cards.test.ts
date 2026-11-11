@@ -60,6 +60,40 @@ describe("verifyPackageCards", () => {
     expect(preview.cards[0]?.quantity).toBe(20);
   });
 
+  it("lets a singleton package hold many copies of a Snow-Covered basic", async () => {
+    getCardCollection.mockResolvedValue({
+      data: [
+        {
+          id: "snow-forest",
+          name: "Snow-Covered Forest",
+          color_identity: ["G"],
+          type_line: "Basic Snow Land — Forest",
+          legalities: { commander: "legal" },
+        },
+      ],
+      not_found: [],
+    });
+    const cards = await verifyPackageCards(
+      [
+        {
+          scryfallId: "snow-forest",
+          name: "Snow-Covered Forest",
+          quantity: 10,
+          colorIdentity: ["G"],
+          isBanned: false,
+          isBasicLand: false,
+        },
+      ],
+      "commander"
+    );
+    const preview = previewCardPackage(cards, {
+      format: "commander",
+      commanderColorIdentity: ["G"],
+      existingCards: [],
+    });
+    expect(preview.cards[0]?.status).toBe("ready");
+  });
+
   it("ignores forged stored Oracle exceptions when checking copy limits", async () => {
     getCardCollection.mockResolvedValue({ data: [{
       id: "spell", name: "Counterspell", color_identity: ["U"],

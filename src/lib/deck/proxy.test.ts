@@ -90,6 +90,18 @@ describe("buildProxySlots", () => {
     expect(slots.filter((s) => s.name === "Island")).toHaveLength(0);
   });
 
+  it("excludes Snow-Covered basics by default", () => {
+    const snow = makeCard({
+      id: "s1",
+      name: "Snow-Covered Island",
+      typeLine: "Basic Snow Land — Island",
+      quantity: 4,
+    });
+    expect(buildProxySlots([snow], null, null, DEFAULT_PROXY_CONFIG)).toEqual(
+      []
+    );
+  });
+
   it("includes basic lands when includeLands=true", () => {
     const plains = makeCard({ id: "c2", name: "Plains", typeLine: "Basic Land — Plains", quantity: 3 });
     const slots = buildProxySlots([plains], null, null, { ...DEFAULT_PROXY_CONFIG, includeLands: true });

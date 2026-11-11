@@ -3,6 +3,7 @@ import type { DeckCard, Deck } from "./types";
 import { getCompanionDeckWarnings } from "./companion";
 import { getFormatConfig, isDeckFormat } from "./formats";
 import { PIP_COLORS } from "./mana-alignment";
+import { isBasicLand } from "@/lib/scryfall/type-line";
 
 export interface ValidationResult {
   valid: boolean;
@@ -35,7 +36,8 @@ function checkCardColorIdentity(card: DeckCard, deck: Deck): string | null {
 
 /** Check the format's non-basic card copy limit before adding a card. */
 function checkCardCopyLimit(card: DeckCard, deck: Deck, maxCopies: number): string | null {
-  if (card.typeLine.toLowerCase().includes("basic land")) return null;
+  // CR 903.5b and CR 100.2a: basic lands are exempt from the copy limit.
+  if (isBasicLand(card.typeLine)) return null;
   const allCards = [
     ...deck.cards,
     ...(deck.commander ? [deck.commander] : []),
@@ -153,7 +155,8 @@ function checkGameChangers(allCards: DeckCard[], warnings: string[]): void {
 function checkSingleton(allCards: DeckCard[], maxCopies: number, errors: string[]): void {
   const nameCounts: Record<string, number> = {};
   for (const card of allCards) {
-    if (!card.typeLine.toLowerCase().includes("basic land")) {
+    // CR 903.5b and CR 100.2a: basic lands are exempt from the copy limit.
+    if (!isBasicLand(card.typeLine)) {
       nameCounts[card.name] = (nameCounts[card.name] ?? 0) + card.quantity;
     }
   }

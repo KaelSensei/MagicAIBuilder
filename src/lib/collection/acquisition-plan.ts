@@ -5,6 +5,7 @@
  * still missing, and does not change ownership.
  */
 import type { DeckCard } from "@/lib/deck/types";
+import { isBasicLand } from "@/lib/scryfall/type-line";
 
 /** One deck's share of a printing that still has to be acquired. */
 export interface AcquisitionDeckRequirement {
@@ -105,7 +106,7 @@ function deckPrintingNeeds(deck: AcquisitionPlanDeck): ReadonlyMap<string, DeckP
     ...deck.cards.filter((card) => card.zone === "main"),
   ];
   for (const card of cards) {
-    if (card === null || card.typeLine.toLowerCase().includes("basic land")) continue;
+    if (card === null || isBasicLand(card.typeLine)) continue;
     const scryfallId = card.scryfallId ?? card.id;
     const current = perDeck.get(scryfallId);
     perDeck.set(scryfallId, {

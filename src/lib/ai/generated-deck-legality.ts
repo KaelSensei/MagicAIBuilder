@@ -40,6 +40,7 @@ import {
   normalizeImportedName,
   scryfallCollectionLookupName,
 } from "@/lib/scryfall/name-index";
+import { isBasicLand } from "@/lib/scryfall/type-line";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import { fitToDeckSize, type KeptCard } from "./generated-deck-size";
 
@@ -228,7 +229,7 @@ function filterListedCards(
         quantity,
         category: entry.category,
       },
-      isBasicLand: card.type_line.toLowerCase().includes("basic land"),
+      isBasicLand: isBasicLand(card.type_line),
     });
   }
 

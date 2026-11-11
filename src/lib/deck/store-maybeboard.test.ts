@@ -180,11 +180,14 @@ describe("Deck store — maybeboard actions", () => {
       expect(deck.maybeboard).toHaveLength(1);
     });
 
-    it("allows duplicate basic lands in maybeboard", async () => {
+    it.each([
+      ["Forest", "Basic Land — Forest"],
+      ["Snow-Covered Forest", "Basic Snow Land — Forest"],
+    ])("allows duplicate %s in maybeboard", async (name, typeLine) => {
       const forest = makeScryfallCard({
         id: "forest-1",
-        name: "Forest",
-        type_line: "Basic Land — Forest",
+        name,
+        type_line: typeLine,
         cmc: 0,
         mana_cost: "",
       });

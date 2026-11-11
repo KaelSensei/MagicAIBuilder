@@ -1271,6 +1271,25 @@ describe("useDeckStore — updateCardQuantity", () => {
     expect(card?.quantity).toBe(2);
   });
 
+  it("lets a Snow-Covered basic go past one copy", async () => {
+    seedDeck(
+      makeActiveDeck({
+        cards: [
+          makeDeckCard({
+            id: "snow-1",
+            name: "Snow-Covered Forest",
+            typeLine: "Basic Snow Land — Forest",
+            quantity: 1,
+          }),
+        ],
+      })
+    );
+
+    await useDeckStore.getState().updateCardQuantity("snow-1", 1);
+
+    expect(useDeckStore.getState().decks["deck-1"].cards[0].quantity).toBe(2);
+  });
+
   it.each(["note", "zone"])("keeps saving visible when a %s finishes before a pending quantity", async (action) => {
     let finishQuantity = () => {};
     const pendingQuantity = new Promise<void>((resolve) => { finishQuantity = resolve; });
