@@ -12,7 +12,7 @@ import {
   type ScryfallCollectionIdentifier,
   type ScryfallCollectionResponse,
 } from "./types";
-import { lookupCardCache, lookupSearchCache } from "@/lib/db/deck-api";
+import { lookupCardCache, lookupSearchCache } from "./shared-cache-client";
 import { isScryfallCard, isScryfallSearchResponse } from "./guards";
 import { resetScryfallQueue, scheduleScryfallRequest } from "./request-queue";
 import { buildLocalizedNamesQueries } from "./localized";

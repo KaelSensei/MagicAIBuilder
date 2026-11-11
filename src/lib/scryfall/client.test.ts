@@ -4,8 +4,8 @@ vi.mock(import("@/lib/logger"), () => ({
   logger: { warn: vi.fn(), error: vi.fn(), info: vi.fn() },
 }));
 
-// Mock deck-api cache functions before importing client
-vi.mock(import("@/lib/db/deck-api"), () => ({
+// Mock the shared-cache lookups before importing client
+vi.mock(import("@/lib/scryfall/shared-cache-client"), () => ({
   lookupCardCache: vi.fn(async () => null),
   lookupSearchCache: vi.fn(async () => null),
 }));
@@ -22,7 +22,7 @@ import {
   __resetRateLimiter,
   SCRYFALL_TIMEOUT_MS,
 } from "@/lib/scryfall/client";
-import { lookupCardCache } from "@/lib/db/deck-api";
+import { lookupCardCache } from "@/lib/scryfall/shared-cache-client";
 import { logger } from "@/lib/logger";
 import type {
   ScryfallCard,

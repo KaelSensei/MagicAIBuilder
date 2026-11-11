@@ -63,7 +63,6 @@ vi.mock(import("@/lib/db/deck-api"), () => ({
   updateCardMaybeboard: vi.fn().mockResolvedValue({}),
   updateCardZone: vi.fn().mockResolvedValue({}),
   removeAllCards: vi.fn().mockResolvedValue(undefined),
-  lookupCardCache: vi.fn().mockResolvedValue(null),
 }));
 
 vi.mock(import("@/hooks/useToast"), async (importOriginal) => {
