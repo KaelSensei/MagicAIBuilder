@@ -3,7 +3,7 @@
 > **Initiative:** I-31, proposed for the [roadmap](../roadmap.md) · **Status:** proposed · **Priority:** Next; Later for slice 11, norms placement, which waits for I-29's corpus statistics (marked 2026-11-10) · **Written 2026-11-09**
 > **Paid tier:** a candidate for [I-30](i30-business-model-and-paid-tier.md), rated unproven there: no willingness-to-pay data exists for probability analytics, and free tools already offer castability and paired swaps. Billing waits for I-30's decision gate and legal review.
 > **Research:** dated notes, not committed, so every external fact below links its own source. Legal points are research, not legal advice.
-> **Owns:** the player-facing lab on one list: card classification for simulation, the colour model, the solved keep table, commander and mana development, variants within one list, norms placement, run history, and the free/paid split of those outputs. **Does not own:** the seeded shuffler, interval maths, named mulligan policies and the two-snapshot verdict ([I-21](i21-reproducible-probability-bench.md)); the interactive playtest and its keep advice ([I-07](../roadmap.md#i-07-playtest-and-iteration)); bracket rules and the guide's shell tables ([I-28](i28-commander-deckbuilding-guide-by-bracket.md)); the deck corpus and its statistics ([I-29](i29-cross-site-deck-index.md)); pricing and billing (I-30).
+> **Owns:** the player-facing lab on one list: card classification for simulation, the colour model, the solved keep table, commander and mana development, variants within one list, norms placement, run history, and the free/paid split of those outputs. **Does not own:** the seeded shuffler, interval maths, named mulligan policies and the two-snapshot verdict ([I-21](i21-reproducible-probability-bench.md)); the interactive playtest and its keep advice ([I-07](i07-playtest-and-iteration.md)); bracket rules and the guide's shell tables ([I-28](i28-commander-deckbuilding-guide-by-bracket.md)); the deck corpus and its statistics ([I-29](i29-cross-site-deck-index.md)); pricing and billing (I-30).
 
 ## Overview
 
@@ -259,3 +259,507 @@ Slice 2 ships alone, and slice 1 ships as soon as I-21's shuffler exists. Slices
 21. Playgroup.gg, How many lands, updated 2026-11-08. https://playgroup.gg/commander/how-many-lands
 22. Scryfall, API documentation (use of data), read 2026-11-09. https://scryfall.com/docs/api
 23. Wizards of the Coast, Fan Content Policy, last updated 2017-11-15, read 2026-11-09. https://company.wizards.com/en/legal/fancontentpolicy
+
+## Feature contract (Full, 2026-11-11)
+
+The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
+
+### Summary and problem
+
+a player opens their own Commander list and gets a seeded, replayable analysis: the best keep rule for the first seven and the free seven, the chance the commander is cast by each turn, per-turn mana and colours, and swaps judged with an interval.
+
+### Goals
+
+- A player runs Deck Lab on their own list without an account and gets a keep table and commander and mana development, each figure with its interval, seed, sample size and engine version; a replay link reproduces the run byte for byte; and a variant's verdict says when the difference is not distinguishable.
+
+### Non-goals
+
+- Do not reverse a non-goal already named in the moved record or in the roadmap's strategic boundaries.
+- Do not invent a usage count, a win rate, or a score the moved record does not already cite from a named source.
+
+### Personas
+
+See the roadmap persona table. This initiative serves the rows that list its id.
+
+### User stories
+
+#### US-31-01
+
+As a player tuning one list, I want a keep table and a swap result I can rerun, so that a difference that is noise is labelled noise.
+
+#### US-31-02
+
+As a signed-out player, I want the guest rule in the rollout to be true, so that I am not shown a control that fails when I have no account.
+
+#### US-31-03
+
+As a player using a keyboard or a screen reader, I want the primary action to have a name and a visible focus, so that colour is not the only signal.
+
+### Acceptance criteria
+
+#### AC-31-01 Happy path
+
+Given a signed-in player and the English locale
+When the same seed and sample size reproduce the interval.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-31-02 Happy path
+
+Given a signed-in player and the English locale
+When a swap that is not distinguishable at that sample says so, and says the sample that would be needed.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-31-03 Happy path
+
+Given a signed-in player and the English locale
+When the run does not change the deck.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-31-04 Error and failure
+
+Given the action cannot finish
+When the player retries or leaves the screen
+Then the last confirmed state is unchanged, and the message is a catalogue string rather than a stack trace or a raw status code
+
+#### AC-31-05 Edge cases
+
+Given an empty deck, a missing price, or a field the record says may be absent
+When the screen renders
+Then the empty state says what is missing, and it does not show a zero in place of an unknown value
+
+#### AC-31-06 Guest and signed-in
+
+Given the rollout in this contract
+When a guest and a signed-in player open the same surface
+Then the rollout holds: Signed-in. A free allowance is I-30's decision. Guests do not run the lab. Flag off until a fixture reproduces.
+
+#### AC-31-07 Locales
+
+Given the ten catalogs
+When this feature adds a user-facing string
+Then The ten catalogs on disk are `en`, `fr`, `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` (`src/i18n/routing.ts`). Only `en` and `fr` are routed. The other eight stay at key parity with `en` and may reuse the English text until a person who speaks the language reviews them. A new string is not shipped in a routed locale as hard-coded English.
+
+#### AC-31-08 Accessibility
+
+Given a keyboard, a visible focus, and a screen reader
+When the player completes US-31-01 without a pointer
+Then every new control has an accessible name, focus returns on close, and a status uses a word or an icon as well as colour
+
+### UX flow and states
+
+The result is a table: inputs, interval, sample size, seed. A button reruns with the same inputs.
+
+- Empty: the screen says what is missing and what to do next.
+- Loading: a busy state that does not shift the layout when it ends.
+- Error: the catalogue message and a way to retry, without losing the last confirmed edit.
+
+### Data model and API
+
+Uses the seeded generator from the I-21 slices that move ahead of Later. Results are stored on the account, private. No public route.
+
+### Analytics and telemetry
+
+`lab_run_finished {kind: keep or swap, distinguishable: yes or no}`. Reserved for I-39. Not emitted before that store exists.
+
+The event is reserved for I-39's store. It is not emitted before that store exists. The row holds counts and enums only: no email, name, username, deck name, card name, list, search text or URL.
+
+### Rollout and feature flags
+
+Signed-in. A free allowance is I-30's decision. Guests do not run the lab. Flag off until a fixture reproduces.
+
+### Dependencies
+
+Hard waits are in the roadmap dependency table. Slice edges, where this file has a delivery-slice table, stay in that table and in `dependency-graph.md`.
+
+### Risks and mitigations
+
+- Shipping the surface before its wait is met: the roadmap sequence forbids the pick.
+- A string or a status that only some players can read: the locale and accessibility scenarios above fail the change.
+
+### Kill criteria
+
+None. This initiative is not in the Now band. Stop it if it would reverse a non-goal in the moved record.
+
+### Open questions
+
+Norms against other decks wait on I-29 and stay Later.
+
+### Sources
+
+- https://www.deckflow.gg/manabase
+- https://www.fetch-mtg.com/analyse
+- https://edhtuner.com/methodology
+- https://archidekt.com/news/9287631
+- https://tappedout.net/mtg-forum/site-updates/card-odds-gets-an-update/
+
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-31-101
+
+As a player, I want the product to port the research model into src/lib/deck-lab/, with parity tests against model.mjs and the guide's exact hypergeometric figures (slice 1)., so that a player opens their own Commander list and gets a seeded, replayable analysis: the best keep rule for the first seven and the free seven, the chance the commander is cast by each turn, per-turn mana and colours, and swaps judged with an interval.
+
+#### AC-31-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Port the research model into src/lib/deck-lab/, with parity tests against model.mjs and the guide's exact hypergeometric figures (slice 1).
+
+#### AC-31-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-31-102 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-31-102
+
+As a player, I want the product to classify each card for the simulation by a deterministic rule the player can see and override per deck., so that a player opens their own Commander list and gets a seeded, replayable analysis: the best keep rule for the first seven and the free seven, the chance the commander is cast by each turn, per-turn mana and colours, and swaps judged with an interval.
+
+#### AC-31-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Classify each card for the simulation by a deterministic rule the player can see and override per deck. No language model (slice 2).
+
+#### AC-31-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-31-105 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-31-103
+
+As a player, I want the product to run in web workers with progress and cancel, and add a colour model: pips matched to sources each turn, fetch lands, MDFCs and filter rocks (slices 3–4)., so that a player opens their own Commander list and gets a seeded, replayable analysis: the best keep rule for the first seven and the free seven, the chance the commander is cast by each turn, per-turn mana and colours, and swaps judged with an interval.
+
+#### AC-31-106 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Run in web workers with progress and cancel, and add a colour model: pips matched to sources each turn, fetch lands, MDFCs and filter rocks (slices 3–4).
+
+#### AC-31-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-31-108 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-31-104
+
+As a player, I want the product to report a cross-fitted keep table per mulligan stage, P(commander cast by turn), per-turn mana and colour percentiles, colour sources, castability per card and land drops, each with a 95% interval and its sample size (slice 5)., so that a player opens their own Commander list and gets a seeded, replayable analysis: the best keep rule for the first seven and the free seven, the chance the commander is cast by each turn, per-turn mana and colours, and swaps judged with an interval.
+
+#### AC-31-109 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Report a cross-fitted keep table per mulligan stage, P(commander cast by turn), per-turn mana and colour percentiles, colour sources, castability per card and land drops, each with a 95% interval and its sample size (slice 5).
+
+#### AC-31-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-31-111 Edge
+
+Given the same inputs as a previous run
+When the player runs it again
+Then the reported figures match the first run
+
+#### US-31-105
+
+As a player, I want the product to a Deck Lab page that runs signed out on a visible or pasted list, with classification review and a limits panel that is always visible (slice 6)., so that a player opens their own Commander list and gets a seeded, replayable analysis: the best keep rule for the first seven and the free seven, the chance the commander is cast by each turn, per-turn mana and colours, and swaps judged with an interval.
+
+#### AC-31-112 Happy path
+
+Given a signed-out visitor and a public deck
+When the player uses this behaviour
+Then the behaviour holds: A Deck Lab page that runs signed out on a visible or pasted list, with classification review and a limits panel that is always visible (slice 6).
+
+#### AC-31-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-31-114 Edge
+
+Given a list where one name does not resolve
+When the player confirms
+Then the unresolved name is shown first and nothing is written until they accept that list
+
+#### US-31-106
+
+As a player, I want the product to recorded runs and a replay link that names the engine version (slice 7)., so that a player opens their own Commander list and gets a seeded, replayable analysis: the best keep rule for the first seven and the free seven, the chance the commander is cast by each turn, per-turn mana and colours, and swaps judged with an interval.
+
+#### AC-31-115 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Recorded runs and a replay link that names the engine version (slice 7).
+
+#### AC-31-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-31-117 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-31-107
+
+As a player, I want the product to variants on common random numbers with the policy re-solved, Holm-corrected verdicts, and "not distinguishable at this sample size" with the sample that would be needed (slice 8)., so that a player opens their own Commander list and gets a seeded, replayable analysis: the best keep rule for the first seven and the free seven, the chance the commander is cast by each turn, per-turn mana and colours, and swaps judged with an interval.
+
+#### AC-31-118 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Variants on common random numbers with the policy re-solved, Holm-corrected verdicts, and "not distinguishable at this sample size" with the sample that would be needed (slice 8). A variant may change several lines at once, so that I-58's whole proposed land base can be checked as one variant (I-58 slice 13).
+
+#### AC-31-119 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-31-120 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-31-108
+
+As a player, I want the product to server runs, history across snapshots, and percentile placement within bracket × colour identity with n and withheld cells (slices 9–11)., so that a player opens their own Commander list and gets a seeded, replayable analysis: the best keep rule for the first seven and the free seven, the chance the commander is cast by each turn, per-turn mana and colours, and swaps judged with an interval.
+
+#### AC-31-121 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Server runs, history across snapshots, and percentile placement within bracket × colour identity with n and withheld cells (slices 9–11).
+
+#### AC-31-122 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-31-123 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+#### US-31-109
+
+As a player, I want the product to give I-07's playtest advice and I-28's opening-hand check the deck's own keep table when a run matches the list (slice 13)., so that a player opens their own Commander list and gets a seeded, replayable analysis: the best keep rule for the first seven and the free seven, the chance the commander is cast by each turn, per-turn mana and colours, and swaps judged with an interval.
+
+#### AC-31-124 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Give I-07's playtest advice and I-28's opening-hand check the deck's own keep table when a run matches the list (slice 13).
+
+#### AC-31-125 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-31-126 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-31-110
+
+As a player, I want the product to once a Deck Lab run matches the list, judge keep-drill calls against the deck's own cross-fitted keep table and show the margin of each disagreement (slice 14)., so that a player opens their own Commander list and gets a seeded, replayable analysis: the best keep rule for the first seven and the free seven, the chance the commander is cast by each turn, per-turn mana and colours, and swaps judged with an interval.
+
+#### AC-31-127 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Once a Deck Lab run matches the list, judge keep-drill calls against the deck's own cross-fitted keep table and show the margin of each disagreement (slice 14). The drill itself is I-07's; this needs slices 5 and 13.
+
+#### AC-31-128 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-31-129 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-31-111
+
+As a player, I want the product to a free exact-odds panel ahead of slice 1, needing none of I-21's slices (D-47)., so that a player opens their own Commander list and gets a seeded, replayable analysis: the best keep rule for the first seven and the free seven, the chance the commander is cast by each turn, per-turn mana and colours, and swaps judged with an interval.
+
+#### AC-31-130 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A free exact-odds panel ahead of slice 1, needing none of I-21's slices (D-47). It gives the chance to see at least one of, or all of, a card, a set of cards, a category or tag, or a Spellbook combo's pieces, by turns 1–10:
+
+#### AC-31-131 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-31-132 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-31-112
+
+As a player, I want the product to neighbour change from I-78, 2026-11-11: no new lab kind; the run's limits list (slice 5) names the cards I-78 classes as group hug or wheel, because the goldfish credits their mana and cards to the player alone., so that a player opens their own Commander list and gets a seeded, replayable analysis: the best keep rule for the first seven and the free seven, the chance the commander is cast by each turn, per-turn mana and colours, and swaps judged with an interval.
+
+#### AC-31-133 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Neighbour change from I-78, 2026-11-11: no new lab kind; the run's limits list (slice 5) names the cards I-78 classes as group hug or wheel, because the goldfish credits their mana and cards to the player alone.
+
+#### AC-31-134 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-31-135 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+### UX states for this feature
+
+The player-visible outcome is: a player opens their own Commander list and gets a seeded, replayable analysis: the best keep rule for the first seven and the free seven, the chance the commander is cast by each turn, per-turn mana and colours, and swaps judged with an interval.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
+
+### Record moved from the roadmap (2026-11-11)
+
+Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.
+
+## I-31: Deck Lab: Analysis Run On Your Own List
+
+**Spec:** [`specs/i31-deck-lab.md`](i31-deck-lab.md)
+
+**Outcome:** a player opens their own Commander list and gets a seeded, replayable analysis: the best keep rule for the first seven and the free seven, the chance the commander is cast by each turn, per-turn mana and colours, and swaps judged with an interval.
+
+**Status:** Next
+**Priority:** Next; Later for slice 11, norms placement, which waits for I-29's corpus statistics (marked 2026-11-10)
+**Impact / effort:** High / large
+**Depends on:** I-21 slices 1 (seeded shuffler), 3 (intervals), 5 (two-sample verdict) and 6 (worker runtime), which therefore move ahead of I-21's Later priority. Norms placement needs I-29's computed statistics and I-28 slice 2.
+
+The [opening-hands guide](../guides/commander-mulligans-curves-and-play-style.md) solved keep rules for eight archetypal shells and named "a keep table for the user's own list" as the most useful product output. Castability on the player's list is already free at [DeckFlow](https://www.deckflow.gg/manabase) and [Fetch](https://www.fetch-mtg.com/analyse), and [EDHTuner](https://edhtuner.com/methodology) runs paired, replayable swap tests for free. Among the roughly twenty tools checked, none solves the keep table for a given list, gives the commander's cast probability by turn, shows per-turn percentiles of mana and colours, re-solves the mulligan for each variant, or shows an interval and says when a difference is not distinguishable at the sample size. The research model in [`scripts/research/commander-opening-hands/`](../../scripts/research/commander-opening-hands/README.md) ran 36,000–65,000 games a second on one core of the development VPS; it has no colours, and nothing in `src/` imports it.
+
+### Scope
+
+- [ ] Port the research model into `src/lib/deck-lab/`, with parity tests against `model.mjs` and the guide's exact hypergeometric figures (slice 1).
+- [ ] Classify each card for the simulation by a deterministic rule the player can see and override per deck. No language model (slice 2).
+  - Route roles are a separate layer. `categorizeCard` (`src/lib/deck/categories.ts`) gives each card one label and, on 35 hand-picked route cards, labels no combat, drain, mill, equipment, combo or lock card `winCondition` (I-65 spec, logic re-checked on `origin/dev` at `72fbfc1`). [I-65](i65-how-this-deck-wins.md) adds multi-label route roles that never overwrite `category`; this slice keeps its lab kinds, and the engine supplies I-65's assembly odds (I-65 slice 13).
+- [ ] Run in web workers with progress and cancel, and add a colour model: pips matched to sources each turn, fetch lands, MDFCs and filter rocks (slices 3–4).
+- [ ] Report a cross-fitted keep table per mulligan stage, P(commander cast by turn), per-turn mana and colour percentiles, colour sources, castability per card and land drops, each with a 95% interval and its sample size (slice 5).
+- [ ] A Deck Lab page that runs signed out on a visible or pasted list, with classification review and a limits panel that is always visible (slice 6).
+- [ ] Recorded runs and a replay link that names the engine version (slice 7).
+- [ ] Variants on common random numbers with the policy re-solved, Holm-corrected verdicts, and "not distinguishable at this sample size" with the sample that would be needed (slice 8). A variant may change several lines at once, so that [I-58](i58-mana-base-builder.md)'s whole proposed land base can be checked as one variant (I-58 slice 13).
+- [ ] Server runs, history across snapshots, and percentile placement within bracket × colour identity with n and withheld cells (slices 9–11).
+- [ ] Give I-07's playtest advice and I-28's opening-hand check the deck's own keep table when a run matches the list (slice 13).
+- [ ] Once a Deck Lab run matches the list, judge keep-drill calls against the deck's own cross-fitted keep table and show the margin of each disagreement (slice 14). The drill itself is I-07's; this needs slices 5 and 13.
+- [ ] A free exact-odds panel ahead of slice 1, needing none of I-21's slices ([D-47](../owner-decisions.md#product-scope-and-non-goals)). It gives the chance to see at least one of, or all of, a card, a set of cards, a category or tag, or a Spellbook combo's pieces, by turns 1–10:
+  - the population comes from the deck (99, or 98 with a partner);
+  - it shows one figure per turn, with the formula named;
+  - the opening-seven figure says the free mulligan is not modelled and links I-07's advice.
+
+  It reuses `choose` in `src/lib/deck/turn-one.ts`. Archidekt ([news](https://archidekt.com/news/9287631), edited 2024-09-23), TappedOut ([update](https://tappedout.net/mtg-forum/site-updates/card-odds-gets-an-update/), 2024-01-31), TopDecked (13.0.5, 2025-11-13) and Moxfield (code, 2026-05-14) all offer one. Added 2026-11-11.
+
+- [ ] Neighbour change from [I-78](i78-what-this-deck-does-to-the-table.md), 2026-11-11: no new lab kind; the run's limits list (slice 5) names the cards I-78 classes as group hug or wheel, because the goldfish credits their mana and cards to the player alone.
+
+### Engineering enablers
+
+- The same run key gives a byte-identical result in a browser worker and in Node, with one worker or four. This is the initiative's acceptance test.
+- The hot path draws integers from I-21's seeded generator and avoids `Math.random`, `exp`, `log` and `pow`; the interactive playtest keeps `src/lib/crypto-random.ts`.
+- A mono-coloured deck gives the colourless model's result at the same seed.
+- `DeckCard` stores no mana production, and `src/lib/deck/mana-alignment.ts` says Scryfall's `produced_mana` "is not stored anywhere", so classification reads Oracle text until that field is stored.
+
+**Paid-tier angle:** rated unproven in I-30, because free tools already offer castability, swaps and replay. The default run, the replay link, a land ±1 pair and norms placement stay free. Candidates are custom swaps and more than two variants a run, large server-side samples, and full run history across snapshots (slice 12, blocked on I-30's decision).
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player tuning one list, I want a keep table and a swap result I can rerun, so that a difference that is noise is labelled noise.
+
+**Acceptance.**
+- The same seed and sample size reproduce the interval.
+- A swap that is not distinguishable at that sample says so, and says the sample that would be needed.
+- The run does not change the deck.
+
+**UX.** The result is a table: inputs, interval, sample size, seed. A button reruns with the same inputs.
+
+**Data and API.** Uses the seeded generator from the I-21 slices that move ahead of Later. Results are stored on the account, private. No public route.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `lab_run_finished {kind: keep or swap, distinguishable: yes or no}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Signed-in. A free allowance is I-30's decision. Guests do not run the lab. Flag off until a fixture reproduces.
+
+**Open questions.** Norms against other decks wait on I-29 and stay Later.
+
+### Definition of done
+
+A player runs Deck Lab on their own list without an account and gets a keep table and commander and mana development, each figure with its interval, seed, sample size and engine version; a replay link reproduces the run byte for byte; and a variant's verdict says when the difference is not distinguishable.
+
+---
+

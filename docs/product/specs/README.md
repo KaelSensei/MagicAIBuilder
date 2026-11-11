@@ -172,7 +172,7 @@ Two specs from an eighth pass on 2026-11-10, written the same way: dated researc
 
 ## Operations, AI quality and recovery — added 2026-11-10
 
-Three specs from a ninth pass on 2026-11-10, written the same way: dated research that is not committed, every external fact linked to its own source, and legal points as research, not legal advice. The roadmap places I-70 directly after [I-02](i02-checkable-ai-copilot.md), whose output it judges with I-02's own validator; I-71 directly after [I-05](../roadmap.md#i-05-production-safety), whose health route and shared store it builds on; and I-69 directly before [I-38](i38-trust-safety-and-user-rights.md) in [Trust, growth and the physical table](../roadmap.md#trust-growth-and-the-physical-table), as the operator side of moderation. [I-70](i70-ai-quality-bench-and-model-changes.md) replaces the "golden set" that [I-30](i30-business-model-and-paid-tier.md) slice 3 waited for, and [I-71](i71-speed-uptime-and-recovery.md) slice 12 gates I-30's first paid entitlements. The same pass's gap sweep added scope to existing initiatives and L-40 to L-48 to [`legal-questions.md`](../legal-questions.md).
+Three specs from a ninth pass on 2026-11-10, written the same way: dated research that is not committed, every external fact linked to its own source, and legal points as research, not legal advice. The roadmap places I-70 directly after [I-02](i02-checkable-ai-copilot.md), whose output it judges with I-02's own validator; I-71 directly after [I-05](i05-production-safety.md), whose health route and shared store it builds on; and I-69 directly before [I-38](i38-trust-safety-and-user-rights.md) in [Trust, growth and the physical table](../roadmap.md#trust-growth-and-the-physical-table), as the operator side of moderation. [I-70](i70-ai-quality-bench-and-model-changes.md) replaces the "golden set" that [I-30](i30-business-model-and-paid-tier.md) slice 3 waited for, and [I-71](i71-speed-uptime-and-recovery.md) slice 12 gates I-30's first paid entitlements. The same pass's gap sweep added scope to existing initiatives and L-40 to L-48 to [`legal-questions.md`](../legal-questions.md).
 
 | Spec                                                                             | Initiative | Status                            | The one-line reason it exists                                                                                                                                                                    |
 | -------------------------------------------------------------------------------- | ---------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -182,7 +182,7 @@ Three specs from a ninth pass on 2026-11-10, written the same way: dated researc
 
 ## Growth, releases, automation and search — added 2026-11-10
 
-Four specs from a tenth pass on 2026-11-10, written the same way: dated research that is not committed, every external fact linked to its own source, and legal points as research, not legal advice. The roadmap places I-72 directly after [I-39](i39-first-run-activation-and-measurement.md), whose events measure its loops; I-73 directly after [I-67](i67-one-card-data-pipeline.md), whose events feed its release calendar and whose gate it changes; I-74 directly after [I-71](i71-speed-uptime-and-recovery.md), with the engineering work; and I-75 directly after [I-08](../roadmap.md#i-08-share-compare-and-learn), whose public decks it searches. [I-72](i72-growth-loops-referrals-creators-and-return.md) takes I-30's referral credit, I-36's creator kit and I-34's publishing calendar; [I-75](i75-finding-public-decks.md) re-scopes [I-29](i29-cross-site-deck-index.md) slice 4 to external decks behind its query contract. Three of their proposals would reverse a non-goal or a shipped behaviour, so they are owner decisions D-80 to D-84 in [`owner-decisions.md`](../owner-decisions.md), and L-49 and L-50 join [`legal-questions.md`](../legal-questions.md).
+Four specs from a tenth pass on 2026-11-10, written the same way: dated research that is not committed, every external fact linked to its own source, and legal points as research, not legal advice. The roadmap places I-72 directly after [I-39](i39-first-run-activation-and-measurement.md), whose events measure its loops; I-73 directly after [I-67](i67-one-card-data-pipeline.md), whose events feed its release calendar and whose gate it changes; I-74 directly after [I-71](i71-speed-uptime-and-recovery.md), with the engineering work; and I-75 directly after [I-08](i08-share-compare-and-learn.md), whose public decks it searches. [I-72](i72-growth-loops-referrals-creators-and-return.md) takes I-30's referral credit, I-36's creator kit and I-34's publishing calendar; [I-75](i75-finding-public-decks.md) re-scopes [I-29](i29-cross-site-deck-index.md) slice 4 to external decks behind its query contract. Three of their proposals would reverse a non-goal or a shipped behaviour, so they are owner decisions D-80 to D-84 in [`owner-decisions.md`](../owner-decisions.md), and L-49 and L-50 join [`legal-questions.md`](../legal-questions.md).
 
 | Spec                                                                                              | Initiative | Status                                                                    | The one-line reason it exists                                                                                                                                                                   |
 | ------------------------------------------------------------------------------------------------- | ---------- | ------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -193,7 +193,7 @@ Four specs from a tenth pass on 2026-11-10, written the same way: dated research
 
 ## Deckbuilding across card games — added 2026-11-11
 
-Four specs from an eleventh pass on 2026-11-11, written the same way: dated research that is not committed, every external fact linked to its own source, and legal points as research, not legal advice. The pass read deckbuilders for other card games as well as Magic's; its review is section 12 of [`competitive-landscape.md`](../competitive-landscape.md#12-deckbuilding-across-card-games-2026-11-11). The roadmap places I-77 directly after [I-03](../roadmap.md#i-03-trustworthy-deck-feedback), whose score it makes auditable; I-79 directly after [I-15](i15-rule-zero-sheets-and-pod-profiles.md), whose comparison it reuses; I-76 directly after [I-58](i58-mana-base-builder.md), whose reviewed change set it applies through; and I-78 directly after [I-65](i65-how-this-deck-wins.md), whose definition format it reuses. [I-58](i58-mana-base-builder.md) gains slice 16, the change set both apply through, and [I-16](i16-decks-buildable-from-a-collection.md)'s non-goal on generating a full list from the collection stands: I-76 fills a deck the player started. Owner decisions D-88 to D-95 join [`owner-decisions.md`](../owner-decisions.md), and L-51 and L-52 join [`legal-questions.md`](../legal-questions.md).
+Four specs from an eleventh pass on 2026-11-11, written the same way: dated research that is not committed, every external fact linked to its own source, and legal points as research, not legal advice. The pass read deckbuilders for other card games as well as Magic's; its review is section 12 of [`competitive-landscape.md`](../competitive-landscape.md#12-deckbuilding-across-card-games-2026-11-11). The roadmap places I-77 directly after [I-03](i03-trustworthy-deck-feedback.md), whose score it makes auditable; I-79 directly after [I-15](i15-rule-zero-sheets-and-pod-profiles.md), whose comparison it reuses; I-76 directly after [I-58](i58-mana-base-builder.md), whose reviewed change set it applies through; and I-78 directly after [I-65](i65-how-this-deck-wins.md), whose definition format it reuses. [I-58](i58-mana-base-builder.md) gains slice 16, the change set both apply through, and [I-16](i16-decks-buildable-from-a-collection.md)'s non-goal on generating a full list from the collection stands: I-76 fills a deck the player started. Owner decisions D-88 to D-95 join [`owner-decisions.md`](../owner-decisions.md), and L-51 and L-52 join [`legal-questions.md`](../legal-questions.md).
 
 | Spec                                                                                  | Initiative | Status                                                      | The one-line reason it exists                                                                                                                                               |
 | ------------------------------------------------------------------------------------- | ---------- | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -205,3 +205,43 @@ Four specs from an eleventh pass on 2026-11-11, written the same way: dated rese
 ## Discipline
 
 A spec is a plan, not a record. It does not mark anything shipped — the roadmap's `Status` and its scope checkboxes remain the only source of truth for what exists. Competitor rows are claims read from public pages on a stated date, not evidence; revalidate before a row justifies implementation.
+
+
+## Feature contracts (2026-11-11)
+
+The roadmap is an index. Each initiative's detail lives in one file in this folder. Files that already had a slice table keep it; the player contract and the roadmap text that used to sit under the initiative were appended, under "Feature contract" and "Record moved from the roadmap". Initiatives that had no file now have one. Those new files have no delivery-slice table, so the dependency generator does not invent slices for them.
+
+`_TEMPLATE.md` is the shape of a new file. Every initiative is **Full**, including Later and Parked. The moved roadmap text is kept in full, and each scope line also has a story, a happy path, a failure, and an edge case.
+
+New files this pass:
+
+- [`i01-deck-editor-workflow.md`](i01-deck-editor-workflow.md)
+- [`i03-trustworthy-deck-feedback.md`](i03-trustworthy-deck-feedback.md)
+- [`i04-ux-stability-and-visual-quality.md`](i04-ux-stability-and-visual-quality.md)
+- [`i05-production-safety.md`](i05-production-safety.md)
+- [`i06-collection-and-purchase-planning.md`](i06-collection-and-purchase-planning.md)
+- [`i07-playtest-and-iteration.md`](i07-playtest-and-iteration.md)
+- [`i08-share-compare-and-learn.md`](i08-share-compare-and-learn.md)
+- [`i09-meta-and-evidence.md`](i09-meta-and-evidence.md)
+- [`i10-interoperability-and-integrations.md`](i10-interoperability-and-integrations.md)
+- [`i11-localization-and-regional-experience.md`](i11-localization-and-regional-experience.md)
+- [`i12-local-ai.md`](i12-local-ai.md)
+- [`i80-print-shop-file.md`](i80-print-shop-file.md)
+- [`i81-a-review-of-the-goldfish-sessions-you-recorded.md`](i81-a-review-of-the-goldfish-sessions-you-recorded.md)
+- [`i82-what-changed-since-the-last-session.md`](i82-what-changed-since-the-last-session.md)
+- [`i83-a-primer-draft-filled-from-the-decks-own-reports.md`](i83-a-primer-draft-filled-from-the-decks-own-reports.md)
+- [`i84-a-reprint-watch-for-cards-you-own.md`](i84-a-reprint-watch-for-cards-you-own.md)
+- [`i85-player-supplied-art-that-never-replaces-the-card.md`](i85-player-supplied-art-that-never-replaces-the-card.md)
+- [`i86-a-data-as-of-line-on-every-deck.md`](i86-a-data-as-of-line-on-every-deck.md)
+- [`i87-goldfish-the-deck-you-downloaded.md`](i87-goldfish-the-deck-you-downloaded.md)
+- [`i88-a-pre-game-script-that-fills-the-rule-0-sheet.md`](i88-a-pre-game-script-that-fills-the-rule-0-sheet.md)
+- [`i89-the-condition-of-a-physical-copy.md`](i89-the-condition-of-a-physical-copy.md)
+- [`i90-a-cardsphere-file-you-upload-yourself.md`](i90-a-cardsphere-file-you-upload-yourself.md)
+- [`i91-an-explainer-that-cannot-change-the-deck.md`](i91-an-explainer-that-cannot-change-the-deck.md)
+- [`i92-public-deck-pages-described-with-stored-fields-only.md`](i92-public-deck-pages-described-with-stored-fields-only.md)
+- [`i93-a-reading-mode-for-the-table.md`](i93-a-reading-mode-for-the-table.md)
+- [`i94-four-lists-pinned-for-one-night.md`](i94-four-lists-pinned-for-one-night.md)
+- [`i95-a-changelog-for-the-public-read-api.md`](i95-a-changelog-for-the-public-read-api.md)
+- [`i96-two-labelled-prices-and-no-conversion.md`](i96-two-labelled-prices-and-no-conversion.md)
+- [`i97-the-chance-one-card-is-in-your-hand.md`](i97-the-chance-one-card-is-in-your-hand.md)
+- [`i98-a-cedh-checklist-that-does-not-claim-a-win-rate.md`](i98-a-cedh-checklist-that-does-not-claim-a-win-rate.md)

@@ -2,7 +2,7 @@
 
 > **Initiative:** I-64, proposed for the [roadmap](../roadmap.md) · **Status:** Proposed · **Priority:** Next for the content model, the glossary, the help pages, the info button, the first articles in English and French, help search and the path into I-52's report (slices 0 to 9), and for the subscription articles, which ship with I-30's billing (slice 13); Later for the rest; slice 15 waits on the owner · **Paid:** never · **Written 2026-11-10**
 > **Research:** one dated note, not committed. Every external fact links its own source in [Sources](#sources). Legal points are research, not legal advice, and go to the lawyer list in [I-30 requirement 7.2](i30-business-model-and-paid-tier.md#7-the-legal-gate) through [I-38](i38-trust-safety-and-user-rights.md)'s slice 0.
-> **Owns:** the help centre (`/help`), its articles and the tests that fail when an article outlives the interface it describes; the shared glossary and its registry; the info button (`HelpTip`) and the registry that maps each statistic to its definition; "what's this" panels and the help link in every empty state; help search and the help row in card search; the "still stuck" path into I-52's report; the rule that no model writes a support answer. **Does not own:** rules text, rulings, rule addresses and keyword links ([I-47](i47-rules-answers-for-this-deck.md)); explanations attached to warnings ([I-27](i27-learning-while-building.md)); bracket guidance, bracket names and `BracketRule` ([I-28](i28-commander-deckbuilding-guide-by-bracket.md)); metric methods, `/methods` and its anchors ([I-34](i34-commander-data-reports.md)); the first-run panel, first-run empty states, sample decks and the event store ([I-39](i39-first-run-activation-and-measurement.md)); the bug report, release notes and status page ([I-52](i52-feedback-loop-players-can-see.md)); legal pages, the DSA contact page and privacy text ([I-38](i38-trust-safety-and-user-rights.md)); the AI-use disclosure page ([I-02](i02-checkable-ai-copilot.md)); the subscription lifecycle ([I-30](i30-business-model-and-paid-tier.md)); the choice of a third locale ([I-25](i25-a-third-locale.md)); importers ([I-10](../roadmap.md#i-10-interoperability-and-integrations)).
+> **Owns:** the help centre (`/help`), its articles and the tests that fail when an article outlives the interface it describes; the shared glossary and its registry; the info button (`HelpTip`) and the registry that maps each statistic to its definition; "what's this" panels and the help link in every empty state; help search and the help row in card search; the "still stuck" path into I-52's report; the rule that no model writes a support answer. **Does not own:** rules text, rulings, rule addresses and keyword links ([I-47](i47-rules-answers-for-this-deck.md)); explanations attached to warnings ([I-27](i27-learning-while-building.md)); bracket guidance, bracket names and `BracketRule` ([I-28](i28-commander-deckbuilding-guide-by-bracket.md)); metric methods, `/methods` and its anchors ([I-34](i34-commander-data-reports.md)); the first-run panel, first-run empty states, sample decks and the event store ([I-39](i39-first-run-activation-and-measurement.md)); the bug report, release notes and status page ([I-52](i52-feedback-loop-players-can-see.md)); legal pages, the DSA contact page and privacy text ([I-38](i38-trust-safety-and-user-rights.md)); the AI-use disclosure page ([I-02](i02-checkable-ai-copilot.md)); the subscription lifecycle ([I-30](i30-business-model-and-paid-tier.md)); the choice of a third locale ([I-25](i25-a-third-locale.md)); importers ([I-10](i10-interoperability-and-integrations.md)).
 
 ## Overview
 
@@ -75,7 +75,7 @@ Three findings:
 
 **French practice.** Microsoft's French (France) style guide addresses the user as "vous", puts a non-breaking space before `; ! : ?` and inside « », and prefers wording that avoids gendered forms [20]. The loi Toubon makes French compulsory in "la désignation, l'offre, la présentation, le mode d'emploi ou d'utilisation" of a product or service [21]. Whether help articles for a paid service count as its "mode d'emploi" is a lawyer question (research, not legal advice).
 
-**Why no answering chatbot.** In February 2024 a Canadian tribunal held Air Canada liable for its website chatbot's wrong answer on bereavement fares. It rejected the argument that the chatbot was "a separate legal entity responsible for its own actions", and found that the airline "failed to take reasonable care to ensure the accuracy of its chatbot". Air Canada had argued that the correct policy sat on a page the chatbot's answer linked [22]. A link beside a wrong answer did not cure it. [I-38](i38-trust-safety-and-user-rights.md) requirement 1.2 (line 58) already says users reach "a person, not only a bot". On r/EDH, an undisclosed model is a reason to dismiss a tool ([roadmap](../roadmap.md#i-02-ai-deck-copilot)).
+**Why no answering chatbot.** In February 2024 a Canadian tribunal held Air Canada liable for its website chatbot's wrong answer on bereavement fares. It rejected the argument that the chatbot was "a separate legal entity responsible for its own actions", and found that the airline "failed to take reasonable care to ensure the accuracy of its chatbot". Air Canada had argued that the correct policy sat on a page the chatbot's answer linked [22]. A link beside a wrong answer did not cure it. [I-38](i38-trust-safety-and-user-rights.md) requirement 1.2 (line 58) already says users reach "a person, not only a bot". On r/EDH, an undisclosed model is a reason to dismiss a tool ([roadmap](i02-checkable-ai-copilot.md)).
 
 ## Current state in this codebase
 
@@ -130,7 +130,7 @@ Verified on `dev` at `72fbfc1` on 2026-11-10.
 4.2 Its panel shows the term's short definition, its basis, and "Read more" to the article or "How it is computed" to the I-34 anchor. It loads no data when opened, so it also works in I-19's offline view.
 4.3 A registry, `Record<StatId, Target>`, maps every statistic the product shows to a glossary term or a methods anchor. A test fails when a registered statistic renders without a `HelpTip` with a valid target. The first set covers `BracketIndicator`, `DeckStats`, `ManaCurve`, `CollectionStatsPanel`, playtest evidence and the combo panel; I-28's check and [I-31](i31-deck-lab.md) add theirs.
 4.4 `CardRoleExplanation` moves to `HelpTip`.
-4.5 **No new informational `title`.** A test counts `title=` props on non-frame elements and fails when the count grows. Existing ones that carry information become a `HelpTip` or visible text; those that repeat a visible label are removed. This works with [I-24](../roadmap.md#i-24-decks-a-screen-reader-can-play-from)'s accessibility bundle 3.
+4.5 **No new informational `title`.** A test counts `title=` props on non-frame elements and fails when the count grows. Existing ones that carry information become a `HelpTip` or visible text; those that repeat a visible label are removed. This works with [I-24](i24-decks-a-screen-reader-can-play-from.md)'s accessibility bundle 3.
 
 ### 5. Empty states and "what's this" panels
 
@@ -272,3 +272,452 @@ All read on 2026-11-10 unless stated.
 20. Microsoft, [French (France) Localization Style Guide](https://download.microsoft.com/download/c/7/9/c7921dbd-4531-4a4e-8490-e4656d739f3d/fra-fra-StyleGuide.pdf), undated; its inclusive-language section cites a Microsoft France position of September 2022.
 21. [Loi n° 94-665 du 4 août 1994 relative à l'emploi de la langue française](https://www.legifrance.gouv.fr/loda/id/JORFTEXT000000349929), art. 2, Légifrance.
 22. WeirFoulds LLP, ["Moffatt v Air Canada: Bot Betrayal and Negligent Misrepresentation"](https://www.weirfoulds.com/moffatt-v-air-canada-bot-betrayal-and-negligent-misrepresentation), 2024-03-06, on _Moffatt v. Air Canada_, 2024 BCCRT 149 ([CanLII](https://www.canlii.org/en/bc/bccrt/doc/2024/2024bccrt149/2024bccrt149.html), which answered HTTP 403). The decision date, 2024-02-14, comes from search results, not from the decision itself.
+
+## Feature contract (Full, 2026-11-11)
+
+The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
+
+### Summary and problem
+
+a player who wonders what "Game Changer", "2 owned · 1 proxy · 3 missing" or "free: new seven" means presses an "i" button beside it, or opens a help centre in English or French, and reads one reviewed definition. An article that outlives the interface it describes fails a test, and a player whom help does not answer reaches I-52's report, never a model.
+
+### Goals
+
+- A signed-out visitor opens `/fr/help`, finds "GC" through search and reads the Game Changer definition that the bracket indicator's info button shows; a pull request that renames a label an article quotes fails until the article follows; and an article's "Still stuck?" opens I-52's report with the article attached, with no model writing a word.
+
+### Non-goals
+
+- Do not reverse a non-goal already named in the moved record or in the roadmap's strategic boundaries.
+- Do not invent a usage count, a win rate, or a score the moved record does not already cite from a named source.
+
+### Personas
+
+See the roadmap persona table. This initiative serves the rows that list its id.
+
+### User stories
+
+#### US-64-01
+
+As a player stuck in the editor, I want a short article that matches the screen I am on, so that I do not have to write to the owner.
+
+#### US-64-02
+
+As a signed-out player, I want the guest rule in the rollout to be true, so that I am not shown a control that fails when I have no account.
+
+#### US-64-03
+
+As a player using a keyboard or a screen reader, I want the primary action to have a name and a visible focus, so that colour is not the only signal.
+
+### Acceptance criteria
+
+#### AC-64-01 Happy path
+
+Given a signed-in player and the English locale
+When an article's controls exist in the interface. A renamed control fails the article's check.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-64-02 Happy path
+
+Given a signed-in player and the English locale
+When the first articles exist in English and French.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-64-03 Happy path
+
+Given a signed-in player and the English locale
+When a dead end offers the bug report, not a claim that the problem was already sent.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-64-04 Error and failure
+
+Given the action cannot finish
+When the player retries or leaves the screen
+Then the last confirmed state is unchanged, and the message is a catalogue string rather than a stack trace or a raw status code
+
+#### AC-64-05 Edge cases
+
+Given an empty deck, a missing price, or a field the record says may be absent
+When the screen renders
+Then the empty state says what is missing, and it does not show a zero in place of an unknown value
+
+#### AC-64-06 Guest and signed-in
+
+Given the rollout in this contract
+When a guest and a signed-in player open the same surface
+Then the rollout holds: Public, signed-out. No flag. A model that only picks article ids stays Later and off.
+
+#### AC-64-07 Locales
+
+Given the ten catalogs
+When this feature adds a user-facing string
+Then The ten catalogs on disk are `en`, `fr`, `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` (`src/i18n/routing.ts`). Only `en` and `fr` are routed. The other eight stay at key parity with `en` and may reuse the English text until a person who speaks the language reviews them. A new string is not shipped in a routed locale as hard-coded English.
+
+#### AC-64-08 Accessibility
+
+Given a keyboard, a visible focus, and a screen reader
+When the player completes US-64-01 without a pointer
+Then every new control has an accessible name, focus returns on close, and a status uses a word or an icon as well as colour
+
+### UX flow and states
+
+The help control is an info button on the surface, opening the article. Search is over titles and headings.
+
+- Empty: the screen says what is missing and what to do next.
+- Loading: a busy state that does not shift the layout when it ends.
+- Error: the catalogue message and a way to retry, without losing the last confirmed edit.
+
+### Data model and API
+
+Authored content through the pipeline this initiative owns. No chatbot. The old user guide is retired rather than left to contradict the product.
+
+### Analytics and telemetry
+
+`help_opened {found: yes or no}`. Reserved for I-39. Not emitted before that store exists.
+
+The event is reserved for I-39's store. It is not emitted before that store exists. The row holds counts and enums only: no email, name, username, deck name, card name, list, search text or URL.
+
+### Rollout and feature flags
+
+Public, signed-out. No flag. A model that only picks article ids stays Later and off.
+
+### Dependencies
+
+Hard waits are in the roadmap dependency table. Slice edges, where this file has a delivery-slice table, stay in that table and in `dependency-graph.md`.
+
+### Risks and mitigations
+
+- Shipping the surface before its wait is met: the roadmap sequence forbids the pick.
+- A string or a status that only some players can read: the locale and accessibility scenarios above fail the change.
+
+### Kill criteria
+
+None. This initiative is not in the Now band. Stop it if it would reverse a non-goal in the moved record.
+
+### Open questions
+
+Who writes the French articles is open. Slice 6 does not start without a reviewer.
+
+### Sources
+
+- https://doi.org/10.1287/isre.1110.0390
+- https://edhrec.com/faq
+- https://www.weirfoulds.com/moffatt-v-air-canada-bot-betrayal-and-negligent-misrepresentation
+
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-64-101
+
+As a player, I want the product to slice 0, no code: who writes and reviews each locale; the lawyer questions join I-30 requirement 7.2 through I-38 slice 0., so that a player who wonders what "Game Changer", "2 owned · 1 proxy · 3 missing" or "free: new seven" means presses an "i" button beside it, or opens a help centre in English or French, and reads one reviewed definition. An article that outlives the interface it describes fails a test, and a player whom help does not answer reaches I-52's report, never a model.
+
+#### AC-64-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Slice 0, no code: who writes and reviews each locale; the lawyer questions join I-30 requirement 7.2 through I-38 slice 0.
+
+#### AC-64-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-64-102 Edge
+
+Given the French locale
+When the new controls render
+Then they come from the French catalogue and are not hard-coded English
+
+#### US-64-102
+
+As a player, I want the product to a content model: MDX articles under src/content/help/<slug>/ with a validated meta.ts, and <Ui>, <Route> and <Anchor> components., so that a player who wonders what "Game Changer", "2 owned · 1 proxy · 3 missing" or "free: new seven" means presses an "i" button beside it, or opens a help centre in English or French, and reads one reviewed definition. An article that outlives the interface it describes fails a test, and a player whom help does not answer reaches I-52's report, never a model.
+
+#### AC-64-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A content model: MDX articles under src/content/help/<slug>/ with a validated meta.ts, and <Ui>, <Route> and <Anchor> components. A test fails, naming the article, when a quoted key, route or anchor disappears or a quoted label changes after its review (slice 1). One MDX pipeline serves I-28's guide and I-68's style guides too. Single owner decided 2026-11-10 (coordinator call, the owner may override): I-64 slice 1; I-28 slice 3 and I-68 slice 1 consume it.
+
+#### AC-64-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-64-105 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-64-103
+
+As a player, I want the product to one glossary registry rendered through <Term>, with /help/glossary and the first terms players argue about (slice 2)., so that a player who wonders what "Game Changer", "2 owned · 1 proxy · 3 missing" or "free: new seven" means presses an "i" button beside it, or opens a help centre in English or French, and reads one reviewed definition. An article that outlives the interface it describes fails a test, and a player whom help does not answer reaches I-52's report, never a model.
+
+#### AC-64-106 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: One glossary registry rendered through <Term>, with /help/glossary and the first terms players argue about (slice 2). Bracket terms take their names from I-28's BracketRule, game terms cite I-47's rule addresses, and metrics link I-34's /methods.
+
+#### AC-64-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-64-108 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+#### US-64-104
+
+As a player, I want the product to public /help and article pages with a helpful counter, and a "Help" entry in the header and both footers, in the same order relative to "Report a problem" (slice 3)., so that a player who wonders what "Game Changer", "2 owned · 1 proxy · 3 missing" or "free: new seven" means presses an "i" button beside it, or opens a help centre in English or French, and reads one reviewed definition. An article that outlives the interface it describes fails a test, and a player whom help does not answer reaches I-52's report, never a model.
+
+#### AC-64-109 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Public /help and article pages with a helpful counter, and a "Help" entry in the header and both footers, in the same order relative to "Report a problem" (slice 3).
+
+#### AC-64-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-64-111 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-64-105
+
+As a player, I want the product to helpTip, an "i" button that opens on click, Enter or Space, closes on Escape and never opens on hover alone, and a registry that maps every statistic to its definition, with a test that fails when one renders without it (slice 4)., so that a player who wonders what "Game Changer", "2 owned · 1 proxy · 3 missing" or "free: new seven" means presses an "i" button beside it, or opens a help centre in English or French, and reads one reviewed definition. An article that outlives the interface it describes fails a test, and a player whom help does not answer reaches I-52's report, never a model.
+
+#### AC-64-112 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: HelpTip, an "i" button that opens on click, Enter or Space, closes on Escape and never opens on hover alone, and a registry that maps every statistic to its definition, with a test that fails when one renders without it (slice 4). Today @radix-ui/react-tooltip is installed and imported nowhere, 43 files carry 89 title= props, and DeckStats, BracketIndicator, ManaCurve and CollectionStatsPanel link to no definition.
+
+#### AC-64-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-64-114 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+#### US-64-106
+
+As a player, I want the product to the first English articles, from getting started to troubleshooting, and the retirement of docs/product/user-guide.md (slice 5)., so that a player who wonders what "Game Changer", "2 owned · 1 proxy · 3 missing" or "free: new seven" means presses an "i" button beside it, or opens a help centre in English or French, and reads one reviewed definition. An article that outlives the interface it describes fails a test, and a player whom help does not answer reaches I-52's report, never a model.
+
+#### AC-64-115 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: The first English articles, from getting started to troubleshooting, and the retirement of docs/product/user-guide.md (slice 5). Checked on origin/dev at 72fbfc1: the guide says "Last updated: 2026-04-06", describes "ARCHITECT" and "RECRUIT" glyphs that appear nowhere in src/, and gives a "Bracket score (1–4)". Its verified sections become articles and the file becomes a link to /help; this roadmap does not edit it in the meantime.
+
+#### AC-64-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-64-117 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+#### US-64-107
+
+As a player, I want the product to bracket 1 named once., so that a player who wonders what "Game Changer", "2 owned · 1 proxy · 3 missing" or "free: new seven" means presses an "i" button beside it, or opens a help centre in English or French, and reads one reviewed definition. An article that outlives the interface it describes fails a test, and a player whom help does not answer reaches I-52's report, never a model.
+
+#### AC-64-118 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Bracket 1 named once. BracketIndicator.tsx shows "Casual" from BRACKET_DEFINITIONS (src/lib/constants/brackets.ts), in its label and its title, while the wizard's target-bracket picker shows "Exhibition" (src/messages/en/deck.json), checked on origin/dev at 72fbfc1. I-28's open bracket-definitions item owns the fix; slice 2's bracket terms wait for it, and slice 4's tip on the indicator reads the corrected name.
+
+#### AC-64-119 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-64-120 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+#### US-64-108
+
+As a player, I want the product to the French review, with a typography lint and "Disponible en anglais" entries for articles not yet reviewed (slice 6); help search from a build-time index that folds accents and expands aliases such as "GC", with searches that found nothing counted per week and deleted after 90 days (slice 7); a help link in every empty state and dismissible "what's this" panels, with no tour (slice 8); and "Still stuck? Report a problem" into I-52's form with the article attached (slice 9)., so that a player who wonders what "Game Changer", "2 owned · 1 proxy · 3 missing" or "free: new seven" means presses an "i" button beside it, or opens a help centre in English or French, and reads one reviewed definition. An article that outlives the interface it describes fails a test, and a player whom help does not answer reaches I-52's report, never a model.
+
+#### AC-64-121 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: The French review, with a typography lint and "Disponible en anglais" entries for articles not yet reviewed (slice 6); help search from a build-time index that folds accents and expands aliases such as "GC", with searches that found nothing counted per week and deleted after 90 days (slice 7); a help link in every empty state and dismissible "what's this" panels, with no tour (slice 8); and "Still stuck? Report a problem" into I-52's form with the article attached (slice 9).
+
+#### AC-64-122 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-64-123 Edge
+
+Given the account or the cache this behaviour changes
+When the player signs out or the deletion finishes
+Then the next request does not still show the private data
+
+#### US-64-109
+
+As a player, I want the product to subscription articles and a test that maps every I-30 entitlement to an article, in the same release as I-30's billing (slice 13)., so that a player who wonders what "Game Changer", "2 owned · 1 proxy · 3 missing" or "free: new seven" means presses an "i" button beside it, or opens a help centre in English or French, and reads one reviewed definition. An article that outlives the interface it describes fails a test, and a player whom help does not answer reaches I-52's report, never a model.
+
+#### AC-64-124 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Subscription articles and a test that maps every I-30 entitlement to an article, in the same release as I-30's billing (slice 13).
+
+#### AC-64-125 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-64-126 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-64-110
+
+As a player, I want the product to later: a help row above builder card search results (slice 10), the title= ratchet (slice 11), the owner's measurement view (slice 12) and glossary links from I-28, I-47 and I-27 (slice 14)., so that a player who wonders what "Game Changer", "2 owned · 1 proxy · 3 missing" or "free: new seven" means presses an "i" button beside it, or opens a help centre in English or French, and reads one reviewed definition. An article that outlives the interface it describes fails a test, and a player whom help does not answer reaches I-52's report, never a model.
+
+#### AC-64-127 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Later: a help row above builder card search results (slice 10), the title= ratchet (slice 11), the owner's measurement view (slice 12) and glossary links from I-28, I-47 and I-27 (slice 14). Only if the owner decides: a model that maps a question to article identifiers and writes nothing (slice 15).
+
+#### AC-64-128 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-64-129 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+### UX states for this feature
+
+The player-visible outcome is: a player who wonders what "Game Changer", "2 owned · 1 proxy · 3 missing" or "free: new seven" means presses an "i" button beside it, or opens a help centre in English or French, and reads one reviewed definition. An article that outlives the interface it describes fails a test, and a player whom help does not answer reaches I-52's report, never a model.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
+
+### Record moved from the roadmap (2026-11-11)
+
+Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.
+
+## I-64: A Help Centre And In-Product Guidance
+
+**Spec:** [`specs/i64-help-centre-and-guidance.md`](i64-help-centre-and-guidance.md)
+
+**Outcome:** a player who wonders what "Game Changer", "2 owned · 1 proxy · 3 missing" or "free: new seven" means presses an "i" button beside it, or opens a help centre in English or French, and reads one reviewed definition. An article that outlives the interface it describes fails a test, and a player whom help does not answer reaches I-52's report, never a model.
+
+**Status:** Next
+**Priority:** Next for slices 0 to 9, and for slice 13, which ships with I-30's billing; Later for the rest; slice 15 waits for the owner. Never paid
+**Impact / effort:** Medium / medium
+**Depends on:** nothing for slices 1 and 3; the owner's choice of writers and reviewers for slice 6; I-28 slices 1 and 2 for bracket names in the glossary (slice 2); I-39 slice 5 for the first-run surfaces (slice 8); I-52 slice 3 for the report (slice 9); I-30 slices 7 and 8 for slice 13; I-28 slice 4, I-47 slice 2 and I-27 slice 1 for glossary links (slice 14); I-30 slice 5's AI-use disclosure page (re-pointed 2026-11-10) and the owner's decision for slice 15.
+
+None of the 16 page routes is a help, FAQ, glossary or about page, and the product names Bracket 1 two ways. I-30's case needs about 1,200 to 1,800 subscribers. On the spec's assumptions, if 0.5 to 1% of 30,000 to 60,000 active accounts wrote once a month, the owner would spend 25 to 100 hours a month answering. Self-service helps only when the answer is clear and easy to find: in a field study, web self-service cut calls about "unambiguous and easily retrievable" information by 29% and raised calls overall by 14% ([Kumar and Telang, 2012](https://doi.org/10.1287/isre.1110.0390)). Archidekt and EDHREC publish one FAQ page each, and no product read links a figure on screen to its definition. EDHREC's FAQ says it "does not under any circumstances approve of or publish AI-generated articles" ([FAQ](https://edhrec.com/faq)), and in 2024 a Canadian tribunal held Air Canada liable for its chatbot's wrong answer, although the answer linked the correct policy ([WeirFoulds](https://www.weirfoulds.com/moffatt-v-air-canada-bot-betrayal-and-negligent-misrepresentation)). So articles are MDX inside the app, quoting interface labels through the message catalogue, and no model writes an answer. Fumadocs needs Next.js 16, and the app runs 15.5.28.
+
+### Scope
+
+- [ ] Slice 0, no code: who writes and reviews each locale; the lawyer questions join I-30 requirement 7.2 through I-38 slice 0.
+- [ ] A content model: MDX articles under `src/content/help/<slug>/` with a validated `meta.ts`, and `<Ui>`, `<Route>` and `<Anchor>` components. A test fails, naming the article, when a quoted key, route or anchor disappears or a quoted label changes after its review (slice 1). One MDX pipeline serves I-28's guide and I-68's style guides too. Single owner decided 2026-11-10 (coordinator call, the owner may override): I-64 slice 1; I-28 slice 3 and I-68 slice 1 consume it.
+- [ ] One glossary registry rendered through `<Term>`, with `/help/glossary` and the first terms players argue about (slice 2). Bracket terms take their names from I-28's `BracketRule`, game terms cite I-47's rule addresses, and metrics link I-34's `/methods`.
+- [ ] Public `/help` and article pages with a helpful counter, and a "Help" entry in the header and both footers, in the same order relative to "Report a problem" (slice 3).
+- [ ] `HelpTip`, an "i" button that opens on click, Enter or Space, closes on Escape and never opens on hover alone, and a registry that maps every statistic to its definition, with a test that fails when one renders without it (slice 4). Today `@radix-ui/react-tooltip` is installed and imported nowhere, 43 files carry 89 `title=` props, and `DeckStats`, `BracketIndicator`, `ManaCurve` and `CollectionStatsPanel` link to no definition.
+- [ ] The first English articles, from getting started to troubleshooting, and the retirement of `docs/product/user-guide.md` (slice 5). Checked on `origin/dev` at `72fbfc1`: the guide says "Last updated: 2026-04-06", describes "ARCHITECT" and "RECRUIT" glyphs that appear nowhere in `src/`, and gives a "Bracket score (1–4)". Its verified sections become articles and the file becomes a link to `/help`; this roadmap does not edit it in the meantime.
+- [ ] Bracket 1 named once. `BracketIndicator.tsx` shows "Casual" from `BRACKET_DEFINITIONS` (`src/lib/constants/brackets.ts`), in its label and its `title`, while the wizard's target-bracket picker shows "Exhibition" (`src/messages/en/deck.json`), checked on `origin/dev` at `72fbfc1`. [I-28](i28-commander-deckbuilding-guide-by-bracket.md)'s open bracket-definitions item owns the fix; slice 2's bracket terms wait for it, and slice 4's tip on the indicator reads the corrected name.
+- [ ] The French review, with a typography lint and "Disponible en anglais" entries for articles not yet reviewed (slice 6); help search from a build-time index that folds accents and expands aliases such as "GC", with searches that found nothing counted per week and deleted after 90 days (slice 7); a help link in every empty state and dismissible "what's this" panels, with no tour (slice 8); and "Still stuck? Report a problem" into I-52's form with the article attached (slice 9).
+- [ ] Subscription articles and a test that maps every I-30 entitlement to an article, in the same release as I-30's billing (slice 13).
+- [ ] Later: a help row above builder card search results (slice 10), the `title=` ratchet (slice 11), the owner's measurement view (slice 12) and glossary links from I-28, I-47 and I-27 (slice 14). Only if the owner decides: a model that maps a question to article identifiers and writes nothing (slice 15).
+
+### Engineering enablers
+
+- Removing a quoted message key, route file or `data-help-anchor`, or changing a quoted label without a new review record, fails with the article's slug; an article behind an off flag is absent from pages, lists and search.
+- I-28's guide, I-47's rules pages, I-27's explanations and I-15's sheets render registered terms through `<Term>`, and no bracket entry holds a literal number.
+- A dependency test fails if a help route imports the AI client, slice 15 excepted, and the CSP gains no host.
+- The count of `title=` props never grows.
+
+**Paid-tier angle:** none. Help explains card data, fan content and the evidence the product shows, which stay free, and there is no paid help, priority support or promised response time. It serves I-30 anyway: contextual help keeps a solo owner's support load bounded as subscribers grow, and a paid feature cannot ship without its article.
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player stuck in the editor, I want a short article that matches the screen I am on, so that I do not have to write to the owner.
+
+**Acceptance.**
+- An article's controls exist in the interface. A renamed control fails the article's check.
+- The first articles exist in English and French.
+- A dead end offers the bug report, not a claim that the problem was already sent.
+
+**UX.** The help control is an info button on the surface, opening the article. Search is over titles and headings.
+
+**Data and API.** Authored content through the pipeline this initiative owns. No chatbot. The old user guide is retired rather than left to contradict the product.
+
+**i18n and access.** Articles ship in both served locales or they do not ship. A missing French article is not filled with English under a French URL.
+
+**Telemetry.** `help_opened {found: yes or no}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Public, signed-out. No flag. A model that only picks article ids stays Later and off.
+
+**Open questions.** Who writes the French articles is open. Slice 6 does not start without a reviewer.
+
+### Definition of done
+
+A signed-out visitor opens `/fr/help`, finds "GC" through search and reads the Game Changer definition that the bracket indicator's info button shows; a pull request that renames a label an article quotes fails until the article follows; and an article's "Still stuck?" opens I-52's report with the article attached, with no model writing a word.
+
+---
+

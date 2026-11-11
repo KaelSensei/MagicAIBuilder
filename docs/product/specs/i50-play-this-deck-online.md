@@ -2,7 +2,7 @@
 
 > **Initiative:** I-50, proposed for the [roadmap](../roadmap.md) · **Status:** Proposed · **Priority:** Next for slices 0–8; Later for slices 9–11; slice 12 blocked on a partner agreement · **Written 2026-11-10**
 > **Research:** dated notes of 2026-11-10 on each client's import format, read in the client's own source code where it is public, on platform availability in Scryfall's data, on competitor export menus and on Scryfall's image rules. They are not committed, so every external fact below cites a numbered entry in [Sources](#sources). Legal points are research, not legal advice.
-> **Owns:** exports aimed at places where Commander is played online (Tabletop Simulator, Cockatrice, XMage, Forge, Magic Online, MTG Arena Brawl, and browser and webcam tables that take pasted text); the play-readiness of the shipped MTGO and Arena exporters; per-platform card availability and naming; the "Play online" panel; export by viewers of a public deck; the table view, the printable decklist and the deck check link. **Does not own:** import and the other text exports and their round trip ([I-10](../roadmap.md#i-10-interoperability-and-integrations)); the offline cache ([I-19](i19-offline-game-night-viewing.md)); the screen-reader export ([I-24](i24-decks-a-screen-reader-can-play-from.md)); the public projection of a deck and embeds ([I-36](i36-creator-and-embed-toolkit.md) slice 1); the playtester (I-07); Rule 0 sheets (I-15); the game log ([I-35](i35-pod-game-log.md)); store check-in ([I-41](i41-store-commander-nights.md)); Discord ([I-46](i46-discord-and-chat-integrations.md)); the full account export ([I-38](i38-trust-safety-and-user-rights.md)); the canonical deck hash ([I-29](i29-cross-site-deck-index.md) requirement 5.1); prices and gating ([I-30](i30-business-model-and-paid-tier.md)).
+> **Owns:** exports aimed at places where Commander is played online (Tabletop Simulator, Cockatrice, XMage, Forge, Magic Online, MTG Arena Brawl, and browser and webcam tables that take pasted text); the play-readiness of the shipped MTGO and Arena exporters; per-platform card availability and naming; the "Play online" panel; export by viewers of a public deck; the table view, the printable decklist and the deck check link. **Does not own:** import and the other text exports and their round trip ([I-10](i10-interoperability-and-integrations.md)); the offline cache ([I-19](i19-offline-game-night-viewing.md)); the screen-reader export ([I-24](i24-decks-a-screen-reader-can-play-from.md)); the public projection of a deck and embeds ([I-36](i36-creator-and-embed-toolkit.md) slice 1); the playtester (I-07); Rule 0 sheets (I-15); the game log ([I-35](i35-pod-game-log.md)); store check-in ([I-41](i41-store-commander-nights.md)); Discord ([I-46](i46-discord-and-chat-integrations.md)); the full account export ([I-38](i38-trust-safety-and-user-rights.md)); the canonical deck hash ([I-29](i29-cross-site-deck-index.md) requirement 5.1); prices and gating ([I-30](i30-business-model-and-paid-tier.md)).
 
 ## Overview
 
@@ -226,3 +226,454 @@ All read on 2026-11-10 unless dated otherwise. Scryfall pages were read with an 
 26. TappedOut forum, "Deck Export with Set Codes", 2024-02-19. https://tappedout.net/mtg-forum/tappedout/deck-export-with-set-codes
 27. mtg.wtf, Settings (export formats). https://mtg.wtf/settings
 28. Refusals recorded on 2026-11-10: Deckstats answered HTTP 403 (https://deckstats.net/decks/); Reddit's search JSON answered HTTP 403 (https://www.reddit.com/r/EDH/search.json), and the search tool blocks reddit.com.
+
+## Feature contract (Full, 2026-11-11)
+
+The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
+
+### Summary and problem
+
+a player, or any viewer of a public deck, takes the deck to Tabletop Simulator, Cockatrice, XMage, Forge, Magic Online, MTG Arena Brawl or a browser table in a file each destination accepts, and is told before copying what that destination lacks or will refuse. Webcam players get a table view, a printable list and a frozen deck check link.
+
+### Goals
+
+- A player exports a Commander deck with a partner and a companion to Cockatrice, XMage and Tabletop Simulator, each file imports in the client version its fixture names, and every dropped or substituted card was listed before the download; a viewer of a public deck does the same without signing in; and an Arena Brawl export states the deck's Arena coverage.
+
+### Non-goals
+
+- Do not reverse a non-goal already named in the moved record or in the roadmap's strategic boundaries.
+- Do not invent a usage count, a win rate, or a score the moved record does not already cite from a named source.
+
+### Personas
+
+See the roadmap persona table. This initiative serves the rows that list its id.
+
+### User stories
+
+#### US-50-01
+
+As a player taking a deck to another table, I want a file that program accepts, and a list of the cards it will drop, so that the failure is not a surprise inside the other program.
+
+#### US-50-02
+
+As a signed-out player, I want the guest rule in the rollout to be true, so that I am not shown a control that fails when I have no account.
+
+#### US-50-03
+
+As a player using a keyboard or a screen reader, I want the primary action to have a name and a visible focus, so that colour is not the only signal.
+
+### Acceptance criteria
+
+#### AC-50-01 Happy path
+
+Given a signed-in player and the English locale
+When each export is a fixture that matches byte for byte.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-50-02 Happy path
+
+Given a signed-in player and the English locale
+When sideboard and Considering cards do not enter a playable zone by accident.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-50-03 Happy path
+
+Given a signed-in player and the English locale
+When a destination that has not been imported in the real client says it has not been tested.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-50-04 Error and failure
+
+Given the action cannot finish
+When the player retries or leaves the screen
+Then the last confirmed state is unchanged, and the message is a catalogue string rather than a stack trace or a raw status code
+
+#### AC-50-05 Edge cases
+
+Given an empty deck, a missing price, or a field the record says may be absent
+When the screen renders
+Then the empty state says what is missing, and it does not show a zero in place of an unknown value
+
+#### AC-50-06 Guest and signed-in
+
+Given the rollout in this contract
+When a guest and a signed-in player open the same surface
+Then the rollout holds: Signed-out for a public deck. Signed-in for a private deck. Webcam aids stay Later. No flag per destination: an untested one is labelled, not hidden.
+
+#### AC-50-07 Locales
+
+Given the ten catalogs
+When this feature adds a user-facing string
+Then The ten catalogs on disk are `en`, `fr`, `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` (`src/i18n/routing.ts`). Only `en` and `fr` are routed. The other eight stay at key parity with `en` and may reuse the English text until a person who speaks the language reviews them. A new string is not shipped in a routed locale as hard-coded English.
+
+#### AC-50-08 Accessibility
+
+Given a keyboard, a visible focus, and a screen reader
+When the player completes US-50-01 without a pointer
+Then every new control has an accessible name, focus returns on close, and a status uses a word or an icon as well as colour
+
+### UX flow and states
+
+The Play online panel lists destinations. Notices appear before the download. A public viewer can export without an account.
+
+- Empty: the screen says what is missing and what to do next.
+- Loading: a busy state that does not shift the layout when it ends.
+- Error: the catalogue message and a way to retry, without losing the last confirmed edit.
+
+### Data model and API
+
+One module per target under the export contract. Platform ids come from card data, not from the browser. No image is rehosted.
+
+### Analytics and telemetry
+
+`export_done {target, dropped: zero or some, scope: deck or table}`. Reserved for I-39. Not emitted before that store exists.
+
+The event is reserved for I-39's store. It is not emitted before that store exists. The row holds counts and enums only: no email, name, username, deck name, card name, list, search text or URL.
+
+### Rollout and feature flags
+
+Signed-out for a public deck. Signed-in for a private deck. Webcam aids stay Later. No flag per destination: an untested one is labelled, not hidden.
+
+### Dependencies
+
+Hard waits are in the roadmap dependency table. Slice edges, where this file has a delivery-slice table, stay in that table and in `dependency-graph.md`.
+
+### Risks and mitigations
+
+- Shipping the surface before its wait is met: the roadmap sequence forbids the pick.
+- A string or a status that only some players can read: the locale and accessibility scenarios above fail the change.
+
+### Kill criteria
+
+None. This initiative is not in the Now band. Stop it if it would reverse a non-goal in the moved record.
+
+### Open questions
+
+Where Magic Online wants the commander, and whether SpellTable or Convoke accept a paste, are unconfirmed. No paste format is specified until someone records it.
+
+### Sources
+
+- https://github.com/magefree/mage
+- https://magic.wizards.com/en/formats/brawl
+- https://mtg.wtf/settings
+- https://cockatrice.github.io/docs/db/d91/importing_decks.html
+- https://apps.apple.com/us/app/topdecked-mtg/id1173388234
+
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-50-101
+
+As a player, I want the product to an export contract: ExportResult with typed notices, one module per target, v1 fixtures for the eight shipped formats, and the TappedOut fix (slice 0)., so that a player, or any viewer of a public deck, takes the deck to Tabletop Simulator, Cockatrice, XMage, Forge, Magic Online, MTG Arena Brawl or a browser table in a file each destination accepts, and is told before copying what that destination lacks or will refuse. Webcam players get a table view, a printable list and a frozen deck check link.
+
+#### AC-50-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: An export contract: ExportResult with typed notices, one module per target, v1 fixtures for the eight shipped formats, and the TappedOut fix (slice 0). Today src/lib/deck/export.ts writes every card line through one cardLine helper as quantity name, and exportTappedOut puts Sideboard and Considering cards in the main list (an I-10 item).
+
+#### AC-50-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-50-102 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-50-102
+
+As a player, I want the product to cardPlatformInfo, filled on the server: set codes and collector numbers, games, arena_id, mtgo_id, Brawl legality and each set's Arena and MTGO codes; then name rules per target and card layout (slices 1–2)., so that a player, or any viewer of a public deck, takes the deck to Tabletop Simulator, Cockatrice, XMage, Forge, Magic Online, MTG Arena Brawl or a browser table in a file each destination accepts, and is told before copying what that destination lacks or will refuse. Webcam players get a table view, a printable list and a frozen deck check link.
+
+#### AC-50-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: CardPlatformInfo, filled on the server: set codes and collector numbers, games, arena_id, mtgo_id, Brawl legality and each set's Arena and MTGO codes; then name rules per target and card layout (slices 1–2). Today DeckCard (prisma/schema.prisma) stores no set code, collector number, Oracle ID or artist, and ScryfallCard (src/lib/scryfall/types.ts) does not type games, arena_id or mtgo_id.
+
+#### AC-50-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-50-105 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-50-103
+
+As a player, I want the product to an Arena Brawl export with Arena set codes and numbers or neither, notices for cards not on Arena or not legal in Brawl, the deck's Arena coverage, and no sideboard (slice 3)., so that a player, or any viewer of a public deck, takes the deck to Tabletop Simulator, Cockatrice, XMage, Forge, Magic Online, MTG Arena Brawl or a browser table in a file each destination accepts, and is told before copying what that destination lacks or will refuse. Webcam players get a table view, a printable list and a frozen deck check link.
+
+#### AC-50-106 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: An Arena Brawl export with Arena set codes and numbers or neither, notices for cards not on Arena or not legal in Brawl, the deck's Arena coverage, and no sideboard (slice 3). Today exportArena promises set and number "if available", writes neither, and checks neither availability nor Brawl legality.
+
+#### AC-50-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-50-108 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-50-104
+
+As a player, I want the product to cockatrice .cod and XMage .dck, then Forge .dck with names only (slices 4–5)., so that a player, or any viewer of a public deck, takes the deck to Tabletop Simulator, Cockatrice, XMage, Forge, Magic Online, MTG Arena Brawl or a browser table in a file each destination accepts, and is told before copying what that destination lacks or will refuse. Webcam players get a table view, a printable list and a frozen deck check link.
+
+#### AC-50-109 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Cockatrice .cod and XMage .dck, then Forge .dck with names only (slices 4–5).
+
+#### AC-50-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-50-111 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-50-105
+
+As a player, I want the product to a Magic Online .dek for Commander with CatID from mtgo_id and single-slash split names (slice 6)., so that a player, or any viewer of a public deck, takes the deck to Tabletop Simulator, Cockatrice, XMage, Forge, Magic Online, MTG Arena Brawl or a browser table in a file each destination accepts, and is told before copying what that destination lacks or will refuse. Webcam players get a table view, a printable list and a frozen deck check link.
+
+#### AC-50-112 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A Magic Online .dek for Commander with CatID from mtgo_id and single-slash split names (slice 6). Today exportMTGO writes CatID="0" for every card and the commander with Sideboard="false", so XMage, which reads .dek, rejects the deck. Where MTGO itself wants the commander is an owner question.
+
+#### AC-50-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-50-114 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-50-106
+
+As a player, I want the product to a Tabletop Simulator saved object that links Scryfall's full images, uses a second state for two-faced cards, holds command-zone and token objects and a neutral card back drawn for the product, under an image-rule guard (slice 7)., so that a player, or any viewer of a public deck, takes the deck to Tabletop Simulator, Cockatrice, XMage, Forge, Magic Online, MTG Arena Brawl or a browser table in a file each destination accepts, and is told before copying what that destination lacks or will refuse. Webcam players get a table view, a printable list and a frozen deck check link.
+
+#### AC-50-115 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A Tabletop Simulator saved object that links Scryfall's full images, uses a second state for two-faced cards, holds command-zone and token objects and a neutral card back drawn for the product, under an image-rule guard (slice 7).
+
+#### AC-50-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-50-117 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-50-107
+
+As a player, I want the product to a "Play online" panel on the builder, public and share pages, with the table-text variant, export by any viewer without forking, and one I-39 event per destination chosen (slice 8)., so that a player, or any viewer of a public deck, takes the deck to Tabletop Simulator, Cockatrice, XMage, Forge, Magic Online, MTG Arena Brawl or a browser table in a file each destination accepts, and is told before copying what that destination lacks or will refuse. Webcam players get a table view, a printable list and a frozen deck check link.
+
+#### AC-50-118 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A "Play online" panel on the builder, public and share pages, with the table-text variant, export by any viewer without forking, and one I-39 event per destination chosen (slice 8). Today only the owner can export: ExportModal.tsx opens from the builder, and PublicDeckView and ShareDeckView offer copy-link and fork.
+
+#### AC-50-119 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-50-120 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-50-108
+
+As a player, I want the product to later: a read-only table view for webcam play, a revocable noindex deck check link that freezes the list and says "Changed since this check", and a printable list with a QR code (slices 9–11)., so that a player, or any viewer of a public deck, takes the deck to Tabletop Simulator, Cockatrice, XMage, Forge, Magic Online, MTG Arena Brawl or a browser table in a file each destination accepts, and is told before copying what that destination lacks or will refuse. Webcam players get a table view, a printable list and a frozen deck check link.
+
+#### AC-50-121 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Later: a read-only table view for webcam play, a revocable noindex deck check link that freezes the list and says "Changed since this check", and a printable list with a QR code (slices 9–11). Slice 12, a partner import into Convoke or Cockatrice, is blocked on an agreement or an accepted upstream change.
+
+#### AC-50-122 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-50-123 Edge
+
+Given a list where one name does not resolve
+When the player confirms
+Then the unresolved name is shown first and nothing is written until they accept that list
+
+#### US-50-109
+
+As a player, I want the product to show slice 11's QR code full screen on the deck and share pages, for opponents at a physical table; scanning needs no account, and the code only opens the list., so that a player, or any viewer of a public deck, takes the deck to Tabletop Simulator, Cockatrice, XMage, Forge, Magic Online, MTG Arena Brawl or a browser table in a file each destination accepts, and is told before copying what that destination lacks or will refuse. Webcam players get a table view, a printable list and a frozen deck check link.
+
+#### AC-50-124 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Show slice 11's QR code full screen on the deck and share pages, for opponents at a physical table; scanning needs no account, and the code only opens the list. TopDecked shares decks and binders by QR code (13.0.5, 2025-11-13). Added 2026-11-11.
+
+#### AC-50-125 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-50-126 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-50-110
+
+As a player, I want the product to neighbour changes, 2026-11-11: the deck check page (6.3) shows I-77's stored audit, and slice 10 stores the assessment; an I-79 set-scoped export runs each seat through the export contract, Tabletop Simulator gains a table save with one deck per seat, and the panel's I-39 event gains scope., so that a player, or any viewer of a public deck, takes the deck to Tabletop Simulator, Cockatrice, XMage, Forge, Magic Online, MTG Arena Brawl or a browser table in a file each destination accepts, and is told before copying what that destination lacks or will refuse. Webcam players get a table view, a printable list and a frozen deck check link.
+
+#### AC-50-127 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Neighbour changes, 2026-11-11: the deck check page (6.3) shows I-77's stored audit, and slice 10 stores the assessment; an I-79 set-scoped export runs each seat through the export contract, Tabletop Simulator gains a table save with one deck per seat, and the panel's I-39 event gains scope.
+
+#### AC-50-128 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-50-129 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+### UX states for this feature
+
+The player-visible outcome is: a player, or any viewer of a public deck, takes the deck to Tabletop Simulator, Cockatrice, XMage, Forge, Magic Online, MTG Arena Brawl or a browser table in a file each destination accepts, and is told before copying what that destination lacks or will refuse. Webcam players get a table view, a printable list and a frozen deck check link.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
+
+### Record moved from the roadmap (2026-11-11)
+
+Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.
+
+## I-50: Play This Deck Online
+
+**Spec:** [`specs/i50-play-this-deck-online.md`](i50-play-this-deck-online.md)
+
+**Outcome:** a player, or any viewer of a public deck, takes the deck to Tabletop Simulator, Cockatrice, XMage, Forge, Magic Online, MTG Arena Brawl or a browser table in a file each destination accepts, and is told before copying what that destination lacks or will refuse. Webcam players get a table view, a printable list and a frozen deck check link.
+
+**Status:** Next
+**Priority:** Next for slices 0 to 8; Later for the webcam aids (slices 9 to 11); slice 12 is blocked on a partner agreement
+**Impact / effort:** Medium / medium
+**Depends on:** nothing for slices 0 to 7, except a test on an MTGO account for slice 6's command-zone placement; I-36 slice 1 for viewer export (slice 8); I-19 slice 3 for the cached table view; I-41 slice 4's QR generator; a signed agreement or an accepted upstream change for slice 12.
+
+A deck built here is usually played somewhere else, and on a weeknight that place is often online: a desktop client, a Tabletop Simulator table, a browser table, or a webcam call with paper cards. Each reads a different file and has its own rules for the commander, the companion and the sideboard, and a wrong guess fails late, in someone else's software. XMage requires the commander and at most one companion in the sideboard and nothing else there ([source](https://github.com/magefree/mage)). Arena Brawl has no sideboard and needs a commander "from a set currently on Arena" ([format page](https://magic.wizards.com/en/formats/brawl)). Of 32,643 Commander-legal cards, 48% have an Arena printing and 96% a Magic Online one (Scryfall, 2026-11-10). No deckbuilder read builds a Tabletop Simulator object, places the command zone where each client's validator expects it, or warns before export which cards a platform lacks. mtg.wtf offers several client formats ([settings](https://mtg.wtf/settings)), and Cockatrice's development build of 2026-11-08 imports deck links from five deckbuilders ([docs](https://cockatrice.github.io/docs/db/d91/importing_decks.html)). Reddit refused automated reads, so the evidence is competitors' investment, not measured demand; the panel counts which destinations players choose. Tabletop Simulator files link Scryfall's full card images as Scryfall serves them, never rehosted or cropped, with the artist credited.
+
+### Scope
+
+- [ ] An export contract: `ExportResult` with typed notices, one module per target, `v1` fixtures for the eight shipped formats, and the TappedOut fix (slice 0). Today `src/lib/deck/export.ts` writes every card line through one `cardLine` helper as `quantity name`, and `exportTappedOut` puts Sideboard and Considering cards in the main list (an I-10 item).
+- [ ] `CardPlatformInfo`, filled on the server: set codes and collector numbers, `games`, `arena_id`, `mtgo_id`, Brawl legality and each set's Arena and MTGO codes; then name rules per target and card layout (slices 1–2). Today `DeckCard` (`prisma/schema.prisma`) stores no set code, collector number, Oracle ID or artist, and `ScryfallCard` (`src/lib/scryfall/types.ts`) does not type `games`, `arena_id` or `mtgo_id`.
+- [ ] An Arena Brawl export with Arena set codes and numbers or neither, notices for cards not on Arena or not legal in Brawl, the deck's Arena coverage, and no sideboard (slice 3). Today `exportArena` promises set and number "if available", writes neither, and checks neither availability nor Brawl legality.
+- [ ] Cockatrice `.cod` and XMage `.dck`, then Forge `.dck` with names only (slices 4–5).
+- [ ] A Magic Online `.dek` for Commander with `CatID` from `mtgo_id` and single-slash split names (slice 6). Today `exportMTGO` writes `CatID="0"` for every card and the commander with `Sideboard="false"`, so XMage, which reads `.dek`, rejects the deck. Where MTGO itself wants the commander is an owner question.
+- [ ] A Tabletop Simulator saved object that links Scryfall's full images, uses a second state for two-faced cards, holds command-zone and token objects and a neutral card back drawn for the product, under an image-rule guard (slice 7).
+- [ ] A "Play online" panel on the builder, public and share pages, with the table-text variant, export by any viewer without forking, and one I-39 event per destination chosen (slice 8). Today only the owner can export: `ExportModal.tsx` opens from the builder, and `PublicDeckView` and `ShareDeckView` offer copy-link and fork.
+- [ ] Later: a read-only table view for webcam play, a revocable `noindex` deck check link that freezes the list and says "Changed since this check", and a printable list with a QR code (slices 9–11). Slice 12, a partner import into Convoke or Cockatrice, is blocked on an agreement or an accepted upstream change.
+- [ ] Show slice 11's QR code full screen on the deck and share pages, for opponents at a physical table; scanning needs no account, and the code only opens the list. TopDecked shares decks and binders by QR code ([13.0.5](https://apps.apple.com/us/app/topdecked-mtg/id1173388234), 2025-11-13). Added 2026-11-11.
+- [ ] Neighbour changes, 2026-11-11: the deck check page (6.3) shows [I-77](i77-a-bracket-estimate-players-can-audit.md)'s stored audit, and slice 10 stores the assessment; an [I-79](i79-table-sets.md) set-scoped export runs each seat through the export contract, Tabletop Simulator gains a table save with one deck per seat, and the panel's I-39 event gains `scope`.
+
+### Engineering enablers
+
+- Each target's `v1` fixture matches byte for byte. For random decks, the exported command and main counts equal the deck's minus the dropped cards the notices list, and no Considering card reaches a playable zone.
+- The XMage fixture has 1 to 3 sideboard entries, the Arena Brawl fixture has no `Sideboard` section, and the MTGO fixture has no `CatID="0"`.
+- Every image URL in a Tabletop Simulator export is on `cards.scryfall.io` and equals the stored URI; no export contains `data:`, `art_crop` or `/api/proxy-card-image`.
+- A person imports each fixture into the named client and records the client version and the date in its header; a destination never tested says "Not yet tested".
+
+**Paid-tier angle:** every export, the panel, the table view, the printable list and deck check links stay free, with no account for a public deck: I-30 lists exporting as always free, and Scryfall forbids paywalling its data. No export carries an advertisement, a referral code or a tracking parameter. The one adjacent candidate, a check board for a recurring online pod, is rated weak, belongs with I-15 and I-35, and is I-30's to decide.
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player taking a deck to another table, I want a file that program accepts, and a list of the cards it will drop, so that the failure is not a surprise inside the other program.
+
+**Acceptance.**
+- Each export is a fixture that matches byte for byte.
+- Sideboard and Considering cards do not enter a playable zone by accident.
+- A destination that has not been imported in the real client says it has not been tested.
+
+**UX.** The Play online panel lists destinations. Notices appear before the download. A public viewer can export without an account.
+
+**Data and API.** One module per target under the export contract. Platform ids come from card data, not from the browser. No image is rehosted.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `export_done {target, dropped: zero or some, scope: deck or table}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Signed-out for a public deck. Signed-in for a private deck. Webcam aids stay Later. No flag per destination: an untested one is labelled, not hidden.
+
+**Open questions.** Where Magic Online wants the commander, and whether SpellTable or Convoke accept a paste, are unconfirmed. No paste format is specified until someone records it.
+
+### Definition of done
+
+A player exports a Commander deck with a partner and a companion to Cockatrice, XMage and Tabletop Simulator, each file imports in the client version its fixture names, and every dropped or substituted card was listed before the download; a viewer of a public deck does the same without signing in; and an Arena Brawl export states the deck's Arena coverage.
+
+---
+

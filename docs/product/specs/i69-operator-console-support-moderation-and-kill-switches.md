@@ -258,3 +258,380 @@ Read 2026-11-10 unless dated otherwise. Legal sources are research, not legal ad
 24. Légifrance, [Code de la consommation, article L224-25-26](https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000044133275), in force since 2021-10-01, for contracts concluded from 2022-01-01.
 25. OWASP ASVS 5.0.0, [V16 Security Logging and Error Handling](https://github.com/OWASP/ASVS/blob/v5.0.0/5.0/en/0x25-V16-Security-Logging-and-Error-Handling.md) (16.2.1, 16.3.2, 16.4.2, 16.4.3), release 2025-05-30.
 26. OWASP ASVS 5.0.0, [V8 Authorization](https://github.com/OWASP/ASVS/blob/v5.0.0/5.0/en/0x17-V8-Authorization.md) (8.2.1, 8.2.2, 8.3.1, 8.4.2).
+
+## Feature contract (Full, 2026-11-11)
+
+The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
+
+### Summary and problem
+
+the owner switches free or paid AI off, pauses one upstream source or puts the site in read-only mode within 15 seconds and without a deploy, finds one account and sees the least personal data needed to act on it, and works I-38's moderation queue, while every view and every action is written to an append-only log in the same transaction.
+
+### Goals
+
+- The owner switches free AI off from the console or the command line and every instance answers `ai_paused` within 15 seconds, with no deploy and no placeholder deck; pauses the Archidekt importer and players get a typed refusal with no request sent; finds an account by email and sees only the minimal card; and each of those steps appears once in an append-only log whose hash chain verifies.
+
+### Non-goals
+
+- Do not reverse a non-goal already named in the moved record or in the roadmap's strategic boundaries.
+- Do not invent a usage count, a win rate, or a score the moved record does not already cite from a named source.
+
+### Personas
+
+See the roadmap persona table. This initiative serves the rows that list its id.
+
+### User stories
+
+#### US-69-01
+
+As the owner on a bad day, I want to stop the model or a source without a deploy, so that a failure does not wait on a release.
+
+#### US-69-02
+
+As a signed-out player, I want the guest rule in the rollout to be true, so that I am not shown a control that fails when I have no account.
+
+#### US-69-03
+
+As a player using a keyboard or a screen reader, I want the primary action to have a name and a visible focus, so that colour is not the only signal.
+
+### Acceptance criteria
+
+#### AC-69-01 Happy path
+
+Given a signed-in player and the English locale
+When an operator role is required for the switch.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-69-02 Happy path
+
+Given a signed-in player and the English locale
+When a switch takes effect within 15 seconds.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-69-03 Happy path
+
+Given a signed-in player and the English locale
+When the action is in an append-only log.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-69-04 Error and failure
+
+Given the action cannot finish
+When the player retries or leaves the screen
+Then the last confirmed state is unchanged, and the message is a catalogue string rather than a stack trace or a raw status code
+
+#### AC-69-05 Edge cases
+
+Given an empty deck, a missing price, or a field the record says may be absent
+When the screen renders
+Then the empty state says what is missing, and it does not show a zero in place of an unknown value
+
+#### AC-69-06 Guest and signed-in
+
+Given the rollout in this contract
+When a guest and a signed-in player open the same surface
+Then the rollout holds: Operators only. Players see the effect, not the console. No charge.
+
+#### AC-69-07 Locales
+
+Given the ten catalogs
+When this feature adds a user-facing string
+Then The ten catalogs on disk are `en`, `fr`, `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` (`src/i18n/routing.ts`). Only `en` and `fr` are routed. The other eight stay at key parity with `en` and may reuse the English text until a person who speaks the language reviews them. A new string is not shipped in a routed locale as hard-coded English.
+
+#### AC-69-08 Accessibility
+
+Given a keyboard, a visible focus, and a screen reader
+When the player completes US-69-01 without a pointer
+Then every new control has an accessible name, focus returns on close, and a status uses a word or an icon as well as colour
+
+### UX flow and states
+
+The console is a separate page, not a control on a player's deck. Maintenance mode is a banner a player can read.
+
+- Empty: the screen says what is missing and what to do next.
+- Loading: a busy state that does not shift the layout when it ends.
+- Error: the catalogue message and a way to retry, without losing the last confirmed edit.
+
+### Data model and API
+
+A grant table, a switch store and an audit hash. Player routes read the switch. They do not list operators.
+
+### Analytics and telemetry
+
+`operator_switch_set {switch, state: on or off}`. Reserved for I-39. Not emitted before that store exists.
+
+The event is reserved for I-39's store. It is not emitted before that store exists. The row holds counts and enums only: no email, name, username, deck name, card name, list, search text or URL.
+
+### Rollout and feature flags
+
+Operators only. Players see the effect, not the console. No charge.
+
+### Dependencies
+
+Hard waits are in the roadmap dependency table. Slice edges, where this file has a delivery-slice table, stay in that table and in `dependency-graph.md`.
+
+### Risks and mitigations
+
+- Shipping the surface before its wait is met: the roadmap sequence forbids the pick.
+- A string or a status that only some players can read: the locale and accessibility scenarios above fail the change.
+
+### Kill criteria
+
+None. This initiative is not in the Now band. Stop it if it would reverse a non-goal in the moved record.
+
+### Open questions
+
+Whether a volunteer moderator exists, and whether read-only mode also stops sign-ups, are owner questions.
+
+### Sources
+
+- https://vercel.com/docs/environment-variables
+- https://supabase.com/pricing
+
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-69-101
+
+As a player, I want the product to slice 0, no code: who holds which role, the audit retention, a passkey from day one or not, and the maintenance scope; lawyer question L-47 joins I-30 requirement 7.2 through I-38 slice 0., so that the owner switches free or paid AI off, pauses one upstream source or puts the site in read-only mode within 15 seconds and without a deploy, finds one account and sees the least personal data needed to act on it, and works I-38's moderation queue, while every view and every action is written to an append-only log in the same transaction.
+
+#### AC-69-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Slice 0, no code: who holds which role, the audit retention, a passkey from day one or not, and the maintenance scope; lawyer question L-47 joins I-30 requirement 7.2 through I-38 slice 0.
+
+#### AC-69-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-69-102 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-69-102
+
+As a player, I want the product to operator roles in OperatorGrant (moderator, support and owner) and one requireOperator(role) that replaces requireModerator and the moderation page's inline check; the owner role needs a grant and the account id in OPERATOR_OWNER_IDS; isModerator migrates to grants and is dropped; operator pages answer 404 and join I-05's L2 inventory (slice 1)., so that the owner switches free or paid AI off, pauses one upstream source or puts the site in read-only mode within 15 seconds and without a deploy, finds one account and sees the least personal data needed to act on it, and works I-38's moderation queue, while every view and every action is written to an append-only log in the same transaction.
+
+#### AC-69-103 Happy path
+
+Given a signed-in operator
+When the player uses this behaviour
+Then the behaviour holds: Operator roles in OperatorGrant (moderator, support and owner) and one requireOperator(role) that replaces requireModerator and the moderation page's inline check; the owner role needs a grant and the account id in OPERATOR_OWNER_IDS; isModerator migrates to grants and is dropped; operator pages answer 404 and join I-05's L2 inventory (slice 1).
+
+#### AC-69-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-69-105 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-69-103
+
+As a player, I want the product to operatorAuditEvent: every action and every view of an account, a case or the audit log, written in the action's transaction, append-only by a trigger, hash-chained with a verification command and copied to the application log (slice 2)., so that the owner switches free or paid AI off, pauses one upstream source or puts the site in read-only mode within 15 seconds and without a deploy, finds one account and sees the least personal data needed to act on it, and works I-38's moderation queue, while every view and every action is written to an append-only log in the same transaction.
+
+#### AC-69-106 Happy path
+
+Given a signed-in operator
+When the player uses this behaviour
+Then the behaviour holds: OperatorAuditEvent: every action and every view of an account, a case or the audit log, written in the action's transaction, append-only by a trigger, hash-chained with a verification command and copied to the application log (slice 2).
+
+#### AC-69-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-69-108 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-69-104
+
+As a player, I want the product to a switch registry in code and a Switch table read through readSwitch, with a 15-second cache and a declared fail mode, set from the console or pnpm ops:switch with a reason and an optional expiry; ai.free and ai.paid answer 503 ai_paused, never the placeholder deck (slice 3); a switch per upstream source with typed refusals such as "Import from Archidekt is paused; paste the list instead", the browser's Scryfall calls included (slice 4); read-only maintenance mode, with a coverage test over every mutating route (slice 5)., so that the owner switches free or paid AI off, pauses one upstream source or puts the site in read-only mode within 15 seconds and without a deploy, finds one account and sees the least personal data needed to act on it, and works I-38's moderation queue, while every view and every action is written to an append-only log in the same transaction.
+
+#### AC-69-109 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A switch registry in code and a Switch table read through readSwitch, with a 15-second cache and a declared fail mode, set from the console or pnpm ops:switch with a reason and an optional expiry; ai.free and ai.paid answer 503 ai_paused, never the placeholder deck (slice 3); a switch per upstream source with typed refusals such as "Import from Archidekt is paused; paste the list instead", the browser's Scryfall calls included (slice 4); read-only maintenance mode, with a coverage test over every mutating route (slice 5).
+
+#### AC-69-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-69-111 Edge
+
+Given a list where one name does not resolve
+When the player confirms
+Then the unresolved name is shown first and nothing is written until they accept that list
+
+#### US-69-105
+
+As a player, I want the product to i-30's ceiling through the store: the automatic switch-off writes ai.free, then ai.paid, and the owner can lower the ceiling below the environment's bound without a deploy, never raise it (slice 6); the console at /ops with step-up, an overview, the switches and the audit log (slice 7)., so that the owner switches free or paid AI off, pauses one upstream source or puts the site in read-only mode within 15 seconds and without a deploy, finds one account and sees the least personal data needed to act on it, and works I-38's moderation queue, while every view and every action is written to an append-only log in the same transaction.
+
+#### AC-69-112 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: I-30's ceiling through the store: the automatic switch-off writes ai.free, then ai.paid, and the owner can lower the ceiling below the environment's bound without a deploy, never raise it (slice 6); the console at /ops with step-up, an overview, the switches and the audit log (slice 7).
+
+#### AC-69-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-69-114 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-69-106
+
+As a player, I want the product to later: account lookup by exact email, username or id, with the email masked until a logged reveal (slice 8); support actions without email: end all sessions, an AI grant or reset under a monthly cap, and clearing the password throttle (slice 9); verification, reset, export and deletion links sent through the players' own flows and tracked against GDPR's one month (slice 10); the operator side of I-38's queue, with a decision form that preselects nothing (slice 11); dark launches to named accounts that never gate a paid feature (slice 12); a passkey required for operators (slice 13); the retention purge (slice 14)., so that the owner switches free or paid AI off, pauses one upstream source or puts the site in read-only mode within 15 seconds and without a deploy, finds one account and sees the least personal data needed to act on it, and works I-38's moderation queue, while every view and every action is written to an append-only log in the same transaction.
+
+#### AC-69-115 Happy path
+
+Given a signed-in operator
+When the player uses this behaviour
+Then the behaviour holds: Later: account lookup by exact email, username or id, with the email masked until a logged reveal (slice 8); support actions without email: end all sessions, an AI grant or reset under a monthly cap, and clearing the password throttle (slice 9); verification, reset, export and deletion links sent through the players' own flows and tracked against GDPR's one month (slice 10); the operator side of I-38's queue, with a decision form that preselects nothing (slice 11); dark launches to named accounts that never gate a paid feature (slice 12); a passkey required for operators (slice 13); the retention purge (slice 14).
+
+#### AC-69-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-69-117 Edge
+
+Given the account or the cache this behaviour changes
+When the player signs out or the deletion finishes
+Then the next request does not still show the private data
+
+### UX states for this feature
+
+The player-visible outcome is: the owner switches free or paid AI off, pauses one upstream source or puts the site in read-only mode within 15 seconds and without a deploy, finds one account and sees the least personal data needed to act on it, and works I-38's moderation queue, while every view and every action is written to an append-only log in the same transaction.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
+
+### Record moved from the roadmap (2026-11-11)
+
+Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.
+
+# Trust, Growth And The Physical Table
+
+I-38 to I-46 were added on the evening of 2026-11-09, from dated research that each spec links, because its notes are not committed. They cover what a public, paying product owes its users (I-38), how a new player reaches a first deck and how that is counted (I-39), the phone and the store (I-40, I-41), the Commander variants (I-42), the physical cards a player stores, trades and sells (I-43 to I-45), and the chat rooms where pods and creators meet (I-46). I-38 and I-39 are Next, I-42 is Next for slices 1 to 6 and I-46 for slices 1 to 3, and the others are Later with cheap early slices named. The rules of the previous part hold: card data, fan content and evidence stay free, each initiative names its paid-tier candidate and leaves the decision to I-30, legal points are research and not legal advice, and none of them holds money, cards or shipments.
+
+I-51 to I-53 joined this part on 2026-11-10, from a third research pass. I-51 records the cards and decks lent within a pod, beside I-43 to I-45. I-52 makes the product's own reliability and progress visible to players, beside I-38 and I-39. I-53 runs deckbuilding challenges on I-38's moderation and I-41's stores. I-52 is Next for slices 0 to 8, and I-51 and I-53 are Later with cheap early slices. The same rules hold.
+
+I-54 and I-56 followed later that day, from a fourth pass. I-54 helps a new or returning player choose a commander, beside I-39's first run. I-56 keeps the cards a player wants, beside the cards they store, trade, sell and lend (I-43 to I-45, I-51), and would absorb I-44's want lists if the owner agrees. I-54 is Next for slices 1 to 7, 9, 10 and 15, and I-56 for slices 0 to 4.
+
+I-59 to I-61 joined from a fifth pass that day. I-61 protects the account itself, beside I-38's rights and deletion, and follows it. I-60 gives a player statistics across their decks and a yearly recap, a growth loop measured through I-39, and follows it. I-59 keeps prices over time, beside I-45's collection value, and follows it. I-61 is Next, I-60 is Next for slices 0 to 5 and 13, and I-59 is Later with slices 0 to 2 ready now. The same rules hold.
+
+I-62 to I-64 joined from a sixth pass that day. I-63 delivers what every initiative here tells a player, I-38's sender and I-61's security notices first, and follows I-61. I-62 moves a player's decks in from another site, a first run measured through I-39's events, and follows I-60. I-64 answers players' questions inside the product and sends what it cannot answer to I-52's report, and follows I-52. I-63 is Next, I-62 is Next for slices 0 to 11, 17 and 18, and I-64 for slices 0 to 9 and 13. None of the three is paid.
+
+I-66 joined from a seventh pass that day. It tells the owner what the product costs to run per active player and which free-tier limit breaks first, and it sits between I-63, whose job route runs its daily checks, and I-39, whose active accounts it counts. It is Next for slices 0 to 8. It is internal and never shown to players, so it has no paid-tier candidate.
+
+I-67 joined from an eighth pass that day, directly after I-63. It loads card data once a day for every other initiative, as I-63 delivers every notice, and its run registers on I-63's job route when it runs on Vercel; I-66, which follows, counts its tables. It is Next for slices 0 to 13 and never paid.
+
+I-69 joined from a ninth pass that day, directly before I-38. It is the operator side of trust and safety: the roles, the audit log and the queue view through which the owner works I-38's notices and decisions, and the switches that pause AI or an upstream source without a deploy. Placed before I-38, it leaves I-61 directly after I-38. It is Next for slices 0 to 7, and nothing in it is sold.
+
+---
+
+## I-69: An Operator Console: Support, Moderation Queue, Flags And Kill Switches
+
+**Spec:** [`specs/i69-operator-console-support-moderation-and-kill-switches.md`](i69-operator-console-support-moderation-and-kill-switches.md)
+
+**Outcome:** the owner switches free or paid AI off, pauses one upstream source or puts the site in read-only mode within 15 seconds and without a deploy, finds one account and sees the least personal data needed to act on it, and works I-38's moderation queue, while every view and every action is written to an append-only log in the same transaction.
+
+**Status:** Next
+**Priority:** Next for slices 0 to 7: the operator role, the audit log, the switch store with the AI and upstream switches, maintenance mode and the console shell; Later for slices 8 to 14, which wait for I-61, I-38, I-63 or I-30. Nothing in it is sold
+**Impact / effort:** High / medium
+**Depends on:** nothing outside this initiative for slices 1 to 5; I-30 slice 2's metering for the AI ceiling through the store (slice 6); I-61 slices 2 and 3, the session registry and re-authentication, for the console (slice 7); I-30 slice 2 and I-61 slice 1 for the support actions (slice 9); I-61 slices 11 and 12, I-38 slices 4 and 5 and I-63 slice 7 for support by email (slice 10); I-38 slices 8 to 11 for the moderation view (slice 11); I-61 slice 8 for operator passkeys (slice 13); slice 0's answers, I-63 slice 5 and the answer to L-47 for the retention purge (slice 14).
+
+No spec or roadmap item covered the product's own operator, and each lever today is ad hoc. The moderator role is one boolean, `isModerator` (`prisma/schema.prisma` line 38), set by hand in SQL and checked in two places, and nothing records who looked at what. I-30's spend ceiling is an environment variable on the unmerged metering branch, and Vercel applies a changed variable "only to new deployments" ([docs](https://vercel.com/docs/environment-variables)); removing the AI keys makes both routes return a placeholder deck that hides an outage behind a demo. No upstream caller, from Scryfall to the Archidekt importer that [D-07](../owner-decisions.md#d-07-archidekt) questions, can be stopped without a code change and a full promotion, and Vercel's only global stop pauses the whole site ([I-66 7.3](i66-running-costs-and-margin.md#7-budget-alerts)). Flag services add a processor or a second source of truth: Vercel Flags allows 10,000 flag requests a month on Hobby, about 29 active players at I-66's usage estimate (computed), and Supabase's platform audit logs start with the Team plan "from $599/month" ([pricing](https://supabase.com/pricing)). A switch is therefore a row in PostgreSQL, read through one module and changed in the same transaction as its audit event, with no new vendor.
+
+### Scope
+
+- [ ] Slice 0, no code: who holds which role, the audit retention, a passkey from day one or not, and the maintenance scope; lawyer question L-47 joins I-30 requirement 7.2 through I-38 slice 0.
+- [ ] Operator roles in `OperatorGrant` (moderator, support and owner) and one `requireOperator(role)` that replaces `requireModerator` and the moderation page's inline check; the owner role needs a grant and the account id in `OPERATOR_OWNER_IDS`; `isModerator` migrates to grants and is dropped; operator pages answer 404 and join I-05's L2 inventory (slice 1).
+- [ ] `OperatorAuditEvent`: every action and every view of an account, a case or the audit log, written in the action's transaction, append-only by a trigger, hash-chained with a verification command and copied to the application log (slice 2).
+- [ ] A switch registry in code and a `Switch` table read through `readSwitch`, with a 15-second cache and a declared fail mode, set from the console or `pnpm ops:switch` with a reason and an optional expiry; `ai.free` and `ai.paid` answer 503 `ai_paused`, never the placeholder deck (slice 3); a switch per upstream source with typed refusals such as "Import from Archidekt is paused; paste the list instead", the browser's Scryfall calls included (slice 4); read-only maintenance mode, with a coverage test over every mutating route (slice 5).
+  - [I-73](i73-every-set-release-ready-on-day-one.md) adds one kill switch, `release.previews`, which turns off the preview switch, the release digest and set pages (2026-11-10).
+- [ ] I-30's ceiling through the store: the automatic switch-off writes `ai.free`, then `ai.paid`, and the owner can lower the ceiling below the environment's bound without a deploy, never raise it (slice 6); the console at `/ops` with step-up, an overview, the switches and the audit log (slice 7).
+- [ ] Later: account lookup by exact email, username or id, with the email masked until a logged reveal (slice 8); support actions without email: end all sessions, an AI grant or reset under a monthly cap, and clearing the password throttle (slice 9); verification, reset, export and deletion links sent through the players' own flows and tracked against GDPR's one month (slice 10); the operator side of I-38's queue, with a decision form that preselects nothing (slice 11); dark launches to named accounts that never gate a paid feature (slice 12); a passkey required for operators (slice 13); the retention purge (slice 14).
+
+### Engineering enablers
+
+- Every `/ops` page answers 404 and every `/api/ops` route 403 without the right grant, and an owner grant without the environment entry is refused.
+- Each action writes exactly one audit event in its transaction, a forced failure writes none, `UPDATE` and `DELETE` on the log raise, and an `/api/ops` route that skips the audit writer fails an inventory test.
+- With an upstream paused, each caller makes no outbound request and returns its typed refusal; with `ai.free` off, the build route answers 503 and never the placeholder.
+- No `/api/ops` route writes a password, an email or a second-factor table, and the account card carries no IP address, private deck name or unmasked email.
+
+**Paid-tier angle:** none. Support, export, deletion and appeals stay free on every plan. Its value to I-30 is margin and trust: runtime AI switches and a ceiling the owner can lower bound the largest variable cost, a goodwill AI grant replaces a refund for a failed build, and a pause of paid AI shows a dated notice with its reason and expected end.
+
+### Enrichment (2026-11-11)
+
+**User story.** As the owner on a bad day, I want to stop the model or a source without a deploy, so that a failure does not wait on a release.
+
+**Acceptance.**
+- An operator role is required for the switch.
+- A switch takes effect within 15 seconds.
+- The action is in an append-only log.
+
+**UX.** The console is a separate page, not a control on a player's deck. Maintenance mode is a banner a player can read.
+
+**Data and API.** A grant table, a switch store and an audit hash. Player routes read the switch. They do not list operators.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `operator_switch_set {switch, state: on or off}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Operators only. Players see the effect, not the console. No charge.
+
+**Open questions.** Whether a volunteer moderator exists, and whether read-only mode also stops sign-ups, are owner questions.
+
+### Definition of done
+
+The owner switches free AI off from the console or the command line and every instance answers `ai_paused` within 15 seconds, with no deploy and no placeholder deck; pauses the Archidekt importer and players get a typed refusal with no request sent; finds an account by email and sees only the minimal card; and each of those steps appears once in an append-only log whose hash chain verifies.
+
+---
+

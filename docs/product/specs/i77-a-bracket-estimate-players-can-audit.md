@@ -1,6 +1,6 @@
 # I-77: A Bracket Estimate Players Can Audit
 
-> **Initiative:** I-77, proposed for the [roadmap](../roadmap.md) · **Status:** Next · **Priority:** Next, directly after [I-03](../roadmap.md#i-03-trustworthy-deck-feedback) in the roadmap and after [I-48](i48-official-changes-reach-every-deck.md) in the Portfolio View. Slices 1 to 12 are Next; slices 13 to 16 are Later · **Paid:** never; it is evidence ([I-30 1.1](i30-business-model-and-paid-tier.md#1-the-free-and-paid-line)) · **Written 2026-11-11**
+> **Initiative:** I-77, proposed for the [roadmap](../roadmap.md) · **Status:** Next · **Priority:** Next, directly after [I-03](i03-trustworthy-deck-feedback.md) in the roadmap and after [I-48](i48-official-changes-reach-every-deck.md) in the Portfolio View. Slices 1 to 12 are Next; slices 13 to 16 are Later · **Paid:** never; it is evidence ([I-30 1.1](i30-business-model-and-paid-tier.md#1-the-free-and-paid-line)) · **Written 2026-11-11**
 > **Research:** one dated note of 2026-11-11, not committed. Every external fact links its entry in [Sources](#sources). Legal points are research, not legal advice; each goes to [`legal-questions.md`](../legal-questions.md).
 > **Owns:** the decomposition of the estimate (official floors, heuristic terms, the cards behind each, a certainty badge per count, blind spots); the "to reach bracket N" list; the frozen audit; the labelled sets, the benchmark report and its constant-guess baseline; the method version and the method-change gate; the public process for contesting a classification. **Does not own:** the official bracket rules ([I-28](i28-commander-deckbuilding-guide-by-bracket.md) slice 2) and their dated versions, rules-version selection and `compareAssessments` ([I-48](i48-official-changes-reach-every-deck.md)); the bracket check and the guide (I-28); the methods-page framework ([I-34](i34-commander-data-reports.md)); snapshots and the deck check link ([I-50](i50-play-this-deck-online.md)); the report form and the board ([I-52](i52-feedback-loop-players-can-see.md)); declared brackets and the pod comparison ([I-15](i15-rule-zero-sheets-and-pod-profiles.md)); logged games ([I-35](i35-pod-game-log.md)); routes and win speed ([I-65](i65-how-this-deck-wins.md)); statistics method ([I-21](i21-reproducible-probability-bench.md)).
 
@@ -8,7 +8,7 @@
 
 | Initiative                                                                                   | Change                                                                                                                                                                                                                                                                                                                                  |
 | -------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [I-03](../roadmap.md#i-03-trustworthy-deck-feedback)                                         | Add a remaining-scope item: "Every bracket estimate shows its floors, terms, cards and certainty, links a frozen audit, and states its accuracy against a constant guess (I-77)." I-77 answers "Why is it flagged?" for the estimate. The shipped line "Bracket scoring across six dimensions" becomes "five" once I-28 slice 2 merges. |
+| [I-03](i03-trustworthy-deck-feedback.md)                                         | Add a remaining-scope item: "Every bracket estimate shows its floors, terms, cards and certainty, links a frozen audit, and states its accuracy against a constant guess (I-77)." I-77 answers "Why is it flagged?" for the estimate. The shipped line "Bracket scoring across six dimensions" becomes "five" once I-28 slice 2 merges. |
 | [I-15](i15-rule-zero-sheets-and-pod-profiles.md)                                             | Line 22: replace "That is the realistic accuracy ceiling…" with "A published calculator matched 77.1%, against 73.9% for always answering Bracket 3 [1]". 1.4 and 3.3: the computed column shows I-77's estimate with its method version and audit link. Slice 2 depends on I-77 slice 1.                                               |
 | [I-34](i34-commander-data-reports.md#6-methods-page-and-open-data)                           | 6.1 gains the anchor `bracket-estimate`: I-77's report, its sets, baseline and method change log. Slice 3 reserves the anchor; I-77 slice 9 fills it.                                                                                                                                                                                   |
 | [I-41](i41-store-commander-nights.md#6-declared-and-estimated-brackets)                      | 6.2: drop "A gap of one is shown without a flag" and its 99.5% basis. A one-bracket gap gets a soft prompt, worded as a question, citing Playgroup's measured cost [11] and I-77's per-bracket figure (8.5). Slice 5 freezes the method version and the audit link with the estimate.                                                   |
@@ -250,3 +250,360 @@ Slice 1 can start once I-28 slice 2 merges; slices 2 to 4 and 6 follow it, and s
 16. Draftsim, "MTG Arena Brawl weight", 2024-10-24, updated 2025-10-11. <https://draftsim.com/mtg-arena-brawl-weight/>
 17. cEDH Decklist Database, home page, read 2026-11-11. <https://cedh-decklist-database.com/>
 18. r/EDH through Arctic Shift, read 2026-11-11: "Nuh Uh! Manabox Says It's A 3!", 797 points, 2025-03-05 <https://www.reddit.com/r/EDH/comments/1j3r30v/>; "Why does EDHrec title some combos as two card infinites when clearly a third card is needed?", 262 points, 2025-11-15 <https://www.reddit.com/r/EDH/comments/1oxuhqy/>
+
+## Feature contract (Full, 2026-11-11)
+
+The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
+
+### Summary and problem
+
+every bracket estimate shows the floor each official rule sets apart from the heuristic average, the terms and the cards behind each, which counts are exact and which estimated, and what it cannot see. It links to a frozen audit of that deck version, states on the methods page how often it matches labelled decks against a constant-guess baseline, per bracket and in which direction it errs, and takes challenges to a scoring rule through a published process.
+
+### Goals
+
+- A pod member opens a frozen audit link and sees why a deck reads Bracket 3: the Game Changer floor with its two cards, the heuristic sum, which counts are exact and which estimated, and what the estimate cannot see; the methods page states how often the estimate matched labelled precons, beside the score of always answering the most common label, in which direction it erred, and which method version produced the figure.
+
+### Non-goals
+
+- Do not reverse a non-goal already named in the moved record or in the roadmap's strategic boundaries.
+- Do not invent a usage count, a win rate, or a score the moved record does not already cite from a named source.
+
+### Personas
+
+See the roadmap persona table. This initiative serves the rows that list its id.
+
+### User stories
+
+#### US-77-01
+
+As a player told a bracket, I want the floors and the cards that tripped them, so that the number is an explanation I can audit.
+
+#### US-77-02
+
+As a signed-out player, I want the guest rule in the rollout to be true, so that I am not shown a control that fails when I have no account.
+
+#### US-77-03
+
+As a player using a keyboard or a screen reader, I want the primary action to have a name and a visible focus, so that colour is not the only signal.
+
+### Acceptance criteria
+
+#### AC-77-01 Happy path
+
+Given a signed-in player and the English locale
+When official floors are listed apart from heuristic terms.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-77-02 Happy path
+
+Given a signed-in player and the English locale
+When each term names the cards.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-77-03 Happy path
+
+Given a signed-in player and the English locale
+When a method change does not ship without the benchmark the spec requires.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-77-04 Error and failure
+
+Given the action cannot finish
+When the player retries or leaves the screen
+Then the last confirmed state is unchanged, and the message is a catalogue string rather than a stack trace or a raw status code
+
+#### AC-77-05 Edge cases
+
+Given an empty deck, a missing price, or a field the record says may be absent
+When the screen renders
+Then the empty state says what is missing, and it does not show a zero in place of an unknown value
+
+#### AC-77-06 Guest and signed-in
+
+Given the rollout in this contract
+When a guest and a signed-in player open the same surface
+Then the rollout holds: Signed-in on private decks. A public audit stays off until the owner says so. Never paid.
+
+#### AC-77-07 Locales
+
+Given the ten catalogs
+When this feature adds a user-facing string
+Then The ten catalogs on disk are `en`, `fr`, `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` (`src/i18n/routing.ts`). Only `en` and `fr` are routed. The other eight stay at key parity with `en` and may reuse the English text until a person who speaks the language reviews them. A new string is not shipped in a routed locale as hard-coded English.
+
+#### AC-77-08 Accessibility
+
+Given a keyboard, a visible focus, and a screen reader
+When the player completes US-77-01 without a pointer
+Then every new control has an accessible name, focus returns on close, and a status uses a word or an icon as well as colour
+
+### UX flow and states
+
+The audit is a panel on the deck and a link that freezes the explanation. It does not say the deck is fair or unfair.
+
+- Empty: the screen says what is missing and what to do next.
+- Loading: a busy state that does not shift the layout when it ends.
+- Error: the catalogue message and a way to retry, without losing the last confirmed edit.
+
+### Data model and API
+
+`explainBracket` is the one function I-48 and I-15 read. It returns the method version. No model.
+
+### Analytics and telemetry
+
+`bracket_audit_opened {method_version}`. Reserved for I-39. Not emitted before that store exists.
+
+The event is reserved for I-39's store. It is not emitted before that store exists. The row holds counts and enums only: no email, name, username, deck name, card name, list, search text or URL.
+
+### Rollout and feature flags
+
+Signed-in on private decks. A public audit stays off until the owner says so. Never paid.
+
+### Dependencies
+
+Hard waits are in the roadmap dependency table. Slice edges, where this file has a delivery-slice table, stay in that table and in `dependency-graph.md`.
+
+### Risks and mitigations
+
+- Shipping the surface before its wait is met: the roadmap sequence forbids the pick.
+- A string or a status that only some players can read: the locale and accessibility scenarios above fail the change.
+
+### Kill criteria
+
+None. This initiative is not in the Now band. Stop it if it would reverse a non-goal in the moved record.
+
+### Open questions
+
+Whether to publish a benchmark that barely beats always saying Bracket 3 is D-94.
+
+### Sources
+
+- https://scrollvault.net/posts/how-scrollvault-bracket-calculator-works.html
+- https://spellrack.com/accuracy
+- https://magic.wizards.com/en/news/announcements/commander-brackets-beta-update-october-21-2025
+
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-77-101
+
+As a player, I want the product to owner decisions: publish even when the estimate barely beats the baseline, which labelled sets come first, and whether other calculators are named (D-94); the precon label policy; and whether under-estimates are the harm the method gate guards against (slice 0)., so that every bracket estimate shows the floor each official rule sets apart from the heuristic average, the terms and the cards behind each, which counts are exact and which estimated, and what it cannot see. It links to a frozen audit of that deck version, states on the methods page how often it matches labelled decks against a constant-guess baseline, per bracket and in which direction it errs, and takes challenges to a scoring rule through a published process.
+
+#### AC-77-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Owner decisions: publish even when the estimate barely beats the baseline, which labelled sets come first, and whether other calculators are named (D-94); the precon label policy; and whether under-estimates are the harm the method gate guards against (slice 0).
+
+#### AC-77-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-77-102 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-77-102
+
+As a player, I want the product to explainBracket, one pure function every surface reads: the official floors (Game Changers, two-card combos, mass land denial, extra turns) apart from the heuristic terms, each with its cards, rule ids, owner placements, an Exact, Sourced or Estimated badge, the blind spots and a completeness flag; scoreBracket becomes its projection with unchanged numbers, and detectGameChanger is removed (slice 1)., so that every bracket estimate shows the floor each official rule sets apart from the heuristic average, the terms and the cards behind each, which counts are exact and which estimated, and what it cannot see. It links to a frozen audit of that deck version, states on the methods page how often it matches labelled decks against a constant-guess baseline, per bracket and in which direction it errs, and takes challenges to a scoring rule through a published process.
+
+#### AC-77-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then explainBracket, one pure function every surface reads: the official floors (Game Changers, two-card combos, mass land denial, extra turns) apart from the heuristic terms, each with its cards, rule ids, owner placements, an Exact, Sourced or Estimated badge, the blind spots and a completeness flag; scoreBracket becomes its projection with unchanged numbers, and detectGameChanger is removed (slice 1).
+
+#### AC-77-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-77-105 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-77-103
+
+As a player, I want the product to the audit view: the sum as written arithmetic, the floor block, badges, blind spots, "not checked" when combo data is missing and the beta label; the home card says "Target", not "Auto bracket"; the mismatch warning compares the target with the estimate shown (slice 2)., so that every bracket estimate shows the floor each official rule sets apart from the heuristic average, the terms and the cards behind each, which counts are exact and which estimated, and what it cannot see. It links to a frozen audit of that deck version, states on the methods page how often it matches labelled decks against a constant-guess baseline, per bracket and in which direction it errs, and takes challenges to a scoring rule through a published process.
+
+#### AC-77-106 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: The audit view: the sum as written arithmetic, the floor block, badges, blind spots, "not checked" when combo data is missing and the beta label; the home card says "Target", not "Auto bracket"; the mismatch warning compares the target with the estimate shown (slice 2). Mass-land-denial and extra-turn rows, Estimated, with the number unchanged (slice 3).
+
+#### AC-77-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-77-108 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+#### US-77-104
+
+As a player, I want "To reach bracket N" through pathToBracket, floors first, naming no replacement card and using no verdict word, read by I-28 slice 7 and I-76 (slice 4); a frozen audit on I-50's deck check link that always shows its stored verdict, with a line for the current method (slice 5)., so that every bracket estimate shows the floor each official rule sets apart from the heuristic average, the terms and the cards behind each, which counts are exact and which estimated, and what it cannot see. It links to a frozen audit of that deck version, states on the methods page how often it matches labelled decks against a constant-guess baseline, per bracket and in which direction it errs, and takes challenges to a scoring rule through a published process.
+
+#### AC-77-109 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then "To reach bracket N" through pathToBracket, floors first, naming no replacement card and using no verdict word, read by I-28 slice 7 and I-76 (slice 4); a frozen audit on I-50's deck check link that always shows its stored verdict, with a line for the current method (slice 5).
+
+#### AC-77-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-77-111 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+#### US-77-105
+
+As a player, I want the product to a bench of labelled sets replayed offline in CI, reporting exact matches, balanced accuracy, a confusion matrix, errors above and below, and the constant-guess baseline with intervals (slice 6); precons first, Official where a Game Changer sets the floor and Reference otherwise, reported apart (slice 7); a method-change gate that refuses a change raising under-estimates (slice 8); publication on I-34's methods page with a change log and the per-bracket line in the audit view (slice 9); method v2, the mass-land-denial floor, as the first change through the gate (slice 10); "Contest this" with I-52's bracket_rule kind and a public challenge log (slice 11); an owner-reviewed set with blind double review (slice 12)., so that every bracket estimate shows the floor each official rule sets apart from the heuristic average, the terms and the cards behind each, which counts are exact and which estimated, and what it cannot see. It links to a frozen audit of that deck version, states on the methods page how often it matches labelled decks against a constant-guess baseline, per bracket and in which direction it errs, and takes challenges to a scoring rule through a published process.
+
+#### AC-77-112 Happy path
+
+Given a downloaded deck and no network
+When the player uses this behaviour
+Then the behaviour holds: A bench of labelled sets replayed offline in CI, reporting exact matches, balanced accuracy, a confusion matrix, errors above and below, and the constant-guess baseline with intervals (slice 6); precons first, Official where a Game Changer sets the floor and Reference otherwise, reported apart (slice 7); a method-change gate that refuses a change raising under-estimates (slice 8); publication on I-34's methods page with a change log and the per-bracket line in the audit view (slice 9); method v2, the mass-land-denial floor, as the first change through the gate (slice 10); "Contest this" with I-52's bracket_rule kind and a public challenge log (slice 11); an owner-reviewed set with blind double review (slice 12).
+
+#### AC-77-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-77-114 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+#### US-77-106
+
+As a player, I want the product to later: the cEDH set, reported as the share that reaches the ceiling (slice 13); every surface reads the audit, with a one-function test (slice 14); a signed-out audit of a pasted list (slice 15); outcomes from consented I-35 logs (slice 16)., so that every bracket estimate shows the floor each official rule sets apart from the heuristic average, the terms and the cards behind each, which counts are exact and which estimated, and what it cannot see. It links to a frozen audit of that deck version, states on the methods page how often it matches labelled decks against a constant-guess baseline, per bracket and in which direction it errs, and takes challenges to a scoring rule through a published process.
+
+#### AC-77-115 Happy path
+
+Given a signed-out visitor and a public deck
+When the player uses this behaviour
+Then the behaviour holds: Later: the cEDH set, reported as the share that reaches the ceiling (slice 13); every surface reads the audit, with a one-function test (slice 14); a signed-out audit of a pasted list (slice 15); outcomes from consented I-35 logs (slice 16).
+
+#### AC-77-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-77-117 Edge
+
+Given a list where one name does not resolve
+When the player confirms
+Then the unresolved name is shown first and nothing is written until they accept that list
+
+### UX states for this feature
+
+The player-visible outcome is: every bracket estimate shows the floor each official rule sets apart from the heuristic average, the terms and the cards behind each, which counts are exact and which estimated, and what it cannot see. It links to a frozen audit of that deck version, states on the methods page how often it matches labelled decks against a constant-guess baseline, per bracket and in which direction it errs, and takes challenges to a scoring rule through a published process.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
+
+### Record moved from the roadmap (2026-11-11)
+
+Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.
+
+## I-77: A Bracket Estimate Players Can Audit
+
+**Spec:** [`specs/i77-a-bracket-estimate-players-can-audit.md`](i77-a-bracket-estimate-players-can-audit.md)
+
+**Outcome:** every bracket estimate shows the floor each official rule sets apart from the heuristic average, the terms and the cards behind each, which counts are exact and which estimated, and what it cannot see. It links to a frozen audit of that deck version, states on the methods page how often it matches labelled decks against a constant-guess baseline, per bracket and in which direction it errs, and takes challenges to a scoring rule through a published process.
+
+**Status:** Next
+**Priority:** Next for slices 0 to 12, directly after I-48 in the Portfolio View; Later for slices 13 to 16 (the cEDH set, every surface as it lands, signed-out audits and outcomes from logged games). Never paid: it is evidence
+**Impact / effort:** High / medium
+**Depends on:** the owner for slice 0 (D-94, the precon label policy, the harm direction); I-28 slice 2 for `explainBracket` (slice 1); I-50 slice 10, the deck check link, and I-48 slice 1 for the frozen audit link (slice 5), which therefore waits for that Later I-50 slice unless the owner moves it ahead; I-17 slice 1 and I-67 slice 13 for the precon set (slice 7); I-34 slice 3 for publication (slice 9); I-52 slice 3 for "Contest this" (slice 11); I-29 slice 6 for the cEDH set (slice 13); I-15 slice 2, I-41 slice 5, I-35 slice 5, I-75 slice 14 and I-29 slice 6 as each lands (slice 14); I-48 slice 4 for pasted lists (slice 15); I-35 slice 8 and D-68 for outcomes (slice 16).
+
+`scoreBracket` (`src/lib/deck/bracket.ts`) averages six heuristic terms scored 1 to 4, then raises the result to 4 for any two-card infinite combo ("RC rule"), to 3 for any Game Changer and to 4 above three, and clamps it. The official signals already act as floors, but nothing on screen separates them from the average. Average mana value enters three of the six terms, the counts follow the category the owner drags a card to, a failed combo lookup passes an empty list without saying so, and the estimate is computed in the browser only and never stored; `HomeDeckCard` labels the declared target "Auto bracket" (checked on `dev` at `2cf792e8`). Five initiatives hold a piece and none owns the result: [I-03](i03-trustworthy-deck-feedback.md) the score, [I-48](i48-official-changes-reach-every-deck.md) `assessDeck` and the method version, [I-28](i28-commander-deckbuilding-guide-by-bracket.md) the rules, [I-34](i34-commander-data-reports.md) the methods page, and [I-70](i70-ai-quality-bench-and-model-changes.md) benchmarks only the AI routes. Published figures need their baseline. ScrollVault states 77.1% exact on 1,229 organiser-labelled lists, and its FAQ says that always answering Bracket 3 scores 73.9% ([post](https://scrollvault.net/posts/how-scrollvault-bracket-calculator-works.html), 2026-04-07). SpellRack publishes 83.4% on 157 precons, all 26 misses over-predicted ([accuracy](https://spellrack.com/accuracy), 2026-11-10), on a set with one label, Bracket 2. Wizards wrote on 2025-02-11 that "the average current preconstructed deck is at a Core (Bracket 2) level", and on 2025-10-21 untied Bracket 2 from precons, because "some precons … didn't necessarily follow the model" ([update](https://magic.wizards.com/en/news/announcements/commander-brackets-beta-update-october-21-2025)). Decks of KeyForge shows its score as an equation and changes it through public issues under "Do No Harm". I-77 judges I-03's output the way I-70 judges I-02's. No model takes part, and Bracket 5 stays a declaration.
+
+### Scope
+
+- [ ] Owner decisions: publish even when the estimate barely beats the baseline, which labelled sets come first, and whether other calculators are named ([D-94](../owner-decisions.md#content-and-naming)); the precon label policy; and whether under-estimates are the harm the method gate guards against (slice 0).
+- [ ] `explainBracket`, one pure function every surface reads: the official floors (Game Changers, two-card combos, mass land denial, extra turns) apart from the heuristic terms, each with its cards, rule ids, owner placements, an Exact, Sourced or Estimated badge, the blind spots and a completeness flag; `scoreBracket` becomes its projection with unchanged numbers, and `detectGameChanger` is removed (slice 1).
+- [ ] The audit view: the sum as written arithmetic, the floor block, badges, blind spots, "not checked" when combo data is missing and the beta label; the home card says "Target", not "Auto bracket"; the mismatch warning compares the target with the estimate shown (slice 2). Mass-land-denial and extra-turn rows, Estimated, with the number unchanged (slice 3).
+- [ ] "To reach bracket N" through `pathToBracket`, floors first, naming no replacement card and using no verdict word, read by I-28 slice 7 and [I-76](i76-complete-this-deck-from-my-collection.md) (slice 4); a frozen audit on I-50's deck check link that always shows its stored verdict, with a line for the current method (slice 5).
+- [ ] A bench of labelled sets replayed offline in CI, reporting exact matches, balanced accuracy, a confusion matrix, errors above and below, and the constant-guess baseline with intervals (slice 6); precons first, Official where a Game Changer sets the floor and Reference otherwise, reported apart (slice 7); a method-change gate that refuses a change raising under-estimates (slice 8); publication on I-34's methods page with a change log and the per-bracket line in the audit view (slice 9); method v2, the mass-land-denial floor, as the first change through the gate (slice 10); "Contest this" with I-52's `bracket_rule` kind and a public challenge log (slice 11); an owner-reviewed set with blind double review (slice 12).
+- [ ] Later: the cEDH set, reported as the share that reaches the ceiling (slice 13); every surface reads the audit, with a one-function test (slice 14); a signed-out audit of a pasted list (slice 15); outcomes from consented I-35 logs (slice 16).
+
+### Engineering enablers
+
+- Golden decks give fixed floors, terms, cards and estimate; card order changes nothing; every count has a badge; `scoreBracket` equals the projection of `explainBracket` on every existing test.
+- CI replays recorded Spellbook responses with the network stubbed, reports are byte-identical on rerun, and a threshold changed without a version bump fails.
+- The same list, versions and combo data return the same audit link, a revoked link answers 410, and no private field reaches the page.
+- Slice 1 merges before I-48 slice 2, so that two runs do not edit `bracket.ts` at once.
+
+**Paid-tier angle:** none. ScrollVault, SpellRack, Nerd Leagues, TableCommander and DeckCheck all publish an estimator, so the estimator is never the product. What I-77 buys is trust in the free surfaces that lead to paid ones: I-15's pod comparison, I-41's store nights and I-30's pod pass. Nothing is sold, previewed early or ranked by spend.
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player told a bracket, I want the floors and the cards that tripped them, so that the number is an explanation I can audit.
+
+**Acceptance.**
+- Official floors are listed apart from heuristic terms.
+- Each term names the cards.
+- A method change does not ship without the benchmark the spec requires.
+
+**UX.** The audit is a panel on the deck and a link that freezes the explanation. It does not say the deck is fair or unfair.
+
+**Data and API.** `explainBracket` is the one function I-48 and I-15 read. It returns the method version. No model.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `bracket_audit_opened {method_version}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Signed-in on private decks. A public audit stays off until the owner says so. Never paid.
+
+**Open questions.** Whether to publish a benchmark that barely beats always saying Bracket 3 is D-94.
+
+### Definition of done
+
+A pod member opens a frozen audit link and sees why a deck reads Bracket 3: the Game Changer floor with its two cards, the heuristic sum, which counts are exact and which estimated, and what the estimate cannot see; the methods page states how often the estimate matched labelled precons, beside the score of always answering the most common label, in which direction it erred, and which method version produced the figure.
+
+---
+

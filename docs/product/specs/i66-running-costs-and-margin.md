@@ -2,7 +2,7 @@
 
 > **Initiative:** I-66, proposed for the [roadmap](../roadmap.md) · **Status:** Proposed · **Priority:** Next for slices 0 to 8, before [I-30](i30-business-model-and-paid-tier.md)'s pricing decision; Later for slices 9 to 12, which wait for I-30's owner page, [I-63](i63-one-notification-system.md)'s job route or a Pro plan · **Paid:** not applicable; an internal tool for the owner, never shown to players · **Written 2026-11-10**
 > **Research:** one dated note of 2026-11-10 on Vercel, Supabase, Sentry, Anthropic, domain and Prisma pages, plus three measurements made for this spec (Scryfall's bulk files, card image sizes, a domain lookup). It is not committed, so every external fact links its own entry in [Sources](#sources). Legal points are research, not legal advice; each goes to the lawyer list in [I-30 requirement 7.2](i30-business-model-and-paid-tier.md#7-the-legal-gate).
-> **Owns:** the dated price book of every provider except AI and payments; the cost model per active player; the table of plan limits and the usage at which each one hits; the fixed-cost floor and the plan-upgrade triggers; the monthly cost report; budget alerts and their thresholds; the list of cost-cutting engineering moves with their estimated savings; break-even subscriber counts for running costs. **Does not own:** AI prices, metering, allowances and the AI spend ceiling (I-30 slices 1 to 3, [I-02](i02-checkable-ai-copilot.md)); plans, prices, payment fees and the owner metrics page (I-30); the email provider and the job route (I-63); the price archive and its retention ([I-59](i59-prices-over-time-and-alerts.md)); the shared rate-limit store, the WebP migration and user-write bounds ([I-05](../roadmap.md#i-05-production-safety)); the rules version reader ([I-48](i48-official-changes-reach-every-deck.md)); the definition of an active account ([I-39](i39-first-run-activation-and-measurement.md)); the uptime monitor ([I-52](i52-feedback-loop-players-can-see.md)); the index server ([I-29](i29-cross-site-deck-index.md)).
+> **Owns:** the dated price book of every provider except AI and payments; the cost model per active player; the table of plan limits and the usage at which each one hits; the fixed-cost floor and the plan-upgrade triggers; the monthly cost report; budget alerts and their thresholds; the list of cost-cutting engineering moves with their estimated savings; break-even subscriber counts for running costs. **Does not own:** AI prices, metering, allowances and the AI spend ceiling (I-30 slices 1 to 3, [I-02](i02-checkable-ai-copilot.md)); plans, prices, payment fees and the owner metrics page (I-30); the email provider and the job route (I-63); the price archive and its retention ([I-59](i59-prices-over-time-and-alerts.md)); the shared rate-limit store, the WebP migration and user-write bounds ([I-05](i05-production-safety.md)); the rules version reader ([I-48](i48-official-changes-reach-every-deck.md)); the definition of an active account ([I-39](i39-first-run-activation-and-measurement.md)); the uptime monitor ([I-52](i52-feedback-loop-players-can-see.md)); the index server ([I-29](i29-cross-site-deck-index.md)).
 > **Proposed changes to neighbours, for the integrator:** I-30's assumption A2 cites requirement 5 here instead of a guessed €150. I-05 M3 and `src/lib/cache-limits.ts` say 500 MB, not 512 MB. I-05 gains one item: the code's fallback domain is unregistered (requirement 5.4).
 
 ## Overview
@@ -23,7 +23,7 @@ The estimates below lead to three findings, to be confirmed by measurement (slic
 | -------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [I-30](i30-business-model-and-paid-tier.md)                                            | AI cost table (lines 114–123), allowance cost (4.3, line 129), global AI ceiling (4.6, line 132), merchant-of-record cost (6.1, line 145), owner metrics page (8.1, line 171; slice 10, line 231), assumption A2 and the living-wage table (lines 173–183) | I-30 keeps AI, fees and the page. I-66 replaces A2 with requirement 5, adds hosting to the cost per payer (9.1) and feeds the page's cost section |
 | [I-02](i02-checkable-ai-copilot.md)                                                    | Cost per call and per month on Haiku 4.5, Haiku 5.5 and Sonnet 5.5 (lines 121–129)                                                                                                                                                                         | Read, not owned. The unmerged branch `feat/ai-usage-metering-and-monthly-quota` adds the ledger I-66 reads (requirement 6.4)                      |
-| [I-05](../roadmap.md#i-05-production-safety)                                           | At roadmap `4f803bb`: WebP move (line 898), uptime monitor (901), AI metering (909), M2 shared rate-limit store (921), M3 "can fill the 512 MB database" (923), advanced observability parked (948)                                                        | I-05 owns all six. I-66 corrects M3 to 500 MB, prices the WebP move (8.1) and adds no observability vendor                                        |
+| [I-05](i05-production-safety.md)                                           | At roadmap `4f803bb`: WebP move (line 898), uptime monitor (901), AI metering (909), M2 shared rate-limit store (921), M3 "can fill the 512 MB database" (923), advanced observability parked (948)                                                        | I-05 owns all six. I-66 corrects M3 to 500 MB, prices the WebP move (8.1) and adds no observability vendor                                        |
 | [I-59](i59-prices-over-time-and-alerts.md)                                             | "512 MB free-tier database" (line 55), a 512 MB database full in nine weeks of daily prices (144), a 287 MB-a-year archive (146), storage as open question 1 (188)                                                                                         | I-59 decides what to store. I-66 prices it (5.1) and alerts on database size (7.4)                                                                |
 | [I-63](i63-one-notification-system.md)                                                 | Email prices (lines 49–55), Vercel cron on Hobby once a day (61, 149), the job route (10.1, line 168), job cadence as open question 5 (266)                                                                                                                | I-63 chooses the provider and owns the route. I-66's daily checks run on that route, and its alerts use I-63's transport                          |
 | [I-39](i39-first-run-activation-and-measurement.md)                                    | Active account (30 days) defined in 11.4 (line 166)                                                                                                                                                                                                        | I-66 uses that definition as its denominator and counts it from existing rows (6.6)                                                               |
@@ -59,7 +59,7 @@ Pro's spend management sets an on-demand budget. It notifies by web and email at
 
 **Domains.** On 2026-11-10, Verisign's registry lookup for `magicaibuilder.com` answered "not found" [20]. Gandi charges €11.65 for the first year of a `.com` and €31.98 a year to renew; for `.fr` it charges €6.00 and €23.98, all before 20% VAT [21][22]. Third-party comparisons put Cloudflare's at-cost `.com` at about $10.44–10.46 a year (search summary; not verified on Cloudflare) [26].
 
-**Scryfall** charges nothing. Its rate limits and daily bulk files are in [I-05](../roadmap.md#i-05-production-safety)'s Scryfall item. Measured on 2026-11-10 [24]: the Oracle Cards file of 2026-11-09 is 25.4 MB compressed and 211 MB of JSON for 39,288 cards. Keeping 17 fields (six Commander-family legalities and one image URL) gives 32.5 MB, or 828 bytes a card. Twenty random Commander-legal card images [25] averaged 110.6 KB as the `normal` JPEG, 60.6 KB as the `grid` WebP at the same 488 × 680, and 91.1 KB as the `display` WebP at 672 × 936.
+**Scryfall** charges nothing. Its rate limits and daily bulk files are in [I-05](i05-production-safety.md)'s Scryfall item. Measured on 2026-11-10 [24]: the Oracle Cards file of 2026-11-09 is 25.4 MB compressed and 211 MB of JSON for 39,288 cards. Keeping 17 fields (six Commander-family legalities and one image URL) gives 32.5 MB, or 828 bytes a card. Twenty random Commander-legal card images [25] averaged 110.6 KB as the `normal` JPEG, 60.6 KB as the `grid` WebP at the same 488 × 680, and 91.1 KB as the `display` WebP at 672 × 936.
 
 ## Current state in this codebase
 
@@ -190,7 +190,7 @@ At I-30's exchange rate (€1 ≈ $1.10–1.20) the commercial minimum is **€4
 | 5   | Run functions in `dub1`, next to the database in Ireland                                                                                      | CPU and memory both cost about 31% more in `dub1` than in `iad1` [6]. Memory cost falls only if wall time per call drops by more than 24%; CPU cost rises regardless. The move is for latency first; measure before deciding        | I-66                                                                                                               |
 | 6   | Speed Insights `sampleRate`                                                                                                                   | $0 on Hobby; keeps data flowing past about 250 players; avoids Plus at $10 and $0.65 per 10,000 [10]                                                                                                                                | I-66                                                                                                               |
 | 7   | `replaysOnErrorSampleRate` below 1.0                                                                                                          | Keeps within 50 replays; avoids Sentry Team ($26–29) for quota alone                                                                                                                                                                | I-66                                                                                                               |
-| 8   | Static pages with timed and on-demand revalidation (ISR) for public deck, profile and commander pages                                         | One invocation per revalidation instead of per view, crawlers included. Hobby includes 1 million ISR reads and 200,000 writes [1]                                                                                                   | [I-08](../roadmap.md#i-08-share-compare-and-learn); I-66 measures                                                  |
+| 8   | Static pages with timed and on-demand revalidation (ISR) for public deck, profile and commander pages                                         | One invocation per revalidation instead of per view, crawlers included. Hobby includes 1 million ISR reads and 200,000 writes [1]                                                                                                   | [I-08](i08-share-compare-and-learn.md); I-66 measures                                                  |
 | 9   | An explicit Prisma `connection_limit` in the documented production URL                                                                        | $0; postpones the 200-client pooler ceiling                                                                                                                                                                                         | I-66                                                                                                               |
 | 10  | AI: Haiku 5.5, the Batch API, prompt caching                                                                                                  | $0.88 to $0.12 for a 20-build month (I-02 line 129); the Batch API halves the rest [19]                                                                                                                                             | I-30 slice 3, I-02                                                                                                 |
 | 11  | Card lookups from Scryfall's daily Oracle Cards file instead of server fills                                                                  | No fee saved, since Scryfall charges nothing; fewer server calls to Scryfall; costs about 32.5 MB of JSON in the database [24]                                                                                                      | I-67 slice 9 (re-pointed 2026-11-10)                                                                               |
@@ -297,3 +297,383 @@ Read 2026-11-10 unless dated otherwise. Vercel's pages carry their own "last upd
 25. Measured for this spec on 2026-11-10: 20 random Commander-legal paper cards from [24] (seed 20261110), each downloaded from `cards.scryfall.io` as `normal` JPEG, `grid` WebP and `display` WebP.
 26. Third-party comparisons of Cloudflare Registrar prices, for example [CostGoat](https://costgoat.com/pricing/cloudflare-domains), from a search summary; not verified on Cloudflare.
 27. Supabase, [Management API reference](https://supabase.com/docs/reference/api/introduction); a search on 2026-11-10 found no organisation usage or cost endpoint.
+
+## Feature contract (Full, 2026-11-11)
+
+The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
+
+### Summary and problem
+
+the owner knows what one more active player costs each month, free or paying, which plan limit breaks first and when, and what the product spends with each provider, from dated prices, provider exports and the database's own counts. An alert fires before a limit or a budget is reached, and no player is tracked for it.
+
+### Goals
+
+- The owner runs one command and reads last month's cost per provider, per active player, per stored account and per payer, each figure labelled measured, computed or assumed with its date, and the three limits with the least headroom with the month each would hit; a repeat card lookup is served by the CDN without a function call; and no player-facing page shows a cost, and no new event or column tracks a player.
+
+### Non-goals
+
+- Do not reverse a non-goal already named in the moved record or in the roadmap's strategic boundaries.
+- Do not invent a usage count, a win rate, or a score the moved record does not already cite from a named source.
+
+### Personas
+
+See the roadmap persona table. This initiative serves the rows that list its id.
+
+### User stories
+
+#### US-66-01
+
+As the owner, I want the monthly cost of a running player, so that a price is not a guess.
+
+#### US-66-02
+
+As a signed-out player, I want the guest rule in the rollout to be true, so that I am not shown a control that fails when I have no account.
+
+#### US-66-03
+
+As a player using a keyboard or a screen reader, I want the primary action to have a name and a visible focus, so that colour is not the only signal.
+
+### Acceptance criteria
+
+#### AC-66-01 Happy path
+
+Given a signed-in player and the English locale
+When the price book reproduces the published provider prices to the cent.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-66-02 Happy path
+
+Given a signed-in player and the English locale
+When a past month is recomputed with that month's prices.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-66-03 Happy path
+
+Given a signed-in player and the English locale
+When the report is not a page a player can open.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-66-04 Error and failure
+
+Given the action cannot finish
+When the player retries or leaves the screen
+Then the last confirmed state is unchanged, and the message is a catalogue string rather than a stack trace or a raw status code
+
+#### AC-66-05 Edge cases
+
+Given an empty deck, a missing price, or a field the record says may be absent
+When the screen renders
+Then the empty state says what is missing, and it does not show a zero in place of an unknown value
+
+#### AC-66-06 Guest and signed-in
+
+Given the rollout in this contract
+When a guest and a signed-in player open the same surface
+Then the rollout holds: Owner only. Never a player feature. No flag.
+
+#### AC-66-07 Locales
+
+Given the ten catalogs
+When this feature adds a user-facing string
+Then The ten catalogs on disk are `en`, `fr`, `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` (`src/i18n/routing.ts`). Only `en` and `fr` are routed. The other eight stay at key parity with `en` and may reuse the English text until a person who speaks the language reviews them. A new string is not shipped in a routed locale as hard-coded English.
+
+#### AC-66-08 Accessibility
+
+Given a keyboard, a visible focus, and a screen reader
+When the player completes US-66-01 without a pointer
+Then every new control has an accessible name, focus returns on close, and a status uses a word or an icon as well as colour
+
+### UX flow and states
+
+An owner page, behind the operator role once I-69 has it. Until then a script the owner runs.
+
+- Empty: the screen says what is missing and what to do next.
+- Loading: a busy state that does not shift the layout when it ends.
+- Error: the catalogue message and a way to retry, without losing the last confirmed edit.
+
+### Data model and API
+
+Pure functions plus measurements of the routes we already have. No new vendor. No tracking of a player's cards.
+
+### Analytics and telemetry
+
+`cost_report_run {month}`. Reserved for I-39. Not emitted before that store exists.
+
+The event is reserved for I-39's store. It is not emitted before that store exists. The row holds counts and enums only: no email, name, username, deck name, card name, list, search text or URL.
+
+### Rollout and feature flags
+
+Owner only. Never a player feature. No flag.
+
+### Dependencies
+
+Hard waits are in the roadmap dependency table. Slice edges, where this file has a delivery-slice table, stay in that table and in `dependency-graph.md`.
+
+### Risks and mitigations
+
+- Shipping the surface before its wait is met: the roadmap sequence forbids the pick.
+- A string or a status that only some players can read: the locale and accessibility scenarios above fail the change.
+
+### Kill criteria
+
+None. This initiative is not in the Now band. Stop it if it would reverse a non-goal in the moved record.
+
+### Open questions
+
+Which Vercel and Supabase plans production uses, and when Pro starts, are owner questions. VAT recovery is an accountant's question.
+
+### Sources
+
+- https://vercel.com/docs/limits/fair-use-guidelines
+- https://vercel.com/docs/caching/cdn-cache
+
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-66-101
+
+As a player, I want the product to slice 0, no code: the plans and function region in use today, when to move to Vercel Pro and Supabase Pro, the domain, the budget amounts and whether reaching a budget pauses the site; a written question to Vercel on commercial use, which joins I-30 requirement 7.2., so that the owner knows what one more active player costs each month, free or paying, which plan limit breaks first and when, and what the product spends with each provider, from dated prices, provider exports and the database's own counts. An alert fires before a limit or a budget is reached, and no player is tracked for it.
+
+#### AC-66-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Slice 0, no code: the plans and function region in use today, when to move to Vercel Pro and Supabase Pro, the domain, the budget amounts and whether reaching a budget pauses the site; a written question to Vercel on commercial use, which joins I-30 requirement 7.2.
+
+#### AC-66-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-66-102 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-66-102
+
+As a player, I want the product to a dated price book of every provider except AI and payments, and the cost model per active player as pure functions with 13 labelled assumptions, tested against the spec's tables (slice 1); a measurement script that prints Vercel usage by project and region, database and table sizes, active and stored accounts and the next build route table (slice 2)., so that the owner knows what one more active player costs each month, free or paying, which plan limit breaks first and when, and what the product spends with each provider, from dated prices, provider exports and the database's own counts. An alert fires before a limit or a budget is reached, and no player is tracked for it.
+
+#### AC-66-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A dated price book of every provider except AI and payments, and the cost model per active player as pure functions with 13 labelled assumptions, tested against the spec's tables (slice 1); a measurement script that prints Vercel usage by project and region, database and table sizes, active and stored accounts and the next build route table (slice 2).
+
+#### AC-66-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-66-105 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-66-103
+
+As a player, I want the product to s-maxage with stale-while-revalidate on 200 answers from /api/cache/search and /api/cache/cards, never on 400, 429 or 502 (slice 3), and a CDN caching header on /api/proxy-card-image, with the response bytes in its log line (slice 4)., so that the owner knows what one more active player costs each month, free or paying, which plan limit breaks first and when, and what the product spends with each provider, from dated prices, provider exports and the database's own counts. An alert fires before a limit or a budget is reached, and no player is tracked for it.
+
+#### AC-66-106 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then s-maxage with stale-while-revalidate on 200 answers from /api/cache/search and /api/cache/cards, never on 400, 429 or 502 (slice 3), and a CDN caching header on /api/proxy-card-image, with the response bytes in its log line (slice 4).
+
+#### AC-66-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-66-108 Edge
+
+Given a card the player marked as a proxy
+When ownership and the deck total are shown
+Then the card is labelled proxy and is not counted as a physical copy the player owns
+
+#### US-66-104
+
+As a player, I want the product to speed Insights and Sentry on-error replay sample rates set from slice 2's counts (slice 5); the function region chosen by comparing durationMs by route, then set in the dashboard or in the vercel.json that I-63 slice 5 creates (slice 6); and an explicit Prisma connection_limit in the documented production URL, with the infrastructure doc corrected to 500 MB (slice 7)., so that the owner knows what one more active player costs each month, free or paying, which plan limit breaks first and when, and what the product spends with each provider, from dated prices, provider exports and the database's own counts. An alert fires before a limit or a budget is reached, and no player is tracked for it.
+
+#### AC-66-109 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Speed Insights and Sentry on-error replay sample rates set from slice 2's counts (slice 5); the function region chosen by comparing durationMs by route, then set in the dashboard or in the vercel.json that I-63 slice 5 creates (slice 6); and an explicit Prisma connection_limit in the documented production URL, with the infrastructure doc corrected to 500 MB (slice 7).
+
+#### AC-66-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-66-111 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-66-105
+
+As a player, I want the product to a monthly report script that prints every provider's cost with its source, the denominators, the plan-limit table and the break-even under I-30's prices, and stores nothing (slice 8)., so that the owner knows what one more active player costs each month, free or paying, which plan limit breaks first and when, and what the product spends with each provider, from dated prices, provider exports and the database's own counts. An alert fires before a limit or a budget is reached, and no player is tracked for it.
+
+#### AC-66-112 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A monthly report script that prints every provider's cost with its source, the denominators, the plan-limit table and the break-even under I-30's prices, and stores nothing (slice 8). Active players are counted from Deck.updatedAt and, once I-30 slice 1 merges, AiUsage, until I-39's event store replaces them; a missing input shows "not available", never zero.
+
+#### AC-66-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-66-114 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-66-106
+
+As a player, I want the product to later: stored months and the cost section of I-30's owner page (slice 9); Vercel's signed budget.reached webhook (slice 10); daily threshold checks on I-63's job route for database size, Hobby allotments, early AI thresholds and a Speed Insights pause (slice 11); and static regeneration for public deck, profile and commander pages, with the saving measured (slice 12)., so that the owner knows what one more active player costs each month, free or paying, which plan limit breaks first and when, and what the product spends with each provider, from dated prices, provider exports and the database's own counts. An alert fires before a limit or a budget is reached, and no player is tracked for it.
+
+#### AC-66-115 Happy path
+
+Given a signed-out visitor and a public deck
+When the player uses this behaviour
+Then the behaviour holds: Later: stored months and the cost section of I-30's owner page (slice 9); Vercel's signed budget.reached webhook (slice 10); daily threshold checks on I-63's job route for database size, Hobby allotments, early AI thresholds and a Speed Insights pause (slice 11); and static regeneration for public deck, profile and commander pages, with the saving measured (slice 12).
+
+#### AC-66-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-66-117 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-66-107
+
+As a player, I want the product to changes to neighbours, recorded on 2026-11-10: I-30's assumption A2 cites requirement 5, I-05 M3 and the I-59 spec say 500 MB, and the unregistered fallback domain and the function region are I-05 items., so that the owner knows what one more active player costs each month, free or paying, which plan limit breaks first and when, and what the product spends with each provider, from dated prices, provider exports and the database's own counts. An alert fires before a limit or a budget is reached, and no player is tracked for it.
+
+#### AC-66-118 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Changes to neighbours, recorded on 2026-11-10: I-30's assumption A2 cites requirement 5, I-05 M3 and the I-59 spec say 500 MB, and the unregistered fallback domain and the function region are I-05 items. The comment in src/lib/cache-limits.ts still says 512 MB and is corrected with the code.
+
+#### AC-66-119 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-66-120 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+### UX states for this feature
+
+The player-visible outcome is: the owner knows what one more active player costs each month, free or paying, which plan limit breaks first and when, and what the product spends with each provider, from dated prices, provider exports and the database's own counts. An alert fires before a limit or a budget is reached, and no player is tracked for it.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
+
+### Record moved from the roadmap (2026-11-11)
+
+Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.
+
+## I-66: Running Costs And Margin Per Active Player
+
+**Spec:** [`specs/i66-running-costs-and-margin.md`](i66-running-costs-and-margin.md)
+
+**Outcome:** the owner knows what one more active player costs each month, free or paying, which plan limit breaks first and when, and what the product spends with each provider, from dated prices, provider exports and the database's own counts. An alert fires before a limit or a budget is reached, and no player is tracked for it.
+
+**Status:** Next
+**Priority:** Next for slices 0 to 8, before I-30's price decision; Later for slices 9 to 12, which wait for I-30's owner page, I-63's job route or a Pro plan. Internal; never shown to players
+**Impact / effort:** Medium / medium
+**Depends on:** nothing for slices 1, 3 and 4; the owner's slice 0 answers for the region and the budget webhook (slices 6 and 10); slice 2's measurements for slices 5 to 8 and 12; I-30 slice 10 and I-63 slice 5 for stored months (slice 9); I-63 slice 5, and I-30 slice 2 for the AI thresholds, for the daily checks (slice 11); I-08's agreement on its pages for static regeneration (slice 12).
+
+I-30 prices the AI per user and computes how many subscribers a living takes, but it guessed the rest: its assumption A2 put fixed costs at €150 a month. Nothing in the code reads Vercel, Supabase or Sentry usage, and nobody knew which free limit breaks first. The spec's estimates, which slice 2 replaces with measurements: Speed Insights stops collecting at about 250 active players, Sentry's 50 replays run out at about 625, the 500 MB database fills at about 1,100 stored accounts, or about 800 once I-67's card tables take their estimated 100 MB (computed 2026-11-10), and Hobby's 10 GB of Fast Origin Transfer runs out at about 1,300 active players. On Pro, hosting costs about $0.002–0.005 per active player a month beyond the included credit, while a free player who uses the whole AI allowance on today's model costs $0.44, about 90 times more. Vercel's Hobby plan forbids commercial use ([fair use](https://vercel.com/docs/limits/fair-use-guidelines)), so the first paid plan or ad needs Pro, and the commercial floor is about €40–44 a month before VAT. Two cheap moves need no decision. The shared Scryfall cache routes set no caching header (`src/app/api/cache/read-through-response.ts`), so every repeat lookup costs a function call and a database read, and the image proxy answers `public, max-age=86400`, which Vercel's CDN does not cache without `s-maxage` ([CDN cache](https://vercel.com/docs/caching/cdn-cache)). The report counts players only from rows that already exist and adds no external service.
+
+### Scope
+
+- [ ] Slice 0, no code: the plans and function region in use today, when to move to Vercel Pro and Supabase Pro, the domain, the budget amounts and whether reaching a budget pauses the site; a written question to Vercel on commercial use, which joins I-30 requirement 7.2.
+- [ ] A dated price book of every provider except AI and payments, and the cost model per active player as pure functions with 13 labelled assumptions, tested against the spec's tables (slice 1); a measurement script that prints Vercel usage by project and region, database and table sizes, active and stored accounts and the `next build` route table (slice 2).
+- [ ] `s-maxage` with `stale-while-revalidate` on 200 answers from `/api/cache/search` and `/api/cache/cards`, never on 400, 429 or 502 (slice 3), and a CDN caching header on `/api/proxy-card-image`, with the response bytes in its log line (slice 4).
+- [ ] Speed Insights and Sentry on-error replay sample rates set from slice 2's counts (slice 5); the function region chosen by comparing `durationMs` by route, then set in the dashboard or in the `vercel.json` that I-63 slice 5 creates (slice 6); and an explicit Prisma `connection_limit` in the documented production URL, with the infrastructure doc corrected to 500 MB (slice 7).
+- [ ] A monthly report script that prints every provider's cost with its source, the denominators, the plan-limit table and the break-even under I-30's prices, and stores nothing (slice 8). Active players are counted from `Deck.updatedAt` and, once I-30 slice 1 merges, `AiUsage`, until I-39's event store replaces them; a missing input shows "not available", never zero.
+- [ ] Later: stored months and the cost section of I-30's owner page (slice 9); Vercel's signed `budget.reached` webhook (slice 10); daily threshold checks on I-63's job route for database size, Hobby allotments, early AI thresholds and a Speed Insights pause (slice 11); and static regeneration for public deck, profile and commander pages, with the saving measured (slice 12).
+  - Recorded 2026-11-10: the owner pages of slices 9 and 10 use [I-69](i69-operator-console-support-moderation-and-kill-switches.md)'s `requireOperator` once its slice 1 exists, and the 50% and 80% budget alerts show on I-69's console overview.
+- [ ] Changes to neighbours, recorded on 2026-11-10: I-30's assumption A2 cites requirement 5, I-05 M3 and the I-59 spec say 500 MB, and the unregistered fallback domain and the function region are I-05 items. The comment in `src/lib/cache-limits.ts` still says 512 MB and is corrected with the code.
+
+### Engineering enablers
+
+- Pure functions reproduce the spec's cost, limit, floor and break-even tables to the cent, and a dated price change recomputes an older month with that month's prices.
+- A guard test fails if the report's queries touch a table outside an allowlist: `User`, `Deck`, `AiUsage`, `AiMonthlySpend` and its own cost tables.
+- The cache routes send `s-maxage` on hits and fills only, and the proxy sends its CDN header only with a 200 image.
+- A webhook with a bad signature is rejected, a duplicate event is stored once, and each threshold alerts once a month.
+
+**Paid-tier angle:** not applicable. The model, the report and the alerts are for the owner only, and no page, route or export shown to players carries a cost figure. Its value to I-30 is the price decision: it says what one more player costs, free or paying, before slice 0 sets a price.
+
+### Enrichment (2026-11-11)
+
+**User story.** As the owner, I want the monthly cost of a running player, so that a price is not a guess.
+
+**Acceptance.**
+- The price book reproduces the published provider prices to the cent.
+- A past month is recomputed with that month's prices.
+- The report is not a page a player can open.
+
+**UX.** An owner page, behind the operator role once I-69 has it. Until then a script the owner runs.
+
+**Data and API.** Pure functions plus measurements of the routes we already have. No new vendor. No tracking of a player's cards.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `cost_report_run {month}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Owner only. Never a player feature. No flag.
+
+**Open questions.** Which Vercel and Supabase plans production uses, and when Pro starts, are owner questions. VAT recovery is an accountant's question.
+
+### Definition of done
+
+The owner runs one command and reads last month's cost per provider, per active player, per stored account and per payer, each figure labelled measured, computed or assumed with its date, and the three limits with the least headroom with the month each would hit; a repeat card lookup is served by the CDN without a function call; and no player-facing page shows a cost, and no new event or column tracks a player.
+
+---
+

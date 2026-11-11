@@ -2,7 +2,7 @@
 
 > **Initiative:** I-70, proposed for the [roadmap](../roadmap.md) · **Status:** Proposed · **Priority:** Next for slices 0 to 13, because [I-30](i30-business-model-and-paid-tier.md) slice 3 moves builds to a cheaper model "behind the golden set" and that set cannot judge a model; Later for slices 14 to 18 · **Paid:** never paid; it is how the paid AI allowance earns its price · **Written 2026-11-10**
 > **Research:** one dated note of 2026-11-10 on Anthropic's model, pricing, deprecation, evaluation and guardrail pages, OpenAI's and OWASP's guidance, and what AI deck tools say about quality. It is not committed, so every external fact links its entry in [Sources](#sources). Legal points are research, not legal advice; each goes to the lawyer list in [I-30 requirement 7.2](i30-business-model-and-paid-tier.md#7-the-legal-gate) through [I-38](i38-trust-safety-and-user-rights.md)'s slice 0.
-> **Owns:** the bench: a versioned set of build, suggestion and injection cases; the pinned card-data snapshot it scores against; the deterministic scorers; recorded model replies and the offline CI run; the live runner and its cost cap; the comparison report; the model-change gate; the prompt registry and its version numbers; the design of the provenance fields; the rule for turning player reports into cases. **Does not own:** the routes, the validator and the copilot's presentation ([I-02](i02-checkable-ai-copilot.md)); metering, the price table, allowances and the player AI ceiling ([I-30](i30-business-model-and-paid-tier.md#4-ai-metering-and-quotas-production-safety-ships-before-billing)); the cost book ([I-66](i66-running-costs-and-margin.md)); the event store ([I-39](i39-first-run-activation-and-measurement.md)); the bug report ([I-52](i52-feedback-loop-players-can-see.md)); the public verdict API ([I-22](i22-verification-as-a-public-surface.md)); land formulas ([I-58](i58-mana-base-builder.md)); dated Game Changer lists ([I-48](i48-official-changes-reach-every-deck.md)); card data ([I-67](i67-one-card-data-pipeline.md)); the statistics method ([I-21](i21-reproducible-probability-bench.md)); the fix for unsanitised suggestion fields ([I-05](../roadmap.md#i-05-production-safety) M1); local models ([I-12](../roadmap.md#i-12-local-ai)).
+> **Owns:** the bench: a versioned set of build, suggestion and injection cases; the pinned card-data snapshot it scores against; the deterministic scorers; recorded model replies and the offline CI run; the live runner and its cost cap; the comparison report; the model-change gate; the prompt registry and its version numbers; the design of the provenance fields; the rule for turning player reports into cases. **Does not own:** the routes, the validator and the copilot's presentation ([I-02](i02-checkable-ai-copilot.md)); metering, the price table, allowances and the player AI ceiling ([I-30](i30-business-model-and-paid-tier.md#4-ai-metering-and-quotas-production-safety-ships-before-billing)); the cost book ([I-66](i66-running-costs-and-margin.md)); the event store ([I-39](i39-first-run-activation-and-measurement.md)); the bug report ([I-52](i52-feedback-loop-players-can-see.md)); the public verdict API ([I-22](i22-verification-as-a-public-surface.md)); land formulas ([I-58](i58-mana-base-builder.md)); dated Game Changer lists ([I-48](i48-official-changes-reach-every-deck.md)); card data ([I-67](i67-one-card-data-pipeline.md)); the statistics method ([I-21](i21-reproducible-probability-bench.md)); the fix for unsanitised suggestion fields ([I-05](i05-production-safety.md) M1); local models ([I-12](i12-local-ai.md)).
 > **Proposed changes to neighbours, for the integrator:** I-30 slice 3 depends on I-70 slices 10 and 11 instead of "I-02 golden set". I-02 requirement 7.3 and its open golden-set item ("provider-backed qualitative evaluations") point here. I-02's "Already shipped" line "a golden evaluation set for valid cards, useful explanations" becomes "six validator regression cases; no case calls a model". I-12's "Benchmark local models against the golden evaluation set from I-02" points to this bench. I-30 4.1's `AiUsage` gains `promptVersion`, `resolvedModel` and `latencyMs`. I-52 2.3 gains the kind `ai_output`. I-39 8.2 gains one event, `ai_suggestion_action`.
 
 ## Overview
@@ -244,7 +244,7 @@ Slices 1 and 3 can start today, and slice 7 follows slice 1. Scheduled agents mu
 2. **Caps and accounting.** What per-run cap and monthly workspace limit? The estimates suggest a few dollars a month on Haiku models; a three-trial Fable 5.2 run is about $21 (estimate, 7.6). Does bench spend appear in I-66's cost report as its own line?
 3. **Publish the scores?** A public invented-name rate invites scrutiny on a forum that distrusts AI, and it is also the only answer to that distrust. Pre-repair or post-repair figures, or both?
 4. **Keep the OpenAI fallback?** It runs only when no Anthropic key is set. If it stays, it needs its own recordings and OpenAI prices read from OpenAI's page, which this spec did not read.
-5. **French rationale.** No locale reaches the prompts. Should French players get French rationale (I-02 with [I-11](../roadmap.md#i-11-localization-and-regional-experience)), and should the brief stop losing its apostrophes?
+5. **French rationale.** No locale reaches the prompts. Should French players get French rationale (I-02 with [I-11](i11-localization-and-regional-experience.md)), and should the brief stop losing its apostrophes?
 6. **Reports as cases.** Can a confirmed player report become a public test case, with what consent and what rewriting? Research, not legal advice, for the lawyer list ([L-06](../legal-questions.md#l-06-lawful-bases-and-personal-data-status-of-smaller-processing) (h)).
 
 ## Sources
@@ -267,3 +267,435 @@ Read on 2026-11-10 unless dated otherwise.
 14. [mtgcommander.ai](https://mtgcommander.ai/) (no date on the page).
 15. xoPLA.NET, [A little tool to make AI better at Magic: The Gathering deckbuilding](https://xopla.net/posts/a-little-tool-to-make-ai-better-at-magic-the-gathering-deckbuilding), 2025-11-09.
 16. SpellRack, [accuracy](https://spellrack.com/accuracy), "Public benchmark · 2026-11-10"; added 2026-11-11.
+
+## Feature contract (Full, 2026-11-11)
+
+The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
+
+### Summary and problem
+
+the owner knows whether a build or a suggestion is good, whether a prompt edit made it better or worse and whether a cheaper model would do, from scores that code computes on a fixed, public set of cases. No model or prompt change ships without a committed comparison report, and every stored build names the model and prompt version that made it.
+
+### Goals
+
+- A pull request that changes the model or a prompt cannot merge without a committed report showing that every case the incumbent passed in all trials still passes, at a cost and latency within the owner's limits; CI replays the bench with no key and no network; and a saved AI-built deck names its model and prompt version.
+
+### Non-goals
+
+- Do not reverse a non-goal already named in the moved record or in the roadmap's strategic boundaries.
+- Do not invent a usage count, a win rate, or a score the moved record does not already cite from a named source.
+
+### Personas
+
+See the roadmap persona table. This initiative serves the rows that list its id.
+
+### User stories
+
+#### US-70-01
+
+As the owner changing a model, I want a report that says whether the new model invents more card names, so that a cheaper model is not a silent regression.
+
+#### US-70-02
+
+As a signed-out player, I want the guest rule in the rollout to be true, so that I am not shown a control that fails when I have no account.
+
+#### US-70-03
+
+As a player using a keyboard or a screen reader, I want the primary action to have a name and a visible focus, so that colour is not the only signal.
+
+### Acceptance criteria
+
+#### AC-70-01 Happy path
+
+Given a signed-in player and the English locale
+When the bench scores a pinned set of cases with code, not with another model's opinion.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-70-02 Happy path
+
+Given a signed-in player and the English locale
+When a model or prompt change does not ship without the comparison report.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-70-03 Happy path
+
+Given a signed-in player and the English locale
+When the cases replay in CI with no API key.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-70-04 Error and failure
+
+Given the action cannot finish
+When the player retries or leaves the screen
+Then the last confirmed state is unchanged, and the message is a catalogue string rather than a stack trace or a raw status code
+
+#### AC-70-05 Edge cases
+
+Given an empty deck, a missing price, or a field the record says may be absent
+When the screen renders
+Then the empty state says what is missing, and it does not show a zero in place of an unknown value
+
+#### AC-70-06 Guest and signed-in
+
+Given the rollout in this contract
+When a guest and a signed-in player open the same surface
+Then the rollout holds: Owner only for the report. The live runner stays off until the owner's caps are committed. Players are unaffected until a passing report changes the model.
+
+#### AC-70-07 Locales
+
+Given the ten catalogs
+When this feature adds a user-facing string
+Then The ten catalogs on disk are `en`, `fr`, `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` (`src/i18n/routing.ts`). Only `en` and `fr` are routed. The other eight stay at key parity with `en` and may reuse the English text until a person who speaks the language reviews them. A new string is not shipped in a routed locale as hard-coded English.
+
+#### AC-70-08 Accessibility
+
+Given a keyboard, a visible focus, and a screen reader
+When the player completes US-70-01 without a pointer
+Then every new control has an accessible name, focus returns on close, and a status uses a word or an icon as well as colour
+
+### UX flow and states
+
+The report is an owner page. A player never sees another player's prompt. A live run is capped.
+
+- Empty: the screen says what is missing and what to do next.
+- Loading: a busy state that does not shift the layout when it ends.
+- Error: the catalogue message and a way to retry, without losing the last confirmed edit.
+
+### Data model and API
+
+A prompt registry and a pinned card snapshot. Recorded replies are the bench's, not the player's decks.
+
+### Analytics and telemetry
+
+`bench_report_recorded {gate: pass or fail}`. Reserved for I-39. Not emitted before that store exists.
+
+The event is reserved for I-39's store. It is not emitted before that store exists. The row holds counts and enums only: no email, name, username, deck name, card name, list, search text or URL.
+
+### Rollout and feature flags
+
+Owner only for the report. The live runner stays off until the owner's caps are committed. Players are unaffected until a passing report changes the model.
+
+### Dependencies
+
+Hard waits are in the roadmap dependency table. Slice edges, where this file has a delivery-slice table, stay in that table and in `dependency-graph.md`.
+
+### Risks and mitigations
+
+- Shipping the surface before its wait is met: the roadmap sequence forbids the pick.
+- A string or a status that only some players can read: the locale and accessibility scenarios above fail the change.
+
+### Kill criteria
+
+None. This initiative is not in the Now band. Stop it if it would reverse a non-goal in the moved record.
+
+### Open questions
+
+Which scores are hard lines, and whether French players get French rationale, are open.
+
+### Sources
+
+- https://platform.claude.com/docs/en/about-claude/model-deprecations
+- https://deckcheck.co/support
+- https://tappedout.net/mtg-forum/commander/a-challenge-extended-to-ai-deckbuilders
+- https://spellrack.com/accuracy
+
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-70-101
+
+As a player, I want the product to slice 0, no code: the per-run cap, the monthly limit of a separate Anthropic workspace, the cost and latency limits of the gate, the first candidates, and whether the scores are public., so that the owner knows whether a build or a suggestion is good, whether a prompt edit made it better or worse and whether a cheaper model would do, from scores that code computes on a fixed, public set of cases. No model or prompt change ships without a committed comparison report, and every stored build names the model and prompt version that made it.
+
+#### AC-70-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Slice 0, no code: the per-run cap, the monthly limit of a separate Anthropic workspace, the cost and latency limits of the gate, the first candidates, and whether the scores are public.
+
+#### AC-70-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-70-102 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-70-102
+
+As a player, I want the product to a prompt registry: the build and suggest templates as versioned modules that declare their player inputs, with today's prompts unchanged byte for byte (slice 1); case set v1 with 28 build, 20 suggestion and 18 injection cases, and coverage and input-inventory tests (slice 2); a pinned, hashed card snapshot and a dated Game Changer list (slice 3)., so that the owner knows whether a build or a suggestion is good, whether a prompt edit made it better or worse and whether a cheaper model would do, from scores that code computes on a fixed, public set of cases. No model or prompt change ships without a committed comparison report, and every stored build names the model and prompt version that made it.
+
+#### AC-70-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A prompt registry: the build and suggest templates as versioned modules that declare their player inputs, with today's prompts unchanged byte for byte (slice 1); case set v1 with 28 build, 20 suggestion and 18 injection cases, and coverage and input-inventory tests (slice 2); a pinned, hashed card snapshot and a dated Game Changer list (slice 3).
+
+#### AC-70-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-70-105 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-70-103
+
+As a player, I want the product to scorers computed by code: outcome, structural issues, corrections by reason and the invented-name rate, basics added, commander honoured, Game Changers against the bracket, land count and colour sources (on I-58's formula once its slice 1 ships), price against budget, tokens, cost and latency (slice 4); suggestion counts, unresolved names, colour identity, legality, duplicates, dislikes and French names (slice 5); injection canaries before and after the validator (slice 6)., so that the owner knows whether a build or a suggestion is good, whether a prompt edit made it better or worse and whether a cheaper model would do, from scores that code computes on a fixed, public set of cases. No model or prompt change ships without a committed comparison report, and every stored build names the model and prompt version that made it.
+
+#### AC-70-106 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Scorers computed by code: outcome, structural issues, corrections by reason and the invented-name rate, basics added, commander honoured, Game Changers against the bracket, land count and colour sources (on I-58's formula once its slice 1 ships), price against budget, tokens, cost and latency (slice 4); suggestion counts, unresolved names, colour identity, legality, duplicates, dislikes and French names (slice 5); injection canaries before and after the validator (slice 6).
+
+#### AC-70-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-70-108 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-70-104
+
+As a player, I want the product to an injectable transport in both routes, a recorder and a replayer (slice 7); a CI run that replays the recordings with the network stubbed to fail and no key, against a committed baseline, and fails on a lower score, a missing recording or a template changed without a version bump (slice 8)., so that the owner knows whether a build or a suggestion is good, whether a prompt edit made it better or worse and whether a cheaper model would do, from scores that code computes on a fixed, public set of cases. No model or prompt change ships without a committed comparison report, and every stored build names the model and prompt version that made it.
+
+#### AC-70-109 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: An injectable transport in both routes, a recorder and a replayer (slice 7); a CI run that replays the recordings with the network stubbed to fail and no key, against a committed baseline, and fails on a lower score, a missing recording or a template changed without a version bump (slice 8).
+
+#### AC-70-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-70-111 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-70-105
+
+As a player, I want the product to a live runner with three trials by default, dated prices, a pre-run estimate and a hard cap, on a workspace key that never reaches production, and a weekly drift run that opens an issue (slice 9); a comparison report with intervals and every new failure's reply text, and the first recordings of claude-haiku-4-5 (slice 10); the gate in CI, so a model, a model setting or a prompt version changes only with a committed report whose recordings match (slice 11); reports for Haiku 5.5 and Sonnet 5.5 (slice 12)., so that the owner knows whether a build or a suggestion is good, whether a prompt edit made it better or worse and whether a cheaper model would do, from scores that code computes on a fixed, public set of cases. No model or prompt change ships without a committed comparison report, and every stored build names the model and prompt version that made it.
+
+#### AC-70-112 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A live runner with three trials by default, dated prices, a pre-run estimate and a hard cap, on a workspace key that never reaches production, and a weekly drift run that opens an issue (slice 9); a comparison report with intervals and every new failure's reply text, and the first recordings of claude-haiku-4-5 (slice 10); the gate in CI, so a model, a model setting or a prompt version changes only with a committed report whose recordings match (slice 11); reports for Haiku 5.5 and Sonnet 5.5 (slice 12).
+
+#### AC-70-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-70-114 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-70-106
+
+As a player, I want the product to provenance: the model and prompt version on the build's done event, Deck.aiModel and Deck.aiPromptVersion, and AiUsage.promptVersion, resolvedModel and latencyMs (slice 13)., so that the owner knows whether a build or a suggestion is good, whether a prompt edit made it better or worse and whether a cheaper model would do, from scores that code computes on a fixed, public set of cases. No model or prompt change ships without a committed comparison report, and every stored build names the model and prompt version that made it.
+
+#### AC-70-115 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Provenance: the model and prompt version on the build's done event, Deck.aiModel and Deck.aiPromptVersion, and AiUsage.promptVersion, resolvedModel and latencyMs (slice 13).
+
+#### AC-70-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-70-117 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-70-107
+
+As a player, I want the product to later: acceptance by model and prompt version from one event with enums and integers only (slice 14); an ai_output report with consent and a script that turns a confirmed report into a candidate case (slice 15); prose rated on a rubric by a different model, calibrated on 30 owner ratings and never gating (slice 16); quality figures on the AI-use disclosure page (slice 17); I-14, I-47, I-64 and I-12 join with their own sets (slice 18)., so that the owner knows whether a build or a suggestion is good, whether a prompt edit made it better or worse and whether a cheaper model would do, from scores that code computes on a fixed, public set of cases. No model or prompt change ships without a committed comparison report, and every stored build names the model and prompt version that made it.
+
+#### AC-70-118 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Later: acceptance by model and prompt version from one event with enums and integers only (slice 14); an ai_output report with consent and a script that turns a confirmed report into a candidate case (slice 15); prose rated on a rubric by a different model, calibrated on 30 owner ratings and never gating (slice 16); quality figures on the AI-use disclosure page (slice 17); I-14, I-47, I-64 and I-12 join with their own sets (slice 18).
+
+#### AC-70-119 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-70-120 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-70-108
+
+As a player, I want the product to two build scorers in slice 4:, so that the owner knows whether a build or a suggestion is good, whether a prompt edit made it better or worse and whether a cheaper model would do, from scores that code computes on a fixed, public set of cases. No model or prompt change ships without a committed comparison report, and every stored build names the model and prompt version that made it.
+
+#### AC-70-121 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Two build scorers in slice 4:
+
+#### AC-70-122 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-70-123 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-70-109
+
+As a player, I want **Corrected 2026-11-11:** the spec's claim that nobody publishes a test set, a pass rate or a before-and-after for a model change still holds for AI., so that the owner knows whether a build or a suggestion is good, whether a prompt edit made it better or worse and whether a cheaper model would do, from scores that code computes on a fixed, public set of cases. No model or prompt change ships without a committed comparison report, and every stored build names the model and prompt version that made it.
+
+#### AC-70-124 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then **Corrected 2026-11-11:** the spec's claim that nobody publishes a test set, a pass rate or a before-and-after for a model change still holds for AI. Since 2026-11-10 SpellRack publishes a dated pass rate for its deterministic bracket scorer: 83.4%, 131 of 157 precons, all 26 misses over-predicted (accuracy). That is the bar I-77 sets for our own scorer.
+
+#### AC-70-125 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-70-126 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+### UX states for this feature
+
+The player-visible outcome is: the owner knows whether a build or a suggestion is good, whether a prompt edit made it better or worse and whether a cheaper model would do, from scores that code computes on a fixed, public set of cases. No model or prompt change ships without a committed comparison report, and every stored build names the model and prompt version that made it.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
+
+### Record moved from the roadmap (2026-11-11)
+
+Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.
+
+## I-70: An AI Quality Bench And Safe Model Changes
+
+**Spec:** [`specs/i70-ai-quality-bench-and-model-changes.md`](i70-ai-quality-bench-and-model-changes.md)
+
+**Outcome:** the owner knows whether a build or a suggestion is good, whether a prompt edit made it better or worse and whether a cheaper model would do, from scores that code computes on a fixed, public set of cases. No model or prompt change ships without a committed comparison report, and every stored build names the model and prompt version that made it.
+
+**Status:** Next
+**Priority:** Next for slices 0 to 13, because I-30 slice 3 moves builds to a cheaper model behind this bench; Later for slices 14 to 18: player signals, reports as cases, prose rating, public figures and other model surfaces. Never paid
+**Impact / effort:** High / medium
+**Depends on:** nothing for slices 1 and 3; slice 1 for the injectable transport (slice 7); the owner's per-run cap, workspace limit and gate limits (slice 0) for the live runner (slice 9) and so for the first report (slice 10); I-30 slice 1 for the `AiUsage` fields (slice 13); I-39 slice 10 for acceptance by model (slice 14); I-52 slice 3 and a lawyer's answer for reports as cases (slice 15); I-30 slice 5 for the public figures (slice 17).
+
+The paid tier's strongest candidate is AI use above a free allowance, and nobody can say today whether a build is good. The roadmap called six tests "the golden set" and made two model changes wait for it (I-30 slice 3, I-12); they feed hand-written replies to the validator, and none calls a model (`src/lib/ai/golden-evaluation.test.ts`, checked on `origin/dev` at `72fbfc1`). Both routes send the alias `claude-haiku-4-5` with no system prompt, from inline templates with no version, and no stored deck records the model or prompt that built it. Anthropic lists Haiku 4.5 as legacy, retiring "not sooner than October 15, 2026", a date already passed, with "at least 60 days' notice" ([deprecations](https://platform.claude.com/docs/en/about-claude/model-deprecations), read 2026-11-10). Haiku 5.5 costs a tenth as much per token but counts about 30% more tokens, and API version `2026-10-21` refuses `temperature`, so determinism comes from recorded replies and several trials, not a setting. DeckCheck says a model update can move the score of an unchanged deck and combines three scans ([support](https://deckcheck.co/support)); no AI deck tool found publishes a test set, a pass rate or a before-and-after. A model never decides legality, and a model's opinion of prose never gates anything.
+
+### Scope
+
+- [ ] Slice 0, no code: the per-run cap, the monthly limit of a separate Anthropic workspace, the cost and latency limits of the gate, the first candidates, and whether the scores are public.
+- [ ] A prompt registry: the build and suggest templates as versioned modules that declare their player inputs, with today's prompts unchanged byte for byte (slice 1); case set v1 with 28 build, 20 suggestion and 18 injection cases, and coverage and input-inventory tests (slice 2); a pinned, hashed card snapshot and a dated Game Changer list (slice 3).
+- [ ] Scorers computed by code: outcome, structural issues, corrections by reason and the invented-name rate, basics added, commander honoured, Game Changers against the bracket, land count and colour sources (on I-58's formula once its slice 1 ships), price against budget, tokens, cost and latency (slice 4); suggestion counts, unresolved names, colour identity, legality, duplicates, dislikes and French names (slice 5); injection canaries before and after the validator (slice 6).
+- [ ] An injectable transport in both routes, a recorder and a replayer (slice 7); a CI run that replays the recordings with the network stubbed to fail and no key, against a committed baseline, and fails on a lower score, a missing recording or a template changed without a version bump (slice 8).
+- [ ] A live runner with three trials by default, dated prices, a pre-run estimate and a hard cap, on a workspace key that never reaches production, and a weekly drift run that opens an issue (slice 9); a comparison report with intervals and every new failure's reply text, and the first recordings of `claude-haiku-4-5` (slice 10); the gate in CI, so a model, a model setting or a prompt version changes only with a committed report whose recordings match (slice 11); reports for Haiku 5.5 and Sonnet 5.5 (slice 12).
+- [ ] Provenance: the model and prompt version on the build's `done` event, `Deck.aiModel` and `Deck.aiPromptVersion`, and `AiUsage.promptVersion`, `resolvedModel` and `latencyMs` (slice 13).
+- [ ] Later: acceptance by model and prompt version from one event with enums and integers only (slice 14); an `ai_output` report with consent and a script that turns a confirmed report into a candidate case (slice 15); prose rated on a rubric by a different model, calibrated on 30 owner ratings and never gating (slice 16); quality figures on the AI-use disclosure page (slice 17); I-14, I-47, I-64 and I-12 join with their own sets (slice 18).
+- [ ] Two build scorers in slice 4:
+  - "theme honoured": cards matching the brief's theme by I-54's definitions and I-65 slice 1's clauses, against a minimum the owner sets;
+  - "pair valid": the returned command zone passes I-03's pairing check.
+
+  A Temur goad request once returned "a Temur goodstuff deck with no goad cards" ([TappedOut forum](https://tappedout.net/mtg-forum/commander/a-challenge-extended-to-ai-deckbuilders), 2025-05-09 to 21). Added 2026-11-11.
+
+- [ ] **Corrected 2026-11-11:** the spec's claim that nobody publishes a test set, a pass rate or a before-and-after for a model change still holds for AI. Since 2026-11-10 SpellRack publishes a dated pass rate for its deterministic bracket scorer: 83.4%, 131 of 157 precons, all 26 misses over-predicted ([accuracy](https://spellrack.com/accuracy)). That is the bar [I-77](i77-a-bracket-estimate-players-can-audit.md) sets for our own scorer.
+
+### Engineering enablers
+
+- The same recordings and snapshot give a byte-identical score file on every machine.
+- The CI run stubs `fetch` to throw and runs without keys, so any network access fails it.
+- For every case, the prompt the route sends equals the registry's render.
+- With a fake transport, the runner refuses a plan over the cap and stops before the call that would cross it.
+
+**Paid-tier angle:** none. The bench and its page are free. Its value to I-30 is the price: the report lets the owner sell the cheapest model that holds the line, keep a margin on a €3.99 plan, and charge for a deeper Sonnet 5.5 review only if the bench shows it is better.
+
+### Enrichment (2026-11-11)
+
+**User story.** As the owner changing a model, I want a report that says whether the new model invents more card names, so that a cheaper model is not a silent regression.
+
+**Acceptance.**
+- The bench scores a pinned set of cases with code, not with another model's opinion.
+- A model or prompt change does not ship without the comparison report.
+- The cases replay in CI with no API key.
+
+**UX.** The report is an owner page. A player never sees another player's prompt. A live run is capped.
+
+**Data and API.** A prompt registry and a pinned card snapshot. Recorded replies are the bench's, not the player's decks.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `bench_report_recorded {gate: pass or fail}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Owner only for the report. The live runner stays off until the owner's caps are committed. Players are unaffected until a passing report changes the model.
+
+**Open questions.** Which scores are hard lines, and whether French players get French rationale, are open.
+
+### Definition of done
+
+A pull request that changes the model or a prompt cannot merge without a committed report showing that every case the incumbent passed in all trials still passes, at a cost and latency within the owner's limits; CI replays the bench with no key and no network; and a saved AI-built deck names its model and prompt version.
+
+---
+

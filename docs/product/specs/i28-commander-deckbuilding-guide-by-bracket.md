@@ -144,3 +144,523 @@ Added 2026-11-11: slice 7 reads shared sources instead of keeping its own copies
 - **Goldfish keep rules as product copy.** The companion's rules come from a model with no opponents, no colours and a mana-spent metric. Its optimum keeps fewer first sevens (32–51%) than players do (64%). Should the product show the computed rule with its margin, or a softened rule? The research supports showing the margin and calling the ±2% zone a judgment call.
 - **Simulate the player's own list.** The tables use deck shells tuned to bracket medians. Running the same model on the open decklist is the step EDHREC and Moxfield do not take. Does it belong in slice 9 or in I-21?
 - **Reference decks.** Linking third-party decklists ages quickly. Should reference decks become I-17 catalogue entries for bracket 2 and dated snapshots for the others?
+
+## Feature contract (Full, 2026-11-11)
+
+The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
+
+### Summary and problem
+
+a player who picks a target bracket can learn what a deck at that bracket contains, how its games unfold and how to tell when a deck belongs elsewhere, then check their own list against it.
+
+### Goals
+
+- A player can open the section for their target bracket from the deck, read sourced guidance in English or French, and see which official limits and composition ranges their list meets, with the guide and the bracket analysis stating the same rules.
+
+### Non-goals
+
+- Do not reverse a non-goal already named in the moved record or in the roadmap's strategic boundaries.
+- Do not invent a usage count, a win rate, or a score the moved record does not already cite from a named source.
+
+### Personas
+
+See the roadmap persona table. This initiative serves the rows that list its id.
+
+### User stories
+
+#### US-28-01
+
+As a player who picked a bracket, I want to read what that bracket is for and check my list against it, so that the name on the screen matches Wizards' name.
+
+#### US-28-02
+
+As a signed-out player, I want the guest rule in the rollout to be true, so that I am not shown a control that fails when I have no account.
+
+#### US-28-03
+
+As a player using a keyboard or a screen reader, I want the primary action to have a name and a visible focus, so that colour is not the only signal.
+
+### Acceptance criteria
+
+#### AC-28-01 Happy path
+
+Given a signed-in player and the English locale
+When the five official names and the current limits are the ones shown in English and French.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-28-02 Happy path
+
+Given a signed-in player and the English locale
+When a sentence in the guide is tagged official, measured or community.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-28-03 Happy path
+
+Given a signed-in player and the English locale
+When the open deck's check lists the cards that miss the chosen bracket, without blocking the edit.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-28-04 Error and failure
+
+Given the action cannot finish
+When the player retries or leaves the screen
+Then the last confirmed state is unchanged, and the message is a catalogue string rather than a stack trace or a raw status code
+
+#### AC-28-05 Edge cases
+
+Given an empty deck, a missing price, or a field the record says may be absent
+When the screen renders
+Then the empty state says what is missing, and it does not show a zero in place of an unknown value
+
+#### AC-28-06 Guest and signed-in
+
+Given the rollout in this contract
+When a guest and a signed-in player open the same surface
+Then the rollout holds: Public, signed-out. The check on a private deck is signed-in. No flag for the name correction. The long guide waits on a named author.
+
+#### AC-28-07 Locales
+
+Given the ten catalogs
+When this feature adds a user-facing string
+Then The ten catalogs on disk are `en`, `fr`, `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` (`src/i18n/routing.ts`). Only `en` and `fr` are routed. The other eight stay at key parity with `en` and may reuse the English text until a person who speaks the language reviews them. A new string is not shipped in a routed locale as hard-coded English.
+
+#### AC-28-08 Accessibility
+
+Given a keyboard, a visible focus, and a screen reader
+When the player completes US-28-01 without a pointer
+Then every new control has an accessible name, focus returns on close, and a status uses a word or an icon as well as colour
+
+### UX flow and states
+
+The guide is a page, not a modal on every public route. The check is a panel on the deck.
+
+- Empty: the screen says what is missing and what to do next.
+- Loading: a busy state that does not shift the layout when it ends.
+- Error: the catalogue message and a way to retry, without losing the last confirmed edit.
+
+### Data model and API
+
+Guide content is authored files, the pipeline I-64 owns. The check reads I-77's explanation when that exists, and the current bracket function until then.
+
+### Analytics and telemetry
+
+`bracket_guide_opened {bracket: 1 to 5, locale: en or fr}`. Reserved for I-39. Not emitted before that store exists.
+
+The event is reserved for I-39's store. It is not emitted before that store exists. The row holds counts and enums only: no email, name, username, deck name, card name, list, search text or URL.
+
+### Rollout and feature flags
+
+Public, signed-out. The check on a private deck is signed-in. No flag for the name correction. The long guide waits on a named author.
+
+### Dependencies
+
+Hard waits are in the roadmap dependency table. Slice edges, where this file has a delivery-slice table, stay in that table and in `dependency-graph.md`.
+
+### Risks and mitigations
+
+- Shipping the surface before its wait is met: the roadmap sequence forbids the pick.
+- A string or a status that only some players can read: the locale and accessibility scenarios above fail the change.
+
+### Kill criteria
+
+None. This initiative is not in the Now band. Stop it if it would reverse a non-goal in the moved record.
+
+### Open questions
+
+The French guide waits on a named reviewer. Slice 2 of the official definitions is already in flight.
+
+### Sources
+
+- https://edhrec.com/articles/the-command-zone-commander-deckbuilding-template-for-the-new-era-the-command-zone-658-mtg-edh-magic-gathering
+- https://www.playgwent.com/en/news/41252/gwents-design-01-provision
+- https://tablecommander.com/blog/bracket-estimates-rebuilt
+
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-28-101
+
+As a player, I want the product to correct the bracket names and descriptions players see in the deck wizard, and the bracket rules given to the copilot: bracket 2 is Core with zero Game Changers, bracket 3 Upgraded, bracket 4 Optimized, and cEDH is bracket 5., so that a player who picks a target bracket can learn what a deck at that bracket contains, how its games unfold and how to tell when a deck belongs elsewhere, then check their own list against it.
+
+#### AC-28-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Correct the bracket names and descriptions players see in the deck wizard, and the bracket rules given to the copilot: bracket 2 is Core with zero Game Changers, bracket 3 Upgraded, bracket 4 Optimized, and cEDH is bracket 5. Use the official French names with the "bracket" alias. Shipped in #1300: the wizard's picker shows the official English names, the French "Catégorie N — Nom (bracket N)" form, and each bracket's Game Changer limit and turn floor. The copilot prompt reads one set of bracket rules for brackets 1 to 5, and the build route's duplicate bracket table is gone. The dormant catalogs carry the English text, held equal to English by a test until a native review.
+
+#### AC-28-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-28-102 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+#### US-28-102
+
+As a player, I want the product to extend the bracket definitions to bracket 5 and to the official restrictions on mass land denial, extra turns and two-card combos, and remove the tutor restriction Wizards dropped on 2025-10-21., so that a player who picks a target bracket can learn what a deck at that bracket contains, how its games unfold and how to tell when a deck belongs elsewhere, then check their own list against it.
+
+#### AC-28-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Extend the bracket definitions to bracket 5 and to the official restrictions on mass land denial, extra turns and two-card combos, and remove the tutor restriction Wizards dropped on 2025-10-21. Still open after #1300: BRACKET_DEFINITIONS (src/lib/constants/brackets.ts) names bracket 1 "Casual", sets allowsTutors: false for it and stops at bracket 4; the wizard's picker offers brackets 1 to 4; and src/lib/deck/bracket.ts still forces any two-card infinite to bracket 4, with the warning deck.bracket.infiniteCombos labelled "(RC rule)" in every locale.
+
+#### AC-28-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-28-105 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+#### US-28-103
+
+As a player, I want the product to publish a static, indexable guide page with one section per bracket, from the researched document, with every claim labeled Official, Data or Community and linked to a dated source., so that a player who picks a target bracket can learn what a deck at that bracket contains, how its games unfold and how to tell when a deck belongs elsewhere, then check their own list against it.
+
+#### AC-28-106 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Publish a static, indexable guide page with one section per bracket, from the researched document, with every claim labeled Official, Data or Community and linked to a dated source.
+
+#### AC-28-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-28-108 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+#### US-28-104
+
+As a player, I want the product to make the rules pages reachable signed out., so that a player who picks a target bracket can learn what a deck at that bracket contains, how its games unfold and how to tell when a deck belongs elsewhere, then check their own list against it.
+
+#### AC-28-109 Happy path
+
+Given a signed-out visitor and a public deck
+When the player uses this behaviour
+Then the behaviour holds: Make the rules pages reachable signed out. /rules/game-changers and /rules/comprehensive were in neither public-path list (PUBLIC_PATH_PREFIXES in src/middleware.ts, PUBLIC_API_AND_PAGE_PATHS in src/lib/auth/edge-config.ts), although the header and the landing page link to them, so visitors and crawlers were sent to sign-in. Shipped in #1313: the public page paths, /rules included, live once in src/lib/auth/public-paths.ts, which both the middleware and the authorized callback read. I-34 slice 2 adds their alternates and localized metadata, and keeps the verbatim Comprehensive Rules noindex.
+
+#### AC-28-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-28-111 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-28-105
+
+As a player, I want the product to render the guide's official rules from the same definitions the bracket analysis uses, so the two cannot disagree., so that a player who picks a target bracket can learn what a deck at that bracket contains, how its games unfold and how to tell when a deck belongs elsewhere, then check their own list against it.
+
+#### AC-28-112 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Render the guide's official rules from the same definitions the bracket analysis uses, so the two cannot disagree.
+
+#### AC-28-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-28-114 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+#### US-28-106
+
+As a player, I want the product to link the bracket badge and the wizard's bracket step to the matching section without losing deck state., so that a player who picks a target bracket can learn what a deck at that bracket contains, how its games unfold and how to tell when a deck belongs elsewhere, then check their own list against it.
+
+#### AC-28-115 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Link the bracket badge and the wizard's bracket step to the matching section without losing deck state.
+
+#### AC-28-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-28-117 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+#### US-28-107
+
+As a player, I want the product to check the open deck against a chosen bracket, separating official limits it breaks from composition ranges it falls outside, without calling the model or blocking a save., so that a player who picks a target bracket can learn what a deck at that bracket contains, how its games unfold and how to tell when a deck belongs elsewhere, then check their own list against it.
+
+#### AC-28-118 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Check the open deck against a chosen bracket, separating official limits it breaks from composition ranges it falls outside, without calling the model or blocking a save.
+
+#### AC-28-119 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-28-120 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+#### US-28-108
+
+As a player, I want the product to teach opening hands per bracket and play style: the free mulligan, keep rules built on cheap ramp, and the land plateau for the deck's curve., so that a player who picks a target bracket can learn what a deck at that bracket contains, how its games unfold and how to tell when a deck belongs elsewhere, then check their own list against it.
+
+#### AC-28-121 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Teach opening hands per bracket and play style: the free mulligan, keep rules built on cheap ramp, and the land plateau for the deck's curve. Report the open deck's own keep profile under the multiplayer rules.
+
+#### AC-28-122 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-28-123 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+#### US-28-109
+
+As a player, I want the product to ship reviewed English and French content; hide sections not reviewed in a locale., so that a player who picks a target bracket can learn what a deck at that bracket contains, how its games unfold and how to tell when a deck belongs elsewhere, then check their own list against it.
+
+#### AC-28-124 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Ship reviewed English and French content; hide sections not reviewed in a locale.
+
+#### AC-28-125 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-28-126 Edge
+
+Given the French locale
+When the new controls render
+Then they come from the French catalogue and are not hard-coded English
+
+#### US-28-110
+
+As a player, I want the product to show the rules state the guide reflects, and open a review whenever Wizards changes brackets, Game Changers or the banned list., so that a player who picks a target bracket can learn what a deck at that bracket contains, how its games unfold and how to tell when a deck belongs elsewhere, then check their own list against it.
+
+#### AC-28-127 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Show the rules state the guide reflects, and open a review whenever Wizards changes brackets, Game Changers or the banned list.
+
+#### AC-28-128 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-28-129 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+#### US-28-111
+
+As a player, I want the product to the check (slice 7) reports interaction three ways: pieces, the instant-speed share, and pieces per opponent., so that a player who picks a target bracket can learn what a deck at that bracket contains, how its games unfold and how to tell when a deck belongs elsewhere, then check their own list against it.
+
+#### AC-28-130 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: The check (slice 7) reports interaction three ways: pieces, the instant-speed share, and pieces per opponent. It compares them with named templates side by side, each dated and sourced: The Command Zone #658 (EDHREC, 2025-02-18), the 8x8 method (Nerd Leagues, search summary) and West Games' bands from "proactive-only (0–5)" to "stack-battle density (18+)" (2026-07-28). Added 2026-11-11.
+
+#### AC-28-131 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-28-132 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-28-112
+
+As a player, I want the product to the check also runs as a header meter while building: Game Changers "2 of 3", two-card combos, mass land denial, extra turns, and price against the target bracket and budget, with a "to reach bracket N, change these" list., so that a player who picks a target bracket can learn what a deck at that bracket contains, how its games unfold and how to tell when a deck belongs elsewhere, then check their own list against it.
+
+#### AC-28-133 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: The check also runs as a header meter while building: Game Changers "2 of 3", two-card combos, mass land denial, extra turns, and price against the target bracket and budget, with a "to reach bracket N, change these" list. Gwent keeps the provision budget visible (CD PROJEKT RED, 2022-02-04). TableCommander's reasons are "a checklist of exactly what to change" (blog, 2026-06-11). Added 2026-11-11.
+
+#### AC-28-134 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-28-135 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-28-113
+
+As a player, I want the product to neighbour changes, 2026-11-11: slice 7's soft targets read I-76 slice 2's RoleTarget, so the guide's ranges exist once as data; its hard rules read I-77 slice 4's pathToBracket; and the extra-turn and mass-land-denial card classes are defined once in I-78 slice 1, so slice 7 now waits for it., so that a player who picks a target bracket can learn what a deck at that bracket contains, how its games unfold and how to tell when a deck belongs elsewhere, then check their own list against it.
+
+#### AC-28-136 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Neighbour changes, 2026-11-11: slice 7's soft targets read I-76 slice 2's RoleTarget, so the guide's ranges exist once as data; its hard rules read I-77 slice 4's pathToBracket; and the extra-turn and mass-land-denial card classes are defined once in I-78 slice 1, so slice 7 now waits for it. BracketRule stays the source of what each bracket allows, and the per-opponent interaction count reads each match's scope.
+
+#### AC-28-137 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-28-138 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+### UX states for this feature
+
+The player-visible outcome is: a player who picks a target bracket can learn what a deck at that bracket contains, how its games unfold and how to tell when a deck belongs elsewhere, then check their own list against it.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
+
+### Record moved from the roadmap (2026-11-11)
+
+Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.
+
+## I-28: Commander Deckbuilding Guide By Bracket
+
+**Spec:** [`specs/i28-commander-deckbuilding-guide-by-bracket.md`](i28-commander-deckbuilding-guide-by-bracket.md)
+**Content:** [`guides/commander-deckbuilding-by-bracket.md`](../guides/commander-deckbuilding-by-bracket.md) and its companion [`guides/commander-mulligans-curves-and-play-style.md`](../guides/commander-mulligans-curves-and-play-style.md)
+
+**Outcome:** a player who picks a target bracket can learn what a deck at that bracket contains, how its games unfold and how to tell when a deck belongs elsewhere, then check their own list against it.
+
+**Status:** Building
+**Priority:** Next
+**Impact / effort:** High / medium
+
+Wizards publishes the rules but no deckbuilding guidance. EDHREC, CoolStuffInc and Card Kingdom publish guidance without evidence labels, and data sites publish numbers without explanation. No French step-by-step guide was found. I-27 explains a rule when a warning fires and explicitly leaves strategy out; this initiative owns the strategy, labeled as official, measured or community advice.
+
+### Scope
+
+- [x] Correct the bracket names and descriptions players see in the deck wizard, and the bracket rules given to the copilot: bracket 2 is Core with zero Game Changers, bracket 3 Upgraded, bracket 4 Optimized, and cEDH is bracket 5. Use the official French names with the "bracket" alias. Shipped in #1300: the wizard's picker shows the official English names, the French "Catégorie N — Nom (bracket N)" form, and each bracket's Game Changer limit and turn floor. The copilot prompt reads one set of bracket rules for brackets 1 to 5, and the build route's duplicate bracket table is gone. The dormant catalogs carry the English text, held equal to English by a test until a native review.
+- [ ] Extend the bracket definitions to bracket 5 and to the official restrictions on mass land denial, extra turns and two-card combos, and remove the tutor restriction Wizards dropped on 2025-10-21. Still open after #1300: `BRACKET_DEFINITIONS` (`src/lib/constants/brackets.ts`) names bracket 1 "Casual", sets `allowsTutors: false` for it and stops at bracket 4; the wizard's picker offers brackets 1 to 4; and `src/lib/deck/bracket.ts` still forces any two-card infinite to bracket 4, with the warning `deck.bracket.infiniteCombos` labelled "(RC rule)" in every locale.
+  - The I-64 spec found what players see: `BracketIndicator.tsx` shows Bracket 1 as "Casual", in its label and its `title`, while the wizard's picker shows "Exhibition" (`src/messages/en/deck.json`), so one screen of the editor names the bracket two ways. This item fixes the name; [I-64](i64-help-centre-and-guidance.md)'s glossary then renders bracket names from `BracketRule` and holds none of its own.
+  - Fix pending in an open branch: `fix/official-bracket-definitions`, queued and not yet pushed or merged, scores decks against Brackets 1 to 5, replaces the two-card-infinite override and its "(RC rule)" label with the official floor, drops the tutor dimension, and names Bracket 1 Exhibition in `BRACKET_DEFINITIONS` and in `BracketIndicator`'s label and `title`. Nothing here is checked until it merges.
+  - One owner, decided 2026-11-10: slice 2 owns the Bracket 5 definitions, and the bracket 5 item of `commander-power-meter.md` reuses them.
+- [ ] Publish a static, indexable guide page with one section per bracket, from the researched document, with every claim labeled Official, Data or Community and linked to a dated source.
+  - The guide's "win conditions and combos" section and the bracket check name routes with [I-65](i65-how-this-deck-wins.md)'s route kinds, and I-65's map shows this initiative's official turn expectations beside its estimates, from the same constants. I-28 keeps the official rules and any finding about them.
+  - The guide's content model (slice 3) runs on [I-64](i64-help-centre-and-guidance.md) slice 1's MDX pipeline. Single owner decided 2026-11-10 (coordinator call, the owner may override): I-64 slice 1.
+- [x] Make the rules pages reachable signed out. `/rules/game-changers` and `/rules/comprehensive` were in neither public-path list (`PUBLIC_PATH_PREFIXES` in `src/middleware.ts`, `PUBLIC_API_AND_PAGE_PATHS` in `src/lib/auth/edge-config.ts`), although the header and the landing page link to them, so visitors and crawlers were sent to sign-in. Shipped in #1313: the public page paths, `/rules` included, live once in `src/lib/auth/public-paths.ts`, which both the middleware and the `authorized` callback read. [I-34](i34-commander-data-reports.md) slice 2 adds their alternates and localized metadata, and keeps the verbatim Comprehensive Rules `noindex`.
+- [ ] Render the guide's official rules from the same definitions the bracket analysis uses, so the two cannot disagree.
+- [ ] Link the bracket badge and the wizard's bracket step to the matching section without losing deck state.
+- [ ] Check the open deck against a chosen bracket, separating official limits it breaks from composition ranges it falls outside, without calling the model or blocking a save.
+- [ ] Teach opening hands per bracket and play style: the free mulligan, keep rules built on cheap ramp, and the land plateau for the deck's curve. Report the open deck's own keep profile under the multiplayer rules.
+- [ ] Ship reviewed English and French content; hide sections not reviewed in a locale.
+- [ ] Show the rules state the guide reflects, and open a review whenever Wizards changes brackets, Game Changers or the banned list.
+  - This is slice 8's freshness banner. [I-48](i48-official-changes-reach-every-deck.md) slice 3 stores each Wizards announcement as a dated `RulesAnnouncement` record, and the banner can read it once that slice ships.
+- [ ] The check (slice 7) reports interaction three ways: pieces, the instant-speed share, and pieces per opponent. It compares them with named templates side by side, each dated and sourced: The Command Zone #658 ([EDHREC](https://edhrec.com/articles/the-command-zone-commander-deckbuilding-template-for-the-new-era-the-command-zone-658-mtg-edh-magic-gathering), 2025-02-18), the 8x8 method (Nerd Leagues, search summary) and West Games' bands from "proactive-only (0–5)" to "stack-battle density (18+)" (2026-07-28). Added 2026-11-11.
+- [ ] The check also runs as a header meter while building: Game Changers "2 of 3", two-card combos, mass land denial, extra turns, and price against the target bracket and budget, with a "to reach bracket N, change these" list. Gwent keeps the provision budget visible ([CD PROJEKT RED](https://www.playgwent.com/en/news/41252/gwents-design-01-provision), 2022-02-04). TableCommander's reasons are "a checklist of exactly what to change" ([blog](https://tablecommander.com/blog/bracket-estimates-rebuilt), 2026-06-11). Added 2026-11-11.
+- [ ] Neighbour changes, 2026-11-11: slice 7's soft targets read [I-76](i76-complete-this-deck-from-my-collection.md) slice 2's `RoleTarget`, so the guide's ranges exist once as data; its hard rules read [I-77](i77-a-bracket-estimate-players-can-audit.md) slice 4's `pathToBracket`; and the extra-turn and mass-land-denial card classes are defined once in [I-78](i78-what-this-deck-does-to-the-table.md) slice 1, so slice 7 now waits for it. `BracketRule` stays the source of what each bracket allows, and the per-opponent interaction count reads each match's scope.
+
+### Engineering enablers
+
+- A test fails when a guide claim has no label or no dated source.
+- A test fails when the guide's official rules diverge from the bracket definitions.
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player who picked a bracket, I want to read what that bracket is for and check my list against it, so that the name on the screen matches Wizards' name.
+
+**Acceptance.**
+- The five official names and the current limits are the ones shown in English and French.
+- A sentence in the guide is tagged official, measured or community.
+- The open deck's check lists the cards that miss the chosen bracket, without blocking the edit.
+
+**UX.** The guide is a page, not a modal on every public route. The check is a panel on the deck.
+
+**Data and API.** Guide content is authored files, the pipeline I-64 owns. The check reads I-77's explanation when that exists, and the current bracket function until then.
+
+**i18n and access.** English and French. A guide section is not published in a locale that has no reviewed text. The check's labels come from the catalogues.
+
+**Telemetry.** `bracket_guide_opened {bracket: 1 to 5, locale: en or fr}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Public, signed-out. The check on a private deck is signed-in. No flag for the name correction. The long guide waits on a named author.
+
+**Open questions.** The French guide waits on a named reviewer. Slice 2 of the official definitions is already in flight.
+
+### Definition of done
+
+A player can open the section for their target bracket from the deck, read sourced guidance in English or French, and see which official limits and composition ranges their list meets, with the guide and the bracket analysis stating the same rules.
+
+---
+

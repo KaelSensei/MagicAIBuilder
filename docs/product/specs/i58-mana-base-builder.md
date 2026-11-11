@@ -2,7 +2,7 @@
 
 > **Initiative:** I-58, proposed for the [roadmap](../roadmap.md) · **Status:** Proposed · **Priority:** Next for slices 1–9 and 16 (slice 16 added 2026-11-11, for I-76); Later for slices 10–15 · **Written 2026-11-10**
 > **Research:** dated notes of 2026-11-10, not committed, so every external fact cites a numbered entry in [Sources](#sources). Legal points are research, not legal advice.
-> **Owns:** the land base proposed for one deck: the land-count target and its formula, the source target per colour and its table, the land catalogue with each land's mana facts, the deterministic proposal, the reason shown on every line, and the reviewed change set that applies and reverts it. **Does not own:** simulation, castability by Monte Carlo and swap verdicts ([I-31](i31-deck-lab.md)); the seeded shuffler and intervals ([I-21](i21-reproducible-probability-bench.md)); bracket rules and the guide's land-count text ([I-28](i28-commander-deckbuilding-guide-by-bracket.md)); dated Game Changer lists ([I-48](i48-official-changes-reach-every-deck.md)); the printing chosen ([I-57](i57-printing-preferences-everywhere.md)); ownership and the acquisition plan ([I-06](../roadmap.md#i-06-collection-and-purchase-planning)); copies committed to other decks ([I-16](i16-decks-buildable-from-a-collection.md)); markets and prices ([I-32](i32-seller-handoff-and-affiliate-carts.md)); the change log ([I-37](i37-editor-depth.md)); what the copilot generates ([I-02](i02-checkable-ai-copilot.md)).
+> **Owns:** the land base proposed for one deck: the land-count target and its formula, the source target per colour and its table, the land catalogue with each land's mana facts, the deterministic proposal, the reason shown on every line, and the reviewed change set that applies and reverts it. **Does not own:** simulation, castability by Monte Carlo and swap verdicts ([I-31](i31-deck-lab.md)); the seeded shuffler and intervals ([I-21](i21-reproducible-probability-bench.md)); bracket rules and the guide's land-count text ([I-28](i28-commander-deckbuilding-guide-by-bracket.md)); dated Game Changer lists ([I-48](i48-official-changes-reach-every-deck.md)); the printing chosen ([I-57](i57-printing-preferences-everywhere.md)); ownership and the acquisition plan ([I-06](i06-collection-and-purchase-planning.md)); copies committed to other decks ([I-16](i16-decks-buildable-from-a-collection.md)); markets and prices ([I-32](i32-seller-handoff-and-affiliate-carts.md)); the change log ([I-37](i37-editor-depth.md)); what the copilot generates ([I-02](i02-checkable-ai-copilot.md)).
 > **Paid tier:** the land count, the source check and a one-deck proposal within a budget stay free. A cross-deck optimiser over the player's collection is a candidate for [I-30](i30-business-model-and-paid-tier.md), rated unproven. Billing waits for I-30's legal gate.
 
 ## Overview
@@ -172,7 +172,7 @@ Verified on `dev` at `72fbfc1` on 2026-11-10.
 11.1 **I-31 analyses; I-58 proposes and applies.** I-31 owns the simulation classifier ([line 74](i31-deck-lab.md#2-card-classification), 2.1), per-colour sources by turn with Karsten's table as a reference line (line 103, 5.3), and swap variants including "a basic for a dual" (line 109, 6.1). I-58 shares I-31 slice 2's classifier rather than writing a second one. Karsten's weights stay out of I-31's simulation (line 188); they are I-58's table check, which is a different method and is labelled as such. I-31 slice 8 must accept a multi-line variant, so a whole proposal can be checked at once; the integrator should add this to I-31.
 11.2 **I-21** owns the seeded generator (line 52, 1.4) and colour availability by turn (line 56, 2.1). I-58 reports neither until I-31 runs on them.
 11.3 **I-28** explains land counts in prose and places the deck's count against the plateau (line 74, 4.5), with official rules from shared constants (lines 63–64, 3.1–3.2). I-58 slice 1 owns Karsten's numbers as data; I-28's check reads them, and I-58's screens link to the [guide's section](../guides/commander-deckbuilding-by-bracket.md#land-count-karstens-math) for the reasoning.
-11.4 **I-06, I-16, I-17 and I-57.** I-58 adds no ownership state: it reads I-06's collection ([roadmap lines 896–900](../roadmap.md#i-06-collection-and-purchase-planning)), I-16's commitment index once built ([I-16 line 67](i16-decks-buildable-from-a-collection.md#data-and-api)) and I-57's resolver ([I-57 line 63](i57-printing-preferences-everywhere.md#2-precedence-and-fallback), 2.1). It follows I-57's diff-and-apply pattern (lines 81–84, 4.1–4.4) and joins I-57's enumeration of entry points (line 72, 3.1). An I-17 bundle stays editorial and applies to a working copy (lines 53–54); I-58 can run on that copy, never on the sealed list. Missing lands go to I-06's acquisition plan and I-32's handoff.
+11.4 **I-06, I-16, I-17 and I-57.** I-58 adds no ownership state: it reads I-06's collection ([roadmap lines 896–900](i06-collection-and-purchase-planning.md)), I-16's commitment index once built ([I-16 line 67](i16-decks-buildable-from-a-collection.md#data-and-api)) and I-57's resolver ([I-57 line 63](i57-printing-preferences-everywhere.md#2-precedence-and-fallback), 2.1). It follows I-57's diff-and-apply pattern (lines 81–84, 4.1–4.4) and joins I-57's enumeration of entry points (line 72, 3.1). An I-17 bundle stays editorial and applies to a working copy (lines 53–54); I-58 can run on that copy, never on the sealed list. Missing lands go to I-06's acquisition plan and I-32's handoff.
 
 ## Data model / API
 
@@ -267,3 +267,478 @@ Slices 1, 2, 4 and 16 ship alone; slice 16, added 2026-11-11, is Next and is the
 16. Scryfall API, search `is:gamechanger` (53 cards) and `is:gamechanger t:land` (7 cards) with USD and EUR prices, retrieved 2026-11-10. https://scryfall.com/search?q=is%3Agamechanger+t%3Aland
 17. Scryfall API, card objects for Command Tower, Polluted Delta, Watery Grave, Exotic Orchard, Evolving Wilds, Sea Gate Restoration, Blackcleave Cliffs, Drowned Catacomb, Dimir Guildgate and Underground River (`produced_mana`, `game_changer`, `prices`), retrieved 2026-11-10. https://api.scryfall.com/cards/collection
 18. Scryfall search keywords for land cycles (`is:dual`, `is:fetchland`, `is:shockland`, `is:fastland`, `is:checkland`, `is:slowland`, `is:painland`, `is:bounceland`, `is:gainland`, `is:pathway`, `is:triland`, `is:bikeland`, `is:filterland`, `is:battleland`, `is:scryland`, `is:bondland`, `is:canopyland`, `is:creatureland`, `is:surveilland`, `is:shadowland`, `is:snarl`), each returning cards on 2026-11-10. https://scryfall.com/search?q=is%3Afastland
+
+## Feature contract (Full, 2026-11-11)
+
+The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
+
+### Summary and problem
+
+a player opens a Commander deck and gets a land count from a published formula, a source target per colour from a published table, and a proposed land base within a budget, owned copies first, with a reason on every line. Nothing changes until the player reviews the diff; apply takes a snapshot first, and one action reverts it.
+
+### Goals
+
+- On a two-colour deck, a player sees the formula's count and each colour's target with its driver and table entry, takes a proposal within a budget with owned lands first and a reason on every line, applies it after unchecking one line, and reverts it in one action; a Bracket 2 deck never receives a Game Changer land; and no model chose a land.
+
+### Non-goals
+
+- Do not reverse a non-goal already named in the moved record or in the roadmap's strategic boundaries.
+- Do not invent a usage count, a win rate, or a score the moved record does not already cite from a named source.
+
+### Personas
+
+See the roadmap persona table. This initiative serves the rows that list its id.
+
+### User stories
+
+#### US-58-01
+
+As a player fixing a mana base, I want a land count and a source target from a published table, so that a model is not picking my lands.
+
+#### US-58-02
+
+As a signed-out player, I want the guest rule in the rollout to be true, so that I am not shown a control that fails when I have no account.
+
+#### US-58-03
+
+As a player using a keyboard or a screen reader, I want the primary action to have a name and a visible focus, so that colour is not the only signal.
+
+### Acceptance criteria
+
+#### AC-58-01 Happy path
+
+Given a signed-in player and the English locale
+When the suggestion cites Karsten's table and the inputs it used.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-58-02 Happy path
+
+Given a signed-in player and the English locale
+When applying it is one change the player can revert.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-58-03 Happy path
+
+Given a signed-in player and the English locale
+When the deck is unchanged until the player applies.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-58-04 Error and failure
+
+Given the action cannot finish
+When the player retries or leaves the screen
+Then the last confirmed state is unchanged, and the message is a catalogue string rather than a stack trace or a raw status code
+
+#### AC-58-05 Edge cases
+
+Given an empty deck, a missing price, or a field the record says may be absent
+When the screen renders
+Then the empty state says what is missing, and it does not show a zero in place of an unknown value
+
+#### AC-58-06 Guest and signed-in
+
+Given the rollout in this contract
+When a guest and a signed-in player open the same surface
+Then the rollout holds: Signed-in. Guests see the read-only check on the session deck and cannot apply. No model, so no AI flag.
+
+#### AC-58-07 Locales
+
+Given the ten catalogs
+When this feature adds a user-facing string
+Then The ten catalogs on disk are `en`, `fr`, `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` (`src/i18n/routing.ts`). Only `en` and `fr` are routed. The other eight stay at key parity with `en` and may reuse the English text until a person who speaks the language reviews them. A new string is not shipped in a routed locale as hard-coded English.
+
+#### AC-58-08 Accessibility
+
+Given a keyboard, a visible focus, and a screen reader
+When the player completes US-58-01 without a pointer
+Then every new control has an accessible name, focus returns on close, and a status uses a word or an icon as well as colour
+
+### UX flow and states
+
+The check is read-only first. The proposal lists lands to add and cut. Basics are split by colour source, not dumped in WUBRG order.
+
+- Empty: the screen says what is missing and what to do next.
+- Loading: a busy state that does not shift the layout when it ends.
+- Error: the catalogue message and a way to retry, without losing the last confirmed edit.
+
+### Data model and API
+
+Tables are data in the repository. The land catalogue is built from I-67. Apply uses the reviewed change set.
+
+### Analytics and telemetry
+
+`mana_proposal_applied {lands_changed: count}`. Reserved for I-39. Not emitted before that store exists.
+
+The event is reserved for I-39's store. It is not emitted before that store exists. The row holds counts and enums only: no email, name, username, deck name, card name, list, search text or URL.
+
+### Rollout and feature flags
+
+Signed-in. Guests see the read-only check on the session deck and cannot apply. No model, so no AI flag.
+
+### Dependencies
+
+Hard waits are in the roadmap dependency table. Slice edges, where this file has a delivery-slice table, stay in that table and in `dependency-graph.md`.
+
+### Risks and mitigations
+
+- Shipping the surface before its wait is met: the roadmap sequence forbids the pick.
+- A string or a status that only some players can read: the locale and accessibility scenarios above fail the change.
+
+### Kill criteria
+
+None. This initiative is not in the Now band. Stop it if it would reverse a non-goal in the moved record.
+
+### Open questions
+
+Whether the default land count is the deck's current count or the formula is open. Utility lands from EDHREC wait on terms.
+
+### Sources
+
+- https://www.tcgplayer.com/content/article/How-Many-Lands-Do-You-Need-in-Your-Deck-An-Updated-Analysis/cd1c1a24-d439-4a8e-b369-b936edb0b38a/
+- https://www.tcgplayer.com/content/article/How-Many-Sources-Do-You-Need-to-Consistently-Cast-Your-Spells-A-2022-Update/dc23a7d2-0a16-4c0b-ad36-586fcca03ad8/
+- https://www.deckflow.gg/manabase
+- https://mtgland.pages.dev/
+- https://scrollvault.net/tools/manabase/
+- https://scryfall.com/search?q=is%3Agamechanger+t%3Aland
+
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-58-101
+
+As a player, I want the product to karsten's tables as data: the 99-card source column, partial-source weights, the land formula, MDFC weights (0.38, or 0.74 when mythic) and the rule of thumb, as pure functions with golden tests (slice 1)., so that a player opens a Commander deck and gets a land count from a published formula, a source target per colour from a published table, and a proposed land base within a budget, owned copies first, with a reason on every line. Nothing changes until the player reviews the diff; apply takes a snapshot first, and one action reverts it.
+
+#### AC-58-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Karsten's tables as data: the 99-card source column, partial-source weights, the land formula, MDFC weights (0.38, or 0.74 when mythic) and the rule of thumb, as pure functions with golden tests (slice 1).
+
+#### AC-58-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-58-102 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-58-102
+
+As a player, I want the product to card mana facts on ScryfallCard (produced_mana, game_changer, rarity, prices.eur) and a land classifier for colours produced, fetchable types and four enters-tapped classes from a dated cycle table; the card mana facts are I-31 slice 2's, and this slice adds the land classifier (slice 2; one owner, decided 2026-11-10)., so that a player opens a Commander deck and gets a land count from a published formula, a source target per colour from a published table, and a proposed land base within a budget, owned copies first, with a reason on every line. Nothing changes until the player reviews the diff; apply takes a snapshot first, and one action reverts it.
+
+#### AC-58-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Card mana facts on ScryfallCard (produced_mana, game_changer, rarity, prices.eur) and a land classifier for colours produced, fetchable types and four enters-tapped classes from a dated cycle table; the card mana facts are I-31 slice 2's, and this slice adds the land classifier (slice 2; one owner, decided 2026-11-10).
+
+#### AC-58-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-58-105 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-58-103
+
+As a player, I want the product to a read-only "Mana base check" that replaces the proportional advice: the count against the formula, the driver and target per colour, current sources at Karsten's weights and the tapped-land facts, with one land definition for MDFCs in stats and playtest (slice 3)., so that a player opens a Commander deck and gets a land count from a published formula, a source target per colour from a published table, and a proposed land base within a budget, owned copies first, with a reason on every line. Nothing changes until the player reviews the diff; apply takes a snapshot first, and one action reverts it.
+
+#### AC-58-106 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A read-only "Mana base check" that replaces the proportional advice: the count against the formula, the driver and target per colour, current sources at Karsten's weights and the tapped-land facts, with one land definition for MDFCs in stats and playtest (slice 3). Today stats count category === "land", while isOpeningHandLand (src/lib/playtest/opening-hand-evidence.ts) counts any type line with "Land", MDFCs included.
+
+#### AC-58-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-58-108 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-58-104
+
+As a player, I want the product to split the wizard's added basics by source targets, not evenly in WUBRG order (slice 4)., so that a player opens a Commander deck and gets a land count from a published formula, a source target per colour from a published table, and a proposed land base within a budget, owned copies first, with a reason on every line. Nothing changes until the player reviews the diff; apply takes a snapshot first, and one action reverts it.
+
+#### AC-58-109 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Split the wizard's added basics by source targets, not evenly in WUBRG order (slice 4).
+
+#### AC-58-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-58-111 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-58-105
+
+As a player, I want the product to a land catalogue keyed by Oracle ID, built from I-67's CardOracle and rebuilt on its change events (slice 5, re-pointed 2026-11-10 to I-67 slices 2 and 4), and a deterministic proposal with constraints, a preference order, templated reasons and a shortfall report (slice 6)., so that a player opens a Commander deck and gets a land count from a published formula, a source target per colour from a published table, and a proposed land base within a budget, owned copies first, with a reason on every line. Nothing changes until the player reviews the diff; apply takes a snapshot first, and one action reverts it.
+
+#### AC-58-112 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A land catalogue keyed by Oracle ID, built from I-67's CardOracle and rebuilt on its change events (slice 5, re-pointed 2026-11-10 to I-67 slices 2 and 4), and a deterministic proposal with constraints, a preference order, templated reasons and a shortfall report (slice 6). Game Changer lands are never candidates at Brackets 1 and 2, nor past three at Bracket 3, and need an opt-in at Brackets 4 and 5.
+
+#### AC-58-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-58-114 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+#### US-58-106
+
+As a player, I want the product to review and apply: a land-only diff, a snapshot and then one transaction through PATCH /api/decks/[id]/cards, a 409 when the deck changed since the review, an apply record and a one-action revert (slice 7)., so that a player opens a Commander deck and gets a land count from a published formula, a source target per colour from a published table, and a proposed land base within a budget, owned copies first, with a reason on every line. Nothing changes until the player reviews the diff; apply takes a snapshot first, and one action reverts it.
+
+#### AC-58-115 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Review and apply: a land-only diff, a snapshot and then one transaction through PATCH /api/decks/[id]/cards, a 409 when the deck changed since the review, an apply record and a one-action revert (slice 7).
+
+#### AC-58-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-58-117 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-58-107
+
+As a player, I want the product to utility slots with the reason for what each replaces, from a dated, reviewed list (slice 8), and owned copies first, with printings from I-57's resolver (slice 9)., so that a player opens a Commander deck and gets a land count from a published formula, a source target per colour from a published table, and a proposed land base within a budget, owned copies first, with a reason on every line. Nothing changes until the player reviews the diff; apply takes a snapshot first, and one action reverts it.
+
+#### AC-58-118 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Utility slots with the reason for what each replaces, from a dated, reviewed list (slice 8), and owned copies first, with printings from I-57's resolver (slice 9).
+
+#### AC-58-119 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-58-120 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-58-108
+
+As a player, I want the product to delete suggestBudgetReductions (src/lib/deck/pricing.ts) and BudgetOptimizationModal (src/components/deck/BudgetOptimizationModal.tsx), which only tests import., so that a player opens a Commander deck and gets a land count from a published formula, a source target per colour from a published table, and a proposed land base within a budget, owned copies first, with a reason on every line. Nothing changes until the player reviews the diff; apply takes a snapshot first, and one action reverts it.
+
+#### AC-58-121 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Delete suggestBudgetReductions (src/lib/deck/pricing.ts) and BudgetOptimizationModal (src/components/deck/BudgetOptimizationModal.tsx), which only tests import. The heuristic proposes "Basic Land" at a fixed 0.1 for any land and a "(budget alternative)" at 30% of the price for any other card; it is not a base for this initiative. I-05 lists the modal among the components never rendered.
+
+#### AC-58-122 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-58-123 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-58-109
+
+As a player, I want the product to later: a budget in the EUR market (slice 10), Game Changer status from the deck's rules version (slice 11), uncommitted owned copies first (slice 12), a check by simulation through a multi-line I-31 variant (slice 13), and the builder picking the wizard's lands, with the I-02 owner's agreement (slice 14)., so that a player opens a Commander deck and gets a land count from a published formula, a source target per colour from a published table, and a proposed land base within a budget, owned copies first, with a reason on every line. Nothing changes until the player reviews the diff; apply takes a snapshot first, and one action reverts it.
+
+#### AC-58-124 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Later: a budget in the EUR market (slice 10), Game Changer status from the deck's rules version (slice 11), uncommitted owned copies first (slice 12), a check by simulation through a multi-line I-31 variant (slice 13), and the builder picking the wizard's lands, with the I-02 owner's agreement (slice 14).
+
+#### AC-58-125 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-58-126 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-58-110
+
+As a player, I want the product to after I-30's decision: a cross-deck allocation of owned lands and the cheapest purchase plan that meets every deck's targets (slice 15)., so that a player opens a Commander deck and gets a land count from a published formula, a source target per colour from a published table, and a proposed land base within a budget, owned copies first, with a reason on every line. Nothing changes until the player reviews the diff; apply takes a snapshot first, and one action reverts it.
+
+#### AC-58-127 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: After I-30's decision: a cross-deck allocation of owned lands and the cheapest purchase plan that meets every deck's targets (slice 15).
+
+#### AC-58-128 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-58-129 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-58-111
+
+As a player, I want the product to a reviewed change set shared with I-76 (slice 16, which needs nothing): a snapshot-then-apply route, 409 on a stale deck, an apply record with kind (ManaBaseApply becomes DeckChangeSetApply) and revert., so that a player opens a Commander deck and gets a land count from a published formula, a source target per colour from a published table, and a proposed land base within a budget, owned copies first, with a reason on every line. Nothing changes until the player reviews the diff; apply takes a snapshot first, and one action reverts it.
+
+#### AC-58-130 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A reviewed change set shared with I-76 (slice 16, which needs nothing): a snapshot-then-apply route, 409 on a stale deck, an apply record with kind (ManaBaseApply becomes DeckChangeSetApply) and revert. Slice 7's land review sits on it, and slice 15's cross-deck allocation runs on I-76 slice 21's allocator, restricted to lands. I-76 reuses slices 6 and 7's proposal, apply and revert (re-pointed 2026-11-11).
+
+#### AC-58-131 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-58-132 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+### UX states for this feature
+
+The player-visible outcome is: a player opens a Commander deck and gets a land count from a published formula, a source target per colour from a published table, and a proposed land base within a budget, owned copies first, with a reason on every line. Nothing changes until the player reviews the diff; apply takes a snapshot first, and one action reverts it.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
+
+### Record moved from the roadmap (2026-11-11)
+
+Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.
+
+## I-58: Mana Base Builder
+
+**Spec:** [`specs/i58-mana-base-builder.md`](i58-mana-base-builder.md)
+
+**Outcome:** a player opens a Commander deck and gets a land count from a published formula, a source target per colour from a published table, and a proposed land base within a budget, owned copies first, with a reason on every line. Nothing changes until the player reviews the diff; apply takes a snapshot first, and one action reverts it.
+
+**Status:** Next
+**Priority:** Next for slices 1 to 9 and 16, the free product (slice 16, the reviewed change set shared with I-76, added 2026-11-11); Later for slices 10 to 14, each behind the initiative it extends; slice 15 waits for I-30
+**Impact / effort:** Medium / medium
+**Depends on:** nothing outside this initiative for slices 1, 3, 4, 6, 8 and 16, the reviewed change set shared with I-76 (added 2026-11-11); slices 6 and 16 for the land review (slice 7); I-31 slice 2's card mana facts for the land classifier (slice 2), one owner decided 2026-11-10; I-67 slices 2 and 4 for the land catalogue (slice 5), re-pointed 2026-11-10; I-57 slice 2 for printings (slice 9); I-32 slices 2 and 3 for the euro market (slice 10); I-48 slice 2 for Game Changer status (slice 11); I-16 slice 4 for uncommitted owned copies (slice 12); I-31 slices 4, 5 and 8 for the check by simulation (slice 13); the I-02 owner's agreement for slice 14; I-30's decision for slice 15.
+
+Today the deck page's "Mana Alignment" (`buildManaAlignment` in `src/lib/deck/mana-alignment.ts`) counts lands only and recommends sources in proportion to pips. The AI wizard asks a model for "approximately 36-38 lands" and fills a short list with basics spread evenly in WUBRG order (`src/lib/ai/generated-deck-size.ts`), so a model chooses the lands, a deterministic job the strategic boundaries keep away from it. Frank Karsten published a 99-card land formula, 31.42 + 3.13 × average mana value − 0.28 × cheap ramp and draw ([2022-07-29, updated 2025-02-13](https://www.tcgplayer.com/content/article/How-Many-Lands-Do-You-Need-in-Your-Deck-An-Updated-Analysis/cd1c1a24-d439-4a8e-b369-b936edb0b38a/)), and a 99-card table of coloured sources keyed to the most demanding spell ([2022-08-02](https://www.tcgplayer.com/content/article/How-Many-Sources-Do-You-Need-to-Consistently-Cast-Your-Spells-A-2022-Update/dc23a7d2-0a16-4c0b-ad36-586fcca03ad8/)). Free tools give counts and splits: [DeckFlow](https://www.deckflow.gg/manabase) checks castability without naming lands, and [mtg.land](https://mtgland.pages.dev/) and [ScrollVault](https://scrollvault.net/tools/manabase/) name lands within a budget tier. None found reads the player's own list, collection and bracket together, explains each land against a cited table and applies a change that can be reverted. Wizards restricts no land except through the Game Changer count; on 2026-11-10 Scryfall listed 53 Game Changers, seven of them lands ([search](https://scryfall.com/search?q=is%3Agamechanger+t%3Aland)). No model chooses a land, a count or a split, and every probability shown comes from a cited table or I-31's seeded engine.
+
+### Scope
+
+- [ ] Karsten's tables as data: the 99-card source column, partial-source weights, the land formula, MDFC weights (0.38, or 0.74 when mythic) and the rule of thumb, as pure functions with golden tests (slice 1).
+- [ ] Card mana facts on `ScryfallCard` (`produced_mana`, `game_changer`, `rarity`, `prices.eur`) and a land classifier for colours produced, fetchable types and four enters-tapped classes from a dated cycle table; the card mana facts are I-31 slice 2's, and this slice adds the land classifier (slice 2; one owner, decided 2026-11-10).
+- [ ] A read-only "Mana base check" that replaces the proportional advice: the count against the formula, the driver and target per colour, current sources at Karsten's weights and the tapped-land facts, with one land definition for MDFCs in stats and playtest (slice 3). Today stats count `category === "land"`, while `isOpeningHandLand` (`src/lib/playtest/opening-hand-evidence.ts`) counts any type line with "Land", MDFCs included.
+- [ ] Split the wizard's added basics by source targets, not evenly in WUBRG order (slice 4).
+- [ ] A land catalogue keyed by Oracle ID, built from I-67's `CardOracle` and rebuilt on its change events (slice 5, re-pointed 2026-11-10 to I-67 slices 2 and 4), and a deterministic proposal with constraints, a preference order, templated reasons and a shortfall report (slice 6). Game Changer lands are never candidates at Brackets 1 and 2, nor past three at Bracket 3, and need an opt-in at Brackets 4 and 5.
+- [ ] Review and apply: a land-only diff, a snapshot and then one transaction through `PATCH /api/decks/[id]/cards`, a 409 when the deck changed since the review, an apply record and a one-action revert (slice 7).
+- [ ] Utility slots with the reason for what each replaces, from a dated, reviewed list (slice 8), and owned copies first, with printings from I-57's resolver (slice 9).
+- [ ] Delete `suggestBudgetReductions` (`src/lib/deck/pricing.ts`) and `BudgetOptimizationModal` (`src/components/deck/BudgetOptimizationModal.tsx`), which only tests import. The heuristic proposes "Basic Land" at a fixed 0.1 for any land and a "(budget alternative)" at 30% of the price for any other card; it is not a base for this initiative. I-05 lists the modal among the components never rendered.
+- [ ] Later: a budget in the EUR market (slice 10), Game Changer status from the deck's rules version (slice 11), uncommitted owned copies first (slice 12), a check by simulation through a multi-line I-31 variant (slice 13), and the builder picking the wizard's lands, with the I-02 owner's agreement (slice 14).
+- [ ] After I-30's decision: a cross-deck allocation of owned lands and the cheapest purchase plan that meets every deck's targets (slice 15).
+- [ ] A reviewed change set shared with [I-76](i76-complete-this-deck-from-my-collection.md) (slice 16, which needs nothing): a snapshot-then-apply route, 409 on a stale deck, an apply record with `kind` (`ManaBaseApply` becomes `DeckChangeSetApply`) and revert. Slice 7's land review sits on it, and slice 15's cross-deck allocation runs on I-76 slice 21's allocator, restricted to lands. I-76 reuses slices 6 and 7's proposal, apply and revert (re-pointed 2026-11-11).
+
+### Engineering enablers
+
+- Every cost in the encoded column returns Karsten's value, and the formula gives 40.81 at an average of 3.0 with no cheap pieces and 38.01 with ten.
+- Identical inputs give an identical proposal. No proposed land is outside the identity, banned, over the per-card budget or a Game Changer above the bracket limit, and an unpriced card never counts as zero.
+- The snapshot exists before rows change, a failure mid-apply leaves the deck and its snapshots unchanged, and revert restores exactly when the deck is unchanged.
+- An import test fails if `src/lib/mana-base/` can reach an AI client.
+
+**Paid-tier angle:** the count, the source check, the tapped-land facts, the reasons and a one-deck proposal within a budget, applied and reverted, stay free: DeckFlow, ScrollVault and Draftsim give counts and splits free, and I-30 requirement 1.1 keeps building and evidence free. The one candidate is a cross-deck allocation of the player's owned lands, a personal tool over their own data that no tool read offers. The spec rates it unproven.
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player fixing a mana base, I want a land count and a source target from a published table, so that a model is not picking my lands.
+
+**Acceptance.**
+- The suggestion cites Karsten's table and the inputs it used.
+- Applying it is one change the player can revert.
+- The deck is unchanged until the player applies.
+
+**UX.** The check is read-only first. The proposal lists lands to add and cut. Basics are split by colour source, not dumped in WUBRG order.
+
+**Data and API.** Tables are data in the repository. The land catalogue is built from I-67. Apply uses the reviewed change set.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `mana_proposal_applied {lands_changed: count}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Signed-in. Guests see the read-only check on the session deck and cannot apply. No model, so no AI flag.
+
+**Open questions.** Whether the default land count is the deck's current count or the formula is open. Utility lands from EDHREC wait on terms.
+
+### Definition of done
+
+On a two-colour deck, a player sees the formula's count and each colour's target with its driver and table entry, takes a proposal within a budget with owned lands first and a reason on every line, applies it after unchecking one line, and reverts it in one action; a Bracket 2 deck never receives a Game Changer land; and no model chose a land.
+
+---
+

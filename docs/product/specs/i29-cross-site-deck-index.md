@@ -2,7 +2,7 @@
 
 > **Initiative:** I-29, proposed for the [roadmap](../roadmap.md) · **Status:** Later — proposed 2026-11-09 · **Researched:** 2026-11-09
 > **Research:** three dated notes (source access and terms, EU and French law, scale and architecture). They are not committed, so every external fact below links its own source. They are research, not legal advice.
-> **Owns:** the deck index and its source policy, cross-site deck search, link-outs to other deckbuilding sites, deduplication, "decks like mine", and statistics computed from indexed decks. **Does not own:** importing decks ([I-10](../roadmap.md#i-10-interoperability-and-integrations)) or collections ([I-26](i26-collections-arriving-from-elsewhere.md)), sync included; card search and query generation ([I-14](i14-verifiable-natural-language-search.md)); public-deck visibility, profiles and moderation ([I-08](../roadmap.md#i-08-share-compare-and-learn)); hand simulation ([I-21](i21-reproducible-probability-bench.md)); bracket names and rules ([I-28](i28-commander-deckbuilding-guide-by-bracket.md)); the precon catalog ([I-17](i17-precon-path-and-tiered-upgrades.md)); the EDHREC feed ([I-09](../roadmap.md#i-09-meta-and-evidence)); prices and the seller handoff (I-06).
+> **Owns:** the deck index and its source policy, cross-site deck search, link-outs to other deckbuilding sites, deduplication, "decks like mine", and statistics computed from indexed decks. **Does not own:** importing decks ([I-10](i10-interoperability-and-integrations.md)) or collections ([I-26](i26-collections-arriving-from-elsewhere.md)), sync included; card search and query generation ([I-14](i14-verifiable-natural-language-search.md)); public-deck visibility, profiles and moderation ([I-08](i08-share-compare-and-learn.md)); hand simulation ([I-21](i21-reproducible-probability-bench.md)); bracket names and rules ([I-28](i28-commander-deckbuilding-guide-by-bracket.md)); the precon catalog ([I-17](i17-precon-path-and-tiered-upgrades.md)); the EDHREC feed ([I-09](i09-meta-and-evidence.md)); prices and the seller handoff (I-06).
 
 ## Overview
 
@@ -214,3 +214,455 @@ Slices 0 and 5 ship alone: a published source policy and links into every other 
 - **Ownership of imported decks.** A checkbox warranty is cheap; a code placed in the source deck's description proves ownership but adds friction. Which one gates indexing under 2.2?
 - **Minimum sample for statistics,** and how long an external deck stays after it was last seen.
 - **Does "largest" mean keeping decks beyond two years?** EDHREC keeps a rolling two-year window. Keeping older decks is the only way to exceed its count, and it only matters once partner data exists.
+
+## Feature contract (Full, 2026-11-11)
+
+The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
+
+
+
+### Summary and problem
+
+from MagicAIBuilder, a player can find Commander decks and data wherever they live: in the index when a source allows it, and by a direct link into Moxfield, Archidekt, EDHREC and the others when it does not.
+
+### Goals
+
+- A player can search every deck MagicAIBuilder may lawfully hold, see where each one comes from, and reach the same search on every other site in one link. A public page states each source, what is stored, and how to remove it.
+
+### Non-goals
+
+- Do not reverse a non-goal already named in the moved record or in the roadmap's strategic boundaries.
+- Do not invent a usage count, a win rate, or a score the moved record does not already cite from a named source.
+
+### Personas
+
+See the roadmap persona table. This initiative serves the rows that list its id.
+
+### User stories
+
+#### US-29-01
+
+As a player, I want from MagicAIBuilder, a player can find Commander decks and data wherever they live: in the index when a source allows it, and by a direct link into Moxfield, Archidekt, EDHREC and the others when it does not., so that this initiative's definition of done is met.
+
+#### US-29-02
+
+As a signed-out player, I want the guest rule in the rollout to be true, so that I am not shown a control that fails when I have no account.
+
+#### US-29-03
+
+As a player using a keyboard or a screen reader, I want the primary action to have a name and a visible focus, so that colour is not the only signal.
+
+### Acceptance criteria
+
+#### AC-29-01 Happy path
+
+Given a signed-in player and the English locale
+When a player can search every deck MagicAIBuilder may lawfully hold, see where each one comes from, and reach the same search on every other site in one link. A public page states each source, what is stored, and how to remove it.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-29-02 Error and failure
+
+Given the action cannot finish
+When the player retries or leaves the screen
+Then the last confirmed state is unchanged, and the message is a catalogue string rather than a stack trace or a raw status code
+
+#### AC-29-03 Edge cases
+
+Given an empty deck, a missing price, or a field the record says may be absent
+When the screen renders
+Then the empty state says what is missing, and it does not show a zero in place of an unknown value
+
+#### AC-29-04 Guest and signed-in
+
+Given the rollout in this contract
+When a guest and a signed-in player open the same surface
+Then the rollout holds: Follows the initiative priority. Guest and signed-in behaviour is the moved record's.
+
+#### AC-29-05 Locales
+
+Given the ten catalogs
+When this feature adds a user-facing string
+Then The ten catalogs on disk are `en`, `fr`, `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` (`src/i18n/routing.ts`). Only `en` and `fr` are routed. The other eight stay at key parity with `en` and may reuse the English text until a person who speaks the language reviews them. A new string is not shipped in a routed locale as hard-coded English.
+
+#### AC-29-06 Accessibility
+
+Given a keyboard, a visible focus, and a screen reader
+When the player completes US-29-01 without a pointer
+Then every new control has an accessible name, focus returns on close, and a status uses a word or an icon as well as colour
+
+### UX flow and states
+
+The flow is the one described in the moved record. Empty, loading and error states use a catalogue string, not a blank panel.
+
+- Empty: the screen says what is missing and what to do next.
+- Loading: a busy state that does not shift the layout when it ends.
+- Error: the catalogue message and a way to retry, without losing the last confirmed edit.
+
+### Data model and API
+
+See the moved record. No public route is added unless that record names one.
+
+### Analytics and telemetry
+
+No new event until the moved record names one.
+
+The event is reserved for I-39's store. It is not emitted before that store exists. The row holds counts and enums only: no email, name, username, deck name, card name, list, search text or URL.
+
+### Rollout and feature flags
+
+Follows the initiative priority. Guest and signed-in behaviour is the moved record's.
+
+### Dependencies
+
+Hard waits are in the roadmap dependency table. Slice edges, where this file has a delivery-slice table, stay in that table and in `dependency-graph.md`.
+
+### Risks and mitigations
+
+- Shipping the surface before its wait is met: the roadmap sequence forbids the pick.
+- A string or a status that only some players can read: the locale and accessibility scenarios above fail the change.
+
+### Kill criteria
+
+None. This initiative is not in the Now band. Stop it if it would reverse a non-goal in the moved record.
+
+### Open questions
+
+None beyond the moved record.
+
+### Sources
+
+- https://cedh-decklist-database.com/
+- https://edhtop16.com/llms.txt
+- https://topdeck.gg/docs/tournaments-v2
+- https://topdeck.gg/developer-terms
+
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-29-101
+
+As a player, I want the product to publish a source policy before the first ingest., so that from MagicAIBuilder, a player can find Commander decks and data wherever they live: in the index when a source allows it, and by a direct link into Moxfield, Archidekt, EDHREC and the others when it does not.
+
+#### AC-29-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Publish a source policy before the first ingest. It forbids circumvention, accounts and headers impersonating a source; it respects robots.txt and text-and-data-mining opt-outs; it never indexes private decks or stores text written elsewhere; and it gives a takedown and opt-out path.
+
+#### AC-29-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-29-102 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-29-102
+
+As a player, I want the product to build the card dictionary and dated prices from Scryfall bulk data, keyed by Oracle ID., so that from MagicAIBuilder, a player can find Commander decks and data wherever they live: in the index when a source allows it, and by a direct link into Moxfield, Archidekt, EDHREC and the others when it does not.
+
+#### AC-29-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Build the card dictionary and dated prices from Scryfall bulk data, keyed by Oracle ID.
+
+#### AC-29-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-29-105 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-29-103
+
+As a player, I want the product to search MagicAIBuilder's public decks by commander, color identity, cards included and excluded with and/or, bracket, budget and freshness, signed out., so that from MagicAIBuilder, a player can find Commander decks and data wherever they live: in the index when a source allows it, and by a direct link into Moxfield, Archidekt, EDHREC and the others when it does not.
+
+#### AC-29-106 Happy path
+
+Given a signed-out visitor and a public deck
+When the player uses this behaviour
+Then the behaviour holds: Search MagicAIBuilder's public decks by commander, color identity, cards included and excluded with and/or, bracket, budget and freshness, signed out.
+
+#### AC-29-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-29-108 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+#### US-29-104
+
+As a player, I want the product to link out to Moxfield, Archidekt, EDHREC and the other researched sites from verified URL templates, without fetching or storing their content., so that from MagicAIBuilder, a player can find Commander decks and data wherever they live: in the index when a source allows it, and by a direct link into Moxfield, Archidekt, EDHREC and the others when it does not.
+
+#### AC-29-109 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Link out to Moxfield, Archidekt, EDHREC and the other researched sites from verified URL templates, without fetching or storing their content.
+
+#### AC-29-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-29-111 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-29-105
+
+As a player, I want the product to add licensed sources (the cEDH Decklist Database, MTGJSON precons through I-17), each with its notice and a link back., so that from MagicAIBuilder, a player can find Commander decks and data wherever they live: in the index when a source allows it, and by a direct link into Moxfield, Archidekt, EDHREC and the others when it does not.
+
+#### AC-29-112 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Add licensed sources (the cEDH Decklist Database, MTGJSON precons through I-17), each with its notice and a link back.
+
+#### AC-29-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-29-114 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-29-106
+
+As a player, I want the product to collapse exact copies, precon copies and near-duplicates, and offer "decks like mine" with a diff against the cohort., so that from MagicAIBuilder, a player can find Commander decks and data wherever they live: in the index when a source allows it, and by a direct link into Moxfield, Archidekt, EDHREC and the others when it does not.
+
+#### AC-29-115 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Collapse exact copies, precon copies and near-duplicates, and offer "decks like mine" with a diff against the cohort.
+
+#### AC-29-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-29-117 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-29-107
+
+As a player, I want the product to publish statistics only from indexed decks, labeled by source, sample size and corpus version., so that from MagicAIBuilder, a player can find Commander decks and data wherever they live: in the index when a source allows it, and by a direct link into Moxfield, Archidekt, EDHREC and the others when it does not.
+
+#### AC-29-118 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Publish statistics only from indexed decks, labeled by source, sample size and corpus version.
+
+#### AC-29-119 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-29-120 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-29-108
+
+As a player, I want the product to open partner-fed sources (Moxfield; Space Cow Media for EDHREC, Archidekt and Commander Spellbook; TopDeck.gg) only under a signed agreement., so that from MagicAIBuilder, a player can find Commander decks and data wherever they live: in the index when a source allows it, and by a direct link into Moxfield, Archidekt, EDHREC and the others when it does not.
+
+#### AC-29-121 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Open partner-fed sources (Moxfield; Space Cow Media for EDHREC, Archidekt and Commander Spellbook; TopDeck.gg) only under a signed agreement.
+
+#### AC-29-122 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-29-123 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-29-109
+
+As a player, I want the product to source register: record the cEDH Decklist Database's status tags (COMPETITIVE, BREW, OUTDATED) and Discord links, and show them with a Bracket 5 list., so that from MagicAIBuilder, a player can find Commander decks and data wherever they live: in the index when a source allows it, and by a direct link into Moxfield, Archidekt, EDHREC and the others when it does not.
+
+#### AC-29-124 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Source register: record the cEDH Decklist Database's status tags (COMPETITIVE, BREW, OUTDATED) and Discord links, and show them with a Bracket 5 list. Add Commander's Herald's cEDH guides and cEDH Brewers Base as researched sources (cEDH DDB, seen 2026-11-10). Added 2026-11-11.
+
+#### AC-29-125 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-29-126 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+#### US-29-110
+
+As a player, I want the product to indexed external decks get I-54 4.5's computed styles and I-77's estimate, with its method version, beside their declared fields., so that from MagicAIBuilder, a player can find Commander decks and data wherever they live: in the index when a source allows it, and by a direct link into Moxfield, Archidekt, EDHREC and the others when it does not.
+
+#### AC-29-127 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Indexed external decks get I-54 4.5's computed styles and I-77's estimate, with its method version, beside their declared fields. Added 2026-11-11.
+
+#### AC-29-128 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-29-129 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+#### US-29-111
+
+As a player, I want the product to add "may we show EDHREC salt, with credit" to D-25's letter to Space Cow Media; until then I-78's category flags stand in., so that from MagicAIBuilder, a player can find Commander decks and data wherever they live: in the index when a source allows it, and by a direct link into Moxfield, Archidekt, EDHREC and the others when it does not.
+
+#### AC-29-130 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Add "may we show EDHREC salt, with credit" to D-25's letter to Space Cow Media; until then I-78's category flags stand in. Added 2026-11-11.
+
+#### AC-29-131 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-29-132 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+### UX states for this feature
+
+The player-visible outcome is: from MagicAIBuilder, a player can find Commander decks and data wherever they live: in the index when a source allows it, and by a direct link into Moxfield, Archidekt, EDHREC and the others when it does not.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
+
+### Record moved from the roadmap (2026-11-11)
+
+Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.
+
+## I-29: Cross-Site Commander Deck Index
+
+**Spec:** [`specs/i29-cross-site-deck-index.md`](i29-cross-site-deck-index.md)
+
+**Outcome:** from MagicAIBuilder, a player can find Commander decks and data wherever they live: in the index when a source allows it, and by a direct link into Moxfield, Archidekt, EDHREC and the others when it does not.
+
+**Status:** Later
+**Priority:** Later — 2027
+**Impact / effort:** High / large
+
+EDHREC's 10.5 million decks come from partnerships with Moxfield and Archidekt, not from crawling, and the three largest sources block or forbid automated collection. The index therefore starts from sources that allow it: Scryfall, MTGJSON precons, the cEDH Decklist Database, Commander Spellbook once its data license is confirmed, and MagicAIBuilder's own public decks. Every other site is reached by a link that copies nothing, and partnerships are the only route to scale. Before any partnership, it offers the search the incumbents lack: include and exclude cards with and/or, freshness, near-copies collapsed, declared against estimated bracket, and "decks like mine". The research also found that the shipped Moxfield import sends `Origin` and `Referer` headers set to `moxfield.com`. I-10 owns that code, and the [spec](i29-cross-site-deck-index.md#open-questions) asks for a decision before the source policy is published. #1304 removed those headers on 2026-11-09, which settles the Moxfield half of that question; the EDHREC half is open.
+
+Two initiatives added on 2026-11-09 consume this index. [I-34](i34-commander-data-reports.md) computes its data reports and indexable data pages from the indexed decks, under the same source labels, sample sizes and withholding thresholds. [I-36](i36-creator-and-embed-toolkit.md) exposes the index and its decks to creators and other tools through embeds and the public API. Until a partnership lands, the corpus is small. Any statistic computed from deck populations needs its sample size disclosed, and simulated statistics are the only ones not limited by corpus size.
+
+### Scope
+
+- [ ] Publish a source policy before the first ingest. It forbids circumvention, accounts and headers impersonating a source; it respects robots.txt and text-and-data-mining opt-outs; it never indexes private decks or stores text written elsewhere; and it gives a takedown and opt-out path.
+- [ ] Build the card dictionary and dated prices from Scryfall bulk data, keyed by Oracle ID.
+  - Re-pointed 2026-11-10 to [I-67](i67-one-card-data-pipeline.md): its slice 2 builds the card tables and its slice 5 the dated prices, and this initiative keys its index on I-67's `CardOracle.key`, an `int4`. The spec's `int2` key stopped at 32,767, below the 39,288 Oracle IDs in Scryfall's file of 2026-11-09. MTGJSON precons arrive through I-67 slice 13.
+- [ ] Search MagicAIBuilder's public decks by commander, color identity, cards included and excluded with and/or, bracket, budget and freshness, signed out.
+  - Re-scoped 2026-11-10: [I-75](i75-finding-public-decks.md) slices 2, 4, 5 and 6 deliver search over MagicAIBuilder's own public decks now, on the production database, and own the query contract. This initiative's slice 4 becomes the indexed external decks, a second corpus behind I-75's contract with a source facet.
+- [ ] Link out to Moxfield, Archidekt, EDHREC and the other researched sites from verified URL templates, without fetching or storing their content.
+- [ ] Add licensed sources (the cEDH Decklist Database, MTGJSON precons through I-17), each with its notice and a link back.
+- [ ] Collapse exact copies, precon copies and near-duplicates, and offer "decks like mine" with a diff against the cohort.
+- [ ] Publish statistics only from indexed decks, labeled by source, sample size and corpus version.
+- [ ] Open partner-fed sources (Moxfield; Space Cow Media for EDHREC, Archidekt and Commander Spellbook; TopDeck.gg) only under a signed agreement.
+- [ ] Source register: record the cEDH Decklist Database's status tags (`COMPETITIVE`, `BREW`, `OUTDATED`) and Discord links, and show them with a Bracket 5 list. Add Commander's Herald's cEDH guides and cEDH Brewers Base as researched sources ([cEDH DDB](https://cedh-decklist-database.com/), seen 2026-11-10). Added 2026-11-11.
+- [ ] Indexed external decks get I-54 4.5's computed styles and [I-77](i77-a-bracket-estimate-players-can-audit.md)'s estimate, with its method version, beside their declared fields. Added 2026-11-11.
+- [ ] Add "may we show EDHREC salt, with credit" to [D-25](../owner-decisions.md#data-sources-and-partners)'s letter to Space Cow Media; until then [I-78](i78-what-this-deck-does-to-the-table.md)'s category flags stand in. Added 2026-11-11.
+
+### Engineering enablers
+
+- A test fails when an ingest run proceeds after a 403, a challenge or an opt-out signal.
+- Measure the card index at 1 million and 10 million synthetic decks before choosing between PostgreSQL GIN and a roaring-bitmap index.
+
+### Definition of done
+
+A player can search every deck MagicAIBuilder may lawfully hold, see where each one comes from, and reach the same search on every other site in one link. A public page states each source, what is stored, and how to remove it.
+
+---
+
+### What the sweep ruled out for 2027
+
+Recording these saves the next pass from re-deriving them:
+
+- **Tournament win rates remain blocked, by licence rather than by missing data.** _Corrected 2026-11-09._ The 2026-11-08 sweep said EDHTop16 publishes meta share and entry counts but no win rates, no match-level results and no public API. In fact EDHTop16 computes a win rate (wins divided by wins, losses and draws) and shows each entry's win, loss and draw record. Its GraphQL endpoint answers only persisted queries, so it is still not a usable public API ([EDHTop16 `llms.txt`](https://edhtop16.com/llms.txt), checked 2026-11-09). The match-level data, with seat order and the winner of each table, sits upstream at TopDeck.gg ([API docs](https://topdeck.gg/docs/tournaments-v2)). TopDeck.gg's [Developer Terms](https://topdeck.gg/developer-terms), effective 2026-10-27, forbid selling, licensing or otherwise commercializing API data (§7), and allow displaying public event data with attribution (§8.3, §6.1). MagicMeta and LucidPuzzle derive their tiers from EDHTop16. The block stands, and the reason is now recorded correctly; I-09 carries the detail.
+- **Card scanning** stays a non-goal: ManaBox owns it, it is a native-camera capability, and I-06's own scope defers it behind printing-level ownership.
+- **A table companion** — life totals, commander damage, turn timers — is served by Discord bots and the official app, and is a different product from a deckbuilder. I-19 covers the only table need the product should meet. [I-35](i35-pod-game-log.md), added on 2026-11-09, is a post-game result log attached to decks, not a table companion.
+- **Marketplace, our own cart and checkout** remain excluded by the existing non-goals. I-06 hands off to sellers; it does not become one. [I-32](i32-seller-handoff-and-affiliate-carts.md) sends a list to a seller's own cart, and [I-33](i33-marketplace-ladder.md) records the stage at which the owner could decide otherwise.
+
+---
+

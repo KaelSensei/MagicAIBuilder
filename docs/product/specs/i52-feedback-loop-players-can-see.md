@@ -2,7 +2,7 @@
 
 > **Initiative:** I-52, proposed for the [roadmap](../roadmap.md) · **Status:** Proposed · **Priority:** Next for the status line, the bug report and "What's new" (slices 0 to 8); Later for the request board (slices 9 to 13) · **Written 2026-11-10**
 > **Research:** one dated note, not committed. Every external fact links its own source in [Sources](#sources). Legal points are research, not legal advice, and go to the lawyer list in [I-30 requirement 7.2](i30-business-model-and-paid-tier.md#7-the-legal-gate), through [I-38](i38-trust-safety-and-user-rights.md)'s slice 0.
-> **Owns:** player-facing release notes and the in-app "What's new"; the bug report, its context allowlist and its triage states; the public request board, its votes and statuses, and the link from a shipped request to its release note; the public status page and the in-app status line. **Does not own:** the `/api/health` contract and the shared rate-limit store ([I-05](../roadmap.md#i-05-production-safety)), although slice 1 closes I-05's monitor item; alerting ([I-71](i71-speed-uptime-and-recovery.md#3-availability-objective-and-alerts), named 2026-11-10 instead of I-05); reporting, moderation decisions, statements of reasons and blocking (I-38); the event store, activity days and retention metrics ([I-39](i39-first-run-activation-and-measurement.md)); plans, entitlements and the supporter badge ([I-30](i30-business-model-and-paid-tier.md)); the notification centre and deck-level "seeking feedback" ([I-08](../roadmap.md#i-08-share-compare-and-learn)); Commander rules-change notices ([I-48](i48-official-changes-reach-every-deck.md)); Discord feeds and bots ([I-46](i46-discord-and-chat-integrations.md)); the developer changelog, `docs/project/changelog.md`, which stays as it is.
+> **Owns:** player-facing release notes and the in-app "What's new"; the bug report, its context allowlist and its triage states; the public request board, its votes and statuses, and the link from a shipped request to its release note; the public status page and the in-app status line. **Does not own:** the `/api/health` contract and the shared rate-limit store ([I-05](i05-production-safety.md)), although slice 1 closes I-05's monitor item; alerting ([I-71](i71-speed-uptime-and-recovery.md#3-availability-objective-and-alerts), named 2026-11-10 instead of I-05); reporting, moderation decisions, statements of reasons and blocking (I-38); the event store, activity days and retention metrics ([I-39](i39-first-run-activation-and-measurement.md)); plans, entitlements and the supporter badge ([I-30](i30-business-model-and-paid-tier.md)); the notification centre and deck-level "seeking feedback" ([I-08](i08-share-compare-and-learn.md)); Commander rules-change notices ([I-48](i48-official-changes-reach-every-deck.md)); Discord feeds and bots ([I-46](i46-discord-and-chat-integrations.md)); the developer changelog, `docs/project/changelog.md`, which stays as it is.
 
 ## Overview
 
@@ -265,3 +265,412 @@ All read on 2026-11-10 unless stated.
 24. EDPB, [Guidelines 2/2023 on the technical scope of Art. 5(3) of the ePrivacy Directive](https://www.edpb.europa.eu/our-work-tools/our-documents/guidelines/guidelines-22023-technical-scope-art-53-eprivacy-directive_en), final version listed on 16 October 2024.
 25. CNIL, [Cookies : solutions pour les outils de mesure d'audience](https://www.cnil.fr/fr/cookies-et-autres-traceurs/regles/cookies-solutions-pour-les-outils-de-mesure-daudience), 2025-07-04.
 26. Archidekt, [Feature Voting](https://archidekt.com/features): 19 open and 55 archived requests over four pages, seen 2026-11-10; added 2026-11-11.
+
+## Feature contract (Full, 2026-11-11)
+
+The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
+
+### Summary and problem
+
+a player sees whether the site is working, reports a problem from any page with only safe context attached and follows it, reads what changed in production in English or French, and later votes on requests whose status and release note are public.
+
+### Goals
+
+- A player sees the site's status in the footer and on a page that loads while the site is down, sends a report from an error page with only the listed context and follows it to the release note that fixed it, and reads that note in English or French, dated by the day production first served it.
+
+### Non-goals
+
+- Do not reverse a non-goal already named in the moved record or in the roadmap's strategic boundaries.
+- Do not invent a usage count, a win rate, or a score the moved record does not already cite from a named source.
+
+### Personas
+
+See the roadmap persona table. This initiative serves the rows that list its id.
+
+### User stories
+
+#### US-52-01
+
+As a player who hit a bug, I want to say what happened and see that it was received, so that the error page is not a dead end.
+
+#### US-52-02
+
+As a signed-out player, I want the guest rule in the rollout to be true, so that I am not shown a control that fails when I have no account.
+
+#### US-52-03
+
+As a player using a keyboard or a screen reader, I want the primary action to have a name and a visible focus, so that colour is not the only signal.
+
+### Acceptance criteria
+
+#### AC-52-01 Happy path
+
+Given a signed-in player and the English locale
+When the report takes the player's words and an allowlist of context.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-52-02 Happy path
+
+Given a signed-in player and the English locale
+When the player sees a status, not a claim that it was already reported.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-52-03 Happy path
+
+Given a signed-in player and the English locale
+When release notes exist in English and French for what reached production.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-52-04 Error and failure
+
+Given the action cannot finish
+When the player retries or leaves the screen
+Then the last confirmed state is unchanged, and the message is a catalogue string rather than a stack trace or a raw status code
+
+#### AC-52-05 Edge cases
+
+Given an empty deck, a missing price, or a field the record says may be absent
+When the screen renders
+Then the empty state says what is missing, and it does not show a zero in place of an unknown value
+
+#### AC-52-06 Guest and signed-in
+
+Given the rollout in this contract
+When a guest and a signed-in player open the same surface
+Then the rollout holds: Guests and signed-in players can report. The public request board stays Later. The monitor choice is the owner's.
+
+#### AC-52-07 Locales
+
+Given the ten catalogs
+When this feature adds a user-facing string
+Then The ten catalogs on disk are `en`, `fr`, `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` (`src/i18n/routing.ts`). Only `en` and `fr` are routed. The other eight stay at key parity with `en` and may reuse the English text until a person who speaks the language reviews them. A new string is not shipped in a routed locale as hard-coded English.
+
+#### AC-52-08 Accessibility
+
+Given a keyboard, a visible focus, and a screen reader
+When the player completes US-52-01 without a pointer
+Then every new control has an accessible name, focus returns on close, and a status uses a word or an icon as well as colour
+
+### UX flow and states
+
+The form is on the error page and in the help path. It does not ask for a password. Release notes are a page, not a modal.
+
+- Empty: the screen says what is missing and what to do next.
+- Loading: a busy state that does not shift the layout when it ends.
+- Error: the catalogue message and a way to retry, without losing the last confirmed edit.
+
+### Data model and API
+
+A report row. Context is the route, the locale and the build, not the deck list. Notes ship as authored files.
+
+### Analytics and telemetry
+
+`bug_reported {has_account: yes or no}`. Reserved for I-39. Not emitted before that store exists.
+
+The event is reserved for I-39's store. It is not emitted before that store exists. The row holds counts and enums only: no email, name, username, deck name, card name, list, search text or URL.
+
+### Rollout and feature flags
+
+Guests and signed-in players can report. The public request board stays Later. The monitor choice is the owner's.
+
+### Dependencies
+
+Hard waits are in the roadmap dependency table. Slice edges, where this file has a delivery-slice table, stay in that table and in `dependency-graph.md`.
+
+### Risks and mitigations
+
+- Shipping the surface before its wait is met: the roadmap sequence forbids the pick.
+- A string or a status that only some players can read: the locale and accessibility scenarios above fail the change.
+
+### Kill criteria
+
+None. This initiative is not in the Now band. Stop it if it would reverse a non-goal in the moved record.
+
+### Open questions
+
+Whether the browser family on a report needs consent is a lawyer question. The board's opening waits on a stated number of weekly builders, which we do not have yet.
+
+### Sources
+
+- https://edhrec.com/articles/changelog-redesign-follow-up
+- https://canny.io/pricing
+- https://github.com/upptime/upptime
+- https://uptimerobot.com/pricing/
+
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-52-101
+
+As a player, I want the product to slice 0, no code: the owner chooses the monitor and the status page's address and sets the bug-report retention; the lawyer questions join I-30 requirement 7.2 through I-38's slice 0., so that a player sees whether the site is working, reports a problem from any page with only safe context attached and follows it, reads what changed in production in English or French, and later votes on requests whose status and release note are public.
+
+#### AC-52-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Slice 0, no code: the owner chooses the monitor and the status page's address and sets the bug-report retention; the lawyer questions join I-30 requirement 7.2 through I-38's slice 0.
+
+#### AC-52-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-52-102 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-52-102
+
+As a player, I want the product to an external monitor that checks /api/health at least every 5 minutes, and a status page hosted off the production stack (slice 1)., so that a player sees whether the site is working, reports a problem from any page with only safe context attached and follows it, reads what changed in production in English or French, and later votes on requests whose status and release note are public.
+
+#### AC-52-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: An external monitor that checks /api/health at least every 5 minutes, and a status page hosted off the production stack (slice 1). This closes I-05's monitor item. Today no monitor is configured, although docs/engineering/dx-ci-overview.md lists UptimeRobot, and /api/health (src/app/api/health/route.ts) is public, has no rate limit and queries the database on every call.
+
+#### AC-52-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-52-105 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-52-103
+
+As a player, I want the product to gET /api/status, cached for 60 seconds, which answers unknown, never ok, when the monitor cannot be read; a footer status line, a banner only when something is wrong, and owner notices (slice 2)., so that a player sees whether the site is working, reports a problem from any page with only safe context attached and follows it, reads what changed in production in English or French, and later votes on requests whose status and release note are public.
+
+#### AC-52-106 Happy path
+
+Given a downloaded deck and no network
+When the player uses this behaviour
+Then the behaviour holds: GET /api/status, cached for 60 seconds, which answers unknown, never ok, when the monitor cannot be read; a footer status line, a banner only when something is wrong, and owner notices (slice 2). No browser calls /api/health, and a test fails if client code references it.
+
+#### AC-52-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-52-108 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-52-104
+
+As a player, I want the product to a bug report stored first-party and reachable from the header, both footers and the error boundary, with a "What will be sent" panel, an allowlist of context, a deck id only behind an unticked consent box, and free text scrubbed of e-mail addresses and tokens (slices 3–4)., so that a player sees whether the site is working, reports a problem from any page with only safe context attached and follows it, reads what changed in production in English or French, and later votes on requests whose status and release note are public.
+
+#### AC-52-109 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A bug report stored first-party and reachable from the header, both footers and the error boundary, with a "What will be sent" panel, an allowlist of context, a deck id only behind an unticked consent box, and free text scrubbed of e-mail addresses and tokens (slices 3–4). Today src/app/[locale]/error.tsx says the problem "has been reported" and shows a reference but takes nothing from the player, and src/app/global-error.tsx renders in English only.
+
+#### AC-52-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-52-111 Edge
+
+Given the French locale
+When the new controls render
+Then they come from the French catalogue and are not hard-coded English
+
+#### US-52-105
+
+As a player, I want the product to a moderator triage view, Settings → My reports, and promotion to a GitHub issue with the owner's summary, never the player's words (slice 5)., so that a player sees whether the site is working, reports a problem from any page with only safe context attached and follows it, reads what changed in production in English or French, and later votes on requests whose status and release note are public.
+
+#### AC-52-112 Happy path
+
+Given a signed-in operator
+When the player uses this behaviour
+Then the behaviour holds: A moderator triage view, Settings → My reports, and promotion to a GitHub issue with the owner's summary, never the player's words (slice 5).
+
+#### AC-52-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-52-114 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-52-106
+
+As a player, I want the product to human-written release notes in English and French, one file per note under src/content/whats-new/, written in the chore/docs PR and dated by the first day production served them; /whats-new, an Atom feed and a header dot for accounts, with no modal or toast (slices 6–7)., so that a player sees whether the site is working, reports a problem from any page with only safe context attached and follows it, reads what changed in production in English or French, and later votes on requests whose status and release note are public.
+
+#### AC-52-115 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Human-written release notes in English and French, one file per note under src/content/whats-new/, written in the chore/docs PR and dated by the first day production served them; /whats-new, an Atom feed and a header dot for accounts, with no modal or toast (slices 6–7). docs/project/changelog.md stays the developer log.
+
+#### AC-52-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-52-117 Edge
+
+Given the French locale
+When the new controls render
+Then they come from the French catalogue and are not hard-coded English
+
+#### US-52-107
+
+As a player, I want the product to a released bug report links to its release note (slice 8)., so that a player sees whether the site is working, reports a problem from any page with only safe context attached and follows it, reads what changed in production in English or French, and later votes on requests whose status and release note are public.
+
+#### AC-52-118 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A released bug report links to its release note (slice 8).
+
+#### AC-52-119 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-52-120 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-52-108
+
+As a player, I want the product to later: the request board's read side; posting and voting after I-38's report and block slices; a status workflow with merges and links to release notes; the owner's measurement view; and status lines for card search and the copilot (slices 9–13)., so that a player sees whether the site is working, reports a problem from any page with only safe context attached and follows it, reads what changed in production in English or French, and later votes on requests whose status and release note are public.
+
+#### AC-52-121 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Later: the request board's read side; posting and voting after I-38's report and block slices; a status workflow with merges and links to release notes; the owner's measurement view; and status lines for card search and the copilot (slices 9–13).
+
+#### AC-52-122 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-52-123 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+### UX states for this feature
+
+The player-visible outcome is: a player sees whether the site is working, reports a problem from any page with only safe context attached and follows it, reads what changed in production in English or French, and later votes on requests whose status and release note are public.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
+
+### Record moved from the roadmap (2026-11-11)
+
+Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.
+
+## I-52: A Feedback Loop Players Can See
+
+**Spec:** [`specs/i52-feedback-loop-players-can-see.md`](i52-feedback-loop-players-can-see.md)
+
+**Outcome:** a player sees whether the site is working, reports a problem from any page with only safe context attached and follows it, reads what changed in production in English or French, and later votes on requests whose status and release note are public.
+
+**Status:** Next
+**Priority:** Next for the status line, the bug report and "What's new" (slices 0 to 8); Later for the request board (slices 9 to 13)
+**Impact / effort:** Medium / small for slices 0–8; medium for the board
+**Depends on:** the owner's choice of monitor and of the report retention (slice 0); I-38 slices 8 and 12 before players post or vote (slice 10); I-39 slice 11 for the measurement view; I-05's failure visibility for the status lines per service.
+
+A cheap subscription lives on two things: players trust that the product works, and they see it improve in the direction they asked for. Today neither is visible from inside the product. A player who hits a bug has no form, address or link, and the only changelog is a developer log in English that records merges to `dev`, not what reached players; on 2026-11-10 `dev` was 37 commits ahead of `main`. Every product read takes bugs and requests outside the product, through Discord, a forum, e-mail, GitHub issues or a hosted board. EDHREC and Archidekt publish changelog articles ([EDHREC, 2026-10-22](https://edhrec.com/articles/changelog-redesign-follow-up)), and none links a shipped change to the request behind it. Hosted boards either stop being free early, as Canny's does at 25 tracked users ([pricing](https://canny.io/pricing)), or add a processor, a second sign-in or a script the CSP refuses. So the board is built in the product, with self-hosted Fider (AGPL-3.0) as the exit. No controlled study ties a public board to retention, so the spec measures it. Upptime is free on GitHub and UptimeRobot's free plan allows commercial use ([Upptime](https://github.com/upptime/upptime), [UptimeRobot pricing](https://uptimerobot.com/pricing/)). This is product feedback; deck feedback stays in I-08.
+
+### Scope
+
+- [ ] Slice 0, no code: the owner chooses the monitor and the status page's address and sets the bug-report retention; the lawyer questions join I-30 requirement 7.2 through I-38's slice 0.
+- [ ] An external monitor that checks `/api/health` at least every 5 minutes, and a status page hosted off the production stack (slice 1). This closes I-05's monitor item. Today no monitor is configured, although `docs/engineering/dx-ci-overview.md` lists UptimeRobot, and `/api/health` (`src/app/api/health/route.ts`) is public, has no rate limit and queries the database on every call.
+  - Alert routing, the phone alert for "down" and a page check of `/` beside this monitor, is [I-71](i71-speed-uptime-and-recovery.md) slice 4's, and I-71 owns the availability objective (2026-11-10).
+- [ ] `GET /api/status`, cached for 60 seconds, which answers `unknown`, never `ok`, when the monitor cannot be read; a footer status line, a banner only when something is wrong, and owner notices (slice 2). No browser calls `/api/health`, and a test fails if client code references it.
+- [ ] A bug report stored first-party and reachable from the header, both footers and the error boundary, with a "What will be sent" panel, an allowlist of context, a deck id only behind an unticked consent box, and free text scrubbed of e-mail addresses and tokens (slices 3–4). Today `src/app/[locale]/error.tsx` says the problem "has been reported" and shows a reference but takes nothing from the player, and `src/app/global-error.tsx` renders in English only.
+  - [I-64](i64-help-centre-and-guidance.md) slice 9 adds one field to the allowlist, the help article the player came from, and shows up to three matching articles beside the form without blocking it. No second support channel is added.
+  - [I-70](i70-ai-quality-bench-and-model-changes.md) slice 15 adds the kind `ai_output`, opened from the wizard's result and the suggestion panel, with the AI context attached only behind unticked boxes (2026-11-10).
+- [ ] A moderator triage view, Settings → My reports, and promotion to a GitHub issue with the owner's summary, never the player's words (slice 5).
+  - The triage view uses [I-69](i69-operator-console-support-moderation-and-kill-switches.md)'s moderator role and `requireOperator` once its slice 1 exists (2026-11-10).
+- [ ] Human-written release notes in English and French, one file per note under `src/content/whats-new/`, written in the `chore/docs` PR and dated by the first day production served them; `/whats-new`, an Atom feed and a header dot for accounts, with no modal or toast (slices 6–7). `docs/project/changelog.md` stays the developer log.
+- [ ] A released bug report links to its release note (slice 8).
+- [ ] Later: the request board's read side; posting and voting after I-38's report and block slices; a status workflow with merges and links to release notes; the owner's measurement view; and status lines for card search and the copilot (slices 9–13).
+  - Voters' notices (slice 11) reach the inbox through [I-63](i63-one-notification-system.md) slices 1 to 3, and the spec's `requestUpdates` column becomes I-63's "Requests I voted for" category.
+
+### Engineering enablers
+
+- A report carrying any key outside the allowlist is rejected, the stored row has no user-agent, e-mail or IP column, and the payload equals the "What will be sent" panel.
+- The scrubber removes e-mail addresses, `Bearer` values, JWT-shaped strings and long hexadecimal and base64 runs, under property tests.
+- `firstServedAt` is written once under concurrent renders, and a note missing either locale fails the schema test.
+- One vote per account per request, and a guard test fails if any public response carries a plan, an entitlement or a voter list.
+
+**Paid-tier angle:** everything here is free: reporting, voting, statuses, release notes and the status page. A paying player's vote counts once, and the board shows no split by plan. Its use to I-30 is evidence and trust. The board counts demand for a paid candidate before it is built, which I-33's threshold of 50 distinct players needs, and a visible trail from request to release is the argument a cheap subscription makes.
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player who hit a bug, I want to say what happened and see that it was received, so that the error page is not a dead end.
+
+**Acceptance.**
+- The report takes the player's words and an allowlist of context.
+- The player sees a status, not a claim that it was already reported.
+- Release notes exist in English and French for what reached production.
+
+**UX.** The form is on the error page and in the help path. It does not ask for a password. Release notes are a page, not a modal.
+
+**Data and API.** A report row. Context is the route, the locale and the build, not the deck list. Notes ship as authored files.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `bug_reported {has_account: yes or no}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Guests and signed-in players can report. The public request board stays Later. The monitor choice is the owner's.
+
+**Open questions.** Whether the browser family on a report needs consent is a lawyer question. The board's opening waits on a stated number of weekly builders, which we do not have yet.
+
+### Definition of done
+
+A player sees the site's status in the footer and on a page that loads while the site is down, sends a report from an error page with only the listed context and follows it to the release note that fixed it, and reads that note in English or French, dated by the day production first served it.
+
+---
+

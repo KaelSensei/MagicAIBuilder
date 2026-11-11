@@ -2,7 +2,7 @@
 
 > **Status:** Proposed · **Priority:** Later. The deck-box path (slices 1 to 5) needs no collection import and can be promoted on its own; binders and boxes at scale wait for [I-26](i26-collections-arriving-from-elsewhere.md) slice 3 · **Written 2026-11-09**
 > **Research:** a dated note on competitors' storage features and player posts. It is not committed, so every external fact links its own source in [Sources](#sources).
-> **Owns:** storage places and their nesting, how many copies of a collection row sit in each place, deck-box pairing, pull and put-back lists, the misplaced-card and contention warnings, the cross-deck card view, and deck-box labels. **Does not own:** ownership quantities, printing identity, proxies and the acquisition plan ([I-06](../roadmap.md#i-06-collection-and-purchase-planning)); which deck a copy is committed to, and the free-cards ranking ([I-16](i16-decks-buildable-from-a-collection.md)); the service worker and offline cache ([I-19](i19-offline-game-night-viewing.md)); collection import and its column mapping ([I-26](i26-collections-arriving-from-elsewhere.md)); scanning and the phone-journey harness ([I-40](i40-installable-app-and-card-scanning.md)); plans and entitlements ([I-30](i30-business-model-and-paid-tier.md)); the full data export, account deletion and retention ([I-38](i38-trust-safety-and-user-rights.md)); have lists and share links ([I-44](i44-trade-lists-within-the-pod.md)); buying ([I-32](i32-seller-handoff-and-affiliate-carts.md)).
+> **Owns:** storage places and their nesting, how many copies of a collection row sit in each place, deck-box pairing, pull and put-back lists, the misplaced-card and contention warnings, the cross-deck card view, and deck-box labels. **Does not own:** ownership quantities, printing identity, proxies and the acquisition plan ([I-06](i06-collection-and-purchase-planning.md)); which deck a copy is committed to, and the free-cards ranking ([I-16](i16-decks-buildable-from-a-collection.md)); the service worker and offline cache ([I-19](i19-offline-game-night-viewing.md)); collection import and its column mapping ([I-26](i26-collections-arriving-from-elsewhere.md)); scanning and the phone-journey harness ([I-40](i40-installable-app-and-card-scanning.md)); plans and entitlements ([I-30](i30-business-model-and-paid-tier.md)); the full data export, account deletion and retention ([I-38](i38-trust-safety-and-user-rights.md)); have lists and share links ([I-44](i44-trade-lists-within-the-pod.md)); buying ([I-32](i32-seller-handoff-and-affiliate-carts.md)).
 
 ## Overview
 
@@ -243,3 +243,465 @@ Read on 2026-11-09 unless stated otherwise. Reddit scores and comment counts com
 20. MDN, "Web NFC API", last modified 2024-07-26. <https://developer.mozilla.org/en-US/docs/Web/API/Web_NFC_API>
 21. npm registry, `qrcode` 1.5.4, licence MIT. <https://registry.npmjs.org/qrcode/latest>
 22. MTG Delver TCG Scanner 1.25 for iOS, 2026-10-16: "New option to write NFC tags", from the iTunes Search API. <https://apps.apple.com/app/id6504142186>
+
+## Feature contract (Full, 2026-11-11)
+
+The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
+
+
+
+### Summary and problem
+
+a player records where each physical copy sits, pairs a built deck with its box, and gets a pull list ordered by place and a put-back list when a deck changes or is dismantled.
+
+### Goals
+
+- A player pairs a deck with its box, pulls the missing cards in place order, puts back what the deck no longer needs, and no placement ever exceeds the copies owned.
+
+### Non-goals
+
+- Do not reverse a non-goal already named in the moved record or in the roadmap's strategic boundaries.
+- Do not invent a usage count, a win rate, or a score the moved record does not already cite from a named source.
+
+### Personas
+
+See the roadmap persona table. This initiative serves the rows that list its id.
+
+### User stories
+
+#### US-43-01
+
+As a player, I want a player records where each physical copy sits, pairs a built deck with its box, and gets a pull list ordered by place and a put-back list when a deck changes or is dismantled., so that this initiative's definition of done is met.
+
+#### US-43-02
+
+As a signed-out player, I want the guest rule in the rollout to be true, so that I am not shown a control that fails when I have no account.
+
+#### US-43-03
+
+As a player using a keyboard or a screen reader, I want the primary action to have a name and a visible focus, so that colour is not the only signal.
+
+### Acceptance criteria
+
+#### AC-43-01 Happy path
+
+Given a signed-in player and the English locale
+When a player pairs a deck with its box, pulls the missing cards in place order, puts back what the deck no longer needs, and no placement ever exceeds the copies owned.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-43-02 Error and failure
+
+Given the action cannot finish
+When the player retries or leaves the screen
+Then the last confirmed state is unchanged, and the message is a catalogue string rather than a stack trace or a raw status code
+
+#### AC-43-03 Edge cases
+
+Given an empty deck, a missing price, or a field the record says may be absent
+When the screen renders
+Then the empty state says what is missing, and it does not show a zero in place of an unknown value
+
+#### AC-43-04 Guest and signed-in
+
+Given the rollout in this contract
+When a guest and a signed-in player open the same surface
+Then the rollout holds: Follows the initiative priority. Guest and signed-in behaviour is the moved record's.
+
+#### AC-43-05 Locales
+
+Given the ten catalogs
+When this feature adds a user-facing string
+Then The ten catalogs on disk are `en`, `fr`, `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` (`src/i18n/routing.ts`). Only `en` and `fr` are routed. The other eight stay at key parity with `en` and may reuse the English text until a person who speaks the language reviews them. A new string is not shipped in a routed locale as hard-coded English.
+
+#### AC-43-06 Accessibility
+
+Given a keyboard, a visible focus, and a screen reader
+When the player completes US-43-01 without a pointer
+Then every new control has an accessible name, focus returns on close, and a status uses a word or an icon as well as colour
+
+### UX flow and states
+
+The flow is the one described in the moved record. Empty, loading and error states use a catalogue string, not a blank panel.
+
+- Empty: the screen says what is missing and what to do next.
+- Loading: a busy state that does not shift the layout when it ends.
+- Error: the catalogue message and a way to retry, without losing the last confirmed edit.
+
+### Data model and API
+
+See the moved record. No public route is added unless that record names one.
+
+### Analytics and telemetry
+
+No new event until the moved record names one.
+
+The event is reserved for I-39's store. It is not emitted before that store exists. The row holds counts and enums only: no email, name, username, deck name, card name, list, search text or URL.
+
+### Rollout and feature flags
+
+Follows the initiative priority. Guest and signed-in behaviour is the moved record's.
+
+### Dependencies
+
+Hard waits are in the roadmap dependency table. Slice edges, where this file has a delivery-slice table, stay in that table and in `dependency-graph.md`.
+
+### Risks and mitigations
+
+- Shipping the surface before its wait is met: the roadmap sequence forbids the pick.
+- A string or a status that only some players can read: the locale and accessibility scenarios above fail the change.
+
+### Kill criteria
+
+None. This initiative is not in the Now band. Stop it if it would reverse a non-goal in the moved record.
+
+### Open questions
+
+None beyond the moved record.
+
+### Sources
+
+- https://archidekt.com/forum/thread/15420664
+- https://www.masterduelmeta.com/articles/quick-news/july-29-2025/wcs-rules/
+
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-43-101
+
+As a player, I want the product to schema for storage places, placements and moves, with one write module that keeps placed copies at or below the owned quantity under a row lock (slice 1)., so that a player records where each physical copy sits, pairs a built deck with its box, and gets a pull list ordered by place and a put-back list when a deck changes or is dismantled.
+
+#### AC-43-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Schema for storage places, placements and moves, with one write module that keeps placed copies at or below the owned quantity under a row lock (slice 1).
+
+#### AC-43-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-43-102 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-43-102
+
+As a player, I want the product to places that nest up to five levels, with sort orders, deletion that moves contents, and a computed Unplaced (slice 2)., so that a player records where each physical copy sits, pairs a built deck with its box, and gets a pull list ordered by place and a put-back list when a deck changes or is dismantled.
+
+#### AC-43-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Places that nest up to five levels, with sort orders, deletion that moves contents, and a computed Unplaced (slice 2).
+
+#### AC-43-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-43-105 Edge
+
+Given the account or the cache this behaviour changes
+When the player signs out or the deletion finishes
+Then the next request does not still show the private data
+
+#### US-43-103
+
+As a player, I want the product to placing copies one row at a time or in bulk, quantity decreases and printing merges that keep placements consistent, and "Stored in" next to "Used in decks" (slice 3)., so that a player records where each physical copy sits, pairs a built deck with its box, and gets a pull list ordered by place and a put-back list when a deck changes or is dismantled.
+
+#### AC-43-106 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Placing copies one row at a time or in bulk, quantity decreases and printing merges that keep placements consistent, and "Stored in" next to "Used in decks" (slice 3).
+
+#### AC-43-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-43-108 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-43-104
+
+As a player, I want the product to deck-box pairing, the box state on the deck page, and "put this deck in its box" with a preview (slice 4)., so that a player records where each physical copy sits, pairs a built deck with its box, and gets a pull list ordered by place and a put-back list when a deck changes or is dismantled.
+
+#### AC-43-109 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Deck-box pairing, the box state on the deck page, and "put this deck in its box" with a preview (slice 4).
+
+#### AC-43-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-43-111 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-43-105
+
+As a player, I want the product to a read-only pull list ordered by place, confirmed as moves with undo (slice 5)., so that a player records where each physical copy sits, pairs a built deck with its box, and gets a pull list ordered by place and a put-back list when a deck changes or is dismantled.
+
+#### AC-43-112 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A read-only pull list ordered by place, confirmed as moves with undo (slice 5).
+
+#### AC-43-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-43-114 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-43-106
+
+As a player, I want the product to the put-back list and dismantling, misplaced-card and contention warnings, and cards across decks with a "built decks only" acquisition scope (slices 6–8)., so that a player records where each physical copy sits, pairs a built deck with its box, and gets a pull list ordered by place and a put-back list when a deck changes or is dismantled.
+
+#### AC-43-115 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: The put-back list and dismantling, misplaced-card and contention warnings, and cards across decks with a "built decks only" acquisition scope (slices 6–8).
+
+#### AC-43-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-43-117 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-43-107
+
+As a player, I want the product to count a deck's builds once, by I-55's largest-need rule, in the contention warning and the cross-deck list (slices 7–8)., so that a player records where each physical copy sits, pairs a built deck with its box, and gets a pull list ordered by place and a put-back list when a deck changes or is dismantled.
+
+#### AC-43-118 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Count a deck's builds once, by I-55's largest-need rule, in the contention warning and the cross-deck list (slices 7–8). This needs I-55 slice 2. Today acquisition-plan.ts adds every deck's requirement to the total.
+
+#### AC-43-119 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-43-120 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-43-108
+
+As a player, I want the product to beside the copies needed to keep every deck assembled, show the copies needed to assemble one deck at a time, which is the largest need of any single deck, for players who move staples between boxes (slice 8)., so that a player records where each physical copy sits, pairs a built deck with its box, and gets a pull list ordered by place and a put-back list when a deck changes or is dismantled.
+
+#### AC-43-121 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Beside the copies needed to keep every deck assembled, show the copies needed to assemble one deck at a time, which is the largest need of any single deck, for players who move staples between boxes (slice 8). A player asked for storage "that works with … swapping what I take to games" (I-43 spec source 18, r/EDH, 2026-09-09), and Archidekt staff answered a request for an "in-use" banner that "there's not a great way to do this from a technical perspective" (thread 15420664, about 14 months before 2026-11-10).
+
+#### AC-43-122 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-43-123 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-43-109
+
+As a player, I want the product to deck-box labels with a QR code to a revocable /b/<token>, disallowed in robots and noindex; offline labels through I-19; a place column in the collection export and later its import (slices 9–12)., so that a player records where each physical copy sits, pairs a built deck with its box, and gets a pull list ordered by place and a put-back list when a deck changes or is dismantled.
+
+#### AC-43-124 Happy path
+
+Given a downloaded deck and no network
+When the player uses this behaviour
+Then the behaviour holds: Deck-box labels with a QR code to a revocable /b/<token>, disallowed in robots and noindex; offline labels through I-19; a place column in the collection export and later its import (slices 9–12).
+
+#### AC-43-125 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-43-126 Edge
+
+Given a list where one name does not resolve
+When the player confirms
+Then the unresolved name is shown first and nothing is written until they accept that list
+
+#### US-43-110
+
+As a player, I want the product to after I-30's decision: a game-night planner across several decks, and a move-history timeline (slices 13–14)., so that a player records where each physical copy sits, pairs a built deck with its box, and gets a pull list ordered by place and a put-back list when a deck changes or is dismantled.
+
+#### AC-43-127 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: After I-30's decision: a game-night planner across several decks, and a move-history timeline (slices 13–14).
+
+#### AC-43-128 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-43-129 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-43-111
+
+As a player, I want the product to a "travelling staple" mark on a printing shared by several decks, such as Sol Ring or Command Tower: contention (6.3) then names the box that lends it tonight instead of reporting a shortage., so that a player records where each physical copy sits, pairs a built deck with its box, and gets a pull list ordered by place and a put-back list when a deck changes or is dismantled.
+
+#### AC-43-130 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A "travelling staple" mark on a printing shared by several decks, such as Sol Ring or Command Tower: contention (6.3) then names the box that lends it tonight instead of reporting a shortage. Master Duel's team format allows three "Shared Cards" across decks (Master Duel Meta, 2025-07-29). A ManaBox reviewer owns "a single copy of an expensive card, but it fits in multiple decks" (2025-05-22). Added 2026-11-11.
+
+#### AC-43-131 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-43-132 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-43-112
+
+As a player, I want the product to neighbour change from I-79, 2026-11-11: contention (6.3) and pull lists accept a table set as their scope ("Check this set's boxes"), and the paid game-night planner (slice 13) may take a set as its input., so that a player records where each physical copy sits, pairs a built deck with its box, and gets a pull list ordered by place and a put-back list when a deck changes or is dismantled.
+
+#### AC-43-133 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Neighbour change from I-79, 2026-11-11: contention (6.3) and pull lists accept a table set as their scope ("Check this set's boxes"), and the paid game-night planner (slice 13) may take a set as its input.
+
+#### AC-43-134 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-43-135 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+### UX states for this feature
+
+The player-visible outcome is: a player records where each physical copy sits, pairs a built deck with its box, and gets a pull list ordered by place and a put-back list when a deck changes or is dismantled.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
+
+### Record moved from the roadmap (2026-11-11)
+
+Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.
+
+## I-43: Physical Collection: Storage Places, Deck Boxes And Pull Lists
+
+**Spec:** [`specs/i43-physical-collection-storage-and-pull-lists.md`](i43-physical-collection-storage-and-pull-lists.md)
+
+**Outcome:** a player records where each physical copy sits, pairs a built deck with its box, and gets a pull list ordered by place and a put-back list when a deck changes or is dismantled.
+
+**Status:** Later
+**Priority:** Later. The deck-box path (slices 1 to 5) needs no collection import and can be promoted on its own; binders and boxes at scale wait for I-26 slice 3
+**Impact / effort:** Medium / medium
+**Depends on:** nothing for slices 1–5; I-26 slice 3 for places in a collection import; I-19 slices 3 and 4 for offline labels; I-30 for the two paid candidates.
+
+[I-16](i16-decks-buildable-from-a-collection.md) answers which deck a copy belongs to; nothing answers where the copy is. A player with twenty decks and a few binders finds a card from memory. EchoMTG shipped Locations on 2026-06-17, and Grimoria links a deck to its box; both flag drift between a deck and its box. Players on r/Moxfield ask for the binder a card sits in, an "In Use" mark and the cards they play most across decks; every software request scored under 10 points, so the evidence is many small requests. No product found builds a pull list ordered by place, a put-back list or a plan across several decks for one night. EchoMTG charges for nesting from $4 a month; here nesting stays free.
+
+### Scope
+
+- [ ] Schema for storage places, placements and moves, with one write module that keeps placed copies at or below the owned quantity under a row lock (slice 1).
+- [ ] Places that nest up to five levels, with sort orders, deletion that moves contents, and a computed Unplaced (slice 2).
+- [ ] Placing copies one row at a time or in bulk, quantity decreases and printing merges that keep placements consistent, and "Stored in" next to "Used in decks" (slice 3).
+- [ ] Deck-box pairing, the box state on the deck page, and "put this deck in its box" with a preview (slice 4).
+- [ ] A read-only pull list ordered by place, confirmed as moves with undo (slice 5).
+- [ ] The put-back list and dismantling, misplaced-card and contention warnings, and cards across decks with a "built decks only" acquisition scope (slices 6–8).
+- [ ] Count a deck's builds once, by I-55's largest-need rule, in the contention warning and the cross-deck list (slices 7–8). This needs I-55 slice 2. Today `acquisition-plan.ts` adds every deck's requirement to the total.
+- [ ] Beside the copies needed to keep every deck assembled, show the copies needed to assemble one deck at a time, which is the largest need of any single deck, for players who move staples between boxes (slice 8). A player asked for storage "that works with … swapping what I take to games" (I-43 spec source 18, r/EDH, 2026-09-09), and Archidekt staff answered a request for an "in-use" banner that "there's not a great way to do this from a technical perspective" ([thread 15420664](https://archidekt.com/forum/thread/15420664), about 14 months before 2026-11-10).
+- [ ] Deck-box labels with a QR code to a revocable `/b/<token>`, disallowed in robots and `noindex`; offline labels through I-19; a place column in the collection export and later its import (slices 9–12).
+- [ ] After I-30's decision: a game-night planner across several decks, and a move-history timeline (slices 13–14).
+- [ ] A "travelling staple" mark on a printing shared by several decks, such as Sol Ring or Command Tower: contention (6.3) then names the box that lends it tonight instead of reporting a shortage. Master Duel's team format allows three "Shared Cards" across decks ([Master Duel Meta](https://www.masterduelmeta.com/articles/quick-news/july-29-2025/wcs-rules/), 2025-07-29). A ManaBox reviewer owns "a single copy of an expensive card, but it fits in multiple decks" (2025-05-22). Added 2026-11-11.
+- [ ] Neighbour change from [I-79](i79-table-sets.md), 2026-11-11: contention (6.3) and pull lists accept a table set as their scope ("Check this set's boxes"), and the paid game-night planner (slice 13) may take a set as its input.
+
+### Engineering enablers
+
+- Two concurrent moves of a row's last Unplaced copy let exactly one through.
+- The pull list, put-back list, warnings and cross-deck view write nothing, asserted against the Prisma client.
+- `/b/<token>` reveals no deck name to anyone but the owner unless the owner turns on "label opens the shared deck".
+
+**Paid-tier angle:** places, nesting, pairing, single-deck pull and put-back lists, warnings, cross-deck views, labels and exports stay free. Candidates are the game-night planner, which settles contention between several decks for one night, and the move-history timeline; the moves themselves are stored and exported free for everyone. EchoMTG sells its move history on the $12 Pro plan.
+
+### Definition of done
+
+A player pairs a deck with its box, pulls the missing cards in place order, puts back what the deck no longer needs, and no placement ever exceeds the copies owned.
+
+---
+

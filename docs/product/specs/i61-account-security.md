@@ -2,7 +2,7 @@
 
 > **Initiative:** I-61, proposed for the [roadmap](../roadmap.md) · **Status:** Proposed · **Priority:** Next. Slices 1 to 10 and 15 need neither an email sender nor counsel; slices 11 to 14 wait for [I-38](i38-trust-safety-and-user-rights.md)'s email sender. Never paid · **Written 2026-11-10**
 > **Research:** one dated note on Auth.js, OWASP ASVS 5.0, NIST SP 800-63B-4, the CNIL's password recommendation, the Pwned Passwords API and five competitors. It is not committed, so every external fact links its own source in [Sources](#sources). Legal points are research, not legal advice; each goes to the lawyer list in [I-30 requirement 7.2](i30-business-model-and-paid-tier.md#7-the-legal-gate) through I-38's slice 0.
-> **Owns:** how a person proves who they are and how long that proof lasts: passwords and their storage, the breached-password check, passkeys, two-step sign-in and recovery codes, the session registry and the sessions page, re-authentication before sensitive actions, email verification, password reset and account recovery, linking Google from settings, sign-in throttling rules, and security notices. **Does not own:** the shared rate-limit store ([I-05](../roadmap.md#i-05-production-safety) M2); the `callbackUrl` fix (I-05 H1, done in [I-39](i39-first-run-activation-and-measurement.md) slice 2); the transactional email sender ([I-63](i63-one-notification-system.md) slice 7, formerly I-38 slice 13) and the retention job (I-38 slice 14); account deletion, its cascade and the export (I-38 requirements 6 and 7); billing ([I-30](i30-business-model-and-paid-tier.md)).
+> **Owns:** how a person proves who they are and how long that proof lasts: passwords and their storage, the breached-password check, passkeys, two-step sign-in and recovery codes, the session registry and the sessions page, re-authentication before sensitive actions, email verification, password reset and account recovery, linking Google from settings, sign-in throttling rules, and security notices. **Does not own:** the shared rate-limit store ([I-05](i05-production-safety.md) M2); the `callbackUrl` fix (I-05 H1, done in [I-39](i39-first-run-activation-and-measurement.md) slice 2); the transactional email sender ([I-63](i63-one-notification-system.md) slice 7, formerly I-38 slice 13) and the retention job (I-38 slice 14); account deletion, its cascade and the export (I-38 requirements 6 and 7); billing ([I-30](i30-business-model-and-paid-tier.md)).
 
 ## Overview
 
@@ -78,7 +78,7 @@ L6, the unbounded commander discovery query, does not touch accounts and stays w
 | I-38 line 161                                            | `User` gains `lastSignInAt`                                                                    | Derived from `UserSession`; I-38 reads it for the inactive-account rule                                                                                                 |
 | I-38 lines 201 and 205 (slice 13)                        | The email sender, not to be picked before counsel answers                                      | Slices 11 to 14 depend on it; [open question 2](#open-questions) asks whether security mail may go first                                                                |
 | I-38 line 144 (10.1)                                     | Rights and safety controls are free on every plan                                              | Extended to every control here (11.1)                                                                                                                                   |
-| [Roadmap](../roadmap.md#i-05-production-safety) line 824 | End the session when an account is deleted                                                     | Closed by slice 2 for every device                                                                                                                                      |
+| [Roadmap](i05-production-safety.md) line 824 | End the session when an account is deleted                                                     | Closed by slice 2 for every device                                                                                                                                      |
 | Roadmap line 826 (H1)                                    | Same-origin `callbackUrl` at sign-in                                                           | Stays with I-39 slice 2; re-authentication limits its damage (2.3)                                                                                                      |
 | Roadmap line 827 (H2)                                    | "The 409, email verification and linking Google from settings wait for an email sender (I-38)" | All three move here: 6.3, 6.2 and 10.1                                                                                                                                  |
 | Roadmap line 830 (M2)                                    | Shared store and a per-IP login limit                                                          | The store stays in I-05; the per-IP login rule is slice 1 here                                                                                                          |
@@ -276,3 +276,455 @@ Read 2026-11-10 unless dated otherwise. Legal sources are research, not legal ad
 21. TCGplayer help, "Your Account Security", HTTP 403; content known only from a search summary. <https://help.tcgplayer.com/hc/en-us/articles/219437007-Your-Account-Security>
 22. IETF RFC 6238, "TOTP: Time-Based One-Time Password Algorithm", May 2011 (cited as the standard; not re-read for this spec). <https://www.rfc-editor.org/rfc/rfc6238>
 23. bcryptjs 3.0.3 README ("The maximum input length is 72 bytes … not implicitly checked"), read from the installed package. <https://www.npmjs.com/package/bcryptjs/v/3.0.3>
+
+## Feature contract (Full, 2026-11-11)
+
+The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
+
+### Summary and problem
+
+a player sees where their account is signed in and ends any session, signs in with a passkey, turns on two-step sign-in with recovery codes, changes or resets a password, and gets a notice when something changes. A forgotten password no longer means a lost account, and the throttle that slows an attacker never locks out the owner.
+
+### Goals
+
+- A player signs in on two devices, ends one session from Settings and sees its copied token refused everywhere; adds a passkey and signs in with it; turns on two-step sign-in and recovers with a code; a password longer than 72 bytes is checked in full; guesses from another network never lock the owner out; and, once the email sender ships, a forgotten password is reset by a link that ends every session.
+
+### Non-goals
+
+- Do not reverse a non-goal already named in the moved record or in the roadmap's strategic boundaries.
+- Do not invent a usage count, a win rate, or a score the moved record does not already cite from a named source.
+
+### Personas
+
+See the roadmap persona table. This initiative serves the rows that list its id.
+
+### User stories
+
+#### US-61-01
+
+As a player, I want to see my sessions and end one, and I want a long password to be stored in full, so that losing a laptop is not losing the account.
+
+#### US-61-02
+
+As a signed-out player, I want the guest rule in the rollout to be true, so that I am not shown a control that fails when I have no account.
+
+#### US-61-03
+
+As a player using a keyboard or a screen reader, I want the primary action to have a name and a visible focus, so that colour is not the only signal.
+
+### Acceptance criteria
+
+#### AC-61-01 Happy path
+
+Given a signed-in player and the English locale
+When a password longer than 72 bytes is not silently truncated.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-61-02 Happy path
+
+Given a signed-in player and the English locale
+When the sessions page lists devices and can revoke one.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-61-03 Happy path
+
+Given a signed-in player and the English locale
+When sign-out revokes the token that was used, not only the cookie on that browser.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-61-04 Error and failure
+
+Given the action cannot finish
+When the player retries or leaves the screen
+Then the last confirmed state is unchanged, and the message is a catalogue string rather than a stack trace or a raw status code
+
+#### AC-61-05 Edge cases
+
+Given an empty deck, a missing price, or a field the record says may be absent
+When the screen renders
+Then the empty state says what is missing, and it does not show a zero in place of an unknown value
+
+#### AC-61-06 Guest and signed-in
+
+Given the rollout in this contract
+When a guest and a signed-in player open the same surface
+Then the rollout holds: Signed-in. No guest security surface. Passkeys and two-step ship after the truncation fix, still with no charge.
+
+#### AC-61-07 Locales
+
+Given the ten catalogs
+When this feature adds a user-facing string
+Then The ten catalogs on disk are `en`, `fr`, `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` (`src/i18n/routing.ts`). Only `en` and `fr` are routed. The other eight stay at key parity with `en` and may reuse the English text until a person who speaks the language reviews them. A new string is not shipped in a routed locale as hard-coded English.
+
+#### AC-61-08 Accessibility
+
+Given a keyboard, a visible focus, and a screen reader
+When the player completes US-61-01 without a pointer
+Then every new control has an accessible name, focus returns on close, and a status uses a word or an icon as well as colour
+
+### UX flow and states
+
+Security pages use the existing account settings. A revoked session fails the next request with the signed-out state, not a generic error.
+
+- Empty: the screen says what is missing and what to do next.
+- Loading: a busy state that does not shift the layout when it ends.
+- Error: the catalogue message and a way to retry, without losing the last confirmed edit.
+
+### Data model and API
+
+A session table. Passwords move to the algorithm the spec names. Reset email waits on I-63's sender.
+
+### Analytics and telemetry
+
+`session_revoked {all: yes or no}`. Reserved for I-39. Not emitted before that store exists.
+
+The event is reserved for I-39's store. It is not emitted before that store exists. The row holds counts and enums only: no email, name, username, deck name, card name, list, search text or URL.
+
+### Rollout and feature flags
+
+Signed-in. No guest security surface. Passkeys and two-step ship after the truncation fix, still with no charge.
+
+### Dependencies
+
+Hard waits are in the roadmap dependency table. Slice edges, where this file has a delivery-slice table, stay in that table and in `dependency-graph.md`.
+
+### Risks and mitigations
+
+- Shipping the surface before its wait is met: the roadmap sequence forbids the pick.
+- A string or a status that only some players can read: the locale and accessibility scenarios above fail the change.
+
+### Kill criteria
+
+None. This initiative is not in the Now band. Stop it if it would reverse a non-goal in the moved record.
+
+### Open questions
+
+Recovery when every second factor is lost, and the minimum password length, are owner questions.
+
+### Sources
+
+- https://github.com/OWASP/ASVS/blob/v5.0.0/5.0/en/0x15-V6-Authentication.md
+- https://help.cardmarket.com/en/TwoFactorAuthentication
+- https://csrc.nist.gov/pubs/sp/800/63/b/4/final
+- https://authjs.dev/getting-started/authentication/webauthn
+- https://www.rfc-editor.org/rfc/rfc9116
+
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-61-101
+
+As a player, I want the product to verify passwords in full: Argon2id for new hashes, a bcrypt hash upgraded at the next sign-in, 12 to 128 characters for new passwords, autocomplete and a show-password toggle (slice 5, first)., so that a player sees where their account is signed in and ends any session, signs in with a passkey, turns on two-step sign-in with recovery codes, changes or resets a password, and gets a notice when something changes. A forgotten password no longer means a lost account, and the throttle that slows an attacker never locks out the owner.
+
+#### AC-61-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Verify passwords in full: Argon2id for new hashes, a bcrypt hash upgraded at the next sign-in, 12 to 128 characters for new passwords, autocomplete and a show-password toggle (slice 5, first). Today signup (src/app/api/auth/signup/route.ts) accepts 8 to 128 characters and hashes with bcryptjs cost 12. bcryptjs 3.0.3 reads at most 72 bytes and does not check the length, so two passwords that share their first 72 bytes both work.
+
+#### AC-61-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-61-102 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-61-102
+
+As a player, I want the product to a session registry: a UserSession row per sign-in, its id in the JWT, one resolver for requireAuth and the ten direct auth() reads, sign-out and deletion that revoke the row, and limits of 7 days inactive and 30 days absolute (slice 2)., so that a player sees where their account is signed in and ends any session, signs in with a passkey, turns on two-step sign-in with recovery codes, changes or resets a password, and gets a notice when something changes. A forgotten password no longer means a lost account, and the throttle that slows an attacker never locks out the owner.
+
+#### AC-61-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A session registry: a UserSession row per sign-in, its id in the JWT, one resolver for requireAuth and the ten direct auth() reads, sign-out and deletion that revoke the row, and limits of 7 days inactive and 30 days absolute (slice 2). Today src/lib/auth/edge-config.ts issues JWT sessions of 7 days, re-issued once a day on use, so an active session never expires. Sign-out only clears the cookie (src/components/auth/UserMenu.tsx), so a copied token stays valid for up to 7 days, and ten pages and routes read auth() without the user lookup that requireAuth makes since #1319.
+
+#### AC-61-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-61-105 Edge
+
+Given the account or the cache this behaviour changes
+When the player signs out or the deletion finishes
+Then the next request does not still show the private data
+
+#### US-61-103
+
+As a player, I want the product to re-authentication within the last 10 minutes before sensitive actions: password, passkeys, two-step, recovery codes, email, Google linking, sessions, API keys and account deletion (slice 3)., so that a player sees where their account is signed in and ends any session, signs in with a passkey, turns on two-step sign-in with recovery codes, changes or resets a password, and gets a notice when something changes. A forgotten password no longer means a lost account, and the throttle that slows an attacker never locks out the owner.
+
+#### AC-61-106 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Re-authentication within the last 10 minutes before sensitive actions: password, passkeys, two-step, recovery codes, email, Google linking, sessions, API keys and account deletion (slice 3). Today DELETE /api/user/profile and POST /api/user/api-keys act on the session alone.
+
+#### AC-61-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-61-108 Edge
+
+Given the account or the cache this behaviour changes
+When the player signs out or the deletion finishes
+Then the next request does not still show the private data
+
+#### US-61-104
+
+As a player, I want the product to settings → Security: active sessions with a device label and a country, never the IP address, "sign out everywhere else" and a 90-day event log (slice 4)., so that a player sees where their account is signed in and ends any session, signs in with a passkey, turns on two-step sign-in with recovery codes, changes or resets a password, and gets a notice when something changes. A forgotten password no longer means a lost account, and the throttle that slows an attacker never locks out the owner.
+
+#### AC-61-109 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Settings → Security: active sessions with a device label and a country, never the IP address, "sign out everywhere else" and a 90-day event log (slice 4).
+
+#### AC-61-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-61-111 Edge
+
+Given the account or the cache this behaviour changes
+When the player signs out or the deletion finishes
+Then the next request does not still show the private data
+
+#### US-61-105
+
+As a player, I want the product to change the password with the current one, with an offer to end other sessions (slice 6), and a breached-password check at signup, change and sign-in that sends only the first five hex characters of a SHA-1 hash to Pwned Passwords, with a bundled list as fallback (slice 7)., so that a player sees where their account is signed in and ends any session, signs in with a passkey, turns on two-step sign-in with recovery codes, changes or resets a password, and gets a notice when something changes. A forgotten password no longer means a lost account, and the throttle that slows an attacker never locks out the owner.
+
+#### AC-61-112 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Change the password with the current one, with an offer to end other sessions (slice 6), and a breached-password check at signup, change and sign-in that sends only the first five hex characters of a SHA-1 hash to Pwned Passwords, with a bundled list as fallback (slice 7). Today no route changes a password, and nothing refuses a common one.
+
+#### AC-61-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-61-114 Edge
+
+Given the account or the cache this behaviour changes
+When the player signs out or the deletion finishes
+Then the next request does not still show the private data
+
+#### US-61-106
+
+As a player, I want the product to passkeys with autofill, rename, removal and a last-way-in rule (slice 8), and optional two-step sign-in with ten single-use recovery codes, asked after password and Google sign-in (slice 9)., so that a player sees where their account is signed in and ends any session, signs in with a passkey, turns on two-step sign-in with recovery codes, changes or resets a password, and gets a notice when something changes. A forgotten password no longer means a lost account, and the throttle that slows an attacker never locks out the owner.
+
+#### AC-61-115 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Passkeys with autofill, rename, removal and a last-way-in rule (slice 8), and optional two-step sign-in with ten single-use recovery codes, asked after password and Google sign-in (slice 9). No SMS codes.
+
+#### AC-61-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-61-117 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-61-107
+
+As a player, I want the product to emailVerified from Google's claim, linking Google from Settings, and clearing the stored Google tokens nothing reads (slice 10); Google's Cross-Account Protection receiver (slice 15)., so that a player sees where their account is signed in and ends any session, signs in with a passkey, turns on two-step sign-in with recovery codes, changes or resets a password, and gets a notice when something changes. A forgotten password no longer means a lost account, and the throttle that slows an attacker never locks out the owner.
+
+#### AC-61-118 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then emailVerified from Google's claim, linking Google from Settings, and clearing the stored Google tokens nothing reads (slice 10); Google's Cross-Account Protection receiver (slice 15).
+
+#### AC-61-119 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-61-120 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-61-108
+
+As a player, I want the product to login throttling on I-05's shared store: a per-IP bucket across all addresses, a per-address backoff to a 15-minute cap, the password disabled after 100 consecutive failures, a separate bucket for the owner's devices, and the same answer for an unknown address (slice 1)., so that a player sees where their account is signed in and ends any session, signs in with a passkey, turns on two-step sign-in with recovery codes, changes or resets a password, and gets a notice when something changes. A forgotten password no longer means a lost account, and the throttle that slows an attacker never locks out the owner.
+
+#### AC-61-121 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Login throttling on I-05's shared store: a per-IP bucket across all addresses, a per-address backoff to a 15-minute cap, the password disabled after 100 consecutive failures, a separate bucket for the owner's devices, and the same answer for an unknown address (slice 1). Today src/lib/rate-limit.ts keeps counters in each instance's memory, and the login limit in src/lib/auth/config.ts allows 10 attempts per 15 minutes keyed on the email only, successes included. One password tried across many emails is never limited, and ten failures lock the owner out of that instance. Passkey, Google and reset sign-in stay open while password attempts wait.
+
+#### AC-61-122 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-61-123 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-61-109
+
+As a player, I want the product to after I-63 slice 7 (formerly I-38 slice 13): email verification and a neutral signup answer that ends the 409 enumeration (slice 11); password reset, which hands a never-verified account to whoever proves the mailbox, and "set a password" for Google-only accounts (slice 12); security notice emails with "This wasn't me" (slice 13); and an email change with a revert link (slice 14)., so that a player sees where their account is signed in and ends any session, signs in with a passkey, turns on two-step sign-in with recovery codes, changes or resets a password, and gets a notice when something changes. A forgotten password no longer means a lost account, and the throttle that slows an attacker never locks out the owner.
+
+#### AC-61-124 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: After I-63 slice 7 (formerly I-38 slice 13): email verification and a neutral signup answer that ends the 409 enumeration (slice 11); password reset, which hands a never-verified account to whoever proves the mailbox, and "set a password" for Google-only accounts (slice 12); security notice emails with "This wasn't me" (slice 13); and an email change with a revert link (slice 14). Today no password reset exists and no email is ever sent, so a player who forgets the password, or whose address was squatted before #1321, has no way back.
+
+#### AC-61-125 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-61-126 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-61-110
+
+As a player, I want **A security contact (gap sweep, 2026-11-10).** No security.txt and no vulnerability disclosure policy exist on origin/dev at 72fbfc1, only docs/security/security.md., so that a player sees where their account is signed in and ends any session, signs in with a passkey, turns on two-step sign-in with recovery codes, changes or resets a password, and gets a notice when something changes. A forgotten password no longer means a lost account, and the throttle that slows an attacker never locks out the owner.
+
+#### AC-61-127 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then **A security contact (gap sweep, 2026-11-10).** No security.txt and no vulnerability disclosure policy exist on origin/dev at 72fbfc1, only docs/security/security.md. Serve /.well-known/security.txt (Contact, Expires, Policy, Preferred-Languages en, fr) under RFC 9116, linked to a short disclosure policy page. Done means: a test fails when Expires is less than 30 days away. The contact address is owner decision D-79, and no personal email goes into the docs.
+
+#### AC-61-128 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-61-129 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+### UX states for this feature
+
+The player-visible outcome is: a player sees where their account is signed in and ends any session, signs in with a passkey, turns on two-step sign-in with recovery codes, changes or resets a password, and gets a notice when something changes. A forgotten password no longer means a lost account, and the throttle that slows an attacker never locks out the owner.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
+
+### Record moved from the roadmap (2026-11-11)
+
+Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.
+
+## I-61: Account Security: Passkeys, Two-Step Sign-In And Sessions
+
+**Spec:** [`specs/i61-account-security.md`](i61-account-security.md)
+
+**Outcome:** a player sees where their account is signed in and ends any session, signs in with a passkey, turns on two-step sign-in with recovery codes, changes or resets a password, and gets a notice when something changes. A forgotten password no longer means a lost account, and the throttle that slows an attacker never locks out the owner.
+
+**Status:** Next
+**Priority:** Next. Slice 5 goes first; slices 2 to 10 and 15 need neither an email sender nor counsel; slice 1 waits for I-05's shared store; slices 11 to 14 wait for the email sender, I-63 slice 7. Never paid
+**Impact / effort:** High / large
+**Depends on:** nothing for slices 2 to 10 and 15; I-05 M2's shared rate-limit store for slice 1; the transactional email sender for slices 11 to 14, which was I-38 slice 13 and is now [I-63](i63-one-notification-system.md) slice 7, waiting for the owner's provider choice.
+
+An account will soon hold more than decks: trade proposals (I-44), loans (I-51), gift reservations (I-56) and perhaps a subscription (I-30). Today all of it sits behind one password that cannot be changed or reset, and the code fails several Level 1 requirements of [OWASP ASVS 5.0](https://github.com/OWASP/ASVS/blob/v5.0.0/5.0/en/0x15-V6-Authentication.md), its lowest level. Among the products read, Cardmarket documents authenticator-app codes and urges every user to turn them on ([help](https://help.cardmarket.com/en/TwoFactorAuthentication)), and a community directory lists the same for Scryfall. No deckbuilder read documents a second factor and no product read offers passkeys, though Moxfield's and TCGplayer's pages answered 403, so this is "not found", not "absent". NIST now requires a verifier at AAL2 to offer a phishing-resistant option and accepts synced passkeys there ([SP 800-63B-4, 2025-07-31](https://csrc.nist.gov/pubs/sp/800/63/b/4/final)). Auth.js calls its passkey provider "experimental and not recommended for production use" ([guide](https://authjs.dev/getting-started/authentication/webauthn)), and it creates an account on a signed-out registration, so passkeys run on the current `@simplewebauthn/server` behind the product's own routes. Auth.js stays for the session cookie and Google, as `docs/references/better-auth-evaluation.md` (2026-08-22) advised until two-factor or passkeys became a requirement.
+
+### Scope
+
+- [ ] Verify passwords in full: Argon2id for new hashes, a bcrypt hash upgraded at the next sign-in, 12 to 128 characters for new passwords, `autocomplete` and a show-password toggle (slice 5, first). Today signup (`src/app/api/auth/signup/route.ts`) accepts 8 to 128 characters and hashes with `bcryptjs` cost 12. bcryptjs 3.0.3 reads at most 72 bytes and does not check the length, so two passwords that share their first 72 bytes both work.
+- [ ] A session registry: a `UserSession` row per sign-in, its id in the JWT, one resolver for `requireAuth` and the ten direct `auth()` reads, sign-out and deletion that revoke the row, and limits of 7 days inactive and 30 days absolute (slice 2). Today `src/lib/auth/edge-config.ts` issues JWT sessions of 7 days, re-issued once a day on use, so an active session never expires. Sign-out only clears the cookie (`src/components/auth/UserMenu.tsx`), so a copied token stays valid for up to 7 days, and ten pages and routes read `auth()` without the user lookup that `requireAuth` makes since #1319.
+- [ ] Re-authentication within the last 10 minutes before sensitive actions: password, passkeys, two-step, recovery codes, email, Google linking, sessions, API keys and account deletion (slice 3). Today `DELETE /api/user/profile` and `POST /api/user/api-keys` act on the session alone.
+- [ ] Settings → Security: active sessions with a device label and a country, never the IP address, "sign out everywhere else" and a 90-day event log (slice 4).
+- [ ] Change the password with the current one, with an offer to end other sessions (slice 6), and a breached-password check at signup, change and sign-in that sends only the first five hex characters of a SHA-1 hash to Pwned Passwords, with a bundled list as fallback (slice 7). Today no route changes a password, and nothing refuses a common one.
+- [ ] Passkeys with autofill, rename, removal and a last-way-in rule (slice 8), and optional two-step sign-in with ten single-use recovery codes, asked after password and Google sign-in (slice 9). No SMS codes.
+- [ ] `emailVerified` from Google's claim, linking Google from Settings, and clearing the stored Google tokens nothing reads (slice 10); Google's Cross-Account Protection receiver (slice 15).
+- [ ] Login throttling on I-05's shared store: a per-IP bucket across all addresses, a per-address backoff to a 15-minute cap, the password disabled after 100 consecutive failures, a separate bucket for the owner's devices, and the same answer for an unknown address (slice 1). Today `src/lib/rate-limit.ts` keeps counters in each instance's memory, and the login limit in `src/lib/auth/config.ts` allows 10 attempts per 15 minutes keyed on the email only, successes included. One password tried across many emails is never limited, and ten failures lock the owner out of that instance. Passkey, Google and reset sign-in stay open while password attempts wait.
+- [ ] After I-63 slice 7 (formerly I-38 slice 13): email verification and a neutral signup answer that ends the 409 enumeration (slice 11); password reset, which hands a never-verified account to whoever proves the mailbox, and "set a password" for Google-only accounts (slice 12); security notice emails with "This wasn't me" (slice 13); and an email change with a revert link (slice 14). Today no password reset exists and no email is ever sent, so a player who forgets the password, or whose address was squatted before #1321, has no way back.
+- [ ] **A security contact (gap sweep, 2026-11-10).** No `security.txt` and no vulnerability disclosure policy exist on `origin/dev` at `72fbfc1`, only `docs/security/security.md`. Serve `/.well-known/security.txt` (`Contact`, `Expires`, `Policy`, `Preferred-Languages` en, fr) under [RFC 9116](https://www.rfc-editor.org/rfc/rfc9116), linked to a short disclosure policy page. Done means: a test fails when `Expires` is less than 30 days away. The contact address is owner decision [D-79](../owner-decisions.md#infrastructure-and-providers), and no personal email goes into the docs.
+- Recorded 2026-11-10: requirement 1.9's script that ends every session of one account becomes [I-69](i69-operator-console-support-moderation-and-kill-switches.md)'s support action 6.2, and I-69's console requires this initiative's session registry and re-authentication (I-69 slice 7), then its passkeys (I-69 slice 13).
+
+### Engineering enablers
+
+- A password longer than 72 bytes fails when only its 73rd byte differs, and a bcrypt hash becomes Argon2id after sign-in.
+- A revoked session's replayed JWT gets 401 at every one of the ten `auth()` call sites, and account deletion ends every session.
+- Eleven failures across eleven addresses from one IP are refused, while a passkey sign-in and a reset still work during the wait.
+- The breach client sends exactly five characters with `Add-Padding: true`, and every route added appears in I-05's L2 route inventory with its access class.
+
+**Paid-tier angle:** none. Every control here is free on every plan and never limited by expiry or downgrade, extending I-38's rule. Its value to I-30 is a precondition: a subscription, a trade reputation and gift reservations are worth selling or keeping only on an account that cannot be quietly taken.
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player, I want to see my sessions and end one, and I want a long password to be stored in full, so that losing a laptop is not losing the account.
+
+**Acceptance.**
+- A password longer than 72 bytes is not silently truncated.
+- The sessions page lists devices and can revoke one.
+- Sign-out revokes the token that was used, not only the cookie on that browser.
+
+**UX.** Security pages use the existing account settings. A revoked session fails the next request with the signed-out state, not a generic error.
+
+**Data and API.** A session table. Passwords move to the algorithm the spec names. Reset email waits on I-63's sender.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `session_revoked {all: yes or no}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Signed-in. No guest security surface. Passkeys and two-step ship after the truncation fix, still with no charge.
+
+**Open questions.** Recovery when every second factor is lost, and the minimum password length, are owner questions.
+
+### Definition of done
+
+A player signs in on two devices, ends one session from Settings and sees its copied token refused everywhere; adds a passkey and signs in with it; turns on two-step sign-in and recovers with a code; a password longer than 72 bytes is checked in full; guesses from another network never lock the owner out; and, once the email sender ships, a forgotten password is reset by a link that ends every session.
+
+---
+

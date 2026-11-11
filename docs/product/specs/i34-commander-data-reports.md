@@ -255,3 +255,464 @@ Slices 1–7 are **Next**: they need no deck index, and slice 1 alone removes to
 37. Untapped.gg, Premium, read 2026-11-09. https://mtga.untapped.gg/premium
 38. Deckstats, Premium (page returned 403; features via the competitive landscape). https://deckstats.net/premium
 39. MTGGoldfish, Premium (page returned 403; search summary of 2026-11-09). https://www.mtggoldfish.com/premium
+
+## Feature contract (Full, 2026-11-11)
+
+The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
+
+### Summary and problem
+
+players, creators and search engines can cite dated Commander figures that nobody else publishes, each with its method, sample size and a way to reproduce it, in English and French, and no thin page is offered to search engines.
+
+### Goals
+
+- A first dated report and five bracket pages are public signed out, in English and in reviewed French, each figure with its label, sample size, date and methods anchor; a rerun from the recorded inputs reproduces them; and every public page kind is indexed or `noindex` by one tested policy.
+
+### Non-goals
+
+- Do not reverse a non-goal already named in the moved record or in the roadmap's strategic boundaries.
+- Do not invent a usage count, a win rate, or a score the moved record does not already cite from a named source.
+
+### Personas
+
+See the roadmap persona table. This initiative serves the rows that list its id.
+
+### User stories
+
+#### US-34-01
+
+As a reader searching for a Commander figure, I want the page to show the method and the sample size, so that a thin page is not in the index.
+
+#### US-34-02
+
+As a signed-out player, I want the guest rule in the rollout to be true, so that I am not shown a control that fails when I have no account.
+
+#### US-34-03
+
+As a player using a keyboard or a screen reader, I want the primary action to have a name and a visible focus, so that colour is not the only signal.
+
+### Acceptance criteria
+
+#### AC-34-01 Happy path
+
+Given a signed-in player and the English locale
+When every public figure names its method, its date and its sample size.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-34-02 Happy path
+
+Given a signed-in player and the English locale
+When a page under the sample threshold is noindex and absent from the sitemap.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-34-03 Happy path
+
+Given a signed-in player and the English locale
+When a filtered URL is noindex.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-34-04 Error and failure
+
+Given the action cannot finish
+When the player retries or leaves the screen
+Then the last confirmed state is unchanged, and the message is a catalogue string rather than a stack trace or a raw status code
+
+#### AC-34-05 Edge cases
+
+Given an empty deck, a missing price, or a field the record says may be absent
+When the screen renders
+Then the empty state says what is missing, and it does not show a zero in place of an unknown value
+
+#### AC-34-06 Guest and signed-in
+
+Given the rollout in this contract
+When a guest and a signed-in player open the same surface
+Then the rollout holds: Public. No account. No flag for the policy: a page that fails it does not ship.
+
+#### AC-34-07 Locales
+
+Given the ten catalogs
+When this feature adds a user-facing string
+Then The ten catalogs on disk are `en`, `fr`, `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` (`src/i18n/routing.ts`). Only `en` and `fr` are routed. The other eight stay at key parity with `en` and may reuse the English text until a person who speaks the language reviews them. A new string is not shipped in a routed locale as hard-coded English.
+
+#### AC-34-08 Accessibility
+
+Given a keyboard, a visible focus, and a screen reader
+When the player completes US-34-01 without a pointer
+Then every new control has an accessible name, focus returns on close, and a status uses a word or an icon as well as colour
+
+### UX flow and states
+
+The method is a link on the page, not a tooltip that covers the number. French and English pages share the same numbers.
+
+- Empty: the screen says what is missing and what to do next.
+- Loading: a busy state that does not shift the layout when it ends.
+- Error: the catalogue message and a way to retry, without losing the last confirmed edit.
+
+### Data model and API
+
+`indexPolicy` is a pure function. Pages read stored aggregates. No per-request scrape.
+
+### Analytics and telemetry
+
+`index_decision {kind, result: index or noindex}`. Reserved for I-39. Not emitted before that store exists.
+
+The event is reserved for I-39's store. It is not emitted before that store exists. The row holds counts and enums only: no email, name, username, deck name, card name, list, search text or URL.
+
+### Rollout and feature flags
+
+Public. No account. No flag for the policy: a page that fails it does not ship.
+
+### Dependencies
+
+Hard waits are in the roadmap dependency table. Slice edges, where this file has a delivery-slice table, stay in that table and in `dependency-graph.md`.
+
+### Risks and mitigations
+
+- Shipping the surface before its wait is met: the roadmap sequence forbids the pick.
+- A string or a status that only some players can read: the locale and accessibility scenarios above fail the change.
+
+### Kill criteria
+
+None. This initiative is not in the Now band. Stop it if it would reverse a non-goal in the moved record.
+
+### Open questions
+
+Which page kinds exist, including precon pages, is still an open list. I-92 consumes the decision and does not make a second one.
+
+### Sources
+
+- https://edhrec.com/articles/salt-vote-results-2026
+- https://edhrec.com/articles/a-statistical-look-at-almost-a-year-in-commander-2025
+- https://developers.google.com/search/docs/essentials/spam-policies
+- https://cedhstats.org/about
+- https://articles.starcitygames.com/2021/03/25/using-17lands-com-as-a-resource-to-improve-at-limited/
+- https://mtgazone.com/17lands-where-i-agree-disagree-and-what-data-you-should-be-taking-from-it/
+
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-34-101
+
+As a player, I want the product to one index policy (index, noindex or absent) that page metadata and the sitemap both call; commander discovery pages below threshold and profiles with no public deck become noindex and leave the sitemap; sitemap entries gain x-default; a test keeps the two public-path lists equal (slice 1)., so that players, creators and search engines can cite dated Commander figures that nobody else publishes, each with its method, sample size and a way to reproduce it, in English and French, and no thin page is offered to search engines.
+
+#### AC-34-100 Happy path
+
+Given a signed-out visitor and a public deck
+When the player uses this behaviour
+Then the behaviour holds: One index policy (index, noindex or absent) that page metadata and the sitemap both call; commander discovery pages below threshold and profiles with no public deck become noindex and leave the sitemap; sitemap entries gain x-default; a test keeps the two public-path lists equal (slice 1).
+
+#### AC-34-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-34-102 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-34-102
+
+As a player, I want the product to make /rules/game-changers public with alternates and localized metadata, and /rules/comprehensive public but noindex, since it reproduces Wizards' text (slice 2)., so that players, creators and search engines can cite dated Commander figures that nobody else publishes, each with its method, sample size and a way to reproduce it, in English and French, and no thin page is offered to search engines.
+
+#### AC-34-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Make /rules/game-changers public with alternates and localized metadata, and /rules/comprehensive public but noindex, since it reproduces Wizards' text (slice 2). #1313 made both public; their alternates, localized metadata and the Comprehensive Rules noindex remain open.
+
+#### AC-34-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-34-105 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-34-103
+
+As a player, I want the product to a versioned methods page with one anchor per metric, a citation line and a corpus section (slice 3)., so that players, creators and search engines can cite dated Commander figures that nobody else publishes, each with its method, sample size and a way to reproduce it, in English and French, and no thin page is offered to search engines.
+
+#### AC-34-106 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A versioned methods page with one anchor per metric, a citation line and a corpus section (slice 3).
+
+#### AC-34-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-34-108 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-34-104
+
+As a player, I want the product to a report framework with permanent URLs, dated errata, Dataset markup, and CSV and JSON downloads with checksums (slice 4)., so that players, creators and search engines can cite dated Commander figures that nobody else publishes, each with its method, sample size and a way to reproduce it, in English and French, and no thin page is offered to search engines.
+
+#### AC-34-109 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A report framework with permanent URLs, dated errata, Dataset markup, and CSV and JSON downloads with checksums (slice 4).
+
+#### AC-34-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-34-111 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-34-105
+
+As a player, I want "Commander Opening Hands", first edition, from the seeded simulation and reproducible from its seeds and commit, then five bracket pages with opening-hand norms linked to the I-28 guide (slices 5–6)., so that players, creators and search engines can cite dated Commander figures that nobody else publishes, each with its method, sample size and a way to reproduce it, in English and French, and no thin page is offered to search engines.
+
+#### AC-34-112 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then "Commander Opening Hands", first edition, from the seeded simulation and reproducible from its seeds and commit, then five bracket pages with opening-hand norms linked to the I-28 guide (slices 5–6).
+
+#### AC-34-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-34-114 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+#### US-34-106
+
+As a player, I want the product to french review of the methods page, the report and the bracket pages; an unreviewed French page stays noindex (slice 7)., so that players, creators and search engines can cite dated Commander figures that nobody else publishes, each with its method, sample size and a way to reproduce it, in English and French, and no thin page is offered to search engines.
+
+#### AC-34-115 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: French review of the methods page, the report and the bracket pages; an unreviewed French page stays noindex (slice 7).
+
+#### AC-34-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-34-117 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+#### US-34-107
+
+As a player, I want the product to commander × bracket and card × bracket pages from I-29's statistics, then "State of the Brackets" and precon drift (slices 9–12, Later)., so that players, creators and search engines can cite dated Commander figures that nobody else publishes, each with its method, sample size and a way to reproduce it, in English and French, and no thin page is offered to search engines.
+
+#### AC-34-118 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Commander × bracket and card × bracket pages from I-29's statistics, then "State of the Brackets" and precon drift (slices 9–12, Later).
+
+#### AC-34-119 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-34-120 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+#### US-34-108
+
+As a player, I want the product to slice 3's methods page gains one convention for four-player outcomes:, so that players, creators and search engines can cite dated Commander figures that nobody else publishes, each with its method, sample size and a way to reproduce it, in English and French, and no thin page is offered to search engines.
+
+#### AC-34-121 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Slice 3's methods page gains one convention for four-player outcomes:
+
+#### AC-34-122 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-34-123 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-34-109
+
+As a player, I want the product to the corpus section profiles contributors (pod sizes, declared brackets, games per account), since opt-in loggers are not a random sample (MTG Arena Zone, 2021-10-12)., so that players, creators and search engines can cite dated Commander figures that nobody else publishes, each with its method, sample size and a way to reproduce it, in English and French, and no thin page is offered to search engines.
+
+#### AC-34-124 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: The corpus section profiles contributors (pod sizes, declared brackets, games per account), since opt-in loggers are not a random sample (MTG Arena Zone, 2021-10-12). Added 2026-11-11.
+
+#### AC-34-125 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-34-126 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+#### US-34-110
+
+As a player, I want the product to an anchor for I-77's estimator accuracy, with its baseline: slice 3 reserves bracket-estimate, and I-77 slice 9 fills it with the report, its labelled sets, the baseline and the method change log., so that players, creators and search engines can cite dated Commander figures that nobody else publishes, each with its method, sample size and a way to reproduce it, in English and French, and no thin page is offered to search engines.
+
+#### AC-34-127 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: An anchor for I-77's estimator accuracy, with its baseline: slice 3 reserves bracket-estimate, and I-77 slice 9 fills it with the report, its labelled sets, the baseline and the method change log. Added 2026-11-11.
+
+#### AC-34-128 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-34-129 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+### UX states for this feature
+
+The player-visible outcome is: players, creators and search engines can cite dated Commander figures that nobody else publishes, each with its method, sample size and a way to reproduce it, in English and French, and no thin page is offered to search engines.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
+
+### Record moved from the roadmap (2026-11-11)
+
+Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.
+
+## I-34: Commander Data Reports And Indexable Data Pages
+
+**Spec:** [`specs/i34-commander-data-reports.md`](i34-commander-data-reports.md)
+
+**Outcome:** players, creators and search engines can cite dated Commander figures that nobody else publishes, each with its method, sample size and a way to reproduce it, in English and French, and no thin page is offered to search engines.
+
+**Status:** Next
+**Priority:** Next for slices 1–7, which need no deck index; Later for slices 9–12, built on [I-29](i29-cross-site-deck-index.md). Slice 8 waits for the owner.
+**Impact / effort:** High / medium without the index, large with it
+**Depends on:** I-29 slices 8 and 11 for any figure computed from deck populations; I-28 slices 4 and 6 for guide links and the French guides; the owner's domain and analytics decisions for measurement.
+
+"More information than EDHREC" cannot mean copying its rankings: popularity is not advice, and Lift needs its denominator ([strategic boundaries](#strategic-boundaries)). The data products that get cited share a recurring dated release, a stated method with denominators, and open data or community participation, as EDHREC's [salt vote](https://edhrec.com/articles/salt-vote-results-2026) and [year-end report](https://edhrec.com/articles/a-statistical-look-at-almost-a-year-in-commander-2025), EDHTop16's conversion rate and 17lands' game-level datasets do. The research found nobody publishing declared against estimated brackets, per-bracket norms with their sample size, simulated keep rates by bracket, deck freshness, price by bracket or combo density by bracket, and none of it in French. None of the large sites grew mainly through search, and Google's [spam policy](https://developers.google.com/search/docs/essentials/spam-policies) names scaled AI-written, scraped or machine-translated pages as abuse, so reports are written to be cited first and to rank second.
+
+### Scope
+
+- [ ] One index policy (`index`, `noindex` or absent) that page metadata and the sitemap both call; commander discovery pages below threshold and profiles with no public deck become `noindex` and leave the sitemap; sitemap entries gain `x-default`; a test keeps the two public-path lists equal (slice 1).
+  - Before #1313, `/commanders/[slug]/decks` answered HTTP 200 with its empty state, a canonical and no `noindex` for any slug, including one that names no card (`src/app/[locale]/commanders/[slug]/decks/page.tsx`). The sitemap still lists a commander as soon as one public deck names it.
+  - [x] An empty commander listing is `noindex` with no canonical or alternates, a slug no commander name can produce answers the 404 page without calling the API, a failed discovery request goes to the retryable error page, the sitemap drops such slugs, and the two public-path lists became one module, `src/lib/auth/public-paths.ts` (#1313). The shared index policy, `noindex` profiles with no public deck and `x-default` in the sitemap remain open. With one list, the public-route parity test has nothing left to compare (noted 2026-11-10).
+  - Two page kinds join the policy (2026-11-10): [I-75](i75-finding-public-decks.md)'s unfiltered browse page, `/community/decks`, indexable only above a threshold of listed decks (50 proposed, D-68), and [I-73](i73-every-set-release-ready-on-day-one.md)'s Commander-lens set page, if D-82 allows it, `noindex` before release.
+  - [x] Keep profiles with no public deck out of the index and the sitemap (#1338, 2026-11-10). The policy as one pure function stays open.
+- [ ] Make `/rules/game-changers` public with alternates and localized metadata, and `/rules/comprehensive` public but `noindex`, since it reproduces Wizards' text (slice 2). #1313 made both public; their alternates, localized metadata and the Comprehensive Rules `noindex` remain open.
+- [ ] A versioned methods page with one anchor per metric, a citation line and a corpus section (slice 3).
+- [ ] A report framework with permanent URLs, dated errata, `Dataset` markup, and CSV and JSON downloads with checksums (slice 4).
+- [ ] "Commander Opening Hands", first edition, from the seeded simulation and reproducible from its seeds and commit, then five bracket pages with opening-hand norms linked to the I-28 guide (slices 5–6).
+- [ ] French review of the methods page, the report and the bracket pages; an unreviewed French page stays `noindex` (slice 7).
+- Moved 2026-11-10: the publishing calendar, which says which content ships when, is now [I-72](i72-growth-loops-referrals-creators-and-return.md)'s slices 7 and 8, and it reads [I-73](i73-every-set-release-ready-on-day-one.md)'s release calendar for set dates and milestones (I-73 slices 3 and 5). This initiative keeps its report refreshes, which become rows of I-73's playbook.
+- [ ] Commander × bracket and card × bracket pages from I-29's statistics, then "State of the Brackets" and precon drift (slices 9–12, Later).
+- [ ] Slice 3's methods page gains one convention for four-player outcomes:
+  - the fair-share baseline;
+  - small samples shrunk toward it (cedhstats uses a Beta(1,3) prior "centered on 25%", [about](https://cedhstats.org/about), seen 2026-11-10);
+  - a stated rule for draws;
+  - one reviewed caveat sentence per metric, shown with the number. 17lands' IWD "slightly emphasizes cards that are good in long games" ([SCG](https://articles.starcitygames.com/2021/03/25/using-17lands-com-as-a-resource-to-improve-at-limited/), 2021-03-25, search summary). Added 2026-11-11.
+- [ ] The corpus section profiles contributors (pod sizes, declared brackets, games per account), since opt-in loggers are not a random sample ([MTG Arena Zone](https://mtgazone.com/17lands-where-i-agree-disagree-and-what-data-you-should-be-taking-from-it/), 2021-10-12). Added 2026-11-11.
+- [ ] An anchor for [I-77](i77-a-bracket-estimate-players-can-audit.md)'s estimator accuracy, with its baseline: slice 3 reserves `bracket-estimate`, and I-77 slice 9 fills it with the report, its labelled sets, the baseline and the method change log. Added 2026-11-11.
+
+### Engineering enablers
+
+- No AI client is imported on a report or data-page route, and every sentence on a data page comes from a reviewed template.
+- Rendering a figure without its sample size, date, method version or methods link fails a test.
+- A report table regenerated from its recorded seeds, sample sizes and commit is byte-identical.
+- No page kind is disallowed in robots.txt, so crawlers can read its `noindex`.
+
+**Paid-tier angle:** reports, data pages, methods and downloads stay free, with no account and no early access for payers. The candidate is personal: placing the player's own decks within the published norms, which belongs to I-31 and is priced in I-30, and never shows a norm the free pages do not.
+
+### Enrichment (2026-11-11)
+
+**User story.** As a reader searching for a Commander figure, I want the page to show the method and the sample size, so that a thin page is not in the index.
+
+**Acceptance.**
+- Every public figure names its method, its date and its sample size.
+- A page under the sample threshold is noindex and absent from the sitemap.
+- A filtered URL is noindex.
+
+**UX.** The method is a link on the page, not a tooltip that covers the number. French and English pages share the same numbers.
+
+**Data and API.** `indexPolicy` is a pure function. Pages read stored aggregates. No per-request scrape.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `index_decision {kind, result: index or noindex}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Public. No account. No flag for the policy: a page that fails it does not ship.
+
+**Open questions.** Which page kinds exist, including precon pages, is still an open list. I-92 consumes the decision and does not make a second one.
+
+### Definition of done
+
+A first dated report and five bracket pages are public signed out, in English and in reviewed French, each figure with its label, sample size, date and methods anchor; a rerun from the recorded inputs reproduces them; and every public page kind is indexed or `noindex` by one tested policy.
+
+---
+

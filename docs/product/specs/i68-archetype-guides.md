@@ -17,12 +17,12 @@ This initiative publishes **one guide per play style in I-54's vocabulary**, on 
 
 | Initiative                                                                                                                         | What it already says                                                                                                                                                                                                                                                                                                                                            | How this spec resolves it                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | ---------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [I-27](i27-learning-while-building.md)                                                                                             | Owns explanations attached to warnings (line 4), authored, never model text (34); lists "Teaching deckbuilding strategy … strategy is the copilot's job" as a non-goal (44). The roadmap already says I-28 owns strategy ([line 1660](../roadmap.md#i-28-commander-deckbuilding-guide-by-bracket))                                                              | I-27 keeps rules explanations. Strategy is authored in I-28 (per bracket) and here (per style), never by the copilot. I-27 line 44 should read "strategy belongs to I-28 and I-68". Guides link I-27 explanations for rules terms they use, such as "dies" against exile                                                                                                                                                                             |
+| [I-27](i27-learning-while-building.md)                                                                                             | Owns explanations attached to warnings (line 4), authored, never model text (34); lists "Teaching deckbuilding strategy … strategy is the copilot's job" as a non-goal (44). The roadmap already says I-28 owns strategy ([line 1660](i28-commander-deckbuilding-guide-by-bracket.md))                                                              | I-27 keeps rules explanations. Strategy is authored in I-28 (per bracket) and here (per style), never by the copilot. I-27 line 44 should read "strategy belongs to I-28 and I-68". Guides link I-27 explanations for rules terms they use, such as "dies" against exile                                                                                                                                                                             |
 | [I-28](i28-commander-deckbuilding-guide-by-bracket.md) and its [companion](../guides/commander-mulligans-curves-and-play-style.md) | Owns per-bracket guidance (line 5) and the section list (50); labels (57); keep rules adjusted by play style (75); `KeepRule.style` limited to `midrange`, `aggro`, `bigMana`, `spellslinger`, `cedh` (95); no LLM content (102); no ranking of archetypes (105). The companion holds a curve table by archetype (line 447) and a keep table by archetype (604) | One content model: I-28's `GuideSection`, `GuideClaim` and `GuideSource` gain a `styleId` and two qualifiers (requirement 4.1). The bracket section of each guide renders from `BracketRule` and links I-28's section. The companion's rows are cited by style key, not copied: the companion keeps the cross-style comparison. This spec supplies the map from I-54 style IDs to `KeepRule.style`. cEDH archetypes stay in I-28's bracket 5 section |
 | [I-34](i34-commander-data-reports.md)                                                                                              | Owns the index policy (line 6, 97), the AI-use rule (103), French indexing only after review (109), `DataPage.kind` (152); computes no deck statistic itself (159); a personal comparison as its paid candidate (127)                                                                                                                                           | New page kind `styleGuide` in I-34's policy function (requirement 7.2). Measured norms per style and bracket are a new `CorpusStat` scope that I-29 computes and I-34 documents on `/methods`; this spec only reads them. The paid candidate joins I-34 7.2 rather than becoming a second product                                                                                                                                                    |
 | [I-54](i54-find-your-next-commander.md)                                                                                            | One list of styles (line 78) replacing the wizard's strategies, `ARCHETYPES` and `detectThemes` (100); versioned definitions (101); a precision floor (103); styles detected in a deck (104); curated identity × style pages (117) with no model text (120)                                                                                                     | Every guide is keyed by `CommanderStyle.id`; this spec adds no style. I-54 4.1's link "an I-27 explanation when one exists" becomes the I-64 glossary term and, once published, this guide. I-54's curated pages link the guide. A fourth unsourced list, `src/lib/archetypes/archetypes.ts`, is retired here (slice 0)                                                                                                                              |
 | [I-64](i64-help-centre-and-guidance.md)                                                                                            | MDX content folder and schema (line 99); one glossary registry (110) whose first terms include no style (111); one definition per term through `<Term id>` (115); one MDX pipeline shared with I-28 (30)                                                                                                                                                        | Each style gets a glossary term `style.<id>` with basis `community`, its name and aliases from I-54, and this guide as its article. Guides name styles through `<Term>`. Guides use the shared MDX pipeline                                                                                                                                                                                                                                          |
-| [I-65](i65-how-this-deck-wins.md)                                                                                                  | No model (line 72); private by default (75); eight route kinds with their roles (80–91) in I-54's definition format (94); a primer pre-fill (139) and a fixed plan-to-route table (140). The roadmap says "each style may link the routes it usually uses" ([line 3232](../roadmap.md#i-54-find-your-next-commander))                                           | The "how it wins" section names I-65 route kinds and renders I-65's definitions. The style-to-route link is a field `usualRoutes` on I-54's style definition, authored with each guide. The deck panel shows the reader's own route map from I-65, which stays private                                                                                                                                                                               |
+| [I-65](i65-how-this-deck-wins.md)                                                                                                  | No model (line 72); private by default (75); eight route kinds with their roles (80–91) in I-54's definition format (94); a primer pre-fill (139) and a fixed plan-to-route table (140). The roadmap says "each style may link the routes it usually uses" ([line 3232](i54-find-your-next-commander.md))                                           | The "how it wins" section names I-65 route kinds and renders I-65's definitions. The style-to-route link is a field `usualRoutes` on I-54's style definition, authored with each guide. The deck panel shows the reader's own route map from I-65, which stays private                                                                                                                                                                               |
 
 ## What the market does
 
@@ -247,3 +247,390 @@ Slice 0 removes the only unsourced counts in the code and ships alone. Slices 1 
 17. Arctic Shift, r/EDH posts from 2026-08-10 to 2026-11-09 (10,367 posts with title, flair and comment count), read 2026-11-10; title counts by this research's patterns. A 12-month title search timed out, and Reddit's own search and Pullpush answered 403. https://arctic-shift.photon-reddit.com/api/posts/search?subreddit=EDH&after=2026-08-10&before=2026-11-10&limit=100&sort=asc
 18. r/EDH, "Who's your weird Voltron commander?", 2026-09-14, 841 comments, https://www.reddit.com/r/EDH/comments/1wg76vk/ ; and "How do you deal with aristocrat decks without just running cards that counter them in every deck?", 2026-10-02, 312 comments, https://www.reddit.com/r/EDH/comments/1ww1ynf/ ; both through Arctic Shift.
 19. r/EDH, "The 'players expect the game to last X turns' kills aggro", 2026-09-03, 514 comments; through Arctic Shift. https://www.reddit.com/r/EDH/comments/1w6kujc/
+
+## Feature contract (Full, 2026-11-11)
+
+The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
+
+### Summary and problem
+
+a player who wants to play a style, such as tokens, aristocrats or voltron, reads one sourced guide on how it wins, what it needs by role, how it changes across brackets 1 to 5, its mana and curve, its mulligans, what beats it, its budget paths and its common mistakes, then sees privately how their own deck compares. A named person writes each guide, a second person reviews it in each locale, and no model writes a word of it.
+
+### Goals
+
+- A signed-out player opens the first published guide in English, reads how the style wins, its roles by bracket, its mulligans and what beats it, each claim labelled with a dated source and the author and reviewer named; pastes a list and sees its role counts beside the guide's figures with nothing sent or stored; and no page ranks styles or was written by a model.
+
+### Non-goals
+
+- Do not reverse a non-goal already named in the moved record or in the roadmap's strategic boundaries.
+- Do not invent a usage count, a win rate, or a score the moved record does not already cite from a named source.
+
+### Personas
+
+See the roadmap persona table. This initiative serves the rows that list its id.
+
+### User stories
+
+#### US-68-01
+
+As a player learning a style, I want a guide written by a named person from play, so that an unsourced percentage is not advice.
+
+#### US-68-02
+
+As a signed-out player, I want the guest rule in the rollout to be true, so that I am not shown a control that fails when I have no account.
+
+#### US-68-03
+
+As a player using a keyboard or a screen reader, I want the primary action to have a name and a visible focus, so that colour is not the only signal.
+
+### Acceptance criteria
+
+#### AC-68-01 Happy path
+
+Given a signed-in player and the English locale
+When the dead archetype module with percentages that sum past 100 percent is deleted.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-68-02 Happy path
+
+Given a signed-in player and the English locale
+When a published guide names its author and tags each claim official, measured or community.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-68-03 Happy path
+
+Given a signed-in player and the English locale
+When a model does not write the guide.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-68-04 Error and failure
+
+Given the action cannot finish
+When the player retries or leaves the screen
+Then the last confirmed state is unchanged, and the message is a catalogue string rather than a stack trace or a raw status code
+
+#### AC-68-05 Edge cases
+
+Given an empty deck, a missing price, or a field the record says may be absent
+When the screen renders
+Then the empty state says what is missing, and it does not show a zero in place of an unknown value
+
+#### AC-68-06 Guest and signed-in
+
+Given the rollout in this contract
+When a guest and a signed-in player open the same surface
+Then the rollout holds: Public once a named author has signed the page. No flag. French editions wait on a reviewer.
+
+#### AC-68-07 Locales
+
+Given the ten catalogs
+When this feature adds a user-facing string
+Then The ten catalogs on disk are `en`, `fr`, `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` (`src/i18n/routing.ts`). Only `en` and `fr` are routed. The other eight stay at key parity with `en` and may reuse the English text until a person who speaks the language reviews them. A new string is not shipped in a routed locale as hard-coded English.
+
+#### AC-68-08 Accessibility
+
+Given a keyboard, a visible focus, and a screen reader
+When the player completes US-68-01 without a pointer
+Then every new control has an accessible name, focus returns on close, and a status uses a word or an icon as well as colour
+
+### UX flow and states
+
+One page per style. A deck panel, later, points at the guide. It does not rank the player's deck.
+
+- Empty: the screen says what is missing and what to do next.
+- Loading: a busy state that does not shift the layout when it ends.
+- Error: the catalogue message and a way to retry, without losing the last confirmed edit.
+
+### Data model and API
+
+The content pipeline is I-64's. Style ids match I-54's vocabulary. No new card table.
+
+### Analytics and telemetry
+
+`style_guide_opened {locale: en or fr}`. Reserved for I-39. Not emitted before that store exists.
+
+The event is reserved for I-39's store. It is not emitted before that store exists. The row holds counts and enums only: no email, name, username, deck name, card name, list, search text or URL.
+
+### Rollout and feature flags
+
+Public once a named author has signed the page. No flag. French editions wait on a reviewer.
+
+### Dependencies
+
+Hard waits are in the roadmap dependency table. Slice edges, where this file has a delivery-slice table, stay in that table and in `dependency-graph.md`.
+
+### Risks and mitigations
+
+- Shipping the surface before its wait is met: the roadmap sequence forbids the pick.
+- A string or a status that only some players can read: the locale and accessibility scenarios above fail the change.
+
+### Kill criteria
+
+None. This initiative is not in the Now band. Stop it if it would reverse a non-goal in the moved record.
+
+### Open questions
+
+Guest authors and whether they are paid are open. EDHREC figures on a guide need the terms answer.
+
+### Sources
+
+- https://edhrec.com/guides/edhrec-guide-to-aristocrats-in-commander
+- https://developers.google.com/search/docs/essentials/spam-policies
+- https://hearthstone.blizzard.com/en-us/blog/20056279
+- https://hearthstone.blizzard.com/news/24267727/35-0-patch-notes
+
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-68-101
+
+As a player, I want the product to delete src/lib/archetypes/archetypes.ts and its test, the fourth list of styles and the only unsourced counts in the code (slice 0, alone)., so that a player who wants to play a style, such as tokens, aristocrats or voltron, reads one sourced guide on how it wins, what it needs by role, how it changes across brackets 1 to 5, its mana and curve, its mulligans, what beats it, its budget paths and its common mistakes, then sees privately how their own deck compares. A named person writes each guide, a second person reviews it in each locale, and no model writes a word of it.
+
+#### AC-68-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Delete src/lib/archetypes/archetypes.ts and its test, the fourth list of styles and the only unsourced counts in the code (slice 0, alone).
+
+#### AC-68-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-68-102 Edge
+
+Given the account or the cache this behaviour changes
+When the player signs out or the deletion finishes
+Then the next request does not still show the private data
+
+#### US-68-102
+
+As a player, I want the product to extend I-28's content model with a styleId, ten section kinds and two qualifiers, reference for a count a named source published but nobody measured and experience for a named player's account, with a review record per locale and a coverage test (slice 1)., so that a player who wants to play a style, such as tokens, aristocrats or voltron, reads one sourced guide on how it wins, what it needs by role, how it changes across brackets 1 to 5, its mana and curve, its mulligans, what beats it, its budget paths and its common mistakes, then sees privately how their own deck compares. A named person writes each guide, a second person reviews it in each locale, and no model writes a word of it.
+
+#### AC-68-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Extend I-28's content model with a styleId, ten section kinds and two qualifiers, reference for a count a named source published but nobody measured and experience for a named player's account, with a review record per locale and a coverage test (slice 1).
+
+#### AC-68-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-68-105 Edge
+
+Given the French locale
+When the new controls render
+Then they come from the French catalogue and are not hard-coded English
+
+#### US-68-103
+
+As a player, I want the product to a dated demand register from EDHREC's tag counts, r/EDH titles and, once I-34 slice 8 exists, Search Console, with its method on /methods and no count on any guide page (slice 2); each I-54 style's usual I-65 routes (slice 3)., so that a player who wants to play a style, such as tokens, aristocrats or voltron, reads one sourced guide on how it wins, what it needs by role, how it changes across brackets 1 to 5, its mana and curve, its mulligans, what beats it, its budget paths and its common mistakes, then sees privately how their own deck compares. A named person writes each guide, a second person reviews it in each locale, and no model writes a word of it.
+
+#### AC-68-106 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A dated demand register from EDHREC's tag counts, r/EDH titles and, once I-34 slice 8 exists, Search Console, with its method on /methods and no count on any guide page (slice 2); each I-54 style's usual I-65 routes (slice 3).
+
+#### AC-68-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-68-108 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-68-104
+
+As a player, I want /guides/styles and one page per style and locale under I-34's new styleGuide page kind, noindex until reviewed, with Article markup and a "how this guide was made" block (slice 4); the first two English guides in the register's order, with reference figures and cited Data (slices 5 and 6); a glossary term per published style through I-64 (slice 7); links from ThemeDetector, the wizard's style step and I-54's results (slice 8); and freshness triggers and banners (slice 14)., so that a player who wants to play a style, such as tokens, aristocrats or voltron, reads one sourced guide on how it wins, what it needs by role, how it changes across brackets 1 to 5, its mana and curve, its mulligans, what beats it, its budget paths and its common mistakes, then sees privately how their own deck compares. A named person writes each guide, a second person reviews it in each locale, and no model writes a word of it.
+
+#### AC-68-109 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then /guides/styles and one page per style and locale under I-34's new styleGuide page kind, noindex until reviewed, with Article markup and a "how this guide was made" block (slice 4); the first two English guides in the register's order, with reference figures and cited Data (slices 5 and 6); a glossary term per published style through I-64 (slice 7); links from ThemeDetector, the wizard's style step and I-54's results (slice 8); and freshness triggers and banners (slice 14).
+
+#### AC-68-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-68-111 Edge
+
+Given the French locale
+When the new controls render
+Then they come from the French catalogue and are not hard-coded English
+
+#### US-68-105
+
+As a player, I want the product to later: a "your deck and this guide" panel, private and stored nowhere, built from I-54's style detection, I-65's route map, I-58's land check and I-28's keep profile and bracket check (slices 9 to 11); measured norms by style and bracket from I-29 in place of reference figures (slice 12); French editions with a named reviewer (slice 13); and one further guide per slice in the register's order (slice 15)., so that a player who wants to play a style, such as tokens, aristocrats or voltron, reads one sourced guide on how it wins, what it needs by role, how it changes across brackets 1 to 5, its mana and curve, its mulligans, what beats it, its budget paths and its common mistakes, then sees privately how their own deck compares. A named person writes each guide, a second person reviews it in each locale, and no model writes a word of it.
+
+#### AC-68-112 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Later: a "your deck and this guide" panel, private and stored nowhere, built from I-54's style detection, I-65's route map, I-58's land check and I-28's keep profile and bracket check (slices 9 to 11); measured norms by style and bracket from I-29 in place of reference figures (slice 12); French editions with a named reviewer (slice 13); and one further guide per slice in the register's order (slice 15).
+
+#### AC-68-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-68-114 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+#### US-68-106
+
+As a player, I want the product to reanimator, landfall and stax are sections of the graveyard, lands and control guides until I-54 decides whether they become styles, and wheels waits., so that a player who wants to play a style, such as tokens, aristocrats or voltron, reads one sourced guide on how it wins, what it needs by role, how it changes across brackets 1 to 5, its mana and curve, its mulligans, what beats it, its budget paths and its common mistakes, then sees privately how their own deck compares. A named person writes each guide, a second person reviews it in each locale, and no model writes a word of it.
+
+#### AC-68-115 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Reanimator, landfall and stax are sections of the graveyard, lands and control guides until I-54 decides whether they become styles, and wheels waits. The series follows I-54's vocabulary and keeps no list of its own.
+
+#### AC-68-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-68-117 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-68-107
+
+As a player, I want the product to a "starting skeleton" section kind, written and reviewed by the guide's named people:, so that a player who wants to play a style, such as tokens, aristocrats or voltron, reads one sourced guide on how it wins, what it needs by role, how it changes across brackets 1 to 5, its mana and curve, its mulligans, what beats it, its budget paths and its common mistakes, then sees privately how their own deck compares. A named person writes each guide, a second person reviews it in each locale, and no model writes a word of it.
+
+#### AC-68-118 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A "starting skeleton" section kind, written and reviewed by the guide's named people:
+
+#### AC-68-119 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-68-120 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+### UX states for this feature
+
+The player-visible outcome is: a player who wants to play a style, such as tokens, aristocrats or voltron, reads one sourced guide on how it wins, what it needs by role, how it changes across brackets 1 to 5, its mana and curve, its mulligans, what beats it, its budget paths and its common mistakes, then sees privately how their own deck compares. A named person writes each guide, a second person reviews it in each locale, and no model writes a word of it.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
+
+### Record moved from the roadmap (2026-11-11)
+
+Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.
+
+## I-68: Commander Archetype Guides From Play Experience
+
+**Spec:** [`specs/i68-archetype-guides.md`](i68-archetype-guides.md)
+
+**Outcome:** a player who wants to play a style, such as tokens, aristocrats or voltron, reads one sourced guide on how it wins, what it needs by role, how it changes across brackets 1 to 5, its mana and curve, its mulligans, what beats it, its budget paths and its common mistakes, then sees privately how their own deck compares. A named person writes each guide, a second person reviews it in each locale, and no model writes a word of it.
+
+**Status:** Next
+**Priority:** Next for slices 0 to 8 and 14: the template, the evidence rules, the demand register, the guide pages, the first two English guides, their links and freshness; Later for the deck panel, measured norms and French editions (slices 9 to 13), which wait for I-65, I-58, I-28, I-29 and a named French reviewer; slice 15 adds one guide at a time after slice 6; slice 16 waits for I-30's decision. The guides are never paid
+**Impact / effort:** Medium / large
+**Depends on:** nothing for slice 0; I-64 slice 1 for the shared content pipeline (slice 1; single owner decided 2026-11-10, coordinator call, the owner may override); I-54 slice 2 and I-34 slice 3 for the demand register (slice 2); I-54 slice 2 and I-65 slice 1 for each style's usual routes (slice 3); I-34 slice 1 for the page kind (slice 4); a named author before the first guide (slice 5); I-64 slice 2 for glossary terms (slice 7); I-54 slice 3 for the links (slice 8); I-65 slice 6, I-58 slice 3 and I-28 slices 7 and 9 for the deck panel (slices 9 to 11); I-29 slices 8 and 11 for measured norms (slice 12); a named French reviewer (slice 13); I-48 slice 3 or I-28 slice 8 for freshness (slice 14); I-30's decision gate and its slice 11 for slice 16.
+
+Players learn a play style from people who have played it, and that knowledge is scattered and mostly unsourced. EDHREC lists 419 tags with a deck count each, sorted by popularity, and its aristocrats guide of 2025-10-27 builds one deck from one writer's experience, with no role counts, brackets, mulligans or budget path ([guide](https://edhrec.com/guides/edhrec-guide-to-aristocrats-in-commander)). Draftsim calls its 27 archetypes a "non-exhaustive list", Card Kingdom's "Archetype Inspection" series has three posts in two years, two searches found no French guide series, and none of the guides read takes the reader's deck. On r/EDH, 1,202 of 10,367 posts between 2026-08-10 and 2026-11-09 name a style in their title, and 82.9% of those ask a question (counted from the Arctic Shift archive). The product adds an unsourced list of its own: `src/lib/archetypes/archetypes.ts` gives ten archetypes counts such as "Tutors (4–6)" and popularity shares that sum to 145%, and only its own test imports it (checked on `origin/dev` at `72fbfc1`). Google names AI-generated pages at scale as spam ([spam policies](https://developers.google.com/search/docs/essentials/spam-policies)), and players on r/EDH treat AI as a liability, so no model writes, translates or summarises guide text.
+
+### Scope
+
+- [ ] Delete `src/lib/archetypes/archetypes.ts` and its test, the fourth list of styles and the only unsourced counts in the code (slice 0, alone).
+- [ ] Extend I-28's content model with a `styleId`, ten section kinds and two qualifiers, `reference` for a count a named source published but nobody measured and `experience` for a named player's account, with a review record per locale and a coverage test (slice 1).
+- [ ] A dated demand register from EDHREC's tag counts, r/EDH titles and, once I-34 slice 8 exists, Search Console, with its method on `/methods` and no count on any guide page (slice 2); each I-54 style's usual I-65 routes (slice 3).
+- [ ] `/guides/styles` and one page per style and locale under I-34's new `styleGuide` page kind, `noindex` until reviewed, with `Article` markup and a "how this guide was made" block (slice 4); the first two English guides in the register's order, with reference figures and cited Data (slices 5 and 6); a glossary term per published style through I-64 (slice 7); links from `ThemeDetector`, the wizard's style step and I-54's results (slice 8); and freshness triggers and banners (slice 14).
+- [ ] Later: a "your deck and this guide" panel, private and stored nowhere, built from I-54's style detection, I-65's route map, I-58's land check and I-28's keep profile and bracket check (slices 9 to 11); measured norms by style and bracket from I-29 in place of reference figures (slice 12); French editions with a named reviewer (slice 13); and one further guide per slice in the register's order (slice 15).
+- [ ] Reanimator, landfall and stax are sections of the `graveyard`, `lands` and `control` guides until I-54 decides whether they become styles, and wheels waits. The series follows I-54's vocabulary and keeps no list of its own.
+- [ ] A "starting skeleton" section kind, written and reviewed by the guide's named people:
+  - role counts by bracket;
+  - up to N example cards per role;
+  - owned cards highlighted for a signed-in reader;
+  - "Start from this skeleton", which opens a guest deck the player completes with [I-76](i76-complete-this-deck-from-my-collection.md).
+
+  It is reviewed through I-73's playbook each set. It respects "Decklists generated for a style": nothing is generated. Hearthstone's recipes explain a playstyle ([Blizzard](https://hearthstone.blizzard.com/en-us/blog/20056279), 2016-03-08) and were refreshed in [35.0](https://hearthstone.blizzard.com/news/24267727/35-0-patch-notes) (2026-03-09). Who owns the skeletons is [D-64](../owner-decisions.md#content-and-naming). Added 2026-11-11.
+
+### Engineering enablers
+
+- Every published guide has every section kind in order and every claim a label and a dated source, and a count with no measured norm, cited Data or labelled reference figure fails the coverage test.
+- A dependency test fails if a guide route or content module imports the AI client.
+- With a pasted list, signed out, no request, analytics payload or crawler view carries a card name.
+- A draft, unreviewed or stale guide is `noindex` and out of the sitemap, and recomputing a demand snapshot from its stored inputs gives the same order.
+
+**Paid-tier angle:** every guide in every locale, the panel for one deck and the demand register stay free ([I-30 requirement 1.1](i30-business-model-and-paid-tier.md#1-the-free-and-paid-line)). The candidate is "My decks by style", a player's decks and snapshots set against style and bracket norms over time, sold with I-34's personal comparison as one entitlement in I-31. The spec rates it weak, because it needs measured norms that wait for I-29's corpus.
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player learning a style, I want a guide written by a named person from play, so that an unsourced percentage is not advice.
+
+**Acceptance.**
+- The dead archetype module with percentages that sum past 100 percent is deleted.
+- A published guide names its author and tags each claim official, measured or community.
+- A model does not write the guide.
+
+**UX.** One page per style. A deck panel, later, points at the guide. It does not rank the player's deck.
+
+**Data and API.** The content pipeline is I-64's. Style ids match I-54's vocabulary. No new card table.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `style_guide_opened {locale: en or fr}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Public once a named author has signed the page. No flag. French editions wait on a reviewer.
+
+**Open questions.** Guest authors and whether they are paid are open. EDHREC figures on a guide need the terms answer.
+
+### Definition of done
+
+A signed-out player opens the first published guide in English, reads how the style wins, its roles by bracket, its mulligans and what beats it, each claim labelled with a dated source and the author and reviewer named; pastes a list and sees its role counts beside the guide's figures with nothing sent or stored; and no page ranks styles or was written by a model.
+
+---
+

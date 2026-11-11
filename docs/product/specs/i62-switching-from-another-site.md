@@ -2,7 +2,7 @@
 
 > **Initiative:** I-62, proposed for the [roadmap](../roadmap.md) · **Status:** Proposed · **Priority:** Next for slices 0 to 11 and 18; slices 12 to 14 follow I-37 and I-08; Later for collections (slice 15), want lists (slice 16) and the owner view's migration metric (slice 17), which wait for I-26, I-56 and I-39's event store (slice 17 marked Later 2026-11-10); any API route (slice 19) is blocked on a written permission. Never paid · **Written 2026-11-10**
 > **Research:** one dated note of 2026-11-10 on the export features, file formats, APIs, terms and robots.txt of eleven sources. It is not committed, so every external fact links its own entry in [Sources](#sources). Moxfield, Deckstats and MTGGoldfish refused automated reads; their rows rest on third-party pages or search summaries and say so. Legal points are research, not legal advice; each goes to the lawyer list in [I-30 requirement 7.2](i30-business-model-and-paid-tier.md#7-the-legal-gate).
-> **Owns:** the guided move from another site: the per-source guide, multi-file and zip upload, source detection, the migration preview across all decks, the loss table, the category-to-zone mapping per source, deck idempotency and re-import, the server commit of many decks, the report, and the migration's measurement. **Does not own:** single-deck paste and URL import and their parsers ([I-10](../roadmap.md#i-10-interoperability-and-integrations)); the collection pipeline and printing-level ownership ([I-26](i26-collections-arriving-from-elsewhere.md), [I-06](../roadmap.md#i-06-collection-and-purchase-planning)); the choice of printing ([I-57](i57-printing-preferences-everywhere.md)); custom categories, tags, finish and language on deck cards ([I-37](i37-editor-depth.md)); the primer length limit ([I-08](../roadmap.md#i-08-share-compare-and-learn)); the wanted list ([I-56](i56-wishlists-friends-can-buy-from.md)); storage places ([I-43](i43-physical-collection-storage-and-pull-lists.md)); other players' public decks ([I-29](i29-cross-site-deck-index.md)); the event contract ([I-39](i39-first-run-activation-and-measurement.md)); the full export out ([I-38](i38-trust-safety-and-user-rights.md#7-full-data-export)).
+> **Owns:** the guided move from another site: the per-source guide, multi-file and zip upload, source detection, the migration preview across all decks, the loss table, the category-to-zone mapping per source, deck idempotency and re-import, the server commit of many decks, the report, and the migration's measurement. **Does not own:** single-deck paste and URL import and their parsers ([I-10](i10-interoperability-and-integrations.md)); the collection pipeline and printing-level ownership ([I-26](i26-collections-arriving-from-elsewhere.md), [I-06](i06-collection-and-purchase-planning.md)); the choice of printing ([I-57](i57-printing-preferences-everywhere.md)); custom categories, tags, finish and language on deck cards ([I-37](i37-editor-depth.md)); the primer length limit ([I-08](i08-share-compare-and-learn.md)); the wanted list ([I-56](i56-wishlists-friends-can-buy-from.md)); storage places ([I-43](i43-physical-collection-storage-and-pull-lists.md)); other players' public decks ([I-29](i29-cross-site-deck-index.md)); the event contract ([I-39](i39-first-run-activation-and-measurement.md)); the full export out ([I-38](i38-trust-safety-and-user-rights.md#7-full-data-export)).
 > **Proposed changes to neighbours:** I-39 gains one event and one deck origin (requirement 12.1). I-10's Moxfield profile panel points to the Moxfield guide while Moxfield refuses honest requests (requirement 2.3).
 
 ## Overview
@@ -19,7 +19,7 @@ Read on 2026-11-10 unless dated otherwise. "Search summary" marks a fact read in
 
 | Source            | Export per deck                                                                                                                                                                                                                                                                     | Export per account                                                                                                                                                                                                                                                                                                 | Public API and terms                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Moxfield**      | Text, one deck at a time; the line syntax is `1 Name (SET) number *F* #tag` ([I-37 7.5](i37-editor-depth.md#7-text-bulk-edit-in-place)). Not re-verified: Moxfield answered 403                                                                                                     | None. "Export all decks at once", asking for "a zip file", has been open since 2023-09-30 [1]. Collection CSV with `Count, Tradelist Count, Name, Edition, Condition, Language, Foil, Alter, Proxy, Purchase Price, Collector Number` [3], plus `Tags` and `Last Modified` (search summary of Moxfield's help) [2] | No public API; its API and pages answer 403 to automated clients ([I-10](../roadmap.md#i-10-interoperability-and-integrations), [I-29](i29-cross-site-deck-index.md)). Tools that fetch Moxfield decks in bulk reach public decks only [23]                                                                                                                                                                                                                                                                   |
+| **Moxfield**      | Text, one deck at a time; the line syntax is `1 Name (SET) number *F* #tag` ([I-37 7.5](i37-editor-depth.md#7-text-bulk-edit-in-place)). Not re-verified: Moxfield answered 403                                                                                                     | None. "Export all decks at once", asking for "a zip file", has been open since 2023-09-30 [1]. Collection CSV with `Count, Tradelist Count, Name, Edition, Condition, Language, Foil, Alter, Proxy, Purchase Price, Collector Number` [3], plus `Tags` and `Last Modified` (search summary of Moxfield's help) [2] | No public API; its API and pages answer 403 to automated clients ([I-10](i10-interoperability-and-integrations.md), [I-29](i29-cross-site-deck-index.md)). Tools that fetch Moxfield decks in bulk reach public decks only [23]                                                                                                                                                                                                                                                                   |
 | **Archidekt**     | The FAQ describes only sending a deck to a vendor cart [6]; a text export with category headers is described by a third party (search summary) [24]                                                                                                                                 | No bulk deck export found. The collection importer has presets, matches by Scryfall ID or set and collector number, and lets ambiguous rows be skipped or tagged "Unsure"; its new importer "always adds cards already in your collection as new entries" [7]                                                      | Open, undocumented JSON. `/api/decks/v3/?ownerUsername=` lists a user's public decks with folder, `hasPrimer` and bracket; a deck carries Scryfall `uid`, `collectorNumber`, finish `modifier`, categories with `includedInDeck`, card `notes` and the deck's `description`, and no language [9]. Terms (2018-09-07) forbid "automated searches, requests, or queries" and access "to build a similar or competitive website" [5]. robots.txt disallows only login, compare, playtester and sandbox paths [8] |
 | **TappedOut**     | Text at `?fmt=txt` (read by the importer on `dev`); a CSV with board, quantity, name, set code, foil, alter, signed, condition and language, without collector numbers (search summary) [11]. In a 2025 thread, two users disagree on whether a CSV download is a site feature [10] | Inventory CSV upload since 2017 (search summary) [11]                                                                                                                                                                                                                                                              | No API found. robots.txt blocks only named crawlers [10]                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | **Deckstats**     | Text with `SB:` sideboard lines, in a third-party sample (search summary) [25]; collection `amount, card_name, is_foil, is_pinned, set_id, set_code` [3]                                                                                                                            | Not verified                                                                                                                                                                                                                                                                                                       | None found. robots.txt answered 403 [12]                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
@@ -279,3 +279,428 @@ Slices 0, 1 and 2 can start now and in parallel. Slices 1 to 5 make a working mo
 23. Architrice, [on PyPI](https://pypi.org/project/architrice): "only your public decks can be seen and downloaded"; search summary, 2026-11-10.
 24. TableCommander, [Import MTG Decks](https://tablecommander.com/import-mtg-decks): says Archidekt's text export includes category headers; search summary, 2026-11-10.
 25. dylan, [Pile](https://github.com/dylan/Pile), a sample labelled as a Deckstats TXT export with `SB:` lines; search summary, 2026-11-10.
+
+## Feature contract (Full, 2026-11-11)
+
+The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
+
+### Summary and problem
+
+a player who keeps decks on another site downloads them with that site's own export, drops every file here at once, sees each deck and what it will lose before anything is written, confirms, and gets a report. A second run with the same files changes nothing, and the product never logs in to, scrapes or calls the other site.
+
+### Goals
+
+- Twenty Archidekt text files in a zip with two directories become twenty private decks in two folders, after one preview that lists what each will lose; a second run reports "20 unchanged"; and no module of the move sent a request to another site.
+
+### Non-goals
+
+- Do not reverse a non-goal already named in the moved record or in the roadmap's strategic boundaries.
+- Do not invent a usage count, a win rate, or a score the moved record does not already cite from a named source.
+
+### Personas
+
+See the roadmap persona table. This initiative serves the rows that list its id.
+
+### User stories
+
+#### US-62-01
+
+As a player leaving another site, I want to bring my decks across in one step and see what each deck will lose, so that a second import does not duplicate them.
+
+#### US-62-02
+
+As a signed-out player, I want the guest rule in the rollout to be true, so that I am not shown a control that fails when I have no account.
+
+#### US-62-03
+
+As a player using a keyboard or a screen reader, I want the primary action to have a name and a visible focus, so that colour is not the only signal.
+
+### Acceptance criteria
+
+#### AC-62-01 Happy path
+
+Given a signed-in player and the English locale
+When the preview lists unresolved cards and dropped fields before anything is written.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-62-02 Happy path
+
+Given a signed-in player and the English locale
+When one deck is one transaction.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-62-03 Happy path
+
+Given a signed-in player and the English locale
+When importing the same file again changes nothing.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-62-04 Error and failure
+
+Given the action cannot finish
+When the player retries or leaves the screen
+Then the last confirmed state is unchanged, and the message is a catalogue string rather than a stack trace or a raw status code
+
+#### AC-62-05 Edge cases
+
+Given an empty deck, a missing price, or a field the record says may be absent
+When the screen renders
+Then the empty state says what is missing, and it does not show a zero in place of an unknown value
+
+#### AC-62-06 Guest and signed-in
+
+Given the rollout in this contract
+When a guest and a signed-in player open the same surface
+Then the rollout holds: Signed-in. Guests cannot import a library. No flag. Archidekt stays file-only until the owner has a written answer.
+
+#### AC-62-07 Locales
+
+Given the ten catalogs
+When this feature adds a user-facing string
+Then The ten catalogs on disk are `en`, `fr`, `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` (`src/i18n/routing.ts`). Only `en` and `fr` are routed. The other eight stay at key parity with `en` and may reuse the English text until a person who speaks the language reviews them. A new string is not shipped in a routed locale as hard-coded English.
+
+#### AC-62-08 Accessibility
+
+Given a keyboard, a visible focus, and a screen reader
+When the player completes US-62-01 without a pointer
+Then every new control has an accessible name, focus returns on close, and a status uses a word or an icon as well as colour
+
+### UX flow and states
+
+The player uploads a file they downloaded. The product does not ask for the other site's password and does not call that site.
+
+- Empty: the screen says what is missing and what to do next.
+- Loading: a busy state that does not shift the layout when it ends.
+- Error: the catalogue message and a way to retry, without losing the last confirmed edit.
+
+### Data model and API
+
+File parsers only. Source is recorded on the deck. Printings are kept when the file names them, through I-57.
+
+### Analytics and telemetry
+
+`migration_finished {decks: count, unresolved: zero or some}`. Reserved for I-39. Not emitted before that store exists.
+
+The event is reserved for I-39's store. It is not emitted before that store exists. The row holds counts and enums only: no email, name, username, deck name, card name, list, search text or URL.
+
+### Rollout and feature flags
+
+Signed-in. Guests cannot import a library. No flag. Archidekt stays file-only until the owner has a written answer.
+
+### Dependencies
+
+Hard waits are in the roadmap dependency table. Slice edges, where this file has a delivery-slice table, stay in that table and in `dependency-graph.md`.
+
+### Risks and mitigations
+
+- Shipping the surface before its wait is met: the roadmap sequence forbids the pick.
+- A string or a status that only some players can read: the locale and accessibility scenarios above fail the change.
+
+### Kill criteria
+
+None. This initiative is not in the Now band. Stop it if it would reverse a non-goal in the moved record.
+
+### Open questions
+
+Whether a Moxfield bulk export exists, and whether a primer over 2,000 characters is truncated or refused, are open.
+
+### Sources
+
+- https://github.com/moxfield/moxfield-public/issues/54
+- https://archidekt.com/news/5891613
+
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-62-101
+
+As a player, I want the product to a source register with one dated row per source (files, terms, robots.txt, verdict), and a dated guide per source at /[locale]/move in English and French, marked after 90 days as possibly out of date (slice 0)., so that a player who keeps decks on another site downloads them with that site's own export, drops every file here at once, sees each deck and what it will lose before anything is written, confirms, and gets a report. A second run with the same files changes nothing, and the product never logs in to, scrapes or calls the other site.
+
+#### AC-62-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A source register with one dated row per source (files, terms, robots.txt, verdict), and a dated guide per source at /[locale]/move in English and French, marked after 90 days as possibly out of date (slice 0).
+
+#### AC-62-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-62-102 Edge
+
+Given the French locale
+When the new controls render
+Then they come from the French catalogue and are not hard-coded English
+
+#### US-62-102
+
+As a player, I want the product to a normalized bundle and a text adapter that reads many .txt files at once and keeps (SET) number, *F* and #tag as data, coordinated with I-57 slice 6 (slice 1); the server write of one deck with all its rows in one transaction (slice 2)., so that a player who keeps decks on another site downloads them with that site's own export, drops every file here at once, sees each deck and what it will lose before anything is written, confirms, and gets a report. A second run with the same files changes nothing, and the product never logs in to, scrapes or calls the other site.
+
+#### AC-62-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A normalized bundle and a text adapter that reads many .txt files at once and keeps (SET) number, *F* and #tag as data, coordinated with I-57 slice 6 (slice 1); the server write of one deck with all its rows in one transaction (slice 2).
+
+#### AC-62-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-62-105 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-62-103
+
+As a player, I want the product to importBatch and ImportedDeckLink with staging, fingerprints and content hashes, and unconfirmed bundles deleted after 24 hours (slice 3); a preview with an include switch per deck, zones, commanders, unresolved names and a loss table per field (slice 4)., so that a player who keeps decks on another site downloads them with that site's own export, drops every file here at once, sees each deck and what it will lose before anything is written, confirms, and gets a report. A second run with the same files changes nothing, and the product never logs in to, scrapes or calls the other site.
+
+#### AC-62-106 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: ImportBatch and ImportedDeckLink with staging, fingerprints and content hashes, and unconfirmed bundles deleted after 24 hours (slice 3); a preview with an include switch per deck, zones, commanders, unresolved names and a loss table per field (slice 4).
+
+#### AC-62-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-62-108 Edge
+
+Given a list where one name does not resolve
+When the player confirms
+Then the unresolved name is shown first and nothing is written until they accept that list
+
+#### US-62-104
+
+As a player, I want the product to commit, retry and a report, every new deck private, with origin migration and an automatic snapshot (slice 5); re-import where an unchanged deck is skipped, a deck changed on the source is a diff, and a deck changed on both sides is a conflict that defaults to keeping the player's version (slice 6)., so that a player who keeps decks on another site downloads them with that site's own export, drops every file here at once, sees each deck and what it will lose before anything is written, confirms, and gets a report. A second run with the same files changes nothing, and the product never logs in to, scrapes or calls the other site.
+
+#### AC-62-109 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Commit, retry and a report, every new deck private, with origin migration and an automatic snapshot (slice 5); re-import where an unchanged deck is skipped, a deck changed on the source is a diff, and a deck changed on both sides is a conflict that defaults to keeping the player's version (slice 6).
+
+#### AC-62-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-62-111 Edge
+
+Given a list where one name does not resolve
+When the player confirms
+Then the unresolved name is shown first and nothing is written until they accept that list
+
+#### US-62-105
+
+As a player, I want the product to archidekt files with an editable category-to-zone mapping saved per source (slice 7), Moxfield files (slice 8), TappedOut, Deckstats, MTGGoldfish and Scryfall files (slice 9), and a zip whose directories become folders (slice 10)., so that a player who keeps decks on another site downloads them with that site's own export, drops every file here at once, sees each deck and what it will lose before anything is written, confirms, and gets a report. A second run with the same files changes nothing, and the product never logs in to, scrapes or calls the other site.
+
+#### AC-62-112 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Archidekt files with an editable category-to-zone mapping saved per source (slice 7), Moxfield files (slice 8), TappedOut, Deckstats, MTGGoldfish and Scryfall files (slice 9), and a zip whose directories become folders (slice 10). From slice 8, while Moxfield refuses honest requests, I-10's Moxfield profile panel links to the Moxfield guide.
+
+#### AC-62-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-62-114 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-62-106
+
+As a player, I want the product to source printings through I-57's resolver, a Scryfall ID first, then set and collector number (slice 11)., so that a player who keeps decks on another site downloads them with that site's own export, drops every file here at once, sees each deck and what it will lose before anything is written, confirms, and gets a report. A second run with the same files changes nothing, and the product never logs in to, scrapes or calls the other site.
+
+#### AC-62-115 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Source printings through I-57's resolver, a Scryfall ID first, then set and collector number (slice 11). The move-in is announced only after this slice, because lost printings are what a collector notices first.
+
+#### AC-62-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-62-117 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-62-107
+
+As a player, I want the product to after their owners: finish and language (slice 12), custom categories and tags (slice 13), primers within I-08's limit (slice 14), collection files through I-26's pipeline (slice 15) and want lists into I-56's wanted list (slice 16)., so that a player who keeps decks on another site downloads them with that site's own export, drops every file here at once, sees each deck and what it will lose before anything is written, confirms, and gets a report. A second run with the same files changes nothing, and the product never logs in to, scrapes or calls the other site.
+
+#### AC-62-118 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: After their owners: finish and language (slice 12), custom categories and tags (slice 13), primers within I-08's limit (slice 14), collection files through I-26's pipeline (slice 15) and want lists into I-56's wanted list (slice 16).
+
+#### AC-62-119 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-62-120 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-62-108
+
+As a player, I want the product to migration_finished, the origin split and the primary metric in I-39's owner view (slice 17), and entry points on an empty /decks, in I-39's first-run panel and in settings (slice 18)., so that a player who keeps decks on another site downloads them with that site's own export, drops every file here at once, sees each deck and what it will lose before anything is written, confirms, and gets a report. A second run with the same files changes nothing, and the product never logs in to, scrapes or calls the other site.
+
+#### AC-62-121 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then migration_finished, the origin split and the primary metric in I-39's owner view (slice 17), and entry points on an empty /decks, in I-39's first-run panel and in settings (slice 18).
+
+#### AC-62-122 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-62-123 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-62-109
+
+As a player, I want the product to archidekt's terms forbid the API reads that I-10's shipped single-deck import makes; the owner decision is recorded in I-10., so that a player who keeps decks on another site downloads them with that site's own export, drops every file here at once, sees each deck and what it will lose before anything is written, confirms, and gets a report. A second run with the same files changes nothing, and the product never logs in to, scrapes or calls the other site.
+
+#### AC-62-124 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Archidekt's terms forbid the API reads that I-10's shipped single-deck import makes; the owner decision is recorded in I-10. Until a written answer, I-62 reads Archidekt files only, and an API route for any source (slice 19) stays blocked.
+
+#### AC-62-125 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-62-126 Edge
+
+Given a list where one name does not resolve
+When the player confirms
+Then the unresolved name is shown first and nothing is written until they accept that list
+
+### UX states for this feature
+
+The player-visible outcome is: a player who keeps decks on another site downloads them with that site's own export, drops every file here at once, sees each deck and what it will lose before anything is written, confirms, and gets a report. A second run with the same files changes nothing, and the product never logs in to, scrapes or calls the other site.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
+
+### Record moved from the roadmap (2026-11-11)
+
+Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.
+
+## I-62: Switching From Another Site In One Step
+
+**Spec:** [`specs/i62-switching-from-another-site.md`](i62-switching-from-another-site.md)
+
+**Outcome:** a player who keeps decks on another site downloads them with that site's own export, drops every file here at once, sees each deck and what it will lose before anything is written, confirms, and gets a report. A second run with the same files changes nothing, and the product never logs in to, scrapes or calls the other site.
+
+**Status:** Next
+**Priority:** Next for slices 0 to 11 and 18; slices 12 to 14 follow I-37 and I-08; Later for collections (slice 15), want lists (slice 16) and the migration metric in the owner view (slice 17), which waits for I-39's event store (marked 2026-11-10); an API route (slice 19) is blocked on a written permission. Never paid
+**Impact / effort:** High / large
+**Depends on:** nothing for slices 0 to 2; I-57 slice 3 for source printings (slice 11); I-37 slices 12 to 14 for finish, language, categories and tags (slices 12 and 13); I-08's primer limit (slice 14); I-26 slices 3 and 4 for collections (slice 15); I-56 slice 1 for want lists (slice 16); I-39 slices 5, 10 and 12 for the first-run panel and measurement (slices 17 and 18); a source's written permission for slice 19.
+
+A player with 20 decks on another site would open the import dialog 20 times today. `ImportDialog.tsx` fills one open deck at a time, `src/lib/import/url-import.ts` keeps card names only from its seven sources, `parsePlainTextDecklist` (`src/lib/import/decklist-parse.ts`) strips `(SET) number` and `*F*`, and each card is posted on its own, about 100 requests and no transaction for a 100-card deck. Moxfield exports one deck at a time, and its users have asked for "Export all decks at once" since 2023-09-30 ([issue #54](https://github.com/moxfield/moxfield-public/issues/54)); Archidekt's new collection importer adds duplicates on re-import ([news](https://archidekt.com/news/5891613)). No product read moves many decks in one step, shows what each will lose, or makes a second run change nothing, and third-party tools fill the gap by fetching public decks only. This initiative reads files the player downloaded, holds no credentials, scrapes no page and sends no header that pretends to come from another site; an API is used only with written permission, and on 2026-11-10 none qualifies. It is measured as decks imported per new account in its first 7 days, through I-39's events.
+
+### Scope
+
+- [ ] A source register with one dated row per source (files, terms, robots.txt, verdict), and a dated guide per source at `/[locale]/move` in English and French, marked after 90 days as possibly out of date (slice 0).
+- [ ] A normalized bundle and a text adapter that reads many `.txt` files at once and keeps `(SET) number`, `*F*` and `#tag` as data, coordinated with I-57 slice 6 (slice 1); the server write of one deck with all its rows in one transaction (slice 2).
+- [ ] `ImportBatch` and `ImportedDeckLink` with staging, fingerprints and content hashes, and unconfirmed bundles deleted after 24 hours (slice 3); a preview with an include switch per deck, zones, commanders, unresolved names and a loss table per field (slice 4).
+- [ ] Commit, retry and a report, every new deck private, with origin `migration` and an automatic snapshot (slice 5); re-import where an unchanged deck is skipped, a deck changed on the source is a diff, and a deck changed on both sides is a conflict that defaults to keeping the player's version (slice 6).
+- [ ] Archidekt files with an editable category-to-zone mapping saved per source (slice 7), Moxfield files (slice 8), TappedOut, Deckstats, MTGGoldfish and Scryfall files (slice 9), and a zip whose directories become folders (slice 10). From slice 8, while Moxfield refuses honest requests, I-10's Moxfield profile panel links to the Moxfield guide.
+- [ ] Source printings through I-57's resolver, a Scryfall ID first, then set and collector number (slice 11). The move-in is announced only after this slice, because lost printings are what a collector notices first.
+- [ ] After their owners: finish and language (slice 12), custom categories and tags (slice 13), primers within I-08's limit (slice 14), collection files through I-26's pipeline (slice 15) and want lists into I-56's wanted list (slice 16).
+- [ ] `migration_finished`, the origin split and the primary metric in I-39's owner view (slice 17), and entry points on an empty `/decks`, in I-39's first-run panel and in settings (slice 18).
+- [ ] Archidekt's terms forbid the API reads that I-10's shipped single-deck import makes; the owner decision is recorded in [I-10](i10-interoperability-and-integrations.md). Until a written answer, I-62 reads Archidekt files only, and an API route for any source (slice 19) stays blocked.
+
+### Engineering enablers
+
+- A test fails when a module under `src/lib/migration/` imports `@/lib/http` or calls `fetch`, and adapter tests run with the network off.
+- The same files give the same preview, an unchanged re-run writes nothing, the same idempotency key commits nothing twice, and one failing deck leaves the others written.
+- A zip with `..` paths, an expansion ratio above 100, 1,001 files or an oversized CSV is refused with its reason, and primer HTML is stripped.
+- Fixtures per source come from real exports of accounts the owner controls, and a fixture older than 180 days raises a reminder.
+
+**Paid-tier angle:** none. Every part is free on every plan, with no cap on decks, files or re-runs beyond the abuse limits. I-30 requirement 1.1 keeps importing free, a price at the moment of moving would rebuild the cost this initiative removes, and I-38 makes the export out free. Its value to I-30 is that it fills the decks and collections that paid tools, such as I-31's Deck Lab, work on.
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player leaving another site, I want to bring my decks across in one step and see what each deck will lose, so that a second import does not duplicate them.
+
+**Acceptance.**
+- The preview lists unresolved cards and dropped fields before anything is written.
+- One deck is one transaction.
+- Importing the same file again changes nothing.
+
+**UX.** The player uploads a file they downloaded. The product does not ask for the other site's password and does not call that site.
+
+**Data and API.** File parsers only. Source is recorded on the deck. Printings are kept when the file names them, through I-57.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `migration_finished {decks: count, unresolved: zero or some}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Signed-in. Guests cannot import a library. No flag. Archidekt stays file-only until the owner has a written answer.
+
+**Open questions.** Whether a Moxfield bulk export exists, and whether a primer over 2,000 characters is truncated or refused, are open.
+
+### Definition of done
+
+Twenty Archidekt text files in a zip with two directories become twenty private decks in two folders, after one preview that lists what each will lose; a second run reports "20 unchanged"; and no module of the move sent a request to another site.
+
+---
+

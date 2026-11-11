@@ -115,7 +115,7 @@ Verified on `dev` at `fee835d8` on 2026-11-10.
 3.2 The legality verdict stays Scryfall's, read through I-67, or I-48's version for bans and Game Changers. The status changes only the wording. A `preview` card reads "Preview: legal in Commander from 5 February 2027", never "not legal" alone.
 3.3 Builder search and the set browser get an "Include previews" switch, off by default. `previewQuery` replaces `legal:<format>` with `(legal:<format> or date>YYYY-MM-DD)`, using today's date, and adds `game:paper`. The query stays visible ([I-14](i14-verifiable-natural-language-search.md)). On 2026-11-10 the query without `game:paper` found all 12 Darkhold Destiny cards [9].
 3.4 A preview card in a deck gets a warning in the legality group, with its release date and the card-data date. It never blocks saving. The warning clears at `legalSwitch` without a notice.
-3.5 The copilot never puts a preview card in a generated deck or a suggestion. Its removal reason becomes "Preview, legal from <date>" ([I-02](../roadmap.md#i-02-ai-deck-copilot)).
+3.5 The copilot never puts a preview card in a generated deck or a suggestion. Its removal reason becomes "Preview, legal from <date>" ([I-02](i02-checkable-ai-copilot.md)).
 3.6 A preview image is shown exactly as Scryfall serves it, with a "Preview image" label when `image_status` is `missing`, `placeholder` or `lowres`. It is never cropped, stretched or edited, which Scryfall's image rules forbid [12][13].
 
 ### 4. The playbook
@@ -149,7 +149,7 @@ Verified on `dev` at `fee835d8` on 2026-11-10.
 
 ### 5. What players get
 
-5.1 **New cards for your commander, on preview day.** Through I-18, on request for one deck, the corpus includes the set's printings with their status. The reasons available on day one come first: a Commander Spellbook combo with a card already in the deck, shown as a preview combo when Spellbook's `spoiler` field says so, and a role the deck lacks under [I-03](../roadmap.md#i-03-trustworthy-deck-feedback). EDHREC inclusion is added as its counts grow; it had counts before release [24].
+5.1 **New cards for your commander, on preview day.** Through I-18, on request for one deck, the corpus includes the set's printings with their status. The reasons available on day one come first: a Commander Spellbook combo with a card already in the deck, shown as a preview combo when Spellbook's `spoiler` field says so, and a role the deck lacks under [I-03](i03-trustworthy-deck-feedback.md). EDHREC inclusion is added as its counts grow; it had counts before release [24].
 5.2 **Precons on decklist day.** Precon pages and the sealed diff from I-17 appear when MTGJSON publishes the list, labelled as a decklist from a product not yet released. Upgrade bundles follow by `T+14` if a curator exists.
 5.3 **The release digest.** At `galleryComplete`, players who opted in get one event per set, `release.digest`, in I-63's category "New cards for my decks", off in the app and by email by default ([I-63 4.2](i63-one-notification-system.md#4-preferences-defaults-and-consent)). It lists each of the player's decks and how many new cards are legal in it, from I-18's legality filter only. Each deck links to the radar. It does not advertise the set, link to a shop or count down.
 5.4 **Bracket and Game Changer impact.** Each radar candidate states whether it is a Game Changer under the version in force, named with its date, and which bracket floor it would trip if added: extra turns, mass land denial, or a two-card combo with the deck. I-48's `assessDeck` on the deck plus the card decides. Nothing predicts a future Game Changer or ban. If Wizards later lists a new card, I-48's notice covers it.
@@ -297,3 +297,335 @@ Slices 1 and 2 can start today. Slice 4 must merge before the first release that
 25. Archidekt, card search endpoint, [`nameSearch=Hela, Mistress of Darkness`](https://archidekt.com/api/cards/v2/?nameSearch=Hela%2C%20Mistress%20of%20Darkness), read 2026-11-10.
 26. Moxfield, card search API, `api2.moxfield.com/v2/cards/search`; answered HTTP 403 (tried 2026-11-10).
 27. EDHREC, Josh Nelson, "MagicCon Amsterdam Reveals What 2027 Looks Like for Magic", 2026-07-17. https://edhrec.com/articles/magiccon-amsterdam-reveals-what-2027-looks-like-for-magic/ (read 2026-11-10)
+
+## Feature contract (Full, 2026-11-11)
+
+The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
+
+### Summary and problem
+
+on preview day a player sees which new cards fit one deck, each labelled "Preview: legal in Commander from 5 February 2027"; on the day Scryfall turns a set legal, the card data loads without waiting for the owner; and the owner sees, for each release, which rows of a playbook kept as data are done, late or not built yet.
+
+### Goals
+
+- On a replayed release, a preview card reads "Preview: legal in Commander from 5 February 2027" in search, the editor and the copilot; on the day its set turns legal, the Oracle file loads without the owner's confirmation; and the release page lists every playbook row as done, due, late, skipped or not built.
+
+### Non-goals
+
+- Do not reverse a non-goal already named in the moved record or in the roadmap's strategic boundaries.
+- Do not invent a usage count, a win rate, or a score the moved record does not already cite from a named source.
+
+### Personas
+
+See the roadmap persona table. This initiative serves the rows that list its id.
+
+### User stories
+
+#### US-73-01
+
+As a player browsing a set that is not out yet, I want a preview card labelled with the date it becomes legal, so that the editor does not call it simply illegal.
+
+#### US-73-02
+
+As a signed-out player, I want the guest rule in the rollout to be true, so that I am not shown a control that fails when I have no account.
+
+#### US-73-03
+
+As a player using a keyboard or a screen reader, I want the primary action to have a name and a visible focus, so that colour is not the only signal.
+
+### Acceptance criteria
+
+#### AC-73-01 Happy path
+
+Given a signed-in player and the English locale
+When search, the editor and the copilot use one status: legal, preview with a date, or not legal.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-73-02 Happy path
+
+Given a signed-in player and the English locale
+When a preview card can be added and is labelled.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-73-03 Happy path
+
+Given a signed-in player and the English locale
+When a release-day legality change does not trip the card-data hold by itself.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-73-04 Error and failure
+
+Given the action cannot finish
+When the player retries or leaves the screen
+Then the last confirmed state is unchanged, and the message is a catalogue string rather than a stack trace or a raw status code
+
+#### AC-73-05 Edge cases
+
+Given an empty deck, a missing price, or a field the record says may be absent
+When the screen renders
+Then the empty state says what is missing, and it does not show a zero in place of an unknown value
+
+#### AC-73-06 Guest and signed-in
+
+Given the rollout in this contract
+When a guest and a signed-in player open the same surface
+Then the rollout holds: On for guests and signed-in players. The same label everywhere. No flag that hides previews in one surface and not another.
+
+#### AC-73-07 Locales
+
+Given the ten catalogs
+When this feature adds a user-facing string
+Then The ten catalogs on disk are `en`, `fr`, `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` (`src/i18n/routing.ts`). Only `en` and `fr` are routed. The other eight stay at key parity with `en` and may reuse the English text until a person who speaks the language reviews them. A new string is not shipped in a routed locale as hard-coded English.
+
+#### AC-73-08 Accessibility
+
+Given a keyboard, a visible focus, and a screen reader
+When the player completes US-73-01 without a pointer
+Then every new control has an accessible name, focus returns on close, and a status uses a word or an icon as well as colour
+
+### UX flow and states
+
+The label is on the card row. The set page, if D-82 allows one, is not this slice.
+
+- Empty: the screen says what is missing and what to do next.
+- Loading: a busy state that does not shift the layout when it ends.
+- Error: the catalogue message and a way to retry, without losing the last confirmed edit.
+
+### Data model and API
+
+Status is a pure function of the printing's legality and the set's release date, from I-67 once that load exists, and from the search response until then.
+
+### Analytics and telemetry
+
+`preview_card_added {labelled: yes}`. Reserved for I-39. Not emitted before that store exists.
+
+The event is reserved for I-39's store. It is not emitted before that store exists. The row holds counts and enums only: no email, name, username, deck name, card name, list, search text or URL.
+
+### Rollout and feature flags
+
+On for guests and signed-in players. The same label everywhere. No flag that hides previews in one surface and not another.
+
+### Dependencies
+
+Hard waits are in the roadmap dependency table. Slice edges, where this file has a delivery-slice table, stay in that table and in `dependency-graph.md`.
+
+### Risks and mitigations
+
+- Shipping the surface before its wait is met: the roadmap sequence forbids the pick.
+- A string or a status that only some players can read: the locale and accessibility scenarios above fail the change.
+
+### Kill criteria
+
+None. This initiative is not in the Now band. Stop it if it would reverse a non-goal in the moved record.
+
+### Open questions
+
+When Scryfall flips a set to legal is observed, not assumed. Universes Beyond images are a lawyer question.
+
+### Sources
+
+- https://magic.wizards.com/news/announcements/everything-announced-for-the-magic-multiverse-in-2027
+
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-73-101
+
+As a player, I want the product to slice 0, no code: previews in the radar and search (D-81), Commander-lens set pages (D-82), the digest timing, the gallery and legal-switch windows and the free allowance., so that on preview day a player sees which new cards fit one deck, each labelled "Preview: legal in Commander from 5 February 2027"; on the day Scryfall turns a set legal, the card data loads without waiting for the owner; and the owner sees, for each release, which rows of a playbook kept as data are done, late or not built yet.
+
+#### AC-73-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Slice 0, no code: previews in the radar and search (D-81), Commander-lens set pages (D-82), the digest timing, the gallery and legal-switch windows and the free allowance.
+
+#### AC-73-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-73-102 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-73-102
+
+As a player, I want **Preview cards, found 2026-11-10 (checked on origin/dev at fee835d8).** Builder search hides them: buildSearchQuery and buildSetSearchQuery (src/lib/scryfall/search.ts) add legal:commander to every query, and Scryfall marks new cards not_legal until close to release., so that on preview day a player sees which new cards fit one deck, each labelled "Preview: legal in Commander from 5 February 2027"; on the day Scryfall turns a set legal, the card data loads without waiting for the owner; and the owner sees, for each release, which rows of a playbook kept as data are done, late or not built yet.
+
+#### AC-73-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then **Preview cards, found 2026-11-10 (checked on origin/dev at fee835d8).** Builder search hides them: buildSearchQuery and buildSetSearchQuery (src/lib/scryfall/search.ts) add legal:commander to every query, and Scryfall marks new cards not_legal until close to release. The editor accepts them without a label: validateCardForDeck (src/lib/deck/validation.ts) checks the stored banned flag, colour identity and copies, and no deck code outside the AI routes reads Scryfall's legalities. The copilot calls them "not legal" with no date: commanderLegalityProblem (src/lib/ai/generated-deck-legality.ts) maps every value but legal to "not legal", and suggestion-evidence.ts sets commanderLegal: false. Done means: releaseStatus and previewQuery as pure functions (slice 1), then an "Include previews" switch off by default, an editor warning that never blocks a save, the copilot's reason Preview, legal from <date> (I-02 points here) and a label on preview images Scryfall marks low-resolution or missing (slice 2).
+
+#### AC-73-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-73-105 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-73-103
+
+As a player, I want the product to setRelease and its milestones, detected from I-67's events, with the 2027 sets seeded from their sources (slice 3); isReleaseLegalitySwitch, so that a set's release-day switch is reported on its own line and not counted toward I-67's threshold of 20 (slice 4), merged before I-67 slice 3's scheduled run meets its first release., so that on preview day a player sees which new cards fit one deck, each labelled "Preview: legal in Commander from 5 February 2027"; on the day Scryfall turns a set legal, the card data loads without waiting for the owner; and the owner sees, for each release, which rows of a playbook kept as data are done, late or not built yet.
+
+#### AC-73-106 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: SetRelease and its milestones, detected from I-67's events, with the 2027 sets seeded from their sources (slice 3); isReleaseLegalitySwitch, so that a set's release-day switch is reported on its own line and not counted toward I-67's threshold of 20 (slice 4), merged before I-67 slice 3's scheduled run meets its first release.
+
+#### AC-73-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-73-108 Edge
+
+Given the same inputs as a previous run
+When the player runs it again
+Then the reported figures match the first run
+
+#### US-73-104
+
+As a player, I want the product to the playbook as typed data with a check per row, /ops/releases in I-69's console, and owner emails at T-30 and on release day (slice 5); a dry run that replays Reality Fracture's timeline in CI with no network, then Nauctis's recorded excerpts (slice 6)., so that on preview day a player sees which new cards fit one deck, each labelled "Preview: legal in Commander from 5 February 2027"; on the day Scryfall turns a set legal, the card data loads without waiting for the owner; and the owner sees, for each release, which rows of a playbook kept as data are done, late or not built yet.
+
+#### AC-73-109 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: The playbook as typed data with a check per row, /ops/releases in I-69's console, and owner emails at T-30 and on release day (slice 5); a dry run that replays Reality Fracture's timeline in CI with no network, then Nauctis's recorded excerpts (slice 6).
+
+#### AC-73-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-73-111 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-73-105
+
+As a player, I want the product to later: one release digest per opted-in player in I-63's "New cards for my decks" (slice 7); Game Changer and bracket-floor flags on radar candidates (slice 8); a precon catalogue version on decklist day (slice 9); Commander-lens set pages, if D-82 says yes and L-49 and L-50 allow (slice 10); a release-week replay against I-71's budgets on a preview deployment (slice 11); an automatic radar for each deck above a free allowance, after I-30's decision (slice 12)., so that on preview day a player sees which new cards fit one deck, each labelled "Preview: legal in Commander from 5 February 2027"; on the day Scryfall turns a set legal, the card data loads without waiting for the owner; and the owner sees, for each release, which rows of a playbook kept as data are done, late or not built yet.
+
+#### AC-73-112 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Later: one release digest per opted-in player in I-63's "New cards for my decks" (slice 7); Game Changer and bracket-floor flags on radar candidates (slice 8); a precon catalogue version on decklist day (slice 9); Commander-lens set pages, if D-82 says yes and L-49 and L-50 allow (slice 10); a release-week replay against I-71's budgets on a preview deployment (slice 11); an automatic radar for each deck above a free allowance, after I-30's decision (slice 12).
+
+#### AC-73-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-73-114 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+### UX states for this feature
+
+The player-visible outcome is: on preview day a player sees which new cards fit one deck, each labelled "Preview: legal in Commander from 5 February 2027"; on the day Scryfall turns a set legal, the card data loads without waiting for the owner; and the owner sees, for each release, which rows of a playbook kept as data are done, late or not built yet.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
+
+### Record moved from the roadmap (2026-11-11)
+
+Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.
+
+## I-73: Every Set Release, Ready On Day One
+
+**Spec:** [`specs/i73-every-set-release-ready-on-day-one.md`](i73-every-set-release-ready-on-day-one.md)
+
+**Outcome:** on preview day a player sees which new cards fit one deck, each labelled "Preview: legal in Commander from 5 February 2027"; on the day Scryfall turns a set legal, the card data loads without waiting for the owner; and the owner sees, for each release, which rows of a playbook kept as data are done, late or not built yet.
+
+**Status:** Next
+**Priority:** Next for slices 0 to 6, so that the first release after I-67's scheduled run does not hold the card data; Later for slices 7 to 11; slice 12, the automatic radar, waits for I-30. Release status, wording, precon pages and the digest stay free
+**Impact / effort:** High / medium
+**Depends on:** nothing for slice 1; I-67 slice 4 for the release calendar (slice 3); I-67 slice 2 for the gate exception (slice 4); I-69 slice 7 for the release page (slice 5); slices 3 to 5 for the dry run (slice 6); I-18 slice 2 and I-63 slices 1 to 3 for the digest (slice 7); I-18 slice 3 and I-48 slice 2 for bracket flags (slice 8); I-17 slice 1 and I-67 slice 13 for decklist day (slice 9); D-82, the lawyer's answer on images, I-34 slice 1 and I-18 slice 3 for set pages (slice 10); I-71 slice 8 for the release-week replay (slice 11); I-30's decision and I-18 slice 5 for the automatic radar (slice 12).
+
+Wizards ships a Commander-relevant set every six to nine weeks, and six are planned for 2027, each reported with four Commander decks ([Wizards, 2026-07-17](https://magic.wizards.com/news/announcements/everything-announced-for-the-magic-multiverse-in-2027)). Each release touches ten initiatives, and each reacts on its own; until this pass the only roadmap line that planned for releases was I-34's publishing calendar, which now belongs to [I-72](i72-growth-loops-referrals-creators-and-return.md). Three things break on the next one. Preview cards are invisible or wrong: on 2026-11-10 the set browser showed 5 of Marvel: Darkhold Destiny's 12 cards, the editor accepts a preview with no mark, and the copilot calls it "not legal" with no date. Card data would be held on the day the new cards turn legal: I-67 holds a file with more than 20 legality events, and Star Trek's three sets bring 467 new Oracle cards. Nobody checks readiness: the served Comprehensive Rules date from 2026-08-07, while Wizards linked a 2026-11-06 version a week before Star Trek's release. I-73 coordinates and does not repeat other initiatives' work; it builds the few pieces nobody owns: one release status, the preview wording, the gate exception, the playbook and the digest.
+
+### Scope
+
+- [ ] Slice 0, no code: previews in the radar and search ([D-81](../owner-decisions.md#product-scope-and-non-goals)), Commander-lens set pages ([D-82](../owner-decisions.md#product-scope-and-non-goals)), the digest timing, the gallery and legal-switch windows and the free allowance.
+- [ ] **Preview cards, found 2026-11-10 (checked on `origin/dev` at `fee835d8`).** Builder search hides them: `buildSearchQuery` and `buildSetSearchQuery` (`src/lib/scryfall/search.ts`) add `legal:commander` to every query, and Scryfall marks new cards `not_legal` until close to release. The editor accepts them without a label: `validateCardForDeck` (`src/lib/deck/validation.ts`) checks the stored banned flag, colour identity and copies, and no deck code outside the AI routes reads Scryfall's legalities. The copilot calls them "not legal" with no date: `commanderLegalityProblem` (`src/lib/ai/generated-deck-legality.ts`) maps every value but `legal` to "not legal", and `suggestion-evidence.ts` sets `commanderLegal: false`. Done means: `releaseStatus` and `previewQuery` as pure functions (slice 1), then an "Include previews" switch off by default, an editor warning that never blocks a save, the copilot's reason `Preview, legal from <date>` ([I-02](i02-checkable-ai-copilot.md) points here) and a label on preview images Scryfall marks low-resolution or missing (slice 2).
+- [ ] `SetRelease` and its milestones, detected from I-67's events, with the 2027 sets seeded from their sources (slice 3); `isReleaseLegalitySwitch`, so that a set's release-day switch is reported on its own line and not counted toward I-67's threshold of 20 (slice 4), merged before I-67 slice 3's scheduled run meets its first release.
+- [ ] The playbook as typed data with a check per row, `/ops/releases` in I-69's console, and owner emails at T-30 and on release day (slice 5); a dry run that replays Reality Fracture's timeline in CI with no network, then Nauctis's recorded excerpts (slice 6).
+- [ ] Later: one release digest per opted-in player in I-63's "New cards for my decks" (slice 7); Game Changer and bracket-floor flags on radar candidates (slice 8); a precon catalogue version on decklist day (slice 9); Commander-lens set pages, if D-82 says yes and L-49 and L-50 allow (slice 10); a release-week replay against I-71's budgets on a preview deployment (slice 11); an automatic radar for each deck above a free allowance, after I-30's decision (slice 12).
+
+### Engineering enablers
+
+- No surface renders "not legal" alone for a `preview` card, across the editor warning, search results and the copilot, and no release module imports an AI client.
+- A fixture with 467 release switches loads through I-67's gate, and the same fixture with 21 other legality changes is held.
+- The Reality Fracture replay passes in CI with no network.
+- The digest writes one event per set per opted-in player, none for a player who opted out, and its payload rejects names and URLs.
+
+**Paid-tier angle:** release status and wording, the preview switch, warnings, precon pages, the radar on request, the digest, set pages, bracket flags and price labels stay free, with no account where public. One candidate, rated medium: an automatic radar for each of the player's decks when previews start and again when the gallery is complete, above a free allowance the owner sets, which needs I-30, L-16 and L-20. Legality, preview status and precon lists are never paid.
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player browsing a set that is not out yet, I want a preview card labelled with the date it becomes legal, so that the editor does not call it simply illegal.
+
+**Acceptance.**
+- Search, the editor and the copilot use one status: legal, preview with a date, or not legal.
+- A preview card can be added and is labelled.
+- A release-day legality change does not trip the card-data hold by itself.
+
+**UX.** The label is on the card row. The set page, if D-82 allows one, is not this slice.
+
+**Data and API.** Status is a pure function of the printing's legality and the set's release date, from I-67 once that load exists, and from the search response until then.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `preview_card_added {labelled: yes}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** On for guests and signed-in players. The same label everywhere. No flag that hides previews in one surface and not another.
+
+**Open questions.** When Scryfall flips a set to legal is observed, not assumed. Universes Beyond images are a lawyer question.
+
+### Definition of done
+
+On a replayed release, a preview card reads "Preview: legal in Commander from 5 February 2027" in search, the editor and the copilot; on the day its set turns legal, the Oracle file loads without the owner's confirmation; and the release page lists every playbook row as done, due, late, skipped or not built.
+
+---
+

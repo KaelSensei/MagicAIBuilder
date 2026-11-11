@@ -2,7 +2,7 @@
 
 > **Status:** Proposed · **Priority:** Next, behind a decision gate: slice 0 (legal answers and the owner's pricing decision) comes before any billing code · **Written 2026-11-09**
 > **Research:** dated notes on monetization, AI product economics and player demand, plus the I-29 legal research. The notes are not committed, so every external fact links its own source in [Sources](#sources). Legal points are research, not legal advice.
-> **Owns:** the line between free and paid, plans and prices, entitlements, AI usage metering and monthly quotas, the billing provider, the subscription lifecycle (checkout, renewal, cancellation, withdrawal, refunds, invoices) and the business metrics. **Does not own:** the paid features themselves — Deck Lab ([I-31](i31-deck-lab.md)), the copilot ([I-02](i02-checkable-ai-copilot.md)), price alerts and carts ([I-32](i32-seller-handoff-and-affiliate-carts.md)), the game log ([I-35](i35-pod-game-log.md)), collection tools ([I-06](../roadmap.md#i-06-collection-and-purchase-planning), [I-16](i16-decks-buildable-from-a-collection.md)), the deck radar ([I-18](i18-per-deck-radar-of-new-cards.md)); affiliate links (I-32); the marketplace decision ([I-33](i33-marketplace-ladder.md)); free data reports ([I-34](i34-commander-data-reports.md)); the choice of an analytics product ([I-05](../roadmap.md#i-05-production-safety)).
+> **Owns:** the line between free and paid, plans and prices, entitlements, AI usage metering and monthly quotas, the billing provider, the subscription lifecycle (checkout, renewal, cancellation, withdrawal, refunds, invoices) and the business metrics. **Does not own:** the paid features themselves — Deck Lab ([I-31](i31-deck-lab.md)), the copilot ([I-02](i02-checkable-ai-copilot.md)), price alerts and carts ([I-32](i32-seller-handoff-and-affiliate-carts.md)), the game log ([I-35](i35-pod-game-log.md)), collection tools ([I-06](i06-collection-and-purchase-planning.md), [I-16](i16-decks-buildable-from-a-collection.md)), the deck radar ([I-18](i18-per-deck-radar-of-new-cards.md)); affiliate links (I-32); the marketplace decision ([I-33](i33-marketplace-ladder.md)); free data reports ([I-34](i34-commander-data-reports.md)); the choice of an analytics product ([I-05](i05-production-safety.md)).
 
 ## Overview
 
@@ -304,3 +304,613 @@ Read 2026-11-09 unless dated otherwise. "Search summary" means the page itself r
 48. Lifetap, [App Store listing](https://apps.apple.com/app/id1508241754); The Pod Companion, [Commander game tracker](https://thepodcompanion.com/commander-game-tracker/), search summary.
 49. Inkborn Forge, [supporter-only Deck Insights](https://inkbornforge.substack.com/p/supporter-feature-deck-insights) for Lorcana, 2026-08-13; added 2026-11-11.
 50. Deckstats, [Premium](https://deckstats.net/premium): first-turn analysis on Premium, as recorded in the [competitive landscape](../competitive-landscape.md) §1; added 2026-11-11.
+
+## Feature contract (Full, 2026-11-11)
+
+The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
+
+### Summary and problem
+
+the owner knows what is free, what is paid, at what price and after which written legal answers, and no player's model calls can cost more than the plan that pays for them.
+
+### Goals
+
+- Every model call is metered and capped per month; the free and paid line is public and was answered in writing by a lawyer before the first charge; card data, deck pages and evidence stay free signed out; and a player can subscribe, cancel online and withdraw as French law requires.
+
+### Non-goals
+
+- Do not reverse a non-goal already named in the moved record or in the roadmap's strategic boundaries.
+- Do not invent a usage count, a win rate, or a score the moved record does not already cite from a named source.
+
+### Personas
+
+See the roadmap persona table. This initiative serves the rows that list its id.
+
+### User stories
+
+#### US-30-01
+
+As a player who might pay, I want to know what is free, what is a usage limit, and what I am paying for, so that card data is not behind the charge.
+
+#### US-30-02
+
+As a signed-out player, I want the guest rule in the rollout to be true, so that I am not shown a control that fails when I have no account.
+
+#### US-30-03
+
+As a player using a keyboard or a screen reader, I want the primary action to have a name and a visible focus, so that colour is not the only signal.
+
+### Acceptance criteria
+
+#### AC-30-01 Happy path
+
+Given a signed-in player and the English locale
+When card data, exports, legality and the evidence on a deck stay reachable without paying.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-30-02 Happy path
+
+Given a signed-in player and the English locale
+When aI calls are metered per account before any charge exists.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-30-03 Happy path
+
+Given a signed-in player and the English locale
+When no billing code runs before the written legal answers are committed.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-30-04 Error and failure
+
+Given the action cannot finish
+When the player retries or leaves the screen
+Then the last confirmed state is unchanged, and the message is a catalogue string rather than a stack trace or a raw status code
+
+#### AC-30-05 Edge cases
+
+Given an empty deck, a missing price, or a field the record says may be absent
+When the screen renders
+Then the empty state says what is missing, and it does not show a zero in place of an unknown value
+
+#### AC-30-06 Guest and signed-in
+
+Given the rollout in this contract
+When a guest and a signed-in player open the same surface
+Then the rollout holds: Metering is signed-in and on. The charge is a flag defaulting to off, and off means the product stays free. Guests do not get a billable action.
+
+#### AC-30-07 Locales
+
+Given the ten catalogs
+When this feature adds a user-facing string
+Then The ten catalogs on disk are `en`, `fr`, `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` (`src/i18n/routing.ts`). Only `en` and `fr` are routed. The other eight stay at key parity with `en` and may reuse the English text until a person who speaks the language reviews them. A new string is not shipped in a routed locale as hard-coded English.
+
+#### AC-30-08 Accessibility
+
+Given a keyboard, a visible focus, and a screen reader
+When the player completes US-30-01 without a pointer
+Then every new control has an accessible name, focus returns on close, and a status uses a word or an icon as well as colour
+
+### UX flow and states
+
+The disclosure page lists where a model is used. A quota warning appears before the call is refused, in both languages.
+
+- Empty: the screen says what is missing and what to do next.
+- Loading: a busy state that does not shift the layout when it ends.
+- Error: the catalogue message and a way to retry, without losing the last confirmed edit.
+
+### Data model and API
+
+Usage rows are I-30's. The charge, later, is a merchant of record, not a card charge we store. Webhooks do not carry a deck.
+
+### Analytics and telemetry
+
+`ai_quota_hit {surface: build or suggest}`. Reserved for I-39. Not emitted before that store exists.
+
+The event is reserved for I-39's store. It is not emitted before that store exists. The row holds counts and enums only: no email, name, username, deck name, card name, list, search text or URL.
+
+### Rollout and feature flags
+
+Metering is signed-in and on. The charge is a flag defaulting to off, and off means the product stays free. Guests do not get a billable action.
+
+### Dependencies
+
+Hard waits are in the roadmap dependency table. Slice edges, where this file has a delivery-slice table, stay in that table and in `dependency-graph.md`.
+
+### Risks and mitigations
+
+- Shipping the surface before its wait is met: the roadmap sequence forbids the pick.
+- A string or a status that only some players can read: the locale and accessibility scenarios above fail the change.
+
+### Kill criteria
+
+None. This initiative is not in the Now band. Stop it if it would reverse a non-goal in the moved record.
+
+### Open questions
+
+Price, the legal entity, and whether a plan may be sold outside the EU stay the owner's and the lawyer's.
+
+### Sources
+
+- https://company.wizards.com/en/legal/fancontentpolicy
+- https://scryfall.com/docs/api
+- https://archidekt.com/faq
+- https://edhrec.com/terms
+- https://deckcheck.co/get-more
+- https://www.manatap.ai/pricing
+- https://mtga.untapped.gg/premium
+- https://entreprendre.service-public.gouv.fr/vosdroits/F33338
+- https://www.lettredesreseaux.com/?p=23453
+- https://cms.law/en/deu/legal-updates/the-odr-platform-is-closing-what-businesses-need-to-know
+- https://www.heuking.de/en/news-events/newsletter-articles/detail/digital-fairness-act-implementation-obligations-companies-need-to-prepare-for.html
+- https://www.vatcalc.com/uk/uk-vat-on-foreign-digital-services/
+
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-30-101
+
+As a player, I want the product to slice 0, no code: commit written answers from a lawyer and an accountant to the spec's legal questions, then the owner's choice of provider, legal structure, price hypothesis (€3.99 a month or €29.99 a year first), withdrawal flow, and whether to ask Wizards for a licence., so that the owner knows what is free, what is paid, at what price and after which written legal answers, and no player's model calls can cost more than the plan that pays for them.
+
+#### AC-30-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Slice 0, no code: commit written answers from a lawyer and an accountant to the spec's legal questions, then the owner's choice of provider, legal structure, price hypothesis (€3.99 a month or €29.99 a year first), withdrawal flow, and whether to ask Wizards for a licence.
+
+#### AC-30-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-30-102 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-30-102
+
+As a player, I want the product to meter every model call through one module: an AiUsage row with tokens, stop_reason, outcome and a cost from a dated price table., so that the owner knows what is free, what is paid, at what price and after which written legal answers, and no player's model calls can cost more than the plan that pays for them.
+
+#### AC-30-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Meter every model call through one module: an AiUsage row with tokens, stop_reason, outcome and a cost from a dated price table. A truncated reply is never parsed as a success (slice 1).
+
+#### AC-30-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-30-105 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-30-103
+
+As a player, I want the product to enforce a monthly allowance per user and route, atomic in PostgreSQL across instances, show what remains before an AI action, and set a global monthly spend ceiling., so that the owner knows what is free, what is paid, at what price and after which written legal answers, and no player's model calls can cost more than the plan that pays for them.
+
+#### AC-30-106 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Enforce a monthly allowance per user and route, atomic in PostgreSQL across instances, show what remains before an AI action, and set a global monthly spend ceiling. Calls that fail on our side consume nothing (slice 2). This closes I-05's quota scope.
+
+#### AC-30-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-30-108 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-30-104
+
+As a player, I want the product to move builds and suggestions to the cheapest adequate model once I-70's comparison report passes on it (slice 3; re-pointed 2026-11-10 from I-02's golden set, which calls no model)., so that the owner knows what is free, what is paid, at what price and after which written legal answers, and no player's model calls can cost more than the plan that pays for them.
+
+#### AC-30-109 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Move builds and suggestions to the cheapest adequate model once I-70's comparison report passes on it (slice 3; re-pointed 2026-11-10 from I-02's golden set, which calls no model).
+
+#### AC-30-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-30-111 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-30-105
+
+As a player, I want the product to an entitlement layer with a single free plan, enforced on the server, that asks for capabilities rather than plan names (slice 4)., so that the owner knows what is free, what is paid, at what price and after which written legal answers, and no player's model calls can cost more than the plan that pays for them.
+
+#### AC-30-112 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: An entitlement layer with a single free plan, enforced on the server, that asks for capabilities rather than plan names (slice 4).
+
+#### AC-30-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-30-114 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-30-106
+
+As a player, I want the product to publish the AI-use disclosure page from I-02's scope (slice 5) and, after slice 0, a public page that explains the free and paid line (slice 6)., so that the owner knows what is free, what is paid, at what price and after which written legal answers, and no player's model calls can cost more than the plan that pays for them.
+
+#### AC-30-115 Happy path
+
+Given a signed-out visitor and a public deck
+When the player uses this behaviour
+Then the behaviour holds: Publish the AI-use disclosure page from I-02's scope (slice 5) and, after slice 0, a public page that explains the free and paid line (slice 6).
+
+#### AC-30-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-30-117 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-30-107
+
+As a player, I want the product to after slice 0: billing in test mode through the chosen provider, webhooks, cancellation online, account deletion that cancels first, and the French withdrawal, renewal-reminder and termination flows (slices 7–8)., so that the owner knows what is free, what is paid, at what price and after which written legal answers, and no player's model calls can cost more than the plan that pays for them.
+
+#### AC-30-118 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: After slice 0: billing in test mode through the chosen provider, webhooks, cancellation online, account deletion that cancels first, and the French withdrawal, renewal-reminder and termination flows (slices 7–8).
+
+#### AC-30-119 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-30-120 Edge
+
+Given the account or the cache this behaviour changes
+When the player signs out or the deletion finishes
+Then the next request does not still show the private data
+
+#### US-30-108
+
+As a player, I want **Decide in slice 0: is any delivery channel ever paid?** I-63 requirement 13.3 says no: a free event delivered by email stays free, and what may be sold is how much a player watches., so that the owner knows what is free, what is paid, at what price and after which written legal answers, and no player's model calls can cost more than the plan that pays for them.
+
+#### AC-30-121 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then **Decide in slice 0: is any delivery channel ever paid?** I-63 requirement 13.3 says no: a free event delivered by email stays free, and what may be sold is how much a player watches. I-51 lists email reminders as a paid hypothesis, and I-59 requirement 9.2 lists the email digest as a paid candidate. The three disagree until this is decided. On I-63's estimate from list prices, 2,000 players on a daily digest send about 60,000 emails a month, about $6 on Amazon SES.
+
+#### AC-30-122 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-30-123 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-30-109
+
+As a player, I want the product to first paid entitlements, a larger AI allowance and early access, then one entitlement per initiative as it ships (slices 9 and 11)., so that the owner knows what is free, what is paid, at what price and after which written legal answers, and no player's model calls can cost more than the plan that pays for them.
+
+#### AC-30-124 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: First paid entitlements, a larger AI allowance and early access, then one entitlement per initiative as it ships (slices 9 and 11).
+
+#### AC-30-125 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-30-126 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-30-110
+
+As a player, I want the product to after slice 0, a pod pass: one member's plan unlocks the paid tools for the whole pod., so that the owner knows what is free, what is paid, at what price and after which written legal answers, and no player's model calls can cost more than the plan that pays for them.
+
+#### AC-30-127 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: After slice 0, a pod pass: one member's plan unlocks the paid tools for the whole pod. On 2025-12-02 Playgroup.gg gave every playgroup one free league and said that "only _one_ member in a playgroup needs a Supporter Pack" to unlock unlimited leagues (post). This initiative has no group plan, while pods are already a unit in I-15, I-35, I-41, I-44 and I-51, and one subscriber in a pod of four spreads one price across four players. The pass sells computation and capacity only, such as Deck Lab runs on the pod's decks, pod history beyond a free window and game-night aids, never card data or evidence.
+
+#### AC-30-128 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-30-129 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-30-111
+
+As a player, I want the product to an owner-only metrics page computed from our own database: active accounts, conversion, churn, AI cost per user and net revenue (slice 10)., so that the owner knows what is free, what is paid, at what price and after which written legal answers, and no player's model calls can cost more than the plan that pays for them.
+
+#### AC-30-130 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: An owner-only metrics page computed from our own database: active accounts, conversion, churn, AI cost per user and net revenue (slice 10).
+
+#### AC-30-131 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-30-132 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-30-112
+
+As a player, I want the product to if slice 0 says no: a supporter page with nothing gated, labelled sponsorships, affiliate income through I-32, and one AI allowance for everyone (slice 12)., so that the owner knows what is free, what is paid, at what price and after which written legal answers, and no player's model calls can cost more than the plan that pays for them.
+
+#### AC-30-133 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: If slice 0 says no: a supporter page with nothing gated, labelled sponsorships, affiliate income through I-32, and one AI allowance for everyone (slice 12).
+
+#### AC-30-134 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-30-135 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-30-113
+
+As a player, I want the product to pod pass: add a second dated precedent., so that the owner knows what is free, what is paid, at what price and after which written legal answers, and no player's model calls can cost more than the plan that pays for them.
+
+#### AC-30-136 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Pod pass: add a second dated precedent. Decks of KeyForge has sold "Team Decks" for "$5+ a month" since release 4.18 (2020-04-09, bundle). Added 2026-11-11.
+
+#### AC-30-137 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-30-138 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-30-114
+
+As a player, I want the product to price band evidence, 2026:, so that the owner knows what is free, what is paid, at what price and after which written legal answers, and no player's model calls can cost more than the plan that pays for them.
+
+#### AC-30-139 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Price band evidence, 2026:
+
+#### AC-30-140 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-30-141 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-30-115
+
+As a player, I want the product to two paid candidates join D-17 (2026-11-11): I-76 slice 21's collection-wide allocation and I-79's balance run., so that the owner knows what is free, what is paid, at what price and after which written legal answers, and no player's model calls can cost more than the plan that pays for them.
+
+#### AC-30-142 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Two paid candidates join D-17 (2026-11-11): I-76 slice 21's collection-wide allocation and I-79's balance run. D-89 recommends that the pod pass covers table sets, and D-95 that a pod's first comparison stays free, leaving history across versions as the pod-pass candidate.
+
+#### AC-30-143 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-30-144 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+### UX states for this feature
+
+The player-visible outcome is: the owner knows what is free, what is paid, at what price and after which written legal answers, and no player's model calls can cost more than the plan that pays for them.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
+
+### Record moved from the roadmap (2026-11-11)
+
+Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.
+
+# Business, Reference And Depth
+
+The eight initiatives below were added on 2026-11-09 from a dated research pass on the owner's goals, summarised under [Product Direction](#owner-ambition-and-business-model-2026-11-09). Unlike the 2027 horizon above, they mix priorities: I-30, I-31, I-32 and I-37 are Next, I-34 is Next for the slices that need no deck index, I-35 and I-36 are Later, and I-33 is a decision record parked for the owner. Each has a spec. The research notes are not committed, so every spec links its own sources. Legal points in them are research, not legal advice.
+
+I-55 and I-57 joined this part on 2026-11-10, from a fourth research pass, after I-37: several builds of one deck, and the printing each card gets, are editor depth. I-57 is Next, and I-55 is Next for slices 1 to 7 and 9.
+
+I-58 followed the same day, from a fifth pass, after I-57: a land base is deckbuilding depth, and its apply follows I-57's diff-and-apply pattern. It is Next for slices 1 to 9.
+
+I-65 joined from a seventh pass that day, after I-58: a map of how the deck wins is analysis of the player's own list, beside I-31's lab and I-58's land check. It is Next for slices 1 to 11, with slice 8 blocked for release on the Tagger licence, and its single-deck map stays free.
+
+I-76 and I-78 joined this part on 2026-11-11, from an eleventh pass. I-76 sits directly after I-58, because it applies a completion through I-58's reviewed change set, and I-78 directly after I-65, because table effects reuse I-65's definition format. I-76 is Next for slices 0 to 16 and I-78 for slices 1 to 3; one deck's completion and one deck's table profile stay free.
+
+Two rules hold across all eight. Card data, fan content and the evidence the product shows stay free, under the [Wizards Fan Content Policy](https://company.wizards.com/en/legal/fancontentpolicy) and [Scryfall's API terms](https://scryfall.com/docs/api): a paid tier sells usage and personal tools, and only after I-30's legal gate. Each initiative names its paid-tier candidate and leaves the decision to I-30. The marketplace non-goal stays in force: I-32 builds the rungs that fit it, and I-33 names the one that would reverse it.
+
+---
+
+## I-30: Business Model And The Paid Tier
+
+**Spec:** [`specs/i30-business-model-and-paid-tier.md`](i30-business-model-and-paid-tier.md)
+
+**Outcome:** the owner knows what is free, what is paid, at what price and after which written legal answers, and no player's model calls can cost more than the plan that pays for them.
+
+**Status:** Next
+**Priority:** Next, behind a decision gate: slice 0 (written legal answers and the owner's pricing decision) comes before any billing code
+**Impact / effort:** High / large
+**Depends on:** a French IP/IT and consumer lawyer and an accountant for slice 0; I-70 slices 10 and 11 for the model change (slice 3), which wait for the owner's caps on live runs (re-pointed 2026-11-10 from I-02's golden set, which calls no model); I-71 slice 12's readiness check for the first paid entitlements (slice 9), which therefore wait for Later work (added 2026-11-10).
+
+The owner wants a cheap SaaS that pays a decent living while the competition is almost free. Free reference sites sell ad removal for about 2 USD a month through Patreon ([Archidekt](https://archidekt.com/faq), [EDHREC](https://edhrec.com/terms)), which is a donation, not a product. Subscriptions at 3–8 USD a month or 30–50 USD a year sell AI usage, price tooling and personal history ([DeckCheck](https://deckcheck.co/get-more), [ManaTap](https://www.manatap.ai/pricing), [Untapped.gg](https://mtga.untapped.gg/premium)), and paywalls on how many decks or binders a player keeps draw one-star reviews. The Fan Content Policy forbids requiring payment to access fan content and Scryfall forbids paywalling its data, so the line is **content free, tools paid**, and a lawyer confirms it before anyone is charged. No billing, entitlement or monthly quota exists today; the only AI limits are per minute, in a per-instance memory store (`src/lib/rate-limit.ts`). The spec's computed case: on stated assumptions, a living wage needs about 1,200–1,800 paying subscribers and 30,000–60,000 active accounts, and is never reached if the free AI allowance is generous and the model stays on today's price.
+
+**Never paid:** card data and images, search, deck pages, building, importing, exporting and sharing, guides, data reports, the bracket check, the index, the evidence behind any result, and how many decks, folders, collection cards or snapshots a player keeps. **Candidates**, each decided when its initiative ships: AI above a free allowance (I-02), price alerts above a free allowance (I-59, which took over I-32's price watch), automatic deck watch (I-18), history across snapshots (I-07, I-21), collection-scale tools (I-06, I-16), Deck Lab variants (I-31), game-log trends (I-35), creator analytics (I-36), longer editor history (I-37) and early access.
+
+### Scope
+
+- [ ] Slice 0, no code: commit written answers from a lawyer and an accountant to the spec's legal questions, then the owner's choice of provider, legal structure, price hypothesis (€3.99 a month or €29.99 a year first), withdrawal flow, and whether to ask Wizards for a licence.
+  - Running costs come from [I-66](i66-running-costs-and-margin.md), proposed 2026-11-10. The spec's assumption A2, €150 a month of fixed costs, now cites I-66 requirement 5: about €40–44 a month before VAT for Vercel Pro, Supabase Pro and a domain, or €62–67 with Sentry Team; €150 holds only once I-29's index server exists. With hosting counted, 22 monthly or 33 yearly payers cover that floor, and a living takes about 1,230 monthly or 1,870 yearly payers, beside this spec's own 1,200 and 1,770. Vercel's Hobby plan forbids commercial use, so hosting moves to Pro before the first paid plan (slice 9) or any ad.
+  - The lawyer questions of every initiative are collected in [`legal-questions.md`](../legal-questions.md) (2026-11-10), research for counsel and not legal advice. The product's name, built on "Magic", a Wizards of the Coast trademark, joined the spec's list that day.
+  - [ ] **Terms of sale for a consumer subscription (gap sweep, 2026-11-10).** Every French professional selling to consumers must offer free mediation (Code de la consommation L612-1) and say so (L616-1) ([Service-Public](https://entreprendre.service-public.gouv.fr/vosdroits/F33338), search summary); a secondary source adds that the mediator must be contracted beforehand and listed by the CECMC ([Lettre des réseaux](https://www.lettredesreseaux.com/?p=23453), search summary). The EU ODR link duty ended on 2025-07-20 ([CMS](https://cms.law/en/deu/legal-updates/the-odr-platform-is-closing-what-businesses-need-to-know), search summary), and the planned Digital Fairness Act targets cancellation, auto-renewal and trial conversion ([Heuking](https://www.heuking.de/en/news-events/newsletter-articles/detail/digital-fairness-act-implementation-obligations-companies-need-to-prepare-for.html), 2026-05-08, search summary). Lawyer questions [L-41](../legal-questions.md#l-41-consumer-mediation) and [L-42](../legal-questions.md#l-42-conformity-guarantee-price-rises-and-feature-removals).
+    - [ ] Slice 0: decide who the seller of record is. If the owner sells directly, contract with a listed consumer mediator before the first sale. Done means: the contract or the merchant of record's written position is committed under `docs/legal/`, and the mediator's name and website appear in the terms of sale and the footer.
+    - [ ] A versioned `LegalDocument` slug `sale` (I-38 table 1.5) covering price, renewal, cancellation, withdrawal, the legal conformity guarantee for a digital service, and how a price rise or a feature removal is notified. Done means: signup and checkout record the accepted version, and a test proves that a price change cannot take effect before its notice date has passed.
+    - [ ] No ODR link anywhere, and a dated note here to re-check the subscription flow once the Digital Fairness Act proposal is published. Done means: the note carries the publication date and a verdict.
+  - [ ] **Selling outside the EU (gap sweep, 2026-11-10).** Add the non-EU tax position to the merchant-of-record versus Stripe comparison: secondary sources say a business with no UK establishment must register for UK VAT from its first digital sale to a UK consumer, with no threshold ([VATCalc](https://www.vatcalc.com/uk/uk-vat-on-foreign-digital-services/), search summary; confirm on GOV.UK). Done means: the accountant's answer to [L-46](../legal-questions.md#l-46-selling-outside-the-eu-and-invoicing-business-buyers-accountant) is committed, and if Stripe is chosen, checkout refuses countries where no registration exists.
+- [ ] Meter every model call through one module: an `AiUsage` row with tokens, `stop_reason`, outcome and a cost from a dated price table. A truncated reply is never parsed as a success (slice 1).
+- [ ] Enforce a monthly allowance per user and route, atomic in PostgreSQL across instances, show what remains before an AI action, and set a global monthly spend ceiling. Calls that fail on our side consume nothing (slice 2). This closes I-05's quota scope.
+  - Since 2026-11-10 the ceiling's switch-off writes through [I-69](i69-operator-console-support-moderation-and-kill-switches.md)'s switch store (its slice 6), so the owner can lower the ceiling or switch AI off without a deploy, never raise it.
+- [ ] Move builds and suggestions to the cheapest adequate model once [I-70](i70-ai-quality-bench-and-model-changes.md)'s comparison report passes on it (slice 3; re-pointed 2026-11-10 from I-02's golden set, which calls no model).
+- [ ] An entitlement layer with a single free plan, enforced on the server, that asks for capabilities rather than plan names (slice 4).
+- [ ] Publish the AI-use disclosure page from I-02's scope (slice 5) and, after slice 0, a public page that explains the free and paid line (slice 6).
+  - [ ] **Dated 2026-11-10, the AI Act (Art. 50).** Sources read that day agree that Article 50 applies from 2026-08-02 and that the AI Omnibus gave generative systems already on the market before that date until 2026-12-02 for machine-readable marking (Art. 50(2)); they disagree on whether the Omnibus text is formally adopted ([Goodwin](https://www.goodwinlaw.com/en/insights/publications/2026/08/alerts-technology-dpc-eu-ai-act-transparency-obligations-now-in-force), 2026-08-03; [FEDIL](https://fedil.lu/en/publications/ai-act-update-enforcement-begins-as-the-digital-omnibus-reshapes-the-timeline/), search summary). Research, not legal advice: check the Official Journal text, and ask [L-40](../legal-questions.md#l-40-the-ai-acts-transparency-duties-art-50). The copilot labels its output "AI Suggestions" (`src/messages/en/deck.json`), and no disclosure page exists (gap sweep).
+    - [ ] Map each model surface (build, suggest, card questions, I-47's later retrieval) to the Art. 50 paragraph it falls under, and publish that map on the disclosure page. Done means: the page is live in English and French, names the provider and model, cites Art. 50, and a test fails when a route under `src/app/api/ai/` has no row in the map.
+    - [ ] Store an origin of `ai` on every saved item a model produced (deck proposal, suggestion text), and carry it into the JSON export and `/api/v1` as a machine-readable field. Done means: contract tests over every export format, shipped before 2026-12-02 unless counsel answers L-40 otherwise.
+    - [ ] Keep the label on an AI-built deck after it is saved and made public, until the owner edits it past a stated threshold. Done means: the public deck page shows "Built with AI help" with a link to the disclosure page.
+- [ ] After slice 0: billing in test mode through the chosen provider, webhooks, cancellation online, account deletion that cancels first, and the French withdrawal, renewal-reminder and termination flows (slices 7–8).
+  - The cancellation and renewal emails go through [I-63](i63-one-notification-system.md)'s transactional stream (its slice 7), and the renewal reminder is timed by its job route (slice 5). [I-64](i64-help-centre-and-guidance.md) slice 13's subscription articles ship in the same release, so cancellation and withdrawal are explained the day a player can pay.
+- [ ] **Decide in slice 0: is any delivery channel ever paid?** [I-63](i63-one-notification-system.md) requirement 13.3 says no: a free event delivered by email stays free, and what may be sold is how much a player watches. [I-51](i51-cards-lent-and-borrowed.md) lists email reminders as a paid hypothesis, and [I-59](i59-prices-over-time-and-alerts.md) requirement 9.2 lists the email digest as a paid candidate. The three disagree until this is decided. On I-63's estimate from list prices, 2,000 players on a daily digest send about 60,000 emails a month, about $6 on Amazon SES.
+- [ ] First paid entitlements, a larger AI allowance and early access, then one entitlement per initiative as it ships (slices 9 and 11).
+  - Slice 9 waits for [I-71](i71-speed-uptime-and-recovery.md) slice 12's readiness check: a restore drill passed in the last 90 days, the status page and the 99.5% history public, and a player's own data export (added 2026-11-10).
+- [ ] After slice 0, a pod pass: one member's plan unlocks the paid tools for the whole pod. On 2025-12-02 Playgroup.gg gave every playgroup one free league and said that "only _one_ member in a playgroup needs a Supporter Pack" to unlock unlimited leagues ([post](https://playgroup.gg/posts/96-rewind-2025-playgroup-leagues-and-more)). This initiative has no group plan, while pods are already a unit in I-15, I-35, I-41, I-44 and I-51, and one subscriber in a pod of four spreads one price across four players. The pass sells computation and capacity only, such as Deck Lab runs on the pod's decks, pod history beyond a free window and game-night aids, never card data or evidence.
+- Moved 2026-11-10: the referral credit, still after slice 9 and [L-43](../legal-questions.md#l-43-referral-and-creator-rewards), is now [I-72](i72-growth-loops-referrals-creators-and-return.md)'s slices 11 and 12: the code, the ledger applied from the provider webhook after the withdrawal window, the yearly cap, the exclusion of accounts without the adult declaration and the labelling text in English and French.
+- [ ] An owner-only metrics page computed from our own database: active accounts, conversion, churn, AI cost per user and net revenue (slice 10).
+  - Its cost section is [I-66](i66-running-costs-and-margin.md)'s: stored monthly costs per provider, cost per active player, per stored account and per payer, and the plan limits with the least headroom (I-66 slice 9).
+  - The page sits behind [I-69](i69-operator-console-support-moderation-and-kill-switches.md)'s `requireOperator` once its slice 1 exists, in I-69's console at `/ops` (2026-11-10).
+- [ ] If slice 0 says no: a supporter page with nothing gated, labelled sponsorships, affiliate income through I-32, and one AI allowance for everyone (slice 12).
+- [ ] Pod pass: add a second dated precedent. Decks of KeyForge has sold "Team Decks" for "$5+ a month" since release 4.18 (2020-04-09, [bundle](https://decksofkeyforge.com/static/js/main.b8088841.js)). Added 2026-11-11.
+- [ ] Price band evidence, 2026:
+  - Untap AI sells a Claude-powered Commander coach at 4.99 USD a month or 49.99 a year ([App Store](https://apps.apple.com/app/id6768833564), 2026-05-26).
+  - Kraken Pro costs $4.99 a month ([site](https://krakenthemeta.com/), seen 2026-11-10).
+  - Commander Bracket Pro costs $5.99 or $54.99.
+  - Mythic Tools' Mythic+ costs 9.99 USD a month, and reviewers call it "bonkers" ([reviews](https://itunes.apple.com/us/rss/customerreviews/page=1/id=1669698500/sortby=mostrecent/json), 2026-06-16). Added 2026-11-11.
+- [ ] Two paid candidates join [D-17](../owner-decisions.md#money-and-plans) (2026-11-11): [I-76](i76-complete-this-deck-from-my-collection.md) slice 21's collection-wide allocation and [I-79](i79-table-sets.md)'s balance run. [D-89](../owner-decisions.md#product-scope-and-non-goals) recommends that the pod pass covers table sets, and [D-95](../owner-decisions.md#money-and-plans) that a pod's first comparison stays free, leaving history across versions as the pod-pass candidate.
+
+### Engineering enablers
+
+- A test fails when any file outside the metered module calls a model endpoint.
+- Concurrent calls at `limit − 1` let exactly one through, and the period rolls over in UTC.
+- A guard test lists the only modules allowed to check an entitlement, and every always-free surface renders signed out.
+- Expiry or downgrade deletes nothing. Webhooks are signature-verified, stored once and applied idempotently.
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player who might pay, I want to know what is free, what is a usage limit, and what I am paying for, so that card data is not behind the charge.
+
+**Acceptance.**
+- Card data, exports, legality and the evidence on a deck stay reachable without paying.
+- AI calls are metered per account before any charge exists.
+- No billing code runs before the written legal answers are committed.
+
+**UX.** The disclosure page lists where a model is used. A quota warning appears before the call is refused, in both languages.
+
+**Data and API.** Usage rows are I-30's. The charge, later, is a merchant of record, not a card charge we store. Webhooks do not carry a deck.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `ai_quota_hit {surface: build or suggest}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Metering is signed-in and on. The charge is a flag defaulting to off, and off means the product stays free. Guests do not get a billable action.
+
+**Open questions.** Price, the legal entity, and whether a plan may be sold outside the EU stay the owner's and the lawyer's.
+
+### Definition of done
+
+Every model call is metered and capped per month; the free and paid line is public and was answered in writing by a lawyer before the first charge; card data, deck pages and evidence stay free signed out; and a player can subscribe, cancel online and withdraw as French law requires.
+
+---
+

@@ -1,8 +1,8 @@
 # I-32: Seller Handoff, Affiliate Links And Buy-This-Deck Carts
 
 > **Initiative:** I-32, proposed for the [roadmap](../roadmap.md) · **Status:** Proposed 2026-11-09 · **Priority:** Next · Written 2026-11-09
-> **Extends:** [I-06](../roadmap.md#i-06-collection-and-purchase-planning), which already lists "Add region-aware price providers, starting with a clearly selected market" and "Export or deep-link the acquisition plan to supported regional sellers while preserving printing, condition and finish choices". I-32 is the detailed plan for both, plus the per-vendor breakdown.
-> **Owns:** the seller registry, the disclosure page, affiliate links, the market choice and its dated prices, cart handoffs, plan splitting, and the price watch. **Does not own:** ownership and acquire state (I-06), free-copies mode ([I-16](i16-decks-buildable-from-a-collection.md)), budget bundles ([I-17](i17-precon-path-and-tiered-upgrades.md)), currency formatting ([I-11](../roadmap.md#i-11-localization-and-regional-experience)), the Scryfall bulk job ([I-29](i29-cross-site-deck-index.md) slice 1), billing ([I-30](i30-business-model-and-paid-tier.md)), and the marketplace decision ([I-33](i33-marketplace-ladder.md)).
+> **Extends:** [I-06](i06-collection-and-purchase-planning.md), which already lists "Add region-aware price providers, starting with a clearly selected market" and "Export or deep-link the acquisition plan to supported regional sellers while preserving printing, condition and finish choices". I-32 is the detailed plan for both, plus the per-vendor breakdown.
+> **Owns:** the seller registry, the disclosure page, affiliate links, the market choice and its dated prices, cart handoffs, plan splitting, and the price watch. **Does not own:** ownership and acquire state (I-06), free-copies mode ([I-16](i16-decks-buildable-from-a-collection.md)), budget bundles ([I-17](i17-precon-path-and-tiered-upgrades.md)), currency formatting ([I-11](i11-localization-and-regional-experience.md)), the Scryfall bulk job ([I-29](i29-cross-site-deck-index.md) slice 1), billing ([I-30](i30-business-model-and-paid-tier.md)), and the marketplace decision ([I-33](i33-marketplace-ladder.md)).
 > **Research:** two dated notes (marketplace path; monetization), plus fetches made on 2026-11-09. The notes are not committed, so every external fact cites its own source. Legal points are research, not legal advice.
 
 ## Overview
@@ -288,3 +288,408 @@ All pages were read on 2026-11-09 unless another date is given. "Search summary"
 [33]: https://www.mtggoldfish.com/premium
 [34]: https://topdecked.com/articles/powered-features
 [35]: https://edhrec.com/articles/?p=107636
+
+## Feature contract (Full, 2026-11-11)
+
+The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
+
+### Summary and problem
+
+a player sends the exact printings still missing across their decks, net of owned copies, to a seller's cart or wants list, priced for the market they chose, with any affiliate link labelled where they click.
+
+### Goals
+
+- From the acquisition plan, a player picks a market and a seller and reaches that seller's cart or wants list with every line mapped or listed as unmapped, prices dated in the market's currency, and any affiliate relationship labelled at the click and listed on the disclosure page.
+
+### Non-goals
+
+- Do not reverse a non-goal already named in the moved record or in the roadmap's strategic boundaries.
+- Do not invent a usage count, a win rate, or a score the moved record does not already cite from a named source.
+
+### Personas
+
+See the roadmap persona table. This initiative serves the rows that list its id.
+
+### User stories
+
+#### US-32-01
+
+As a player ready to buy the missing cards, I want the exact printings sent to a seller's cart in the market I chose, so that an affiliate link is labelled where I click it.
+
+#### US-32-02
+
+As a signed-out player, I want the guest rule in the rollout to be true, so that I am not shown a control that fails when I have no account.
+
+#### US-32-03
+
+As a player using a keyboard or a screen reader, I want the primary action to have a name and a visible focus, so that colour is not the only signal.
+
+### Acceptance criteria
+
+#### AC-32-01 Happy path
+
+Given a signed-in player and the English locale
+When the handoff lists printing, quantity and the market.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-32-02 Happy path
+
+Given a signed-in player and the English locale
+When copies owned across decks are already subtracted.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-32-03 Happy path
+
+Given a signed-in player and the English locale
+When any affiliate parameter is visible on the link, not only in a footer.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-32-04 Error and failure
+
+Given the action cannot finish
+When the player retries or leaves the screen
+Then the last confirmed state is unchanged, and the message is a catalogue string rather than a stack trace or a raw status code
+
+#### AC-32-05 Edge cases
+
+Given an empty deck, a missing price, or a field the record says may be absent
+When the screen renders
+Then the empty state says what is missing, and it does not show a zero in place of an unknown value
+
+#### AC-32-06 Guest and signed-in
+
+Given the rollout in this contract
+When a guest and a signed-in player open the same surface
+Then the rollout holds: Signed-in. Guests get no handoff. Affiliate codes stay off until the seller and the lawyer agree.
+
+#### AC-32-07 Locales
+
+Given the ten catalogs
+When this feature adds a user-facing string
+Then The ten catalogs on disk are `en`, `fr`, `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` (`src/i18n/routing.ts`). Only `en` and `fr` are routed. The other eight stay at key parity with `en` and may reuse the English text until a person who speaks the language reviews them. A new string is not shipped in a routed locale as hard-coded English.
+
+#### AC-32-08 Accessibility
+
+Given a keyboard, a visible focus, and a screen reader
+When the player completes US-32-01 without a pointer
+Then every new control has an accessible name, focus returns on close, and a status uses a word or an icon as well as colour
+
+### UX flow and states
+
+The player picks the seller, then leaves for that seller's site. We do not take payment.
+
+- Empty: the screen says what is missing and what to do next.
+- Loading: a busy state that does not shift the layout when it ends.
+- Error: the catalogue message and a way to retry, without losing the last confirmed edit.
+
+### Data model and API
+
+Reads the acquisition plan. Writes nothing on the seller. A regional price needs a source with display rights. Until then the stored USD amount is labelled as such.
+
+### Analytics and telemetry
+
+`seller_handoff_clicked {market: us or eu, affiliate: yes or no}`. Reserved for I-39. Not emitted before that store exists.
+
+The event is reserved for I-39's store. It is not emitted before that store exists. The row holds counts and enums only: no email, name, username, deck name, card name, list, search text or URL.
+
+### Rollout and feature flags
+
+Signed-in. Guests get no handoff. Affiliate codes stay off until the seller and the lawyer agree.
+
+### Dependencies
+
+Hard waits are in the roadmap dependency table. Slice edges, where this file has a delivery-slice table, stay in that table and in `dependency-graph.md`.
+
+### Risks and mitigations
+
+- Shipping the surface before its wait is met: the roadmap sequence forbids the pick.
+- A string or a status that only some players can read: the locale and accessibility scenarios above fail the change.
+
+### Kill criteria
+
+None. This initiative is not in the Now band. Stop it if it would reverse a non-goal in the moved record.
+
+### Open questions
+
+Which seller is first, and whether EUR display rights exist, are open. I-96's two labels are not this handoff.
+
+### Sources
+
+- https://manapool.com/library/platform/2025/05/30/moxfield-manapool-integration.html
+- https://manapool.com/mass-entry-info
+- https://manapool.com/affiliates
+
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-32-101
+
+As a player, I want the product to a seller registry reviewed in pull requests, with no affiliate code active, and a public disclosure page linked from the footer (slice 0)., so that a player sends the exact printings still missing across their decks, net of owned copies, to a seller's cart or wants list, priced for the market they chose, with any affiliate link labelled where they click.
+
+#### AC-32-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A seller registry reviewed in pull requests, with no affiliate code active, and a public disclosure page linked from the footer (slice 0).
+
+#### AC-32-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-32-102 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-32-102
+
+As a player, I want the product to copy-and-open handoffs for Mana Pool, TCGplayer, Cardmarket and Card Kingdom that state what the seller keeps, what must be picked again, and which lines could not be mapped (slice 1)., so that a player sends the exact printings still missing across their decks, net of owned copies, to a seller's cart or wants list, priced for the market they chose, with any affiliate link labelled where they click.
+
+#### AC-32-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Copy-and-open handoffs for Mana Pool, TCGplayer, Cardmarket and Card Kingdom that state what the seller keeps, what must be picked again, and which lines could not be mapped (slice 1).
+
+#### AC-32-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-32-105 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-32-103
+
+As a player, I want the product to dated Scryfall prices in USD and EUR, per finish, with source, date and a stale label after 24 hours, from one job shared with I-29 (slice 2)., so that a player sends the exact printings still missing across their decks, net of owned copies, to a seller's cart or wants list, priced for the market they chose, with any affiliate link labelled where they click.
+
+#### AC-32-106 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Dated Scryfall prices in USD and EUR, per finish, with source, date and a stale label after 24 hours, from one job shared with I-29 (slice 2).
+
+#### AC-32-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-32-108 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-32-104
+
+As a player, I want the product to an explicit EU or US market choice, never inferred from the locale and never converted, with totals by deck, category and price band (slice 3)., so that a player sends the exact printings still missing across their decks, net of owned copies, to a seller's cart or wants list, priced for the market they chose, with any affiliate link labelled where they click.
+
+#### AC-32-109 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: An explicit EU or US market choice, never inferred from the locale and never converted, with totals by deck, category and price band (slice 3). This is I-06's region-aware provider and per-vendor breakdown, limited to the one source we may display.
+
+#### AC-32-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-32-111 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-32-105
+
+As a player, I want the product to finish, minimum condition and exact-or-any printing on each plan line, and a flag on lines owned in another printing (slices 4–5)., so that a player sends the exact printings still missing across their decks, net of owned copies, to a seller's cart or wants list, priced for the market they chose, with any affiliate link labelled where they click.
+
+#### AC-32-112 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Finish, minimum condition and exact-or-any printing on each plan line, and a flag on lines owned in another printing (slices 4–5).
+
+#### AC-32-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-32-114 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-32-106
+
+As a player, I want the product to mana Pool's prefilled link with our affiliate code, a visible label beside every affiliate control, and a setting that removes our codes (slice 6, blocked on approval and the lawyer)., so that a player sends the exact printings still missing across their decks, net of owned copies, to a seller's cart or wants list, priced for the market they chose, with any affiliate link labelled where they click.
+
+#### AC-32-115 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Mana Pool's prefilled link with our affiliate code, a visible label beside every affiliate control, and a setting that removes our codes (slice 6, blocked on approval and the lawyer). Further sellers follow one per pull request (slice 7).
+
+#### AC-32-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-32-117 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-32-107
+
+As a player, I want the product to count handoffs, monthly buyers and wrong-cart reports with no user, deck or IP column, for I-30 and I-33 (slice 8)., so that a player sends the exact printings still missing across their decks, net of owned copies, to a seller's cart or wants list, priced for the market they chose, with any affiliate link labelled where they click.
+
+#### AC-32-118 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Count handoffs, monthly buyers and wrong-cart reports with no user, deck or IP column, for I-30 and I-33 (slice 8).
+
+#### AC-32-119 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-32-120 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-32-108
+
+As a player, I want the product to free-copies and budget-tier handoffs and the CardTrader token flow behind a security review (slices 9–11)., so that a player sends the exact printings still missing across their decks, net of owned copies, to a seller's cart or wants list, priced for the market they chose, with any affiliate link labelled where they click.
+
+#### AC-32-121 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Free-copies and budget-tier handoffs and the CardTrader token flow behind a security review (slices 9–11).
+
+#### AC-32-122 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-32-123 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+### UX states for this feature
+
+The player-visible outcome is: a player sends the exact printings still missing across their decks, net of owned copies, to a seller's cart or wants list, priced for the market they chose, with any affiliate link labelled where they click.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
+
+### Record moved from the roadmap (2026-11-11)
+
+Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.
+
+## I-32: Seller Handoff, Affiliate Links And Buy-This-Deck Carts
+
+**Spec:** [`specs/i32-seller-handoff-and-affiliate-carts.md`](i32-seller-handoff-and-affiliate-carts.md)
+
+**Outcome:** a player sends the exact printings still missing across their decks, net of owned copies, to a seller's cart or wants list, priced for the market they chose, with any affiliate link labelled where they click.
+
+**Status:** Next
+**Priority:** Next
+**Impact / effort:** High / medium
+**Depends on:** I-06's acquisition plan, which ships. Affiliate activation waits for each seller's approval and the lawyer's answer on disclosure; free-copies and budget-tier carts wait for I-16 slice 4 and I-17 slice 6.
+
+I-06 stops one step short of buying: the plan lists missing printings with undated USD estimates, and the player rebuilds the cart by hand from a CSV. A buy button is no longer rare. Moxfield has opened Mana Pool's mass entry since 30 May 2025 ([announcement](https://manapool.com/library/platform/2025/05/30/moxfield-manapool-integration.html)), and the AI builder mtgcommander.ai sends a generated list to a Mana Pool cart in one click ([Mana Pool](https://manapool.com/mass-entry-info)). What sets this initiative apart is what goes into the cart: exact printings, owned copies removed across several decks, budget tiers, a chosen market priced in its own currency, and a labelled affiliate. The income is small: Mana Pool pays 5% of a referred first sale ([affiliates](https://manapool.com/affiliates)). TCGplayer and Cardmarket grant no new API access, so listing-level prices and a cross-seller "cheapest split" are out of reach. This is stages 1 to 3 of the [I-33](i33-marketplace-ladder.md) ladder: MagicAIBuilder never takes payment, never holds a cart and never lists a seller's stock.
+
+### Scope
+
+- [ ] A seller registry reviewed in pull requests, with no affiliate code active, and a public disclosure page linked from the footer (slice 0).
+- [ ] Copy-and-open handoffs for Mana Pool, TCGplayer, Cardmarket and Card Kingdom that state what the seller keeps, what must be picked again, and which lines could not be mapped (slice 1).
+- [ ] Dated Scryfall prices in USD and EUR, per finish, with source, date and a stale label after 24 hours, from one job shared with I-29 (slice 2).
+  - Re-pointed 2026-11-10 to [I-67](i67-one-card-data-pipeline.md) slice 5, which writes every printing's daily price; this slice keeps the labels, the source, the date and the stale rule.
+- [ ] An explicit EU or US market choice, never inferred from the locale and never converted, with totals by deck, category and price band (slice 3). This is I-06's region-aware provider and per-vendor breakdown, limited to the one source we may display.
+- [ ] Finish, minimum condition and exact-or-any printing on each plan line, and a flag on lines owned in another printing (slices 4–5).
+- [ ] Mana Pool's prefilled link with our affiliate code, a visible label beside every affiliate control, and a setting that removes our codes (slice 6, blocked on approval and the lawyer). Further sellers follow one per pull request (slice 7).
+- [ ] Count handoffs, monthly buyers and wrong-cart reports with no user, deck or IP column, for I-30 and I-33 (slice 8).
+- [ ] Free-copies and budget-tier handoffs and the CardTrader token flow behind a security review (slices 9–11).
+- Moved 2026-11-10: the price watch on the player's own plan (requirements 6.3 and 6.4, slice 12) is now [I-59](i59-prices-over-time-and-alerts.md)'s, so that one price series and one alert engine serve every list.
+
+### Engineering enablers
+
+- Randomizing commission fields never changes seller order, and no ordering code reads them.
+- Generated URLs never contain a user ID, deck ID, username or email, and no page loads a third-party affiliate script.
+- A golden fixture per seller covers double-faced, split, foil-only, etched, Secret Lair and unmappable cards.
+- A handoff leaves `CollectionCard` and `AcquisitionIntent` unchanged.
+
+**Paid-tier angle:** prices, the market choice, the plan and every handoff stay free, by Scryfall's paywall clause and because affiliate income depends on click volume. The candidate was a price watch on the player's own plan, with that plan's price history; both moved to [I-59](i59-prices-over-time-and-alerts.md), which proposes the history free and keeps alerts above a free allowance as the candidate.
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player ready to buy the missing cards, I want the exact printings sent to a seller's cart in the market I chose, so that an affiliate link is labelled where I click it.
+
+**Acceptance.**
+- The handoff lists printing, quantity and the market.
+- Copies owned across decks are already subtracted.
+- Any affiliate parameter is visible on the link, not only in a footer.
+
+**UX.** The player picks the seller, then leaves for that seller's site. We do not take payment.
+
+**Data and API.** Reads the acquisition plan. Writes nothing on the seller. A regional price needs a source with display rights. Until then the stored USD amount is labelled as such.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `seller_handoff_clicked {market: us or eu, affiliate: yes or no}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Signed-in. Guests get no handoff. Affiliate codes stay off until the seller and the lawyer agree.
+
+**Open questions.** Which seller is first, and whether EUR display rights exist, are open. I-96's two labels are not this handoff.
+
+### Definition of done
+
+From the acquisition plan, a player picks a market and a seller and reaches that seller's cart or wants list with every line mapped or listed as unmapped, prices dated in the market's currency, and any affiliate relationship labelled at the click and listed on the disclosure page.
+
+---
+

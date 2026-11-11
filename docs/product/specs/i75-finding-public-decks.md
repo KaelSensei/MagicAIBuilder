@@ -2,7 +2,7 @@
 
 > **Initiative:** I-75, proposed for the [roadmap](../roadmap.md) · **Status:** Proposed · **Priority:** Next for slices 0 to 7 and 10 (search, popularity and saved searches on data `dev` already stores); Later for slices 8, 9 and 11 to 14, which wait for I-69, I-54, I-63, I-30, I-67 and I-28 · **Paid:** searching is never paid; alerts beyond a free allowance and their email digest are a candidate for [I-30](i30-business-model-and-paid-tier.md) (requirement 10) · **Written 2026-11-10**
 > **Research:** one dated note of 2026-11-10, not committed. Every external fact links its own entry in [Sources](#sources). Legal points are research, not legal advice; each goes to the lawyer list in [I-30 requirement 7.2](i30-business-model-and-paid-tier.md#7-the-legal-gate) through [I-38](i38-trust-safety-and-user-rights.md)'s slice 0.
-> **Owns:** search and browsing over MagicAIBuilder's own public decks: the query contract and its URL, the filters and sorts, the search projection and its indexes, how popularity is measured and its abuse limits, the author's listing switch, public deck themes, the index rule for search URLs, saved searches and their alerts. **Does not own:** deck visibility, forks, votes, comments and the commander discovery page's place in the product ([I-08](../roadmap.md#i-08-share-compare-and-learn)); decks from other sites, deduplication, "decks like mine", similarity and statistics ([I-29](i29-cross-site-deck-index.md)); the index policy function and its thresholds ([I-34](i34-commander-data-reports.md#4-index-policy)); view counts ([I-36](i36-creator-and-embed-toolkit.md#8-view-counts-and-privacy)); the play-style vocabulary ([I-54](i54-find-your-next-commander.md#4-one-play-style-vocabulary)); the bracket estimate ([I-28](i28-commander-deckbuilding-guide-by-bracket.md)); card keys and dated prices ([I-67](i67-one-card-data-pipeline.md)); delivery of notifications ([I-63](i63-one-notification-system.md)); moderation, blocking, deletion and export (I-38); plans and entitlements (I-30); the shared rate-limit store ([I-05](../roadmap.md#i-05-production-safety) M2).
+> **Owns:** search and browsing over MagicAIBuilder's own public decks: the query contract and its URL, the filters and sorts, the search projection and its indexes, how popularity is measured and its abuse limits, the author's listing switch, public deck themes, the index rule for search URLs, saved searches and their alerts. **Does not own:** deck visibility, forks, votes, comments and the commander discovery page's place in the product ([I-08](i08-share-compare-and-learn.md)); decks from other sites, deduplication, "decks like mine", similarity and statistics ([I-29](i29-cross-site-deck-index.md)); the index policy function and its thresholds ([I-34](i34-commander-data-reports.md#4-index-policy)); view counts ([I-36](i36-creator-and-embed-toolkit.md#8-view-counts-and-privacy)); the play-style vocabulary ([I-54](i54-find-your-next-commander.md#4-one-play-style-vocabulary)); the bracket estimate ([I-28](i28-commander-deckbuilding-guide-by-bracket.md)); card keys and dated prices ([I-67](i67-one-card-data-pipeline.md)); delivery of notifications ([I-63](i63-one-notification-system.md)); moderation, blocking, deletion and export (I-38); plans and entitlements (I-30); the shared rate-limit store ([I-05](i05-production-safety.md) M2).
 > **Proposed changes to neighbours, for the integrator:** I-29 slice 4 ("Deck search over I-08 decks") is delivered by I-75 slices 2, 4, 5 and 6; I-29 slice 4 becomes "indexed external decks as a second corpus behind I-75's query contract, with the source facet". I-08's L6 item (bound the commander discovery query) is delivered by I-75 slice 2. I-36 8.3 stands: views rank nothing. I-34 gains one page kind, the unfiltered deck browse page. I-63 gains one producer, `deck-search.new-matches`.
 
 ## Overview
@@ -272,3 +272,382 @@ Slices 0 and 1 start now and in parallel. Slice 2 alone fixes the unbounded comm
 13. Regulation (EU) 2022/2065, [Article 19](https://www.eu-digital-services-act.com/Digital_Services_Act_Article_19.html), same copy, read 2026-11-10.
 14. Regulation (EU) 2022/2065, [Article 17](https://www.eu-digital-services-act.com/Digital_Services_Act_Article_17.html), same copy, read 2026-11-10.
 15. PostgreSQL 18.6 documentation, [GIN Indexes](https://www.postgresql.org/docs/current/gin.html), read 2026-11-10.
+
+## Feature contract (Full, 2026-11-11)
+
+The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
+
+### Summary and problem
+
+a signed-out player searches MagicAIBuilder's own public decks by commander, colours, cards included and excluded, price with its basis, declared bracket and freshness, sees why each result appears and how each order is computed, and can save a search that says when a new deck matches; an author can keep any public deck out of search.
+
+### Goals
+
+- A signed-out player finds Atraxa decks that play Smothering Tithe but not Rhystic Study, under $150 and updated this year, and sees why each result appears and how the order is computed; an author who turns off "Show in deck search" leaves every result and alert at once; and the commander page reads at most 50 decks through an index, never every deck for the commander.
+
+### Non-goals
+
+- Do not reverse a non-goal already named in the moved record or in the roadmap's strategic boundaries.
+- Do not invent a usage count, a win rate, or a score the moved record does not already cite from a named source.
+
+### Personas
+
+See the roadmap persona table. This initiative serves the rows that list its id.
+
+### User stories
+
+#### US-75-01
+
+As a player looking for a public deck, I want to filter by commander, cards and a price with its basis, so that I can see why a result appeared.
+
+#### US-75-02
+
+As a signed-out player, I want the guest rule in the rollout to be true, so that I am not shown a control that fails when I have no account.
+
+#### US-75-03
+
+As a player using a keyboard or a screen reader, I want the primary action to have a name and a visible focus, so that colour is not the only signal.
+
+### Acceptance criteria
+
+#### AC-75-01 Happy path
+
+Given a signed-in player and the English locale
+When a result says which filters it matched.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-75-02 Happy path
+
+Given a signed-in player and the English locale
+When popularity is not the default order.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-75-03 Happy path
+
+Given a signed-in player and the English locale
+When an author can keep a public deck out of search.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-75-04 Error and failure
+
+Given the action cannot finish
+When the player retries or leaves the screen
+Then the last confirmed state is unchanged, and the message is a catalogue string rather than a stack trace or a raw status code
+
+#### AC-75-05 Edge cases
+
+Given an empty deck, a missing price, or a field the record says may be absent
+When the screen renders
+Then the empty state says what is missing, and it does not show a zero in place of an unknown value
+
+#### AC-75-06 Guest and signed-in
+
+Given the rollout in this contract
+When a guest and a signed-in player open the same surface
+Then the rollout holds: Signed-out. Alerts on a saved search, later, are signed-in and wait on I-63. No flag that changes the order for some players.
+
+#### AC-75-07 Locales
+
+Given the ten catalogs
+When this feature adds a user-facing string
+Then The ten catalogs on disk are `en`, `fr`, `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` (`src/i18n/routing.ts`). Only `en` and `fr` are routed. The other eight stay at key parity with `en` and may reuse the English text until a person who speaks the language reviews them. A new string is not shipped in a routed locale as hard-coded English.
+
+#### AC-75-08 Accessibility
+
+Given a keyboard, a visible focus, and a screen reader
+When the player completes US-75-01 without a pointer
+Then every new control has an accessible name, focus returns on close, and a status uses a word or an icon as well as colour
+
+### UX flow and states
+
+Filters are chips on a signed-out page. A filtered URL is noindex, through I-34. The commander page reads this query instead of loading every deck.
+
+- Empty: the screen says what is missing and what to do next.
+- Loading: a busy state that does not shift the layout when it ends.
+- Error: the catalogue message and a way to retry, without losing the last confirmed edit.
+
+### Data model and API
+
+A search projection, updated in the same transaction as a deck write. Private fields never reach it. The route is rate-limited and cached.
+
+### Analytics and telemetry
+
+`deck_search_run {filters: count, signed_in: yes or no}`. Reserved for I-39. Not emitted before that store exists.
+
+The event is reserved for I-39's store. It is not emitted before that store exists. The row holds counts and enums only: no email, name, username, deck name, card name, list, search text or URL.
+
+### Rollout and feature flags
+
+Signed-out. Alerts on a saved search, later, are signed-in and wait on I-63. No flag that changes the order for some players.
+
+### Dependencies
+
+Hard waits are in the roadmap dependency table. Slice edges, where this file has a delivery-slice table, stay in that table and in `dependency-graph.md`.
+
+### Risks and mitigations
+
+- Shipping the surface before its wait is met: the roadmap sequence forbids the pick.
+- A string or a status that only some players can read: the locale and accessibility scenarios above fail the change.
+
+### Kill criteria
+
+None. This initiative is not in the Now band. Stop it if it would reverse a non-goal in the moved record.
+
+### Open questions
+
+Whether existing public decks are listed by default is D-84. An owned-column for the signed-in viewer is a later slice and is never shown to anyone else.
+
+### Sources
+
+- https://www.reddit.com/r/Moxfield/comments/1xl4te2/
+- https://riftbound.gg/?p=393
+
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-75-101
+
+As a player, I want the product to deckSearchQuery, parsed from and written back to one canonical URL with a fixed key order and limits (slice 0); PublicDeckSearch, one row per public listed deck, kept in step by every route that writes a deck, with a parity test, and the author's "Show in deck search" switch (slice 1)., so that a signed-out player searches MagicAIBuilder's own public decks by commander, colours, cards included and excluded, price with its basis, declared bracket and freshness, sees why each result appears and how each order is computed, and can save a search that says when a new deck matches; an author can keep any public deck out of search.
+
+#### AC-75-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: DeckSearchQuery, parsed from and written back to one canonical URL with a fixed key order and limits (slice 0); PublicDeckSearch, one row per public listed deck, kept in step by every route that writes a deck, with a parity test, and the author's "Show in deck search" switch (slice 1).
+
+#### AC-75-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-75-102 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-75-102
+
+As a player, I want the product to gET /api/community/decks by commander, pair, colours, recency, author and name, sorted by update, listing date or votes, with keyset pages, a 2-second statement timeout, a CDN cache and a rate limit; the commander route reads it, which closes I-08's L6 (slice 2)., so that a signed-out player searches MagicAIBuilder's own public decks by commander, colours, cards included and excluded, price with its basis, declared bracket and freshness, sees why each result appears and how each order is computed, and can save a search that says when a new deck matches; an author can keep any public deck out of search.
+
+#### AC-75-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: GET /api/community/decks by commander, pair, colours, recency, author and name, sorted by update, listing date or votes, with keyset pages, a 2-second statement timeout, a CDN cache and a rate limit; the commander route reads it, which closes I-08's L6 (slice 2).
+
+#### AC-75-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-75-105 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-75-103
+
+As a player, I want the product to a notice to authors of public decks 14 days before launch (slice 3), and /community/decks, signed out, with filter chips, counts on every result and noindex on every filtered URL (slice 4)., so that a signed-out player searches MagicAIBuilder's own public decks by commander, colours, cards included and excluded, price with its basis, declared bracket and freshness, sees why each result appears and how each order is computed, and can save a search that says when a new deck matches; an author can keep any public deck out of search.
+
+#### AC-75-106 Happy path
+
+Given a signed-out visitor and a public deck
+When the player uses this behaviour
+Then the behaviour holds: A notice to authors of public decks 14 days before launch (slice 3), and /community/decks, signed out, with filter chips, counts on every result and noindex on every filtered URL (slice 4). Whether existing public decks are listed by default is D-84.
+
+#### AC-75-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-75-108 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-75-104
+
+As a player, I want the product to cards all of, any of and none of, with names resolved before the query, a GIN index and committed plans at 10,000 and 50,000 decks (slice 5); price with its basis, declared bracket, quality defaults, primer, feedback, original and AI filters, and price sorts (slice 6)., so that a signed-out player searches MagicAIBuilder's own public decks by commander, colours, cards included and excluded, price with its basis, declared bracket and freshness, sees why each result appears and how each order is computed, and can save a search that says when a new deck matches; an author can keep any public deck out of search.
+
+#### AC-75-109 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Cards all of, any of and none of, with names resolved before the query, a GIN index and committed plans at 10,000 and 50,000 decks (slice 5); price with its basis, declared bracket, quality defaults, primer, feedback, original and AI filters, and price sorts (slice 6).
+
+#### AC-75-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-75-111 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-75-105
+
+As a player, I want the product to popularity that resists manipulation: saves, votes and copies count only from eligible accounts (not the author, at least 7 days old, at most 30 counted actions a day), copies over 90 days, computed daily, shown beside every result, explained on "How this order works" and never the default order (slice 7); saved searches with "N new since you last opened it" (slice 10)., so that a signed-out player searches MagicAIBuilder's own public decks by commander, colours, cards included and excluded, price with its basis, declared bracket and freshness, sees why each result appears and how each order is computed, and can save a search that says when a new deck matches; an author can keep any public deck out of search.
+
+#### AC-75-112 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Popularity that resists manipulation: saves, votes and copies count only from eligible accounts (not the author, at least 7 days old, at most 30 counted actions a day), copies over 90 days, computed daily, shown beside every result, explained on "How this order works" and never the default order (slice 7); saved searches with "N new since you last opened it" (slice 10).
+
+#### AC-75-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-75-114 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-75-106
+
+As a player, I want the product to later: anomaly flags into I-38's queue through I-69's view (slice 8); public themes from I-54's vocabulary (slice 9); opt-in alerts on new matches through I-63, paused after 90 days unopened (slice 11), and a paid line for alerts above the allowance (slice 12); I-67's card keys and dated prices (slice 13); the estimated bracket and computed styles as separate facets (slice 14)., so that a signed-out player searches MagicAIBuilder's own public decks by commander, colours, cards included and excluded, price with its basis, declared bracket and freshness, sees why each result appears and how each order is computed, and can save a search that says when a new deck matches; an author can keep any public deck out of search.
+
+#### AC-75-115 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Later: anomaly flags into I-38's queue through I-69's view (slice 8); public themes from I-54's vocabulary (slice 9); opt-in alerts on new matches through I-63, paused after 90 days unopened (slice 11), and a paid line for alerts above the allowance (slice 12); I-67's card keys and dated prices (slice 13); the estimated bracket and computed styles as separate facets (slice 14). I-29 slice 4 adds external decks behind the same contract.
+
+#### AC-75-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-75-117 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-75-107
+
+As a player, I want the product to for the signed-in viewer only, an "owned" column and sort: the share of each list the viewer owns, with "free copies only" as a toggle, read from I-16 slice 4., so that a signed-out player searches MagicAIBuilder's own public decks by commander, colours, cards included and excluded, price with its basis, declared bracket and freshness, sees why each result appears and how each order is computed, and can save a search that says when a new deck matches; an author can keep any public deck out of search.
+
+#### AC-75-118 Happy path
+
+Given a signed-out visitor and a public deck
+When the player uses this behaviour
+Then the behaviour holds: For the signed-in viewer only, an "owned" column and sort: the share of each list the viewer owns, with "free copies only" as a toggle, read from I-16 slice 4. It is never stored on the deck and never shown to others. A reply speaking for Moxfield calls it "something that we get a fair amount of requests for" (r/Moxfield, 2026-11-01). riftbound.gg sorts public decks by "Collection" (guide, updated 2025-07-05). Added 2026-11-11.
+
+#### AC-75-119 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-75-120 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+### UX states for this feature
+
+The player-visible outcome is: a signed-out player searches MagicAIBuilder's own public decks by commander, colours, cards included and excluded, price with its basis, declared bracket and freshness, sees why each result appears and how each order is computed, and can save a search that says when a new deck matches; an author can keep any public deck out of search.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
+
+### Record moved from the roadmap (2026-11-11)
+
+Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.
+
+## I-75: Finding Public Decks
+
+**Spec:** [`specs/i75-finding-public-decks.md`](i75-finding-public-decks.md)
+
+**Outcome:** a signed-out player searches MagicAIBuilder's own public decks by commander, colours, cards included and excluded, price with its basis, declared bracket and freshness, sees why each result appears and how each order is computed, and can save a search that says when a new deck matches; an author can keep any public deck out of search.
+
+**Status:** Next
+**Priority:** Next for slices 0 to 7 and 10, on data `dev` already stores; Later for slices 8, 9 and 11 to 14, which wait for I-69, I-54, I-63, I-30, I-67 and I-28. Searching is never paid; alerts beyond a free allowance are an I-30 candidate
+**Impact / effort:** High / medium
+**Depends on:** nothing for slices 0 and 1; slices 0 and 1 for the search route (slice 2); slice 1 for the launch notice (slice 3); slices 2 and 3 for the browse page (slice 4); slice 2 for the card filters (slice 5) and the other filters (slice 6); I-63 slice 5 for popularity (slice 7); I-69 slice 11 and I-38 slice 10 for anomaly flags (slice 8); I-54 slice 2 for public themes (slice 9); slice 4 for saved searches (slice 10); I-63 slices 1 and 5 for alerts (slice 11); I-30 slice 11 and I-63 slice 10 for the paid line (slice 12); I-67 slices 2 and 5 for card keys and dated prices (slice 13); I-28 slice 2 and I-54 slice 2 for the estimated bracket and styles (slice 14).
+
+A player finds someone else's deck in two ways today: the author's profile, or the commander page, whose route loads every public deck for the commander with all its votes and ratings, ranks them in memory and returns 50, with no rate limit and no cache (`src/app/api/community/commanders/[slug]/decks/route.ts`, checked on `origin/dev` at `fee835d8`; [I-08](i08-share-compare-and-learn.md)'s L6). Nothing else lists public decks across authors, and `Deck.tags` is owner data that `PUBLIC_DECK_SELECT` keeps private. Archidekt's deck search sorts by views among other orders and shows "1000+" results, and Moxfield, read through an unofficial client because its pages answered 403, sorts by likes and views; neither says who counts or over what window. None found offers exclusion filters with and/or, a price with its basis, declared and estimated bracket apart, or an alert on a saved search. [I-29](i29-cross-site-deck-index.md) already describes most of these filters, but it is a 2027 horizon, waits for I-67's keys and a 10-million-deck benchmark, and rules popularity out of sorting. I-75 owns the query contract and the native corpus now, on the production PostgreSQL, and I-29's external decks join later behind the same contract. On Supabase Free every query must read an index, never the whole `DeckCard` table.
+
+### Scope
+
+- [ ] `DeckSearchQuery`, parsed from and written back to one canonical URL with a fixed key order and limits (slice 0); `PublicDeckSearch`, one row per public listed deck, kept in step by every route that writes a deck, with a parity test, and the author's "Show in deck search" switch (slice 1).
+- [ ] `GET /api/community/decks` by commander, pair, colours, recency, author and name, sorted by update, listing date or votes, with keyset pages, a 2-second statement timeout, a CDN cache and a rate limit; the commander route reads it, which closes I-08's L6 (slice 2).
+- [ ] A notice to authors of public decks 14 days before launch (slice 3), and `/community/decks`, signed out, with filter chips, counts on every result and `noindex` on every filtered URL (slice 4). Whether existing public decks are listed by default is [D-84](../owner-decisions.md#product-scope-and-non-goals).
+- [ ] Cards all of, any of and none of, with names resolved before the query, a GIN index and committed plans at 10,000 and 50,000 decks (slice 5); price with its basis, declared bracket, quality defaults, primer, feedback, original and AI filters, and price sorts (slice 6).
+- [ ] Popularity that resists manipulation: saves, votes and copies count only from eligible accounts (not the author, at least 7 days old, at most 30 counted actions a day), copies over 90 days, computed daily, shown beside every result, explained on "How this order works" and never the default order (slice 7); saved searches with "N new since you last opened it" (slice 10).
+- [ ] Later: anomaly flags into I-38's queue through I-69's view (slice 8); public themes from I-54's vocabulary (slice 9); opt-in alerts on new matches through I-63, paused after 90 days unopened (slice 11), and a paid line for alerts above the allowance (slice 12); I-67's card keys and dated prices (slice 13); the estimated bracket and computed styles as separate facets (slice 14). I-29 slice 4 adds external decks behind the same contract.
+- [ ] For the signed-in viewer only, an "owned" column and sort: the share of each list the viewer owns, with "free copies only" as a toggle, read from I-16 slice 4. It is never stored on the deck and never shown to others. A reply speaking for Moxfield calls it "something that we get a fair amount of requests for" ([r/Moxfield](https://www.reddit.com/r/Moxfield/comments/1xl4te2/), 2026-11-01). riftbound.gg sorts public decks by "Collection" ([guide](https://riftbound.gg/?p=393), updated 2025-07-05). Added 2026-11-11.
+
+### Engineering enablers
+
+- Private, share-only, hidden, unlisted and deleted decks never appear, each change removes the row in the same transaction, and `budget`, `manualBracket`, tags and card notes never reach the row or the response.
+- Card, colour and price filters match a brute-force reference over the same corpus.
+- The author, young, restricted and blocked accounts count zero, the 31st action of a day counts zero, and an entitlement change leaves every count and order unchanged.
+- At most 500 ms at p95 and three SQL statements per request on 10,000 and 50,000 synthetic decks, with committed `EXPLAIN` plans.
+
+**Paid-tier angle:** search, filters, sorts, results, the browse page and saved searches are free and need no account. One candidate for I-30: alerts on more saved searches than a free allowance, three proposed, and the alert email digest through I-63 slice 10, as I-59 proposes for price alerts. No competitor found alerts on a deck search, and every deck an alert names stays reachable through the free search. Paying never changes a count, eligibility, order or placement.
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player looking for a public deck, I want to filter by commander, cards and a price with its basis, so that I can see why a result appeared.
+
+**Acceptance.**
+- A result says which filters it matched.
+- Popularity is not the default order.
+- An author can keep a public deck out of search.
+
+**UX.** Filters are chips on a signed-out page. A filtered URL is noindex, through I-34. The commander page reads this query instead of loading every deck.
+
+**Data and API.** A search projection, updated in the same transaction as a deck write. Private fields never reach it. The route is rate-limited and cached.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `deck_search_run {filters: count, signed_in: yes or no}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Signed-out. Alerts on a saved search, later, are signed-in and wait on I-63. No flag that changes the order for some players.
+
+**Open questions.** Whether existing public decks are listed by default is D-84. An owned-column for the signed-in viewer is a later slice and is never shown to anyone else.
+
+### Definition of done
+
+A signed-out player finds Atraxa decks that play Smothering Tithe but not Rhystic Study, under $150 and updated this year, and sees why each result appears and how the order is computed; an author who turns off "Show in deck search" leaves every result and alert at once; and the commander page reads at most 50 decks through an index, never every deck for the commander.
+
+---
+
