@@ -11,9 +11,11 @@
  * @module collection/parse
  */
 
-import type { CollectionCard, CardCondition } from "./types";
-
-const VALID_CONDITIONS = new Set(["NM", "LP", "MP", "HP", "DMG"]);
+import {
+  CARD_CONDITIONS,
+  type CollectionCard,
+  type CardCondition,
+} from "./types";
 
 /**
  * Parses a card condition from an unknown value.
@@ -22,8 +24,7 @@ const VALID_CONDITIONS = new Set(["NM", "LP", "MP", "HP", "DMG"]);
  * @returns the condition, or null when absent or unrecognised
  */
 export function parseCondition(v: unknown): CardCondition | null {
-  if (typeof v === "string" && VALID_CONDITIONS.has(v)) return v as CardCondition;
-  return null;
+  return CARD_CONDITIONS.find((condition) => condition === v) ?? null;
 }
 
 /**

@@ -3,6 +3,7 @@
  * sanitiser that turns client text into one bounded line of prompt data.
  */
 import { z } from "zod";
+import { COLOR_SYMBOLS } from "@/lib/mana/colors";
 
 /**
  * A run of whitespace or control characters. `\s` covers the Unicode line and
@@ -36,7 +37,7 @@ export function sanitizeForPrompt(input: string, maxLen = 100): string {
 // Schema for POST /api/ai/build
 export const buildSchema = z.object({
   budget: z.number().positive().nullable().optional().default(null),
-  colors: z.array(z.enum(["W", "U", "B", "R", "G", "C"])).min(1).max(6),
+  colors: z.array(z.enum(COLOR_SYMBOLS)).min(1).max(6),
   strategy: z.string().min(1).max(50),
   bracket: z.number().int().min(1).max(5),
   commanderName: z.string().max(200).nullable().optional().default(null),

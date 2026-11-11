@@ -15,13 +15,14 @@ import { z } from "zod";
 import { requireAuth } from "@/lib/auth/helpers";
 import { logger } from "@/lib/logger";
 import { readJsonBody } from "@/lib/api/json-body";
+import { CARD_CONDITIONS } from "@/lib/collection/types";
 
 const addCardSchema = z.object({
   scryfallId: z.string().min(1),
   name: z.string().min(1),
   quantity: z.number().int().min(1).default(1),
   foil: z.boolean().default(false),
-  condition: z.enum(["NM", "LP", "MP", "HP", "DMG"]).nullable().optional(),
+  condition: z.enum(CARD_CONDITIONS).nullable().optional(),
   acquiredAt: z.iso.datetime().nullable().optional(),
   price: z.number().positive().nullable().optional(),
   imageUri: z.string().optional().default(""),

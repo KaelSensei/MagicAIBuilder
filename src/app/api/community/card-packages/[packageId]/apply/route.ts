@@ -10,6 +10,7 @@ import { requireAuth } from "@/lib/auth/helpers";
 import { previewCardPackage } from "@/lib/community/card-package-preview";
 import { verifyPackageCards } from "@/lib/community/verified-package-cards";
 import { prisma } from "@/lib/db/prisma";
+import { ALL_FORMATS } from "@/lib/deck/formats";
 import { logger } from "@/lib/logger";
 import { isBasicLand } from "@/lib/scryfall/type-line";
 
@@ -17,10 +18,7 @@ const ApplyRequestSchema = z.object({
   deckId: z.string().min(1).max(50),
   acceptedScryfallIds: z.array(z.string().min(1).max(100)).min(1).max(100),
 });
-const DeckFormatSchema = z.enum([
-  "commander", "brawl", "oathbreaker", "standard", "pioneer",
-  "modern", "legacy", "vintage", "pauper",
-]);
+const DeckFormatSchema = z.enum(ALL_FORMATS);
 
 interface RouteContext {
   readonly params: Promise<{ readonly packageId: string }>;

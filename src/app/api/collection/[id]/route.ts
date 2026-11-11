@@ -4,10 +4,11 @@ import { z } from "zod";
 import { requireAuth } from "@/lib/auth/helpers";
 import { logger } from "@/lib/logger";
 import { readJsonBody } from "@/lib/api/json-body";
+import { CARD_CONDITIONS } from "@/lib/collection/types";
 
 const patchSchema = z.object({
   quantity: z.number().int().min(0).optional(),
-  condition: z.enum(["NM", "LP", "MP", "HP", "DMG"]).nullable().optional(),
+  condition: z.enum(CARD_CONDITIONS).nullable().optional(),
   foil: z.boolean().optional(),
   price: z.number().positive().nullable().optional(),
   acquiredAt: z.iso.datetime().nullable().optional(),

@@ -3,6 +3,8 @@ import { readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { buildOpenApiDocument, DOCUMENTED_PATHS, API_VERSION } from "./openapi";
 import { API_SCOPES } from "./keys";
+import { CARD_CONDITIONS } from "@/lib/collection/types";
+import { VALID_ZONES } from "@/lib/validation/card";
 
 const V1_DIR = join(process.cwd(), "src", "app", "api", "v1");
 
@@ -82,6 +84,18 @@ describe("buildOpenApiDocument", () => {
       "rate_limited",
       "invalid_request",
       "server_error",
+    ]);
+  });
+
+  it("documents exactly the card conditions the collection routes accept, plus null", () => {
+    expect(
+      doc.components.schemas.CollectionCard.properties.condition.enum
+    ).toEqual([...CARD_CONDITIONS, null]);
+  });
+
+  it("documents exactly the zones a deck card may sit in", () => {
+    expect(doc.components.schemas.DeckCard.properties.zone.enum).toEqual([
+      ...VALID_ZONES,
     ]);
   });
 

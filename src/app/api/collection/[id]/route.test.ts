@@ -170,6 +170,13 @@ describe("PATCH /api/collection/[id]", () => {
     expect(response.status).toBe(400);
     expect(collectionDb.row(SOL_RING.id)?.quantity).toBe(1);
   });
+
+  it("rejects a condition outside the five card conditions", async () => {
+    const response = await patch(SOL_RING.id, { condition: "Mint" });
+
+    expect(response.status).toBe(400);
+    expect(collectionDb.row(SOL_RING.id)?.condition).toBe(SOL_RING.condition);
+  });
 });
 
 describe("DELETE /api/collection/[id]", () => {

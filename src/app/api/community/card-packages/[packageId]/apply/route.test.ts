@@ -97,4 +97,12 @@ describe("POST /api/community/card-packages/[packageId]/apply", () => {
     expect(response.status).toBe(500);
     expect(mockCreateMany).not.toHaveBeenCalled();
   });
+
+  it("refuses a deck whose stored format this build does not support", async () => {
+    mockDeckFindFirst.mockResolvedValue({ format: "historic", cards: [] });
+    const response = await POST(request(), context);
+    expect(response.status).toBe(422);
+    expect(mockPackageFindFirst).not.toHaveBeenCalled();
+    expect(mockCreateMany).not.toHaveBeenCalled();
+  });
 });

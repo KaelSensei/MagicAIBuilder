@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { PIP_COLORS, type PipColor } from "@/lib/deck/mana-alignment";
 import { ALL_FORMATS, getFormatConfig, type DeckFormat } from "@/lib/deck/formats";
+import { FIVE_COLORS } from "@/lib/mana/colors";
 import { sanitizeForPrompt } from "@/lib/validation/ai";
 import {
   applySearchContext,
@@ -64,7 +65,7 @@ export const naturalLanguageSearchRequestSchema = z.object({
   description: z.string().trim().min(MIN_CARD_DESCRIPTION_LENGTH).max(MAX_CARD_DESCRIPTION_LENGTH),
   locale: z.enum(["en", "fr"]),
   format: z.enum(ALL_FORMATS),
-  colorIdentity: z.array(z.enum(["W", "U", "B", "R", "G"])).max(5),
+  colorIdentity: z.array(z.enum(FIVE_COLORS)).max(5),
   enforceColorIdentity: z.boolean(),
   applyContext: z.boolean(),
 });
