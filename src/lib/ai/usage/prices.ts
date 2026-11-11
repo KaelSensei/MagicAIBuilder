@@ -71,19 +71,31 @@ const MODEL_PRICES: ReadonlyMap<string, ModelPrice> = new Map([
   ],
 ]);
 
+/** The start of {@link highestRates}: no rate is negative, so zero never wins. */
+const ZERO_RATES: TokenRates = {
+  input: 0,
+  cacheWrite: 0,
+  cacheRead: 0,
+  output: 0,
+};
+
 /**
  * The highest rate of each kind of token across several rate sets.
  *
- * @param rateSets - the rate sets to compare
- * @returns for each kind of token, the highest rate any set charges
+ * @param rateSets - the rate sets to compare; rates are never negative
+ * @returns for each kind of token, the highest rate any set charges; zero
+ *   rates for an empty list, where a seedless fold would throw at module load
  */
 export function highestRates(rateSets: readonly TokenRates[]): TokenRates {
-  return rateSets.reduce((highest, rates) => ({
-    input: Math.max(highest.input, rates.input),
-    cacheWrite: Math.max(highest.cacheWrite, rates.cacheWrite),
-    cacheRead: Math.max(highest.cacheRead, rates.cacheRead),
-    output: Math.max(highest.output, rates.output),
-  }));
+  return rateSets.reduce(
+    (highest, rates) => ({
+      input: Math.max(highest.input, rates.input),
+      cacheWrite: Math.max(highest.cacheWrite, rates.cacheWrite),
+      cacheRead: Math.max(highest.cacheRead, rates.cacheRead),
+      output: Math.max(highest.output, rates.output),
+    }),
+    ZERO_RATES
+  );
 }
 
 /**
