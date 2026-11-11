@@ -69,13 +69,13 @@ export function NaturalLanguageSearchFields(props: NaturalLanguageSearchFieldsPr
               {props.pending ? t("naturalLanguage.translating") : t("naturalLanguage.translate")}
             </Button>
           </form>
-          {props.contextDisabled && <output className="block text-xs text-[var(--text-secondary)]">{t("naturalLanguage.contextOff")}</output>}
+          {props.contextDisabled && <StatusNote>{t("naturalLanguage.contextOff")}</StatusNote>}
           {props.reviewing && (
             <div className="space-y-2">
               <label htmlFor={queryId} className="block text-xs text-[var(--text-secondary)]">{t("naturalLanguage.queryLabel")}</label>
               <input id={queryId} value={props.query} aria-describedby={helpId} className={cn(fieldShellClassName, "w-full px-3 py-2.5 font-mono")} onChange={(event) => props.onQuery(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && props.query.trim().length > 0) { event.preventDefault(); props.onSearch(); } }} />
               <p id={helpId} className="text-xs text-[var(--text-secondary)]">{t("naturalLanguage.queryHelp")}</p>
-              {props.widens && <output className="block text-xs text-[var(--text-secondary)]">{t("naturalLanguage.widened")}</output>}
+              {props.widens && <StatusNote>{t("naturalLanguage.widened")}</StatusNote>}
               <div className="flex flex-wrap gap-2">
                 <Button type="button" className="min-h-10" onClick={props.onSearch} disabled={props.query.trim().length === 0}>{t("naturalLanguage.search")}</Button>
                 <Button type="button" variant="secondary" className="min-h-10" onClick={props.onReject}>{t("naturalLanguage.reject")}</Button>
@@ -85,7 +85,7 @@ export function NaturalLanguageSearchFields(props: NaturalLanguageSearchFieldsPr
           )}
           {props.confirmReplace && (
             <div className="space-y-2">
-              <output className="block text-xs text-[var(--text-secondary)]">{t("naturalLanguage.replaceConfirm")}</output>
+              <StatusNote>{t("naturalLanguage.replaceConfirm")}</StatusNote>
               <div className="flex flex-wrap gap-2">
                 <Button type="button" className="min-h-10" onClick={props.onReplace}>{t("naturalLanguage.replaceEdit")}</Button>
                 <Button type="button" variant="secondary" className="min-h-10" onClick={props.onKeepEdit}>{t("naturalLanguage.keepEdit")}</Button>
@@ -107,9 +107,17 @@ function ModeButton({ pressed, label, name, onClick }: { readonly pressed: boole
   );
 }
 
+function StatusNote({ children }: { readonly children: string }) {
+  return (
+    <output aria-live="polite" className="block text-xs text-[var(--text-secondary)]">
+      {children}
+    </output>
+  );
+}
+
 function SearchStatus({ pending, errorCode }: { readonly pending: boolean; readonly errorCode: SearchQueryErrorCode | null }) {
   const t = useTranslations("search");
-  if (pending) return <output className="block text-xs text-[var(--text-secondary)]">{t("naturalLanguage.translating")}</output>;
+  if (pending) return <StatusNote>{t("naturalLanguage.translating")}</StatusNote>;
   if (!errorCode) return null;
   return <p role="alert" className="text-xs text-[var(--text-secondary)]">{errorText(errorCode, t)}</p>;
 }

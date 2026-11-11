@@ -67,11 +67,10 @@ function orderedColors(colors: readonly string[]): readonly PipColor[] {
   return PIP_COLORS.filter((color) => present.has(color));
 }
 
+const COLOR_NAMES: readonly string[] = PIP_COLORS;
+
 function isPipColor(value: string): value is PipColor {
-  for (const color of PIP_COLORS) {
-    if (color === value) return true;
-  }
-  return false;
+  return COLOR_NAMES.includes(value);
 }
 
 function appendToken(query: string, token: string): string {

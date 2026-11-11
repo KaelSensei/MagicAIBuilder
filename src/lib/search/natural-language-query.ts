@@ -219,27 +219,20 @@ function languageName(locale: SearchDescriptionLocale): string {
   return exhaustive;
 }
 
+const ERROR_CODE_NAMES: readonly string[] = SEARCH_QUERY_ERROR_CODES;
+const FORMAT_NAMES: readonly string[] = ALL_FORMATS;
+const COLOR_NAMES: readonly string[] = PIP_COLORS;
+
 function isSearchQueryErrorCode(value: unknown): value is SearchQueryErrorCode {
-  if (typeof value !== "string") return false;
-  for (const code of SEARCH_QUERY_ERROR_CODES) {
-    if (code === value) return true;
-  }
-  return false;
+  return typeof value === "string" && ERROR_CODE_NAMES.includes(value);
 }
 
 function isDeckFormat(value: unknown): value is DeckFormat {
-  if (typeof value !== "string") return false;
-  for (const format of ALL_FORMATS) {
-    if (format === value) return true;
-  }
-  return false;
+  return typeof value === "string" && FORMAT_NAMES.includes(value);
 }
 
 function isPipColor(value: string): value is PipColor {
-  for (const color of PIP_COLORS) {
-    if (color === value) return true;
-  }
-  return false;
+  return COLOR_NAMES.includes(value);
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
