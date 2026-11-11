@@ -4,6 +4,29 @@ import withBundleAnalyzer from "@next/bundle-analyzer";
 import createNextIntlPlugin from "next-intl/plugin";
 import { buildSecurityHeaders } from "./src/lib/security-headers";
 
+/**
+ * Settings for the Docker E2E stack only (`docker-compose.e2e.yml`), which builds
+ * the app once and serves it with `next start` instead of `next dev`.
+ *
+ * - `allowDevelopmentBuild`: a production build inlines
+ *   `process.env.NODE_ENV = "production"` into every bundle, which compiles out
+ *   the `PLAYWRIGHT_TEST` auth bypass (`requireAuth`, `authorized()`) the specs
+ *   seed their data through. This flag makes `NODE_ENV=development next build`
+ *   inline "development" instead, and Next.js refuses it under any other
+ *   NODE_ENV. Source: next 15.5.29 `dist/build/define-env.js:77` and
+ *   `dist/server/config.js:298` (read 2026-11-11).
+ * - `ignoreBuildErrors`: types are gated by `tsc --noEmit` in CI and the pre-PR
+ *   gate; the E2E build only needs runnable bundles.
+ */
+const e2eDevelopmentBuild: NextConfig =
+  process.env.E2E_DEVELOPMENT_BUILD === "1" &&
+  process.env.NODE_ENV === "development"
+    ? {
+        experimental: { allowDevelopmentBuild: true },
+        typescript: { ignoreBuildErrors: true },
+      }
+    : {};
+
 const withAnalyzer = withBundleAnalyzer({
   enabled: process.env.ANALYZE === "true",
 });
@@ -37,6 +60,7 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  ...e2eDevelopmentBuild,
 };
 
 export default withSentryConfig(withNextIntl(withAnalyzer(nextConfig)), {
