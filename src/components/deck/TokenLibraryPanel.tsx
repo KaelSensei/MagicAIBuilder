@@ -3,6 +3,7 @@
 import { Check, Copy, Download } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
+import { downloadTextFile } from "@/lib/download-text-file";
 import {
   buildTokenLibrary,
   formatTokenLibrary,
@@ -11,16 +12,6 @@ import type { DeckCard } from "@/lib/deck/types";
 
 interface TokenLibraryPanelProps {
   readonly cards: readonly DeckCard[];
-}
-
-function downloadTokenLibrary(content: string): void {
-  const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = "deck-tokens.txt";
-  anchor.click();
-  URL.revokeObjectURL(url);
 }
 
 /** Display and export the physical game pieces required by a deck. */
@@ -62,7 +53,13 @@ export function TokenLibraryPanel({ cards }: TokenLibraryPanelProps) {
           </button>
           <button
             type="button"
-            onClick={() => downloadTokenLibrary(exportText)}
+            onClick={() =>
+              downloadTextFile(
+                exportText,
+                "deck-tokens.txt",
+                "text/plain;charset=utf-8"
+              )
+            }
             className="rounded p-1.5 text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]"
             aria-label={t("stats.downloadTokenLibrary")}
             title={t("stats.downloadTokenLibrary")}

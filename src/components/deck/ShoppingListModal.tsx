@@ -14,6 +14,7 @@ import {
 import { formatAcquisitionCsv } from "@/lib/collection/acquisition-csv";
 import { useAcquisitionIntent } from "@/hooks/useAcquisitionIntent";
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
+import { downloadTextFile } from "@/lib/download-text-file";
 import { ShoppingListRow } from "./ShoppingListRow";
 
 interface ShoppingListModalProps {
@@ -21,16 +22,6 @@ interface ShoppingListModalProps {
   readonly ownedQuantities: Readonly<Record<string, number>>;
   readonly ownerId: string;
   readonly onClose: () => void;
-}
-
-function downloadFile(content: string, filename: string, mime: string): void {
-  const blob = new Blob([content], { type: mime });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
 }
 
 export function ShoppingListModal({
@@ -94,7 +85,7 @@ export function ShoppingListModal({
   const handleExportCsv = () => {
     const csv = formatAcquisitionCsv(buyNowItems);
     const deckSlug = deck.name.replaceAll(/[^a-z0-9]/gi, "_").toLowerCase();
-    downloadFile(csv, `${deckSlug}-buy-now.csv`, "text/csv");
+    downloadTextFile(csv, `${deckSlug}-buy-now.csv`, "text/csv");
   };
 
   return (

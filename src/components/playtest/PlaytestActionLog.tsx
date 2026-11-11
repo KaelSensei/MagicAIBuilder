@@ -5,7 +5,7 @@ import { Copy, Download, Pencil, Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { PlaytestActionLogEntry } from "@/lib/playtest/engine";
 import { exportActionLogJson, exportActionLogText, summarizeActionLog } from "@/lib/playtest/action-log-export";
-import { downloadFile } from "@/lib/deck/export";
+import { downloadTextFile } from "@/lib/download-text-file";
 
 interface PlaytestActionLogProps {
   readonly entries: readonly PlaytestActionLogEntry[];
@@ -85,14 +85,25 @@ export function PlaytestActionLog({ entries, deckName, onAdd, onRecordMana, onEd
             </button>
             <button
               type="button"
-              onClick={() => downloadFile(exportActionLogText(deckName, entries, textFormat), `${fileStem}-playtest.txt`)}
+              onClick={() =>
+                downloadTextFile(
+                  exportActionLogText(deckName, entries, textFormat),
+                  `${fileStem}-playtest.txt`
+                )
+              }
               className="flex items-center gap-1 rounded px-2 py-1 text-[10px] text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]"
             >
               <Download className="h-3 w-3" aria-hidden="true" /> {t("exportText")}
             </button>
             <button
               type="button"
-              onClick={() => downloadFile(exportActionLogJson(deckName, entries), `${fileStem}-playtest.json`, "application/json")}
+              onClick={() =>
+                downloadTextFile(
+                  exportActionLogJson(deckName, entries),
+                  `${fileStem}-playtest.json`,
+                  "application/json"
+                )
+              }
               className="flex items-center gap-1 rounded px-2 py-1 text-[10px] text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]"
             >
               <Download className="h-3 w-3" aria-hidden="true" /> {t("exportJson")}

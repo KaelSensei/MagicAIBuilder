@@ -4,6 +4,7 @@ import { useFormatter, useTranslations } from "next-intl";
 import { X, Download, Copy, Check } from "lucide-react";
 import type { DeckCard } from "@/lib/deck/types";
 import { generateShoppingListCSV } from "@/lib/deck/pricing";
+import { downloadTextFile } from "@/lib/download-text-file";
 
 interface ShoppingListModalProps {
   readonly isOpen: boolean;
@@ -41,13 +42,8 @@ export function PricingShoppingListModal({
 
   function handleDownloadCSV() {
     const csv = generateShoppingListCSV(cards);
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${deckName.replaceAll(/\s+/g, "-").toLowerCase()}-shopping.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const filename = `${deckName.replaceAll(/\s+/g, "-").toLowerCase()}-shopping.csv`;
+    downloadTextFile(csv, filename, "text/csv");
   }
 
   async function handleCopy() {

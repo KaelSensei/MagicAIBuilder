@@ -15,8 +15,8 @@ import {
   exportGoldfish,
   exportEdhrec,
   copyToClipboard,
-  downloadFile,
 } from "@/lib/deck/export";
+import { downloadTextFile } from "@/lib/download-text-file";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { textAreaShellClassName } from "@/components/ui/Input";
@@ -88,9 +88,9 @@ export function ExportModal({ deck, onClose }: ExportModalProps) {
     const text = getExportText(deck, format);
     const deckName = deck.name.replaceAll(/[^a-z0-9]/gi, "_").toLowerCase();
     if (format === "mtgo") {
-      downloadFile(text, `${deckName}.dek`, "application/xml");
+      downloadTextFile(text, `${deckName}.dek`, "application/xml");
     } else {
-      downloadFile(text, `${deckName}_${format}.txt`);
+      downloadTextFile(text, `${deckName}_${format}.txt`);
     }
   };
 
