@@ -2,7 +2,11 @@
 
 import Image from "next/image";
 import { useMemo, useState } from "react";
-import { useTranslations } from "next-intl";
+import {
+  useFormatter,
+  useTranslations,
+  type NumberFormatOptions,
+} from "next-intl";
 import { Search, Star } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import {
@@ -23,6 +27,12 @@ interface CommanderDecksViewProps {
   readonly canVote: boolean;
 }
 
+/** One decimal, as the ratings API rounds the average to tenths. */
+const AVERAGE_RATING_FORMAT: Readonly<NumberFormatOptions> = {
+  minimumFractionDigits: 1,
+  maximumFractionDigits: 1,
+};
+
 /** One row of the discovery listing. */
 function DeckRow({
   deck,
@@ -33,6 +43,7 @@ function DeckRow({
 }) {
   const t = useTranslations("deck.community");
   const tRatings = useTranslations("deck.ratings");
+  const format = useFormatter();
   const authorName =
     deck.author?.name ?? deck.author?.username ?? t("anonymous");
 
@@ -73,7 +84,7 @@ function DeckRow({
           <>
             <p className="flex items-center justify-end gap-1 text-sm text-[var(--text-primary)]">
               <Star className="w-3.5 h-3.5 text-amber-400" aria-hidden="true" />
-              {deck.averageRating.toFixed(1)}
+              {format.number(deck.averageRating, AVERAGE_RATING_FORMAT)}
             </p>
             <p className="text-[11px] text-[var(--text-secondary)]">
               {t("ratedBy", { count: deck.ratingCount })}

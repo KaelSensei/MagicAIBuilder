@@ -151,7 +151,7 @@ export function HomeDeckCard({
             <div className="flex shrink-0 items-center gap-1.5">
               {deck.isAIGenerated && (
                 <span className="shrink-0 rounded-full border border-purple-500/30 bg-purple-500/20 px-1.5 py-0.5 text-xs text-purple-400">
-                  AI
+                  {t("card.aiBadge")}
                 </span>
               )}
               <span

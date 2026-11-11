@@ -54,6 +54,7 @@ const BRACKET_COLORS: Record<number, string> = {
 export function PublicProfileView({ profile, canFollow }: PublicProfileViewProps) {
   const [failedImage, setFailedImage] = useState<string | null>(null);
   const t = useTranslations("profile");
+  const tDeck = useTranslations("deck");
   const format = useFormatter();
   const displayName = profile.name ?? profile.username;
   const memberSince = format.dateTime(new Date(profile.createdAt), {
@@ -159,7 +160,10 @@ export function PublicProfileView({ profile, canFollow }: PublicProfileViewProps
                         {deck.format}
                       </span>
                       {deck.isAIGenerated && (
-                        <span className="text-xs text-purple-400">✦ AI</span>
+                        <span className="text-xs text-purple-400">
+                          <span aria-hidden="true">✦ </span>
+                          {tDeck("card.aiBadge")}
+                        </span>
                       )}
                     </div>
                   </div>

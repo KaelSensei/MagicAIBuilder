@@ -3,6 +3,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { NextIntlClientProvider } from "next-intl";
 import enProfile from "@/messages/en/profile.json";
+import frProfile from "@/messages/fr/profile.json";
 import { FollowButton } from "./FollowButton";
 
 function renderWithIntl(ui: React.ReactElement) {
@@ -114,5 +115,44 @@ describe("FollowButton", () => {
         expect.anything()
       );
     });
+  });
+});
+
+// The French profile catalog repeated the English follow strings verbatim.
+describe("FollowButton in French", () => {
+  function renderFrench(ui: React.ReactElement) {
+    return render(
+      <NextIntlClientProvider locale="fr" messages={{ profile: frProfile }}>
+        {ui}
+      </NextIntlClientProvider>
+    );
+  }
+
+  it("prompts an anonymous viewer to sign in", () => {
+    renderFrench(<FollowButton {...defaultProps} canFollow={false} />);
+
+    expect(
+      screen.getByText("4 abonnés · Connectez-vous pour suivre")
+    ).toBeInTheDocument();
+  });
+
+  it("offers to follow and counts a single follower in the singular", () => {
+    renderFrench(<FollowButton {...defaultProps} initialFollowerCount={1} />);
+
+    expect(screen.getByRole("button", { name: "Suivre" })).toBeInTheDocument();
+    expect(screen.getByText("1 abonné")).toBeInTheDocument();
+  });
+
+  it("reports a failed update", async () => {
+    mockFetch({}, false);
+    renderFrench(<FollowButton {...defaultProps} />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Suivre" }));
+
+    expect(
+      await screen.findByText(
+        "Impossible de mettre à jour l’abonnement. Réessayez."
+      )
+    ).toBeInTheDocument();
   });
 });

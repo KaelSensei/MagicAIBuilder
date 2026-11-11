@@ -67,7 +67,7 @@ export function UserMenu() {
         {session.user.image ? (
           <Image
             src={session.user.image}
-            alt={session.user.name ?? "Avatar"}
+            alt={session.user.name ?? t("userMenu.avatarAlt")}
             width={32}
             height={32}
             className="rounded-full object-cover"

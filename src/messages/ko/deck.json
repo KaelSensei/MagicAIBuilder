@@ -1,5 +1,21 @@
 {
   "publicLoading": "Loading deck...",
+  "public": {
+    "bracket": "Bracket {bracket}",
+    "aiGenerated": "AI generated",
+    "saveDeck": "Save deck",
+    "savingDeck": "Saving deck",
+    "savedDeck": "Saved deck",
+    "saveFailed": "Unable to save deck",
+    "fork": "Fork",
+    "forking": "Forking…",
+    "forkDeck": "Fork deck",
+    "forkingDeck": "Forking deck",
+    "forkedFrom": "Forked from <link>{source}</link>",
+    "forkSource": "{name} by {author}",
+    "deckShared": "Deck shared",
+    "printGuide": "Print guide"
+  },
   "savedFolders": {
     "eyebrow": "Community library",
     "title": "Saved public decks",
@@ -75,6 +91,7 @@
     "startBuildingDescription": "Create your first Commander deck with live bracket scoring and Game Changers detection.",
     "createDeck": "Create Deck",
     "newDeck": "New Deck",
+    "newDeckName": "New Deck {index}",
     "deleteConfirm": "Delete this deck? This cannot be undone.",
     "loadFailedTitle": "덱을 불러오지 못했습니다",
     "loadFailedDescription": "서버가 요청을 거부하여 이 목록이 불완전할 수 있습니다. 덱은 사라지지 않았습니다 — 잠시 후 다시 시도하세요.",
@@ -147,7 +164,8 @@
     "delete": "Delete {name}",
     "manualBracket": "Manual bracket override",
     "autoBracket": "Auto bracket",
-    "gameChanger": "Game Changer"
+    "gameChanger": "Game Changer",
+    "aiBadge": "AI"
   },
   "table": {
     "deck": "Deck",
@@ -613,7 +631,8 @@
     "planGameplan": "Gameplan",
     "planWinConditions": "Win conditions",
     "planRoles": "Deck roles",
-    "planConstraints": "Constraints"
+    "planConstraints": "Constraints",
+    "aiDeckName": "AI Deck — {strategy}"
   },
   "ratings": {
     "title": "Community Rating",
