@@ -820,7 +820,7 @@ The earlier 3D spellbook scene (Three.js, React Three Fiber, gsap) was removed f
 
 ### Deck Description
 
-Field `description String? @default("")` on `Deck`. Stored in DB and synced via `PATCH /api/decks/[id]`. The `DeckDescriptionEditor` component is a collapsible textarea in the deck sidebar, collapsed by default showing the first line as a preview. Supports Ctrl+Enter to save and Esc to cancel. Max 2000 chars (server-enforced).
+Field `description String? @default("")` on `Deck`. Stored in DB and synced via `PATCH /api/decks/[id]`. The `DeckDescriptionEditor` component is a collapsible textarea in the builder's **Deck details** panel (`DeckDetailsPanel`), collapsed by default showing the first line as a preview. Supports Ctrl+Enter to save and Esc to cancel. Max 2000 chars (server-enforced).
 
 ### Card Notes
 
@@ -830,7 +830,15 @@ Field `notes String?` on `DeckCard`. Synced via `PATCH /api/decks/[id]/cards/[ca
 
 ### Deck Tags
 
-Field `tags String[] @default([])` on `Deck` (PostgreSQL array). Tags are synced via `PATCH /api/decks/[id]` with the full updated array. The `DeckTagsEditor` component shows pill-shaped tags with color coding per tag value. Predefined suggestions: `casual`, `cEDH`, `WIP`, `budget`, `tuned`, `theme`. Tab in the input autocompletes the first suggestion. The home page renders a tag filter bar when any decks have tags, and tag pills on deck cards are clickable to activate filtering.
+Field `tags String[] @default([])` on `Deck` (PostgreSQL array). Tags are synced via `PATCH /api/decks/[id]` with the full updated array (at most 20 tags of 50 characters, `patchDeckSchema`). The `DeckTagsEditor` component, in the builder's **Deck details** panel (`DeckDetailsPanel`, top of the analysis sidebar), shows pill-shaped tags with color coding per tag value. Predefined suggestions: `casual`, `cEDH`, `WIP`, `budget`, `tuned`, `theme`. Tab in the input autocompletes the first suggestion. No other screen reads the tags yet: the deck list has no tag filter.
+
+### Target Bracket
+
+Field `targetBracket Int @default(3)` on `Deck`: the official Commander Bracket (1 Exhibition to 5 cEDH, `BRACKET_LEVELS` in `src/lib/constants/brackets.ts`) the player builds for. `DeckTargetBracketPicker`, in the **Deck details** panel, sets it through `setTargetBracket`, which writes to the store's active deck. It is shown only for formats with `hasBracketScoring` (Commander). `GameChangersBadge` and the `DeckStats` benchmarks measure the deck against it; `BracketIndicator` shows it beside the bracket estimate when they differ.
+
+### Budget per Card
+
+Field `budget` on `Deck`: the most the player wants to pay for one card, in US dollars, or `null` for no limit. `PATCH /api/decks/[id]` accepts a positive number or `null`. `DeckBudgetInput`, in the **Deck details** panel, saves it through `setBudget` (on the active deck) when the player presses Enter or leaves the field with a changed amount; an empty field saves `null`, and zero, a negative amount or text is refused in the field with a message. `computeDeckStats` lists the cards priced above it as over budget, and the deck wizard and `POST /api/ai/build` treat it as a maximum per card.
 
 ---
 
