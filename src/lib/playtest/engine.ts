@@ -68,12 +68,6 @@ export const defaultPlaytestDeps: PlaytestDeps = {
 // The opening hand size and the starting life total are game rules shared with deck analysis:
 // they live in `lib/deck/game-constants.ts`.
 
-/**
- * Smallest opening hand the playtest lets a player mulligan down to. A playtest choice, not a
- * rule: CR 103.5 lets a player take mulligans "until their opening hand would be zero cards".
- */
-const MIN_KEPT_HAND_SIZE = 1;
-
 export const PHASES = [
   "Untap",
   "Upkeep",
@@ -307,15 +301,17 @@ export function keptOpeningHandSize(tally: MulliganTally): number {
 }
 
 /**
- * The most mulligans the playtest allows: enough to keep at least one card.
- * A free first mulligan does not count toward the mulligans a player may take
- * either (CR 103.5c), so a multiplayer game allows one more than a duel.
+ * The most mulligans a player may take. CR 103.5: "A player can take mulligans until their
+ * opening hand would be zero cards, after which they may not take further mulligans." Each
+ * counted mulligan bottoms one more card, so seven of them leave a zero-card hand. A free first
+ * mulligan does not count toward the mulligans a player may take (CR 103.5c), so a multiplayer
+ * game allows one more than a duel.
  *
  * @param rule - whether the first mulligan is free
- * @returns the mulligan limit
+ * @returns the mulligan limit: 7, or 8 with a free first mulligan
  */
 export function maxMulligans(rule: Pick<PlaytestEngine, "firstMulliganFree">): number {
-  const countedMulligans = OPENING_HAND_SIZE - MIN_KEPT_HAND_SIZE;
+  const countedMulligans = OPENING_HAND_SIZE;
   return rule.firstMulliganFree ? countedMulligans + 1 : countedMulligans;
 }
 

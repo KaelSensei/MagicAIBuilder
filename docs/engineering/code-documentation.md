@@ -110,7 +110,7 @@ Inside a function, comment only knowledge the code cannot express:
 | A rejected alternative          | `// Not Math.random(): the shuffle must not be predictable; see crypto-random.ts.`                                        |
 | A cross-file dependency         | `// If you change this list, change the SQL twin in the migration too.`                                                   |
 | A performance reason            | `// One pass over the rows: the store calls this on every keystroke.`                                                     |
-| A product deviation from a rule | `// Product choice: the playtest stops at a one-card hand; CR 103.5 allows zero.`                                         |
+| A product deviation from a rule | `// Product choice: the playtest always plays the starting player; CR 103.1 lets players choose.`                         |
 
 ## Citing the Comprehensive Rules
 

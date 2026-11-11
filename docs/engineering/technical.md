@@ -677,7 +677,7 @@ The playtest is a solitaire goldfish with no opponent. `turns` and `mulliganCoun
 
 `PlaytestSession` carries no unique constraint, unlike `DeckVote` and `DeckRating` which both upsert on `@@unique([userId, deckId])`. Every run is its own row — that is what makes a trend possible at all. Indexed on `deckId` and on `[deckId, createdAt]` for the chronological read.
 
-`result` and `difficulty` are plain string columns, so `parseSessionInput` is the only thing standing between a typo and a row that quietly breaks every aggregate reading it. It validates the three results, rejects a turn count below 1 (a game always has a first turn), caps `mulliganCount` at `OPENING_HAND_SIZE` (the London mulligan bottoms one card per mulligan; past a full hand there is nothing to keep), and treats whitespace-only notes as absent.
+`result` and `difficulty` are plain string columns, so `parseSessionInput` is the only thing standing between a typo and a row that quietly breaks every aggregate reading it. It validates the three results, rejects a turn count below 1 (a game always has a first turn), caps `mulliganCount` at `maxMulligans` with a free first mulligan, eight (CR 103.5 allows mulligans "until their opening hand would be zero cards", seven counted ones, and CR 103.5c adds the free one), and treats whitespace-only notes as absent.
 
 ### Route
 

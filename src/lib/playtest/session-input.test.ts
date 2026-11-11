@@ -59,10 +59,10 @@ describe("parseSessionInput", () => {
   });
 
   it("accepts the Commander limit and rejects anything past it", () => {
-    // Six counted mulligans leave one card; Commander's free first mulligan
-    // (CR 103.5c) allows a seventh. No playtest can record an eighth.
-    expect(parseSessionInput({ result: "win", turns: 8, mulliganCount: 7 }).ok).toBe(true);
-    expect(parseSessionInput({ result: "win", turns: 8, mulliganCount: 8 }).ok).toBe(false);
+    // Seven counted mulligans leave zero cards (CR 103.5); Commander's free
+    // first mulligan (CR 103.5c) allows an eighth. No playtest can record a ninth.
+    expect(parseSessionInput({ result: "win", turns: 8, mulliganCount: 8 }).ok).toBe(true);
+    expect(parseSessionInput({ result: "win", turns: 8, mulliganCount: 9 }).ok).toBe(false);
   });
 
   it("accepts a difficulty from the known set and rejects anything else", () => {

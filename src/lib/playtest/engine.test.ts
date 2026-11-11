@@ -685,19 +685,37 @@ describe("applyMulligan in a duel format", () => {
   });
 });
 
-// The playtest keeps a hand of at least one card; the free mulligan does not
-// count toward that limit either (CR 103.5c), so multiplayer goes one further.
+// CR 103.5: "A player can take mulligans until their opening hand would be zero
+// cards, after which they may not take further mulligans." The free mulligan
+// does not count toward that limit either (CR 103.5c), so multiplayer goes one
+// further.
 describe("mulligan limit", () => {
   it.each([
-    ["a duel", duelState, 6],
-    ["a multiplayer game", multiplayerState, 7],
-  ])("stops %s at a one-card hand", (_, setUp, limit) => {
+    ["a duel", duelState, 7],
+    ["a multiplayer game", multiplayerState, 8],
+  ])("lets %s mulligan down to a zero-card hand", (_, setUp, limit) => {
     let state = setUp();
     for (let i = 0; i < limit + 3; i++) state = bottomFirstCards(applyMulligan(state));
 
     expect(maxMulligans(state)).toBe(limit);
     expect(state.mulliganCount).toBe(limit);
-    expect(state.hand).toHaveLength(1);
+    expect(state.hand).toHaveLength(0);
+  });
+
+  it("asks the last mulligan to bottom the whole new seven", () => {
+    let oneCard = duelState();
+    for (let i = 0; i < 6; i++) oneCard = bottomFirstCards(applyMulligan(oneCard));
+    expect(oneCard.hand).toHaveLength(1);
+
+    const last = applyMulligan(oneCard);
+
+    expect(last.hand).toHaveLength(7);
+    expect(last.cardsToBottom).toBe(7);
+    const kept = bottomFirstCards(last);
+    // All seven went to the bottom: the whole hundred-card deck is in the library.
+    expect(kept.hand).toEqual([]);
+    expect(kept.library).toHaveLength(100);
+    expect(applyMulligan(kept)).toBe(kept);
   });
 });
 
