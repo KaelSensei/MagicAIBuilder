@@ -59,6 +59,7 @@ type AuthPolicy =
 const ROUTE_POLICIES: Readonly<
   Record<string, Readonly<Partial<Record<HttpVerb, AuthPolicy>>>>
 > = {
+  "ai/allowance": { GET: "session" },
   "ai/build": { POST: "session" },
   "ai/suggest": { POST: "session" },
   "auth/[...nextauth]": { GET: "public", POST: "public" },
@@ -131,7 +132,6 @@ const ROUTE_POLICIES: Readonly<
   "meta/[commanderSlug]/history": { GET: "public" },
   "moderation/deck-reports": { GET: "moderator" },
   "moderation/deck-reports/[reportId]": { PATCH: "moderator" },
-  og: { GET: "public" },
   "proxy-card-image": { GET: "public" },
   "share/[token]": { GET: "share-token" },
   templates: { GET: "public", POST: "session" },
@@ -150,11 +150,12 @@ const ROUTE_POLICIES: Readonly<
 };
 
 /**
- * Routes recorded as data only. Decision D4 freezes the AI routes until
- * `feat/ai-usage-metering-and-monthly-quota` lands, so this suite lists them
- * without running them.
+ * Routes recorded as data only: the table must still match them on disk, but
+ * this suite does not run them. The AI routes were frozen by decision D4 when
+ * this slice was planned; the AI series characterizes them before they change.
  */
 const DATA_ONLY_ROUTES: ReadonlySet<string> = new Set([
+  "ai/allowance",
   "ai/build",
   "ai/suggest",
 ]);
@@ -579,6 +580,30 @@ describe("a caller with no session", () => {
       query: "",
     });
     expect(response.status).toBe(404);
+  });
+
+  it("GET /api/deck/[id] (optional-viewer): a client past its read budget gets 429, before the session is read", async () => {
+    const { GET } = await import("@/app/api/deck/[id]/route");
+    const { PUBLIC_DECK_READS_PER_CLIENT } =
+      await import("@/lib/deck/public-read-policy");
+    // The budget is per client address and the limiter outlives a test, so
+    // this client has an address of its own.
+    const read = () =>
+      GET(
+        new Request(`http://localhost/api/deck/${DECK_ID}`, {
+          headers: { "x-real-ip": "203.0.113.42" },
+        }),
+        { params: Promise.resolve({ id: DECK_ID }) }
+      );
+    for (let served = 0; served < PUBLIC_DECK_READS_PER_CLIENT; served++) {
+      expect((await read()).status).toBe(200);
+    }
+
+    const response = await read();
+
+    expect(response.status).toBe(429);
+    expect(response.headers.get("retry-after")).not.toBeNull();
+    expect(fake.auth).toHaveBeenCalledTimes(PUBLIC_DECK_READS_PER_CLIENT);
   });
 });
 
