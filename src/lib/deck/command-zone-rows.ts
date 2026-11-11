@@ -59,6 +59,10 @@ export function withSavedCommandRow(
  * deleted is logged and left in place: the deck record is already saved, and
  * the commander rollback only covers a deck record that failed.
  *
+ * The deletes run at once. Their order does not matter: each names a
+ * different row, sends no expected version, and is its own server
+ * transaction (`DELETE /api/decks/[id]/cards/[cardId]`).
+ *
  * @param deckId - Deck the change was made on
  * @param previous - Commander and partner on screen before the change
  * @param next - Commander and partner the change put on screen
@@ -70,16 +74,27 @@ export async function removeReplacedCommandRows(
   next: readonly (DeckCard | null)[]
 ): Promise<void> {
   const kept = new Set(next.map((card) => card?.id));
-  for (const card of previous) {
-    if (!card || kept.has(card.id)) continue;
-    try {
-      await deckApi.removeCard(deckId, card.id);
-    } catch (err) {
-      logger.error(
-        "Could not remove a replaced command-zone row",
-        "removeReplacedCommandRows",
-        err
-      );
-    }
+  const replaced = previous.filter(
+    (card): card is DeckCard => card !== null && !kept.has(card.id)
+  );
+  await Promise.all(replaced.map((card) => removeRowOrLog(deckId, card.id)));
+}
+
+/**
+ * Deletes one command-zone row, logging a failure instead of rejecting.
+ *
+ * @param deckId - Deck that holds the row
+ * @param rowId - Id of the row to delete
+ * @returns Resolves once the row was deleted or the failure logged
+ */
+async function removeRowOrLog(deckId: string, rowId: string): Promise<void> {
+  try {
+    await deckApi.removeCard(deckId, rowId);
+  } catch (err) {
+    logger.error(
+      "Could not remove a replaced command-zone row",
+      "removeReplacedCommandRows",
+      err
+    );
   }
 }

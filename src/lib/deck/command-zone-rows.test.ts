@@ -1,6 +1,9 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { withSavedCommandRow } from "./command-zone-rows";
+import {
+  removeReplacedCommandRows,
+  withSavedCommandRow,
+} from "./command-zone-rows";
 import { createEmptyDeck } from "./store-factories";
 import type { Deck, DeckCard } from "./types";
 
@@ -86,5 +89,96 @@ describe("withSavedCommandRow", () => {
     });
 
     expect(result).toBe(decks);
+  });
+
+  it("leaves the decks alone when the slot was emptied", () => {
+    const emptied: Readonly<Record<string, Deck>> = {
+      "deck-1": {
+        ...createEmptyDeck("deck-1", "Partners"),
+        commander: THRASIOS,
+        partner: null,
+      },
+    };
+
+    const result = withSavedCommandRow(emptied, {
+      deckId: "deck-1",
+      slot: "partner",
+      placedId: "tymna",
+      rowId: "row-7",
+    });
+
+    expect(result).toBe(emptied);
+  });
+});
+
+/** The card-row delete route `deckApi.removeCard` calls for one row. */
+function deleteRoute(rowId: string): string {
+  return `/api/decks/deck-1/cards/${rowId}`;
+}
+
+/**
+ * The deletes go through the real deck API client; only `fetch`, the HTTP
+ * boundary, is replaced.
+ */
+describe("removeReplacedCommandRows", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("sends the deletes of both replaced rows before either answers", async () => {
+    let answer: () => void = () => {};
+    const answered = new Promise<void>((resolve) => {
+      answer = resolve;
+    });
+    const fetchStub = vi.fn<typeof fetch>(async () => {
+      await answered;
+      return new Response(null, { status: 200 });
+    });
+    vi.stubGlobal("fetch", fetchStub);
+
+    const removal = removeReplacedCommandRows("deck-1", [THRASIOS, TYMNA], []);
+    const sentBeforeAnyAnswer = fetchStub.mock.calls.map(([input]) => input);
+    answer();
+    await removal;
+
+    expect(sentBeforeAnyAnswer).toEqual([
+      deleteRoute("thrasios"),
+      deleteRoute("tymna"),
+    ]);
+  });
+
+  it("keeps the row of a card still on screen", async () => {
+    const fetchStub = vi.fn<typeof fetch>(
+      async () => new Response(null, { status: 200 })
+    );
+    vi.stubGlobal("fetch", fetchStub);
+
+    await removeReplacedCommandRows(
+      "deck-1",
+      [THRASIOS, TYMNA],
+      [THRASIOS, null]
+    );
+
+    expect(fetchStub.mock.calls.map(([input]) => input)).toEqual([
+      deleteRoute("tymna"),
+    ]);
+  });
+
+  it("still deletes the other row when one delete fails, and never rejects", async () => {
+    const fetchStub = vi.fn<typeof fetch>(
+      async (input) =>
+        new Response(null, {
+          status: input === deleteRoute("thrasios") ? 500 : 200,
+        })
+    );
+    vi.stubGlobal("fetch", fetchStub);
+
+    await expect(
+      removeReplacedCommandRows("deck-1", [THRASIOS, TYMNA], [])
+    ).resolves.toBeUndefined();
+    expect(fetchStub.mock.calls.map(([input]) => input)).toEqual([
+      deleteRoute("thrasios"),
+      deleteRoute("tymna"),
+    ]);
   });
 });
