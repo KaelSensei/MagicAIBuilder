@@ -9,6 +9,10 @@
   "moveNamedToMaybeboard": "Déplacer {name} vers À l'étude",
   "moveNamedToSideboard": "Déplacer {name} vers la réserve",
   "removeNamed": "Retirer {name}",
+  "setAsCommander": "Définir comme commandant",
+  "setAsCommanderNamed": "Définir {name} comme commandant",
+  "changePrinting": "Changer d'édition",
+  "changePrintingNamed": "Changer l'édition de {name}",
   "noText": "Aucun texte",
   "noCardsFound": "Aucune carte trouvée",
   "loadingPrintings": "Chargement des éditions…",
@@ -28,7 +32,11 @@
     "add": "Ajouter une note",
     "edit": "Modifier la note",
     "editor": "Éditeur de note de carte",
-    "placeholder": "Ajoute une note privée pour cette carte…"
+    "placeholder": "Ajoute une note privée pour cette carte…",
+    "addNamed": "Ajouter une note à {name}",
+    "editNamed": "Modifier la note de {name}",
+    "fieldNamed": "Note sur {name}",
+    "hint": "Ctrl+Entrée pour enregistrer · Échap pour annuler"
   },
   "favorite": {
     "add": "Ajouter aux favoris",
@@ -47,5 +55,10 @@
     "commander": "Cette carte est le commandant de votre deck.",
     "companion": "Cette carte est le compagnon de votre deck.",
     "category": "Son rôle attribué dans ce deck est : {category}."
+  },
+  "quantity": {
+    "group": "Exemplaires de {name}",
+    "add": "Ajouter un exemplaire de {name}",
+    "remove": "Retirer un exemplaire de {name}"
   }
 }
