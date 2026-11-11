@@ -1,23 +1,44 @@
 /**
  * Plans a move map on a git working tree: which files move, which module
- * specifiers and path-keyed entries change, and which references would
- * resolve to no file.
+ * specifiers, config paths and path-keyed entries change, which references
+ * would resolve to no file, and what the report lists without changing it.
  *
  * Planning reads the tree and writes nothing, so a dry run and a real run
  * take the same decisions; `apply-plan.ts` carries a ready plan out.
  *
  * Scanned sources: `.ts`, `.tsx`, `.js`, `.jsx` and their `m`/`c` variants
- * under `src/`, `e2e/` and `scripts/`. Root configs (`vitest.config.ts`,
- * `next.config.ts`, `sonar-project.properties`) and docs are not rewritten
- * yet: P0-08 adds them.
+ * under `src/`, `e2e/` and `scripts/`, and at the repository root. The root
+ * configs also get their hand-written paths rewritten (`config-files.ts`),
+ * and `eslint.config.mjs` its migration guard (`migration-guard.ts`). Docs
+ * are only reported (`old-path-report.ts`).
  *
  * @module refactor/move-plan
  */
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
+import {
+  isRootConfig,
+  rewriteRootConfig,
+  scopeChanges,
+  SCOPE_FILES,
+  type PathEdit,
+  type PatternList,
+  type ScopeChange,
+} from "./config-files";
+import {
+  generatedSection,
+  GUARD_FILE,
+  rewriteMigrationGuard,
+} from "./migration-guard";
 import { findModuleSpecifiers } from "./module-specifiers";
 import { isAtOrUnder, type Move } from "./move-map";
+import {
+  findOldPathMentions,
+  isReportedConfig,
+  isReportedDoc,
+  type PathMention,
+} from "./old-path-report";
 import {
   rewriteKnownViolations,
   rewriteSuppressions,
@@ -53,11 +74,14 @@ export interface SpecifierEdit {
   readonly after: string;
 }
 
-/** A source file's new content, at its path after the moves. */
+/** A source or config file's new content, at its path after the moves. */
 export interface SourceRewrite {
   readonly path: string;
   readonly content: string;
+  /** Rewritten module specifiers. */
   readonly edits: readonly SpecifierEdit[];
+  /** Rewritten hand-written paths, in a root config only. */
+  readonly pathEdits: readonly PathEdit[];
 }
 
 /** A path-keyed JSON file's new content, with how many entries or keys changed. */
@@ -79,6 +103,12 @@ interface PlannedChanges {
   readonly fileMoves: readonly FileMove[];
   readonly fileEdits: readonly SourceRewrite[];
   readonly jsonEdits: readonly PathKeyedRewrite[];
+  /** Moved files that a coverage or test list stops or starts selecting: reported, not changed. */
+  readonly scopeChanges: readonly ScopeChange[];
+  /** Old paths still named in Markdown: reported, never rewritten. */
+  readonly docMentions: readonly PathMention[];
+  /** Old paths still named in root configs after their rewrite, in a comment for example: reported. */
+  readonly configMentions: readonly PathMention[];
 }
 
 /** A plan ready to apply. */
@@ -96,6 +126,7 @@ export type MovePlan =
     });
 
 const SCANNED_FOLDERS = ["src", "e2e", "scripts"] as const;
+const ROOT_SOURCE = /^[^/]+\.[cm]?[jt]sx?$/;
 const SOURCE_FILE = /\.[cm]?[jt]sx?$/;
 
 /** The path-keyed files that follow the moves, when they exist; `path-keyed-files.ts` says what each needs. */
@@ -115,6 +146,10 @@ const PATH_KEYED_FILES: readonly {
     path: "eslint-suppressions.json",
     rewrite: (text, moves) => rewriteSuppressions(text, moves),
   },
+  {
+    path: GUARD_FILE,
+    rewrite: (text, moves) => rewriteMigrationGuard(text, moves),
+  },
 ];
 
 /**
@@ -127,7 +162,7 @@ const PATH_KEYED_FILES: readonly {
  * before and is skipped; its references are still rewritten.
  *
  * @param root - the repository root; every path in the plan is relative to it
- * @throws Error when two moves claim one destination, or a file would move onto a folder
+ * @throws Error when two moves claim one destination, a file would move onto a folder, or the map marks a shim and `eslint.config.mjs` has no generated section for it
  */
 export function planMoves(root: string, moves: readonly Move[]): MovePlan {
   const tracked = new Set(gitFiles(root, ["--cached"]));
@@ -146,35 +181,105 @@ export function planMoves(root: string, moves: readonly Move[]): MovePlan {
         cached(onDisk, path, () => isFileOnDisk(root, path))),
   };
 
-  const fileEdits: SourceRewrite[] = [];
-  const dangling: DanglingReference[] = [];
-  for (const [path, writtenAt] of [...layout].sort(byKey)) {
-    if (!isScannedSource(path)) continue;
-    const result = rewriteSource(
-      readFileSync(join(root, writtenAt), "utf8"),
-      { path, writtenAt },
-      moduleLayout
-    );
-    dangling.push(...result.dangling);
-    if (result.edits.length > 0)
-      fileEdits.push({ path, content: result.content, edits: result.edits });
-  }
+  const files = [...layout].sort(byKey);
+  const readNow = (writtenAt: string): string =>
+    readFileSync(join(root, writtenAt), "utf8");
+  const { fileEdits, lists, dangling } = rewriteFiles(
+    files,
+    moves,
+    moduleLayout,
+    readNow
+  );
+  const fileMoves = [...layout]
+    .filter(([path, writtenAt]) => path !== writtenAt)
+    .map(([to, from]) => ({ from, to, tracked: tracked.has(from) }));
+  const edited = new Map(fileEdits.map(({ path, content }) => [path, content]));
+  const jsonEdits = rewritePathKeyedFiles(
+    moves,
+    specifierRewritesOf(fileEdits),
+    (path) =>
+      edited.get(path) ??
+      (existsSync(join(root, path)) ? readNow(path) : undefined)
+  );
+  for (const { path, content } of jsonEdits) edited.set(path, content);
 
   const changes: PlannedChanges = {
     moves: outcomes,
-    fileMoves: [...layout]
-      .filter(([path, writtenAt]) => path !== writtenAt)
-      .map(([to, from]) => ({ from, to, tracked: tracked.has(from) })),
+    fileMoves,
     fileEdits,
-    jsonEdits: rewritePathKeyedFiles(
-      root,
+    jsonEdits,
+    scopeChanges: scopeChanges(lists, fileMoves),
+    ...reportOldPaths(
+      files,
       moves,
-      specifierRewritesOf(fileEdits)
+      ([path, writtenAt]) => edited.get(path) ?? readNow(writtenAt)
     ),
   };
   return dangling.length === 0
     ? { kind: "ready", ...changes }
     : { kind: "blocked", ...changes, dangling };
+}
+
+/**
+ * The source and config pass over every file: module specifiers in scanned
+ * sources, then the hand-written paths of root configs on top, and the
+ * pattern lists of the configs that decide coverage and test discovery.
+ */
+function rewriteFiles(
+  files: readonly (readonly [string, string])[],
+  moves: readonly Move[],
+  moduleLayout: ModuleLayout,
+  readNow: (writtenAt: string) => string
+): {
+  readonly fileEdits: readonly SourceRewrite[];
+  readonly lists: readonly PatternList[];
+  readonly dangling: readonly DanglingReference[];
+} {
+  const fileEdits: SourceRewrite[] = [];
+  const lists: PatternList[] = [];
+  const dangling: DanglingReference[] = [];
+  for (const [path, writtenAt] of files) {
+    const source = isScannedSource(path)
+      ? rewriteSource(readNow(writtenAt), { path, writtenAt }, moduleLayout)
+      : undefined;
+    dangling.push(...(source?.dangling ?? []));
+    const config = isRootConfig(path)
+      ? rewriteRootConfig(path, source?.content ?? readNow(writtenAt), moves)
+      : undefined;
+    if (config !== undefined && SCOPE_FILES.has(path))
+      lists.push(...config.lists);
+    const content = config?.content ?? source?.content;
+    const edits = source?.edits ?? [];
+    const pathEdits = config?.edits ?? [];
+    if (content !== undefined && edits.length + pathEdits.length > 0)
+      fileEdits.push({ path, content, edits, pathEdits });
+  }
+  return { fileEdits, lists, dangling };
+}
+
+/**
+ * The old paths still named in docs and in root configs, read from each
+ * file's text after this plan's rewrites. The migration guard's generated
+ * section is left out: its `from` paths are old on purpose.
+ */
+function reportOldPaths(
+  files: readonly (readonly [string, string])[],
+  moves: readonly Move[],
+  textOf: (file: readonly [string, string]) => string
+): Pick<PlannedChanges, "docMentions" | "configMentions"> {
+  return {
+    docMentions: files
+      .filter(([path]) => isReportedDoc(path))
+      .flatMap((file) => findOldPathMentions(file[0], textOf(file), moves)),
+    configMentions: files
+      .filter(([path]) => isReportedConfig(path))
+      .flatMap((file) => {
+        const text = textOf(file);
+        const skipped =
+          file[0] === GUARD_FILE ? generatedSection(text) : undefined;
+        return findOldPathMentions(file[0], text, moves, skipped);
+      }),
+  };
 }
 
 /** Runs the moves over the listed files, returning each file's path after the moves mapped to its path now. */
@@ -263,18 +368,20 @@ function rewriteSource(
   return { content: content + text.slice(cursor), edits, dangling };
 }
 
+/**
+ * Runs each path-keyed rewrite on its file's current text: the text after
+ * the other rewrites of this plan, so that the migration guard's section is
+ * written into `eslint.config.mjs` after its config paths.
+ */
 function rewritePathKeyedFiles(
-  root: string,
   moves: readonly Move[],
-  rewrites: SpecifierRewrites
+  rewrites: SpecifierRewrites,
+  textOf: (path: string) => string | undefined
 ): readonly PathKeyedRewrite[] {
   return PATH_KEYED_FILES.flatMap(({ path, rewrite }) => {
-    if (!existsSync(join(root, path))) return [];
-    const result = rewrite(
-      readFileSync(join(root, path), "utf8"),
-      moves,
-      rewrites
-    );
+    const text = textOf(path);
+    if (text === undefined) return [];
+    const result = rewrite(text, moves, rewrites);
     return result === undefined ? [] : [{ path, ...result }];
   });
 }
@@ -310,8 +417,9 @@ function isFileOnDisk(root: string, path: string): boolean {
 
 function isScannedSource(path: string): boolean {
   return (
-    SOURCE_FILE.test(path) &&
-    SCANNED_FOLDERS.some((folder) => isAtOrUnder(path, folder))
+    ROOT_SOURCE.test(path) ||
+    (SOURCE_FILE.test(path) &&
+      SCANNED_FOLDERS.some((folder) => isAtOrUnder(path, folder)))
   );
 }
 

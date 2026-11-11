@@ -17,6 +17,12 @@ import { z } from "zod";
 export interface Move {
   readonly from: string;
   readonly to: string;
+  /**
+   * True while a temporary re-export shim stays at `from` (decision D8): the
+   * migration guard in `eslint.config.mjs` then bans importing or mocking
+   * `from`. The series' closing slice deletes the shim and drops the mark.
+   */
+  readonly shim?: boolean;
 }
 
 /** The outcome of reading a move map: the moves in order, or every problem found. */
@@ -25,7 +31,11 @@ export type MoveMapResult =
   | { readonly ok: false; readonly errors: readonly string[] };
 
 const moveMapSchema = z.array(
-  z.strictObject({ from: z.string(), to: z.string() })
+  z.strictObject({
+    from: z.string(),
+    to: z.string(),
+    shim: z.boolean().optional(),
+  })
 );
 
 /**

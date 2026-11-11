@@ -27,6 +27,20 @@ describe("parseMoveMap", () => {
     expect(errorsOf([{ from: "src/a.ts", to: 3 }])).not.toEqual([]);
   });
 
+  it("accepts an entry marked as a temporary re-export shim and keeps the mark", () => {
+    const map = [
+      { from: "src/lib/dice.ts", to: "src/modules/dice.ts", shim: true },
+      { from: "src/lib/random.ts", to: "src/modules/random.ts", shim: false },
+    ];
+    expect(parseMoveMap(map)).toEqual({ ok: true, moves: map });
+  });
+
+  it("rejects a shim mark that is not a boolean", () => {
+    expect(
+      errorsOf([{ from: "src/a.ts", to: "src/b.ts", shim: "yes" }])
+    ).toHaveLength(1);
+  });
+
   it.each([
     ["an absolute path", "/src/a.ts"],
     ["a parent segment", "src/../a.ts"],

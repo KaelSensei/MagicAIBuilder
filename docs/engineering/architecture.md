@@ -411,8 +411,12 @@ specifiers as `@/`, keeps the dependency-cruiser baseline and the ESLint suppres
 the moved paths, and refuses to write anything if a specifier would resolve to no file. It leaves the
 rewrites unstaged, so the pure renames are committed first and the rewrites second. The map only
 grows, and a second run changes nothing, so a branch that predates a move is rebased and then runs
-the same command. Root configs and docs that name a moved path are checked by hand with
-`git grep` until the codemod covers them. Details and limits:
+the same command. It also rewrites the paths that root configs write by hand (`vitest.config.ts`,
+`next.config.ts`, `sonar-project.properties`, the dependency-cruiser patterns), and reports what it
+does not change: a moved file that leaves or joins a coverage or test list, and the old paths still
+named in docs and configs, which are fixed by hand. An entry marked `"shim": true` keeps a temporary
+re-export shim at its old path; the codemod lists it in `eslint.config.mjs`, where the
+`migration-guard/no-shim-import` rule fails any import or `vi.mock` of that path. Details and limits:
 [scripts/refactor/README.md](../../scripts/refactor/README.md).
 
 ## How to read the code base today
