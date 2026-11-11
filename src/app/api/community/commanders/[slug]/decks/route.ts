@@ -21,6 +21,33 @@ type Params = { params: Promise<{ slug: string }> };
 /** Hard cap on a single response; discovery is a browse surface, not an export. */
 const MAX_DECKS = 50;
 
+/**
+ * Ids of the public decks led by the commander whose name slugifies to `slug`.
+ *
+ * The slug is matched in SQL against the denormalised Deck.commanderName,
+ * using the same expression the partial index Deck_commanderSlug_public_idx
+ * covers — the SQL twin of commanderToSlug (lowercase → strip non
+ * [a-z0-9\s-] → trim → whitespace runs to '-'). Prisma cannot filter on an
+ * expression, hence the raw id query.
+ *
+ * @param slug The commander slug from the URL.
+ * @returns The matching deck ids, in no particular order; empty when none match.
+ */
+async function findPublicDeckIdsByCommanderSlug(
+  slug: string
+): Promise<string[]> {
+  const rows = await prisma.$queryRaw<{ id: string }[]>`
+    SELECT "id" FROM "Deck"
+    WHERE "isPublic" = true
+      AND "commanderName" IS NOT NULL
+      AND regexp_replace(
+            btrim(regexp_replace(lower("commanderName"), '[^a-z0-9[:space:]-]', '', 'g')),
+            '[[:space:]]+', '-', 'g'
+          ) = ${slug}
+  `;
+  return rows.map((row) => row.id);
+}
+
 // GET /api/community/commanders/[slug]/decks
 export async function GET(_req: Request, { params }: Params) {
   const { slug } = await params;
@@ -28,24 +55,10 @@ export async function GET(_req: Request, { params }: Params) {
   try {
     const session = await auth();
     const viewerId = session?.user?.id ?? null;
-
-    // The slug is matched in SQL against the denormalised Deck.commanderName,
-    // using the same expression the partial index
-    // Deck_commanderSlug_public_idx covers — the SQL twin of commanderToSlug
-    // (lowercase → strip non [a-z0-9\s-] → trim → whitespace runs to '-').
-    // Prisma cannot filter on an expression, hence the raw id query.
-    const matchingIds = await prisma.$queryRaw<{ id: string }[]>`
-      SELECT "id" FROM "Deck"
-      WHERE "isPublic" = true
-        AND "commanderName" IS NOT NULL
-        AND regexp_replace(
-              btrim(regexp_replace(lower("commanderName"), '[^a-z0-9[:space:]-]', '', 'g')),
-              '[[:space:]]+', '-', 'g'
-            ) = ${slug}
-    `;
+    const matchingIds = await findPublicDeckIdsByCommanderSlug(slug);
 
     const decks = await prisma.deck.findMany({
-      where: { id: { in: matchingIds.map((row) => row.id) } },
+      where: { id: { in: matchingIds } },
       select: {
         id: true,
         name: true,
