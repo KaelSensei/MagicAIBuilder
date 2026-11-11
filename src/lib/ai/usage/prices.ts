@@ -27,7 +27,7 @@ export interface PricedUsage {
 }
 
 /** USD per million tokens for each kind of token. */
-interface TokenRates {
+export interface TokenRates {
   readonly input: number;
   /** A write to the 5-minute prompt cache, the API's default lifetime. */
   readonly cacheWrite: number;
@@ -72,22 +72,32 @@ const MODEL_PRICES: ReadonlyMap<string, ModelPrice> = new Map([
 ]);
 
 /**
+ * The highest rate of each kind of token across several rate sets.
+ *
+ * @param rateSets - the rate sets to compare
+ * @returns for each kind of token, the highest rate any set charges
+ */
+export function highestRates(rateSets: readonly TokenRates[]): TokenRates {
+  return rateSets.reduce((highest, rates) => ({
+    input: Math.max(highest.input, rates.input),
+    cacheWrite: Math.max(highest.cacheWrite, rates.cacheWrite),
+    cacheRead: Math.max(highest.cacheRead, rates.cacheRead),
+    output: Math.max(highest.output, rates.output),
+  }));
+}
+
+/**
  * The highest rate of each kind in the table.
  *
  * A model the table does not list (today the OpenAI fallback) is charged at
  * these rates, so the spend ceiling over-counts rather than under-counts until
  * its price is added.
  */
-const UNPRICED_RATES: TokenRates = [...MODEL_PRICES.values()]
-  .flatMap((price) =>
+const UNPRICED_RATES: TokenRates = highestRates(
+  [...MODEL_PRICES.values()].flatMap((price) =>
     price.longPrompt ? [price.rates, price.longPrompt.rates] : [price.rates]
   )
-  .reduce((highest, rates) => ({
-    input: Math.max(highest.input, rates.input),
-    cacheWrite: Math.max(highest.cacheWrite, rates.cacheWrite),
-    cacheRead: Math.max(highest.cacheRead, rates.cacheRead),
-    output: Math.max(highest.output, rates.output),
-  }));
+);
 
 /**
  * Picks the rates that apply to one call of a listed model.
