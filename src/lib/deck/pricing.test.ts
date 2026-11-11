@@ -61,6 +61,20 @@ describe("generateShoppingListCSV", () => {
     expect(csv).toContain('"Jaheira, Friend of the Forest"');
   });
 
+  it("doubles the quotes in a card name so the row keeps its four cells", () => {
+    const csv = generateShoppingListCSV([
+      makeCard("c1", 'Kongming, "Sleeping Dragon"', 1),
+    ]);
+    expect(csv.split("\n")[1]).toBe(
+      '"Kongming, ""Sleeping Dragon""",1,$1.00,$1.00'
+    );
+  });
+
+  it("exports a card name that starts like a formula as text", () => {
+    const csv = generateShoppingListCSV([makeCard("c1", "=1+1", 1)]);
+    expect(csv.split("\n")[1]).toBe(`"'=1+1",1,$1.00,$1.00`);
+  });
+
   it("prices a card with no known price at zero rather than omitting it", () => {
     const csv = generateShoppingListCSV([makeCard("c1", "Unpriced", null)]);
     expect(csv).toContain("Unpriced");

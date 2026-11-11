@@ -5,6 +5,10 @@
 - Deck names: HTML-stripped + trimmed + max 200 chars (enforced in API routes)
 - Deck import: card names HTML-stripped, quantity clamped 1–99, max 500 lines
 
+## CSV exports
+
+Every CSV download builds its text cells with `src/lib/csv.ts`: the acquisition plan, the collection export, the deck shopping list and the deck statistics export. A cell that starts with `=`, `+`, `-`, `@`, a tab, a carriage return, a line feed or a full-width `＝＋－＠` gets a leading single quote, so a spreadsheet shows it as text instead of running it as a formula ([OWASP, CSV Injection](https://owasp.org/www-community/attacks/CSV_Injection), read 2026-11-10). Excel may drop that quote after the file is saved and reopened; OWASP knows no escaping that is safe for every reader.
+
 ## External API Calls
 
 - **Scryfall JSON API**: Called directly from the browser for search/collection where applicable
