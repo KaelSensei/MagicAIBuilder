@@ -1,3 +1,16 @@
+/**
+ * GET /api/proxy-card-image: same-origin copies of Scryfall card images for
+ * the printable proxy sheet.
+ *
+ * Card catalog context. `ProxyExportModal` calls it once per image, because a
+ * browser `fetch()` to cards.scryfall.io is blocked by CORS. Public: no
+ * session needed. The route fetches only https URLs on cards.scryfall.io and
+ * never follows a redirect, so it cannot be turned into a fetcher of other
+ * hosts (SSRF). It answers images only, at most 5 MB each.
+ *
+ * @module api/proxy-card-image
+ */
+
 import { NextResponse } from "next/server";
 import { logger } from "@/lib/logger";
 
@@ -70,7 +83,13 @@ async function proxyCardImage(request: Request): Promise<NextResponse> {
         "User-Agent": "MagicAIBuilder/1.0 (image proxy for print export)",
       },
       signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
-      redirect: "follow",
+      // The allowlist checked only this URL: following a redirect would let any
+      // host be fetched. OWASP: "Disable the support for the following of the
+      // redirection" (https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html,
+      // read 2026-11-10). cards.scryfall.io serves every image size without a
+      // redirect (checked 2026-11-10), and Node returns a 3xx as `ok === false`,
+      // so the check below answers 502.
+      redirect: "manual",
     });
 
     if (!upstream.ok) {

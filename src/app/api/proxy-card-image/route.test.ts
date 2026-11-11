@@ -9,6 +9,48 @@ function makeReq(search: string): Request {
   return new Request(`http://localhost:3000/api/proxy-card-image?${search}`);
 }
 
+/** @returns a small JPEG answer, as cards.scryfall.io sends one */
+function imageResponse(): Response {
+  return new Response(new Uint8Array([0xff, 0xd8, 0xff, 0xd9]), {
+    status: 200,
+    headers: { "content-type": "image/jpeg" },
+  });
+}
+
+/**
+ * A stand-in for the network that honours `fetch`'s `redirect` option as
+ * Node's fetch does: "follow" (the default) chases the `Location` header,
+ * "manual" hands the 3xx answer back, "error" rejects. It records every URL it
+ * is asked for, so a test can prove that a host was never contacted.
+ *
+ * @param routes - the answer each absolute URL gives; any other URL answers 404
+ */
+function fakeNetwork(routes: Readonly<Record<string, () => Response>>) {
+  const requested: string[] = [];
+  async function fakeFetch(
+    input: RequestInfo | URL,
+    init?: RequestInit
+  ): Promise<Response> {
+    let url = input instanceof Request ? input.url : String(input);
+    for (let hop = 0; hop <= 20; hop++) {
+      requested.push(url);
+      const answer = routes[url]?.() ?? new Response(null, { status: 404 });
+      const location = answer.headers.get("location");
+      const isRedirect =
+        answer.status >= 300 && answer.status < 400 && location !== null;
+      if (!isRedirect) return answer;
+      const mode = init?.redirect ?? "follow";
+      if (mode === "manual") return answer;
+      if (mode === "error") {
+        throw new TypeError("fetch failed: unexpected redirect");
+      }
+      url = new URL(location, url).toString();
+    }
+    throw new TypeError("fetch failed: redirect count exceeded");
+  }
+  return { fetch: fakeFetch, requested };
+}
+
 describe("GET /api/proxy-card-image", () => {
   beforeEach(() => {
     vi.stubGlobal(
@@ -124,5 +166,26 @@ describe("GET /api/proxy-card-image request timing", () => {
     expect(calls).toEqual([
       ["Card image proxy request completed", "GET /api/proxy-card-image", { status: expected, durationMs: expect.any(Number) }],
     ]);
+  });
+});
+
+describe("GET /api/proxy-card-image upstream redirects", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("refuses a redirect to a host outside the allowlist without contacting that host", async () => {
+    const foreignUrl = "https://intranet.example/secret.jpg";
+    const network = fakeNetwork({
+      [VALID_URL]: () =>
+        new Response(null, { status: 302, headers: { location: foreignUrl } }),
+      [foreignUrl]: imageResponse,
+    });
+    vi.stubGlobal("fetch", network.fetch);
+
+    const res = await GET(makeReq(`url=${encodeURIComponent(VALID_URL)}`));
+
+    expect(res.status).toBe(502);
+    expect(network.requested).toEqual([VALID_URL]);
   });
 });
