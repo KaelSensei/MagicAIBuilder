@@ -5,10 +5,13 @@ const { mockDeckFindUnique, mockAuth } = vi.hoisted(() => ({
   mockAuth: vi.fn(),
 }));
 
-vi.mock("@/lib/db/prisma", () => ({
-  prisma: { deck: { findUnique: mockDeckFindUnique } },
-}));
-vi.mock("@/lib/auth/config", () => ({ auth: mockAuth }));
+vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
+  const { stubPrisma } = await import("@/test/prisma-stub");
+  return stubPrisma(await importOriginal(), {
+    deck: { findUnique: mockDeckFindUnique },
+  });
+});
+vi.mock(import("@/lib/auth/config"), () => ({ auth: mockAuth }));
 
 import { GET } from "./route";
 import { PUBLIC_DECK_READS_PER_CLIENT } from "@/lib/deck/public-read-policy";

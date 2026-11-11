@@ -2,9 +2,10 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { logger } from "@/lib/logger";
 import { scryfallCacheDb } from "@/test/scryfall-cache-db-fake";
 
-vi.mock("@/lib/db/prisma", async () => {
+vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
+  const { stubPrisma } = await import("@/test/prisma-stub");
   const { scryfallCacheDb: db } = await import("@/test/scryfall-cache-db-fake");
-  return { prisma: db.prisma };
+  return stubPrisma(await importOriginal(), db.prisma);
 });
 
 import * as route from "./route";

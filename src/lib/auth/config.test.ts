@@ -7,13 +7,14 @@ const { mockFindUnique, mockCompare } = vi.hoisted(() => ({
   mockCompare: vi.fn(),
 }));
 
-vi.mock("@/lib/db/prisma", () => ({
-  prisma: {
+vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
+  const { stubPrisma } = await import("@/test/prisma-stub");
+  return stubPrisma(await importOriginal(), {
     user: { findUnique: mockFindUnique },
-  },
-}));
+  });
+});
 
-vi.mock("bcryptjs", () => ({
+vi.mock(import("bcryptjs"), () => ({
   compare: mockCompare,
 }));
 
@@ -59,7 +60,7 @@ vi.mock("next-auth/providers/credentials", () => ({
   })),
 }));
 
-vi.mock("@auth/prisma-adapter", () => ({
+vi.mock(import("@auth/prisma-adapter"), () => ({
   PrismaAdapter: vi.fn(() => ({})),
 }));
 

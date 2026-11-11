@@ -11,7 +11,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const toastAdd = vi.hoisted(() => vi.fn());
 
-vi.mock("@/lib/db/deck-api", () => ({
+vi.mock(import("@/lib/db/deck-api"), () => ({
   fetchDecks: vi.fn().mockResolvedValue({ decks: [], total: 0, page: 0, limit: 20 }),
   createDeck: vi.fn().mockResolvedValue({
     id: "deck-1",
@@ -66,9 +66,11 @@ vi.mock("@/lib/db/deck-api", () => ({
   lookupCardCache: vi.fn().mockResolvedValue(null),
 }));
 
-vi.mock("@/hooks/useToast", () => ({
-  useToastStore: { getState: () => ({ add: toastAdd }) },
-}));
+vi.mock(import("@/hooks/useToast"), async (importOriginal) => {
+  const { useToastStore } = await importOriginal();
+  useToastStore.setState({ add: toastAdd });
+  return { useToastStore };
+});
 
 import * as deckApi from "@/lib/db/deck-api";
 import type { Deck, DeckCard } from "@/lib/deck/types";

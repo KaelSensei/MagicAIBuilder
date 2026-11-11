@@ -13,8 +13,8 @@ import * as scryfallClient from "@/lib/scryfall/client";
 import type { DeckCard } from "@/lib/deck/types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 
-vi.mock("@/lib/scryfall/client");
-vi.mock("./CardTooltip", () => ({
+vi.mock(import("@/lib/scryfall/client"));
+vi.mock(import("./CardTooltip"), () => ({
   CardTooltip: ({ children }: { readonly children: React.ReactNode }) => <>{children}</>,
 }));
 

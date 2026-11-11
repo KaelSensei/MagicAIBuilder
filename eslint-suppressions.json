@@ -16,9 +16,46 @@
       "count": 1
     }
   },
+  "src/app/[locale]/commanders/[slug]/decks/page.test.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    },
+    "vitest/prefer-import-in-mock": {
+      "count": 2
+    }
+  },
   "src/app/[locale]/commanders/[slug]/decks/page.tsx": {
     "@typescript-eslint/consistent-type-assertions": {
       "count": 1
+    }
+  },
+  "src/app/[locale]/deck/[id]/page.test.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    },
+    "vitest/prefer-import-in-mock": {
+      "count": 2
+    }
+  },
+  "src/app/[locale]/decks/loading.test.tsx": {
+    "vitest/prefer-import-in-mock": {
+      "count": 1
+    }
+  },
+  "src/app/[locale]/decks/page.new-deck.test.tsx": {
+    "no-restricted-syntax": {
+      "count": 12
+    },
+    "vitest/prefer-import-in-mock": {
+      "count": 3
+    }
+  },
+  "src/app/[locale]/decks/page.test.tsx": {
+    "no-restricted-syntax": {
+      "count": 12
+    },
+    "vitest/prefer-import-in-mock": {
+      "count": 4
     }
   },
   "src/app/[locale]/decks/page.tsx": {
@@ -32,13 +69,57 @@
       "count": 1
     }
   },
+  "src/app/[locale]/layout.test.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    },
+    "vitest/prefer-import-in-mock": {
+      "count": 3
+    }
+  },
   "src/app/[locale]/layout.tsx": {
     "@typescript-eslint/consistent-type-assertions": {
       "count": 1
     }
   },
+  "src/app/[locale]/page.test.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "src/app/[locale]/share/[token]/page.test.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    },
+    "vitest/prefer-import-in-mock": {
+      "count": 2
+    }
+  },
+  "src/app/[locale]/u/[username]/page.test.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    },
+    "vitest/prefer-import-in-mock": {
+      "count": 2
+    }
+  },
+  "src/app/api/ai/allowance/route.test.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
   "src/app/api/ai/build/mock-deck.ts": {
     "@typescript-eslint/consistent-type-assertions": {
+      "count": 2
+    }
+  },
+  "src/app/api/ai/build/route.card-names.test.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "src/app/api/ai/build/route.test.ts": {
+    "no-restricted-syntax": {
       "count": 2
     }
   },
@@ -48,6 +129,16 @@
     },
     "max-lines-per-function": {
       "count": 1
+    }
+  },
+  "src/app/api/ai/suggest/route.card-names.test.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "src/app/api/ai/suggest/route.test.ts": {
+    "no-restricted-syntax": {
+      "count": 2
     }
   },
   "src/app/api/ai/suggest/route.ts": {
@@ -74,9 +165,34 @@
       "count": 1
     }
   },
+  "src/app/api/collection/[id]/route.test.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
   "src/app/api/collection/[id]/route.ts": {
     "@typescript-eslint/max-params": {
       "count": 1
+    }
+  },
+  "src/app/api/collection/acquisition-plan/route.test.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "src/app/api/collection/route.test.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "src/app/api/collection/usage/route.test.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "src/app/api/community/card-packages/[packageId]/apply/route.test.ts": {
+    "no-restricted-syntax": {
+      "count": 2
     }
   },
   "src/app/api/community/card-packages/[packageId]/apply/route.ts": {
@@ -87,14 +203,34 @@
       "count": 1
     }
   },
+  "src/app/api/community/card-packages/[packageId]/preview/route.test.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
   "src/app/api/community/card-packages/[packageId]/preview/route.ts": {
     "max-depth": {
+      "count": 1
+    }
+  },
+  "src/app/api/community/card-packages/route.test.ts": {
+    "no-restricted-syntax": {
       "count": 1
     }
   },
   "src/app/api/community/commanders/[slug]/decks/route.ts": {
     "@typescript-eslint/consistent-type-assertions": {
       "count": 2
+    }
+  },
+  "src/app/api/community/deck-folders/[folderId]/route.test.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "src/app/api/community/deck-folders/route.test.ts": {
+    "no-restricted-syntax": {
+      "count": 1
     }
   },
   "src/app/api/community/decks/[id]/comments/[commentId]/route.ts": {
@@ -112,8 +248,58 @@
       "count": 1
     }
   },
+  "src/app/api/community/decks/[id]/save/route.test.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
   "src/app/api/community/decks/[id]/vote/route.ts": {
     "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
+  "src/app/api/deck-folders/[folderId]/route.test.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "src/app/api/decks/[id]/acquisition-intent/route.test.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "src/app/api/decks/[id]/cards/[cardId]/route.test.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "src/app/api/decks/[id]/cards/route.patch.test.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "src/app/api/decks/[id]/cards/route.test.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "src/app/api/decks/[id]/folder/route.test.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "src/app/api/decks/[id]/fork/route.test.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "src/app/api/decks/[id]/legality/route.test.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "src/app/api/decks/[id]/playtest-sessions/route.deck-version.test.ts": {
+    "vitest/prefer-import-in-mock": {
       "count": 1
     }
   },
@@ -122,9 +308,49 @@
       "count": 2
     }
   },
+  "src/app/api/decks/[id]/route.test.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "src/app/api/decks/[id]/snapshots/[snapshotId]/restore/route.test.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "src/app/api/decks/folders/route.test.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "src/app/api/decks/route.test.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
   "src/app/api/decks/route.ts": {
     "@typescript-eslint/max-params": {
       "count": 1
+    }
+  },
+  "src/app/api/health/route.test.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "src/app/api/import/moxfield-user/route.test.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "src/app/api/meta/[commanderSlug]/history/route.test.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "src/app/api/meta/[commanderSlug]/route.test.ts": {
+    "no-restricted-syntax": {
+      "count": 4
     }
   },
   "src/app/api/meta/[commanderSlug]/route.ts": {
@@ -135,8 +361,86 @@
       "count": 1
     }
   },
+  "src/app/api/moderation/deck-reports/[reportId]/route.test.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "src/app/api/moderation/deck-reports/route.test.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "src/app/api/search/translate/route.test.ts": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "src/app/api/share/route.test.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "src/app/api/user/api-keys/[id]/route.test.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "src/app/api/user/api-keys/route.test.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "src/app/api/user/init/route.test.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "src/app/api/user/username/route.test.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
   "src/app/api/users/[username]/route.ts": {
     "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
+  "src/app/api/v1/collection/route.test.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "src/app/api/v1/decks/[id]/route.test.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "src/app/api/v1/decks/route.test.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "src/app/og/deck/[id]/route.test.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    },
+    "vitest/prefer-import-in-mock": {
+      "count": 1
+    }
+  },
+  "src/components/auth/AuthCallbackUrl.test.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "src/components/auth/GoogleSignInFailure.test.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "src/components/auth/OAuthAccountNotLinked.test.tsx": {
+    "no-restricted-syntax": {
       "count": 1
     }
   },
@@ -150,6 +454,11 @@
       "count": 1
     }
   },
+  "src/components/auth/UserMenu.test.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
   "src/components/auth/UserMenu.tsx": {
     "@typescript-eslint/consistent-type-assertions": {
       "count": 1
@@ -158,11 +467,24 @@
       "count": 1
     }
   },
+  "src/components/builder/GuestDeckNotice.test.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    },
+    "vitest/prefer-import-in-mock": {
+      "count": 1
+    }
+  },
   "src/components/card/CardImage.tsx": {
     "complexity": {
       "count": 1
     },
     "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/card/CardListItem.role-explanation.test.tsx": {
+    "no-restricted-syntax": {
       "count": 1
     }
   },
@@ -182,9 +504,32 @@
       "count": 1
     }
   },
+  "src/components/card/CardRulingsPanel.test.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "src/components/card/CardTooltip.test.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
   "src/components/card/CardTooltip.tsx": {
     "@typescript-eslint/consistent-type-assertions": {
       "count": 1
+    }
+  },
+  "src/components/card/LocalizedDeckTextContext.test.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "src/components/card/PrintingSelectorModal.test.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    },
+    "vitest/prefer-import-in-mock": {
+      "count": 2
     }
   },
   "src/components/card/PrintingSelectorModal.tsx": {
@@ -195,6 +540,11 @@
       "count": 1
     },
     "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/collection/AcquisitionPlanPanel.test.tsx": {
+    "no-restricted-syntax": {
       "count": 1
     }
   },
@@ -217,6 +567,14 @@
       "count": 1
     }
   },
+  "src/components/collection/CollectionPageClient.test.tsx": {
+    "no-restricted-syntax": {
+      "count": 4
+    },
+    "vitest/prefer-import-in-mock": {
+      "count": 1
+    }
+  },
   "src/components/collection/CollectionPageClient.tsx": {
     "complexity": {
       "count": 1
@@ -228,9 +586,19 @@
       "count": 2
     }
   },
+  "src/components/collection/PrintingDeckUsage.test.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
   "src/components/collection/PrintingDeckUsage.tsx": {
     "max-lines-per-function": {
       "count": 1
+    }
+  },
+  "src/components/community/CommanderDecksView.test.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
     }
   },
   "src/components/community/CommentThreadItem.tsx": {
@@ -238,8 +606,18 @@
       "count": 1
     }
   },
+  "src/components/community/DeckCommentPanel.test.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
   "src/components/community/DeckCommentPanel.tsx": {
     "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/community/DeckRatingPanel.test.tsx": {
+    "no-restricted-syntax": {
       "count": 1
     }
   },
@@ -259,13 +637,28 @@
       "count": 1
     }
   },
+  "src/components/community/SavePublicDeckButton.test.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
   "src/components/community/SavePublicDeckButton.tsx": {
     "max-lines-per-function": {
       "count": 1
     }
   },
+  "src/components/community/SavedDeckLibrary.test.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
   "src/components/community/SavedDeckLibrary.tsx": {
     "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/community/UserChip.test.tsx": {
+    "no-restricted-syntax": {
       "count": 1
     }
   },
@@ -312,6 +705,19 @@
       "count": 1
     }
   },
+  "src/components/deck/BulkEditModal.guest.test.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "src/components/deck/BulkEditModal.test.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    },
+    "vitest/prefer-import-in-mock": {
+      "count": 1
+    }
+  },
   "src/components/deck/BulkEditModal.tsx": {
     "max-lines": {
       "count": 1
@@ -336,6 +742,11 @@
       "count": 1
     }
   },
+  "src/components/deck/CollectionStatsPanel.test.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
   "src/components/deck/CollectionStatsPanel.tsx": {
     "max-lines": {
       "count": 1
@@ -355,8 +766,21 @@
       "count": 1
     }
   },
+  "src/components/deck/DeckComparisonPanel.test.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
   "src/components/deck/DeckComparisonPanel.tsx": {
     "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/deck/DeckDescriptionEditor.test.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    },
+    "vitest/prefer-import-in-mock": {
       "count": 1
     }
   },
@@ -384,8 +808,18 @@
       "count": 1
     }
   },
+  "src/components/deck/DeckListTable.test.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
   "src/components/deck/DeckListTable.tsx": {
     "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/deck/DeckStats.test.tsx": {
+    "no-restricted-syntax": {
       "count": 1
     }
   },
@@ -400,14 +834,35 @@
       "count": 1
     }
   },
+  "src/components/deck/DeckTagsEditor.test.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    },
+    "vitest/prefer-import-in-mock": {
+      "count": 1
+    }
+  },
   "src/components/deck/DeckTagsEditor.tsx": {
     "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/deck/DeckUnavailableState.test.tsx": {
+    "no-restricted-syntax": {
       "count": 1
     }
   },
   "src/components/deck/DeckVisibilityToggle.tsx": {
     "max-lines-per-function": {
       "count": 1
+    }
+  },
+  "src/components/deck/DeckWizard.deck-name.test.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    },
+    "vitest/prefer-import-in-mock": {
+      "count": 2
     }
   },
   "src/components/deck/DeckWizard.tsx": {
@@ -427,8 +882,18 @@
       "count": 1
     }
   },
+  "src/components/deck/DeckZoneTab.test.tsx": {
+    "vitest/prefer-import-in-mock": {
+      "count": 1
+    }
+  },
   "src/components/deck/DecksHomeControls.tsx": {
     "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/deck/ExportModal.test.tsx": {
+    "no-restricted-syntax": {
       "count": 1
     }
   },
@@ -447,6 +912,19 @@
       "count": 1
     }
   },
+  "src/components/deck/GuestDeckClaimOffer.test.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    },
+    "vitest/prefer-import-in-mock": {
+      "count": 1
+    }
+  },
+  "src/components/deck/HomeDeckCard.test.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
   "src/components/deck/HomeDeckCard.tsx": {
     "complexity": {
       "count": 1
@@ -455,11 +933,27 @@
       "count": 1
     }
   },
+  "src/components/deck/ImportDialog.test.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    },
+    "vitest/prefer-import-in-mock": {
+      "count": 1
+    }
+  },
   "src/components/deck/ImportDialog.tsx": {
     "max-lines": {
       "count": 1
     },
     "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/deck/ImportFromUrlTab.test.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    },
+    "vitest/prefer-import-in-mock": {
       "count": 1
     }
   },
@@ -475,6 +969,11 @@
     },
     "max-lines-per-function": {
       "count": 1
+    }
+  },
+  "src/components/deck/MainZoneContent.test.tsx": {
+    "vitest/prefer-import-in-mock": {
+      "count": 2
     }
   },
   "src/components/deck/MainZoneContent.tsx": {
@@ -493,6 +992,11 @@
       "count": 1
     }
   },
+  "src/components/deck/MetaPanel.test.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
   "src/components/deck/MetaPanel.tsx": {
     "complexity": {
       "count": 1
@@ -501,6 +1005,14 @@
       "count": 1
     },
     "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/deck/MetaTrendsView.test.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    },
+    "vitest/prefer-import-in-mock": {
       "count": 1
     }
   },
@@ -528,11 +1040,21 @@
       "count": 1
     }
   },
+  "src/components/deck/SecondaryZoneContent.test.tsx": {
+    "vitest/prefer-import-in-mock": {
+      "count": 1
+    }
+  },
   "src/components/deck/SecondaryZoneContent.tsx": {
     "max-lines": {
       "count": 1
     },
     "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/deck/ShareDeckView.test.tsx": {
+    "no-restricted-syntax": {
       "count": 1
     }
   },
@@ -582,6 +1104,19 @@
       "count": 2
     }
   },
+  "src/components/landing/CapabilityAtlas.test.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "src/components/layout/Header.test.tsx": {
+    "no-restricted-syntax": {
+      "count": 6
+    },
+    "vitest/prefer-import-in-mock": {
+      "count": 1
+    }
+  },
   "src/components/layout/Header.tsx": {
     "max-lines-per-function": {
       "count": 1
@@ -589,6 +1124,19 @@
   },
   "src/components/layout/HeaderMobileMenu.tsx": {
     "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/layout/LocaleSwitcher.test.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    },
+    "vitest/prefer-import-in-mock": {
+      "count": 1
+    }
+  },
+  "src/components/moderation/DeckReportQueue.test.tsx": {
+    "no-restricted-syntax": {
       "count": 1
     }
   },
@@ -604,6 +1152,16 @@
   },
   "src/components/playtest/BattlefieldZone.tsx": {
     "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/playtest/CommandZone.test.tsx": {
+    "vitest/prefer-import-in-mock": {
+      "count": 1
+    }
+  },
+  "src/components/playtest/HandZone.test.tsx": {
+    "vitest/prefer-import-in-mock": {
       "count": 1
     }
   },
@@ -638,11 +1196,24 @@
       "count": 1
     }
   },
+  "src/components/playtest/PlaytestHistoryPanel.test.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    },
+    "vitest/prefer-import-in-mock": {
+      "count": 1
+    }
+  },
   "src/components/playtest/PlaytestHistoryPanel.tsx": {
     "@typescript-eslint/consistent-type-assertions": {
       "count": 1
     },
     "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/playtest/PlaytestModal.test.tsx": {
+    "vitest/prefer-import-in-mock": {
       "count": 1
     }
   },
@@ -657,9 +1228,19 @@
       "count": 1
     }
   },
+  "src/components/playtest/RecordResultBar.deck-version.test.tsx": {
+    "vitest/prefer-import-in-mock": {
+      "count": 1
+    }
+  },
   "src/components/playtest/RecordResultBar.tsx": {
     "max-lines-per-function": {
       "count": 1
+    }
+  },
+  "src/components/profile/PublicDeckActions.test.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
     }
   },
   "src/components/profile/PublicDeckActions.tsx": {
@@ -680,6 +1261,11 @@
       "count": 1
     }
   },
+  "src/components/profile/PublicDeckView.test.tsx": {
+    "no-restricted-syntax": {
+      "count": 7
+    }
+  },
   "src/components/profile/PublicDeckView.tsx": {
     "complexity": {
       "count": 1
@@ -691,8 +1277,21 @@
       "count": 1
     }
   },
+  "src/components/profile/PublicProfileView.test.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
   "src/components/profile/PublicProfileView.tsx": {
     "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/rules/ComprehensiveRulesView.test.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    },
+    "vitest/prefer-import-in-mock": {
       "count": 1
     }
   },
@@ -787,13 +1386,48 @@
       "count": 3
     }
   },
+  "src/hooks/useBanlist.test.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "src/hooks/useBoundedSession.test.tsx": {
+    "vitest/prefer-import-in-mock": {
+      "count": 1
+    }
+  },
+  "src/hooks/useCardLookup.test.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "src/hooks/useCardPrintings.test.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
   "src/hooks/useCardPrintings.ts": {
     "@typescript-eslint/no-non-null-assertion": {
       "count": 2
     }
   },
+  "src/hooks/useCardSearch.test.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
   "src/hooks/useCardSearch.ts": {
     "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
+  "src/hooks/useCombos.test.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "src/hooks/useGameChangers.test.ts": {
+    "no-restricted-syntax": {
       "count": 1
     }
   },
@@ -802,13 +1436,36 @@
       "count": 1
     }
   },
+  "src/hooks/useKeyboardShortcuts.test.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    },
+    "vitest/prefer-import-in-mock": {
+      "count": 1
+    }
+  },
   "src/hooks/useKeyboardShortcuts.ts": {
     "@typescript-eslint/max-params": {
       "count": 1
     }
   },
+  "src/hooks/useLocalizedCardText.test.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "src/hooks/useLocalizedDeckIndex.test.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
   "src/hooks/useMetaShifts.ts": {
     "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
+  "src/hooks/useOnboarding.test.ts": {
+    "no-restricted-syntax": {
       "count": 1
     }
   },
@@ -870,9 +1527,22 @@
       "count": 1
     }
   },
+  "src/lib/api/authenticate.test.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
   "src/lib/api/openapi.ts": {
     "max-lines-per-function": {
       "count": 1
+    }
+  },
+  "src/lib/auth/config.test.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    },
+    "vitest/prefer-import-in-mock": {
+      "count": 4
     }
   },
   "src/lib/auth/edge-config.ts": {
@@ -882,6 +1552,11 @@
   },
   "src/lib/auth/helpers.ts": {
     "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
+  "src/lib/auth/require-moderator.test.ts": {
+    "no-restricted-syntax": {
       "count": 1
     }
   },
@@ -903,6 +1578,11 @@
       "count": 1
     }
   },
+  "src/lib/collection/store.collection-route.test.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
   "src/lib/collection/store.ts": {
     "max-lines-per-function": {
       "count": 1
@@ -910,6 +1590,11 @@
   },
   "src/lib/community/card-package-preview.ts": {
     "@typescript-eslint/max-params": {
+      "count": 1
+    }
+  },
+  "src/lib/community/verified-package-cards.test.ts": {
+    "no-restricted-syntax": {
       "count": 1
     }
   },
@@ -933,6 +1618,11 @@
   },
   "src/lib/db/snapshot-api.ts": {
     "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
+  "src/lib/deck/batch-fetch.test.ts": {
+    "no-restricted-syntax": {
       "count": 1
     }
   },
@@ -1025,6 +1715,14 @@
       "count": 1
     }
   },
+  "src/lib/deck/store-bulk-edit.test.ts": {
+    "no-restricted-syntax": {
+      "count": 4
+    },
+    "vitest/prefer-import-in-mock": {
+      "count": 1
+    }
+  },
   "src/lib/deck/store-card-faces.ts": {
     "@typescript-eslint/max-params": {
       "count": 1
@@ -1033,9 +1731,83 @@
       "count": 1
     }
   },
+  "src/lib/deck/store-command-zone-rows.test.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "src/lib/deck/store-commander-recovery.test.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "src/lib/deck/store-core.test.ts": {
+    "no-restricted-syntax": {
+      "count": 4
+    },
+    "vitest/prefer-import-in-mock": {
+      "count": 1
+    }
+  },
+  "src/lib/deck/store-extra.test.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
   "src/lib/deck/store-factories.ts": {
     "complexity": {
       "count": 1
+    }
+  },
+  "src/lib/deck/store-hydration.test.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "src/lib/deck/store-load-error.test.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "src/lib/deck/store-maybeboard.test.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    },
+    "vitest/prefer-import-in-mock": {
+      "count": 1
+    }
+  },
+  "src/lib/deck/store-missing.test.ts": {
+    "no-restricted-syntax": {
+      "count": 4
+    },
+    "vitest/prefer-import-in-mock": {
+      "count": 2
+    }
+  },
+  "src/lib/deck/store-notes-persistence.test.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "src/lib/deck/store-notes.test.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "src/lib/deck/store-pairing.test.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "src/lib/deck/store-reload.test.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "src/lib/deck/store-zone-recovery.test.ts": {
+    "no-restricted-syntax": {
+      "count": 2
     }
   },
   "src/lib/deck/store.ts": {
@@ -1104,6 +1876,11 @@
       "count": 1
     }
   },
+  "src/lib/meta/snapshots.test.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
   "src/lib/playtest/engine.ts": {
     "@typescript-eslint/max-params": {
       "count": 9
@@ -1148,6 +1925,16 @@
       "count": 1
     }
   },
+  "src/lib/scryfall/client.shared-cache.test.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "src/lib/scryfall/client.test.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
   "src/lib/scryfall/client.ts": {
     "@typescript-eslint/consistent-type-assertions": {
       "count": 1
@@ -1166,6 +1953,11 @@
       "count": 1
     }
   },
+  "src/lib/seo/page-metadata.test.ts": {
+    "vitest/prefer-import-in-mock": {
+      "count": 1
+    }
+  },
   "src/lib/seo/sitemap.ts": {
     "@typescript-eslint/max-params": {
       "count": 1
@@ -1173,6 +1965,11 @@
   },
   "src/lib/shortcuts/shortcuts.ts": {
     "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
+  "src/middleware.test.ts": {
+    "vitest/prefer-import-in-mock": {
       "count": 1
     }
   }

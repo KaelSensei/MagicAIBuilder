@@ -1,21 +1,20 @@
-import { createElement, type ReactNode } from "react";
 import { screen } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { renderWithIntl } from "@/test/render-with-intl";
 
-vi.mock("next/headers", () => ({ headers: async () => new Headers() }));
-vi.mock("next/navigation", () => ({
+vi.mock(import("next/headers"), () => ({ headers: async () => new Headers() }));
+vi.mock(import("next/navigation"), () => ({
   notFound: () => {
     throw new Error("NOT_FOUND");
   },
 }));
 vi.mock("next-intl/server", () => import("@/test/server-intl"));
 vi.mock("@/lib/auth/config", () => ({ auth: async () => null }));
-vi.mock("@/components/layout/Header", () => ({ Header: () => null }));
-vi.mock("@/i18n/navigation", () => ({
-  Link: ({ children, href }: { children: ReactNode; href: string }) =>
-    createElement("a", { href }, children),
-}));
+vi.mock(import("@/components/layout/Header"), () => ({ Header: () => <></> }));
+vi.mock(
+  import("@/i18n/navigation"),
+  () => import("@/test/i18n-navigation-stub")
+);
 
 import CommanderDecksPage, { generateMetadata } from "./page";
 

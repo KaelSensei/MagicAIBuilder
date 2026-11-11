@@ -7,7 +7,16 @@ const createDeck = vi.hoisted(() => vi.fn(async (_name: string) => "deck-1"));
 vi.mock("next-auth/react", () => ({
   useSession: () => ({ status: "unauthenticated" }),
 }));
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
+vi.mock(import("next/navigation"), () => ({
+  useRouter: () => ({
+    back: vi.fn(),
+    forward: vi.fn(),
+    refresh: vi.fn(),
+    push: vi.fn(),
+    replace: vi.fn(),
+    prefetch: vi.fn(),
+  }),
+}));
 vi.mock("@/lib/deck/store", () => ({
   useDeckStore: () => ({
     decks: {},
@@ -22,26 +31,30 @@ vi.mock("@/lib/deck/store", () => ({
 vi.mock("@/hooks/useToast", () => ({
   useToastStore: () => vi.fn(),
 }));
-vi.mock("@/components/layout/Header", () => ({ Header: () => null }));
-vi.mock("@/components/layout/Footer", () => ({ Footer: () => null }));
-vi.mock("@/components/deck/DeckWizard", () => ({ DeckWizard: () => null }));
-vi.mock("@/components/deck/DecksHomeControls", () => ({
-  DecksHomeControls: () => null,
+vi.mock(import("@/components/layout/Header"), () => ({ Header: () => <></> }));
+vi.mock(import("@/components/layout/Footer"), () => ({ Footer: () => <></> }));
+vi.mock(import("@/components/deck/DeckWizard"), () => ({
+  DeckWizard: () => <></>,
 }));
-vi.mock("@/components/deck/DeckFolderControls", () => ({
-  DeckFolderControls: () => null,
+vi.mock(import("@/components/deck/DecksHomeControls"), () => ({
+  DecksHomeControls: () => <></>,
 }));
-vi.mock("@/components/deck/DeckComparisonPanel", () => ({
+vi.mock(import("@/components/deck/DeckFolderControls"), () => ({
+  DeckFolderControls: () => <></>,
+}));
+vi.mock(import("@/components/deck/DeckComparisonPanel"), () => ({
   DeckComparisonPanel: () => null,
 }));
-vi.mock("@/components/deck/HomeDeckCard", () => ({ HomeDeckCard: () => null }));
-vi.mock("@/components/deck/DeckListTable", () => ({
-  DeckListTable: () => null,
+vi.mock(import("@/components/deck/HomeDeckCard"), () => ({
+  HomeDeckCard: () => <></>,
 }));
-vi.mock("@/components/deck/DeckListRefreshNotice", () => ({
-  DeckListRefreshNotice: () => null,
+vi.mock(import("@/components/deck/DeckListTable"), () => ({
+  DeckListTable: () => <></>,
 }));
-vi.mock("@/components/deck/GuestDeckClaimOffer", () => ({
+vi.mock(import("@/components/deck/DeckListRefreshNotice"), () => ({
+  DeckListRefreshNotice: () => <></>,
+}));
+vi.mock(import("@/components/deck/GuestDeckClaimOffer"), () => ({
   GuestDeckClaimOffer: () => null,
 }));
 

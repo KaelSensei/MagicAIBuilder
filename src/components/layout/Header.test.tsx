@@ -10,32 +10,27 @@ let createDeckImpl: (name: string) => Promise<string> = async (_name: string) =>
   "deck-0";
 let setActiveDeckImpl: (id: string) => void = (_id: string) => {};
 
-vi.mock("@/i18n/navigation", () => ({
-  Link: ({
-    href,
-    children,
-    ...props
-  }: {
-    href: string;
-    children: React.ReactNode;
-  }) => React.createElement("a", { href, ...props }, children),
-  useRouter: () => ({ replace: vi.fn(), push: vi.fn() }),
-  usePathname: () => "/",
+vi.mock(import("@/i18n/navigation"), () => import("@/test/i18n-navigation-stub"));
+
+vi.mock(import("@/hooks/useTheme"), () => ({
+  useTheme: () => ({
+    theme: "dark",
+    preference: "dark",
+    toggleTheme: vi.fn(),
+    setTheme: vi.fn(),
+    setPreference: vi.fn(),
+  }),
 }));
 
-vi.mock("@/hooks/useTheme", () => ({
-  useTheme: () => ({ theme: "dark", toggleTheme: vi.fn() }),
+vi.mock(import("@/components/auth/UserMenu"), () => ({
+  UserMenu: () => <></>,
 }));
 
-vi.mock("@/components/auth/UserMenu", () => ({
-  UserMenu: () => null,
+vi.mock(import("@/components/layout/LocaleSwitcher"), () => ({
+  LocaleSwitcher: () => <></>,
 }));
 
-vi.mock("@/components/layout/LocaleSwitcher", () => ({
-  LocaleSwitcher: () => null,
-}));
-
-vi.mock("@/components/deck/ImportDialog", () => ({
+vi.mock(import("@/components/deck/ImportDialog"), () => ({
   ImportDialog: ({ children }: { children?: React.ReactNode }) =>
     React.createElement(React.Fragment, null, children),
 }));

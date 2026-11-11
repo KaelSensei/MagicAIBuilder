@@ -90,6 +90,25 @@ describe("findMockCalls", () => {
     ]);
   });
 
+  it("reads the typed form when Prettier wraps import(…) onto its own line", () => {
+    const source = fixture(
+      [
+        "MOCK(",
+        '  import("@/i18n/navigation"),',
+        '  () => import("@/test/i18n-navigation-stub")',
+        ");",
+        'DO_MOCK(import("./helper"), async (importOriginal) => ({',
+        "  ...(await importOriginal()),",
+        "}));",
+      ].join("\n")
+    );
+
+    expect(findMockCalls(source)).toEqual([
+      { method: "mock", specifier: "@/i18n/navigation", line: 1 },
+      { method: "doMock", specifier: "./helper", line: 5 },
+    ]);
+  });
+
   it("skips commented-out calls and specifiers it cannot read statically", () => {
     const source = fixture(
       [

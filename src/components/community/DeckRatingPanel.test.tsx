@@ -5,12 +5,7 @@ import userEvent from "@testing-library/user-event";
 import { NextIntlClientProvider } from "next-intl";
 import enDeck from "@/messages/en/deck.json";
 
-vi.mock("@/i18n/navigation", () => ({
-  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) =>
-    React.createElement("a", { href, ...props }, children),
-  useRouter: () => ({ replace: vi.fn(), push: vi.fn() }),
-  usePathname: () => "/",
-}));
+vi.mock(import("@/i18n/navigation"), () => import("@/test/i18n-navigation-stub"));
 
 import enCommon from "@/messages/en/common.json";
 import { DeckRatingPanel, type DeckRatingsResponse } from "./DeckRatingPanel";

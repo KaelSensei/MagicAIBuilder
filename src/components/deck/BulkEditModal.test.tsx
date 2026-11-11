@@ -102,7 +102,7 @@ function insertRow(deckId: string, payload: AddCardPayload): ApiDeckCard {
 
 // The whole client is faked, including the per-card calls the old
 // remove-everything-and-re-add save made, so a return to it shows up here.
-vi.mock("@/lib/deck/batch-fetch", () => ({ fetchInBatches }));
+vi.mock(import("@/lib/deck/batch-fetch"), () => ({ fetchInBatches }));
 vi.mock("@/lib/db/deck-api", () => ({
   fetchDeck: vi.fn(async () => serverDeck()),
   updateDeck: vi.fn(

@@ -18,6 +18,7 @@
 // breach of a rule in a file that already has some, fails `pnpm lint`.
 // docs/engineering/quality-gate.md ("Lint ratchet") says how to shrink the file.
 import { FlatCompat } from "@eslint/eslintrc";
+import vitest from "@vitest/eslint-plugin";
 
 const compat = new FlatCompat({ baseDirectory: import.meta.dirname });
 
@@ -31,6 +32,69 @@ const TEST_FILES = [
   "src/test/**",
   "**/testing/**",
   "**/fixtures/**",
+];
+
+/**
+ * The test files Vitest runs (`include` in vitest.config.ts). Playwright specs
+ * under `e2e/` are named `*.spec.ts`, so they are not matched.
+ */
+const VITEST_FILES = ["**/*.test.{ts,tsx}"];
+
+/** A `vi.mock(…)` or `vi.doMock(…)` call, as an esquery selector. */
+const VI_MOCK_CALL =
+  "CallExpression[callee.object.name='vi'][callee.property.name=/^(mock|doMock)$/]";
+
+/**
+ * A module path of this repository: the `@/` alias or a relative path.
+ * esquery regexes cannot contain a `/`, hence `\u002F`.
+ */
+const INTERNAL_PATH = "/^(@\\u002F|\\.)/";
+
+/**
+ * Mocked modules the internal-mock ban lets through, for now.
+ *
+ * Why: a route handler reaches the database through `@/lib/db/prisma` and the
+ * session through Auth.js's `auth()` in `@/lib/auth/config`. Until a context
+ * has a repository port and an injected session (phases 3 and later of the
+ * migration, ADR 0001 and docs/engineering/architecture.md), its route
+ * characterization tests can only replace those two modules with a mock.
+ *
+ * This exemption is transitional. Each context's move series removes it for
+ * its own routes once its repository port lands: a config block for that
+ * context's tests applies the ban without the exemption. The list is deleted
+ * when the last context has moved. These mocks still take the typed form
+ * (`prefer-import-in-mock`).
+ */
+const TRANSITIONAL_MOCK_SEAMS = ["@/lib/db/prisma", "@/lib/auth/config"];
+
+/** esquery conditions that keep the transitional seams out of a selector on `field`. */
+function exceptSeams(field) {
+  return TRANSITIONAL_MOCK_SEAMS.map((seam) => `[${field}!='${seam}']`).join(
+    ""
+  );
+}
+
+const INTERNAL_MOCK_MESSAGE =
+  "Do not mock a module of this repository (ADR 0005, rule 5): test through its public behaviour, with an in-memory fake behind a port or MSW for HTTP.";
+
+/**
+ * `no-restricted-syntax` entries for ADR 0005, rule 5: no new mock of an
+ * internal module, in the string form or the typed `import()` form. Test the
+ * behaviour through the module's public surface, with in-memory fakes behind
+ * a port and MSW at the HTTP boundary. Packages (`next/navigation`) and the
+ * transitional seams above may still be mocked. Existing internal mocks are
+ * the baseline in `eslint-suppressions.json`; they go as their context
+ * migrates.
+ */
+const INTERNAL_MOCK_BANS = [
+  {
+    selector: `${VI_MOCK_CALL}[arguments.0.type='Literal'][arguments.0.value=${INTERNAL_PATH}]${exceptSeams("arguments.0.value")}`,
+    message: INTERNAL_MOCK_MESSAGE,
+  },
+  {
+    selector: `${VI_MOCK_CALL}[arguments.0.type='ImportExpression'][arguments.0.source.value=${INTERNAL_PATH}]${exceptSeams("arguments.0.source.value")}`,
+    message: INTERNAL_MOCK_MESSAGE,
+  },
 ];
 
 /** Every TypeScript module under `src/`; combine with `ignores: TEST_FILES`. */
@@ -238,6 +302,35 @@ const eslintConfig = [
       IMPORT_BANS.testSupport,
       IMPORT_BANS.browserIntoServer
     ),
+  },
+
+  // Test hygiene (ADR 0005, rules 5 and 7). `@vitest/eslint-plugin` knows
+  // Vitest's API, so its rules read `vi.mock` and `it.only` the way Vitest
+  // does. The mocks that predate these rules are recorded in
+  // `eslint-suppressions.json`, like the other ratchets. ESLint keeps only
+  // the last block's options for a rule, so a later block may set
+  // `no-restricted-syntax` for test files only to tighten the ban for one
+  // context (see TRANSITIONAL_MOCK_SEAMS); `src/test/test-hygiene-lint.test.ts`
+  // fails if the ban is lost.
+  {
+    files: VITEST_FILES,
+    plugins: { vitest },
+    rules: {
+      // `vi.mock(import("@/x"))`: `tsc` checks the path and the factory
+      // against the real module, so a moved module cannot leave a mock that
+      // silently applies to nothing. Its autofix is off: lint-staged runs
+      // `eslint --fix` on every staged file, and would rewrite a baselined
+      // mock whose factory then fails `tsc`, and leave a stale suppression
+      // that fails the commit. docs/engineering/quality-gate.md says how to
+      // convert a file on purpose.
+      "vitest/prefer-import-in-mock": ["error", { fixable: false }],
+      "no-restricted-syntax": ["error", ...INTERNAL_MOCK_BANS],
+      // A committed `.only` silently skips the rest of the file in CI, and
+      // `.skip` disables a test; both are forbidden moves (ADR 0005, rule 7).
+      // No autofix: the author sees the failure instead of a silent edit.
+      "vitest/no-focused-tests": ["error", { fixable: false }],
+      "vitest/no-disabled-tests": "error",
+    },
   },
 ];
 

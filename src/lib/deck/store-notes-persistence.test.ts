@@ -12,29 +12,33 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const db = vi.hoisted((): { notes: string | null } => ({ notes: null }));
 const toastAdd = vi.hoisted(() => vi.fn());
 
-vi.mock("@/lib/auth/helpers", () => ({
-  requireDeckOwner: vi.fn(async () => ({ deck: { id: "deck-1" } })),
+vi.mock(import("@/lib/auth/helpers"), () => ({
+  requireDeckOwner: vi.fn(async () => ({
+    userId: "owner-1",
+    deck: { id: "deck-1", userId: "owner-1" },
+  })),
 }));
 
-vi.mock("@/lib/db/prisma", () => {
+vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
+  const { stubPrisma } = await import("@/test/prisma-stub");
   const storedRow = () => ({ id: "card-1", deckId: "deck-1", notes: db.notes });
-  return {
-    prisma: {
-      deckCard: {
-        findFirst: vi.fn(async () => storedRow()),
-        update: vi.fn(async ({ data }: { data: { notes?: string | null } }) => {
-          if (data.notes !== undefined) db.notes = data.notes;
-          return storedRow();
-        }),
-      },
-      deck: { update: vi.fn(async () => ({ id: "deck-1" })) },
+  return stubPrisma(await importOriginal(), {
+    deckCard: {
+      findFirst: vi.fn(async () => storedRow()),
+      update: vi.fn(async ({ data }: { data: { notes?: string | null } }) => {
+        if (data.notes !== undefined) db.notes = data.notes;
+        return storedRow();
+      }),
     },
-  };
+    deck: { update: vi.fn(async () => ({ id: "deck-1" })) },
+  });
 });
 
-vi.mock("@/hooks/useToast", () => ({
-  useToastStore: { getState: () => ({ add: toastAdd }) },
-}));
+vi.mock(import("@/hooks/useToast"), async (importOriginal) => {
+  const { useToastStore } = await importOriginal();
+  useToastStore.setState({ add: toastAdd });
+  return { useToastStore };
+});
 
 import { PATCH } from "@/app/api/decks/[id]/cards/[cardId]/route";
 import { createGuestDeck, GUEST_DECK_ID, loadGuestDeck } from "./guest-deck";

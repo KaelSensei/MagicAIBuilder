@@ -8,11 +8,7 @@ import deckMessages from "@/messages/en/deck.json";
 import commonMessages from "@/messages/en/common.json";
 import { DeckUnavailableState } from "./DeckUnavailableState";
 
-vi.mock("@/i18n/navigation", () => ({
-  Link: ({ href, children }: { readonly href: string; readonly children: React.ReactNode }) => (
-    <a href={href}>{children}</a>
-  ),
-}));
+vi.mock(import("@/i18n/navigation"), () => import("@/test/i18n-navigation-stub"));
 
 function show(loadError: string | null, onRetry = vi.fn()) {
   render(

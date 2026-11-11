@@ -4,7 +4,7 @@ import { renderWithIntl } from "@/test/render-with-intl";
 import { DeckComparisonPanel } from "./DeckComparisonPanel";
 
 const { mockFetchDeck } = vi.hoisted(() => ({ mockFetchDeck: vi.fn() }));
-vi.mock("@/lib/db/deck-api", () => ({ fetchDeck: mockFetchDeck }));
+vi.mock(import("@/lib/db/deck-api"), () => ({ fetchDeck: mockFetchDeck }));
 
 describe("DeckComparisonPanel", () => {
   beforeEach(() => mockFetchDeck.mockReset());

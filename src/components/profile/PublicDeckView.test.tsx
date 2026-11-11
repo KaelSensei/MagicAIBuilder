@@ -5,26 +5,28 @@ import { renderWithIntl } from "@/test/render-with-intl";
 import type { PublicDeck } from "@/lib/deck/public-deck";
 import { PublicDeckView } from "./PublicDeckView";
 
-vi.mock("@/i18n/navigation", () => ({
-  Link: ({ children, href }: { children: React.ReactNode; href: string }) =>
-    React.createElement("a", { href }, children),
+vi.mock(
+  import("@/i18n/navigation"),
+  () => import("@/test/i18n-navigation-stub")
+);
+vi.mock(import("@/components/community/DeckRatingPanel"), () => ({
+  DeckRatingPanel: () => <></>,
 }));
-vi.mock("@/components/community/DeckRatingPanel", () => ({
-  DeckRatingPanel: () => null,
+vi.mock(import("@/components/community/DeckCommentPanel"), () => ({
+  DeckCommentPanel: () => <></>,
 }));
-vi.mock("@/components/community/DeckCommentPanel", () => ({
-  DeckCommentPanel: () => null,
-}));
-vi.mock("@/components/community/FocusedFeedbackPanel", () => ({
+vi.mock(import("@/components/community/FocusedFeedbackPanel"), () => ({
   FocusedFeedbackPanel: () => null,
 }));
-vi.mock("@/components/community/DeckReportButton", () => ({
+vi.mock(import("@/components/community/DeckReportButton"), () => ({
   DeckReportButton: () => null,
 }));
-vi.mock("@/components/community/SavePublicDeckButton", () => ({
+vi.mock(import("@/components/community/SavePublicDeckButton"), () => ({
   SavePublicDeckButton: () => null,
 }));
-vi.mock("./PublicDeckActions", () => ({ PublicDeckActions: () => null }));
+vi.mock(import("./PublicDeckActions"), () => ({
+  PublicDeckActions: () => <></>,
+}));
 
 const deck: PublicDeck = {
   id: "deck-1",

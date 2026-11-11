@@ -8,7 +8,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const toastAdd = vi.hoisted(() => vi.fn());
 
-vi.mock("@/lib/scryfall/types", () => ({
+vi.mock(import("@/lib/scryfall/types"), () => ({
   DFC_LAYOUTS: new Set(["modal_dfc", "transform", "reversible_card"]),
 }));
 
@@ -73,9 +73,11 @@ vi.mock("@/lib/db/deck-api", () => ({
   })),
 }));
 
-vi.mock("@/hooks/useToast", () => ({
-  useToastStore: { getState: () => ({ add: toastAdd }) },
-}));
+vi.mock(import("@/hooks/useToast"), async (importOriginal) => {
+  const { useToastStore } = await importOriginal();
+  useToastStore.setState({ add: toastAdd });
+  return { useToastStore };
+});
 
 vi.mock("@/lib/scryfall/images", () => ({
   getCardImageUri: vi.fn((_card: unknown, size: string) =>

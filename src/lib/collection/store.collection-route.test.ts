@@ -18,15 +18,24 @@ import {
 } from "@/test/collection-db-fake";
 import { useCollectionStore } from "./store";
 
-vi.mock("@/lib/db/prisma", async () => {
+vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
+  const { stubPrisma } = await import("@/test/prisma-stub");
   const { collectionDb: db } = await import("@/test/collection-db-fake");
-  return { prisma: db.prisma };
+  return stubPrisma(await importOriginal(), db.prisma);
 });
 
-vi.mock("@/lib/auth/helpers", async () => {
+vi.mock(import("@/lib/auth/helpers"), async () => {
   const { COLLECTION_OWNER } = await import("@/test/collection-db-fake");
   return {
-    requireAuth: async () => ({ session: { user: { id: COLLECTION_OWNER } } }),
+    requireAuth: async () => ({
+      session: {
+        user: {
+          id: COLLECTION_OWNER,
+          createdAt: new Date(0),
+          onboardingDone: true,
+        },
+      },
+    }),
   };
 });
 

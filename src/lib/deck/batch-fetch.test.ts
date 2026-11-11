@@ -3,7 +3,7 @@ import { fetchInBatches } from "./batch-fetch";
 import * as scryfallClient from "@/lib/scryfall/client";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 
-vi.mock("@/lib/scryfall/client");
+vi.mock(import("@/lib/scryfall/client"));
 
 function makeCard(name: string): ScryfallCard {
   return { id: name, name } as unknown as ScryfallCard;

@@ -6,7 +6,7 @@ import { useCombos } from "./useCombos";
 import * as spellbook from "@/lib/combos/spellbook";
 import type { Deck } from "@/lib/deck/types";
 
-vi.mock("@/lib/combos/spellbook");
+vi.mock(import("@/lib/combos/spellbook"));
 
 function createWrapper() {
   const client = new QueryClient({

@@ -11,7 +11,7 @@ import type { ScryfallCard } from "@/lib/scryfall/types";
 import type { DeckCard } from "@/lib/deck/types";
 
 const fetchInBatches = vi.hoisted(() => vi.fn());
-vi.mock("@/lib/deck/batch-fetch", () => ({ fetchInBatches }));
+vi.mock(import("@/lib/deck/batch-fetch"), () => ({ fetchInBatches }));
 
 import { BulkEditModal } from "./BulkEditModal";
 import { useDeckStore } from "@/lib/deck/store";

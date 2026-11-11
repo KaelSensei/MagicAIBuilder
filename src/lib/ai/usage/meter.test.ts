@@ -5,7 +5,10 @@ const db = await vi.hoisted(async () => {
   return createAiUsageDb();
 });
 
-vi.mock("@/lib/db/prisma", () => ({ prisma: db }));
+vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
+  const { stubPrisma } = await import("@/test/prisma-stub");
+  return stubPrisma(await importOriginal(), db);
+});
 
 import { logger } from "@/lib/logger";
 import { resetAiUsageDb } from "@/test/ai-usage-db";

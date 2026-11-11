@@ -11,7 +11,7 @@ const metaAnalysisMocks = vi.hoisted(() => ({
   errorEdhrec: null as string | null,
 }));
 
-vi.mock("@/hooks/useMetaAnalysis", () => ({
+vi.mock(import("@/hooks/useMetaAnalysis"), () => ({
   useMetaAnalysis: () => ({
     edhrec: {
       cards: [{ name: "Sol Ring", inclusion: 0.8, sample: { decksWithCard: 80, eligibleDecks: 100 } }],
@@ -47,7 +47,7 @@ vi.mock("@/hooks/useMetaAnalysis", () => ({
   }),
 }));
 
-vi.mock("@/hooks/useMetaShifts", () => ({
+vi.mock(import("@/hooks/useMetaShifts"), () => ({
   useMetaShifts: () => ({
     report: null,
     snapshotCount: 0,
@@ -58,15 +58,7 @@ vi.mock("@/hooks/useMetaShifts", () => ({
   }),
 }));
 
-vi.mock("@/i18n/navigation", () => ({
-  Link: ({
-    href,
-    children,
-  }: {
-    readonly href: string;
-    readonly children: React.ReactNode;
-  }) => <a href={href}>{children}</a>,
-}));
+vi.mock(import("@/i18n/navigation"), () => import("@/test/i18n-navigation-stub"));
 
 const deck: TournamentDeck = {
   name: "Atraxa 7ccm",

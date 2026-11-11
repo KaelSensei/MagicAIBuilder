@@ -4,7 +4,7 @@ import { MOXFIELD_REFUSED_MESSAGE, MoxfieldRefusedError } from "@/lib/import/mox
 import { POST } from "./route";
 import { logger } from "@/lib/logger";
 
-vi.mock("@/lib/import/moxfield-user", () => ({
+vi.mock(import("@/lib/import/moxfield-user"), () => ({
   fetchMoxfieldUserDecks: vi.fn(),
 }));
 

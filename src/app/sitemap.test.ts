@@ -5,12 +5,13 @@ const { mockUserFindMany, mockDeckFindMany } = vi.hoisted(() => ({
   mockDeckFindMany: vi.fn(),
 }));
 
-vi.mock("@/lib/db/prisma", () => ({
-  prisma: {
+vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
+  const { stubPrisma } = await import("@/test/prisma-stub");
+  return stubPrisma(await importOriginal(), {
     user: { findMany: mockUserFindMany },
     deck: { findMany: mockDeckFindMany },
-  },
-}));
+  });
+});
 
 import { siteUrl } from "@/lib/seo/alternates";
 import sitemap from "./sitemap";

@@ -6,26 +6,29 @@ import enAuth from "@/messages/en/auth.json";
 import frAuth from "@/messages/fr/auth.json";
 import { UserMenu } from "./UserMenu";
 
-vi.mock("next-auth/react", () => ({
+vi.mock(import("next-auth/react"), () => ({
   useSession: () => ({
     status: "authenticated",
     data: {
       user: {
+        id: "player-1",
         name: null,
         email: "player@example.test",
         image: "https://example.test/a.png",
       },
+      expires: "2099-01-01T00:00:00.000Z",
     },
+    update: vi.fn(),
   }),
   signOut: vi.fn(),
 }));
-vi.mock("@/components/onboarding/OnboardingProvider", () => ({
+vi.mock(import("@/components/onboarding/OnboardingProvider"), () => ({
   useOnboardingContext: () => ({ resetOnboarding: vi.fn() }),
 }));
-vi.mock("@/i18n/navigation", () => ({
-  Link: ({ children, href }: { children: React.ReactNode; href: string }) =>
-    React.createElement("a", { href }, children),
-}));
+vi.mock(
+  import("@/i18n/navigation"),
+  () => import("@/test/i18n-navigation-stub")
+);
 
 function renderMenu(locale: "en" | "fr") {
   render(

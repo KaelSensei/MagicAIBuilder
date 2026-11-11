@@ -6,9 +6,16 @@ const { mockRequireAuth, mockUpdateMany, mockLogError } = vi.hoisted(() => ({
   mockLogError: vi.fn(),
 }));
 
-vi.mock("@/lib/auth/helpers", () => ({ requireAuth: mockRequireAuth }));
-vi.mock("@/lib/db/prisma", () => ({ prisma: { apiKey: { updateMany: mockUpdateMany } } }));
-vi.mock("@/lib/logger", () => ({ logger: { error: mockLogError } }));
+vi.mock(import("@/lib/auth/helpers"), () => ({ requireAuth: mockRequireAuth }));
+vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
+  const { stubPrisma } = await import("@/test/prisma-stub");
+  return stubPrisma(await importOriginal(), {
+    apiKey: { updateMany: mockUpdateMany },
+  });
+});
+vi.mock(import("@/lib/logger"), () => ({
+  logger: { info: vi.fn(), warn: vi.fn(), error: mockLogError },
+}));
 
 import { DELETE } from "./route";
 

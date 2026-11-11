@@ -18,8 +18,9 @@ const {
   mockUserUpsert: vi.fn(),
 }));
 
-vi.mock("@/lib/db/prisma", () => ({
-  prisma: {
+vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
+  const { stubPrisma } = await import("@/test/prisma-stub");
+  return stubPrisma(await importOriginal(), {
     deck: {
       findMany: mockFindMany,
       findFirst: mockFindFirst,
@@ -27,14 +28,14 @@ vi.mock("@/lib/db/prisma", () => ({
       create: mockCreate,
     },
     user: { findUnique: mockUserFindUnique, upsert: mockUserUpsert },
-  },
-}));
+  });
+});
 
 const { mockAuth } = vi.hoisted(() => ({ mockAuth: vi.fn() }));
-vi.mock("@/lib/auth/config", () => ({ auth: mockAuth }));
+vi.mock(import("@/lib/auth/config"), () => ({ auth: mockAuth }));
 
 const { mockGetCardCollection } = vi.hoisted(() => ({ mockGetCardCollection: vi.fn() }));
-vi.mock("@/lib/scryfall/client", () => ({ getCardCollection: mockGetCardCollection }));
+vi.mock(import("@/lib/scryfall/client"), () => ({ getCardCollection: mockGetCardCollection }));
 
 import { GET, POST } from "./route";
 

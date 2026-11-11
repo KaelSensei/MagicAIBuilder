@@ -16,10 +16,12 @@ const api = vi.hoisted(() => ({
   removeCard: vi.fn(),
 }));
 
-vi.mock("@/lib/db/deck-api", () => api);
-vi.mock("@/hooks/useToast", () => ({
-  useToastStore: { getState: () => ({ add: vi.fn() }) },
-}));
+vi.mock(import("@/lib/db/deck-api"), () => api);
+vi.mock(import("@/hooks/useToast"), async (importOriginal) => {
+  const { useToastStore } = await importOriginal();
+  useToastStore.setState({ add: vi.fn() });
+  return { useToastStore };
+});
 interface OwnedCard {
   readonly name: string;
   readonly quantity: number;
@@ -39,7 +41,7 @@ vi.mock("@/lib/collection/store", () => ({
     }),
   },
 }));
-vi.mock("@/lib/scryfall/client", () => ({ getCardById }));
+vi.mock(import("@/lib/scryfall/client"), () => ({ getCardById }));
 
 import { useDeckStore } from "./store";
 import { apiDeckToStoreDeck } from "./store-factories";

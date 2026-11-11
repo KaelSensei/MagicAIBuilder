@@ -32,7 +32,8 @@ const { mockUserFindUnique } = vi.hoisted(() => ({
   })),
 }));
 
-vi.mock("@/lib/db/prisma", () => {
+vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
+  const { stubPrisma } = await import("@/test/prisma-stub");
   const tables = {
     user: { findUnique: mockUserFindUnique },
     deck: { findUnique: mockDeckFindUnique },
@@ -42,18 +43,22 @@ vi.mock("@/lib/db/prisma", () => {
       findMany: mockSnapshotFindMany,
       create: mockSnapshotCreate,
     },
-    playtestSession: { findMany: mockSessionFindMany, create: mockSessionCreate },
+    playtestSession: {
+      findMany: mockSessionFindMany,
+      create: mockSessionCreate,
+    },
   };
   // Recording runs in an interactive transaction over the same tables.
-  return {
-    prisma: { ...tables, $transaction: (run: (tx: typeof tables) => unknown) => run(tables) },
-  };
+  return stubPrisma(await importOriginal(), {
+    ...tables,
+    $transaction: (run: (tx: typeof tables) => unknown) => run(tables),
+  });
 });
 
 // ─── Mock NextAuth auth() ─────────────────────────────────────────────────────
 
 const { mockAuth } = vi.hoisted(() => ({ mockAuth: vi.fn() }));
-vi.mock("@/lib/auth/config", () => ({ auth: mockAuth }));
+vi.mock(import("@/lib/auth/config"), () => ({ auth: mockAuth }));
 
 // ─── Import after mocks ───────────────────────────────────────────────────────
 

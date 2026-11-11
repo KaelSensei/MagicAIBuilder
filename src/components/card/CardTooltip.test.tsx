@@ -9,7 +9,7 @@ import * as scryfallClient from "@/lib/scryfall/client";
 import type { DeckCard } from "@/lib/deck/types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 
-vi.mock("@/lib/scryfall/client");
+vi.mock(import("@/lib/scryfall/client"));
 
 const card: DeckCard = {
   id: "sol-ring", name: "Sol Ring", manaCost: "{1}", cmc: 1, typeLine: "Artifact",

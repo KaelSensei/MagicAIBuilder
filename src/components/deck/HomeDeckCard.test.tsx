@@ -8,18 +8,7 @@ import enBuilder from "@/messages/en/builder.json";
 import frDeck from "@/messages/fr/deck.json";
 import frBuilder from "@/messages/fr/builder.json";
 
-vi.mock("@/i18n/navigation", () => ({
-  Link: ({
-    href,
-    children,
-    ...props
-  }: {
-    href: string;
-    children: React.ReactNode;
-  }) => React.createElement("a", { href, ...props }, children),
-  useRouter: () => ({ replace: vi.fn(), push: vi.fn() }),
-  usePathname: () => "/",
-}));
+vi.mock(import("@/i18n/navigation"), () => import("@/test/i18n-navigation-stub"));
 
 import { getDeckPresentationManaColors, HomeDeckCard } from "./HomeDeckCard";
 

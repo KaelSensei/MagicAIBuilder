@@ -6,15 +6,15 @@ import type { Deck, DeckCard } from "@/lib/deck/types";
 import { CollectionStatsPanel } from "./CollectionStatsPanel";
 import { ShoppingListModal } from "./ShoppingListModal";
 
-vi.mock("next-auth/react", () => ({
-  useSession: () => ({ data: { user: { id: "owner" } } }),
+vi.mock(import("next-auth/react"), () => ({
+  useSession: () => ({
+    data: { user: { id: "owner" }, expires: "2099-01-01T00:00:00.000Z" },
+    status: "authenticated",
+    update: vi.fn(),
+  }),
 }));
 
-vi.mock("@/i18n/navigation", () => ({
-  Link: ({ href, children }: { readonly href: string; readonly children: React.ReactNode }) => (
-    <a href={href}>{children}</a>
-  ),
-}));
+vi.mock(import("@/i18n/navigation"), () => import("@/test/i18n-navigation-stub"));
 
 const card: DeckCard = {
   id: "sol-ring",

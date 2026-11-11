@@ -95,7 +95,7 @@ A gate marked `planned` does not exist yet. The gates land in stages ([ADR 0007]
 | 5     | Knip: unused files, dependencies and exports                                                                                                                                                                                                       | nothing: an advisory report                     | planned |
 | 6     | `pnpm arch` joins the pre-PR gate in `CLAUDE.md`                                                                                                                                                                                                   | as stage 3                                      | done    |
 | —     | `eslint-plugin-jsdoc`: `require-jsdoc` on exports, then `informative-docs`, starting in `src/modules/**` ([ADR 0006](../adr/0006-comment-and-documentation-standard.md))                                                                           | a missing or restating doc comment              | planned |
-| —     | A lint rule for the typed `vi.mock(import("…"))` form and against new `vi.mock` of internal modules ([ADR 0005](../adr/0005-testing-strategy-fakes-contracts-and-characterization.md))                                                             | a string-path or internal mock                  | planned |
+| —     | A lint rule for the typed `vi.mock(import("…"))` form and against new `vi.mock` of internal modules ([ADR 0005](../adr/0005-testing-strategy-fakes-contracts-and-characterization.md)). Done; see [Lint ratchet](#lint-ratchet)                    | a string-path or internal mock                  | done    |
 | —     | StrykerJS mutation testing on `domain/` folders: nightly, then incremental on changed files ([ADR 0005](../adr/0005-testing-strategy-fakes-contracts-and-characterization.md))                                                                     | nothing at first: advisory                      | planned |
 | —     | Docs drift tests: glossary terms exist in code, the ADR index is complete, the dependency graph is generated ([ADR 0006](../adr/0006-comment-and-documentation-standard.md))                                                                       | a stale glossary, index or graph                | planned |
 
@@ -235,7 +235,7 @@ Every value below is a local test fixture, not a secret. No variable has to be e
 | `@typescript-eslint/no-non-null-assertion`      | no non-null assertion (`x!`)                             |
 | `no-restricted-imports`                         | the import boundaries below                              |
 
-Comments and blank lines never count toward a line limit, so the comment standard cannot push a module over one. The rules apply to shipped code: every `src/**/*.{ts,tsx}` file except `*.test.{ts,tsx}`, `src/test/**` and the `testing/` and `fixtures/` folders. Tests keep the preset rules, except for the `../` ban below.
+Comments and blank lines never count toward a line limit, so the comment standard cannot push a module over one. The rules apply to shipped code: every `src/**/*.{ts,tsx}` file except `*.test.{ts,tsx}`, `src/test/**` and the `testing/` and `fixtures/` folders. Tests keep the preset rules, except for the `../` ban and the test-hygiene rules below.
 
 The import boundaries, phase 1. `no-restricted-imports` matches the specifier as written, which is enough because cross-folder imports use the `@/` alias; dependency-cruiser adds the transitive view in stage 3.
 
@@ -245,11 +245,24 @@ The import boundaries, phase 1. `no-restricted-imports` matches the specifier as
 - No file under `src`, tests included, imports a `../` path, which would slip past the rules above.
 - `src/modules/*/domain/` and `index.ts` do not import React, Next.js, Zustand, Prisma or an outer layer; `src/modules/*/client/`, `ui/` and `client.ts` do not import Prisma, `server-only`, a `server.ts`, `application/` or `infrastructure/`. No module exists yet, so these bans start with no breach.
 
+Test files (`*.test.{ts,tsx}`) have their own rules, from `@vitest/eslint-plugin` and `no-restricted-syntax` ([ADR 0005](../adr/0005-testing-strategy-fakes-contracts-and-characterization.md), rules 5 and 7). `src/test/test-hygiene-lint.test.ts` pins them.
+
+| Rule                           | Rejects                                                                                                                                       | Baseline when it arrived        |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
+| `vitest/prefer-import-in-mock` | a mock named by a string, `vi.mock("@/x")`; write `vi.mock(import("@/x"))`, which `tsc` checks                                                | 59 string mocks in 41 files     |
+| `no-restricted-syntax`         | a `vi.mock` or `vi.doMock` of a module of this repository (`@/…` or a relative path), in either form, except the two transitional seams below | 222 internal mocks in 130 files |
+| `vitest/no-focused-tests`      | a committed `.only`                                                                                                                           | none                            |
+| `vitest/no-disabled-tests`     | `.skip` and `xit`-style disabled tests; `.todo` stays allowed for a test not written yet                                                      | none                            |
+
+`prefer-import-in-mock` runs with its autofix off, because lint-staged runs `eslint --fix` on every staged file: it would rewrite a baselined mock behind the author's back, leave a factory that fails `tsc`, and fail the commit on the stale suppression. To convert a file on purpose, run `npx eslint --rule '{"vitest/prefer-import-in-mock":["error",{"fixable":true}]}' --fix <file>`, put the quotes back to double quotes, type the factory, then run `pnpm lint --prune-suppressions`. The typed form checks the factory against the real module, so a factory that returned a partial object needs a complete, typed stub: `src/test/prisma-stub.ts` (`stubPrisma`) for the Prisma client and `src/test/i18n-navigation-stub.tsx` for `@/i18n/navigation`. Never cast a stub to make it fit.
+
+The internal-mock ban follows [tdd-with-ai.md](tdd-with-ai.md): test through the module's public behaviour, with an in-memory fake behind a port, or MSW at the HTTP boundary. Packages, such as `next/navigation`, may still be mocked. Two modules of this repository are exempt for now: `@/lib/db/prisma` and `@/lib/auth/config` (Auth.js's `auth()`). Route characterization tests can only replace the database and the session through them until each context has a repository port and an injected session, in phases 3 and later of the migration ([ADR 0001](../adr/0001-modular-monolith-by-bounded-context.md)). The exemption is transitional: each context's move series removes it for its own routes once its repository port lands (`TRANSITIONAL_MOCK_SEAMS` in `eslint.config.mjs`). Mocks of these two modules still take the typed form.
+
 `next build` does not lint (`eslint.ignoreDuringBuilds` in `next.config.ts`): it calls the ESLint Node.js API, which ignores the suppressions file in ESLint 9. `pnpm lint` in CI and lint-staged on commit run the ESLint CLI, which applies it.
 
 ### Shrinking the baseline
 
-1. Fix the breach: split the module, extract the function, flatten the nesting, replace the cast or the `!` with a type guard, a Zod parse at the boundary or `satisfies`, move the shared type down to the layer that owns it.
+1. Fix the breach: split the module, extract the function, flatten the nesting, replace the cast or the `!` with a type guard, a Zod parse at the boundary or `satisfies`, move the shared type down to the layer that owns it. In a test, convert a string mock with the autofix, or replace an internal mock with a fake.
 2. Run `pnpm lint --prune-suppressions`. It lowers the counts in `eslint-suppressions.json`, deletes the entries that reached zero and drops the paths that no longer exist.
 3. Commit the smaller `eslint-suppressions.json` with the fix. The pre-commit hook lints staged files against it, so the commit fails until step 2 is done.
 

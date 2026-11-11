@@ -9,15 +9,16 @@ const { mockFindUnique, mockUpdate, mockUserFindUnique, mockUserUpsert } = vi.ho
   })
 );
 
-vi.mock("@/lib/db/prisma", () => ({
-  prisma: {
+vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
+  const { stubPrisma } = await import("@/test/prisma-stub");
+  return stubPrisma(await importOriginal(), {
     deck: { findUnique: mockFindUnique, update: mockUpdate },
     user: { findUnique: mockUserFindUnique, upsert: mockUserUpsert },
-  },
-}));
+  });
+});
 
 const { mockAuth } = vi.hoisted(() => ({ mockAuth: vi.fn() }));
-vi.mock("@/lib/auth/config", () => ({ auth: mockAuth }));
+vi.mock(import("@/lib/auth/config"), () => ({ auth: mockAuth }));
 
 import { DELETE, POST } from "./route";
 

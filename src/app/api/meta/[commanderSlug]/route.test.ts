@@ -20,30 +20,33 @@ const {
   mockUserFindUnique: vi.fn(),
 }));
 
-vi.mock("@/lib/db/prisma", () => ({
-  prisma: {
+vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
+  const { stubPrisma } = await import("@/test/prisma-stub");
+  return stubPrisma(await importOriginal(), {
     metaCache: {
       findUnique: mockFindUnique,
       upsert: mockUpsert,
     },
     user: { findUnique: mockUserFindUnique },
-  },
-}));
-vi.mock("@/lib/auth/config", () => ({ auth: mockAuth }));
+  });
+});
+vi.mock(import("@/lib/auth/config"), () => ({ auth: mockAuth }));
 
-vi.mock("@/lib/meta/fetch", () => ({
+vi.mock(import("@/lib/meta/fetch"), () => ({
   fetchEdhrecData: mockFetchEdhrecData,
   fetchTournamentData: mockFetchTournamentData,
 }));
 
-vi.mock("@/lib/meta/snapshots", () => ({
+vi.mock(import("@/lib/meta/snapshots"), () => ({
   recordEdhrecSnapshot: mockRecordSnapshot,
 }));
-vi.mock("@/lib/rate-limit", () => ({
+vi.mock(import("@/lib/rate-limit"), () => ({
   checkRateLimit: mockCheckRateLimit,
   getClientIp: () => "127.0.0.1",
 }));
-vi.mock("@/lib/logger", () => ({ logger: { error: vi.fn() } }));
+vi.mock(import("@/lib/logger"), () => ({
+  logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
+}));
 
 import { GET } from "./route";
 

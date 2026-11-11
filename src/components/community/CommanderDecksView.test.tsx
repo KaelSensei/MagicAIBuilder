@@ -5,11 +5,13 @@ import type { CommanderDeckSummary } from "@/lib/community/discovery-types";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { CommanderDecksView } from "./CommanderDecksView";
 
-vi.mock("@/i18n/navigation", () => ({
-  Link: ({ children, href }: { children: React.ReactNode; href: string }) =>
-    React.createElement("a", { href }, children),
+vi.mock(
+  import("@/i18n/navigation"),
+  () => import("@/test/i18n-navigation-stub")
+);
+vi.mock(import("./PublicDeckComparison"), () => ({
+  PublicDeckComparison: () => null,
 }));
-vi.mock("./PublicDeckComparison", () => ({ PublicDeckComparison: () => null }));
 
 function makeDeck(
   overrides: Partial<CommanderDeckSummary> = {}

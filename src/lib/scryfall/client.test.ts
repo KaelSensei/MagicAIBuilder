@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
-vi.mock("@/lib/logger", () => ({
-  logger: { info: vi.fn() },
+vi.mock(import("@/lib/logger"), () => ({
+  logger: { warn: vi.fn(), error: vi.fn(), info: vi.fn() },
 }));
 
 // Mock deck-api cache functions before importing client
-vi.mock("@/lib/db/deck-api", () => ({
+vi.mock(import("@/lib/db/deck-api"), () => ({
   lookupCardCache: vi.fn(async () => null),
   lookupSearchCache: vi.fn(async () => null),
 }));

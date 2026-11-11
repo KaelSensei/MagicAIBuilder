@@ -6,15 +6,17 @@ import { SignInForm } from "./SignInForm";
 import { SignUpForm } from "./SignUpForm";
 
 const { signIn } = vi.hoisted(() => ({ signIn: vi.fn() }));
-vi.mock("next-auth/react", () => ({ signIn }));
-vi.mock("next/navigation", () => ({
-  useSearchParams: () => new URLSearchParams(),
-}));
-vi.mock("@/i18n/navigation", () => ({
-  Link: ({ href, children }: { href: string; children: React.ReactNode }) => (
-    <a href={href}>{children}</a>
-  ),
-}));
+vi.mock(import("next-auth/react"), () => ({ signIn }));
+vi.mock(import("next/navigation"), async (importOriginal) => {
+  const { ReadonlyURLSearchParams } = await importOriginal();
+  return {
+    useSearchParams: () => new ReadonlyURLSearchParams(new URLSearchParams()),
+  };
+});
+vi.mock(
+  import("@/i18n/navigation"),
+  () => import("@/test/i18n-navigation-stub")
+);
 
 describe("Google sign-in failure", () => {
   beforeEach(() => signIn.mockReset());

@@ -7,17 +7,20 @@ const { mockUpsert, mockDeleteMany, mockFindMany, mockLogError } = vi.hoisted(()
   mockLogError: vi.fn(),
 }));
 
-vi.mock("@/lib/db/prisma", () => ({
-  prisma: {
+vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
+  const { stubPrisma } = await import("@/test/prisma-stub");
+  return stubPrisma(await importOriginal(), {
     metaSnapshot: {
       upsert: mockUpsert,
       deleteMany: mockDeleteMany,
       findMany: mockFindMany,
     },
-  },
-}));
+  });
+});
 
-vi.mock("@/lib/logger", () => ({ logger: { error: mockLogError } }));
+vi.mock(import("@/lib/logger"), () => ({
+  logger: { info: vi.fn(), warn: vi.fn(), error: mockLogError },
+}));
 
 import {
   readSnapshotHistory,

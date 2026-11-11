@@ -129,15 +129,17 @@ const server = vi.hoisted(() => {
   };
 });
 
-vi.mock("@/lib/db/deck-api", () => ({
+vi.mock(import("@/lib/db/deck-api"), () => ({
   updateDeck: server.updateDeck,
   addCard: server.addCard,
   removeCard: server.removeCard,
   fetchDeck: server.fetchDeck,
 }));
-vi.mock("@/hooks/useToast", () => ({
-  useToastStore: { getState: () => ({ add: vi.fn() }) },
-}));
+vi.mock(import("@/hooks/useToast"), async (importOriginal) => {
+  const { useToastStore } = await importOriginal();
+  useToastStore.setState({ add: vi.fn() });
+  return { useToastStore };
+});
 
 const { useDeckStore } = await import("./store");
 

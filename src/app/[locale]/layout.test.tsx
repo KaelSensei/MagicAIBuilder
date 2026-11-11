@@ -5,7 +5,9 @@ vi.mock("next/font/google", () => {
   const font = () => ({ variable: "" });
   return { Geist: font, Geist_Mono: font, Inter: font };
 });
-vi.mock("@vercel/speed-insights/next", () => ({ SpeedInsights: () => null }));
+vi.mock(import("@vercel/speed-insights/next"), () => ({
+  SpeedInsights: () => null,
+}));
 vi.mock("next-intl/server", () => import("@/test/server-intl"));
 vi.mock("./providers", () => ({
   Providers: ({ children }: { children: ReactNode }) => children,

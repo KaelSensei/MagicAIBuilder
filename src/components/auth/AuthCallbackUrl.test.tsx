@@ -9,15 +9,17 @@ const { signIn, searchParams } = vi.hoisted(() => ({
   signIn: vi.fn(),
   searchParams: { current: new URLSearchParams() },
 }));
-vi.mock("next-auth/react", () => ({ signIn }));
-vi.mock("next/navigation", () => ({
-  useSearchParams: () => searchParams.current,
-}));
-vi.mock("@/i18n/navigation", () => ({
-  Link: ({ href, children }: { href: string; children: React.ReactNode }) => (
-    <a href={href}>{children}</a>
-  ),
-}));
+vi.mock(import("next-auth/react"), () => ({ signIn }));
+vi.mock(import("next/navigation"), async (importOriginal) => {
+  const { ReadonlyURLSearchParams } = await importOriginal();
+  return {
+    useSearchParams: () => new ReadonlyURLSearchParams(searchParams.current),
+  };
+});
+vi.mock(
+  import("@/i18n/navigation"),
+  () => import("@/test/i18n-navigation-stub")
+);
 
 /** The page the browser is sent to once the session exists. */
 const location = { href: "" };

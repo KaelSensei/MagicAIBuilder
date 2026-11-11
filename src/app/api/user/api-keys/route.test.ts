@@ -10,11 +10,16 @@ const { mockRequireAuth, mockFindMany, mockCount, mockCreate, mockLogError } = v
   })
 );
 
-vi.mock("@/lib/auth/helpers", () => ({ requireAuth: mockRequireAuth }));
-vi.mock("@/lib/db/prisma", () => ({
-  prisma: { apiKey: { findMany: mockFindMany, count: mockCount, create: mockCreate } },
+vi.mock(import("@/lib/auth/helpers"), () => ({ requireAuth: mockRequireAuth }));
+vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
+  const { stubPrisma } = await import("@/test/prisma-stub");
+  return stubPrisma(await importOriginal(), {
+    apiKey: { findMany: mockFindMany, count: mockCount, create: mockCreate },
+  });
+});
+vi.mock(import("@/lib/logger"), () => ({
+  logger: { info: vi.fn(), warn: vi.fn(), error: mockLogError },
 }));
-vi.mock("@/lib/logger", () => ({ logger: { error: mockLogError } }));
 
 import { GET, POST } from "./route";
 import { isWellFormedApiKey } from "@/lib/api/keys";

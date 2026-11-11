@@ -10,7 +10,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Mock } from "vitest";
 
 // ─── Mock deck-api before importing the store ─────────────────────────────────
-vi.mock("@/lib/db/deck-api", () => ({
+vi.mock(import("@/lib/db/deck-api"), () => ({
   fetchDecks: vi.fn().mockResolvedValue({ decks: [], total: 0, page: 0, limit: 20 }),
   createDeck: vi.fn(),
   updateDeck: vi.fn().mockResolvedValue({}),
@@ -25,9 +25,11 @@ vi.mock("@/lib/db/deck-api", () => ({
 
 // Toasts are the player's only signal that a save failed, so tests read them.
 const toastAdd = vi.hoisted(() => vi.fn());
-vi.mock("@/hooks/useToast", () => ({
-  useToastStore: { getState: () => ({ add: toastAdd }) },
-}));
+vi.mock(import("@/hooks/useToast"), async (importOriginal) => {
+  const { useToastStore } = await importOriginal();
+  useToastStore.setState({ add: toastAdd });
+  return { useToastStore };
+});
 
 import * as deckApi from "@/lib/db/deck-api";
 import type { Deck, DeckCard } from "@/lib/deck/types";
