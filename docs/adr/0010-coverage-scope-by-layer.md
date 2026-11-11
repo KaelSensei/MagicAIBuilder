@@ -1,5 +1,5 @@
 ---
-status: proposed
+status: accepted
 date: 2026-11-11
 decision-makers: Project owner; clean-code programme coordinator (owner decision OD-10, taken under the owner's carte blanche of 2026-11-10)
 ---

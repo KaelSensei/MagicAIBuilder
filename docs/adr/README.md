@@ -23,7 +23,7 @@ Records), following Michael Nygard's original proposal,
 | [0007](0007-architecture-enforcement-in-stages.md)                    | Enforce the architecture with tools, introduced in stages                                                 | Accepted | 2026-11-10 |
 | [0008](0008-english-only.md)                                          | Write code, comments, docs, commits and PRs in English                                                    | Accepted | 2026-11-10 |
 | [0009](0009-legality-is-a-report-and-the-server-owns-rules.md)        | Report legality on the deck, and let the server own the rules                                             | Accepted | 2026-11-10 |
-| [0010](0010-coverage-scope-by-layer.md)                               | Scope coverage by layer: keep module UI out of the Sonar figure, and set floors on domain and application | Proposed | 2026-11-11 |
+| [0010](0010-coverage-scope-by-layer.md)                               | Scope coverage by layer: keep module UI out of the Sonar figure, and set floors on domain and application | Accepted | 2026-11-11 |
 
 Add a row here in the same pull request that adds an ADR. A test that fails when this index and
 the files in this folder disagree is planned (see [ADR 0006](0006-comment-and-documentation-standard.md)).
