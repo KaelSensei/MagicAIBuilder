@@ -109,6 +109,7 @@
     "husky": "^9.1.7",
     "jsdom": "^26.0.0",
     "lint-staged": "^16.4.0",
+    "msw": "3.0.5",
     "prettier": "^3.9.10",
     "prisma": "^6.19.3",
     "tailwindcss": "^4",
