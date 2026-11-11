@@ -1,6 +1,6 @@
 # MagicAIBuilder: Product Roadmap
 
-> **Updated:** 2026-11-11 (I-80 to I-98)
+> **Updated:** 2026-11-11 (depth pass: stories, dependencies, personas, risks)
 
 > **North star:** help a Commander player go from an idea to a legal, explainable, testable and enjoyable deck.
 
@@ -8,7 +8,7 @@ This roadmap is organized by **product initiatives**, not by an arbitrary split 
 
 ## Themes
 
-The initiatives group into the jobs a Commander player actually has. I-80 to I-98, added on 2026-11-11, are marked. Placement and the impact table are in the [Portfolio View](#twelfth-pass-impact-effort-and-placement).
+The initiatives group into the jobs a Commander player actually has. I-80 to I-98, added on 2026-11-11, are marked. Placement and the impact table are in the [Portfolio View](#twelfth-pass-impact-effort-and-placement). Personas, the dependency graph, the quarter sequence and the risks are in [Planning Views](#planning-views).
 
 | Theme | Already on the roadmap | Added in this pass |
 | --- | --- | --- |
@@ -1029,6 +1029,133 @@ RICE is not scored. Reach would be a count of players in a month, and this produ
 
 ---
 
+## Planning Views
+
+Added 2026-11-11. These views order work that already has an initiative. They are not a release promise: the [status table](#status-and-priorities) says a priority is not a date. Slice-level edges stay in the [dependency page](specs/dependency-graph.md). This section is the initiative-level picture.
+
+### How to read an enrichment
+
+Every Now item, every Next item, and I-80 through I-98 has an enrichment block in front of its definition of done. The block is the player contract. The spec, where one exists, remains the engineering contract. Do not copy a slice table into the block.
+
+Telemetry names are reserved for I-39's event store. Nothing is emitted until that store exists. A row holds counts and enums only: no email, name, username, deck name, card name, list, search text or URL, the same bar as I-39 requirement 8.3. A notice to a player goes through I-63, not through the event.
+
+Guest means a signed-out session that can hold one deck, as I-39 already requires the deck to survive sign-up. Signed-in means an account. A flag, where named, is an I-69 switch defaulting to off until the acceptance lines are true.
+
+### Personas
+
+A person can be more than one of these. The table says which initiatives are for them, not which ones they are forbidden to use.
+
+| Persona | What they are trying to do | Initiatives |
+| --- | --- | --- |
+| Casual pod player | Sit down with friends, say what the deck does, and play | I-01, I-07, I-15, I-17, I-19, I-28, I-88, I-93, I-94 |
+| Bracket-focused player | Match the table without a fake score | I-03, I-15, I-28, I-48, I-77, I-78, I-88 |
+| cEDH player | Check legality, combos and a primer, and not a win rate | I-09, I-21, I-31, I-42, I-50, I-65, I-98 |
+| Collector and budget player | Know what they own, what it costs, and what they can proxy | I-06, I-16, I-32, I-45, I-55, I-57, I-59, I-76, I-80, I-84, I-89, I-90, I-96 |
+| Content creator | Publish a list people can read, embed and trust | I-08, I-34, I-36, I-46, I-72, I-75, I-83, I-92, I-95 |
+
+### Dependencies
+
+Hard waits only. An arrow means the second does not start, or does not start past the named slice, until the first has shipped. Softer "reads when it exists" links are in the enrichment, not in the graph. The [dependency page](specs/dependency-graph.md) remains the authority for slice numbers.
+
+```mermaid
+flowchart TD
+  I01["I-01 Editor"] --> I37["I-37 Editor depth"]
+  I05["I-05 Safety"] --> I71["I-71 Recovery"]
+  I05 --> I61["I-61 Accounts"]
+  I67["I-67 Card data"] --> I17["I-17 Precons"]
+  I67 --> I54["I-54 Finder"]
+  I67 --> I58["I-58 Mana base"]
+  I67 --> I84["I-84 Reprint watch"]
+  I06["I-06 Collection"] --> I16["I-16 Buildable"]
+  I06 --> I76["I-76 Complete"]
+  I06 --> I89["I-89 Condition"]
+  I06 --> I90["I-90 Cardsphere file"]
+  I15["I-15 Rule 0"] --> I88["I-88 Script"]
+  I19["I-19 Offline"] --> I87["I-87 Offline goldfish"]
+  I19 --> I94["I-94 Pinned lists"]
+  I34["I-34 Index policy"] --> I92["I-92 Structured data"]
+  I38["I-38 Trust"] --> I30["I-30 Billing"]
+  I70["I-70 Bench"] --> I30
+  I70 --> I91m["I-91 Model wording"]
+  I02["I-02 Copilot"] --> I91m
+  I08["I-08 Primer cap"] --> I83["I-83 Primer insert"]
+  I39["I-39 Events"] --> I72["I-72 Growth loops"]
+  I21s["I-21 Seeded slices"] --> I31["I-31 Deck Lab"]
+  I58 --> I76
+  I77["I-77 Bracket audit"] --> I48["I-48 assessDeck"]
+  I77 --> I15
+  I50q["I-50 Image question"] --> I80a["I-80 Art on"]
+  I71s["I-71 Storage choice"] --> I85u["I-85 Upload"]
+```
+
+| Initiative | Waits on | Unblocks |
+| --- | --- | --- |
+| I-14, I-15, I-39, I-49, I-57, I-67, I-71 slice 1, I-86, I-95, I-96, I-97 | Nothing that is not already on `dev` | Search, sheets, measurement, contrast, printings, card data, backups, the small Next tools |
+| I-30 billing | I-38's legal pages and a deletion that holds; I-70's report before a model change | A price. Metering itself does not wait |
+| I-31 | The I-21 slices the portfolio already moves ahead of Later | Swap verdicts with an interval |
+| I-76 | I-58's reviewed change set for apply; I-65 and I-28 for role names | Completion from owned cards |
+| I-88 | I-15's sheet | The pre-game script |
+| I-92 | I-34's index decision | Structured data on indexable decks only |
+| I-80 name file | Nothing | A list a print shop can paste |
+| I-80 art | The lawyer question already on I-50 | Nothing until that answer |
+| I-83 draft panel | Nothing | A private outline |
+| I-83 insert into the primer | I-08's length decision | Publishing the draft |
+| I-84 | I-67's printings | Reprint lines on owned cards |
+| I-85 URL | Nothing, private | Player art the owner sees |
+| I-85 upload | I-71's storage choice | A hosted file |
+| I-87, I-94 download | I-19's cache and sign-out purge | Offline reading |
+| I-89, I-90 | I-06's printing-level copy; I-90's spare list also waits on I-45 | Grades and a Cardsphere file |
+| I-91 deterministic answers | Stored oracle text and the playtest log | An explainer that cannot edit |
+| I-91 model wording | I-02's allowance and I-70 | A labelled rephrase |
+
+I-21 as a whole stays Later. Only the seeded slices I-31 needs move ahead, which the portfolio already says. That is not a promotion of the bench.
+
+### Sequencing
+
+Buckets follow Now, then Next, then Later. A bucket is an order. It is not a promise that the quarter will finish the list.
+
+| Bucket | What ships in this order | What does not |
+| --- | --- | --- |
+| 2026 Q4 | The Now band: I-01 recovery, I-02's visible verdict and card-data repair, I-03's sourced warnings, I-04's focus and typing undo, I-05's WebP path, deletion session and rate limit. Beside them, the Next slices that protect the product and need nothing: I-71's command guard, I-61's password fix, I-67's reader, I-39's public-page and replay fixes, I-49's contrast measure | Billing, new locales, a marketplace, any Later initiative |
+| 2027 Q1 | Next work that other Next work waits on: I-67, I-14, I-15, I-63, I-70, I-30's metering and disclosure with no charge, I-34's index policy, I-57's printing defects, I-42's format picker, I-46's previews, I-50's export contract, I-86, I-95, I-96, I-97 | I-30's charge, I-91's model wording, I-80's art |
+| 2027 Q2 | The rest of Next: I-06, I-07, I-08, I-09, I-13 with I-37, I-16, I-17, I-19, I-28, I-31, I-32 without an affiliate code until the lawyer says yes, I-38's remaining safety floor, I-47, I-48, I-52, I-54, I-55, I-56, I-58, I-60, I-62, I-64, I-65, I-66, I-68, I-69, I-72, I-73, I-74, I-75, I-76, I-77, I-78, I-88, I-91's deterministic mode, I-92 | The 2027 horizon and the Later rows of I-80 to I-98 |
+| 2027 Q3 and after | Later, one at a time, after the wait in the table above is met: I-18, I-20, I-21, I-22 to I-27, I-29, I-35, I-36's remainder, I-40, I-41, I-43 to I-45, I-51, I-53, I-59, I-79, I-80, I-81, I-82, I-83's insert, I-84, I-85's upload, I-87, I-89, I-90, I-93, I-94, I-98. I-33 stays parked until the owner picks a rung | A date for any of these |
+
+### Risks and mitigations
+
+| Risk | What would go wrong | Mitigation |
+| --- | --- | --- |
+| A score that looks like a verdict | Players treat a bracket estimate, a goldfish percentage or a checklist as a ruling | I-77 shows floors and blind spots. I-81 refuses a percentage under five sessions. I-98 refuses a win rate and the word "accepted" |
+| The copilot writes a deck the player cannot check | r/EDH already rejects undisclosed AI | I-02's kill criteria below. I-91 has no write control. Legality stays on with the copilot off |
+| Card data gets paywalled or republished | Scryfall's terms and the Fan Content Policy | Prices, rules and exports stay free. I-80's name file has no image. Art waits on the question already on I-50 |
+| Another site's terms | Archidekt forbids automated collection; Moxfield blocks honest fetches | I-10 and I-62 read files the player downloaded. No new scraper |
+| A lost database | Supabase Free keeps no backup | I-71's guard and export stay ahead of new product surface |
+| Guest work disappears | A signed-out deck is the first run | I-39 keeps it at sign-up. Guest features in the enrichments are read or local until an account exists |
+| The roadmap grows faster than the product | Agents pick a Later initiative because it has a story | The glance priority and this sequence are the pick order. A story is not a promotion |
+| Colour and language | A new view is English-only or colour-only | Enrichments name English and French, and a second channel. I-49 and I-24 stay the owners |
+
+### Kill criteria for Now
+
+These apply to I-01 through I-05. Each is repeated on the initiative. Hitting one stops new surface on that initiative. It does not delete shipped behaviour.
+
+| Initiative | Stop if |
+| --- | --- |
+| I-01 | A reload can still lose or duplicate a card. New editor views wait |
+| I-02 | A player cannot see which sentences were checked against card data. Do not add prompts |
+| I-03 | A warning still cannot name its rule or its source. Do not add a score |
+| I-04 | A change blocks typing undo, traps focus, or moves the layout during a drag. Revert it |
+| I-05 | A change weakens deletion, the shared rate limit, or the WebP image path. It does not ship |
+
+### What this pass checked and did not promote
+
+Read on 2026-11-11. No new initiative number.
+
+- Archidekt's news index shows no November development update. The newest development note is the September playtester, already on I-07. The November entry is a deckbuilding contest, "build around a deep-cut commander", which is I-53's kind of challenge ([news](https://archidekt.com/news)).
+- Alternate printed names that fail import, such as "Balin's Tomb" for Ancient Tomb, are a comment on Archidekt's January 2026 odds-and-ends thread ([thread](https://archidekt.com/news/19248512)). That is a line on I-10, not a new initiative.
+- Moxfield's mobile grid change is already the acceptance rule on I-13: keep the previous view selectable ([feedback](https://moxfield.nolt.io/2723), read 2026-11-11). A replacement link between a card and a Considering card is an open question on I-55, beside the existing builds, not a new object ([feedback](https://moxfield.nolt.io/1440)).
+
+---
+
 # Initiatives
 
 Detailed functional specs live in [`docs/product/specs/`](specs/README.md): one per initiative, each with a dated market sweep, the current state of the code, and delivery slices with their dependencies.
@@ -1143,6 +1270,29 @@ Detailed functional specs live in [`docs/product/specs/`](specs/README.md): one 
 - Serialized writes per deck and idempotent zone updates.
 - Tests for hydration, duplicate prevention, failed writes and reload persistence.
 
+### Enrichment (2026-11-11)
+
+**User story.** As a player editing a deck, I want a failed save to put the card back where it was, so that a reload never loses or duplicates it.
+
+**Acceptance.**
+- Moving a card between Main, Sideboard and Considering, then reloading, shows the same zone and quantity.
+- Two overlapping writes of different fields each roll back to the last confirmed value for that field.
+- A signed-in card note survives reload, or the editor says it did not save.
+
+**UX.** The save indicator stays up until the last write finishes. A failure names the field. Drag, keyboard and touch all land on the same zone.
+
+**Data and API.** The saved zone on the deck card is the only source of truth. Notes need a field `patchCardSchema` currently drops. No new public route.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `editor_save_failed {field, recovered: yes or no}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Signed-in only for persistence. A guest keeps the deck in the session until I-39's sign-up handoff. No flag: this is the editor itself.
+
+**Open questions.** Whether a 30-day trash is compatible with erasure stays L-52.
+
+**Kill criteria.** Stop new editor views, including I-37, if a reload can still lose or duplicate a card.
+
 ### Definition of done
 
 A user can move a card between every legal zone, reload the page, change its printing, undo a move and recover from a failed request without a lost or duplicated card.
@@ -1225,6 +1375,29 @@ Code facts were read on `dev` on 2026-11-09. Figures marked as estimates are cal
 
 **Twelfth pass, 2026-11-11:** a surface that explains and cannot add a card is [I-91](#i-91-an-explainer-that-cannot-change-the-deck), not a second generator. This initiative keeps proposals. The visible-verdict item above is done when each sentence is tagged "checked" or "model", and a test fails if a model's sentence is tagged "checked". #1369, which shows an editable Scryfall query, is open and is I-14, not this route.
 
+### Enrichment (2026-11-11)
+
+**User story.** As a player who asked for a deck, I want to see which sentences were checked against card data and which are the model's, so that I can reject a line without trusting the whole reply.
+
+**Acceptance.**
+- Every sentence in a suggestion is tagged checked or model.
+- A test fails if a model's sentence is tagged checked.
+- Legality, search and the playtest still work with the copilot switched off.
+
+**UX.** The tag sits on the sentence, not in a footer. Applying a suggestion still shows the diff first. A truncated reply says it was cut off, not that the deck was illegal.
+
+**Data and API.** The build and suggest routes stay the only model callers. `verifyGeneratedDeck` remains the card-data check. Metering and the disclosure page are I-30.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `ai_suggestion_action {action: apply, ignore or dismiss, tagged: checked or model}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Signed-in, behind the existing per-minute limit. Guests do not call the model. The disclosure page is public.
+
+**Open questions.** Whether the wizard may still ask a model to choose a commander is the open decision with I-54.
+
+**Kill criteria.** Stop adding prompts if a player cannot see which sentences were checked against card data.
+
 ### Definition of done
 
 For a fixed brief and deck, the copilot produces reproducible structured output that passes deterministic Commander validation, stays within constraints, and explains its recommendations well enough for a player to accept or reject them.
@@ -1269,6 +1442,27 @@ The paid tier's strongest candidate is AI use above a free allowance, and nobody
 - With a fake transport, the runner refuses a plan over the cap and stops before the call that would cross it.
 
 **Paid-tier angle:** none. The bench and its page are free. Its value to I-30 is the price: the report lets the owner sell the cheapest model that holds the line, keep a margin on a €3.99 plan, and charge for a deeper Sonnet 5.5 review only if the bench shows it is better.
+
+### Enrichment (2026-11-11)
+
+**User story.** As the owner changing a model, I want a report that says whether the new model invents more card names, so that a cheaper model is not a silent regression.
+
+**Acceptance.**
+- The bench scores a pinned set of cases with code, not with another model's opinion.
+- A model or prompt change does not ship without the comparison report.
+- The cases replay in CI with no API key.
+
+**UX.** The report is an owner page. A player never sees another player's prompt. A live run is capped.
+
+**Data and API.** A prompt registry and a pinned card snapshot. Recorded replies are the bench's, not the player's decks.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `bench_report_recorded {gate: pass or fail}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Owner only for the report. The live runner stays off until the owner's caps are committed. Players are unaffected until a passing report changes the model.
+
+**Open questions.** Which scores are hard lines, and whether French players get French rationale, are open.
 
 ### Definition of done
 
@@ -1326,6 +1520,29 @@ A pull request that changes the model or a prompt cannot merge without a committ
 
 **2026-11-11, eleventh pass:** the audit view, the accuracy statement and the change process for `scoreBracket` belong to [I-77](#i-77-a-bracket-estimate-players-can-audit); this initiative keeps the score. I-77 publishes the estimate as a sum of official floors and heuristic terms, freezes it behind a link and benchmarks it against labelled decks, the way I-70 judges I-02's output.
 
+### Enrichment (2026-11-11)
+
+**User story.** As a player reading a warning, I want the rule or the source named on the warning, so that I can fix the deck or ignore a preference without guessing.
+
+**Acceptance.**
+- Every warning names a rule number, a ban list date, or an external source with its freshness.
+- A Game Changer count uses the current list, not the flag stored when the card was added.
+- No new score appears without that name.
+
+**UX.** The warning is next to the card or the deck total. Colour is not the only difference between a warning and an error.
+
+**Data and API.** Warnings are computed on read from card data and the rules version. Stored flags are not the authority. No new public route.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `warning_shown {class, has_source: yes or no}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** On for everyone, including guests and public decks. No flag.
+
+**Open questions.** Whether the bracket number moves entirely to I-77's audit is that initiative's decision. This one keeps the warning text.
+
+**Kill criteria.** Stop adding scores if a warning still cannot name its rule or its source.
+
 ### Definition of done
 
 A player can answer three questions from the editor: "What is invalid?", "Why is it flagged?" and "What should I do next?"
@@ -1362,6 +1579,27 @@ A player can answer three questions from the editor: "What is invalid?", "Why is
 - Slice 1 merges before I-48 slice 2, so that two runs do not edit `bracket.ts` at once.
 
 **Paid-tier angle:** none. ScrollVault, SpellRack, Nerd Leagues, TableCommander and DeckCheck all publish an estimator, so the estimator is never the product. What I-77 buys is trust in the free surfaces that lead to paid ones: I-15's pod comparison, I-41's store nights and I-30's pod pass. Nothing is sold, previewed early or ranked by spend.
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player told a bracket, I want the floors and the cards that tripped them, so that the number is an explanation I can audit.
+
+**Acceptance.**
+- Official floors are listed apart from heuristic terms.
+- Each term names the cards.
+- A method change does not ship without the benchmark the spec requires.
+
+**UX.** The audit is a panel on the deck and a link that freezes the explanation. It does not say the deck is fair or unfair.
+
+**Data and API.** `explainBracket` is the one function I-48 and I-15 read. It returns the method version. No model.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `bracket_audit_opened {method_version}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Signed-in on private decks. A public audit stays off until the owner says so. Never paid.
+
+**Open questions.** Whether to publish a benchmark that barely beats always saying Bracket 3 is D-94.
 
 ### Definition of done
 
@@ -1424,6 +1662,29 @@ A pod member opens a frozen audit link and sees why a deck reads Bracket 3: the 
 **2026-11-10:** a read-only accessibility audit of `dev` at `65e6230` read the code against WCAG 2.2 AA and grouped its findings into six bundles. Bundles 1, 4 and 5 are above. Bundles 2, 3 and 6 decide what a screen reader hears, so they sit under [I-24](#i-24-decks-a-screen-reader-can-play-from). The audit did not repeat known items: single-key shortcuts (above), I-13's contrast work and I-24's mana-cost labels.
 
 **Twelfth pass, 2026-11-11:** Archidekt's primary developer, replying on 19 February 2026 to a request for Shift-drag between categories, said a modifier must not "overwrite anything the browser is supposed to be doing" for accessibility ([r/EDH](https://www.reddit.com/r/EDH/comments/1r863kj/)). Modifier-drags in I-37 stay behind that check. A reading view with no hover is [I-93](#i-93-a-reading-mode-for-the-table), not a second theme.
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player who types, drags and uses a keyboard, I want the editor to stay still and give me my typing undo back, so that the page does not fight the browser.
+
+**Acceptance.**
+- Ctrl or Cmd+Z inside a text field undoes typing, not a deck edit.
+- A dialog traps focus and returns it when it closes.
+- A drag does not move the layout of the card under the pointer.
+
+**UX.** One dialog closes at a time. Touch targets that are already 40 px stay that size. A modifier used to add a category must not steal a browser or assistive-technology key.
+
+**Data and API.** No schema change. Shortcuts stay in the existing hook until I-37's registry replaces it.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `editor_shortcut_blocked {reason: typing, ime or switch_off}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** On for everyone. The single-key switch stays on by default until a player turns it off, and that choice is local to the browser.
+
+**Open questions.** Remapping of single keys waits on I-37's registry.
+
+**Kill criteria.** Revert a change that blocks typing undo, traps focus, or moves the layout during a drag.
 
 ### Definition of done
 
@@ -1518,6 +1779,29 @@ Speed budgets, the availability objective, alert routing, the off-site database 
 - **Advanced observability:** Datadog, Better Uptime, Grafana, OpenTelemetry and PagerDuty stay parked until usage justifies their operational cost.
 - **Analytics:** choose one privacy-conscious product analytics tool only after defining the product questions it must answer. [I-39](#i-39-first-run-activation-and-product-measurement) writes those questions, measures them first-party, and lists the cookieless candidates for page analytics.
 
+### Enrichment (2026-11-11)
+
+**User story.** As a player with an account, I want a deleted account to stay deleted and card images to keep loading after Scryfall's JPEG cut-off, so that the product is safe to keep using.
+
+**Acceptance.**
+- Deleting an account expires the session cookie. The next request is signed out.
+- No code path builds a retired Scryfall JPEG size. Stored JPEG-era URLs still render through the WebP path.
+- A shared cache cannot be overwritten by a signed-in caller.
+
+**UX.** Failures are HTTP errors with a stable code, not a stack trace. The health route stays public and says nothing about a player.
+
+**Data and API.** Session revocation is the existing auth cookie. Image URLs stay Scryfall's. Rate limits stay in the shared store I-71 and I-30 also use.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `account_deleted {session_cleared: yes or no}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** On for every account. No flag. Image path must be done before 2027-01-01.
+
+**Open questions.** Who registers the domain, and which function region production uses, stay owner questions on this initiative.
+
+**Kill criteria.** Do not ship a change that weakens deletion, the shared rate limit, or the WebP image path.
+
 ### Definition of done
 
 A staging PR cannot merge while type safety, tests, E2E policy, SonarCloud or production health checks are silently bypassed.
@@ -1556,6 +1840,27 @@ Production runs on Supabase Free, which keeps no backups ([pricing](https://supa
 
 **Paid-tier angle:** none. Every player gets the same uptime, speed and backups, and no budget is relaxed for free players. Its value to I-30 is slice 12's precondition for a first payment: a restore drill passed in the last 90 days, a public status page and 99.5% history, and an export of the player's own data. None of the incumbents read publishes a status page or a speed figure.
 
+### Enrichment (2026-11-11)
+
+**User story.** As a player, I want the deck to survive a database mistake, so that a bad command cannot empty production.
+
+**Acceptance.**
+- The documented reset command refuses to run against production.
+- A daily encrypted export exists, or the owner has not yet chosen the store and the slice says so.
+- A restore drill has been run on a copy, not only described.
+
+**UX.** Players see a maintenance banner when the site is read-only. They do not see the backup.
+
+**Data and API.** An encrypted dump. The store is the owner's choice. Alerts go to the owner, not to a player's inbox.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `backup_finished {restored_in_drill: yes or no}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Internal. No player flag. The guard ships before new product surface that writes decks.
+
+**Open questions.** A 24-hour loss target, and whether point-in-time recovery waits for revenue, are owner questions.
+
 ### Definition of done
 
 A restore from the newest off-site export into a scratch database passes the smoke script within four hours and is recorded; a test alert reaches the owner's phone; no documented command can reset production; and a pull request that pushes a key route's JavaScript or queries past its budget fails CI.
@@ -1592,6 +1897,27 @@ Three scheduled runs a day pick one roadmap item and open one PR against `dev`. 
 - The run guard exits 2 on `gh pr merge`, a push to `dev`, `--no-verify`, `SKIP_E2E`, `sudo`, `git-prune.sh`, `prisma migrate` and an edit of this roadmap, and lets `pnpm test` through.
 
 **Paid-tier angle:** none; nothing reaches players. Its value is the owner's week: at the observed rate of three runs in eight needing repair, about 8 of the 21 weekly runs, plus rebuilding the lane by hand after each merge batch, the spec estimates 4 to 6 hours a week, and a third of the runs' output tokens.
+
+### Enrichment (2026-11-11)
+
+**User story.** As an agent picking work, I want the glance table and the dependency page generated from one registry, so that a hand-edited row cannot drift.
+
+**Acceptance.**
+- A slice in the registry appears in the glance table and the dependency page.
+- A stale generated section fails CI.
+- A scheduled run does not pick a slice that touches the rules of the run.
+
+**UX.** Players do not see this. The registry is a file a reviewer can read.
+
+**Data and API.** A schema for slices. Generation writes between markers. I-80 to I-98, which have no spec, stay hand-written until they have slices.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `roadmap_check_failed {reason: stale or overlap}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Internal. No player flag. Agents pick none of this initiative's own slices.
+
+**Open questions.** The registry format is D-85. Protecting `dev` and `staging` is D-87 and needs no code.
 
 ### Definition of done
 
@@ -1655,6 +1981,27 @@ A scheduled run started from `origin/dev` picks a slice from the generated lane,
 
 **2026-11-09:** prices come only from Scryfall's `prices.usd` field. No code reads Scryfall's EUR or MTGO ticket prices, and nothing converts currency. Moxfield shows USD, EUR and tix; Archidekt shows per-vendor totals from TCGplayer, Card Kingdom, Cardmarket and Cardhoarder; ManaBox shows four sources with currency conversion. [I-32](#i-32-seller-handoff-affiliate-links-and-buy-this-deck-carts) takes the seller side of the regional-price and seller deep-link items above: disclosed affiliate links, a price source with display rights for a chosen region, multi-vendor prices and buy-this-deck carts on the seller's own site. I-06 keeps ownership, printing identity and the acquisition plan that I-32 hands off. [I-33](#i-33-the-marketplace-ladder-decision-record) records what lies beyond a hand-off, and the marketplace stays a non-goal.
 
+### Enrichment (2026-11-11)
+
+**User story.** As a player with cards in a box, I want the deck to show what I own, what I marked proxy, and what I still have to buy, so that the total is not a guess.
+
+**Acceptance.**
+- A missing printing is distinct from an owned one and from an unpriced one.
+- A card the player marked proxy is named on the total and left out of collection value.
+- The acquisition plan across decks does not count a copy twice.
+
+**UX.** Owned, proxy and missing are three labels on the row. The plan is a list the player can copy, not a checkout.
+
+**Data and API.** Ownership is printing-level. Prices stay the stored USD amount until I-96 shows EUR beside it. The plan route stays private.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `acquisition_plan_opened {scope: one_deck or all, unpriced: zero or some}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Signed-in. Guests see a single deck's missing list from the cards in the session, with no collection. No flag.
+
+**Open questions.** Whether the plan's one currency is USD or the player's market is I-32's choice, not a conversion.
+
 ### Definition of done
 
 Importing or editing a deck produces a trustworthy owned, missing and estimated-cost view without conflating card identity with printing identity.
@@ -1716,6 +2063,27 @@ Importing or editing a deck produces a trustworthy owned, missing and estimated-
 - [ ] Track, by the player's own taps, commander damage dealt to up to three imagined opponents, kept separate per commander (CR 903.10a, and the loss at 21 in CR 104.3j and CR 704.6c). The goldfish has a life total and no commander-damage tally. No opponent acts.
 - [ ] Let the player set the designations the checklist in I-19 names and the playtest does not track: the monarch, the initiative, the Ring, day and night, the City's Blessing, and experience, energy and poison counters. The player sets them. The engine does not infer them from Oracle text.
 **Twelfth pass, 2026-11-11:** [Playgroup's Sparring page](https://playgroup.gg/playgroup-live/how-sparring-works), updated 2026-11-06, says its phantom opponents use 21,480 interaction spells from 6,934 of Playgroup's games. Those counts are theirs. They are further evidence for the scripted-interaction decision above. They are not a log this product can replay, and [I-81](#i-81-a-review-of-the-goldfish-sessions-you-recorded) reads only sessions recorded here.
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player goldfishing a deck, I want the session to use the deck I built and to be tied to that version, so that two runs can be compared.
+
+**Acceptance.**
+- The library is the main deck plus the command zone, not Sideboard or Considering.
+- A recorded session names the snapshot it was played from.
+- Commander damage and the named designations are set by the player and never inferred by a rules engine.
+
+**UX.** The solitaire limit stays on screen. Hotkeys are listed in a cheat sheet and do not fire while typing. Saving a session to resume is explicit.
+
+**Data and API.** Sessions stay on `POST /api/decks/[id]/playtest-sessions`. Designations are session state, not deck rows.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `playtest_recorded {snapshot: new or reused, mulligan: free or london}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Signed-in to record. A guest may goldfish the session deck and the log is discarded at sign-out unless they save the deck first. Scripted opponents stay behind D-35.
+
+**Open questions.** Whether a hot-seat of four decks is in scope stays D-35. I-81 reads logs only after they exist.
 
 ### Definition of done
 
@@ -1787,6 +2155,27 @@ A player can test two versions of a deck and see evidence that helps choose betw
 
 **2026-11-09 (evening):** the deck reports and moderation queue checked above stay shipped. [I-38](#i-38-trust-safety-and-user-rights) now owns moderation beyond decks: reports on comments, reviews, profiles, packages and share links, signed-out notices, hide and restore actions, statements of reasons, appeals and blocking. Today a moderator can only mark a deck report reviewed or dismissed.
 
+### Enrichment (2026-11-11)
+
+**User story.** As a player publishing a deck, I want other people to read, compare and fork it without seeing my notes or my budget, so that sharing is not a leak.
+
+**Acceptance.**
+- A public response contains only the public field list.
+- A fork copies the primer only when the owner allowed it.
+- A card note is public only when its own switch is on, and that switch defaults off.
+
+**UX.** Seeking feedback asks one question. The primer editor shows source and preview. The 2,000-character cap is visible before the player hits it.
+
+**Data and API.** Public and share reads use the existing allowlists. Notes stay off those lists until the switch exists. No new write route for visitors.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `deck_forked {primer_copied: yes or no, signed_in: yes or no}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Public read is signed-out. Forking while signed out goes through I-72's sign-up and returns to the deck. Publishing is signed-in.
+
+**Open questions.** The primer length cap is still undecided. I-83 will not write the primer until it is.
+
 ### Definition of done
 
 A user can discover, inspect, compare and safely fork a deck without leaking private data or losing attribution.
@@ -1824,6 +2213,27 @@ A player finds someone else's deck in two ways today: the author's profile, or t
 - At most 500 ms at p95 and three SQL statements per request on 10,000 and 50,000 synthetic decks, with committed `EXPLAIN` plans.
 
 **Paid-tier angle:** search, filters, sorts, results, the browse page and saved searches are free and need no account. One candidate for I-30: alerts on more saved searches than a free allowance, three proposed, and the alert email digest through I-63 slice 10, as I-59 proposes for price alerts. No competitor found alerts on a deck search, and every deck an alert names stays reachable through the free search. Paying never changes a count, eligibility, order or placement.
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player looking for a public deck, I want to filter by commander, cards and a price with its basis, so that I can see why a result appeared.
+
+**Acceptance.**
+- A result says which filters it matched.
+- Popularity is not the default order.
+- An author can keep a public deck out of search.
+
+**UX.** Filters are chips on a signed-out page. A filtered URL is noindex, through I-34. The commander page reads this query instead of loading every deck.
+
+**Data and API.** A search projection, updated in the same transaction as a deck write. Private fields never reach it. The route is rate-limited and cached.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `deck_search_run {filters: count, signed_in: yes or no}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Signed-out. Alerts on a saved search, later, are signed-in and wait on I-63. No flag that changes the order for some players.
+
+**Open questions.** Whether existing public decks are listed by default is D-84. An owned-column for the signed-in viewer is a later slice and is never shown to anyone else.
 
 ### Definition of done
 
@@ -1876,6 +2286,27 @@ A signed-out player finds Atraxa decks that play Smothering Tithe but not Rhysti
 
 - **Goldfish import:** blocked by its Cloudflare managed challenge; do not ship a parser that cannot work reliably.
 - **Tournament win rate:** blocked by licence terms, not by missing data. MTGTop8 standings alone do not yield a win rate. Match-level cEDH data does exist: TopDeck.gg's API v2 returns each table's players in seat order and its winner. EDHTop16 computes a win rate (wins divided by wins, losses and draws) and shows each entry's record from TopDeck.gg data. Its GraphQL endpoint accepts only persisted queries, so it is not a usable public API (checked 2026-11-09). TopDeck.gg's [Developer Terms](https://topdeck.gg/developer-terms), effective 2026-10-27, forbid selling, licensing or otherwise commercializing API data (§7), and allow displaying public event data with a visible credit and link (§8.3, §6.1). Whether a paid product showing derived win rates counts as commercializing is unclear; a written clarification from TopDeck.gg is the cheapest unblocker. Reusing EDHTop16, cedhtools or cedhstats outputs likely inherits the same restriction. Casual pod logs ([I-35](#i-35-pod-game-log-and-casual-results)) are a different population and do not unblock this item.
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player looking at a recommendation, I want inclusion, Lift and a model's suggestion labelled apart, so that a popular card is not presented as a fact about my deck.
+
+**Acceptance.**
+- A row from EDHREC says inclusion or Lift, the cohort when the source has it, and the freshness.
+- A missing denominator is said, not treated as zero.
+- A data-sourced cut is not labelled as the copilot's cut.
+
+**UX.** The source sits on the row. A refresh the player did not ask for does not skip the cache.
+
+**Data and API.** The EDHREC feed and the one Spellbook lookup per deck stay the sources. No local Lift is computed from the top-20 feed. `/api/combos` stays rate-limited.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `recommendation_shown {source: edhrec, spellbook or model, labelled: yes or no}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** On for public and private decks. No flag. Tournament win rates stay blocked on TopDeck's terms.
+
+**Open questions.** A written clarification from TopDeck is still the only unblocker for match win rates.
 
 ### Definition of done
 
@@ -1954,7 +2385,11 @@ A recommendation is never presented as universal truth: the user can see where i
 
 **2026-11-10, sixth pass:** moving many decks from another site in one step is [I-62](#i-62-switching-from-another-site-in-one-step)'s, from the files that site exports. I-10 keeps single-deck paste and URL import, and I-62 reuses its text parser. While Moxfield refuses honest requests, the Moxfield profile panel (`MoxfieldProfileImport`) links to I-62's Moxfield guide instead of offering a picker that fails (I-62 requirement 2.3, slice 8).
 
-**Twelfth pass, 2026-11-11:** accept a pasted line that is only a Scryfall card id. No importer under `src/lib` matched a Scryfall id on `a3250bfa`. Archidekt's board lists "Scryfall ID text import" with no point total, seen 2026-11-11 ([features](https://archidekt.com/features)). A TappedOut forum post on 2026-07-30 says SpellTable and Convoke import Moxfield and Archidekt ([thread](https://tappedout.net/mtg-forum/tappedout/import-deck-support-for-spelltable/)). An EDHMat page, read as a search result on 2026-11-11, says SpellTable needs no list because the cards are physical ([comparison](https://edhmat.com/vs/spelltable)). The two disagree, neither was confirmed inside the product, and no paste format is specified. The export contract stays [I-50](#i-50-play-this-deck-online).
+**Twelfth pass, 2026-11-11:** accept a pasted line that is only a Scryfall card id. No importer under `src/lib` matched a Scryfall id on `a3250bfa`. Archidekt's board lists "Scryfall ID text import" with no point total, seen 2026-11-11 ([features](https://archidekt.com/features)).
+
+- [ ] Resolve a pasted flavor name to the oracle card when the printed name misses. A comment on Archidekt's January 2026 odds-and-ends thread asks for alternate names such as "Balin's Tomb" for Ancient Tomb; staff said a lookup on every import is slow and still called the miss a poor experience ([thread](https://archidekt.com/news/19248512), read 2026-11-11). Try `flavor_name` only after the oracle name fails, and show the oracle name that was chosen. Do not add a second card.
+
+A TappedOut forum post on 2026-07-30 says SpellTable and Convoke import Moxfield and Archidekt ([thread](https://tappedout.net/mtg-forum/tappedout/import-deck-support-for-spelltable/)). An EDHMat page, read as a search result on 2026-11-11, says SpellTable needs no list because the cards are physical ([comparison](https://edhmat.com/vs/spelltable)). The two disagree, neither was confirmed inside the product, and no paste format is specified. The export contract stays [I-50](#i-50-play-this-deck-online).
 
 ### Definition of done
 
@@ -2078,6 +2513,27 @@ No separate design-reference document was added with these slices. Screenshot re
 
 **2026-11-10:** the [I-13 spec](specs/i13-visual-direction.md#delivery-slices)'s slice 1 lists "non-colour status encoding" beside the border and accent-text corrections. [I-49](#i-49-a-display-that-works-for-colour-blind-and-low-vision-players) proposes to take that part into its slices 4 to 10, with status tokens for both themes, an icon shape per status and a lint rule against raw status colours, and to leave I-13 slice 1 with borders and accent text. This is an owner question in the status note; until the owner answers, the item stays in I-13. I-49 also found I-13's finding that brackets are encoded by hue alone partly out of date: the bracket's number and name now sit beside its colour, and only its light-theme contrast still fails.
 
+### Enrichment (2026-11-11)
+
+**User story.** As a player opening the editor, I want the same deck to be readable in both themes and at a phone width, so that a visual change does not hide a control I used yesterday.
+
+**Acceptance.**
+- A changed default view keeps the previous view selectable for at least one release.
+- Light and dark both keep text that meets the contrast bar I-49 measures.
+- Narrow, tablet and wide widths are checked for the journeys this initiative restyles.
+
+**UX.** Tokens, not one-off colours. Tooltips do not cover the card. The mobile grid does not become a stack unless a stacks view already exists beside it.
+
+**Data and API.** No schema change. Visual tokens live in the stylesheet. I-37 owns the editor behaviours this skin wraps.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `view_selected {surface: editor or library, width: narrow, tablet or wide}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** On for everyone once a surface ships. A half-restyled page is not released. Guests and signed-in players see the same skin.
+
+**Open questions.** Whether I-49 takes the non-colour status work out of this initiative's first slice is still an owner question.
+
 ### Definition of done
 
 The deck-library-to-editor-to-share journey is visually coherent and remains at least as usable as before; accessibility, responsive, performance and regression checks pass, and each redesigned slice has QA acceptance evidence before promotion.
@@ -2110,6 +2566,27 @@ This is search, not a new deck generator. DeckCheck Smart Search and Farseek are
 **Demand evidence (2026-11-09):** search by function rather than popularity is a loud, recurring request on r/EDH, and no initiative named Tagger before this. ["Scryfall cheat sheet or: How I Learned to Stop Using EDHRec"](https://www.reddit.com/r/EDH/comments/1k0ih2q/) reached 909 points (April 2025), ["PSA: Check the scryfall tagger"](https://www.reddit.com/r/EDH/comments/1lc7cu9/) 425 (June 2025) and ["PSA: Viewing Scryfall Tags to Find Similar Cards"](https://www.reddit.com/r/EDH/comments/1wxxui2/) 246 (October 2026). A browser extension, MoxTags, adds Scryfall tags to Moxfield, and Archidekt has applied Oracle tags as categories since July 2026. Players reject AI search tools that hide their query; under OffMeta, a commenter asked for each part of the generated query to be shown as an editable assumption ([January 2026](https://www.reddit.com/r/EDH/comments/1q8czkc/)), which is this initiative's design.
 
 **Twelfth pass, 2026-11-11:** #1369 implements this initiative and is open, not merged. EDHREC's 6 November 2026 changelog added colour-identity filters on card pages and said narrowing the identity makes Lift more specific ([changelog](https://edhrec.com/articles/changelog-big-performance-upgrades)). The scope item that keeps the deck's colour identity on the generated query is the same job. Done still means the player sees the query before it runs.
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player who can describe a card but not Scryfall's syntax, I want to read and edit the query before it runs, so that the search cannot invent a card.
+
+**Acceptance.**
+- An English or French description becomes one query the player sees before any search.
+- Editing the query and running it returns only cards that query returns.
+- The deck's format and colour identity stay on the query unless the player removes them.
+
+**UX.** The query is a text field, not a hidden step. A control returns to syntax-only search. #1369 is the open implementation and is not on `dev`.
+
+**Data and API.** The search route gains a translate step that returns the query string and does not add cards. No deck write.
+
+**i18n and access.** The description may be English or French. The query itself stays Scryfall's syntax, which is not translated. Failures use a message-catalogue code.
+
+**Telemetry.** `search_query_run {origin: typed or translated, edited: yes or no, locale: en or fr}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Signed-out and signed-in. The translator is behind a flag defaulting to off until the query-visible test is green. Guests can run it. It does not call the deck model.
+
+**Open questions.** Whether tag lists may be shown is the same licence question as I-37, I-54 and I-65.
 
 ### Definition of done
 
@@ -2156,6 +2633,27 @@ CommanderSalt, DeckCheck DTI and EDHREC salt are the references for describing h
 
 - [ ] Download one `.ics` file for a planned night: the date, the pod's name and a link to the sheet. No Google account and no mail. Recurrence is a later line in the same file, still with no external calendar service.
 **Twelfth pass, 2026-11-11:** the walkthrough that asks the questions one at a time is [I-88](#i-88-a-pre-game-script-that-fills-the-rule-0-sheet). It writes these fields and adds none. Wizards' 21 October 2025 update calls more pregame conversations "the real goal" ([update](https://magic.wizards.com/en/news/announcements/commander-brackets-beta-update-october-21-2025)).
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player about to sit down, I want a sheet of what we agreed, separate from the official rules, so that a house rule is not mistaken for a ban.
+
+**Acceptance.**
+- Intent, combos, extra turns, mass land denial, proxies and house rules are fields, not one blob of text.
+- The sheet is private until an explicit share.
+- A computed column is labelled computed and never overwrites a declared field.
+
+**UX.** Four decks compare in one view. A violation of a house rule says house rule, not illegal. A calendar file downloads for one night, with no external account.
+
+**Data and API.** A new sheet record per deck or pod. Official legality stays the existing report. The calendar file is generated, not stored at a third party.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `rule0_shared {audience: pod or link, fields_filled: count}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Signed-in to edit. A shared sheet is readable by the link without an account. Guests do not create a pod.
+
+**Open questions.** Whether the first comparison is free stays D-95. I-88 only writes fields this sheet already has.
 
 ### Definition of done
 
@@ -2224,6 +2722,27 @@ MTGGoldfish SuperBrew and Mana For Cards Discover are the references. This initi
 
 **Twelfth pass, 2026-11-11:** a reprint of a card the player owns is [I-84](#i-84-a-reprint-watch-for-cards-you-own), not a candidate list. A Cardsphere file is [I-90](#i-90-a-cardsphere-file-you-upload-yourself). Neither ranks commanders.
 
+### Enrichment (2026-11-11)
+
+**User story.** As a player starting from a box of cards, I want commanders ranked by what I already own, so that a copy committed to another deck is not treated as free.
+
+**Acceptance.**
+- Oracle identity is used for colour and legality. Printing identity is used for price.
+- A free-cards mode treats copies in other decks as unavailable.
+- An unknown price is marked unknown, not zero.
+
+**UX.** The ranking does not change the open deck or the collection. Each candidate names where the list came from.
+
+**Data and API.** Reads the commitment index and the collection. No write. Public decks, when used as candidates, go through I-75's query.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `buildable_ranked {mode: all_owned or free_copies, unpriced: zero or some}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Signed-in, because it reads the collection. No guest ranking. Flag off until the commitment index matches a hand-checked fixture.
+
+**Open questions.** The candidate corpus is public decks first. A generated 100-card list from the collection stays out of scope.
+
 ### Definition of done
 
 A collection produces a ranked, sourced view of buildable lists that shows free copies and unknown prices, without changing ownership.
@@ -2267,6 +2786,27 @@ EDHREC precon upgrades, DeckCheck and Farseek are the references. Generic budget
 - [ ] Open a catalogue precon in the playtest, signed out, before "Copy this deck" (slice 2 with I-07). Hearthstone lends six decks for seven days, then the player keeps one ([32.2](https://hearthstone.blizzard.com/en-us/news/24198086), 2025-04-24). Added 2026-11-11.
 
 **Twelfth pass, 2026-11-11:** Archidekt's board has "Deck import defaults to editions owned" at 217 points, seen that day. That job is [I-57](#i-57-printing-preferences-applied-everywhere) and I-06, not a second precon path.
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player who bought a precon, I want the sealed list dated and a budget bundle I can undo, so that the product is not rewriting the deck I own.
+
+**Acceptance.**
+- The sealed list names its source and date.
+- A bundle applies to a working copy and reverses in one action.
+- Every price on the bundle is labelled an estimate.
+
+**UX.** The commander stays until the player changes it. The diff is the list of swaps, shown before apply.
+
+**Data and API.** Catalogue rows come from I-67's import of MTGJSON deck lists. Applying a bundle uses the deck write path, one transaction.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `precon_bundle_applied {reversed_within_session: yes or no}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** The catalogue is readable signed-out. Applying a bundle is signed-in. Guests may open a precon in the playtest only after that slice says so.
+
+**Open questions.** Who writes the editorial bundles, and when a sealed price may appear, wait on I-32 and a named editor.
 
 ### Definition of done
 
@@ -2332,6 +2872,27 @@ ManaBox offline search is the reference. This slice is a voluntary read-only cac
   - Archidekt's "Extras" tab shows emblems and dungeons ([news](https://archidekt.com/news/3834269), about three years before 2026-11-10), and its users reported the monarch, the City's Blessing and Mizzix's experience counter missing ([thread 9348841](https://archidekt.com/forum/thread/9348841)). No printable checklist was found anywhere. All four items stay free.
 
 **Twelfth pass, 2026-11-11:** goldfishing that download, without editing it, is [I-87](#i-87-goldfish-the-deck-you-downloaded). Reading up to four other people's public lists for one night is [I-94](#i-94-four-lists-pinned-for-one-night). Neither raises the one-deck limit of the editable cache. The token list this initiative fixes is also the token section of [I-80](#i-80-a-proxy-file-a-print-shop-can-read).
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player on the way to a game, I want one deck, its primer and its tokens readable with no network, so that the shop's wifi is not required.
+
+**Acceptance.**
+- The player chooses the deck. Nothing else is cached.
+- The cached copy shows the date it was saved.
+- Sign-out deletes the cache.
+
+**UX.** The offline view is read-only. A control that would edit the list is absent, not disabled-and-still-working.
+
+**Data and API.** A versioned cache in the service worker. The deck payload is the share projection plus tokens. No new server route for the cache itself.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `deck_cached {cleared_on_signout: yes}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Signed-in to choose a private deck. A public deck can be cached by a guest and is cleared when the browser session ends. Flag off until the airplane-mode test passes.
+
+**Open questions.** I-87 may goldfish this cache later. I-94 may cache four public projections. Neither raises the one editable deck.
 
 ### Definition of done
 
@@ -2446,6 +3007,27 @@ Wizards publishes the rules but no deckbuilding guidance. EDHREC, CoolStuffInc a
 - A test fails when a guide claim has no label or no dated source.
 - A test fails when the guide's official rules diverge from the bracket definitions.
 
+### Enrichment (2026-11-11)
+
+**User story.** As a player who picked a bracket, I want to read what that bracket is for and check my list against it, so that the name on the screen matches Wizards' name.
+
+**Acceptance.**
+- The five official names and the current limits are the ones shown in English and French.
+- A sentence in the guide is tagged official, measured or community.
+- The open deck's check lists the cards that miss the chosen bracket, without blocking the edit.
+
+**UX.** The guide is a page, not a modal on every public route. The check is a panel on the deck.
+
+**Data and API.** Guide content is authored files, the pipeline I-64 owns. The check reads I-77's explanation when that exists, and the current bracket function until then.
+
+**i18n and access.** English and French. A guide section is not published in a locale that has no reviewed text. The check's labels come from the catalogues.
+
+**Telemetry.** `bracket_guide_opened {bracket: 1 to 5, locale: en or fr}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Public, signed-out. The check on a private deck is signed-in. No flag for the name correction. The long guide waits on a named author.
+
+**Open questions.** The French guide waits on a named reviewer. Slice 2 of the official definitions is already in flight.
+
 ### Definition of done
 
 A player can open the section for their target bracket from the deck, read sourced guidance in English or French, and see which official limits and composition ranges their list meets, with the guide and the bracket analysis stating the same rules.
@@ -2489,6 +3071,27 @@ Players learn a play style from people who have played it, and that knowledge is
 - A draft, unreviewed or stale guide is `noindex` and out of the sitemap, and recomputing a demand snapshot from its stored inputs gives the same order.
 
 **Paid-tier angle:** every guide in every locale, the panel for one deck and the demand register stay free ([I-30 requirement 1.1](specs/i30-business-model-and-paid-tier.md#1-the-free-and-paid-line)). The candidate is "My decks by style", a player's decks and snapshots set against style and bracket norms over time, sold with I-34's personal comparison as one entitlement in I-31. The spec rates it weak, because it needs measured norms that wait for I-29's corpus.
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player learning a style, I want a guide written by a named person from play, so that an unsourced percentage is not advice.
+
+**Acceptance.**
+- The dead archetype module with percentages that sum past 100 percent is deleted.
+- A published guide names its author and tags each claim official, measured or community.
+- A model does not write the guide.
+
+**UX.** One page per style. A deck panel, later, points at the guide. It does not rank the player's deck.
+
+**Data and API.** The content pipeline is I-64's. Style ids match I-54's vocabulary. No new card table.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `style_guide_opened {locale: en or fr}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Public once a named author has signed the page. No flag. French editions wait on a reviewer.
+
+**Open questions.** Guest authors and whether they are paid are open. EDHREC figures on a guide need the terms answer.
 
 ### Definition of done
 
@@ -2813,6 +3416,27 @@ The owner wants a cheap SaaS that pays a decent living while the competition is 
 - A guard test lists the only modules allowed to check an entitlement, and every always-free surface renders signed out.
 - Expiry or downgrade deletes nothing. Webhooks are signature-verified, stored once and applied idempotently.
 
+### Enrichment (2026-11-11)
+
+**User story.** As a player who might pay, I want to know what is free, what is a usage limit, and what I am paying for, so that card data is not behind the charge.
+
+**Acceptance.**
+- Card data, exports, legality and the evidence on a deck stay reachable without paying.
+- AI calls are metered per account before any charge exists.
+- No billing code runs before the written legal answers are committed.
+
+**UX.** The disclosure page lists where a model is used. A quota warning appears before the call is refused, in both languages.
+
+**Data and API.** Usage rows are I-30's. The charge, later, is a merchant of record, not a card charge we store. Webhooks do not carry a deck.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `ai_quota_hit {surface: build or suggest}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Metering is signed-in and on. The charge is a flag defaulting to off, and off means the product stays free. Guests do not get a billable action.
+
+**Open questions.** Price, the legal entity, and whether a plan may be sold outside the EU stay the owner's and the lawyer's.
+
 ### Definition of done
 
 Every model call is metered and capped per month; the free and paid line is public and was answered in writing by a lawyer before the first charge; card data, deck pages and evidence stay free signed out; and a player can subscribe, cancel online and withdraw as French law requires.
@@ -2863,6 +3487,27 @@ The [opening-hands guide](guides/commander-mulligans-curves-and-play-style.md) s
 
 **Paid-tier angle:** rated unproven in I-30, because free tools already offer castability, swaps and replay. The default run, the replay link, a land ±1 pair and norms placement stay free. Candidates are custom swaps and more than two variants a run, large server-side samples, and full run history across snapshots (slice 12, blocked on I-30's decision).
 
+### Enrichment (2026-11-11)
+
+**User story.** As a player tuning one list, I want a keep table and a swap result I can rerun, so that a difference that is noise is labelled noise.
+
+**Acceptance.**
+- The same seed and sample size reproduce the interval.
+- A swap that is not distinguishable at that sample says so, and says the sample that would be needed.
+- The run does not change the deck.
+
+**UX.** The result is a table: inputs, interval, sample size, seed. A button reruns with the same inputs.
+
+**Data and API.** Uses the seeded generator from the I-21 slices that move ahead of Later. Results are stored on the account, private. No public route.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `lab_run_finished {kind: keep or swap, distinguishable: yes or no}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Signed-in. A free allowance is I-30's decision. Guests do not run the lab. Flag off until a fixture reproduces.
+
+**Open questions.** Norms against other decks wait on I-29 and stay Later.
+
 ### Definition of done
 
 A player runs Deck Lab on their own list without an account and gets a keep table and commander and mana development, each figure with its interval, seed, sample size and engine version; a replay link reproduces the run byte for byte; and a variant's verdict says when the difference is not distinguishable.
@@ -2903,6 +3548,27 @@ I-06 stops one step short of buying: the plan lists missing printings with undat
 - A handoff leaves `CollectionCard` and `AcquisitionIntent` unchanged.
 
 **Paid-tier angle:** prices, the market choice, the plan and every handoff stay free, by Scryfall's paywall clause and because affiliate income depends on click volume. The candidate was a price watch on the player's own plan, with that plan's price history; both moved to [I-59](#i-59-prices-over-time-and-alerts), which proposes the history free and keeps alerts above a free allowance as the candidate.
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player ready to buy the missing cards, I want the exact printings sent to a seller's cart in the market I chose, so that an affiliate link is labelled where I click it.
+
+**Acceptance.**
+- The handoff lists printing, quantity and the market.
+- Copies owned across decks are already subtracted.
+- Any affiliate parameter is visible on the link, not only in a footer.
+
+**UX.** The player picks the seller, then leaves for that seller's site. We do not take payment.
+
+**Data and API.** Reads the acquisition plan. Writes nothing on the seller. A regional price needs a source with display rights. Until then the stored USD amount is labelled as such.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `seller_handoff_clicked {market: us or eu, affiliate: yes or no}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Signed-in. Guests get no handoff. Affiliate codes stay off until the seller and the lawyer agree.
+
+**Open questions.** Which seller is first, and whether EUR display rights exist, are open. I-96's two labels are not this handoff.
 
 ### Definition of done
 
@@ -3000,6 +3666,27 @@ The decision log holds dated gate reviews whose figures a second person can reco
 - No page kind is disallowed in robots.txt, so crawlers can read its `noindex`.
 
 **Paid-tier angle:** reports, data pages, methods and downloads stay free, with no account and no early access for payers. The candidate is personal: placing the player's own decks within the published norms, which belongs to I-31 and is priced in I-30, and never shows a norm the free pages do not.
+
+### Enrichment (2026-11-11)
+
+**User story.** As a reader searching for a Commander figure, I want the page to show the method and the sample size, so that a thin page is not in the index.
+
+**Acceptance.**
+- Every public figure names its method, its date and its sample size.
+- A page under the sample threshold is noindex and absent from the sitemap.
+- A filtered URL is noindex.
+
+**UX.** The method is a link on the page, not a tooltip that covers the number. French and English pages share the same numbers.
+
+**Data and API.** `indexPolicy` is a pure function. Pages read stored aggregates. No per-request scrape.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `index_decision {kind, result: index or noindex}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Public. No account. No flag for the policy: a page that fails it does not ship.
+
+**Open questions.** Which page kinds exist, including precon pages, is still an open list. I-92 consumes the decision and does not make a second one.
 
 ### Definition of done
 
@@ -3137,6 +3824,27 @@ The owner wants an editor "more beautiful and more complete than Moxfield". Arch
 
 **Paid-tier angle:** every view, category, tag, filter, bulk edit, the clipboard and shortcuts stay free, as they are at Moxfield and Archidekt, and no slice limits decks, tags or clipboard size. Candidates are history kept beyond a free window, early access to new views, and presentation themes for public decks.
 
+### Enrichment (2026-11-11)
+
+**User story.** As a player coming from Moxfield or Archidekt, I want views, tags and a history that do not reset my printings, so that the editor is as deep without being a copy.
+
+**Acceptance.**
+- A bulk edit changes only the lines that differ, and keeps printings on the lines that do not.
+- The previous view remains selectable after a default changes.
+- A 100-card fixture stays inside the latency and layout-shift bars named on this initiative.
+
+**UX.** Stacks, table and text are views, not separate decks. A category can nest one level. Multi-select tags a group.
+
+**Data and API.** History is a row written in the same transaction as the mutation. Oracle id arrives once, from I-67, on the deck card. No second card database.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `editor_view_changed {view}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Signed-in. Guests keep today's editor. Views ship one at a time, each behind the measurement slice. No flag that hides a view the player already chose.
+
+**Open questions.** Tagger tags stay blocked until Scryfall answers. Foil and language are this initiative's slice 12.
+
 ### Definition of done
 
 On the 100-card fixture, a player switches among five views, collapses groups, tags and filters cards, bulk-edits as text without losing printings or notes, and reverts a change from history, on desktop and at 390 px, within the latency and stability budgets.
@@ -3180,6 +3888,27 @@ Players keep several versions of one deck at the same time, and Wizards' bracket
 - Each write is one transaction, and an injected failure leaves the deck and its builds unchanged.
 
 **Paid-tier angle:** builds without a plan limit, every way of creating, editing, comparing, promoting and reviewing them, legality and bracket per build, public builds and the game-night aids stay free. A limit on builds would be a capacity limit on the player's own data, which I-30 requirement 1.2 rules out, and it would make duplication, which every rival allows free, the cheaper workflow. The one candidate is a deterministic proposer that fits a build to its target bracket, reusing I-48's replacement rule. Players have asked for it, but no willingness-to-pay data exists.
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player with a Bracket 2 night and a Bracket 3 night, I want both lists on one deck, so that I am not maintaining two decks that drifted.
+
+**Acceptance.**
+- A build is a diff from the main list.
+- Each build has its own legality and bracket estimate.
+- Copies are counted once across builds in the acquisition plan.
+
+**UX.** The build switcher is in the deck header. Promoting a build to main shows the diff and can be undone. A Considering card can be marked as the intended replacement for a main-deck card. That link is the open question below, not a second versioning system.
+
+**Data and API.** Builds store added and removed printings against the main list. Restore writes the commander fields in the same transaction as the cards.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `build_promoted {cards_changed: count}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Signed-in. Guests have one list. No flag. Public builds, if any, wait on the same projection rules as I-08.
+
+**Open questions.** A comment on Moxfield feedback 1440, read 2026-11-11, asks to keep a card and name its replacement. Whether that is a field on a build or only a Considering note is open. It does not become a new initiative.
 
 ### Definition of done
 
@@ -3227,6 +3956,27 @@ A card enters a deck by at least ten paths, and each picks a printing its own wa
 
 **Paid-tier angle:** none. Archidekt, TappedOut and Moxfield offer printing defaults free, and printing data is card data, which the strategic boundaries keep free.
 
+### Enrichment (2026-11-11)
+
+**User story.** As a player who picked a printing, I want that printing to stay, so that a later import does not swap it for a different edition and a stale price.
+
+**Acceptance.**
+- Choosing a printing keeps it, including when the player owns another printing of the same card.
+- A printing change updates the stored price.
+- The rule that chooses a printing is the same at search, import, the wizard and a suggestion.
+
+**UX.** The current rule is visible: owned first, then the product default, with the exclusions the player set. Applying it to a whole deck is a diff.
+
+**Data and API.** The deck card stores the Scryfall id it already has, and gains language and finish in I-37's slice. The chooser is a pure function.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `printing_rule_applied {changed: count}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Signed-in. The default rule applies to guests' session decks too, so a guest does not get a different edition than a signed-in player. No flag.
+
+**Open questions.** The product default, newest edition or newest non-Universes-Beyond printing, is an owner decision. French printings for French players are decided with I-11.
+
 ### Definition of done
 
 With "no Universes Beyond", importing Sol Ring never yields a Universes Beyond printing, and each deck row says why its printing was chosen; a printing the player picks stays picked; a swap updates the price; and applying the rule to a deck changes its total exactly as the preview showed.
@@ -3269,6 +4019,27 @@ Today the deck page's "Mana Alignment" (`buildManaAlignment` in `src/lib/deck/ma
 
 **Paid-tier angle:** the count, the source check, the tapped-land facts, the reasons and a one-deck proposal within a budget, applied and reverted, stay free: DeckFlow, ScrollVault and Draftsim give counts and splits free, and I-30 requirement 1.1 keeps building and evidence free. The one candidate is a cross-deck allocation of the player's owned lands, a personal tool over their own data that no tool read offers. The spec rates it unproven.
 
+### Enrichment (2026-11-11)
+
+**User story.** As a player fixing a mana base, I want a land count and a source target from a published table, so that a model is not picking my lands.
+
+**Acceptance.**
+- The suggestion cites Karsten's table and the inputs it used.
+- Applying it is one change the player can revert.
+- The deck is unchanged until the player applies.
+
+**UX.** The check is read-only first. The proposal lists lands to add and cut. Basics are split by colour source, not dumped in WUBRG order.
+
+**Data and API.** Tables are data in the repository. The land catalogue is built from I-67. Apply uses the reviewed change set.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `mana_proposal_applied {lands_changed: count}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Signed-in. Guests see the read-only check on the session deck and cannot apply. No model, so no AI flag.
+
+**Open questions.** Whether the default land count is the deck's current count or the formula is open. Utility lands from EDHREC wait on terms.
+
 ### Definition of done
 
 On a two-colour deck, a player sees the formula's count and each colour's target with its driver and table entry, takes a proposal within a budget with owned lands first and a reason on every line, applies it after unchecking one line, and reverts it in one action; a Bracket 2 deck never receives a Game Changer land; and no model chose a land.
@@ -3305,6 +4076,27 @@ Nothing fills the remaining slots of the player's own deck. No file under `src/a
 - An import test fails if `slotRolesOf`, `roleGaps`, `isLegalCandidate`, `proposeCompletion` or `proposeSubstitute` reach an AI client or I/O.
 
 **Paid-tier angle:** model-free completion of one deck, the substitutes, reasons, review, apply, revert and the role meter are free, because building is free under I-30 1.1. The AI mode and model wording count against I-02's allowance. The candidate is the collection-wide allocation, which gives each owned copy to one deck and then finds the cheapest purchase that completes every deck; Deckbox sells "Build decks from your real inventory" and no tool read allocates copies across decks, so the case is unproven.
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player with a half-built deck, I want the open slots filled from cards I own, so that I can accept or reject each line.
+
+**Acceptance.**
+- Every proposed line names the role and the owned card.
+- Nothing is written until the player applies.
+- Apply and revert are one change set.
+
+**UX.** The proposal is a list beside the deck, not a new deck. A slot with no owned card says so and points at the acquisition plan.
+
+**Data and API.** Role targets are data. Candidates are legal for the commander. The default mode does not call a model. Apply uses I-58's change set.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `completion_applied {lines: count, unowned: count}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Signed-in, because it reads the collection. Guests do not see it. The AI mode, later, counts against I-02's allowance and stays off.
+
+**Open questions.** Which signals may order candidates is D-88. A full 100-card list generated from the collection stays I-16's non-goal.
 
 ### Definition of done
 
@@ -3352,6 +4144,27 @@ Players ask "how does your deck win?" before games with strangers. MagicCon Chic
 
 **Paid-tier angle:** the map for one deck, its sources, its estimates and its use in I-15, the primer and the wizard stay free: it is feedback and evidence, which I-30 requirements 1.1 and 1.4 keep free. The candidate is the comparison of routes across builds, snapshots and a pod's consented decks, a personal tool over the player's own decks over time. The spec rates it unproven, because no Magic product was found charging for route analysis (corrected 2026-11-11: Inkborn Forge's supporter-only Deck Insights for Lorcana "estimates a win turn", [2026-08-13](https://inkbornforge.substack.com/p/supporter-feature-deck-insights)). Whether the first view of a player's own pod is free is [D-95](owner-decisions.md#money-and-plans), which recommends it; history across versions stays the candidate.
 
+### Enrichment (2026-11-11)
+
+**User story.** As a player who has to explain a deck, I want the routes it actually contains, so that the plan in the wizard is not a sentence the list does not support.
+
+**Acceptance.**
+- A route is listed only when the required roles are in the deck.
+- Each route names the cards and the definition version.
+- The panel does not call the deck salty, unfair or a threat.
+
+**UX.** The panel is on the builder, off on the public page until the owner says otherwise. A missing route is omitted, not scored as zero.
+
+**Data and API.** Definitions are versioned data. Spellbook fields the combo lookup does not read yet are added here. No model decides a route.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `route_panel_viewed {routes: count}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Signed-in on private decks. Public display defaults off. No flag for the private panel once the definitions pass their fixture.
+
+**Open questions.** How many cards a role needs, and whether Tagger tags may be used, are open. The public default is D-48.
+
 ### Definition of done
 
 An aristocrats deck shows a drain route with its payoffs, sacrifice outlets and fodder counted, the tutors that reach a creature, a labelled mana-only estimate beside the bracket's official turn expectation, and the answer classes that stop "dies" triggers; a Spellbook timeout leaves the other routes in place; the same deck gives the same map twice; and no sentence grades the deck.
@@ -3385,6 +4198,27 @@ No file under `src` classifies the monarch, the initiative, goad, group hug, pil
 - No table-effects file imports the AI client, React, Prisma or Tagger data, and slices 1 to 3 add no table and no route.
 
 **Paid-tier angle:** one deck's profile, in the builder, on the sheet, in a pod's first comparison and on a public page, is free: it is evidence about the player's own list. A profile across versions or weeks belongs to I-30's pod-pass candidate, not to a paid line here, and no product found charges for it.
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player sitting down, I want to see what this deck does to the other three players, so that the sheet can mention extra turns or land denial without calling the deck rude.
+
+**Acceptance.**
+- Each class names its definition and the cards.
+- The words salty, unfair and threat do not appear.
+- A declared field on the Rule 0 sheet is not overwritten.
+
+**UX.** A line on the builder and, when I-15's comparison exists, a computed column. Public pages stay off until the owner decides.
+
+**Data and API.** Classes are versioned definitions over oracle text, Game Changers and Spellbook. No new feed. No stored score.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `table_line_shown {classes: count}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Signed-in for the private panel. No flag for the private panel once the definitions pass. Salt stays behind D-25.
+
+**Open questions.** Whether heuristic classes reach the sheet before they are measured is open. Tagger clauses wait on the licence.
 
 ### Definition of done
 
@@ -3444,6 +4278,27 @@ No spec or roadmap item covered the product's own operator, and each lever today
 
 **Paid-tier angle:** none. Support, export, deletion and appeals stay free on every plan. Its value to I-30 is margin and trust: runtime AI switches and a ceiling the owner can lower bound the largest variable cost, a goodwill AI grant replaces a refund for a failed build, and a pause of paid AI shows a dated notice with its reason and expected end.
 
+### Enrichment (2026-11-11)
+
+**User story.** As the owner on a bad day, I want to stop the model or a source without a deploy, so that a failure does not wait on a release.
+
+**Acceptance.**
+- An operator role is required for the switch.
+- A switch takes effect within 15 seconds.
+- The action is in an append-only log.
+
+**UX.** The console is a separate page, not a control on a player's deck. Maintenance mode is a banner a player can read.
+
+**Data and API.** A grant table, a switch store and an audit hash. Player routes read the switch. They do not list operators.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `operator_switch_set {switch, state: on or off}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Operators only. Players see the effect, not the console. No charge.
+
+**Open questions.** Whether a volunteer moderator exists, and whether read-only mode also stops sign-ups, are owner questions.
+
 ### Definition of done
 
 The owner switches free AI off from the console or the command line and every instance answers `ai_paused` within 15 seconds, with no deploy and no placeholder deck; pauses the Archidekt importer and players get a typed refusal with no request sent; finds an account by email and sees only the minimal card; and each of those steps appears once in an append-only log whose hash chain verifies.
@@ -3498,6 +4353,27 @@ MagicAIBuilder shows public decks, primers, comments, reviews, profiles, package
 
 **Paid-tier angle:** none. Export, deletion, reporting, blocking, comment controls and appeals are free on every plan, and expiry or downgrade never limits them, extending I-30 requirement 1.2. Its value to I-30 is trust: a cheap subscription is easier to sell when leaving is easy and documented.
 
+### Enrichment (2026-11-11)
+
+**User story.** As a player who wants to leave, I want deletion, export and a way to report someone, so that the account is mine.
+
+**Acceptance.**
+- Deletion expires the session and does not recreate the account on the next request.
+- An export contains the player's decks and collection and not another player's reports.
+- A report can be filed on a deck, a comment, a review, a profile or a package, and the reporter sees a status.
+
+**UX.** Legal pages are linked from the footer. A block hides that person's content. The statement of reasons is a page the affected player can open.
+
+**Data and API.** New tables for reports, blocks and the export job. The export is the player's JSON, signed-in only. No public feed of reports.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `report_filed {target: deck, comment, review, profile or package}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** On for every account before public growth or a charge. Guests can report a public deck only if the form stores no free-text identity beyond what I-38 already allows.
+
+**Open questions.** Who moderates, and how fast, is an owner question. The lawyer questions are already in the legal register.
+
 ### Definition of done
 
 A deleted account stays deleted on every device after its owner could download all of it, and other players' replies survive; every public item can be reported signed in or out, and every restriction reaches its author with a statement of reasons and a route to appeal; the legal notice, DSA contact, terms and privacy policy are public, versioned and name every processor.
@@ -3539,6 +4415,27 @@ An account will soon hold more than decks: trade proposals (I-44), loans (I-51),
 - The breach client sends exactly five characters with `Add-Padding: true`, and every route added appears in I-05's L2 route inventory with its access class.
 
 **Paid-tier angle:** none. Every control here is free on every plan and never limited by expiry or downgrade, extending I-38's rule. Its value to I-30 is a precondition: a subscription, a trade reputation and gift reservations are worth selling or keeping only on an account that cannot be quietly taken.
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player, I want to see my sessions and end one, and I want a long password to be stored in full, so that losing a laptop is not losing the account.
+
+**Acceptance.**
+- A password longer than 72 bytes is not silently truncated.
+- The sessions page lists devices and can revoke one.
+- Sign-out revokes the token that was used, not only the cookie on that browser.
+
+**UX.** Security pages use the existing account settings. A revoked session fails the next request with the signed-out state, not a generic error.
+
+**Data and API.** A session table. Passwords move to the algorithm the spec names. Reset email waits on I-63's sender.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `session_revoked {all: yes or no}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Signed-in. No guest security surface. Passkeys and two-step ship after the truncation fix, still with no charge.
+
+**Open questions.** Recovery when every second factor is lost, and the minimum password length, are owner questions.
 
 ### Definition of done
 
@@ -3585,6 +4482,27 @@ At least fourteen specs plan to tell a player something, and each plans its own 
 
 **Paid-tier angle:** none. The inbox, every channel, the digest, quiet hours, unsubscribe and security notices are free on every plan. Paid candidates stay with their producers, such as I-59's alerts above an allowance, and reach players through these free channels. The spec's rule that a free event delivered by email stays free conflicts with I-51's email reminders and I-59's email digest as paid candidates; I-30 decides (status note).
 
+### Enrichment (2026-11-11)
+
+**User story.** As a player, I want one inbox and one place to turn notices off, so that every feature does not invent its own email.
+
+**Acceptance.**
+- Every notice the product sends is a catalogue entry with a category the player can switch.
+- Security notices that cannot be turned off are listed as such.
+- No marketing email is sent.
+
+**UX.** The inbox is a page. Email uses the same text. Quiet hours are a setting, not a hidden default the player cannot find.
+
+**Data and API.** An event catalogue and `notify()`. The provider waits on the owner's choice. Switches the product already stores and nothing reads are replaced by this catalogue.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `notice_sent {category, channel: inbox or email}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Signed-in. Guests get no inbox. Email stays off until the provider and the privacy policy name it. A free notice stays free.
+
+**Open questions.** Amazon SES, Resend or Postmark is the owner's choice. Whether a notice the player asked for is a service message is a lawyer question.
+
 ### Definition of done
 
 A reply to a player's comment appears once in their inbox, in their language; they turn on email for one category, receive it within the pacing and quiet hours, and stop it in one click from the email without signing in; a password reset still reaches an address that complained about a digest; and no producer sends mail or stores a preference of its own.
@@ -3625,6 +4543,27 @@ Sixteen specs hold at least seventeen slices or items that wait for "the daily j
 
 **Paid-tier angle:** none. Card data stays free and anonymous under Scryfall's terms and [I-30 requirement 1.1](specs/i30-business-model-and-paid-tier.md#1-the-free-and-paid-line), and no part of the pipeline is sold. Lower running costs make paid tools such as I-59's alerts above the allowance cheaper to run; those stay with their specs and I-30.
 
+### Enrichment (2026-11-11)
+
+**User story.** As a player, I want one daily copy of card data, so that bans, printings and prices do not depend on a browser cache.
+
+**Acceptance.**
+- A bulk file is read once, hashed, and skipped if that hash was loaded.
+- A file that fails its count check is not published.
+- Search still goes to Scryfall. This pipeline is not a second public card database.
+
+**UX.** Players do not see a job. They see fresher fields on the cards they already have, with the date I-86 shows.
+
+**Data and API.** Tables for printings, prices, rulings and tags. A scheduled run, one, shared. No public download of the tables.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `card_data_loaded {held: yes or no}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Internal. The first full load is the owner's measurement. Guests and signed-in players see the same published fields.
+
+**Open questions.** GitHub Actions or a Vercel function is the owner's choice. The Tagger licence and the image-mirror question stay open.
+
 ### Definition of done
 
 A daily run loads Scryfall's four files into local tables, one transaction per file; a Game Changer change reaches I-48 as a typed event the next morning; a deck load, an import and the printing selector read local rows with no Scryfall call; a broken file leaves yesterday's data live and alerts the owner; and no public card page, download or API comes from the tables.
@@ -3660,6 +4599,27 @@ Wizards ships a Commander-relevant set every six to nine weeks, and six are plan
 - The digest writes one event per set per opted-in player, none for a player who opted out, and its payload rejects names and URLs.
 
 **Paid-tier angle:** release status and wording, the preview switch, warnings, precon pages, the radar on request, the digest, set pages, bracket flags and price labels stay free, with no account where public. One candidate, rated medium: an automatic radar for each of the player's decks when previews start and again when the gallery is complete, above a free allowance the owner sets, which needs I-30, L-16 and L-20. Legality, preview status and precon lists are never paid.
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player browsing a set that is not out yet, I want a preview card labelled with the date it becomes legal, so that the editor does not call it simply illegal.
+
+**Acceptance.**
+- Search, the editor and the copilot use one status: legal, preview with a date, or not legal.
+- A preview card can be added and is labelled.
+- A release-day legality change does not trip the card-data hold by itself.
+
+**UX.** The label is on the card row. The set page, if D-82 allows one, is not this slice.
+
+**Data and API.** Status is a pure function of the printing's legality and the set's release date, from I-67 once that load exists, and from the search response until then.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `preview_card_added {labelled: yes}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** On for guests and signed-in players. The same label everywhere. No flag that hides previews in one surface and not another.
+
+**Open questions.** When Scryfall flips a set to legal is observed, not assumed. Universes Beyond images are a lawyer question.
 
 ### Definition of done
 
@@ -3699,6 +4659,27 @@ I-30 prices the AI per user and computes how many subscribers a living takes, bu
 - A webhook with a bad signature is rejected, a duplicate event is stored once, and each threshold alerts once a month.
 
 **Paid-tier angle:** not applicable. The model, the report and the alerts are for the owner only, and no page, route or export shown to players carries a cost figure. Its value to I-30 is the price decision: it says what one more player costs, free or paying, before slice 0 sets a price.
+
+### Enrichment (2026-11-11)
+
+**User story.** As the owner, I want the monthly cost of a running player, so that a price is not a guess.
+
+**Acceptance.**
+- The price book reproduces the published provider prices to the cent.
+- A past month is recomputed with that month's prices.
+- The report is not a page a player can open.
+
+**UX.** An owner page, behind the operator role once I-69 has it. Until then a script the owner runs.
+
+**Data and API.** Pure functions plus measurements of the routes we already have. No new vendor. No tracking of a player's cards.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `cost_report_run {month}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Owner only. Never a player feature. No flag.
+
+**Open questions.** Which Vercel and Supabase plans production uses, and when Pro starts, are owner questions. VAT recovery is an accountant's question.
 
 ### Definition of done
 
@@ -3748,6 +4729,27 @@ I-30 needs evidence before a price, and today none of it can be counted: there i
 
 **Paid-tier angle:** nothing here is paid. Its use to I-30 is evidence: it turns I-30's audience and cost assumptions into counts before a price is set. Interest in a future paid feature is asked through a labelled survey, never through a control for a feature that does not exist.
 
+### Enrichment (2026-11-11)
+
+**User story.** As a new player, I want the deck I started while signed out to be there after I create an account, so that the first run is not a dead end.
+
+**Acceptance.**
+- The onboarding modal does not open on a public page.
+- A guest deck is attached to the new account, not discarded.
+- An event row contains no email, name, deck name, card name, list or URL.
+
+**UX.** Empty states say what to do next. Sample decks are real rows or absent, never invented authors.
+
+**Data and API.** The event store is first-party. Sentry replay stays at the settings this initiative names. No third-party product script.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `signup_completed {had_guest_deck: yes or no}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** The guest path is the default. Measurement of signed-in use waits on the store. No flag that turns the guest deck off.
+
+**Open questions.** The lawyer questions on the event store are the gate for slices that write it. Until then, events in other enrichments are names only.
+
 ### Definition of done
 
 A fresh visitor builds, checks, playtests and exports with no modal and no account and keeps the deck on signing up, and the owner reads weekly activation and retention, with n and intervals, from rows that hold nothing personal beyond an account id.
@@ -3784,6 +4786,27 @@ The product has to pay, and nothing yet counts where an account comes from. [I-6
 - A dependency test fails if a notification producer imports `UserActivityDay`, session tables or a last-seen field.
 
 **Paid-tier angle:** nothing is sold. Every loop, page, link, notice and the creator kit stay free, and no loop gates a deck, guide or report. The referral credit and the creator seat hand out months of the paid plan, so they wait for I-30 slice 9 and L-16. A credited referral forgoes at most two months of contribution, about €4.14 on the monthly plan, and 25 creator seats would cost €2.50 to €13.75 a month (estimates in the spec).
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player who found a deck while signed out, I want to fork it and land back on my copy, so that sign-up is not a dead end.
+
+**Acceptance.**
+- A signed-out fork goes through sign-up and returns to the new deck.
+- The entry point is recorded without a campaign that ranks people.
+- A referral, if one exists later, is plan time, not cash.
+
+**UX.** The fork button on a public deck is enabled for a visitor and explains that an account is required. No countdown and no streak.
+
+**Data and API.** A field on the account for the entry. Events go through I-39. Rewards, later, are ledger rows, not a balance of money.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `signup_entry {via: fork, direct or other}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** The signed-out fork is on when I-39's guest handoff is on. Referral credit stays Later, behind the lawyer.
+
+**Open questions.** A getting-started email stays off unless D-78 changes. Creator seats stay behind D-80.
 
 ### Definition of done
 
@@ -3825,6 +4848,27 @@ A player with a dozen decks cannot see them as a whole: the profile lists public
 
 **Paid-tier angle:** the stats page for every year, the recap with all its sections, images, sharing levels, embeds and the export stay free. The recap is an acquisition loop, Spotify, Goodreads and Playgroup give theirs away, and Strava's move to subscribers drew public complaints. The one candidate is statistics over any date range and trends across several years, a personal tool over the player's history; the spec rates the case weak.
 
+### Enrichment (2026-11-11)
+
+**User story.** As a player looking back at a year, I want counts of what I built, so that the recap is mine and not a ranking.
+
+**Acceptance.**
+- Each statistic shows its denominator.
+- The recap has no streak, no rank and no named opponent.
+- The recap is private unless the player later opts into a share, which is Later.
+
+**UX.** The stats page is a list of counts. The recap is a page in December, not a modal.
+
+**Data and API.** Pure counts over the player's decks. The dead analytics module is deleted. No public aggregate in this slice.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `stats_opened {surface: page or recap}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Signed-in. Guests have no stats. The recap email, if the player asks for one, waits on I-63 and on the lawyer.
+
+**Open questions.** Whether the first recap cuts off at 30 November is open. A player under 15 and the lawful basis are lawyer questions.
+
 ### Definition of done
 
 A player with ten decks opens `/stats` and sees colours, commanders, shared cards and brackets, each with its denominator; on 1 December an opted-in player gets a private recap in their language that names no other player and ranks them against no one; and a recap shared by link stops working within a minute of revocation and never reaches a search engine.
@@ -3864,6 +4908,27 @@ A player with 20 decks on another site would open the import dialog 20 times tod
 - Fixtures per source come from real exports of accounts the owner controls, and a fixture older than 180 days raises a reminder.
 
 **Paid-tier angle:** none. Every part is free on every plan, with no cap on decks, files or re-runs beyond the abuse limits. I-30 requirement 1.1 keeps importing free, a price at the moment of moving would rebuild the cost this initiative removes, and I-38 makes the export out free. Its value to I-30 is that it fills the decks and collections that paid tools, such as I-31's Deck Lab, work on.
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player leaving another site, I want to bring my decks across in one step and see what each deck will lose, so that a second import does not duplicate them.
+
+**Acceptance.**
+- The preview lists unresolved cards and dropped fields before anything is written.
+- One deck is one transaction.
+- Importing the same file again changes nothing.
+
+**UX.** The player uploads a file they downloaded. The product does not ask for the other site's password and does not call that site.
+
+**Data and API.** File parsers only. Source is recorded on the deck. Printings are kept when the file names them, through I-57.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `migration_finished {decks: count, unresolved: zero or some}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Signed-in. Guests cannot import a library. No flag. Archidekt stays file-only until the owner has a written answer.
+
+**Open questions.** Whether a Moxfield bulk export exists, and whether a primer over 2,000 characters is truncated or refused, are open.
 
 ### Definition of done
 
@@ -3983,6 +5048,27 @@ The roadmap lists nine formats as a completed foundation, but no screen lets a p
 - Every format label and legality message exists in English and French, and no model decides or explains a verdict.
 
 **Paid-tier angle:** every verdict and its list date, the picker, variant life and mulligan, and banned-list pages stay free. Candidates are an automatic watch over a player's saved decks for bans and unbans, which joins I-18's candidate, and personal Duel Commander matchup statistics from the player's own I-35 logs, never from TopDeck.gg data.
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player building a format other than Commander, I want to pick the format and see a dated ban list, so that a Duel Commander list is not saved as Commander.
+
+**Acceptance.**
+- Creation and deck settings offer a format.
+- Legality is computed on the server from a dated list.
+- An unknown format is rejected, not treated as Commander.
+
+**UX.** The format is in the deck header. Switching format shows the cards that would become illegal before it saves.
+
+**Data and API.** The format is a column on the deck. Banned flags come from the rules version, not from the browser. Duel Commander's mulligan waits on the committee's answer.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `format_selected {format}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Signed-in to change a deck. A guest's session deck can pick a format locally and the choice is saved with the deck at sign-up. Commander remains the default.
+
+**Open questions.** Whether the first mulligan is free in Duel Commander is unanswered. Pauper Commander and the other variants stay Later.
 
 ### Definition of done
 
@@ -4187,6 +5273,27 @@ Playgroups, stores and creators organise Commander on Discord, and the reference
 
 **Paid-tier angle:** previews, oEmbed, component embeds, every command, polls and one feed per deck stay free, and no paid feature lives inside the Discord app, because it would also have to be sold through Discord. The candidates are on the web: I-41's store plan posting night line-ups to the store's server, and I-36's creator analytics counting visits from chat. The spec rates the case weak to medium. Whether webhook delivery from a paid web plan counts as a paid feature of the app is a question for the lawyer and for Discord.
 
+### Enrichment (2026-11-11)
+
+**User story.** As a player pasting a deck link into chat, I want the preview to show the commander, the artist and the bracket, so that the link is worth posting.
+
+**Acceptance.**
+- A public deck unfurls with a PNG, the artist credit, the name and the declared bracket.
+- A private deck does not unfurl.
+- The preview contains no collection and no note.
+
+**UX.** The image is the deck's, from stored fields. SVG is not the preview, because chat apps do not render it.
+
+**Data and API.** Open Graph and oEmbed read the public projection. No bot in this slice. Webhooks stay Later.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `link_preview_served {surface: deck or other}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Public decks only, no account required to preview. A flag can turn previews back to the plain title if an image source fails.
+
+**Open questions.** Whether a paid plan that posts to Discord is a paid feature of a Discord app is a lawyer and Discord question. This slice does not post.
+
 ### Definition of done
 
 A deck link pasted in Discord shows the commander art with its artist, the name, author, declared bracket and legality, and an "Open deck" button; every public page unfurls with a PNG image; a pod runs `/lineup` on four public decks and sees the bracket spread; and a creator's server gets one post per published update with no bot installed.
@@ -4272,6 +5379,27 @@ A cheap subscription lives on two things: players trust that the product works, 
 
 **Paid-tier angle:** everything here is free: reporting, voting, statuses, release notes and the status page. A paying player's vote counts once, and the board shows no split by plan. Its use to I-30 is evidence and trust. The board counts demand for a paid candidate before it is built, which I-33's threshold of 50 distinct players needs, and a visible trail from request to release is the argument a cheap subscription makes.
 
+### Enrichment (2026-11-11)
+
+**User story.** As a player who hit a bug, I want to say what happened and see that it was received, so that the error page is not a dead end.
+
+**Acceptance.**
+- The report takes the player's words and an allowlist of context.
+- The player sees a status, not a claim that it was already reported.
+- Release notes exist in English and French for what reached production.
+
+**UX.** The form is on the error page and in the help path. It does not ask for a password. Release notes are a page, not a modal.
+
+**Data and API.** A report row. Context is the route, the locale and the build, not the deck list. Notes ship as authored files.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `bug_reported {has_account: yes or no}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Guests and signed-in players can report. The public request board stays Later. The monitor choice is the owner's.
+
+**Open questions.** Whether the browser family on a report needs consent is a lawyer question. The board's opening waits on a stated number of weekly builders, which we do not have yet.
+
 ### Definition of done
 
 A player sees the site's status in the footer and on a page that loads while the site is down, sends a report from an error page with only the listed context and follows it to the release note that fixed it, and reads that note in English or French, dated by the day production first served it.
@@ -4312,6 +5440,27 @@ None of the 16 page routes is a help, FAQ, glossary or about page, and the produ
 - The count of `title=` props never grows.
 
 **Paid-tier angle:** none. Help explains card data, fan content and the evidence the product shows, which stay free, and there is no paid help, priority support or promised response time. It serves I-30 anyway: contextual help keeps a solo owner's support load bounded as subscribers grow, and a paid feature cannot ship without its article.
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player stuck in the editor, I want a short article that matches the screen I am on, so that I do not have to write to the owner.
+
+**Acceptance.**
+- An article's controls exist in the interface. A renamed control fails the article's check.
+- The first articles exist in English and French.
+- A dead end offers the bug report, not a claim that the problem was already sent.
+
+**UX.** The help control is an info button on the surface, opening the article. Search is over titles and headings.
+
+**Data and API.** Authored content through the pipeline this initiative owns. No chatbot. The old user guide is retired rather than left to contradict the product.
+
+**i18n and access.** Articles ship in both served locales or they do not ship. A missing French article is not filled with English under a French URL.
+
+**Telemetry.** `help_opened {found: yes or no}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Public, signed-out. No flag. A model that only picks article ids stays Later and off.
+
+**Open questions.** Who writes the French articles is open. Slice 6 does not start without a reviewer.
 
 ### Definition of done
 
@@ -4400,6 +5549,27 @@ A player checks a deck against a brief, enters a frozen list that passes, and fi
 
 **Paid-tier angle:** the finder, its explanations, the random pick, popularity and price signals, public pages and saved profiles stay free: card data cannot be paywalled, and fan content cannot need a subscription. The one candidate is collection-aware ranking, which orders commanders by how much of a reference list the player owns, net of copies committed elsewhere. The spec rates the case weak until I-16's demand test and I-29's reference lists exist.
 
+### Enrichment (2026-11-11)
+
+**User story.** As a player who has not picked a commander, I want filters I set and a reason on each result, so that a model is not choosing for me.
+
+**Acceptance.**
+- Every active filter is visible and removable.
+- Each result has one line that cites the filter it matched.
+- Results are not ordered by popularity.
+
+**UX.** The finder is a page the wizard can open. A seeded shuffle is labelled as random, not as best.
+
+**Data and API.** Reads I-67's card table. Writes the chosen commander through the existing commander save. No model call in the default path.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `commander_chosen {source: finder or typed, filters: count}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Signed-out to browse. Saving the choice needs an account or a guest deck. The flag for any model wording stays off.
+
+**Open questions.** Whether budget pages can show a full-deck estimate depends on a price source we do not have for most commanders.
+
 ### Definition of done
 
 A guest filters commanders by colours, style, complexity and budget, sees the query and one line of evidence per filter on each result, takes a replayable random pick and starts a deck with it; every build request carries a commander; and no page built only from Scryfall data enters the index.
@@ -4438,6 +5608,27 @@ Players keep a list of cards they want, and around a birthday or the holidays a 
 - A schema test fails when one of these models gains a free-text column another person can read.
 
 **Paid-tier angle:** the list, every way of filling it, every audience, reservations, prices, the store view and the handoff stay free: TappedOut and Deckbox charge nothing for a wishlist, Scryfall forbids paywalling prices, and I-30 never charges for the player's own data. The one candidate, wanted items in a price watch, has weak demand evidence and moved to I-59 with the watch. Affiliate income on gift orders is small and not estimated, so I-30 plans no revenue here.
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player with a birthday coming, I want one list of cards I want, so that a friend can reserve a gift without me seeing which one.
+
+**Acceptance.**
+- The wanted list can be filled from the acquisition plan.
+- A reservation is hidden from the owner.
+- The favorites routes that answer success and store nothing are gone.
+
+**UX.** The owner sees the list and the count reserved, not the names of who reserved what. The friend opens a link.
+
+**Data and API.** One want table, private. The gift link is a token. Prices on it are labelled estimates. No address is stored.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `wishlist_reserved {signed_in: yes or no}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** The owner is signed-in. The friend may reserve without an account if that option is on, with the limits the spec names. Default is the spec's recommendation until the owner confirms it.
+
+**Open questions.** Whether one wanted list replaces I-44's want lists is the amendment the owner must confirm before either slice that writes the table.
 
 ### Definition of done
 
@@ -4487,6 +5678,27 @@ At the table, a pod argues about how two cards in one deck interact, and players
 
 **Paid-tier angle:** rulings, rule pages and links, and notes stay free and readable signed out. Scryfall requires card data to stay reachable "anonymously or with free accounts" ([API terms](https://scryfall.com/docs/api)), and rival sites show rulings for free. The notes are never sold, because an error in them is the product's to own. The candidate is a rules watch across all of a player's decks, delivered through I-48's report and notices so that each deck has one change report; whether it paywalls Scryfall data is a lawyer question.
 
+### Enrichment (2026-11-11)
+
+**User story.** As a player arguing about a card, I want the official ruling and a link to the rule number, so that a model is not the judge.
+
+**Acceptance.**
+- Each card on the deck can open its official rulings.
+- A rule citation is a versioned address, with the rules date.
+- The page declines to answer an interaction the rulings do not cover.
+
+**UX.** The rulings panel is available from the card, not only from the printing picker. A missing ruling says there is none.
+
+**Data and API.** Rulings load through I-67. The Comprehensive Rules file is the one the product ships, replaced by a dated import. No model route.
+
+**i18n and access.** Interface chrome in English and French. Ruling text stays the language of the source. A machine translation of a ruling is out of scope.
+
+**Telemetry.** `rulings_opened {found: yes or no}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Signed-out on public decks, signed-in on private decks. No flag. Judge-written notes stay Later and do not start without a named reviewer.
+
+**Open questions.** Whether French players see official English rulings or a labelled unofficial translation is open. The product does not commission a translation in this slice.
+
 ### Definition of done
 
 A player opens any card in the builder or on a public deck and sees its rulings with dates and a Wizards or Scryfall label, and follows each keyword to its rule; a link to CR 903.9a opens the version it was written against and says whether a newer one changed it; and when an update changes a rule that a reviewed note cites, the note disappears until a reviewer approves it again.
@@ -4529,6 +5741,27 @@ Wizards now runs the Commander format and changes three lists without a fixed sc
 
 **Paid-tier angle:** every verdict and its version date, the impact report, replacement candidates, the in-app notice, the e-mail, the public pages and the counts per commander stay free: a legality change on a player's own deck is evidence the product shows. The candidates are a planner that fixes every affected deck at once against the collection and hands the missing cards to I-06 and I-32 (medium), and notices for watched or pod decks, which join I-18's row in I-30 (weak).
 
+### Enrichment (2026-11-11)
+
+**User story.** As a player with saved decks, I want to know which of them a Commander announcement changed, so that a stored flag from last year is not the ban list.
+
+**Acceptance.**
+- An announcement is a dated rules version.
+- Each affected deck lists the cards and the cause.
+- A visitor can check a pasted list against that page without an account.
+
+**UX.** The notice is on the deck and on a public page for the announcement. The estimate before and after is I-77's when that exists.
+
+**Data and API.** Rules versions are records. Assessment reads current card data, not the flag copied onto the deck card at add time.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `rules_change_seen {decks_affected: zero or some}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** The public page is signed-out. The owner's impact list is signed-in. Email, if any, waits on I-63 and on the lawyer's answer about consent.
+
+**Open questions.** Where the version is published from, the database or a reviewed file, is an owner question.
+
 ### Definition of done
 
 When a moderator publishes the next announcement, every saved Commander deck it touches shows a dated notice that names each changed card and its cause, the estimate before and after and the declared bracket, with candidates from a visible query; a visitor checks a pasted list against the announcement's page without an account; and no reader trusts a stored flag.
@@ -4568,6 +5801,27 @@ Magic is a game of five colours, and a deckbuilder repeats them in mana costs, c
 - At 640×400 and at 320×640, no journey scrolls horizontally, and with the root font size doubled, informational text doubles.
 
 **Paid-tier angle:** none, ever. A player who needs contrast or a second channel would otherwise pay more for the same product, and these surfaces are evidence the product shows. Its value to I-30 is indirect: I-31 and I-34 charts and I-36 embeds inherit charts that read in grayscale, in print and when embedded.
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player who does not see red and green as others do, I want every status to have a second channel, so that I do not need a mode to find.
+
+**Acceptance.**
+- Status colours in both themes meet the contrast bar, or they are not the only signal.
+- Charts have a label or a pattern, not hue alone.
+- Text scales to 200 percent and the tested journeys do not scroll sideways at 320 CSS pixels.
+
+**UX.** There is no colour-blind mode to discover. Defaults work. A display control for motion and contrast sits with the theme control.
+
+**Data and API.** Tokens in the stylesheet. A test reads the tokens. No per-user palette stored on the server in the first slices.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `contrast_audit_failed {surface, theme: light or dark}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** On for everyone, guest and signed-in. Never paid. The display control waits on I-24's motion work.
+
+**Open questions.** Who the colour-blind and low-vision reviewers are is open. The European Accessibility Act question is L-36.
 
 ### Definition of done
 
@@ -4610,6 +5864,27 @@ A deck built here is usually played somewhere else, and on a weeknight that plac
 
 **Paid-tier angle:** every export, the panel, the table view, the printable list and deck check links stay free, with no account for a public deck: I-30 lists exporting as always free, and Scryfall forbids paywalling its data. No export carries an advertisement, a referral code or a tracking parameter. The one adjacent candidate, a check board for a recurring online pod, is rated weak, belongs with I-15 and I-35, and is I-30's to decide.
 
+### Enrichment (2026-11-11)
+
+**User story.** As a player taking a deck to another table, I want a file that program accepts, and a list of the cards it will drop, so that the failure is not a surprise inside the other program.
+
+**Acceptance.**
+- Each export is a fixture that matches byte for byte.
+- Sideboard and Considering cards do not enter a playable zone by accident.
+- A destination that has not been imported in the real client says it has not been tested.
+
+**UX.** The Play online panel lists destinations. Notices appear before the download. A public viewer can export without an account.
+
+**Data and API.** One module per target under the export contract. Platform ids come from card data, not from the browser. No image is rehosted.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `export_done {target, dropped: zero or some, scope: deck or table}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Signed-out for a public deck. Signed-in for a private deck. Webcam aids stay Later. No flag per destination: an untested one is labelled, not hidden.
+
+**Open questions.** Where Magic Online wants the commander, and whether SpellTable or Convoke accept a paste, are unconfirmed. No paste format is specified until someone records it.
+
 ### Definition of done
 
 A player exports a Commander deck with a partner and a companion to Cockatrice, XMage and Tabletop Simulator, each file imports in the client version its fixture names, and every dropped or substituted card was listed before the download; a viewer of a public deck does the same without signing in; and an Arena Brawl export states the deck's Arena coverage.
@@ -4639,6 +5914,27 @@ The in-app proxy sheet (`src/lib/deck/proxy.ts`) can include Scryfall art, and `
 - [ ] Flip the home sheet's default to text, and add cut marks. Art stays an explicit opt-in, and it does not ship until the lawyer question on I-50 about proxying Scryfall images is answered. The opt-in is not built before that answer.
 - [ ] On the download, show the count of cards marked proxy and, once I-15's sheet exists, whether that sheet allows proxies. The download is not refused when they disagree. The server still does not block an edit for a house rule.
 
+### Enrichment (2026-11-11)
+
+**User story.** As a player allowed to proxy, I want a file of names and quantities a print shop can paste, so that I am not sending them Scryfall's images.
+
+**Acceptance.**
+- The text file has one line per included card and no image URL.
+- The home sheet defaults to text, with cut marks.
+- Art is not offered until the lawyer question on I-50 is answered.
+
+**UX.** A download on the deck. The proxy count and, once I-15 exists, the sheet's proxy answer are shown and do not block the download.
+
+**Data and API.** Generated from the deck rows. No new stored file. No order and no payment.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `proxy_file_downloaded {art: off, tokens: complete or incomplete}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Signed-in for a private deck. A public deck's name file is available to a viewer, still with art off. No flag for the name file.
+
+**Open questions.** Token lines stay marked incomplete until I-19's token list is fixed.
+
 ### Definition of done
 
 A deck with Sol Ring and a non-basic creature downloads a text file a person can paste into MPC Autofill's text box, every included card appears once per copy, the file has no `scryfall.io` URL, and the home PDF defaults to text with cut marks.
@@ -4663,6 +5959,27 @@ I-07 compares snapshots and keeps a log. I-21 and I-31 simulate hands. Neither r
 - [ ] Below five sessions, show the count and the sentence "Not enough sessions", and no percentage.
 - [ ] Label the panel "Goldfish. No opponents. Not a win rate." Do not rank cards. Do not send the panel to a model.
 
+### Enrichment (2026-11-11)
+
+**User story.** As a player who goldfished a deck several times, I want the turns and the cards that never left my hand, so that I do not mistake a solitaire session for a result.
+
+**Acceptance.**
+- The panel names the snapshot and the session count.
+- Under five sessions it shows the count and no percentage.
+- The words win rate do not appear.
+
+**UX.** A private panel on the deck. The solitaire sentence is on the panel, not behind a help icon.
+
+**Data and API.** Reads stored playtest logs. Writes nothing to the deck. Ignores sessions from before the library fix.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `goldfish_review_opened {sessions_bucket: under_5 or five_plus}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Signed-in. Guests have no stored logs. No flag. It does not ship before the under-five test is green.
+
+**Open questions.** Outside demand was not found. The panel stays Later until players record sessions at all.
+
 ### Definition of done
 
 A fixture of two logs produces the committed counts, a panel with four sessions shows no percentage, and the words "win rate" do not appear.
@@ -4686,6 +6003,27 @@ Moxfield and Archidekt keep a deck's history. They do not anchor it to "the list
 - [ ] Compare the current main deck and command zone with the snapshot of the latest recorded playtest session. Show added, cut and quantity changes. Considering and Sideboard stay out of the diff.
 - [ ] When I-35 has a game for this deck, prefer that game's frozen list over the goldfish snapshot, and say which anchor was used.
 - [ ] Offer the diff to a pod only when the deck is already shared with that pod. No commentary, no model.
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player returning to a deck, I want the cards that changed since I last played it, so that the pod can see the diff and not a story about whether the change was good.
+
+**Acceptance.**
+- Added, cut and quantity changes are the only lines.
+- The anchor is named: a playtest snapshot, or a pod game once I-35 exists.
+- Considering and Sideboard are not in the diff.
+
+**UX.** The diff is on the deck, and on a share only when that deck is already shared. No commentary control.
+
+**Data and API.** Compares the current main deck and command zone to the snapshot. No new card table.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `deck_diff_opened {anchor: playtest or game, changes: zero or some}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Signed-in. A shared diff is visible to the people who can already see the deck. No flag.
+
+**Open questions.** Demand beyond the existence of the logs was not found. That is why it stays Later.
 
 ### Definition of done
 
@@ -4712,6 +6050,27 @@ The cEDH Decklist Database's submit page, read 2026-11-11, requires a descriptio
 - [ ] If the insert would pass 2,000 characters, the control refuses and names the cap. Raising the cap stays I-08's decision.
 - [ ] A test fails if the draft contains a card name that is not in the deck.
 
+### Enrichment (2026-11-11)
+
+**User story.** As a player writing a primer, I want a draft whose lines come from the deck's own reports, so that I can edit them before they are published.
+
+**Acceptance.**
+- Each line names its source.
+- A card name in the draft that is not in the deck fails a test.
+- Nothing writes the primer until the player inserts, and an insert that would pass the cap is refused.
+
+**UX.** A private panel. Insert is a separate control from copy. Missing sources omit the line.
+
+**Data and API.** Templates over stored fields and, when they exist, I-65, I-77, I-78 and I-58. No model call.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `primer_draft_inserted {refused_for_cap: yes or no}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Signed-in. The panel can ship before the cap is raised. The insert stays off until I-08's length decision. Guests do not get a draft.
+
+**Open questions.** The cEDH database still requires Moxfield. This draft does not submit anywhere.
+
 ### Definition of done
 
 A deck with a declared bracket and a price produces a draft that quotes both, names the source of each line, inserts nothing until the player asks, and refuses an insert that would break the cap.
@@ -4735,6 +6094,27 @@ Scryfall's card object exposes `prints_search_uri` for every printing and `relea
 - [ ] For each owned printing, list newer paper printings of the same oracle identity. Digital-only printings are omitted. The line is "Reprinted in {set} on {date}."
 - [ ] No verb about selling, buying or holding. No predicted price. The labelled price, if shown, stays I-59's or the stored USD amount.
 - [ ] The player can turn the watch off for a card. Off is the stored state, not a hidden filter.
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player who owns a card, I want to know when a newer paper printing exists, so that I am not told to sell it.
+
+**Acceptance.**
+- The line names the set and the date.
+- A digital-only printing is omitted.
+- The words sell, buy and hold do not appear on the line.
+
+**UX.** A row on the collection card. The player can turn the watch off for that card. Off stays off.
+
+**Data and API.** Reads I-67's printings by oracle id. Writes a per-card preference. No price forecast.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `reprint_shown {dismissed: yes or no}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Signed-in. No guest collection. Flag off until the fixture with two printings passes. It does not start before I-67.
+
+**Open questions.** Whether a reprint line next to a price is still read as advice is the risk. The wording test is the mitigation.
 
 ### Definition of done
 
@@ -4760,6 +6140,27 @@ Archidekt's feature board, seen 2026-11-11, has "[Builder] Custom card art" at 2
 - [ ] Public pages, share links and the Open Graph image omit it unless the owner opts in. Exports to clients and to I-80's files omit it always.
 - [ ] A report on a public image uses I-38. The MVP does not review images. Taking the URL down is removing the attachment.
 
+### Enrichment (2026-11-11)
+
+**User story.** As a player with art I have the right to use, I want it on one card in my deck, so that a public viewer does not see it unless I say so.
+
+**Acceptance.**
+- The image is labelled player art.
+- The oracle card, the text and the legality do not change.
+- Exports and I-80's file never include the URL.
+
+**UX.** An attachment on the card, visible to the owner. Public opt-in is a separate switch, default off.
+
+**Data and API.** A URL on the deck card, private. An upload waits on I-71's storage. A report uses I-38.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `player_art_set {public: yes or no}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Signed-in. The URL path can exist before storage. Public opt-in stays off until I-38's report path includes it. Guests cannot attach art.
+
+**Open questions.** The product does not review the image in the first slice. Taking it down is deleting the attachment.
+
 ### Definition of done
 
 An owner sees their image on the card, a signed-out viewer does not until the opt-in, and a Cockatrice export of that deck contains no player URL.
@@ -4783,6 +6184,27 @@ I-09 labels external recommendations with a source. The deck itself does not say
 - [ ] One line on the builder and on the public deck: the rules file's effective date, "Prices: USD stored with each card", and "Card data: not loaded from the daily file" until I-67 records a load.
 - [ ] A missing date is absent, not guessed. The line does not fetch Scryfall, EDHREC or a price.
 - [ ] When I-67 and I-59 have timestamps, the same line reads those timestamps and drops the placeholder sentences.
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player looking at a deck, I want the date of the rules and of the prices, so that I know what the numbers were true for.
+
+**Acceptance.**
+- The rules date matches the file the server loaded.
+- A price with no stored date does not show an invented date.
+- The line makes no network request of its own.
+
+**UX.** One line on the builder and on the public deck. Placeholders are sentences, not zeros.
+
+**Data and API.** Reads the rules file's effective date and the price stored on the card. Later it reads I-67's load time and I-59's series. No new table in the first slice.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `data_as_of_rendered {rules_dated: yes, prices_dated: yes or no}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** On for guests and signed-in players, public and private. No flag. It does not jump the backup or the copilot.
+
+**Open questions.** None that block the first line. The later timestamps simply replace the placeholder sentences.
 
 ### Definition of done
 
@@ -4808,6 +6230,27 @@ ManaBox's App Store text says card search works offline and that the app include
 - [ ] Keep the session on the device. On reconnect, offer to upload it under I-07's snapshot rules. If the player signs out, I-19's purge deletes the session with the deck.
 - [ ] Do not cache a second deck, and do not cache search.
 
+### Enrichment (2026-11-11)
+
+**User story.** As a player offline with a downloaded deck, I want to goldfish it, so that the train ride is useful and the list does not change.
+
+**Acceptance.**
+- Airplane mode opens the playtest of the cached deck.
+- An add or a cut does nothing.
+- Sign-out deletes the session with the deck.
+
+**UX.** The playtest chrome, without the editor's add button. A banner says the list is the cached copy and its date.
+
+**Data and API.** Session state in the cache I-19 owns. An upload on reconnect uses I-07's snapshot rules. No new server route for the offline session.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `offline_goldfish_played {uploaded_later: yes or no}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Whoever was allowed to cache the deck. Flag off until I-19's purge test covers the session. It does not start before I-19.
+
+**Open questions.** ManaBox does not say its simulator works offline. This stays Later for that reason and because the cache is large.
+
 ### Definition of done
 
 Airplane mode opens a goldfish of the downloaded deck, an attempt to add a card does nothing, and signing out leaves no deck and no session on the device.
@@ -4831,6 +6274,27 @@ Wizards describes brackets as a pregame conversation: ask what bracket people ar
 - [ ] An authored sequence, in English and French: bracket, intent, combos, extra turns, mass land denial, proxies, and anything the pod wants to allow that the bracket would not. No model. No new sheet field.
 - [ ] Each answer writes the matching I-15 field. Skip leaves the field empty. The sheet's existing sentence, that it does not guarantee a balanced game, stays on screen.
 - [ ] One phone can collect four players. The sheet is still private until I-15's consent action.
+
+### Enrichment (2026-11-11)
+
+**User story.** As four players with one phone, I want the questions one at a time, so that the sheet ends up filled with what we said and nothing we skipped.
+
+**Acceptance.**
+- The questions are the authored list, in English and French.
+- Skip leaves the field empty.
+- The sheet still says it does not balance the game. There is no score at the end.
+
+**UX.** One question, four answers, then the sheet. A question whose field does not exist yet is hidden.
+
+**Data and API.** Writes I-15's fields only. No new table. No model.
+
+**i18n and access.** The question list is authored in English and French. A missing translation hides the script in that locale rather than showing English under a French UI.
+
+**Telemetry.** `rule0_script_finished {skipped: count}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Signed-in, after I-15 can store a sheet. The shared result follows I-15's consent. Guests do not start a script. No flag beyond I-15's own.
+
+**Open questions.** None beyond I-15's open questions. This script adds no fields.
 
 ### Definition of done
 
@@ -4856,6 +6320,27 @@ Cardsphere's sample import file has a Conditions column ([sample](https://www.ca
 - [ ] Later, and off unless the player sets them: a signed flag, and a serialization note of at most 40 characters. Neither changes the price.
 - [ ] The grade is not sent to a public deck page. I-45's seller file may include it when that file exists.
 
+### Enrichment (2026-11-11)
+
+**User story.** As a player tracking a physical copy, I want to record its condition or leave it unrecorded, so that the product does not call a card near mint that I never graded.
+
+**Acceptance.**
+- The grades are NM, LP, MP, HP, Damaged, or not recorded.
+- A new copy is not recorded.
+- No code path writes NM by itself.
+
+**UX.** The grade is on the collection copy, not on the public deck. Signed and serialized notes stay off until the player sets them.
+
+**Data and API.** A field on the collection copy, which waits on I-06's printing-level copy. It is not sent to a public projection.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `condition_set {grade: recorded or not_recorded}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Signed-in. No guest collection. Flag off until the LP-survives-reload test passes.
+
+**Open questions.** Seller files may include the grade once I-45 exists. They do not invent one.
+
 ### Definition of done
 
 A copy saved as LP reloads as LP, a copy the player never graded shows "not recorded", and no code path writes NM on its own.
@@ -4879,6 +6364,27 @@ Cardsphere documents CSV import and export of haves and wants ([guide](https://b
 - [ ] Two downloads, haves and wants. The header is the sample header without `Offer` and without `Limit`. Conditions is empty until I-89. The page tells the player to import wants as paused. The CSV has no comment line.
 - [ ] No Cardsphere account, no login, no offer, no limit, and no sending of cards. The player uploads the file on Cardsphere's own site.
 - [ ] A Scryfall ID column is added only after its header is read from a current Cardsphere sample. Until then it is absent.
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player who uses Cardsphere, I want a file I can upload there myself, so that this product never sets an offer or sends a card.
+
+**Acceptance.**
+- The header matches Cardsphere's sample without Offer and without Limit.
+- The page tells the player to import wants as paused, in English and French.
+- The CSV has no comment line and no offer column.
+
+**UX.** Two downloads, haves and wants. The warning is on the download page, not inside the file.
+
+**Data and API.** Built from the acquisition plan and, for haves, from I-45's spares or from rows the player selects. No Cardsphere account and no login.
+
+**i18n and access.** The warning is in both catalogues. Card names in the file stay the oracle names Cardsphere's sample uses, not a translated name.
+
+**Telemetry.** `cardsphere_file_downloaded {kind: haves or wants}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Signed-in. It does not start before the plan exists. No flag. Guests have nothing to export.
+
+**Open questions.** A Scryfall id column waits until the header name is read from a current sample. The sample read on 2026-11-11 did not name it.
 
 ### Definition of done
 
@@ -4905,6 +6411,27 @@ I-02 already answers "why is this card here?" inside a copilot that also propose
 - [ ] A rules question gets a refusal and a link to the card's rulings when I-47 has them, and to the rules file until then. The mode does not quote a rule it did not look up.
 - [ ] Later, a model may rephrase a deterministic answer. The rephrase is labelled as a model's wording, it may not add a card name that was not in the deterministic answer, and it counts against I-02's allowance. I-70 scores it before it is the default.
 
+### Enrichment (2026-11-11)
+
+**User story.** As a player who wants an explanation, I want an answer that quotes the deck and cannot change it, so that asking why is not the same as asking for a new list.
+
+**Acceptance.**
+- After either deterministic answer, the deck rows are unchanged.
+- Every card name in the answer is in the deck.
+- A rules question is a refusal plus a link, not a ruling.
+
+**UX.** A mode with no apply button. The two answers are where a card sits, and what one recorded session counted.
+
+**Data and API.** Reads the deck and one playtest log. The deterministic mode calls no model. A later rephrase is labelled, cannot add a card name, and counts against I-02's allowance.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `explainer_asked {kind: card, session or refused_rules}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Signed-in. Deterministic mode can ship without I-70. Model wording stays off until I-70 scores it. Guests do not get the mode.
+
+**Open questions.** Whether French rationale is required is the same question as I-70. The default is the deterministic text in the active locale.
+
 ### Definition of done
 
 In this mode, asking about a card and about a session leaves the deck byte-for-byte unchanged, every card name in the answer is in the deck, and a rules question produces a refusal rather than a ruling.
@@ -4928,6 +6455,27 @@ Google's spam policy, already cited under I-34, names scaled AI-written pages as
 - [ ] On an indexable public deck, JSON-LD for the name, the commander and the date the deck was updated, and only when those strings are also visible on the page. No FAQ. No generated paragraph. No rating until a later slice shows the same rating in the HTML and in the data.
 - [ ] A `noindex` deck page, a share page and a private page emit no JSON-LD.
 - [ ] The strings come from the public projection. `budget`, notes and folder names never appear.
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player sharing a public deck, I want the page's structured data to match the page, so that a search result is not a paragraph we invented.
+
+**Acceptance.**
+- JSON-LD contains only the name, the commander and the update date, and only when those strings are visible.
+- A noindex page, a share page and a private page emit none.
+- Budget, notes and folder names are absent.
+
+**UX.** No FAQ block. No generated sentence. The visible title and the structured name are the same string.
+
+**Data and API.** Reads the public projection and I-34's index decision. Writes nothing.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `structured_data_emitted {yes or no}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Public indexable decks only. It does not ship before I-34's policy. No flag that adds a FAQ later without a new decision.
+
+**Open questions.** A rating in the structured data waits until the same rating is visible in the HTML. That slice is not this one.
 
 ### Definition of done
 
@@ -4953,6 +6501,27 @@ EDHREC's 6 November 2026 changelog put card names over images on mobile "so they
 - [ ] No life total, no commander-damage tally and no timer. Those stay out.
 - [ ] English and French chrome. Card text follows the printing's language when I-37 slice 12 has stored it, and the oracle text until then.
 
+### Enrichment (2026-11-11)
+
+**User story.** As a player at the table, I want one card at a time in large type, so that I can read it at arm's length without a life counter getting in the way.
+
+**Acceptance.**
+- Next and previous work from the screen and from the keyboard.
+- The view has no life total, no commander-damage tally and no timer.
+- The card name is readable in both themes without a hover.
+
+**UX.** A reading route from the deck. Add and edit are absent. The command zone is in the sequence.
+
+**Data and API.** Reads the deck. Stores nothing. Printed language waits on I-37's language field. Until then the oracle text is shown.
+
+**i18n and access.** Chrome in English and French. Oracle text until the printing's language is stored. No life-total words, because there is no life total.
+
+**Telemetry.** `reading_mode_opened {cards_stepped: count}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Whoever can already open the deck, including a guest on a public deck. No flag. It does not include a life total even if players ask.
+
+**Open questions.** I-19 may cache this view with the deck. That is one more file in the same cache, not a second cache.
+
 ### Definition of done
 
 A keyboard user moves from the commander through the 99 without a pointer, the view has no life control, and the card name is readable at arm's length in both themes.
@@ -4976,6 +6545,27 @@ I-19 caches one deck the player chose, and its non-goal is a multi-deck offline 
 - [ ] Pin up to four decks from public pages or from share links the host holds. A fifth pin is refused. A private deck the host does not own is refused.
 - [ ] The pin stores the public projection only. An explicit download caches those projections for reading, including I-93's view. It does not raise I-19's limit of one editable deck, because these are not editable.
 - [ ] Sign-out deletes the downloads. The host can clear the night in one action.
+
+### Enrichment (2026-11-11)
+
+**User story.** As a host, I want up to four lists the table is allowed to see, saved for the evening, so that I am not editing anyone else's deck.
+
+**Acceptance.**
+- A fifth pin is refused.
+- A private deck the host does not own is refused.
+- Sign-out deletes the downloads.
+
+**UX.** A night page with four slots. Download is explicit. The cached view includes I-93 when that exists, and has no editor.
+
+**Data and API.** Stores the public projection only. The download uses I-19's purge rules. It does not raise I-19's one editable deck.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `night_pins_set {count: 1 to 4}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Signed-in to pin. The downloaded projections are readable offline by that browser until sign-out. Flag off until the purge test includes four projections.
+
+**Open questions.** Linking a pin to I-15's calendar night is optional and does not block the pin.
 
 ### Definition of done
 
@@ -5001,6 +6591,27 @@ A host pins four public decks, a fifth is refused, a private deck they do not ow
 - [ ] A CI check fails when the OpenAPI document changes and the changelog has no new dated line and no "compatible" label for that change.
 - [ ] The page does not document routes outside `/api/v1`. It does not embed a deck.
 
+### Enrichment (2026-11-11)
+
+**User story.** As a developer using the public read API, I want a page that says what changed, so that a breaking change is not silent.
+
+**Acceptance.**
+- The page lists the deck routes, the collection route and the OpenAPI route.
+- A change to the OpenAPI document without a dated changelog line fails CI, unless the change is labelled compatible.
+- The page renders signed out and embeds no deck.
+
+**UX.** A public documentation page. Compatible and breaking are the only labels.
+
+**Data and API.** The document already exists at `GET /api/v1/openapi`. This initiative adds a changelog page and a CI check. No new data route.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `api_changelog_viewed`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Public. No account. No flag. It does not document routes outside `/api/v1`.
+
+**Open questions.** I-22's verdict, when it exists, adds its own lines. It does not replace this page.
+
 ### Definition of done
 
 The page lists the three data routes and the OpenAPI route, a pull request that changes the document without a changelog line fails the check, and the page renders signed out.
@@ -5024,6 +6635,27 @@ The page lists the three data routes and the OpenAPI route, a pull request that 
 - [ ] On a card and on a deck total, show USD and EUR when both were stored. Each amount is labelled "Scryfall, not a quote". An amount the source did not send is "no USD from Scryfall" or "no EUR from Scryfall", not a zero.
 - [ ] Store the euro amount beside the dollar amount when a card is added. Do not convert. Do not display MTGO tickets in this initiative.
 - [ ] The acquisition plan keeps one currency, chosen and labelled, under I-06. This initiative does not change that choice.
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player looking at a price, I want the dollar amount and the euro amount when Scryfall sent both, so that nobody converts one into the other for me.
+
+**Acceptance.**
+- Both amounts are labelled Scryfall, not a quote.
+- A missing amount says it is missing, not zero.
+- No screen shows a converted figure.
+
+**UX.** The two amounts sit together on the card and on the deck total. The acquisition plan keeps the one currency I-06 already chose, labelled.
+
+**Data and API.** Store the euro amount beside the dollar amount at ingest. `prices.usd` is what the code reads today. No conversion function is added.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `price_shown {currencies: one or two}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** On for guests and signed-in players. No flag. MTGO tickets stay out of this initiative.
+
+**Open questions.** Which of the two the acquisition plan uses is unchanged and still I-06 and I-32.
 
 ### Definition of done
 
@@ -5049,6 +6681,27 @@ Moxfield's production JavaScript, captured on 14 May 2026, includes a hypergeome
 - [ ] Lands use the deck's land count. Any other card uses its quantity in the library. Considering and Sideboard are excluded.
 - [ ] No `Math.random`, no seed, no model. A committed example in the test matches the formula to four decimal places.
 
+### Enrichment (2026-11-11)
+
+**User story.** As a player counting lands, I want the chance of three or more in an opening seven, so that I see the formula and not a simulated game.
+
+**Acceptance.**
+- The panel shows the inputs and the probability.
+- Opening the same deck again shows the same digits.
+- The panel says it is a count of equally likely hands, not a recorded game.
+
+**UX.** A small panel on the deck. Lands use the land count. Any other card uses its quantity in the library. Considering and Sideboard are excluded.
+
+**Data and API.** A pure function. No seed, no `Math.random`, no stored result. Library size is 99, or 98 with a partner.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `odds_opened {kind: lands or card}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** On for guests and signed-in players. No flag. It is not I-21 and does not wait on it.
+
+**Open questions.** None. The committed fraction in the test is the contract.
+
 ### Definition of done
 
 The panel for a 99-card deck with 36 lands and an opening seven shows the chance of three or more lands, shows the inputs, and a second open of the same deck shows the same digits.
@@ -5072,6 +6725,27 @@ The cEDH Decklist Database's submit page, read 2026-11-11, requires a commander-
 - [ ] Show: legality report, last updated date, whether a public viewer needs an account, whether a primer exists and how long it is, and combo lines already on the deck. Each row says "met" or "not met" against the quoted requirement.
 - [ ] A fixed row: "The database requires the list to be on Moxfield. This product does not put it there."
 - [ ] No win rate, no "expected 25%", and no "accepted" or "rejected". The page links to the submit page for the requirements this product does not check, including staples and the win-rate sentence.
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player who might submit a competitive list, I want a checklist of the requirements this product can see, so that I am not shown a win rate or told I would be accepted.
+
+**Acceptance.**
+- Legality, the public date, the primer's presence and the combo lines are rows marked met or not met.
+- A fixed row says the database requires Moxfield and this product does not put the list there.
+- The page contains no win rate and no acceptance verdict.
+
+**UX.** A panel on the deck with a link to the database's submit page for the requirements we do not check.
+
+**Data and API.** Reads the legality report, the deck's update time, the primer's length and the combo lookup. Writes nothing. No win-rate field exists to hide. It is absent.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `cedh_checklist_opened {rows_unmet: count}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Signed-in on private decks. A public deck shows it only to the owner. No flag. It stays Later because the risk of a false verdict is the whole point of the wording.
+
+**Open questions.** The database's 25 percent sentence is their requirement. We link to it and do not compute it.
 
 ### Definition of done
 
