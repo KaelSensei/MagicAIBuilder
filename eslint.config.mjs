@@ -18,6 +18,7 @@
 // breach of a rule in a file that already has some, fails `pnpm lint`.
 // docs/engineering/quality-gate.md ("Lint ratchet") says how to shrink the file.
 import { FlatCompat } from "@eslint/eslintrc";
+import vitest from "@vitest/eslint-plugin";
 
 const compat = new FlatCompat({ baseDirectory: import.meta.dirname });
 
@@ -32,6 +33,12 @@ const TEST_FILES = [
   "**/testing/**",
   "**/fixtures/**",
 ];
+
+/**
+ * The test files Vitest runs (`include` in vitest.config.ts). Playwright specs
+ * under `e2e/` are named `*.spec.ts`, so they are not matched.
+ */
+const VITEST_FILES = ["**/*.test.{ts,tsx}"];
 
 /** Every TypeScript module under `src/`; combine with `ignores: TEST_FILES`. */
 const SOURCE_FILES = ["src/**/*.{ts,tsx}"];
@@ -239,6 +246,11 @@ const eslintConfig = [
       IMPORT_BANS.browserIntoServer
     ),
   },
+
+  // Test hygiene (ADR 0005). `@vitest/eslint-plugin` knows Vitest's API, so
+  // its rules read `vi.mock` and `it.only` the way Vitest does. It is
+  // registered for test files only; no rule of it is switched on yet.
+  { files: VITEST_FILES, plugins: { vitest } },
 ];
 
 export default eslintConfig;
