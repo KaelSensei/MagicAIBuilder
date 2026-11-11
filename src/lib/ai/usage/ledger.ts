@@ -82,6 +82,7 @@ export async function readAllowanceUsed(
   return {
     build: usedByKey.get(allowanceKey("build")) ?? 0,
     suggest: usedByKey.get(allowanceKey("suggest")) ?? 0,
+    translate: usedByKey.get(allowanceKey("translate")) ?? 0,
   };
 }
 

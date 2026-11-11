@@ -49,6 +49,7 @@ describe("GET /api/ai/allowance", () => {
       routes: {
         build: { limit: 10, used: 4, remaining: 6 },
         suggest: { limit: 30, used: 30, remaining: 0 },
+        translate: { limit: 60, used: 0, remaining: 60 },
       },
     });
     expect(db.usageCounter.findMany).toHaveBeenCalledWith(

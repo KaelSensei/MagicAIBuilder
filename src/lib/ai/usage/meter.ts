@@ -254,6 +254,7 @@ export async function readAiAllowance(
     routes: {
       build: routeAllowance("build"),
       suggest: routeAllowance("suggest"),
+      translate: routeAllowance("translate"),
     },
   };
 }

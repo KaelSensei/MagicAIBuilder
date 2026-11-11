@@ -2,7 +2,7 @@
 // Main builder view — 3-panel layout: Search | DeckEditor | Stats
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import {
   DndContext,
   DragEndEvent,
@@ -37,6 +37,8 @@ import { useCardSearchResults } from "@/hooks/useCardSearchResults";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { Header } from "@/components/layout/Header";
 import { SearchBar } from "@/components/search/SearchBar";
+import { NaturalLanguageSearch } from "@/components/search/NaturalLanguageSearch";
+import { NaturalLanguageSearchBoundary } from "@/components/search/NaturalLanguageSearchBoundary";
 import { SearchFilters } from "@/components/search/SearchFilters";
 import { SearchResults } from "@/components/search/SearchResults";
 import { DeckEditor } from "@/components/deck/DeckEditor";
@@ -95,6 +97,10 @@ import { CardPackagesPanel } from "@/components/deck/CardPackagesPanel";
 import { useGameChangersSet } from "@/hooks/useGameChangers";
 import { useBanlistSet } from "@/hooks/useBanlist";
 import { BuilderNameSearchModeBar } from "@/components/builder/BuilderNameSearchModeBar";
+import {
+  buildNaturalLanguageSearchContext,
+  toSearchLocale,
+} from "@/lib/search/natural-language-query";
 import { BuilderColorSearchPicker } from "@/components/builder/BuilderColorSearchPicker";
 import {
   BuilderMobileTabBar,
@@ -276,6 +282,7 @@ function UnavailableBuilderPage({
 
 export default function BuilderPage() {
   const t = useTranslations("builder");
+  const searchLocale = toSearchLocale(useLocale());
   const params = useParams();
   const router = useRouter();
   const deckId = params.deckId as string;
@@ -387,6 +394,8 @@ export default function BuilderPage() {
 
   // Search mode
   const [searchMode, setSearchMode] = useState<SearchMode>("name");
+  const [describeSearch, setDescribeSearch] = useState(false);
+  const [pinnedQuery, setPinnedQuery] = useState<string | null>(null);
   const [selectedSet, setSelectedSet] = useState<string>("");
   const [colorFilter, setColorFilter] = useState<string[]>([]);
   const toggleColorFilter = useCallback((code: string) => {
@@ -445,7 +454,27 @@ export default function BuilderPage() {
     setIsBanlistAlertDismissed(false);
   }, [banlistAlertKey]);
 
-  const query = buildSearchQueryFromMode({
+  const naturalSearchContext = useMemo(
+    () =>
+      buildNaturalLanguageSearchContext({
+        format: deck?.format ?? "commander",
+        commanderColorIdentity: deck?.commander?.colorIdentity ?? [],
+        partnerColorIdentity: deck?.partner?.colorIdentity ?? [],
+        hasCommander: deck?.commander != null,
+      }),
+    [deck?.format, deck?.commander, deck?.partner]
+  );
+  const naturalSearchAllowed =
+    searchMode === "name" && !commanderMode && !partnerMode && !companionMode;
+  const describeActive = describeSearch && naturalSearchAllowed;
+
+  useEffect(() => {
+    if (naturalSearchAllowed) return;
+    setDescribeSearch(false);
+    setPinnedQuery(null);
+  }, [naturalSearchAllowed]);
+
+  const syntaxQuery = buildSearchQueryFromMode({
     mode: searchMode,
     searchText,
     filters,
@@ -457,6 +486,9 @@ export default function BuilderPage() {
     deckCommander: deck?.commander ?? null,
     format: deck?.format,
   });
+  // A confirmed description search stays the executed query until the player
+  // types a new syntax search, including after they return to syntax mode.
+  const query = pinnedQuery ?? syntaxQuery;
 
   // Set and colour search show no filters panel, so a "Collection only" left on there must not
   // filter a list whose toggle the player cannot see.
@@ -468,6 +500,15 @@ export default function BuilderPage() {
 
   const handleSearch = useCallback((text: string) => {
     setSearchText(text);
+    if (text.trim().length > 0) setPinnedQuery(null);
+  }, []);
+
+  const handleDescribeActive = useCallback((active: boolean) => {
+    setDescribeSearch(active);
+  }, []);
+
+  const handleNaturalQuery = useCallback((nextQuery: string) => {
+    setPinnedQuery(nextQuery);
   }, []);
 
   const handleCardClick = useCallback(
@@ -903,13 +944,25 @@ export default function BuilderPage() {
               {/* Mode-specific controls */}
               {searchMode === "name" && (
                 <>
-                  <SearchBar
-                    onSearch={handleSearch}
-                    isLoading={searchLoading}
-                    showKeyboardHint={true}
-                    onFocus={() => setIsInputFocused(true)}
-                    onBlur={() => setIsInputFocused(false)}
-                  />
+                  {!describeActive && (
+                    <SearchBar
+                      onSearch={handleSearch}
+                      isLoading={searchLoading}
+                      showKeyboardHint={true}
+                      onFocus={() => setIsInputFocused(true)}
+                      onBlur={() => setIsInputFocused(false)}
+                    />
+                  )}
+                  {naturalSearchAllowed && (
+                    <NaturalLanguageSearchBoundary>
+                      <NaturalLanguageSearch
+                        context={naturalSearchContext}
+                        locale={searchLocale}
+                        onActiveChange={handleDescribeActive}
+                        onRunQuery={handleNaturalQuery}
+                      />
+                    </NaturalLanguageSearchBoundary>
+                  )}
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
@@ -990,6 +1043,7 @@ export default function BuilderPage() {
                 onAddToMaybeboard={addToMaybeboard}
                 onAddToZone={handleAddToZone}
                 draggable={true}
+                executedQuery={pinnedQuery ?? undefined}
               />
             </div>
           </motion.div>
