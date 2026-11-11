@@ -19,6 +19,7 @@ import type {
   NewDeckCard,
   StoredDeckCard,
 } from "@/lib/deck/deck-repository-port";
+import { compareCodeUnits } from "@/lib/text/code-unit-order";
 
 /** A deck the harness stored for one test. */
 export interface SeededDeck {
@@ -82,9 +83,12 @@ export function newDeckCard(
   };
 }
 
-/** Card names, sorted: adapters need not keep insertion order. */
+/**
+ * Card names in code-unit order: adapters need not keep insertion order, and
+ * the comparison must not depend on the machine's locale.
+ */
 function namesOf(cards: readonly StoredDeckCard[]): readonly string[] {
-  return cards.map((card) => card.name).sort();
+  return cards.map((card) => card.name).toSorted(compareCodeUnits);
 }
 
 const SIGNET = newDeckCard("Arcane Signet", { category: "ramp" });
