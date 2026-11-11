@@ -11,6 +11,12 @@ const withAnalyzer = withBundleAnalyzer({
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 const nextConfig: NextConfig = {
+  // `next build` lints through the ESLint Node.js API, and ESLint 9 applies
+  // bulk suppressions (`eslint-suppressions.json`) only in its CLI. The build
+  // would therefore fail on every breach the lint ratchet has recorded. The
+  // lint gate is `pnpm lint` (the CLI) in CI and on commit; Next.js 16 drops
+  // linting from `next build` altogether.
+  eslint: { ignoreDuringBuilds: true },
   serverExternalPackages: ["@prisma/client"],
   images: {
     remotePatterns: [

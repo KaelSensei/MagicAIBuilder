@@ -1,0 +1,1179 @@
+{
+  "src/app/[locale]/builder/[deckId]/page.tsx": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 6
+    },
+    "@typescript-eslint/max-params": {
+      "count": 2
+    },
+    "complexity": {
+      "count": 1
+    },
+    "max-lines": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/app/[locale]/commanders/[slug]/decks/page.tsx": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
+  "src/app/[locale]/decks/page.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/app/[locale]/layout.tsx": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
+  "src/app/api/ai/build/mock-deck.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 2
+    }
+  },
+  "src/app/api/ai/build/route.ts": {
+    "@typescript-eslint/max-params": {
+      "count": 2
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/app/api/ai/suggest/route.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 3
+    },
+    "complexity": {
+      "count": 2
+    },
+    "max-lines": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 3
+    }
+  },
+  "src/app/api/cache/cards/route.ts": {
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "src/app/api/cache/search/route.ts": {
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "src/app/api/collection/[id]/route.ts": {
+    "@typescript-eslint/max-params": {
+      "count": 1
+    }
+  },
+  "src/app/api/community/card-packages/[packageId]/apply/route.ts": {
+    "max-depth": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/app/api/community/card-packages/[packageId]/preview/route.ts": {
+    "max-depth": {
+      "count": 1
+    }
+  },
+  "src/app/api/community/commanders/[slug]/decks/route.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 2
+    }
+  },
+  "src/app/api/community/decks/[id]/comments/[commentId]/route.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
+  "src/app/api/community/decks/[id]/comments/route.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 2
+    }
+  },
+  "src/app/api/community/decks/[id]/ratings/route.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
+  "src/app/api/community/decks/[id]/vote/route.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
+  "src/app/api/decks/[id]/playtest-sessions/route.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 2
+    }
+  },
+  "src/app/api/decks/route.ts": {
+    "@typescript-eslint/max-params": {
+      "count": 1
+    }
+  },
+  "src/app/api/meta/[commanderSlug]/route.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 2
+    },
+    "@typescript-eslint/max-params": {
+      "count": 1
+    }
+  },
+  "src/app/api/users/[username]/route.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
+  "src/components/auth/SignInForm.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/auth/SignUpForm.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/auth/UserMenu.tsx": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/card/CardImage.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/card/CardListItem.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/card/CardNoteInline.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/card/CardTooltip.tsx": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
+  "src/components/card/PrintingSelectorModal.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/collection/AcquisitionPlanPanel.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/collection/AddToCollectionDialog.tsx": {
+    "max-lines": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/collection/CollectionPageClient.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/components/collection/PrintingDeckUsage.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/community/CommentThreadItem.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/community/DeckCommentPanel.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/community/DeckRatingPanel.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/community/DeckReportButton.tsx": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/community/SavePublicDeckButton.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/community/SavedDeckLibrary.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/community/VoteButtons.tsx": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/deck/AISuggestionsPanel.tsx": {
+    "@typescript-eslint/no-non-null-assertion": {
+      "count": 1
+    },
+    "complexity": {
+      "count": 1
+    },
+    "max-lines": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/deck/BanlistAlert.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/deck/BracketIndicator.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/deck/BudgetOptimizationModal.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/deck/BulkEditModal.tsx": {
+    "max-lines": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/deck/CardPackageCreator.tsx": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/deck/CardPackageLibrary.tsx": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 2
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/deck/CollectionStatsPanel.tsx": {
+    "max-lines": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/deck/CombosPanel.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/deck/DeckComparisonPanel.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/deck/DeckDescriptionEditor.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/deck/DeckEditor.tsx": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 3
+    },
+    "complexity": {
+      "count": 1
+    },
+    "max-lines": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/deck/DeckFolderControls.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/deck/DeckListTable.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/deck/DeckStats.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/deck/DeckTagsEditor.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/deck/DeckVisibilityToggle.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/deck/DeckWizard.tsx": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    },
+    "complexity": {
+      "count": 1
+    },
+    "max-lines": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 2
+    },
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "src/components/deck/DecksHomeControls.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/deck/ExportModal.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/deck/GeneratedDeckCorrections.tsx": {
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "src/components/deck/GridZoneCard.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/deck/HomeDeckCard.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/deck/ImportDialog.tsx": {
+    "max-lines": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/deck/ImportFromUrlTab.tsx": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 2
+    },
+    "complexity": {
+      "count": 1
+    },
+    "max-lines": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/deck/MainZoneContent.tsx": {
+    "@typescript-eslint/no-non-null-assertion": {
+      "count": 3
+    },
+    "max-lines": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/components/deck/ManaCurve.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/deck/MetaPanel.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/deck/MoxfieldProfileImport.tsx": {
+    "max-lines": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/deck/PricingShoppingListModal.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/deck/ProxyExportModal.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/deck/SecondaryZoneContent.tsx": {
+    "max-lines": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/deck/ShareDeckView.tsx": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    },
+    "complexity": {
+      "count": 1
+    },
+    "max-lines": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/deck/SharePopover.tsx": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 2
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/deck/ShoppingListModal.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/deck/SnapshotsPanel.tsx": {
+    "max-lines": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/components/deck/TemplatesModal.tsx": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    },
+    "max-lines": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/components/layout/Header.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/layout/HeaderMobileMenu.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/moderation/DeckReportQueue.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/onboarding/OnboardingWizard.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/playtest/BattlefieldZone.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/playtest/HandZone.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/playtest/LifeTracker.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/playtest/MulliganBottomChoice.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/playtest/PlaytestActionLog.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/playtest/PlaytestComparisonPanel.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/playtest/PlaytestHistoryPanel.tsx": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/playtest/PlaytestModal.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/playtest/RecordResultBar.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/profile/PublicDeckActions.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/profile/PublicDeckCards.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/profile/PublicDeckPrimer.tsx": {
+    "max-lines": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/profile/PublicDeckView.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/profile/PublicProfileView.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/rules/ComprehensiveRulesView.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/rules/GameChangersPageClient.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/components/search/SearchBar.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/search/SearchFilters.tsx": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 2
+    },
+    "max-lines": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/search/SearchResults.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/search/SetAutocomplete.tsx": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 2
+    },
+    "complexity": {
+      "count": 1
+    },
+    "max-lines": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/settings/ApiKeysPageClient.tsx": {
+    "max-lines": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/settings/NotificationPreferencesPanel.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/hooks/useAIDeckBuild.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    },
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "src/hooks/useAISuggestions.ts": {
+    "@typescript-eslint/max-params": {
+      "count": 1
+    },
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/hooks/useApiKeys.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 3
+    }
+  },
+  "src/hooks/useCardPrintings.ts": {
+    "@typescript-eslint/no-non-null-assertion": {
+      "count": 2
+    }
+  },
+  "src/hooks/useCardSearch.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
+  "src/hooks/useGameChangers.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
+  "src/hooks/useKeyboardShortcuts.ts": {
+    "@typescript-eslint/max-params": {
+      "count": 1
+    }
+  },
+  "src/hooks/useMetaShifts.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
+  "src/i18n/request.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
+  "src/lib/ai/archetypes.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 2
+    }
+  },
+  "src/lib/ai/deck-plan.ts": {
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "src/lib/ai/generated-deck-legality.ts": {
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "src/lib/ai/generated-deck-size.ts": {
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "src/lib/ai/generated-deck-validation.ts": {
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "src/lib/ai/model-reply.ts": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "src/lib/ai/suggest-payload.ts": {
+    "@typescript-eslint/max-params": {
+      "count": 2
+    },
+    "complexity": {
+      "count": 1
+    }
+  },
+  "src/lib/ai/suggestion-review.ts": {
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "src/lib/ai/suggestion-stream.ts": {
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "src/lib/ai/usage/ledger.ts": {
+    "@typescript-eslint/max-params": {
+      "count": 1
+    }
+  },
+  "src/lib/api/openapi.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/lib/auth/edge-config.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
+  "src/lib/auth/helpers.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
+  "src/lib/collection/acquisition-plan.ts": {
+    "@typescript-eslint/max-params": {
+      "count": 1
+    }
+  },
+  "src/lib/collection/parse.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
+  "src/lib/collection/shopping-list.ts": {
+    "@typescript-eslint/max-params": {
+      "count": 5
+    },
+    "max-lines": {
+      "count": 1
+    }
+  },
+  "src/lib/collection/store.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/lib/community/card-package-preview.ts": {
+    "@typescript-eslint/max-params": {
+      "count": 1
+    }
+  },
+  "src/lib/community/votes.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
+  "src/lib/db/deck-api.ts": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines": {
+      "count": 1
+    }
+  },
+  "src/lib/db/prisma.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 2
+    }
+  },
+  "src/lib/db/snapshot-api.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
+  "src/lib/deck/bracket.ts": {
+    "@typescript-eslint/max-params": {
+      "count": 1
+    }
+  },
+  "src/lib/deck/commander-save-recovery.ts": {
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "src/lib/deck/companion.ts": {
+    "@typescript-eslint/max-params": {
+      "count": 1
+    }
+  },
+  "src/lib/deck/fixtures/moxfield-v1.ts": {
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "src/lib/deck/fixtures/partner-cards.ts": {
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "src/lib/deck/fixtures/plain-text-roundtrip-v1.ts": {
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "src/lib/deck/fixtures/plain-text-v1.ts": {
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "src/lib/deck/formats.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
+  "src/lib/deck/guest-deck.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
+  "src/lib/deck/import.ts": {
+    "@typescript-eslint/max-params": {
+      "count": 1
+    }
+  },
+  "src/lib/deck/mana-alignment.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 5
+    },
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "src/lib/deck/multiples.ts": {
+    "@typescript-eslint/max-params": {
+      "count": 2
+    }
+  },
+  "src/lib/deck/proxy-print-html.ts": {
+    "@typescript-eslint/max-params": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/lib/deck/proxy.ts": {
+    "@typescript-eslint/max-params": {
+      "count": 1
+    }
+  },
+  "src/lib/deck/sort.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 2
+    }
+  },
+  "src/lib/deck/stats.ts": {
+    "@typescript-eslint/no-non-null-assertion": {
+      "count": 1
+    },
+    "max-depth": {
+      "count": 1
+    }
+  },
+  "src/lib/deck/store-card-faces.ts": {
+    "@typescript-eslint/max-params": {
+      "count": 1
+    },
+    "complexity": {
+      "count": 1
+    }
+  },
+  "src/lib/deck/store-factories.ts": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "src/lib/deck/store.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 4
+    },
+    "@typescript-eslint/max-params": {
+      "count": 3
+    },
+    "complexity": {
+      "count": 3
+    },
+    "max-lines": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 7
+    },
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "src/lib/deck/templates.ts": {
+    "@typescript-eslint/max-params": {
+      "count": 1
+    }
+  },
+  "src/lib/deck/themes.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
+  "src/lib/deck/turn-one.ts": {
+    "@typescript-eslint/max-params": {
+      "count": 1
+    },
+    "no-restricted-imports": {
+      "count": 2
+    }
+  },
+  "src/lib/deck/validation.ts": {
+    "@typescript-eslint/max-params": {
+      "count": 1
+    }
+  },
+  "src/lib/http.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
+  "src/lib/import/decklist-parse.ts": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "src/lib/import/url-import.ts": {
+    "@typescript-eslint/max-params": {
+      "count": 1
+    },
+    "max-lines": {
+      "count": 1
+    }
+  },
+  "src/lib/mana/parse.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
+  "src/lib/playtest/engine.ts": {
+    "@typescript-eslint/max-params": {
+      "count": 9
+    },
+    "complexity": {
+      "count": 1
+    },
+    "max-lines": {
+      "count": 1
+    }
+  },
+  "src/lib/playtest/keep-rules.ts": {
+    "@typescript-eslint/max-params": {
+      "count": 1
+    }
+  },
+  "src/lib/playtest/session-input.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 4
+    },
+    "complexity": {
+      "count": 1
+    }
+  },
+  "src/lib/playtest/store.ts": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/lib/playtest/summary-view.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
+  "src/lib/ratings/ratings.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
+  "src/lib/recommendations/engine.ts": {
+    "@typescript-eslint/max-params": {
+      "count": 1
+    }
+  },
+  "src/lib/scryfall/client.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
+  "src/lib/scryfall/search.ts": {
+    "@typescript-eslint/max-params": {
+      "count": 2
+    },
+    "complexity": {
+      "count": 1
+    }
+  },
+  "src/lib/scryfall/shared-cache.ts": {
+    "@typescript-eslint/max-params": {
+      "count": 1
+    }
+  },
+  "src/lib/seo/sitemap.ts": {
+    "@typescript-eslint/max-params": {
+      "count": 1
+    }
+  },
+  "src/lib/shortcuts/shortcuts.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  }
+}

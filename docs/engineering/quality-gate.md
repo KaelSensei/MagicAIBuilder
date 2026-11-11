@@ -91,7 +91,7 @@ A gate marked `planned` does not exist yet. The gates land in stages ([ADR 0007]
 | 1     | ESLint 9 flat config replaces `next lint` and `.eslintrc.json` (`next lint` is deprecated, and removed in Next 16). A prerequisite for stages 3–4. Done in #1351                                                                                   | as today                                        | done    |
 | 2     | The `server-only` package, with a Vitest stub. Done in #1356                                                                                                                                                                                       | a build that pulls server code into the browser | done    |
 | 3     | dependency-cruiser (`pnpm arch`). Runtime cycles fail at once (there are none); the 3 existing type-only cycles and the known layer and context violations start in a recorded baseline that may only shrink. It also generates the Mermaid graphs | a cycle or a new violation                      | done    |
-| 4     | ESLint `max-lines`, `max-lines-per-function` and `complexity`, with bulk suppressions as a ratchet                                                                                                                                                 | a new file over a limit, or a file that grows   | planned |
+| 4     | ESLint `max-lines`, `max-lines-per-function` and `complexity`, with bulk suppressions as a ratchet                                                                                                                                                 | a new file over a limit, or a file that grows   | done    |
 | 5     | Knip: unused files, dependencies and exports                                                                                                                                                                                                       | nothing: an advisory report                     | planned |
 | 6     | `pnpm arch` joins the pre-PR gate in `CLAUDE.md`                                                                                                                                                                                                   | as stage 3                                      | done    |
 | —     | `eslint-plugin-jsdoc`: `require-jsdoc` on exports, then `informative-docs`, starting in `src/modules/**` ([ADR 0006](../adr/0006-comment-and-documentation-standard.md))                                                                           | a missing or restating doc comment              | planned |
@@ -207,6 +207,47 @@ Every value below is a local test fixture, not a secret. No variable has to be e
 | `PLAYWRIGHT_GREP_INVERT` | `e2e`   | host value, default `@external\|@perf`                     | Tags excluded from the blocking run (see _Tests excluded from the blocking run_). Set it to `""` to run everything. |
 
 `src/lib/toolchain.test.ts` fails the unit suite when the Compose file sets a variable this table does not list, so a new variable cannot ship undocumented.
+
+## Lint ratchet
+
+`eslint.config.mjs` enforces rules that the existing code does not meet yet (stage 4 of [ADR 0007](../adr/0007-architecture-enforcement-in-stages.md)). Each one is an `error`. The breaches that existed when a rule arrived are recorded in `eslint-suppressions.json` with [ESLint bulk suppressions](https://eslint.org/docs/latest/use/suppressions), which count breaches per file and per rule:
+
+- a new file must meet every rule;
+- a file with recorded breaches fails as soon as it has one more breach of the same rule;
+- a file with fewer breaches than recorded also fails, with "There are suppressions left that do not occur anymore", until the count is pruned. The baseline can only go down.
+
+| Rule                                            | Limit                                                    |
+| ----------------------------------------------- | -------------------------------------------------------- |
+| `max-lines`                                     | 300 code lines in a `.ts` module, 200 in a `.tsx` module |
+| `max-lines-per-function`                        | 80 code lines                                            |
+| `complexity`                                    | 15                                                       |
+| `max-depth`                                     | 3 nested blocks                                          |
+| `@typescript-eslint/max-params`                 | 3 parameters                                             |
+| `@typescript-eslint/consistent-type-assertions` | no cast (`x as T`, `<T>x`); `as const` stays allowed     |
+| `@typescript-eslint/no-non-null-assertion`      | no non-null assertion (`x!`)                             |
+| `no-restricted-imports`                         | the import boundaries below                              |
+
+Comments and blank lines never count toward a line limit, so the comment standard cannot push a module over one. The rules apply to shipped code: every `src/**/*.{ts,tsx}` file except `*.test.{ts,tsx}`, `src/test/**` and the `testing/` and `fixtures/` folders. Tests keep the preset rules, except for the `../` ban below.
+
+The import boundaries, phase 1. `no-restricted-imports` matches the specifier as written, which is enough because cross-folder imports use the `@/` alias; dependency-cruiser adds the transitive view in stage 3.
+
+- `src/lib` does not import `@/components`, `@/hooks` or `@/app`.
+- `src/components` and `src/hooks` do not import `@/app`, `@/lib/db/prisma` or `@prisma/client`.
+- Shipped code does not import `@/test` or a `testing/` folder.
+- No file under `src`, tests included, imports a `../` path, which would slip past the rules above.
+- `src/modules/*/domain/` and `index.ts` do not import React, Next.js, Zustand, Prisma or an outer layer; `src/modules/*/client/`, `ui/` and `client.ts` do not import Prisma, `server-only`, a `server.ts`, `application/` or `infrastructure/`. No module exists yet, so these bans start with no breach.
+
+`next build` does not lint (`eslint.ignoreDuringBuilds` in `next.config.ts`): it calls the ESLint Node.js API, which ignores the suppressions file in ESLint 9. `pnpm lint` in CI and lint-staged on commit run the ESLint CLI, which applies it.
+
+### Shrinking the baseline
+
+1. Fix the breach: split the module, extract the function, flatten the nesting, replace the cast or the `!` with a type guard, a Zod parse at the boundary or `satisfies`, move the shared type down to the layer that owns it.
+2. Run `pnpm lint --prune-suppressions`. It lowers the counts in `eslint-suppressions.json`, deletes the entries that reached zero and drops the paths that no longer exist.
+3. Commit the smaller `eslint-suppressions.json` with the fix. The pre-commit hook lints staged files against it, so the commit fails until step 2 is done.
+
+Never grow the file to get a change through. A pull request that adds or raises an entry says why in its description ([ADR 0007](../adr/0007-architecture-enforcement-in-stages.md), "Consequences").
+
+A file move is the one routine case that re-records entries. They are keyed by path, so the moved file fails until `npx eslint <new paths> --suppress-all` records it again; `pnpm lint --prune-suppressions` then drops the old paths. The counts stay the same.
 
 ## Review protocol
 
