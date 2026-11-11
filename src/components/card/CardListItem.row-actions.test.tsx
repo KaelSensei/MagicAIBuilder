@@ -195,3 +195,162 @@ describe("card notes on a deck row", () => {
     ).not.toBeInTheDocument();
   });
 });
+
+describe("quantity stepper on a deck row", () => {
+  const forest = (quantity: number): DeckCard =>
+    deckRow({
+      id: "row-forest",
+      scryfallId: "b34bb2dc-c1af-4d77-b0b3-a0fb342a5fc6",
+      name: "Forest",
+      manaCost: "",
+      cmc: 0,
+      typeLine: "Basic Land — Forest",
+      oracleText: "({T}: Add {G}.)",
+      colorIdentity: ["G"],
+      category: "land",
+      quantity,
+    });
+
+  it("adds a copy of a basic land", async () => {
+    const user = userEvent.setup();
+    openSavedDeck(forest(3));
+    renderWithIntl(<CardListItem card={forest(3)} />);
+
+    await user.click(
+      screen.getByRole("button", { name: "Add a copy of Forest" })
+    );
+
+    await waitFor(() =>
+      expect(requests).toEqual([
+        {
+          method: "PATCH",
+          path: `/api/decks/${DECK_ID}/cards/row-forest`,
+          body: { quantity: 4 },
+        },
+      ])
+    );
+    expect(storedRow("row-forest")?.quantity).toBe(4);
+  });
+
+  it("removes a copy of a basic land", async () => {
+    const user = userEvent.setup();
+    openSavedDeck(forest(2));
+    renderWithIntl(<CardListItem card={forest(2)} />);
+
+    await user.click(
+      screen.getByRole("button", { name: "Remove a copy of Forest" })
+    );
+
+    await waitFor(() =>
+      expect(requests.map((request) => request.body)).toEqual([{ quantity: 1 }])
+    );
+    expect(storedRow("row-forest")?.quantity).toBe(1);
+  });
+
+  it("never removes the last copy, which the row's remove button does", () => {
+    openSavedDeck(forest(1));
+    renderWithIntl(<CardListItem card={forest(1)} />);
+
+    expect(
+      screen.getByRole("button", { name: "Remove a copy of Forest" })
+    ).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "Add a copy of Forest" })
+    ).toBeEnabled();
+  });
+
+  it("lets a card that allows any number of copies go past four (CR 101.1)", async () => {
+    const user = userEvent.setup();
+    const rats = deckRow({
+      id: "row-rats",
+      name: "Relentless Rats",
+      typeLine: "Creature — Rat",
+      oracleText:
+        "Relentless Rats gets +1/+1 for each other creature you control named Relentless Rats.\nA deck can have any number of cards named Relentless Rats.",
+      quantity: 12,
+    });
+    openSavedDeck(rats);
+    renderWithIntl(<CardListItem card={rats} />);
+
+    await user.click(
+      screen.getByRole("button", { name: "Add a copy of Relentless Rats" })
+    );
+
+    await waitFor(() =>
+      expect(requests.map((request) => request.body)).toEqual([
+        { quantity: 13 },
+      ])
+    );
+  });
+
+  it("stops at the number of copies a card's own text allows", () => {
+    const dwarves = deckRow({
+      id: "row-dwarves",
+      name: "Seven Dwarves",
+      typeLine: "Creature — Dwarf",
+      oracleText:
+        "Seven Dwarves gets +1/+1 for each other creature named Seven Dwarves you control.\nA deck can have up to seven cards named Seven Dwarves.",
+      quantity: 7,
+    });
+    openSavedDeck(dwarves);
+    renderWithIntl(<CardListItem card={dwarves} />);
+
+    expect(
+      screen.getByRole("button", { name: "Add a copy of Seven Dwarves" })
+    ).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "Remove a copy of Seven Dwarves" })
+    ).toBeEnabled();
+  });
+
+  it("offers no stepper on a singleton card at one copy (CR 903.5b)", () => {
+    const solRing = deckRow({
+      id: "row-sol-ring",
+      name: "Sol Ring",
+      typeLine: "Artifact",
+      quantity: 1,
+    });
+    openSavedDeck(solRing);
+    renderWithIntl(<CardListItem card={solRing} />);
+
+    expect(
+      screen.queryByRole("button", { name: /a copy of Sol Ring/ })
+    ).not.toBeInTheDocument();
+    expect(screen.getByText("1")).toBeInTheDocument();
+  });
+
+  it("lets a singleton imported with extra copies come back down to one", async () => {
+    const user = userEvent.setup();
+    const solRing = deckRow({
+      id: "row-sol-ring",
+      name: "Sol Ring",
+      typeLine: "Artifact",
+      quantity: 2,
+    });
+    openSavedDeck(solRing);
+    renderWithIntl(<CardListItem card={solRing} />);
+
+    expect(
+      screen.getByRole("button", { name: "Add a copy of Sol Ring" })
+    ).toBeDisabled();
+    await user.click(
+      screen.getByRole("button", { name: "Remove a copy of Sol Ring" })
+    );
+
+    await waitFor(() =>
+      expect(requests.map((request) => request.body)).toEqual([{ quantity: 1 }])
+    );
+  });
+
+  it("names the stepper in the player's language", () => {
+    openSavedDeck(forest(3));
+    renderWithIntl(<CardListItem card={forest(3)} />, { locale: "fr" });
+
+    expect(
+      screen.getByRole("group", { name: "Exemplaires de Forest" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Ajouter un exemplaire de Forest" })
+    ).toBeEnabled();
+  });
+});

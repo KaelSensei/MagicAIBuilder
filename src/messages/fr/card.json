@@ -51,5 +51,10 @@
     "commander": "Cette carte est le commandant de votre deck.",
     "companion": "Cette carte est le compagnon de votre deck.",
     "category": "Son rôle attribué dans ce deck est : {category}."
+  },
+  "quantity": {
+    "group": "Exemplaires de {name}",
+    "add": "Ajouter un exemplaire de {name}",
+    "remove": "Retirer un exemplaire de {name}"
   }
 }

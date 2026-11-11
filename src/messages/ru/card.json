@@ -51,5 +51,10 @@
     "commander": "This card is your deck's commander.",
     "companion": "This card is your deck's companion.",
     "category": "Its assigned role in this deck is {category}."
+  },
+  "quantity": {
+    "group": "Copies of {name}",
+    "add": "Add a copy of {name}",
+    "remove": "Remove a copy of {name}"
   }
 }
