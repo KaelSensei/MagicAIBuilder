@@ -13,7 +13,7 @@ vi.mock("next-auth", () => ({
   default: () => ({ auth: <Handler>(handler: Handler) => handler }),
 }));
 
-vi.mock("next-intl/middleware", () => ({
+vi.mock(import("next-intl/middleware"), () => ({
   default: () => () => {
     const response = NextResponse.next();
     response.headers.set(SERVED_BY_LOCALE_MIDDLEWARE, "1");

@@ -3,16 +3,16 @@ import type { PublicCard, PublicDeck } from "@/lib/deck/public-deck";
 
 const findDeckForViewer = vi.hoisted(() => vi.fn());
 vi.mock(import("@/lib/deck/deck-for-viewer"), () => ({ findDeckForViewer }));
-vi.mock("next/navigation", () => ({
+vi.mock(import("next/navigation"), () => ({
   notFound: () => {
     throw new Error("NOT_FOUND");
   },
 }));
 vi.mock("next-intl/server", () => import("@/test/server-intl"));
 vi.mock("@/lib/auth/config", () => ({ auth: async () => null }));
-vi.mock("@/components/layout/Header", () => ({ Header: () => null }));
-vi.mock("@/components/profile/PublicDeckView", () => ({
-  PublicDeckView: () => null,
+vi.mock(import("@/components/layout/Header"), () => ({ Header: () => <></> }));
+vi.mock(import("@/components/profile/PublicDeckView"), () => ({
+  PublicDeckView: () => <></>,
 }));
 
 import PublicDeckPage, { generateMetadata } from "./page";

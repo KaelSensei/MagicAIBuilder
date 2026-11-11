@@ -13,10 +13,10 @@ const mocks = vi.hoisted(() => {
   };
 });
 
-vi.mock("@/lib/auth/helpers", () => ({ requireAuth: mocks.requireAuth }));
-vi.mock("@/lib/rate-limit", () => ({ checkRateLimit: mocks.checkRateLimit }));
-vi.mock("@/lib/ai/usage/route-gate", () => ({ reserveAiCallForRoute: mocks.reserve }));
-vi.mock("@/lib/ai/metered-model", async () => {
+vi.mock(import("@/lib/auth/helpers"), () => ({ requireAuth: mocks.requireAuth }));
+vi.mock(import("@/lib/rate-limit"), () => ({ checkRateLimit: mocks.checkRateLimit }));
+vi.mock(import("@/lib/ai/usage/route-gate"), () => ({ reserveAiCallForRoute: mocks.reserve }));
+vi.mock(import("@/lib/ai/metered-model"), async () => {
   const actual = await vi.importActual<typeof import("@/lib/ai/metered-model")>("@/lib/ai/metered-model");
   return { ...actual, callModelMetered: mocks.callModelMetered };
 });

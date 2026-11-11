@@ -9,7 +9,7 @@ import { ImportDialog } from "./ImportDialog";
 const addCard = vi.hoisted(() => vi.fn());
 const fetchInBatches = vi.hoisted(() => vi.fn());
 
-vi.mock("@/lib/deck/batch-fetch", () => ({ fetchInBatches }));
+vi.mock(import("@/lib/deck/batch-fetch"), () => ({ fetchInBatches }));
 vi.mock("@/lib/deck/store", () => ({
   useDeckStore: (select: (state: object) => unknown) => select({
     activeDeckId: "deck-1",
@@ -19,8 +19,8 @@ vi.mock("@/lib/deck/store", () => ({
     setCompanion: vi.fn(),
   }),
 }));
-vi.mock("@/components/deck/ImportFromUrlTab", () => ({
-  ImportFromUrlTab: () => null,
+vi.mock(import("@/components/deck/ImportFromUrlTab"), () => ({
+  ImportFromUrlTab: () => <></>,
 }));
 
 beforeEach(() => {

@@ -7,8 +7,11 @@ const push = vi.fn();
 const forkPublicDeck = vi.fn();
 const fetchMock = vi.fn();
 
-vi.mock("@/i18n/navigation", () => ({ useRouter: () => ({ push }) }));
-vi.mock("@/lib/db/deck-api", () => ({
+vi.mock(import("@/i18n/navigation"), async () => {
+  const stub = await import("@/test/i18n-navigation-stub");
+  return { ...stub, useRouter: () => ({ ...stub.useRouter(), push }) };
+});
+vi.mock(import("@/lib/db/deck-api"), () => ({
   forkPublicDeck: (id: string) => forkPublicDeck(id),
 }));
 

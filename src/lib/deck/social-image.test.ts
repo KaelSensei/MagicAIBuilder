@@ -2,9 +2,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockDeckFindFirst = vi.hoisted(() => vi.fn());
 
-vi.mock("@/lib/db/prisma", () => ({
-  prisma: { deck: { findFirst: mockDeckFindFirst } },
-}));
+vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
+  const { stubPrisma } = await import("@/test/prisma-stub");
+  return stubPrisma(await importOriginal(), {
+    deck: { findFirst: mockDeckFindFirst },
+  });
+});
 
 import { DECK_IMAGE_SELECT, loadPublicDeckImage } from "./social-image";
 

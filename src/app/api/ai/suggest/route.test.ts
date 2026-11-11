@@ -9,11 +9,17 @@ const db = await vi.hoisted(async () => {
   return createAiUsageDb();
 });
 
-vi.mock("@/lib/db/prisma", () => ({
-  prisma: { ...db, playtestSession: { findMany: mocks.findMany } },
+vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
+  const { stubPrisma } = await import("@/test/prisma-stub");
+  return stubPrisma(await importOriginal(), {
+    ...db,
+    playtestSession: { findMany: mocks.findMany },
+  });
+});
+vi.mock(import("@/lib/auth/helpers"), () => ({
+  requireAuth: mocks.requireAuth,
 }));
-vi.mock("@/lib/auth/helpers", () => ({ requireAuth: mocks.requireAuth }));
-vi.mock("@/lib/rate-limit", () => ({
+vi.mock(import("@/lib/rate-limit"), () => ({
   checkRateLimit: () => ({ allowed: true, retryAfterMs: 0 }),
 }));
 

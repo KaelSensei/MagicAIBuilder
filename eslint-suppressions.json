@@ -21,7 +21,7 @@
       "count": 2
     },
     "vitest/prefer-import-in-mock": {
-      "count": 6
+      "count": 2
     }
   },
   "src/app/[locale]/commanders/[slug]/decks/page.tsx": {
@@ -34,7 +34,7 @@
       "count": 3
     },
     "vitest/prefer-import-in-mock": {
-      "count": 5
+      "count": 2
     }
   },
   "src/app/[locale]/decks/loading.test.tsx": {
@@ -47,7 +47,7 @@
       "count": 12
     },
     "vitest/prefer-import-in-mock": {
-      "count": 14
+      "count": 3
     }
   },
   "src/app/[locale]/decks/page.test.tsx": {
@@ -74,7 +74,7 @@
       "count": 1
     },
     "vitest/prefer-import-in-mock": {
-      "count": 4
+      "count": 3
     }
   },
   "src/app/[locale]/layout.tsx": {
@@ -100,15 +100,12 @@
       "count": 2
     },
     "vitest/prefer-import-in-mock": {
-      "count": 6
+      "count": 2
     }
   },
   "src/app/api/ai/allowance/route.test.ts": {
     "no-restricted-syntax": {
       "count": 1
-    },
-    "vitest/prefer-import-in-mock": {
-      "count": 2
     }
   },
   "src/app/api/ai/build/mock-deck.ts": {
@@ -124,9 +121,6 @@
   "src/app/api/ai/build/route.test.ts": {
     "no-restricted-syntax": {
       "count": 2
-    },
-    "vitest/prefer-import-in-mock": {
-      "count": 3
     }
   },
   "src/app/api/ai/build/route.ts": {
@@ -145,9 +139,6 @@
   "src/app/api/ai/suggest/route.test.ts": {
     "no-restricted-syntax": {
       "count": 2
-    },
-    "vitest/prefer-import-in-mock": {
-      "count": 3
     }
   },
   "src/app/api/ai/suggest/route.ts": {
@@ -383,9 +374,6 @@
   "src/app/api/search/translate/route.test.ts": {
     "no-restricted-syntax": {
       "count": 4
-    },
-    "vitest/prefer-import-in-mock": {
-      "count": 4
     }
   },
   "src/app/api/share/route.test.ts": {
@@ -438,7 +426,7 @@
       "count": 1
     },
     "vitest/prefer-import-in-mock": {
-      "count": 2
+      "count": 1
     }
   },
   "src/components/auth/AuthCallbackUrl.test.tsx": {
@@ -469,9 +457,6 @@
   "src/components/auth/UserMenu.test.tsx": {
     "no-restricted-syntax": {
       "count": 2
-    },
-    "vitest/prefer-import-in-mock": {
-      "count": 3
     }
   },
   "src/components/auth/UserMenu.tsx": {
@@ -614,9 +599,6 @@
   "src/components/community/CommanderDecksView.test.tsx": {
     "no-restricted-syntax": {
       "count": 2
-    },
-    "vitest/prefer-import-in-mock": {
-      "count": 2
     }
   },
   "src/components/community/CommentThreadItem.tsx": {
@@ -677,9 +659,6 @@
   },
   "src/components/community/UserChip.test.tsx": {
     "no-restricted-syntax": {
-      "count": 1
-    },
-    "vitest/prefer-import-in-mock": {
       "count": 1
     }
   },
@@ -832,9 +811,6 @@
   "src/components/deck/DeckListTable.test.tsx": {
     "no-restricted-syntax": {
       "count": 1
-    },
-    "vitest/prefer-import-in-mock": {
-      "count": 1
     }
   },
   "src/components/deck/DeckListTable.tsx": {
@@ -947,9 +923,6 @@
   "src/components/deck/HomeDeckCard.test.tsx": {
     "no-restricted-syntax": {
       "count": 1
-    },
-    "vitest/prefer-import-in-mock": {
-      "count": 1
     }
   },
   "src/components/deck/HomeDeckCard.tsx": {
@@ -965,7 +938,7 @@
       "count": 3
     },
     "vitest/prefer-import-in-mock": {
-      "count": 3
+      "count": 1
     }
   },
   "src/components/deck/ImportDialog.tsx": {
@@ -1141,7 +1114,7 @@
       "count": 6
     },
     "vitest/prefer-import-in-mock": {
-      "count": 6
+      "count": 1
     }
   },
   "src/components/layout/Header.tsx": {
@@ -1268,9 +1241,6 @@
   "src/components/profile/PublicDeckActions.test.tsx": {
     "no-restricted-syntax": {
       "count": 2
-    },
-    "vitest/prefer-import-in-mock": {
-      "count": 2
     }
   },
   "src/components/profile/PublicDeckActions.tsx": {
@@ -1294,9 +1264,6 @@
   "src/components/profile/PublicDeckView.test.tsx": {
     "no-restricted-syntax": {
       "count": 7
-    },
-    "vitest/prefer-import-in-mock": {
-      "count": 7
     }
   },
   "src/components/profile/PublicDeckView.tsx": {
@@ -1312,9 +1279,6 @@
   },
   "src/components/profile/PublicProfileView.test.tsx": {
     "no-restricted-syntax": {
-      "count": 1
-    },
-    "vitest/prefer-import-in-mock": {
       "count": 1
     }
   },
@@ -1563,11 +1527,6 @@
       "count": 1
     }
   },
-  "src/lib/ai/usage/meter.test.ts": {
-    "vitest/prefer-import-in-mock": {
-      "count": 1
-    }
-  },
   "src/lib/api/authenticate.test.ts": {
     "no-restricted-syntax": {
       "count": 2
@@ -1740,11 +1699,6 @@
   },
   "src/lib/deck/proxy.ts": {
     "@typescript-eslint/max-params": {
-      "count": 1
-    }
-  },
-  "src/lib/deck/social-image.test.ts": {
-    "vitest/prefer-import-in-mock": {
       "count": 1
     }
   },
@@ -2016,7 +1970,7 @@
   },
   "src/middleware.test.ts": {
     "vitest/prefer-import-in-mock": {
-      "count": 2
+      "count": 1
     }
   }
 }

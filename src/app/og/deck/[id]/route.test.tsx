@@ -2,7 +2,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const loadPublicDeckImage = vi.hoisted(() => vi.fn());
-vi.mock("@/lib/deck/social-image", () => ({ loadPublicDeckImage }));
+vi.mock(import("@/lib/deck/social-image"), () => ({ loadPublicDeckImage }));
 vi.mock("next-intl/server", async () => {
   const { createTranslator } = await import("next-intl");
   const deck = (await import("@/messages/en/deck.json")).default;

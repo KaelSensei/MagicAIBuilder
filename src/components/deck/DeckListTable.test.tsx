@@ -5,10 +5,10 @@ import type { Deck, DeckCard } from "@/lib/deck/types";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { DeckListTable } from "./DeckListTable";
 
-vi.mock("@/i18n/navigation", () => ({
-  Link: ({ children, href }: { children: React.ReactNode; href: string }) =>
-    React.createElement("a", { href }, children),
-}));
+vi.mock(
+  import("@/i18n/navigation"),
+  () => import("@/test/i18n-navigation-stub")
+);
 
 function makeCommander(colorIdentity: readonly string[]): DeckCard {
   return {

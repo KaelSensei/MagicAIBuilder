@@ -249,8 +249,8 @@ Test files (`*.test.{ts,tsx}`) have their own rules, from `@vitest/eslint-plugin
 
 | Rule                           | Rejects                                                                                                                                       | Baseline when it arrived        |
 | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
-| `vitest/prefer-import-in-mock` | a mock named by a string, `vi.mock("@/x")`; write `vi.mock(import("@/x"))`, which `tsc` checks                                                | 119 string mocks in 54 files    |
-| `no-restricted-syntax`         | a `vi.mock` or `vi.doMock` of a module of this repository (`@/…` or a relative path), in either form, except the two transitional seams below | 328 internal mocks in 161 files |
+| `vitest/prefer-import-in-mock` | a mock named by a string, `vi.mock("@/x")`; write `vi.mock(import("@/x"))`, which `tsc` checks                                                | 59 string mocks in 41 files     |
+| `no-restricted-syntax`         | a `vi.mock` or `vi.doMock` of a module of this repository (`@/…` or a relative path), in either form, except the two transitional seams below | 222 internal mocks in 130 files |
 | `vitest/no-focused-tests`      | a committed `.only`                                                                                                                           | none                            |
 | `vitest/no-disabled-tests`     | `.skip` and `xit`-style disabled tests; `.todo` stays allowed for a test not written yet                                                      | none                            |
 

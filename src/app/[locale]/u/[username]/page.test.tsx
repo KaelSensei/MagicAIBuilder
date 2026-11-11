@@ -1,11 +1,11 @@
 import { afterEach, expect, it, vi } from "vitest";
 
-vi.mock("next/headers", () => ({ headers: async () => new Headers() }));
-vi.mock("next/navigation", () => ({ notFound: () => { throw new Error("NOT_FOUND"); } }));
+vi.mock(import("next/headers"), () => ({ headers: async () => new Headers() }));
+vi.mock(import("next/navigation"), () => ({ notFound: () => { throw new Error("NOT_FOUND"); } }));
 vi.mock("next-intl/server", () => import("@/test/server-intl"));
 vi.mock("@/lib/auth/config", () => ({ auth: async () => null }));
-vi.mock("@/components/layout/Header", () => ({ Header: () => null }));
-vi.mock("@/components/profile/PublicProfileView", () => ({ PublicProfileView: () => null }));
+vi.mock(import("@/components/layout/Header"), () => ({ Header: () => <></> }));
+vi.mock(import("@/components/profile/PublicProfileView"), () => ({ PublicProfileView: () => <></> }));
 
 import UserProfilePage, { generateMetadata } from "./page";
 
