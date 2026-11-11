@@ -2,8 +2,8 @@
 import "server-only";
 import { z } from "zod";
 import { USER_AGENT } from "@/lib/http";
-import type { DeckComboQuery } from "@/lib/combos/deck-query";
-import type { SpellbookVariant } from "@/lib/combos/spellbook";
+import type { DeckComboQuery } from "@/modules/combos/domain/deck-query";
+import type { SpellbookVariant } from "@/modules/combos/client/api";
 
 /**
  * Spellbook's deck-level endpoint. It takes the whole list and sorts the combos

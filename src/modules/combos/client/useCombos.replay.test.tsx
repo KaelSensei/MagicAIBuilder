@@ -19,16 +19,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { delay, http, HttpResponse, type JsonBodyType } from "msw";
-import { useCombos } from "@/hooks/useCombos";
-import { COMBO_FETCH_TIMEOUT_MS } from "@/lib/combos/spellbook";
+import { useCombos } from "@/modules/combos/client/useCombos";
+import { COMBO_FETCH_TIMEOUT_MS } from "@/modules/combos/client/api";
 import {
   SPELLBOOK_FIND_MY_COMBOS_URL,
   SPELLBOOK_TIMEOUT_MS,
-} from "@/lib/combos/find-my-combos";
+} from "@/modules/combos/infrastructure/find-my-combos";
 import {
   FIND_MY_COMBOS_RECORDED,
   FIND_MY_COMBOS_RECORDED_REQUEST,
-} from "@/lib/combos/fixtures/find-my-combos-v1";
+} from "@/modules/combos/infrastructure/fixtures/find-my-combos-v1";
 import type { Deck, DeckCard, DeckZone } from "@/lib/deck/types";
 import { useMsw } from "@/test/msw";
 

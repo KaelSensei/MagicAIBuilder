@@ -4,7 +4,7 @@ import {
   deckComboQueryKey,
   deckComboQuerySchema,
   normalizeDeckComboQuery,
-} from "@/lib/combos/deck-query";
+} from "@/modules/combos/domain/deck-query";
 
 describe("normalizeDeckComboQuery", () => {
   it("gives the same key to lists that differ only in order, case or spacing", () => {

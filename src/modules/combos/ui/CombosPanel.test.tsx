@@ -1,6 +1,6 @@
 import { screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import type { SpellbookVariant } from "@/lib/combos/spellbook";
+import type { SpellbookVariant } from "@/modules/combos/client/api";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { CombosPanel } from "./CombosPanel";
 

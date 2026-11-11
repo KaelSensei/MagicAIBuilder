@@ -21,8 +21,8 @@
  * are apart from import paths.
  */
 import { describe, expect, it } from "vitest";
-import { FIND_MY_COMBOS_RECORDED } from "@/lib/combos/fixtures/find-my-combos-v1";
-import { parseFindMyCombos } from "@/lib/combos/find-my-combos";
+import { FIND_MY_COMBOS_RECORDED } from "@/modules/combos/infrastructure/fixtures/find-my-combos-v1";
+import { parseFindMyCombos } from "@/modules/combos/infrastructure/find-my-combos";
 import { scoreBracket } from "@/lib/deck/bracket";
 import type { Deck } from "@/lib/deck/types";
 import type { DeckStats } from "@/lib/deck/analysis-types";

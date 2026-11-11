@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { FIND_MY_COMBOS_RECORDED } from "@/lib/combos/fixtures/find-my-combos-v1";
-import { parseFindMyCombos } from "@/lib/combos/find-my-combos";
+import { FIND_MY_COMBOS_RECORDED } from "@/modules/combos/infrastructure/fixtures/find-my-combos-v1";
+import { parseFindMyCombos } from "@/modules/combos/infrastructure/find-my-combos";
 
 function parsedRecording() {
   const combos = parseFindMyCombos(FIND_MY_COMBOS_RECORDED);

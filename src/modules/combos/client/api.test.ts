@@ -3,7 +3,7 @@ import {
   COMBO_FETCH_TIMEOUT_MS,
   fetchCombosForDeck,
   type SpellbookVariant,
-} from "@/lib/combos/spellbook";
+} from "@/modules/combos/client/api";
 
 const mockFetch = vi.fn();
 

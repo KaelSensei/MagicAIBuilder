@@ -1,12 +1,12 @@
 "use client";
 // TanStack Query hook for Commander Spellbook combo detection
 import { useQuery } from "@tanstack/react-query";
-import { fetchCombosForDeck } from "@/lib/combos/spellbook";
+import { fetchCombosForDeck } from "@/modules/combos/client/api";
 import {
   deckComboQueryKey,
   normalizeDeckComboQuery,
   type DeckComboQuery,
-} from "@/lib/combos/deck-query";
+} from "@/modules/combos/domain/deck-query";
 import type { Deck } from "@/lib/deck/types";
 
 const STALE_TIME_1H = 60 * 60 * 1000;

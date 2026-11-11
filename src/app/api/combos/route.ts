@@ -1,22 +1,22 @@
 import { NextResponse } from "next/server";
 import { readJsonBody } from "@/lib/api/json-body";
 import { rateLimitResponse, retryAfterHeaders } from "@/lib/api/route-kit";
-import { readCachedCombos, storeCachedCombos } from "@/lib/combos/combo-cache";
+import { readCachedCombos, storeCachedCombos } from "@/modules/combos/infrastructure/combo-cache";
 import {
   MAX_QUERY_BODY_BYTES,
   deckComboQuerySchema,
   normalizeDeckComboQuery,
-} from "@/lib/combos/deck-query";
+} from "@/modules/combos/domain/deck-query";
 import {
   requestDeckCombos,
   type DeckCombosResult,
-} from "@/lib/combos/find-my-combos";
+} from "@/modules/combos/infrastructure/find-my-combos";
 import {
   COMBO_LOOKUPS_PER_CLIENT,
   COMBO_LOOKUP_WINDOW_MS,
   SPELLBOOK_CALLS_PER_WINDOW,
-} from "@/lib/combos/lookup-policy";
-import type { SpellbookVariant } from "@/lib/combos/spellbook";
+} from "@/modules/combos/domain/lookup-policy";
+import type { SpellbookVariant } from "@/modules/combos/client/api";
 import { logger } from "@/lib/logger";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 

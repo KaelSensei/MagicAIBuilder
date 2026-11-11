@@ -1,7 +1,7 @@
 // Bracket scoring engine
 import type { Deck, BracketLevel } from "./types";
 import type { DeckStats, BracketScore } from "./analysis-types";
-import type { SpellbookVariant } from "@/lib/combos/spellbook";
+import type { SpellbookVariant } from "@/modules/combos/client/api";
 import { parseBracketLevel } from "@/lib/constants/brackets";
 import { minimumBracket } from "./bracket-floor";
 import { getCompanionDeckWarnings } from "./companion";

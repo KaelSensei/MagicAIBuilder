@@ -6,7 +6,7 @@ import { cn } from "@/components/ui/utils";
 import type {
   ComboPrerequisites,
   SpellbookVariant,
-} from "@/lib/combos/spellbook";
+} from "@/modules/combos/client/api";
 import { Zap, Loader2 } from "lucide-react";
 
 const SPELLBOOK_URL = "https://commanderspellbook.com/";

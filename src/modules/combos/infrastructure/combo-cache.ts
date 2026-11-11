@@ -4,8 +4,8 @@ import { createHash } from "node:crypto";
 import {
   deckComboQueryKey,
   type DeckComboQuery,
-} from "@/lib/combos/deck-query";
-import type { SpellbookVariant } from "@/lib/combos/spellbook";
+} from "@/modules/combos/domain/deck-query";
+import type { SpellbookVariant } from "@/modules/combos/client/api";
 
 /**
  * How long a lookup is reused. Spellbook adds combos over days, not minutes,

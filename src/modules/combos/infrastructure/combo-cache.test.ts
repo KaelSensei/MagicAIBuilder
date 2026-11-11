@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { DeckComboQuery } from "@/lib/combos/deck-query";
-import type { SpellbookVariant } from "@/lib/combos/spellbook";
+import type { DeckComboQuery } from "@/modules/combos/domain/deck-query";
+import type { SpellbookVariant } from "@/modules/combos/client/api";
 
-type CacheModule = typeof import("@/lib/combos/combo-cache");
+type CacheModule = typeof import("@/modules/combos/infrastructure/combo-cache");
 
 const COMBO: SpellbookVariant = {
   id: "742-1295",
@@ -22,7 +22,7 @@ describe("combo cache", () => {
 
   beforeEach(async () => {
     vi.resetModules();
-    cache = await import("@/lib/combos/combo-cache");
+    cache = await import("@/modules/combos/infrastructure/combo-cache");
   });
 
   it("reuses a lookup until its time to live runs out", () => {
