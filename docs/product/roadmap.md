@@ -1,14 +1,33 @@
 # MagicAIBuilder: Product Roadmap
 
-> **Updated:** 2026-11-11 (I-47 to I-79)
+> **Updated:** 2026-11-11 (I-80 to I-98)
 
 > **North star:** help a Commander player go from an idea to a legal, explainable, testable and enjoyable deck.
 
 This roadmap is organized by **product initiatives**, not by an arbitrary split between functional and technical work. Every initiative contains the user outcome, the product scope, the engineering enablers, and its definition of done.
 
+## Themes
+
+The initiatives group into the jobs a Commander player actually has. I-80 to I-98, added on 2026-11-11, are marked. Placement and the impact table are in the [Portfolio View](#twelfth-pass-impact-effort-and-placement).
+
+| Theme | Already on the roadmap | Added in this pass |
+| --- | --- | --- |
+| AI coaching and explainability | I-02, I-14, I-22, I-70 | I-83, I-91 |
+| Game night and pods | I-15, I-23, I-35, I-41, I-79 | I-88, I-94 |
+| Playtesting and goldfish | I-07, I-21, I-31 | I-81, I-82, I-87, I-97 |
+| Budget, price and proxies | I-06, I-32, I-45, I-55, I-59 | I-80, I-84, I-96 |
+| Collection and import | I-16, I-26, I-43, I-62, I-76 | I-89, I-90 |
+| Sharing, creators and search | I-08, I-34, I-36, I-46, I-75 | I-92, I-95 |
+| Phone, offline and reading | I-11, I-19, I-24, I-25, I-40, I-49 | I-93 |
+| Trust, data and competitive lists | I-09, I-38, I-67, I-77 | I-86, I-98 |
+| Money and growth | I-30, I-39, I-66, I-72 | — |
+| Platform | I-05, I-69, I-71, I-74 | I-95 |
+
+I-85, player-supplied art, sits with the editor and is not a custom card. Cube, a life counter and a custom-card creator stay non-goals.
+
 ## Roadmap At A Glance
 
-One row per initiative, in numeric order, generated on 2026-11-11 by the script behind the [dependency page](specs/dependency-graph.md). State is the initiative's `Status` line. Priority is its place in the [Portfolio View](#portfolio-view), or its `Priority` line for the 2027 horizon. The slice column names the lowest-numbered slice of its spec that can start now and how many others can; a dash means none can today, or that the initiative has no spec (I-01, I-03 to I-12), whose scope list stands in for slices. Regenerate it with the dependency page; do not edit rows by hand. [I-74](#i-74-a-roadmap-scheduled-agents-can-execute-safely) slice 4 moves its generation into the repository, behind a CI check.
+One row per initiative, in numeric order, generated on 2026-11-11 by the script behind the [dependency page](specs/dependency-graph.md). State is the initiative's `Status` line. Priority is its place in the [Portfolio View](#portfolio-view), or its `Priority` line for the 2027 horizon. The slice column names the lowest-numbered slice of its spec that can start now and how many others can; a dash means none can today, or that the initiative has no spec (I-01, I-03 to I-12), whose scope list stands in for slices. Regenerate it with the dependency page; do not edit rows by hand. The I-80 to I-98 rows were added by hand on 2026-11-11 because those initiatives have no spec yet. The generator must keep them. [I-74](#i-74-a-roadmap-scheduled-agents-can-execute-safely) slice 4 moves its generation into the repository, behind a CI check.
 
 <!-- glance:start -->
 
@@ -93,7 +112,25 @@ One row per initiative, in numeric order, generated on 2026-11-11 by the script 
 | [I-77](#i-77-a-bracket-estimate-players-can-audit)                                 | Bracket audit            | Next     | Next         | —                                                                       | [spec](specs/i77-a-bracket-estimate-players-can-audit.md)                  |
 | [I-78](#i-78-what-this-deck-does-to-the-table)                                     | Table effects            | Next     | Next         | —                                                                       | [spec](specs/i78-what-this-deck-does-to-the-table.md)                      |
 | [I-79](#i-79-table-sets-decks-built-to-play-together)                              | Table sets               | Later    | Later        | —                                                                       | [spec](specs/i79-table-sets.md)                                            |
-
+| [I-80](#i-80-a-proxy-file-a-print-shop-can-read)                                   | Print-shop file          | Later    | Later        | —                                                                       | —                                                                          |
+| [I-81](#i-81-a-review-of-the-goldfish-sessions-you-recorded)                       | Goldfish review          | Later    | Later        | —                                                                       | —                                                                          |
+| [I-82](#i-82-what-changed-since-the-last-session)                                  | Changes since last       | Later    | Later        | —                                                                       | —                                                                          |
+| [I-83](#i-83-a-primer-draft-filled-from-the-decks-own-reports)                     | Primer draft             | Later    | Later        | —                                                                       | —                                                                          |
+| [I-84](#i-84-a-reprint-watch-for-cards-you-own)                                    | Reprint watch            | Later    | Later        | —                                                                       | —                                                                          |
+| [I-85](#i-85-player-supplied-art-that-never-replaces-the-card)                     | Player art               | Later    | Later        | —                                                                       | —                                                                          |
+| [I-86](#i-86-a-data-as-of-line-on-every-deck)                                      | Data-as-of               | Next     | Next         | —                                                                       | —                                                                          |
+| [I-87](#i-87-goldfish-the-deck-you-downloaded)                                     | Offline goldfish         | Later    | Later        | —                                                                       | —                                                                          |
+| [I-88](#i-88-a-pre-game-script-that-fills-the-rule-0-sheet)                        | Pre-game script          | Next     | Next         | —                                                                       | —                                                                          |
+| [I-89](#i-89-the-condition-of-a-physical-copy)                                     | Copy condition           | Later    | Later        | —                                                                       | —                                                                          |
+| [I-90](#i-90-a-cardsphere-file-you-upload-yourself)                                | Cardsphere file          | Later    | Later        | —                                                                       | —                                                                          |
+| [I-91](#i-91-an-explainer-that-cannot-change-the-deck)                             | Read-only explainer      | Next     | Next         | —                                                                       | —                                                                          |
+| [I-92](#i-92-public-deck-pages-described-with-stored-fields-only)                  | Deck structured data     | Next     | Next         | —                                                                       | —                                                                          |
+| [I-93](#i-93-a-reading-mode-for-the-table)                                         | Table reading            | Later    | Later        | —                                                                       | —                                                                          |
+| [I-94](#i-94-four-lists-pinned-for-one-night)                                      | Pinned lists             | Later    | Later        | —                                                                       | —                                                                          |
+| [I-95](#i-95-a-changelog-for-the-public-read-api)                                  | API changelog            | Next     | Next         | —                                                                       | —                                                                          |
+| [I-96](#i-96-two-labelled-prices-and-no-conversion)                                | Two prices               | Next     | Next         | —                                                                       | —                                                                          |
+| [I-97](#i-97-the-chance-one-card-is-in-your-hand)                                  | One-card odds            | Next     | Next         | —                                                                       | —                                                                          |
+| [I-98](#i-98-a-cedh-checklist-that-does-not-claim-a-win-rate)                      | cEDH checklist           | Later    | Later        | —                                                                       | —                                                                          |
 <!-- glance:end -->
 
 ---
@@ -288,6 +325,8 @@ The ninth pass's initiatives touch this part too, without changing it. [I-69](#i
 The tenth pass's initiatives touch this part too, and three of their proposals would change it, so each is an owner decision and the text it would change stays as written. [I-72](#i-72-growth-loops-that-respect-players-referrals-creators-and-coming-back) ranks no one, pays no cash and sends nothing because a player went quiet, so it adds no engagement loop; its early access and complimentary seat for creators would amend [I-36](#i-36-creator-and-embed-toolkit)'s non-goal "contests and community programming", which stands pending [D-80](owner-decisions.md#product-scope-and-non-goals). [I-73](#i-73-every-set-release-ready-on-day-one) builds no card database, card page, set gallery or public release calendar; preview printings in [I-18](#i-18-per-deck-radar-of-new-cards)'s radar and in search would reverse I-18's non-goal on unreleased cards, which stands pending [D-81](owner-decisions.md#product-scope-and-non-goals), and its Commander-lens set pages come close to a set gallery and wait for [D-82](owner-decisions.md#product-scope-and-non-goals). [I-74](#i-74-a-roadmap-scheduled-agents-can-execute-safely) reaches no player and adds no service. [I-75](#i-75-finding-public-decks) never makes popularity the default order and never sorts by views, as the strategic boundaries require; whether the shipped commander page keeps its order by community votes is [D-83](owner-decisions.md#product-scope-and-non-goals), and the page keeps it until then.
 
 The eleventh pass's initiatives touch this part too, without changing it. [I-76](#i-76-complete-this-deck-from-my-collection) orders no candidate by popularity: EDHREC inclusion is at most a labelled column, Lift is not shown, and no model chooses a card in the default mode. It completes a deck the player started, slot by slot, so it neither competes on generation volume nor reverses [I-16](#i-16-decks-buildable-from-a-collection)'s non-goal on generating a full list from the collection, which stands as written. [I-77](#i-77-a-bracket-estimate-players-can-audit) adds no score; it decomposes the existing estimate and calls no model for bracket rules. [I-78](#i-78-what-this-deck-does-to-the-table) copies no EDHREC salt and shows no Tagger tag before its licence. [I-79](#i-79-table-sets-decks-built-to-play-together) is complete decks, never a draft pool, so it stays inside the cube non-goal, and it builds no matchmaking or lobby.
+
+The twelfth pass's initiatives touch this part too, without changing it. [I-80](#i-80-a-proxy-file-a-print-shop-can-read) places no order and embeds no image until the lawyer question already on I-50 is answered. [I-85](#i-85-player-supplied-art-that-never-replaces-the-card) is an image beside an official card, not a custom card, and cubes stay out. [I-87](#i-87-goldfish-the-deck-you-downloaded) does not edit the cached deck. [I-90](#i-90-a-cardsphere-file-you-upload-yourself) sends no offer and handles no trade. [I-91](#i-91-an-explainer-that-cannot-change-the-deck) has no control that writes a deck. [I-93](#i-93-a-reading-mode-for-the-table) has no life total. [I-96](#i-96-two-labelled-prices-and-no-conversion) converts nothing. [I-98](#i-98-a-cedh-checklist-that-does-not-claim-a-win-rate) shows no win rate.
 
 Sources are listed in [`competitive-landscape.md`](./competitive-landscape.md). Revalidate a competitor's behavior before implementation. Capabilities change.
 
@@ -646,6 +685,16 @@ Twenty-five further questions wait for the owner or the lawyer. The lawyer quest
 - **Across the pass.** House verdicts and declared exceptions never change a public legality badge ([D-90](owner-decisions.md#product-scope-and-non-goals)); a co-author with direct edit rights after I-20 slices 1 to 5 ([D-91](owner-decisions.md#product-scope-and-non-goals), with D-36); a 30-day deck trash ([D-92](owner-decisions.md#community-and-moderation)); primer copy on fork off for new public decks ([D-93](owner-decisions.md#community-and-moderation)); the first pod comparison free ([D-95](owner-decisions.md#money-and-plans)). Additions to D-17, D-25, D-35, D-36, D-47, D-54, D-64 and D-74.
 - **For the lawyer (I-01, [L-52](legal-questions.md#l-52-a-deck-trash-and-the-right-to-erasure); I-22, I-78).** Does a restorable deck trash fit storage limitation and erasure? Is an MCP adapter that answers other assistants with verdicts citing Scryfall data "proxying" (L-21)? May I-78's classes use Tagger tags (L-22)? May EDHREC salt and I-76's inclusion column appear under a partnership, and must they stay out of paid features (L-24 (h))?
 
+**2026-11-11, I-80 to I-98:** a twelfth pass read EDHREC's 6 November changelog, Archidekt's feature board, MPC Autofill, Playgroup's Sparring page, Wizards' bracket announcements, Cardsphere's CSV guide, the cEDH Decklist Database submit page, and ManaBox's proxy FAQ. The research is [section 13 of the landscape](competitive-landscape.md#13-a-twelfth-pass-on-commander-tools-2026-11-11). I-22 through I-79 were already on `dev`. This pass does not restate them.
+
+#1369, the natural-language search, is open and not on `dev`. I-14 is unchanged. No translator was found under `src/` at `a3250bfa`.
+
+Nineteen initiatives were added, I-80 to I-98. Seven are Next and do not jump the current Next band: the data-as-of line (I-86), the pre-game script once I-15 stores a sheet (I-88), the read-only explainer (I-91), structured data on indexable deck pages (I-92), the public API changelog (I-95), two labelled prices with no conversion (I-96), and the one-card probability (I-97). The other twelve are Later. None has a spec yet, so the glance rows were written by hand. Reach is not scored: I-39 has not measured a user base, and a RICE reach invented for this pass would be a made-up figure. The impact table is under [Twelfth pass](#twelfth-pass-impact-effort-and-placement).
+
+What the pass folded into an existing initiative, instead of opening another one: subcategories and a language field, already on I-37; a price tag left out of the total, commander damage and designations in the goldfish, a calendar file for a pod night, a Scryfall id on a pasted line, a public card note, and a low-evidence hide-the-Considering-board switch. Cube and custom cards stay non-goals. SpellTable's paste format was not confirmed, so I-50 does not gain a format.
+
+The documentation rule that feature branches leave this file to a `chore/docs` PR conflicts with the owner's request to enrich it here. The owner's request is the one followed.
+
 ---
 
 ## Portfolio View
@@ -950,6 +999,34 @@ The November competitive pass did not open a new initiative for work the roadmap
 - Scanning, regional prices, synchronized buy-later, social notifications, a conditional following feed, import and export fidelity, further locales and local AI stay in I-06, I-08, I-10, I-11 and I-12.
 - Inclusion versus Lift versus AI advice, tooltip and tablet behavior, and export fixtures were merged into I-09, I-13 and I-10. A local Lift score stays out of scope until a source exposes the reference denominator.
 
+### Twelfth pass: impact, effort and placement
+
+Added 2026-11-11. Impact is the player outcome if the initiative ships. Effort is the planning label used everywhere else: small is a few pull requests, medium crosses a few modules, large is a project. Risk is the way the initiative could do harm if the scope slips. Placement is Now, Next or Later. None of these is Now. The seven Next items sit after the numbered Next band above. They are not a new 55 through 61.
+
+RICE is not scored. Reach would be a count of players in a month, and this product has no such count until I-39 measures one. A formula with an invented reach would look more certain than the sources are. Confidence is named in words: high when an official page or a shipped competitor feature is the evidence, medium when a feature board or a vendor's own page is the evidence, low when the gap is visible in our code and outside demand was not found.
+
+| ID | Impact | Effort | Risk | Place | Confidence | Why it is not sooner |
+| --- | --- | --- | --- | --- | --- | --- |
+| I-86 Data-as-of | High | Small | Low | Next | High | Dates the deck already implies. After backups and the copilot. |
+| I-96 Two prices | Medium | Small | Low | Next | High | Scryfall already sends both amounts. The plan's one currency stays I-06. |
+| I-97 One-card odds | Medium | Small | Low | Next | High | Moxfield ships a calculator. This is a formula, not I-21's simulation. |
+| I-95 API changelog | Medium | Small | Low | Next | Medium | The read API is already public. The page does not add a route. |
+| I-92 Structured data | Medium | Small | Medium | Next | Medium | Waits on I-34 so a noindex page emits nothing. No generated FAQ text. |
+| I-91 Explainer | High | Medium | High | Next | Medium | Deterministic answers first. A model wording mode waits on I-70. |
+| I-88 Pre-game script | High | Medium | Low | Next | High | Wizards' own goal for brackets. Waits until I-15 stores a sheet. |
+| I-80 Print-shop file | Medium | Medium | Medium | Later | High | Names are safe. Art stays behind the lawyer question on I-50. |
+| I-82 Changes since last | Medium | Small | Low | Later | Low | The anchor exists in playtest snapshots. Outside demand was not found. |
+| I-89 Copy condition | Medium | Small | Low | Later | Medium | Cardsphere's sample has the column. No grade is the default. |
+| I-90 Cardsphere file | Medium | Small | Medium | Later | Medium | Their guide warns that an offerless want imports at 100% of index. |
+| I-83 Primer draft | Medium | Medium | Medium | Later | Medium | Templates only. The 2,000-character primer cap on I-08 still binds. |
+| I-84 Reprint watch | Medium | Medium | Medium | Later | Medium | Needs I-67's printings. Wording must not become sell advice. |
+| I-81 Goldfish review | Medium | Medium | Medium | Later | Low | The logs exist. A percentage must not read as a win rate. |
+| I-93 Table reading | Medium | Medium | Low | Later | Medium | EDHREC's mobile names are the adjacent evidence. No life counter. |
+| I-94 Pinned lists | Medium | Medium | Medium | Later | Low | Four public projections. Must not weaken I-19's sign-out purge. |
+| I-85 Player art | Medium | Medium | High | Later | Medium | Archidekt's board, 207 points. Private by default. Upload waits on storage. |
+| I-98 cEDH checklist | Low | Small | High | Later | High | The submit page is real. A win rate or an "accepted" line would be false. |
+| I-87 Offline goldfish | High | Large | High | Later | Low | ManaBox does not say its simulator is offline. Waits on I-19. |
+
 ---
 
 # Initiatives
@@ -1057,6 +1134,8 @@ Detailed functional specs live in [`docs/product/specs/`](specs/README.md): one 
 
 **2026-11-09:** the editor-depth gaps found against Moxfield and Archidekt are tracked in [I-37](#i-37-editor-depth-against-moxfield-and-archidekt), not here. They include Stacks, Table and Text views, collapsible and sticky categories, global and Oracle tags, text bulk edit with printing and foil, a cross-deck clipboard, an automatic per-change history, multi-select category assignment and a mobile editing toolbar. I-01 keeps zone integrity, recovery and their E2E coverage. `DeckCard` has no foil, finish or language field (`prisma/schema.prisma`), so a faithful bulk edit or import of those attributes needs a model change first.
 
+**Twelfth pass, 2026-11-11:** Archidekt's feature board, seen that day, still has subcategories at 240 points and non-English printings at 140. Both are already [I-37](#i-37-editor-depth-against-moxfield-and-archidekt): nesting was added on 2026-11-11, and slice 12 stores language. Custom card art, 207 points, is [I-85](#i-85-player-supplied-art-that-never-replaces-the-card). Cube at 507 points and the separate "Custom cards" item stay non-goals. Concurrent recovery is done when two overlapping writes of different fields each roll back to the last confirmed value for that field.
+
 ### Engineering enablers
 
 - One canonical DeckCard.zone model; compatibility mirrors must not become a second source of truth.
@@ -1143,6 +1222,8 @@ Code facts were read on `dev` on 2026-11-09. Figures marked as estimates are cal
 - **Cheaper and more trustworthy at once.** The research recommends four techniques, none measured here yet. First, retrieve a legal candidate pool from Scryfall (colour identity, `legal:commander`, Game Changers per bracket, price cap) so off-identity and illegal cards become impossible rather than detected. Second, have the model return numbered picks from that pool instead of full JSON objects, which could cut build output three to five times. Third, repair a failing card from the pool instead of rejecting the build. Fourth, precompute commander-level plans with the Batch API and serve repeats from the database.
 - **Market corrections.** The 2026-11-08 [spec](specs/i02-checkable-ai-copilot.md) said Farseek states no deterministic legality validation. Farseek's own blog, updated 2026-10-11, says Commander legality is read from Scryfall and the deck flags cards over the singleton limit. MTG Master, cited as enforcing legality, could not be found on 2026-11-09. ManaTap's Pro tier was £3.99 a month on 2026-11-09, not the "around $12.99" recorded on 2026-11-08.
 - **Player hostility to AI.** On r/EDH a December 2025 post, "Do not use AI to make deck suggestions or clarify rules. It's wrong most of the time.", reached 729 points; all fourteen 2025–2026 posts with "ChatGPT" in the title sit at zero; builders now advertise that they do not use AI; and AI-use questions are top comments under launches, including EDHREC's redesign. Only checkable AI output is tolerated there, and the community now asks for disclosure. This is why the visible verdict and the disclosure page above matter more than generation quality.
+
+**Twelfth pass, 2026-11-11:** a surface that explains and cannot add a card is [I-91](#i-91-an-explainer-that-cannot-change-the-deck), not a second generator. This initiative keeps proposals. The visible-verdict item above is done when each sentence is tagged "checked" or "model", and a test fails if a model's sentence is tagged "checked". #1369, which shows an editable Scryfall query, is open and is I-14, not this route.
 
 ### Definition of done
 
@@ -1341,6 +1422,8 @@ A pod member opens a frozen audit link and sees why a deck reads Bracket 3: the 
 - [ ] Scan the builder for accessibility automatically. No axe tool is in the repo (no `jest-axe`, `vitest-axe`, `axe-core` or `@axe-core/playwright`), and Lighthouse CI checks accessibility only on `/`, `/fr` and `/auth/signin`, so the builder is never scanned. Add `@axe-core/playwright` to the Docker E2E gate for the builder, the playtest and the public deck page, and use role queries in unit tests.
 
 **2026-11-10:** a read-only accessibility audit of `dev` at `65e6230` read the code against WCAG 2.2 AA and grouped its findings into six bundles. Bundles 1, 4 and 5 are above. Bundles 2, 3 and 6 decide what a screen reader hears, so they sit under [I-24](#i-24-decks-a-screen-reader-can-play-from). The audit did not repeat known items: single-key shortcuts (above), I-13's contrast work and I-24's mana-cost labels.
+
+**Twelfth pass, 2026-11-11:** Archidekt's primary developer, replying on 19 February 2026 to a request for Shift-drag between categories, said a modifier must not "overwrite anything the browser is supposed to be doing" for accessibility ([r/EDH](https://www.reddit.com/r/EDH/comments/1r863kj/)). Modifier-drags in I-37 stay behind that check. A reading view with no hover is [I-93](#i-93-a-reading-mode-for-the-table), not a second theme.
 
 ### Definition of done
 
@@ -1566,6 +1649,7 @@ A scheduled run started from `origin/dev` picks a slice from the generated lane,
 - [ ] Each missing card offers three paths: an owned substitute in the same role from [I-76](#i-76-complete-this-deck-from-my-collection)'s slot engine (slice 10), a proxy only when the deck's I-15 sheet allows proxies, or the acquisition plan. Hearthstone's "Suggest a Card" replaces a missing card "with a card from your collection" ([Blizzard](https://hearthstone.blizzard.com/en-us/blog/20056279), 2016-03-08). Neighbour change from I-76, 2026-11-11.
 - [ ] **Owner decision, 2026-11-10: make the "Collection only" search toggle work.** `collectionOnly` (`src/lib/deck/types.ts`) toggles in `SearchFilters.tsx`, but no code filters by it ([decided](owner-decisions.md#decided-on-2026-11-10)). It reads the same owned counts as [I-76](#i-76-complete-this-deck-from-my-collection) slice 4, and I-16's per-deck card pool and I-37 slice 17's markers extend it.
 - [ ] **Owner decision, 2026-11-10:** the owned/buy badges are among the orphaned deck fields to re-mount (see I-01).
+- [ ] Let the player mark a tag, including the proxy mark, as excluded from the deck total, and name that tag on the total. Archidekt's board, seen 2026-11-11, has "Set certain color tags to not be included in a deck's price" at 73 points ([features](https://archidekt.com/features)). A proxy the player marked is excluded once the proxy-state item above ships. The total never drops a card silently.
 - [ ] Keep edited collection quantities on screen after a save (fix branch `fix/collection-quantity-response` queued, 2026-11-11).
 - [ ] Keep both partner commanders in the acquisition plan (fix branch `fix/acquisition-plan-partner-commanders` queued, 2026-11-11).
 
@@ -1629,6 +1713,9 @@ Importing or editing a deck produces a trustworthy owned, missing and estimated-
   - Both drill items need only #1301 and #1303, and cover Commander and the first and free sevens, as `src/lib/playtest/keep-rules.ts` does; a 1v1 drill needs the per-session "multiplayer game" choice above. [KrakenTheMeta](https://krakenthemeta.com/mtg-odds) (© 2026, undated) deals sevens from a pasted list with the free first mulligan but compares no verdict with the player's call, and StarCityGames' and MTGAzone's "Keep or Mulligan" columns ask readers to vote on the author's 60-card hands. None scores the player's calls on their own deck, where the [opening-hands guide](guides/commander-mulligans-curves-and-play-style.md) finds the largest gap between practice and the optimum: two- and three-land sevens with nothing cheap to cast. [I-31](#i-31-deck-lab-analysis-run-on-your-own-list) slice 14 later judges the calls against the deck's own keep table.
 - [ ] **Owner decision:** scripted opponent interaction. Archidekt's interaction simulator (about September 2026) rolls configurable removal, counterspells and attacks against the board after a chosen turn, with archetype presets and a log, and never acts on its own. BlueprintMTG's "Resistance Mode" bots cast scripted interaction during playtests, and its two r/EDH launch posts reached 742 and 585 points in July and August 2026. Playgroup.gg offers "phantom opponents" for solo playtesting, built from its tracked games. These are scripted or random events, not an AI opponent and not a rules engine. The roadmap's non-goal "Do not add an AI opponent or a full Magic rules engine under I-21" therefore does not clearly cover them. The owner should confirm whether scripted interaction is in scope for I-07 or I-21.
 - [ ] Under the owner decision on scripted interaction ([D-35](owner-decisions.md#product-scope-and-non-goals)), an added option: a hot-seat sandbox of up to four decks (the player's and three from I-15 shares, public links or an [I-79](#i-79-table-sets-decks-built-to-play-together) set), each seat with its opening hand under the free mulligan, every seat moved by the player, no rules engine and no model. TopDecked "Supports up to four decks per simulation on the same device" (version 12.1.0, 2023-11-13, [App Store](https://apps.apple.com/us/app/topdecked-mtg/id1173388234); corrected 2026-11-11 from 13.0.5, which carries only the QR line). Added 2026-11-11.
+- [ ] Track, by the player's own taps, commander damage dealt to up to three imagined opponents, kept separate per commander (CR 903.10a, and the loss at 21 in CR 104.3j and CR 704.6c). The goldfish has a life total and no commander-damage tally. No opponent acts.
+- [ ] Let the player set the designations the checklist in I-19 names and the playtest does not track: the monarch, the initiative, the Ring, day and night, the City's Blessing, and experience, energy and poison counters. The player sets them. The engine does not infer them from Oracle text.
+**Twelfth pass, 2026-11-11:** [Playgroup's Sparring page](https://playgroup.gg/playgroup-live/how-sparring-works), updated 2026-11-06, says its phantom opponents use 21,480 interaction spells from 6,934 of Playgroup's games. Those counts are theirs. They are further evidence for the scripted-interaction decision above. They are not a log this product can replay, and [I-81](#i-81-a-review-of-the-goldfish-sessions-you-recorded) reads only sessions recorded here.
 
 ### Definition of done
 
@@ -1692,6 +1779,9 @@ A player can test two versions of a deck and see evidence that helps choose betw
 - [ ] Packages may hold colour-generic slots ("one basic of each colour", "the colour pair's signet"), resolved against the commander's identity in the apply preview, and show a price band from I-32's market. Archidekt's default packages "automatically adjust to the color identity of your selected commander" with a "$" band ([EDHREC](https://edhrec.com/articles/digital-deckbuilding-archidekt-card-packages-and-edhrec-staples), 2024-02-07). `CardPackageCard` stores fixed Scryfall IDs (`prisma/schema.prisma`). Added 2026-11-11.
 - [ ] A public deck lists the public forks it inspired, beside its "forked from" credit. NetrunnerDB shows "Derived from" and "Inspiration for" on decklists ([decklist](https://netrunnerdb.com/en/decklist/6092a490-4d1a-4f83-b9eb-440e7d07c657), published 2018-07-05, seen 2026-11-10). Added 2026-11-11.
 - [ ] Whether a published [I-79](#i-79-table-sets-decks-built-to-play-together) table set takes likes and comments is decided here, with I-79 slice 11 (neighbour change from I-79, 2026-11-11).
+- [ ] Once card notes save (I-01), a per-note switch "Show on the public page", off by default. A public note uses the public projection. A private note never does.
+- [ ] Later, and not scheduled: hide the Considering zone on a public deck. Archidekt's board shows that request at 27 points, seen 2026-11-11 ([features](https://archidekt.com/features)). The evidence is thin.
+**Twelfth pass, 2026-11-11:** a primer draft filled from stored reports is [I-83](#i-83-a-primer-draft-filled-from-the-decks-own-reports). It does not write this primer, and it does not raise the 2,000-character cap.
 
 **2026-11-09:** MagicAIBuilder's social layer is evaluative: stars, votes, reviews, feedback questions and attributed forks. Moxfield's is broadcast: unique view counts, likes, a follow feed and embeddable decks, and TappedOut sells a blog widget. Creators value broadcast features, because a view count and an embed make a deck link worth posting. No embed route exists under `src/app` and the schema has no view counter. Embeds, public view counts, `[[Card]]` links in primers and video in primers are tracked in [I-36](#i-36-creator-and-embed-toolkit); notifications stay in this initiative. Archidekt's deck help requests (July 2026) add an expiry, a browse page and notifications to what "seeking feedback" does here.
 
@@ -1780,7 +1870,7 @@ A signed-out player finds Atraxa decks that play Smothering Tithe but not Rhysti
   - **Corrected 2026-11-10:** v0.84.0 is a release of Commander Spellbook's website repository; it added card pages and sitemaps built from the bulk export, not API endpoints ([release](https://github.com/SpaceCowMedia/commander-spellbook-site/releases/tag/v0.84.0)). The backend's v7.3.0 of the same day only tests that clients ignore unknown fields, and the per-deck lookup #1324 uses existed before. The shipped work stands; only the reason given for it was wrong.
 - [x] Stop `/api/combos` acting as an open proxy to Commander Spellbook. `src/app/api/combos/route.ts` forwarded any `cards` value to `backend.commanderspellbook.com` for any caller, with no cache and no rate limit, and `fetchCombosForDeck` in `src/lib/combos/spellbook.ts` called it once per distinct card, about 100 lookups per deck view, cached only in the browser's memory. Shipped in #1324: `POST /api/combos` takes a bounded deck list, allows 30 lookups a minute per address and 60 Spellbook calls a minute per instance, and serves repeats from its cache. The limits are per instance (M2).
 - [ ] **L3, low (security audit, 2026-11-10):** honour `?refresh` on `GET /api/meta/[commanderSlug]` only when it means true, and only for a signed-in user. `z.coerce.boolean()` in `src/app/api/meta/[commanderSlug]/route.ts` reads `refresh=false` as true, so any anonymous caller can skip the 24-hour cache and make the server scrape EDHREC and MTGTop8 again. Fix branch in flight: `fix/api-small-hardening`, no PR yet.
-- [ ] Label data-sourced cuts apart from the copilot's AI cuts. EDHREC Recs scores adds and cuts for a pasted list (cut scores came back on 2026-10-22), and Archidekt shows EDHREC's recommended cuts in its editor since March 2026. Apply I-03's rules-aware check to data-sourced recommendations, so a popular card that cannot work with this commander is filtered or labelled.
+- [ ] Label data-sourced cuts apart from the copilot's AI cuts. EDHREC Recs scores adds and cuts for a pasted list (cut scores came back on 2026-10-22), and Archidekt shows EDHREC's recommended cuts in its editor since March 2026. Apply I-03's rules-aware check to data-sourced recommendations, so a popular card that cannot work with this commander is filtered or labelled. A comment under Moxfield's editor preview asked for cuts beside recommendations ([r/Moxfield](https://www.reddit.com/r/Moxfield/comments/1wsnch7/), 2026-09-29, 1 point). The score is low. The job is the same as this item.
 
 ### Blocked
 
@@ -1864,6 +1954,8 @@ A recommendation is never presented as universal truth: the user can see where i
 
 **2026-11-10, sixth pass:** moving many decks from another site in one step is [I-62](#i-62-switching-from-another-site-in-one-step)'s, from the files that site exports. I-10 keeps single-deck paste and URL import, and I-62 reuses its text parser. While Moxfield refuses honest requests, the Moxfield profile panel (`MoxfieldProfileImport`) links to I-62's Moxfield guide instead of offering a picker that fails (I-62 requirement 2.3, slice 8).
 
+**Twelfth pass, 2026-11-11:** accept a pasted line that is only a Scryfall card id. No importer under `src/lib` matched a Scryfall id on `a3250bfa`. Archidekt's board lists "Scryfall ID text import" with no point total, seen 2026-11-11 ([features](https://archidekt.com/features)). A TappedOut forum post on 2026-07-30 says SpellTable and Convoke import Moxfield and Archidekt ([thread](https://tappedout.net/mtg-forum/tappedout/import-deck-support-for-spelltable/)). An EDHMat page, read as a search result on 2026-11-11, says SpellTable needs no list because the cards are physical ([comparison](https://edhmat.com/vs/spelltable)). The two disagree, neither was confirmed inside the product, and no paste format is specified. The export contract stays [I-50](#i-50-play-this-deck-online).
+
 ### Definition of done
 
 A deck can make a round trip through supported tools without silently changing commander, zone, quantity or ownership meaning.
@@ -1913,6 +2005,8 @@ A deck can make a round trip through supported tools without silently changing c
 - [ ] Type-check `t()` keys. next-intl has no `AppConfig` `Messages` augmentation in the repo, so a misspelt key is not a `tsc` error.
 - [ ] Merge the two catalog parity tests. `src/i18n/catalog.test.ts` repeats for French the key-parity check that `src/i18n/messages.test.ts` runs for all ten locales, and neither compares values.
 - [ ] Stop new hard-coded strings with lint: `react/jsx-no-literals` with an allowlist of about 36 punctuation and brand strings, plus a targeted `no-restricted-syntax` rule for literal `aria-label`, `title`, `placeholder` and `alt` text. The first comes from `eslint-plugin-react`, already installed through `eslint-config-next`, and the second is core ESLint, so no dependency is added. Land them with the last of bundles 1 to 3, so `pnpm lint` stays at zero warnings. Lint cannot see strings in `src/lib`; bundles 4 and 5 fix those at the source.
+
+**Twelfth pass, 2026-11-11:** Archidekt's board has non-English card versions at 140 points, seen that day. Storing the printing's language is [I-37](#i-37-editor-depth-against-moxfield-and-archidekt) slice 12, not a new locale. This initiative still owns the interface language. Two labelled prices, with no conversion, are [I-96](#i-96-two-labelled-prices-and-no-conversion).
 
 ### Definition of done
 
@@ -2015,6 +2109,8 @@ This is search, not a new deck generator. DeckCheck Smart Search and Farseek are
 
 **Demand evidence (2026-11-09):** search by function rather than popularity is a loud, recurring request on r/EDH, and no initiative named Tagger before this. ["Scryfall cheat sheet or: How I Learned to Stop Using EDHRec"](https://www.reddit.com/r/EDH/comments/1k0ih2q/) reached 909 points (April 2025), ["PSA: Check the scryfall tagger"](https://www.reddit.com/r/EDH/comments/1lc7cu9/) 425 (June 2025) and ["PSA: Viewing Scryfall Tags to Find Similar Cards"](https://www.reddit.com/r/EDH/comments/1wxxui2/) 246 (October 2026). A browser extension, MoxTags, adds Scryfall tags to Moxfield, and Archidekt has applied Oracle tags as categories since July 2026. Players reject AI search tools that hide their query; under OffMeta, a commenter asked for each part of the generated query to be shown as an editable assumption ([January 2026](https://www.reddit.com/r/EDH/comments/1q8czkc/)), which is this initiative's design.
 
+**Twelfth pass, 2026-11-11:** #1369 implements this initiative and is open, not merged. EDHREC's 6 November 2026 changelog added colour-identity filters on card pages and said narrowing the identity makes Lift more specific ([changelog](https://edhrec.com/articles/changelog-big-performance-upgrades)). The scope item that keeps the deck's colour identity on the generated query is the same job. Done still means the player sees the query before it runs.
+
 ### Definition of done
 
 For a fixed description and deck context, the player sees one Scryfall query, can change it, and receives only cards that query returns, with the legality context unchanged.
@@ -2057,6 +2153,9 @@ CommanderSalt, DeckCheck DTI and EDHREC salt are the references for describing h
 - [ ] Sheet fields: the time available for the evening; each player's limits ("boundaries"); and a one-screen card with a QR code (I-50 slice 11) for a player who arrives late. r/EDH: "What time does everyone need to leave?", 30 points, 40 comments ([thread](https://www.reddit.com/r/EDH/comments/1xsscfl/), 2026-11-10). rule0.carrd.co lists "boundaries" ([page](https://rule0.carrd.co/), seen 2026-11-10). Added 2026-11-11.
 - [ ] The official column gains "table attention flags" from [I-78](#i-78-what-this-deck-does-to-the-table): Game Changers, mass land denial, extra turns, early two-card combos, and the theft and stax classes. They are labelled as categories; salt stays slice 5 behind [D-25](owner-decisions.md#data-sources-and-partners). Archidekt shows a deck's Salt Sum against a distribution ([EDHREC](https://edhrec.com/articles/digital-deckbuilding-archidekt-deck-comparison-and-edhrec-salt-scores), 2024-03-27). Added 2026-11-11.
 - [ ] Neighbour changes, 2026-11-11: the computed column shows [I-77](#i-77-a-bracket-estimate-players-can-audit)'s estimate with its method version and audit link, so spec slice 2 waits for I-77 slice 1; it also shows [I-78](#i-78-what-this-deck-does-to-the-table)'s table line and, beside the declared combos, extra turns and resource denial fields, the computed counts with "copy into my sheet", and no declared field is ever filled (1.3). Requirement 1.1 accepts an [I-79](#i-79-table-sets-decks-built-to-play-together) table set, whose balance view reuses slice 4's layout; a set is one author's decks, not a pod ([D-40](owner-decisions.md#product-scope-and-non-goals)).
+
+- [ ] Download one `.ics` file for a planned night: the date, the pod's name and a link to the sheet. No Google account and no mail. Recurrence is a later line in the same file, still with no external calendar service.
+**Twelfth pass, 2026-11-11:** the walkthrough that asks the questions one at a time is [I-88](#i-88-a-pre-game-script-that-fills-the-rule-0-sheet). It writes these fields and adds none. Wizards' 21 October 2025 update calls more pregame conversations "the real goal" ([update](https://magic.wizards.com/en/news/announcements/commander-brackets-beta-update-october-21-2025)).
 
 ### Definition of done
 
@@ -2123,6 +2222,8 @@ MTGGoldfish SuperBrew and Mana For Cards Discover are the references. This initi
 - [ ] Answer open question 1 (the candidate corpus) with "public decks first, through I-75's query contract": players ask for public decks sorted by what they own ([r/Moxfield](https://www.reddit.com/r/Moxfield/comments/1xl4te2/), 2026-11-01). Added 2026-11-11.
 - [ ] Neighbour changes from [I-76](#i-76-complete-this-deck-from-my-collection), 2026-11-11: spec slice 4's commitment index needs nothing, since it reads deck rows and collection rows as `GET /api/collection/usage` already does; the free-cards ranking moves to a new slice 7 (after slices 2 and 4); copies in the main and command zones commit, Considering and sideboard copies do not. The non-goal "Generating a full 100-card list from the collection" stands as written: I-76 fills an existing partial deck slot by slot, which is not that non-goal.
 
+**Twelfth pass, 2026-11-11:** a reprint of a card the player owns is [I-84](#i-84-a-reprint-watch-for-cards-you-own), not a candidate list. A Cardsphere file is [I-90](#i-90-a-cardsphere-file-you-upload-yourself). Neither ranks commanders.
+
 ### Definition of done
 
 A collection produces a ranked, sourced view of buildable lists that shows free copies and unknown prices, without changing ownership.
@@ -2165,6 +2266,8 @@ EDHREC precon upgrades, DeckCheck and Farseek are the references. Generic budget
 - [ ] "This precon would cost you X": the singles value of the cards the player lacks, set against the sealed price once I-32 has one (extends slice 8). Arena prices a Brawl precon down by the cards owned ([Draftsim](https://draftsim.com/mtg-arena-brawl-precon/), updated 2025-05-19, search summary). Added 2026-11-11.
 - [ ] Open a catalogue precon in the playtest, signed out, before "Copy this deck" (slice 2 with I-07). Hearthstone lends six decks for seven days, then the player keeps one ([32.2](https://hearthstone.blizzard.com/en-us/news/24198086), 2025-04-24). Added 2026-11-11.
 
+**Twelfth pass, 2026-11-11:** Archidekt's board has "Deck import defaults to editions owned" at 217 points, seen that day. That job is [I-57](#i-57-printing-preferences-applied-everywhere) and I-06, not a second precon path.
+
 ### Definition of done
 
 A player can open a dated precon, preview a budget bundle, apply it to a working copy, and reverse it without altering the source list.
@@ -2193,6 +2296,8 @@ DeckCheck Deckhand reports and EDHREC set pages are the references. The first sl
 - [ ] Add notifications only as a later opt-in, after the on-demand flow is validated.
   - Recorded 2026-11-10: the per-set release digest is [I-73](#i-73-every-set-release-ready-on-day-one) slice 7, and this item keeps notices for one deck. I-73 also proposes that preview printings join the corpus, labelled; that would reverse this initiative's non-goal on unreleased cards, so it is owner decision [D-81](owner-decisions.md#product-scope-and-non-goals), and the non-goal stands until it is decided.
 - [ ] A card-first entry, on demand, from a card page or a card just added to the collection. It lists the player's decks whose identity and bracket admit the card, with the card it could replace by role, using this initiative's relevance rules. Marvel Snap builds "a deck that uses that card" on acquisition ([patch notes](https://marvelsnap.com/?p=31), 2023-12-05). Added 2026-11-11.
+
+**Twelfth pass, 2026-11-11:** a newer printing of a card the player already owns is [I-84](#i-84-a-reprint-watch-for-cards-you-own). This initiative stays new cards that could go into one deck.
 
 ### Definition of done
 
@@ -2226,6 +2331,8 @@ ManaBox offline search is the reference. This slice is a voluntary read-only cac
 - [ ] A printable one-page checklist in black and white, with a tick box, the count and the source cards for each token and game piece, offered on the deck, share and public pages and inside the offline download (slice 2).
   - Archidekt's "Extras" tab shows emblems and dungeons ([news](https://archidekt.com/news/3834269), about three years before 2026-11-10), and its users reported the monarch, the City's Blessing and Mizzix's experience counter missing ([thread 9348841](https://archidekt.com/forum/thread/9348841)). No printable checklist was found anywhere. All four items stay free.
 
+**Twelfth pass, 2026-11-11:** goldfishing that download, without editing it, is [I-87](#i-87-goldfish-the-deck-you-downloaded). Reading up to four other people's public lists for one night is [I-94](#i-94-four-lists-pinned-for-one-night). Neither raises the one-deck limit of the editable cache. The token list this initiative fixes is also the token section of [I-80](#i-80-a-proxy-file-a-print-shop-can-read).
+
 ### Definition of done
 
 After an explicit download, the chosen deck, primer and tokens remain readable offline and are removed from the device when that account signs out.
@@ -2254,6 +2361,8 @@ Archidekt collaborators are the reference. Comments, "seeking feedback" and fork
 - [ ] Keep the owner's private collection inaccessible to the collaborator.
 - [ ] Leave real-time co-editing out of this initiative.
 - [ ] Later, behind [D-91](owner-decisions.md#product-scope-and-non-goals): a co-author the owner invites by name may edit the card list directly. Every change is attributed in I-37's history; the co-author never touches settings, privacy, publishing or deletion, and sees no live presence. Moxfield: "Enable other authors to edit this deck" (code, 2026-05-14). Archidekt collaborators cannot change "the deck's main settings" ([EDHREC guide](https://edhrec.com/guides/how-to-use-archidekt-the-mtg-deckbuilding-site), 2025-12-17). The non-goal "Do not start collaboration with live co-editing" stands as written. Added 2026-11-11.
+
+**Twelfth pass, 2026-11-11:** no new demand was found beyond the BlueprintMTG and MainTable evidence already on this initiative. Its priority stays the owner's decision.
 
 ### Definition of done
 
@@ -2288,6 +2397,8 @@ Deckstats hand analysis and Archidekt odds are the references. I-07 still owns r
 
 - The same seed and sample size reproduce the reported intervals.
 - Tests cover the statistical summary, not only a single shuffled hand.
+
+**Twelfth pass, 2026-11-11:** the chance of one card or of K lands in a known hand is a formula, [I-97](#i-97-the-chance-one-card-is-in-your-hand), not this bench. Playgroup's Sparring counts, cited under I-07, are not a seed this bench can rerun.
 
 ### Definition of done
 
@@ -4502,6 +4613,469 @@ A deck built here is usually played somewhere else, and on a weeknight that plac
 ### Definition of done
 
 A player exports a Commander deck with a partner and a companion to Cockatrice, XMage and Tabletop Simulator, each file imports in the client version its fixture names, and every dropped or substituted card was listed before the download; a viewer of a public deck does the same without signing in; and an Arena Brawl export states the deck's Arena coverage.
+
+---
+
+# Twelfth Pass
+
+Nineteen initiatives from the 11 November 2026 pass. The research is [section 13 of the landscape](competitive-landscape.md#13-a-twelfth-pass-on-commander-tools-2026-11-11). None of them has a spec yet. They do not move ahead of backups, the copilot or the editor.
+
+## I-80: A Proxy File A Print Shop Can Read
+
+**Outcome:** a player who is allowed to proxy can hand a print shop a list of names, quantities and tokens, with no card image in the file, and can print a cut-marked sheet at home with art turned off until the image question is answered.
+
+**Status:** Later
+**Priority:** Later
+**Impact / effort:** Medium / medium
+**Risk:** Medium. A file of names is the same fact as an export. A sheet of Scryfall images is the question already open on I-50. Players may still expect art.
+**Depends on:** I-06 for a proxy mark that is card state, not only a shopping-list choice; I-19's token list, which is wrong for several tokens today; I-15 so the sheet can say whether the pod allows proxies. The name file itself needs none of those.
+
+The in-app proxy sheet (`src/lib/deck/proxy.ts`) can include Scryfall art, and `includeCardArt` defaults to true. [MPC Autofill](https://mpcfill.com/) is free, GPL-3 software for ordering playtest cards from MakePlayingCards. Its maintainer describes the web editor as the place a player pastes a list and picks art, and the XML as the order file ([overview](https://github.com/chilli-axe/mpc-autofill/wiki/Overview), read 2026-11-11). A print guide tells the player to paste lines such as `1 Sol Ring` ([Proxit](https://proxit-tcg.com/guides/order-proxies-from-mpcfill-proxxied), read 2026-11-11). Scryfall declines proxy printing of its own ([printing FAQ](https://scryfall.com/docs/faqs/how-do-i-print-cards-11), seen 2026-11-10). This initiative stops at the list. It does not pick art, build an XML of images, take payment or place an order.
+
+### Scope
+
+- [ ] A text file of the cards the player chose to print: quantity, name, and set code plus collector number when the deck row has them. Basics follow the same switch the PDF already has. The file contains no image URL.
+- [ ] Append the deck's token and emblem lines once I-19's list is fixed. Until then, label the token section "incomplete" and ship the names the current list does return.
+- [ ] Flip the home sheet's default to text, and add cut marks. Art stays an explicit opt-in, and it does not ship until the lawyer question on I-50 about proxying Scryfall images is answered. The opt-in is not built before that answer.
+- [ ] On the download, show the count of cards marked proxy and, once I-15's sheet exists, whether that sheet allows proxies. The download is not refused when they disagree. The server still does not block an edit for a house rule.
+
+### Definition of done
+
+A deck with Sol Ring and a non-basic creature downloads a text file a person can paste into MPC Autofill's text box, every included card appears once per copy, the file has no `scryfall.io` URL, and the home PDF defaults to text with cut marks.
+
+---
+
+## I-81: A Review Of The Goldfish Sessions You Recorded
+
+**Outcome:** after several recorded goldfish sessions of one deck version, the player sees what those sessions did — when the commander was first cast, how many lands were played by turn, which cards were drawn and never cast — with the session count, and with no win rate.
+
+**Status:** Later
+**Priority:** Later
+**Impact / effort:** Medium / medium
+**Risk:** Medium. A percentage on a goldfish is easy to read as a result. The panel has to say what it is not.
+**Depends on:** the action log and the snapshot link I-07 already stores (#1315). No new capture.
+
+I-07 compares snapshots and keeps a log. I-21 and I-31 simulate hands. Neither reads the player's own sessions as a distribution. [Playgroup's Sparring page](https://playgroup.gg/playgroup-live/how-sparring-works), updated 2026-11-06, says its phantom opponents draw on 21,480 interaction spells across 6,934 of Playgroup's games. Those are Playgroup's counts. This product does not have that log, and this initiative does not add an opponent. The owner decision on scripted interaction stays on I-07.
+
+### Scope
+
+- [ ] For one snapshot, aggregate recorded sessions: count, the turn the commander was first cast, lands played on turns 1 to 5, and cards drawn and never cast. Ignore sessions recorded before #1307, which dealt the wrong library.
+- [ ] Below five sessions, show the count and the sentence "Not enough sessions", and no percentage.
+- [ ] Label the panel "Goldfish. No opponents. Not a win rate." Do not rank cards. Do not send the panel to a model.
+
+### Definition of done
+
+A fixture of two logs produces the committed counts, a panel with four sessions shows no percentage, and the words "win rate" do not appear.
+
+---
+
+## I-82: What Changed Since The Last Session
+
+**Outcome:** before the next sitting, the player sees which cards were added, cut or changed in quantity since the list they last goldfished or, later, last logged with the pod.
+
+**Status:** Later
+**Priority:** Later. The playtest snapshot is enough to start; the pod game is not.
+**Impact / effort:** Medium / small
+**Risk:** Low. The diff is the cards. A sentence about whether the change was good would be a different product.
+**Depends on:** #1315's snapshot on the session. I-35's pod game replaces the anchor when it exists. I-37's history is the edit log, not this comparison.
+
+Moxfield and Archidekt keep a deck's history. They do not anchor it to "the list we played". I-35 will freeze the list of a real game and does not, in its current scope, open with the diff the next time the deck is opened.
+
+### Scope
+
+- [ ] Compare the current main deck and command zone with the snapshot of the latest recorded playtest session. Show added, cut and quantity changes. Considering and Sideboard stay out of the diff.
+- [ ] When I-35 has a game for this deck, prefer that game's frozen list over the goldfish snapshot, and say which anchor was used.
+- [ ] Offer the diff to a pod only when the deck is already shared with that pod. No commentary, no model.
+
+### Definition of done
+
+A fixture deck that gained one card, lost one and changed a quantity shows those three lines and no others, and names the session or the game it compared against.
+
+---
+
+## I-83: A Primer Draft Filled From The Deck's Own Reports
+
+**Outcome:** the player gets a primer outline whose lines come from fields the product already stores or computes, copies the lines they want, and edits them before anything is published.
+
+**Status:** Later
+**Priority:** Later, behind the primer length decision on I-08
+**Impact / effort:** Medium / medium
+**Risk:** Medium. A draft that reads like an essay will be taken for a model. Every line has to be a template.
+**Depends on:** nothing for the lines that use the commander, the colours, the declared bracket and the labelled price. I-65, I-77, I-78 and I-58 add lines as they ship. I-08's 2,000-character cap on `Deck.description` stays in force.
+
+The cEDH Decklist Database's submit page, read 2026-11-11, requires a description of the main plan, the backup plan, strengths and weaknesses, and still requires the list to be on Moxfield ([submit](https://cedh-decklist-database.com/submit)). I-08 already ships a primer template the player fills by hand. This initiative fills a draft from reports. It does not write the primer, and it does not submit anywhere.
+
+### Scope
+
+- [ ] A private draft panel. Each line names its source, such as "declared bracket" or "route line, I-65". A missing source omits the line. No model is called.
+- [ ] The player copies chosen lines. Nothing writes `Deck.description` until they paste or press a separate "Insert into primer" control that shows the result first.
+- [ ] If the insert would pass 2,000 characters, the control refuses and names the cap. Raising the cap stays I-08's decision.
+- [ ] A test fails if the draft contains a card name that is not in the deck.
+
+### Definition of done
+
+A deck with a declared bracket and a price produces a draft that quotes both, names the source of each line, inserts nothing until the player asks, and refuses an insert that would break the cap.
+
+---
+
+## I-84: A Reprint Watch For Cards You Own
+
+**Outcome:** when a card the player owns gets a newer paper printing, the collection says which set and which date, without telling the player to sell and without a price forecast.
+
+**Status:** Later
+**Priority:** Later
+**Impact / effort:** Medium / medium
+**Risk:** Medium. A reprint line next to a price is easy to read as advice to sell. The words have to stay descriptive.
+**Depends on:** I-67's printings, which carry the set and the release date. I-06's owned printings. I-18 stays the radar of new cards for a deck. I-59 stays the price series.
+
+Scryfall's card object exposes `prints_search_uri` for every printing and `released_at` on the set ([cards](https://scryfall.com/docs/api/cards), [sets](https://scryfall.com/docs/api/sets), read 2026-11-11). The product does not tell an owner that a card they hold was printed again. A price alert that fires because a reprint moved the market is I-59, and it does not name the set.
+
+### Scope
+
+- [ ] For each owned printing, list newer paper printings of the same oracle identity. Digital-only printings are omitted. The line is "Reprinted in {set} on {date}."
+- [ ] No verb about selling, buying or holding. No predicted price. The labelled price, if shown, stays I-59's or the stored USD amount.
+- [ ] The player can turn the watch off for a card. Off is the stored state, not a hidden filter.
+
+### Definition of done
+
+A fixture oracle identity with an older owned printing and a newer paper printing shows the newer set and date, omits a digital-only printing, and the page contains none of the words "sell", "buy" or "hold".
+
+---
+
+## I-85: Player-Supplied Art That Never Replaces The Card
+
+**Outcome:** a player can attach an image they have the right to use to one deck card, see it themselves, and keep it off the public page and out of every play export unless they opt in.
+
+**Status:** Later
+**Priority:** Later, and the upload waits on the owner's storage choice
+**Impact / effort:** Medium / medium
+**Risk:** High. The image may be someone else's art, or easy to confuse with a real card. The default has to be private, labelled and absent from exports.
+**Depends on:** I-38's report path before a public opt-in. I-71's storage choice before an upload. A pasted `https` URL the player hosts needs neither.
+
+Archidekt's feature board, seen 2026-11-11, has "[Builder] Custom card art" at 207 points and a separate open item, "[Builder] Custom cards" ([features](https://archidekt.com/features)). Custom cards and cubes stay non-goals. This initiative is an image beside an official card, not a new card.
+
+### Scope
+
+- [ ] The owner attaches one `https` URL, or an upload once storage exists. The image is labelled "Player art". The oracle name, the text and the legality stay the official card's.
+- [ ] Public pages, share links and the Open Graph image omit it unless the owner opts in. Exports to clients and to I-80's files omit it always.
+- [ ] A report on a public image uses I-38. The MVP does not review images. Taking the URL down is removing the attachment.
+
+### Definition of done
+
+An owner sees their image on the card, a signed-out viewer does not until the opt-in, and a Cockatrice export of that deck contains no player URL.
+
+---
+
+## I-86: A Data-As-Of Line On Every Deck
+
+**Outcome:** a player can see, on the deck, the date of the rules file, the date each price was stored, and whether card data came from the daily file, without a new network call.
+
+**Status:** Next
+**Priority:** Next, after the current Next band. It is small and it does not jump the backup or the copilot.
+**Impact / effort:** Medium / small
+**Risk:** Low. The failure is a date the product did not record. The line must omit a date it does not have.
+**Depends on:** nothing. I-67 replaces "not loaded from the daily file" with a load timestamp when that load exists. I-59 replaces "stored when the card was added" when a series exists.
+
+I-09 labels external recommendations with a source. The deck itself does not say how old its rules file or its prices are. The app ships the Comprehensive Rules effective 2026-08-07 (`src/lib/rules/data/MagicCompRules-20260807.txt`). Prices are the USD amount stored with the card (`src/lib/deck/pricing.ts`).
+
+### Scope
+
+- [ ] One line on the builder and on the public deck: the rules file's effective date, "Prices: USD stored with each card", and "Card data: not loaded from the daily file" until I-67 records a load.
+- [ ] A missing date is absent, not guessed. The line does not fetch Scryfall, EDHREC or a price.
+- [ ] When I-67 and I-59 have timestamps, the same line reads those timestamps and drops the placeholder sentences.
+
+### Definition of done
+
+A public deck shows the rules date that matches the file the server loaded, shows no price date the database does not store, and the rendered line makes no request of its own.
+
+---
+
+## I-87: Goldfish The Deck You Downloaded
+
+**Outcome:** after the player downloads one deck for game night, they can goldfish that cached deck with no network, and the session is not an edit of the list.
+
+**Status:** Later
+**Priority:** Later
+**Impact / effort:** High / large
+**Risk:** High. A service worker that can write is the offline editor I-19 refuses. This slice is read-only on the list and local on the session.
+**Depends on:** I-19's download and its sign-out purge. I-07's engine, pointed at the cache.
+
+ManaBox's App Store text says card search works offline and that the app includes a deck simulator ([listing](https://apps.apple.com/us/app/manabox-mtg/id1460407674), seen 2026-11-11). It does not say the simulator works offline. I-19 is explicit that the cache is read-only and that an offline editor is out of scope. A goldfish does not change the list.
+
+### Scope
+
+- [ ] With the device offline, open the downloaded deck in the playtest: draw, mulligan, cast, undo. Refuse any control that would add, cut or save a card.
+- [ ] Keep the session on the device. On reconnect, offer to upload it under I-07's snapshot rules. If the player signs out, I-19's purge deletes the session with the deck.
+- [ ] Do not cache a second deck, and do not cache search.
+
+### Definition of done
+
+Airplane mode opens a goldfish of the downloaded deck, an attempt to add a card does nothing, and signing out leaves no deck and no session on the device.
+
+---
+
+## I-88: A Pre-Game Script That Fills The Rule 0 Sheet
+
+**Outcome:** four players can walk through a fixed list of questions on one phone and land in the same Rule 0 sheet they could have filled by hand.
+
+**Status:** Next
+**Priority:** Next, after I-15 can store a sheet. The script adds no fields of its own.
+**Impact / effort:** High / medium
+**Risk:** Low if the questions stay authored and the sheet still says it does not balance the game. High if a model writes the questions or a score appears at the end.
+**Depends on:** I-15's sheet. A question whose field does not exist yet is hidden, not invented.
+
+Wizards describes brackets as a pregame conversation: ask what bracket people are on, and Rule 0 still allows an exception ([introducing brackets](https://magic.wizards.com/en/news/announcements/introducing-commander-brackets-beta), 2025-02-11). The 21 October 2025 update says the system "has created more pregame conversations than we've ever seen, which is the real goal" ([update](https://magic.wizards.com/en/news/announcements/commander-brackets-beta-update-october-21-2025)). I-15 stores the answers. It does not walk anyone through the questions.
+
+### Scope
+
+- [ ] An authored sequence, in English and French: bracket, intent, combos, extra turns, mass land denial, proxies, and anything the pod wants to allow that the bracket would not. No model. No new sheet field.
+- [ ] Each answer writes the matching I-15 field. Skip leaves the field empty. The sheet's existing sentence, that it does not guarantee a balanced game, stays on screen.
+- [ ] One phone can collect four players. The sheet is still private until I-15's consent action.
+
+### Definition of done
+
+Two players finish the script, the sheet shows the answers they gave and blanks where they skipped, and the script has no score and no question that is not in the authored list.
+
+---
+
+## I-89: The Condition Of A Physical Copy
+
+**Outcome:** a player can record that a physical copy is near mint, lightly played, moderately played, heavily played or damaged, or leave it unrecorded, and nothing guesses.
+
+**Status:** Later
+**Priority:** Later
+**Impact / effort:** Medium / small
+**Risk:** Low. The risk is a default of "near mint" on a card the player never graded. There is no default grade.
+**Depends on:** I-06's printing-level copy. I-43 says where the copy sits and does not grade it. I-90 reads the grade once it exists.
+
+Cardsphere's sample import file has a Conditions column ([sample](https://www.cardsphere.com/static/cardsphere-import-sample.csv), read 2026-11-11). ManaBox 4.2.0 added signed cards as their own flag ([r/ManaBoxApp](https://www.reddit.com/r/ManaBoxApp/comments/1wjmzzi/), 2026-09-18). Archidekt's board has an open request for a serialization field; the row showed no point total when read on 2026-11-11 ([features](https://archidekt.com/features)). The collection here stores a printing and a quantity, not a grade.
+
+### Scope
+
+- [ ] On a collection copy: one of NM, LP, MP, HP, Damaged, or "not recorded". New copies are "not recorded".
+- [ ] Later, and off unless the player sets them: a signed flag, and a serialization note of at most 40 characters. Neither changes the price.
+- [ ] The grade is not sent to a public deck page. I-45's seller file may include it when that file exists.
+
+### Definition of done
+
+A copy saved as LP reloads as LP, a copy the player never graded shows "not recorded", and no code path writes NM on its own.
+
+---
+
+## I-90: A Cardsphere File You Upload Yourself
+
+**Outcome:** a player can download a CSV of cards they might trade away and cards they want, in columns Cardsphere already documents, and upload it on Cardsphere's site themselves.
+
+**Status:** Later
+**Priority:** Later
+**Impact / effort:** Medium / small
+**Risk:** Medium. Cardsphere's own guide says a want list without an offer imports at 100% of index and can cause cards to be sent at a price the player did not intend. The file must not carry an offer, and the page must say to import wants as paused.
+**Depends on:** the acquisition plan for wants. I-45's spare list for haves, once it exists; until then the player picks collection rows. I-89's grade when it exists; until then Conditions is empty.
+
+Cardsphere documents CSV import and export of haves and wants ([guide](https://blog.cardsphere.com/how-to-use-csv-files-on-cardsphere/), read 2026-11-11). Its sample header is `Quantity,Name,Sets,Conditions,Languages,Finishes,Paused,Tags,Offer,Limit`. Its buylist guide says wants imported without Offer and Limit come in at 100% of index, and tells the receiver to import as paused ([buylist](https://blog.cardsphere.com/how-to-create-and-manage-a-buylist-on-cardsphere/), read 2026-11-11). The changelog entry of 2025-10-17 says Scryfall IDs are accepted on want import ([changelog](https://www.cardsphere.com/changelog)). The header name for that column was not on the sample file read the same day, so this initiative does not invent one.
+
+### Scope
+
+- [ ] Two downloads, haves and wants. The header is the sample header without `Offer` and without `Limit`. Conditions is empty until I-89. The page tells the player to import wants as paused. The CSV has no comment line.
+- [ ] No Cardsphere account, no login, no offer, no limit, and no sending of cards. The player uploads the file on Cardsphere's own site.
+- [ ] A Scryfall ID column is added only after its header is read from a current Cardsphere sample. Until then it is absent.
+
+### Definition of done
+
+The fixture CSV header matches the sample minus Offer and Limit, a want row has an empty offer because the column is gone, and the page contains the paused-import warning in English and French.
+
+---
+
+## I-91: An Explainer That Cannot Change The Deck
+
+**Outcome:** a player can ask why a card is in the deck, or what a recorded goldfish showed, and get an answer that quotes the deck and the log, without any path that adds or cuts a card.
+
+**Status:** Next
+**Priority:** Next for the deterministic answers. A model wording mode is Later, inside I-02's allowance, and only after I-70 can score it.
+**Impact / effort:** High / medium
+**Risk:** High if it is another chatbot. The mode has no tool that writes a deck, and it refuses questions about the rules.
+**Depends on:** stored oracle text and the playtest log. I-02 keeps generation. I-47 keeps rules answers. I-70 scores the later wording mode.
+
+I-02 already answers "why is this card here?" inside a copilot that also proposes cards. On r/EDH, a December 2025 post telling players not to use AI for suggestions or rules reached 729 points (I-02's findings). DeckCheck sells analysis tools beside its chat ([support](https://deckcheck.co/support), seen 2026-11-08). The gap is a surface whose only output is an explanation.
+
+### Scope
+
+- [ ] A mode with two deterministic answers: where a named card sits and which of its stored fields the deck is using (zone, quantity, commander, price date), and a summary of one recorded session that quotes the log's counts. No model.
+- [ ] The mode has no add, cut, swap or apply control. A test loads the deck, asks both questions, and asserts the card rows are unchanged.
+- [ ] A rules question gets a refusal and a link to the card's rulings when I-47 has them, and to the rules file until then. The mode does not quote a rule it did not look up.
+- [ ] Later, a model may rephrase a deterministic answer. The rephrase is labelled as a model's wording, it may not add a card name that was not in the deterministic answer, and it counts against I-02's allowance. I-70 scores it before it is the default.
+
+### Definition of done
+
+In this mode, asking about a card and about a session leaves the deck byte-for-byte unchanged, every card name in the answer is in the deck, and a rules question produces a refusal rather than a ruling.
+
+---
+
+## I-92: Public Deck Pages Described With Stored Fields Only
+
+**Outcome:** a public deck page that search engines may index carries structured data built only from fields the page already shows, and a page we tell robots to skip carries none.
+
+**Status:** Next
+**Priority:** Next, after I-34's index policy. It does not invent pages.
+**Impact / effort:** Medium / small
+**Risk:** Medium. Generated FAQ text would be the spam pattern the roadmap already cites. This initiative forbids that text.
+**Depends on:** I-34 slice 1, so a `noindex` page is decided in one place. I-36's deck image stays the image.
+
+Google's spam policy, already cited under I-34, names scaled AI-written pages as abuse. The site has JSON-LD for the product (`src/components/JsonLd.tsx`). A public deck page does not describe itself with the same discipline.
+
+### Scope
+
+- [ ] On an indexable public deck, JSON-LD for the name, the commander and the date the deck was updated, and only when those strings are also visible on the page. No FAQ. No generated paragraph. No rating until a later slice shows the same rating in the HTML and in the data.
+- [ ] A `noindex` deck page, a share page and a private page emit no JSON-LD.
+- [ ] The strings come from the public projection. `budget`, notes and folder names never appear.
+
+### Definition of done
+
+An indexable public deck's structured data parses and contains only visible fields, and a noindex deck response contains no JSON-LD script.
+
+---
+
+## I-93: A Reading Mode For The Table
+
+**Outcome:** at the table, a player can read one card at a time — name, cost, type, oracle text — in large type, with next and previous, and without a life total or a hover.
+
+**Status:** Later
+**Priority:** Later
+**Impact / effort:** Medium / medium
+**Risk:** Low, as long as it does not grow a life counter. A life counter is a different product, already ruled out.
+**Depends on:** nothing. I-49's contrast tokens replace the theme colours when they exist. I-24 remains the screen-reader path. I-19 can cache this view with the deck; that is a one-line addition there, not a second cache.
+
+EDHREC's 6 November 2026 changelog put card names over images on mobile "so they can be much more easily clicked" ([changelog](https://edhrec.com/articles/changelog-big-performance-upgrades)). That is a gallery fix. This is a reading view for someone holding a phone across a table. I-49 is already moving 7 px text onto the `rem` scale. This view starts at a size meant to be read at arm's length.
+
+### Scope
+
+- [ ] One card, the command zone included, with next and previous on screen and on the keyboard. No drag, no hover preview, no add button.
+- [ ] No life total, no commander-damage tally and no timer. Those stay out.
+- [ ] English and French chrome. Card text follows the printing's language when I-37 slice 12 has stored it, and the oracle text until then.
+
+### Definition of done
+
+A keyboard user moves from the commander through the 99 without a pointer, the view has no life control, and the card name is readable at arm's length in both themes.
+
+---
+
+## I-94: Four Lists Pinned For One Night
+
+**Outcome:** a host can pin up to four decks the table is allowed to see, download those public projections for the evening, and drop them when the night is over.
+
+**Status:** Later
+**Priority:** Later
+**Impact / effort:** Medium / medium
+**Risk:** Medium. Pinning someone else's private list, or keeping four decks after sign-out, would break I-19's purge and I-08's projection.
+**Depends on:** the public and share projections. I-19's cache rules for the download. I-15's night planner can link a pin to a date once that planner exists; the pin works without it.
+
+I-19 caches one deck the player chose, and its non-goal is a multi-deck offline editor. I-79 is a set of the author's own decks, behind a demand gate. A host on the night needs to read other people's lists, not edit them. Playgroup added a calendar for recurring nights on 2026-11-04 ([post](https://playgroup.gg/posts/101-the-new-playgroup-app-and-everything-else-since-july)); scheduling stays on I-15.
+
+### Scope
+
+- [ ] Pin up to four decks from public pages or from share links the host holds. A fifth pin is refused. A private deck the host does not own is refused.
+- [ ] The pin stores the public projection only. An explicit download caches those projections for reading, including I-93's view. It does not raise I-19's limit of one editable deck, because these are not editable.
+- [ ] Sign-out deletes the downloads. The host can clear the night in one action.
+
+### Definition of done
+
+A host pins four public decks, a fifth is refused, a private deck they do not own is refused, and sign-out leaves none of the four on the device.
+
+---
+
+## I-95: A Changelog For The Public Read API
+
+**Outcome:** a developer can read, in one page, what changed in the public read API since the previous deploy, and a breaking change cannot merge without a dated line.
+
+**Status:** Next
+**Priority:** Next. The API is already public.
+**Impact / effort:** Medium / small
+**Risk:** Low. The page describes routes that exist. It does not add a route.
+**Depends on:** nothing. I-22's versioned verdict is a later contract and will add its own lines when it ships.
+
+`GET /api/v1/openapi` already returns a document with no credential (`src/app/api/v1/openapi/route.ts`). The routes under `src/app/api/v1/` are decks, one deck, and the collection. I-52's release notes are for players. They are not a contract for these routes.
+
+### Scope
+
+- [ ] A public page, in English, listing dated changes to `/api/v1/decks`, `/api/v1/decks/{id}`, `/api/v1/collection` and `/api/v1/openapi`. A compatible change is labelled compatible. A breaking change names the field and the date.
+- [ ] A CI check fails when the OpenAPI document changes and the changelog has no new dated line and no "compatible" label for that change.
+- [ ] The page does not document routes outside `/api/v1`. It does not embed a deck.
+
+### Definition of done
+
+The page lists the three data routes and the OpenAPI route, a pull request that changes the document without a changelog line fails the check, and the page renders signed out.
+
+---
+
+## I-96: Two Labelled Prices, And No Conversion
+
+**Outcome:** where Scryfall provides both a dollar amount and a euro amount, the card shows both, each named as Scryfall's figure, and the product never converts one into the other.
+
+**Status:** Next
+**Priority:** Next. It is a display of a field the source already sends.
+**Impact / effort:** Medium / small
+**Risk:** Low if the labels stay. High if a toggle silently converts, which this initiative forbids.
+**Depends on:** nothing for the display. I-06 and I-32 still choose the single currency of the acquisition plan. I-59's history, when it exists, is per currency and does not mix them.
+
+`src/lib/deck/pricing.ts` documents that every ingest reads Scryfall's `prices.usd`. I-06 records that nothing reads the euro amount. Scryfall's card object is the source of both ([cards](https://scryfall.com/docs/api/cards), read 2026-11-11). Moxfield shows more than one currency; that was established in the 9 November pass. Showing both without a conversion is the trust line I-11 already asks for and nobody has built.
+
+### Scope
+
+- [ ] On a card and on a deck total, show USD and EUR when both were stored. Each amount is labelled "Scryfall, not a quote". An amount the source did not send is "no USD from Scryfall" or "no EUR from Scryfall", not a zero.
+- [ ] Store the euro amount beside the dollar amount when a card is added. Do not convert. Do not display MTGO tickets in this initiative.
+- [ ] The acquisition plan keeps one currency, chosen and labelled, under I-06. This initiative does not change that choice.
+
+### Definition of done
+
+A card ingested with both amounts shows both labels, a card with only dollars shows "no EUR from Scryfall", and no screen contains a converted figure.
+
+---
+
+## I-97: The Chance One Card Is In Your Hand
+
+**Outcome:** a player can ask the chance of drawing at least one copy of a chosen card, or at least K lands, in an opening seven or by a chosen turn, and see the inputs of the formula.
+
+**Status:** Next
+**Priority:** Next. It is one formula, not a simulation.
+**Impact / effort:** Medium / small
+**Risk:** Low. The risk is presenting the formula as a goldfish result. The panel says it is a count, not a session.
+**Depends on:** nothing. I-21 remains the seeded comparison of two snapshots. I-31 remains the keep table for the player's list. Neither is this widget.
+
+Moxfield's production JavaScript, captured on 14 May 2026, includes a hypergeometric calculator (landscape section 1). I-21's scope is thousands of simulated hands across two snapshots, with a seed and an interval. A player who wants "three or more lands in seven cards" does not need that run.
+
+### Scope
+
+- [ ] Inputs: the deck's library size (99, or 98 with a partner, command zone excluded), the number of matching cards, the hand or the turn's draw count, and the minimum count. Output: the probability, the fraction's inputs, and the sentence "This is a count of equally likely hands, not a recorded game."
+- [ ] Lands use the deck's land count. Any other card uses its quantity in the library. Considering and Sideboard are excluded.
+- [ ] No `Math.random`, no seed, no model. A committed example in the test matches the formula to four decimal places.
+
+### Definition of done
+
+The panel for a 99-card deck with 36 lands and an opening seven shows the chance of three or more lands, shows the inputs, and a second open of the same deck shows the same digits.
+
+---
+
+## I-98: A cEDH Checklist That Does Not Claim A Win Rate
+
+**Outcome:** a player who wants to submit a competitive list can see which of the database's published requirements this deck already meets, which this product cannot meet, and no win rate.
+
+**Status:** Later
+**Priority:** Later
+**Impact / effort:** Low / small
+**Risk:** High if the checklist says or implies that the list would be accepted, or if it prints a win rate. The copy has to refuse both.
+**Depends on:** the legality report, the deck's updated date, and whether a primer exists. I-09's combo list and I-65's route line appear when they exist. I-42 keeps format link-outs.
+
+The cEDH Decklist Database's submit page, read 2026-11-11, requires a commander-legal list, a Moxfield URL, a visible "last updated", no account to view the list, and a description of at most 600 characters. It also asks for a strategy with an expected win rate of around 25% in a competitive environment ([submit](https://cedh-decklist-database.com/submit)). I-09 is blocked from showing match win rates by TopDeck's terms. This checklist does not estimate that 25%.
+
+### Scope
+
+- [ ] Show: legality report, last updated date, whether a public viewer needs an account, whether a primer exists and how long it is, and combo lines already on the deck. Each row says "met" or "not met" against the quoted requirement.
+- [ ] A fixed row: "The database requires the list to be on Moxfield. This product does not put it there."
+- [ ] No win rate, no "expected 25%", and no "accepted" or "rejected". The page links to the submit page for the requirements this product does not check, including staples and the win-rate sentence.
+
+### Definition of done
+
+The checklist for a legal public deck with a primer shows those rows as met, shows the Moxfield row as not something this product does, and the page contains no win rate and no acceptance verdict.
 
 ---
 

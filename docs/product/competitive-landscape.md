@@ -1,8 +1,8 @@
 # MTG Competitive Landscape
 
-> **Last updated:** 11 November 2026 (section 12, and corrections to sections 1, 8 and 10)
+> **Last updated:** 11 November 2026 (section 13; sections 1 to 12 unchanged except this header and the method line)
 > **Purpose:** Product strategy reference for MagicAIBuilder
-> **Method:** Public product pages, help pages and vendor changelogs reviewed on 8 November 2026 (Europe/Paris), plus the `dev` roadmap and README. This was not a signed-in test of every product. Vendor claims are not independent measurements. Reddit threads cited below are dated testimony, not a survey. **Not established** means not verified on the surfaces reviewed, not proven absent. A second pass on 9 November 2026 covered traffic, monetization, the marketplace path, editor depth, analytics, game tracking, AI economics and player demand; its findings and corrections are in [section 10](#10-additions-from-the-9-november-2026-pass). Traffic figures there are third-party modelled estimates. Reddit scores in that section come from the Arctic Shift archive, because Reddit refused automated reads. A third pass that evening, for the I-38 to I-46 specs, covered trust and user rights, store tools, Commander variants, storage, trading, selling, scanning and chat apps; its facts are in [section 11](#11-physical-card-tools-stores-and-trust-2026-11-09). A fourth pass, read on 10 and 11 November 2026, looked at deckbuilding in other card games and re-checked several Magic entries; its findings are in [section 12](#12-deckbuilding-across-card-games-2026-11-11), and its corrections are marked "Corrected 2026-11-11" or "Added 2026-11-11" where they apply.
+> **Method:** Public product pages, help pages and vendor changelogs reviewed on 8 November 2026 (Europe/Paris), plus the `dev` roadmap and README. This was not a signed-in test of every product. Vendor claims are not independent measurements. Reddit threads cited below are dated testimony, not a survey. **Not established** means not verified on the surfaces reviewed, not proven absent. A second pass on 9 November 2026 covered traffic, monetization, the marketplace path, editor depth, analytics, game tracking, AI economics and player demand; its findings and corrections are in [section 10](#10-additions-from-the-9-november-2026-pass). Traffic figures there are third-party modelled estimates. Reddit scores in that section come from the Arctic Shift archive, because Reddit refused automated reads. A third pass that evening, for the I-38 to I-46 specs, covered trust and user rights, store tools, Commander variants, storage, trading, selling, scanning and chat apps; its facts are in [section 11](#11-physical-card-tools-stores-and-trust-2026-11-09). A fourth pass, read on 10 and 11 November 2026, looked at deckbuilding in other card games and re-checked several Magic entries; its findings are in [section 12](#12-deckbuilding-across-card-games-2026-11-11), and its corrections are marked "Corrected 2026-11-11" or "Added 2026-11-11" where they apply. A further pass on 11 November 2026, the roadmap's twelfth, looked for Commander jobs that pass had not owned. It is [section 13](#13-a-twelfth-pass-on-commander-tools-2026-11-11).
 
 The March 2026 edition of this document treated EDHREC's interface as dated, treated conversational Commander building as an empty market, and quoted approximate traffic, subscriber and premium prices. Those audience figures were not revalidated and are withdrawn. Prices below are the figures found on the cited page, in that page's currency, with no conversion.
 
@@ -508,6 +508,44 @@ Read on 2026-11-10 and 2026-11-11. Dates in the table are each source's own; eve
 ### 12.4 What follows for the roadmap
 
 The roadmap of 11 November 2026 adds four initiatives: [I-76](roadmap.md#i-76-complete-this-deck-from-my-collection) (complete this deck from my collection), [I-77](roadmap.md#i-77-a-bracket-estimate-players-can-audit) (a bracket estimate players can audit), [I-78](roadmap.md#i-78-what-this-deck-does-to-the-table) (what this deck does to the table) and [I-79](roadmap.md#i-79-table-sets-decks-built-to-play-together) (table sets: decks built to play together). It adds sixty scope items to thirty-one existing initiatives, and applies nineteen research corrections and six status corrections from the same pass; the corrections to this document are marked in sections 1, 8 and 10. What other card games teach is not new categories but four habits: finish a deck from the collection, show constraints at the moment of choice, show how an estimate is made, and treat the table as the unit. None of it needs a model.
+
+---
+
+## 13. A twelfth pass on Commander tools (2026-11-11)
+
+Read on 11 November 2026, after I-14 through I-79 were already on `dev` (`a3250bfa`). The pass looked for jobs the roadmap did not yet own. It did not sign in to Moxfield, Archidekt, SpellTable or Convoke. Vendor counts below are the vendor's, not measurements of this product. Reddit posts are dated testimony.
+
+### What was checked
+
+- EDHREC's changelog of 6 November 2026: bracket histograms, a tag cloud, bracket filters on Top Cards, Game Changers, Staples and Mana Rocks, and card names kept over images on mobile ([changelog](https://edhrec.com/articles/changelog-big-performance-upgrades)). Section 3 already records that pass. Nothing in it opens a new data product.
+- Archidekt's feature board ([features](https://archidekt.com/features)). The open votes read that day, with the point totals the page showed: cube or large lists 507, prefer owned printings 367, subcategories 240, import into owned editions 217, custom card art 207, non-English printings 140, leave some tags out of the price 73, embeds 54, custom format legality 56, deck win tracking 41, custom banlists 29, hide maybeboard contents 27. The board does not print a year on those dates. Cube and custom cards stay non-goals. Subcategories, owned printings, non-English printings, embeds, banlists and win tracking are already I-37, I-57, I-37 slice 12, I-36, I-15 and I-35.
+- Print shops. [MPC Autofill](https://mpcfill.com/) and its [overview](https://github.com/chilli-axe/mpc-autofill/wiki/Overview) take a pasted list and an XML of images. Scryfall's printing FAQ still says it will not print proxies. The in-app sheet can embed Scryfall art (`src/lib/deck/proxy.ts`, `includeCardArt` defaulting to true). The new work is a name file and a text default, [I-80](roadmap.md#i-80-a-proxy-file-a-print-shop-can-read).
+- Playgroup, updated 6 November 2026, describes Sparring as phantom opponents drawn from 21,480 interaction spells across 6,934 of its games ([how sparring works](https://playgroup.gg/playgroup-live/how-sparring-works)). That is their log. It is evidence for the scripted-interaction decision already on I-07, not a dataset this product can rerun. A review of the player's own goldfish logs is [I-81](roadmap.md#i-81-a-review-of-the-goldfish-sessions-you-recorded).
+- Wizards, 11 February 2025 and 21 October 2025: brackets exist to start a pregame conversation ([introducing brackets](https://magic.wizards.com/en/news/announcements/introducing-commander-brackets-beta), [update](https://magic.wizards.com/en/news/announcements/commander-brackets-beta-update-october-21-2025)). The sheet is I-15. The walkthrough is [I-88](roadmap.md#i-88-a-pre-game-script-that-fills-the-rule-0-sheet).
+- Cardsphere's CSV guide, sample file and buylist warning, and the changelog line of 17 October 2025 on Scryfall IDs ([guide](https://blog.cardsphere.com/how-to-use-csv-files-on-cardsphere/), [sample](https://www.cardsphere.com/static/cardsphere-import-sample.csv), [buylist](https://blog.cardsphere.com/how-to-create-and-manage-a-buylist-on-cardsphere/), [changelog](https://www.cardsphere.com/changelog)). The file this product would emit is [I-90](roadmap.md#i-90-a-cardsphere-file-you-upload-yourself). It does not open an account or set an offer.
+- The cEDH Decklist Database submit page ([submit](https://cedh-decklist-database.com/submit)). It requires a Moxfield URL and mentions an expected win rate of around 25%. [I-98](roadmap.md#i-98-a-cedh-checklist-that-does-not-claim-a-win-rate) quotes the checks this product can make and does not compute that rate. I-09's block on match win rates stands.
+- ManaBox's deck FAQ on marking proxies ([FAQ](https://manabox.app/guides/decks/faq/)) and version 4.2.0's signed cards ([r/ManaBoxApp](https://www.reddit.com/r/ManaBoxApp/comments/1wjmzzi/), 2026-09-18). Condition is [I-89](roadmap.md#i-89-the-condition-of-a-physical-copy). Proxy marks stay on I-06.
+- Webcam tables. A TappedOut forum post on 30 July 2026 says SpellTable and Convoke import Moxfield and Archidekt lists ([thread](https://tappedout.net/mtg-forum/tappedout/import-deck-support-for-spelltable/)). An EDHMat comparison, read on 11 November 2026 as a search result, says SpellTable does not need a list because the cards are physical ([comparison](https://edhmat.com/vs/spelltable)). Neither page was confirmed inside those products. No paste format is specified. I-50 keeps the export contract.
+- Natural-language search. Pull request #1369 is open and not on `dev`. I-14 is unchanged by this pass.
+
+### Where the new initiatives sit
+
+The roadmap's twelfth pass adds I-80 through I-98. Seven are Next only in the sense that they are small and unblocked or blocked by one slice: I-86, I-88, I-91, I-92, I-95, I-96 and I-97. They do not move ahead of backups, the copilot or the editor. The rest are Later. None is a score, a marketplace, a life counter, a cube or a custom card.
+
+### Folded back into an existing initiative
+
+| Finding | Where it went |
+| --- | --- |
+| Archidekt subcategories, 240 points | Already I-37, added 2026-11-11 |
+| Non-English printings, 140 points | I-37 slice 12 already stores language. I-11 points at it |
+| Leave tagged cards out of the price, 73 points | I-06 |
+| Hide the Considering board, 27 points | I-08, not scheduled |
+| Scryfall id on a pasted line | I-10 |
+| Commander damage (CR 903.10a) and table designations in the goldfish | I-07 |
+| A calendar file for a pod night | I-15 |
+| EDHREC cuts beside recommendations | I-09, a one-point comment on r/Moxfield, 2026-09-29 |
+| Card notes shown on the public page | I-08, after notes save |
+| Cube, 507 points, and custom cards | Non-goals, unchanged |
 
 ---
 
