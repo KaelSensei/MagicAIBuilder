@@ -4,23 +4,8 @@
  * a second commander the partner rules do not allow.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
-
-const toastAdd = vi.hoisted(() => vi.fn());
-
-vi.mock(import("@/lib/db/deck-api"), () => ({
-  updateDeck: vi.fn().mockResolvedValue({}),
-  addCard: vi.fn().mockResolvedValue({ id: "saved-row" }),
-  removeCard: vi.fn().mockResolvedValue(undefined),
-  lookupCardCache: vi.fn().mockResolvedValue(null),
-}));
-
-vi.mock(import("@/hooks/useToast"), async (importOriginal) => {
-  const { useToastStore } = await importOriginal();
-  useToastStore.setState({ add: toastAdd });
-  return { useToastStore };
-});
-
-import * as deckApi from "@/lib/db/deck-api";
+import { installFakeDeckClient } from "@/test/fake-deck-client";
+import { recordToasts } from "@/test/toast-recorder";
 import { createEmptyDeck } from "./store-factories";
 import { makeDeckCard } from "./store-card-faces";
 import type { PairingCard } from "./partner-abilities";
@@ -41,7 +26,10 @@ import {
   WILSON,
 } from "./fixtures/partner-cards";
 
-const { useDeckStore } = await import("./store");
+import { useDeckStore } from "./store";
+
+const deckApi = installFakeDeckClient();
+const toastAdd = recordToasts();
 
 /** A Scryfall card carrying a fixture's name, type line and Oracle text. */
 function scryfallOf(card: PairingCard): ScryfallCard {

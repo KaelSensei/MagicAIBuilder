@@ -6,76 +6,12 @@
  * renameDeck, getActiveDeck, setTargetBracket, setBudget, setManualBracket,
  * addCard, removeCard, updateCardCategory, markGameChanger, markBanned.
  *
- * All network / DB calls are mocked — tests are fully synchronous / offline.
+ * The fake deck API (`src/test/fake-deck-client.ts`) answers every deck
+ * request in memory, so the tests run offline.
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Mock } from "vitest";
-
-const toastAdd = vi.hoisted(() => vi.fn());
-
-// ── Mock deck-api BEFORE importing the store ─────────────────────────────────
-vi.mock(import("@/lib/db/deck-api"), () => ({
-  fetchDecks: vi.fn().mockResolvedValue({ decks: [], total: 0, page: 0, limit: 20 }),
-  createDeck: vi.fn().mockResolvedValue({
-    id: "deck-1",
-    name: "Test Deck",
-    format: "commander",
-    targetBracket: 2,
-    manualBracket: null,
-    budget: null,
-    description: "",
-    tags: [],
-    shareToken: null,
-    shareEnabled: false,
-    isPublic: false,
-    isAIGenerated: false,
-    commanderId: null,
-    partnerId: null,
-    companionId: null,
-    pairingType: "none",
-    cards: [],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  }),
-  updateDeck: vi.fn().mockResolvedValue({}),
-  deleteDeck: vi.fn().mockResolvedValue(undefined),
-  addCard: vi.fn().mockResolvedValue({
-    id: "saved-db-id",
-    deckId: "deck-1",
-    scryfallId: "scryfall-id-1",
-    name: "Lightning Bolt",
-    manaCost: "{R}",
-    cmc: 1,
-    typeLine: "Instant",
-    oracleText: "Deal 3 damage.",
-    colorIdentity: ["R"],
-    isGameChanger: false,
-    isBanned: false,
-    price: null,
-    imageUri: "",
-    artCropUri: "",
-    category: "instant",
-    quantity: 1,
-    isCommander: false,
-    isPartner: false,
-    zone: "main",
-  }),
-  removeCard: vi.fn().mockResolvedValue(undefined),
-  updateCardCategory: vi.fn().mockResolvedValue({}),
-  updateCardNotes: vi.fn().mockResolvedValue({}),
-  updateCardMaybeboard: vi.fn().mockResolvedValue({}),
-  removeAllCards: vi.fn().mockResolvedValue(undefined),
-  lookupCardCache: vi.fn().mockResolvedValue(null),
-  updateCardZone: vi.fn().mockResolvedValue({}),
-}));
-
-// ── Mock useToast so the store doesn't blow up ────────────────────────────────
-vi.mock(import("@/hooks/useToast"), async (importOriginal) => {
-  const { useToastStore } = await importOriginal();
-  useToastStore.setState({ add: toastAdd });
-  return { useToastStore };
-});
 
 const collectionState = vi.hoisted(() => ({
   collectionCards: {} as Record<string, { name: string; quantity: number; scryfallId: string }>,
@@ -90,14 +26,73 @@ vi.mock(import("@/lib/scryfall/client"), () => ({
   getCardById: vi.fn(),
 }));
 
-import * as deckApi from "@/lib/db/deck-api";
+import type { ApiDeck, ApiDeckCard } from "@/lib/db/deck-api";
 import { GUEST_DECK_ID } from "@/lib/deck/guest-deck";
 import * as scryfallClient from "@/lib/scryfall/client";
 import type { Deck, DeckCard, CardCategory } from "@/lib/deck/types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
+import { installFakeDeckClient } from "@/test/fake-deck-client";
+import { recordToasts } from "@/test/toast-recorder";
 
 // Import the store AFTER mocks are set up
 const { useDeckStore } = await import("@/lib/deck/store");
+
+const deckApi = installFakeDeckClient();
+const toastAdd = recordToasts();
+
+/** The deck every create in this file answers, whatever its name. */
+const CREATED_DECK: ApiDeck = {
+  id: "deck-1",
+  name: "Test Deck",
+  format: "commander",
+  targetBracket: 2,
+  manualBracket: null,
+  budget: null,
+  description: "",
+  tags: [],
+  shareToken: null,
+  shareEnabled: false,
+  isPublic: false,
+  isAIGenerated: false,
+  commanderId: null,
+  commanderName: null,
+  partnerId: null,
+  companionId: null,
+  pairingType: "none",
+  companion: null,
+  maybeboard: [],
+  cards: [],
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+};
+
+/** The row every add in this file answers, whatever card was added. */
+const SAVED_ROW: ApiDeckCard = {
+  id: "saved-db-id",
+  deckId: "deck-1",
+  scryfallId: "scryfall-id-1",
+  name: "Lightning Bolt",
+  manaCost: "{R}",
+  cmc: 1,
+  typeLine: "Instant",
+  oracleText: "Deal 3 damage.",
+  colorIdentity: ["R"],
+  isGameChanger: false,
+  isBanned: false,
+  price: null,
+  imageUri: "",
+  artCropUri: "",
+  category: "instant",
+  quantity: 1,
+  isCommander: false,
+  isPartner: false,
+  zone: "main",
+};
+
+beforeEach(() => {
+  deckApi.createDeck.mockResolvedValue(CREATED_DECK);
+  deckApi.addCard.mockResolvedValue(SAVED_ROW);
+});
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 

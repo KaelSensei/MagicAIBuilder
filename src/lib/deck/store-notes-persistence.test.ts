@@ -1,8 +1,9 @@
 /**
  * Card notes, from the store action to the stored row.
  *
- * The other store tests replace `deck-api`, so they cannot see what the
- * server keeps: a note the route's schema silently dropped still looked saved.
+ * The other store tests answer from a fake of the deck API
+ * (`src/test/fake-deck-client.ts`), so they cannot see what the server keeps:
+ * a note the route's schema silently dropped still looked saved.
  * Here the store calls the real client API, a fetch stub hands the request to
  * the real PATCH route, and only Prisma and the session check are replaced.
  */
@@ -10,7 +11,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 /** The notes column of the one deck row the fake database holds. */
 const db = vi.hoisted((): { notes: string | null } => ({ notes: null }));
-const toastAdd = vi.hoisted(() => vi.fn());
 
 vi.mock(import("@/lib/auth/helpers"), () => ({
   requireDeckOwner: vi.fn(async () => ({
@@ -49,17 +49,13 @@ vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
   });
 });
 
-vi.mock(import("@/hooks/useToast"), async (importOriginal) => {
-  const { useToastStore } = await importOriginal();
-  useToastStore.setState({ add: toastAdd });
-  return { useToastStore };
-});
-
 import { PATCH } from "@/app/api/decks/[id]/cards/[cardId]/route";
 import { createGuestDeck, GUEST_DECK_ID, loadGuestDeck } from "./guest-deck";
 import type { Deck, DeckCard } from "./types";
+import { recordToasts } from "@/test/toast-recorder";
 
 const { useDeckStore } = await import("./store");
+const toastAdd = recordToasts();
 
 const CARD_ROUTE = /^\/api\/decks\/([^/]+)\/cards\/([^/]+)$/;
 

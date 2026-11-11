@@ -9,19 +9,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ApiDeck, ApiDeckCard } from "@/lib/db/deck-api";
 import type { DeckCard } from "./types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
+import { DeckApiRefusal, installFakeDeckClient } from "@/test/fake-deck-client";
+import { recordToasts } from "@/test/toast-recorder";
 
-const api = vi.hoisted(() => ({
-  applyCardChanges: vi.fn(),
-  addCard: vi.fn(),
-  removeCard: vi.fn(),
-}));
-
-vi.mock(import("@/lib/db/deck-api"), () => api);
-vi.mock(import("@/hooks/useToast"), async (importOriginal) => {
-  const { useToastStore } = await importOriginal();
-  useToastStore.setState({ add: vi.fn() });
-  return { useToastStore };
-});
 interface OwnedCard {
   readonly name: string;
   readonly quantity: number;
@@ -45,6 +35,9 @@ vi.mock(import("@/lib/scryfall/client"), () => ({ getCardById }));
 
 import { useDeckStore } from "./store";
 import { apiDeckToStoreDeck } from "./store-factories";
+
+const api = installFakeDeckClient();
+recordToasts();
 
 /** A saved row, as the API returns it. */
 function apiRow(id: string, name: string): ApiDeckCard {
@@ -203,9 +196,7 @@ describe("deck store — cards a bulk edit adds", () => {
         },
       ],
     });
-    api.applyCardChanges.mockRejectedValue(
-      new Error("[applyCardChanges] HTTP 409")
-    );
+    api.applyCardChanges.mockRejectedValue(new DeckApiRefusal(409));
 
     await expect(
       useDeckStore.getState().applyBulkEdit({

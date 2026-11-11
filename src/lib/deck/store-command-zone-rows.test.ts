@@ -5,143 +5,37 @@
  * and partner by the `isCommander` / `isPartner` flags on deck rows. A change
  * that leaves the previous row behind brings that card back on the next load.
  *
- * The deck API is replaced by an in-memory server that keeps rows in insertion
- * order and rejects a delete for a row id it does not hold, as the real routes do.
+ * The deck API is the shared in-memory fake (`src/test/fake-deck-client.ts`),
+ * holding the open deck: it keeps rows in insertion order and rejects a delete
+ * for a row id it does not hold, as the real routes do.
  */
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
-import type { AddCardPayload, ApiDeck, ApiDeckCard } from "@/lib/db/deck-api";
+import type { ApiDeck } from "@/lib/db/deck-api";
 import type { ScryfallCard } from "@/lib/scryfall/types";
+import { emptyApiDeck, installFakeDeckClient } from "@/test/fake-deck-client";
+import { recordToasts } from "@/test/toast-recorder";
 import { createEmptyDeck } from "./store-factories";
-import type { CommanderPairingType, Deck } from "./types";
+import type { Deck } from "./types";
+import { useDeckStore } from "./store";
 
-/** Deck fields and rows the fake server persists. */
-interface SavedDeck {
-  commanderId: string | null;
-  commanderName: string | null;
-  partnerId: string | null;
-  pairingType: CommanderPairingType;
-  rows: ApiDeckCard[];
-}
+const deckApi = installFakeDeckClient();
+recordToasts();
 
-/** Deck fields a command-zone change patches. */
-type CommandZonePatch = Partial<
-  Pick<ApiDeck, "commanderId" | "commanderName" | "partnerId" | "pairingType">
->;
-
-const server = vi.hoisted(() => {
-  const saved: SavedDeck = {
-    commanderId: null,
-    commanderName: null,
-    partnerId: null,
-    pairingType: "none",
-    rows: [],
-  };
-  let rowCount = 0;
-
-  const toApiDeck = (): ApiDeck => ({
-    id: "deck-1",
-    name: "Command Zone",
-    format: "commander",
-    targetBracket: 3,
-    manualBracket: null,
-    budget: null,
-    description: "",
-    tags: [],
-    shareToken: null,
-    shareEnabled: false,
-    isPublic: false,
-    isAIGenerated: false,
-    companion: null,
-    companionId: null,
-    maybeboard: [],
-    commanderId: saved.commanderId,
-    commanderName: saved.commanderName,
-    partnerId: saved.partnerId,
-    pairingType: saved.pairingType,
-    cards: [...saved.rows],
-    createdAt: "2026-11-01T00:00:00.000Z",
-    updatedAt: "2026-11-01T00:00:00.000Z",
-  });
-
-  return {
-    saved,
-    reset(): void {
-      saved.commanderId = null;
-      saved.commanderName = null;
-      saved.partnerId = null;
-      saved.pairingType = "none";
-      saved.rows = [];
-      rowCount = 0;
-    },
-    async updateDeck(
-      _deckId: string,
-      patch: CommandZonePatch
-    ): Promise<ApiDeck> {
-      if (patch.commanderId !== undefined)
-        saved.commanderId = patch.commanderId;
-      if (patch.commanderName !== undefined)
-        saved.commanderName = patch.commanderName;
-      if (patch.partnerId !== undefined) saved.partnerId = patch.partnerId;
-      if (patch.pairingType !== undefined)
-        saved.pairingType = patch.pairingType;
-      return toApiDeck();
-    },
-    async addCard(
-      deckId: string,
-      payload: AddCardPayload
-    ): Promise<ApiDeckCard> {
-      rowCount += 1;
-      const row: ApiDeckCard = {
-        id: `row-${rowCount}`,
-        deckId,
-        scryfallId: payload.scryfallId,
-        name: payload.name,
-        manaCost: payload.manaCost ?? "",
-        cmc: payload.cmc ?? 0,
-        typeLine: payload.typeLine ?? "",
-        oracleText: payload.oracleText ?? "",
-        colorIdentity: payload.colorIdentity ?? [],
-        isGameChanger: false,
-        isBanned: false,
-        price: null,
-        imageUri: "",
-        artCropUri: "",
-        category: payload.category === "commander" ? "commander" : "other",
-        quantity: 1,
-        notes: null,
-        isCommander: payload.isCommander ?? false,
-        isPartner: payload.isPartner ?? false,
-        zone: payload.zone ?? "main",
-      };
-      saved.rows.push(row);
-      return row;
-    },
-    async removeCard(_deckId: string, cardId: string): Promise<void> {
-      const index = saved.rows.findIndex((row) => row.id === cardId);
-      if (index === -1) throw new Error("Card not found");
-      saved.rows.splice(index, 1);
-    },
-    async fetchDeck(): Promise<ApiDeck> {
-      return toApiDeck();
-    },
-  };
-});
-
-vi.mock(import("@/lib/db/deck-api"), () => ({
-  updateDeck: server.updateDeck,
-  addCard: server.addCard,
-  removeCard: server.removeCard,
-  fetchDeck: server.fetchDeck,
-}));
-vi.mock(import("@/hooks/useToast"), async (importOriginal) => {
-  const { useToastStore } = await importOriginal();
-  useToastStore.setState({ add: vi.fn() });
-  return { useToastStore };
-});
-
-const { useDeckStore } = await import("./store");
+/** The open deck as the fake server holds it. */
+const server = {
+  /** The saved deck, with its rows as `rows`. */
+  get saved(): ApiDeck & { readonly rows: ApiDeck["cards"] } {
+    const deck = deckApi.savedDeck("deck-1") ?? emptyApiDeck("deck-1");
+    return { ...deck, rows: deck.cards };
+  },
+  /** Deletes every saved row behind the store's back. */
+  dropRows(): void {
+    const deck = deckApi.savedDeck("deck-1");
+    if (deck) deckApi.seedDeck({ ...deck, cards: [] });
+  },
+};
 
 /**
  * Build the Scryfall card a player picks for the command zone.
@@ -206,7 +100,10 @@ function commandRows(): readonly {
 
 describe("command zone after a save and reload", () => {
   beforeEach(() => {
-    server.reset();
+    deckApi.seedDeck({
+      ...emptyApiDeck("deck-1", "Command Zone"),
+      targetBracket: 3,
+    });
     useDeckStore.setState({
       decks: { "deck-1": createEmptyDeck("deck-1", "Command Zone") },
       activeDeckId: "deck-1",
@@ -276,7 +173,7 @@ describe("command zone after a save and reload", () => {
 
   it("keeps the commander cleared when its row is already gone", async () => {
     await useDeckStore.getState().setCommander(ATRAXA);
-    server.saved.rows = [];
+    server.dropRows();
 
     await useDeckStore.getState().clearCommander();
 
