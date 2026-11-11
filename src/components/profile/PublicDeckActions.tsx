@@ -1,6 +1,15 @@
 "use client";
-
-import { useCallback, useState } from "react";
+/**
+ * The action bar of a public deck page: save, fork, share and print, with the
+ * credit to the source deck when this one is a fork.
+ *
+ * Community context (ui). Saving and forking need a signed-in visitor and
+ * leave the owner's deck untouched: a save bookmarks it as a saved deck of the
+ * visitor, a fork copies it into a private deck the visitor owns.
+ *
+ * @module profile/PublicDeckActions
+ */
+import { useCallback, useState, type ReactNode } from "react";
 import { Bookmark, CopyPlus, Printer, Share2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
@@ -17,6 +26,38 @@ interface PublicDeckActionsProps {
   readonly deckName: string;
   readonly isSignedIn: boolean;
   readonly forkedFrom?: ForkAttribution;
+}
+
+interface ForkSourceLinkProps {
+  /** Id of the public deck this one was forked from. */
+  readonly sourceDeckId: string;
+  /** The link text: the chunks of the message's `<link>` tag. */
+  readonly children: ReactNode;
+}
+
+/** Links the fork credit to the source deck's public page. */
+function ForkSourceLink({ sourceDeckId, children }: ForkSourceLinkProps) {
+  return (
+    <a
+      href={`/deck/${sourceDeckId}`}
+      className="font-medium text-[var(--accent-text)] hover:underline"
+    >
+      {children}
+    </a>
+  );
+}
+
+/**
+ * The `<link>` tag handler of `deck.public.forkedFrom`. It is built out here,
+ * so `PublicDeckActions` declares no component while it renders (Sonar S6478),
+ * and the source deck reaches the link as a prop.
+ */
+function forkSourceLinkTag(sourceDeckId: string) {
+  return function renderForkSourceLink(chunks: ReactNode) {
+    return (
+      <ForkSourceLink sourceDeckId={sourceDeckId}>{chunks}</ForkSourceLink>
+    );
+  };
 }
 
 /** Actions that preserve ownership boundaries on a public deck page. */
@@ -92,14 +133,7 @@ export function PublicDeckActions({
                   author: forkedFrom.author,
                 })
               : forkedFrom.name,
-            link: (chunks) => (
-              <a
-                href={`/deck/${forkedFrom.id}`}
-                className="font-medium text-[var(--accent-text)] hover:underline"
-              >
-                {chunks}
-              </a>
-            ),
+            link: forkSourceLinkTag(forkedFrom.id),
           })}
         </span>
       )}
