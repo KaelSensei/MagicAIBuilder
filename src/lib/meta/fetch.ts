@@ -42,13 +42,30 @@ export interface TournamentData {
 
 // ─── EDHRec ───────────────────────────────────────────────────────────────────
 
-/** Convert a commander name to an EDHRec slug, e.g. "Atraxa, Praetors' Voice" → "atraxa-praetors-voice" */
+/**
+ * Converts a commander's name to its slug, the URL form EDHREC uses and the commander pages,
+ * the sitemap and the meta cache share: "Lim-Dûl the Necromancer" → "lim-dul-the-necromancer".
+ *
+ * Unicode NFD splits an accented letter into its base letter and a combining mark. The strip
+ * then drops the mark, with everything else that is not an ASCII letter, a digit, whitespace or
+ * a hyphen. Whitespace is trimmed, and each run of it becomes one hyphen. EDHREC answers 200 for
+ * the transliterated slug and 403 for the slug with the accented letter dropped
+ * (https://json.edhrec.com/pages/commanders/lim-dul-the-necromancer.json, read 2026-11-11).
+ *
+ * The commander deck route computes the same slug in SQL, behind an expression index. If you
+ * change this function, change that query, its index (in a new migration) and
+ * `commander-slug-parity.test.ts` in the same commit.
+ *
+ * @param name A commander's name, as Scryfall prints it.
+ * @returns Lowercase ASCII letters, digits and hyphens; "" when none of them survive.
+ */
 export function commanderToSlug(name: string): string {
   return name
+    .normalize("NFD")
     .toLowerCase()
-    .replaceAll(/[^a-z0-9\s-]/g, "") // strip punctuation
+    .replaceAll(/[^a-z0-9\s-]/g, "")
     .trim()
-    .replaceAll(/\s+/g, "-"); // spaces → hyphens
+    .replaceAll(/\s+/g, "-");
 }
 
 /**

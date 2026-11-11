@@ -24,10 +24,12 @@ const MAX_DECKS = 50;
 /**
  * Ids of the public decks led by the commander whose name slugifies to `slug`.
  *
- * The slug is matched in SQL against the denormalised Deck.commanderName,
- * using the same expression the partial index Deck_commanderSlug_public_idx
- * covers — the SQL twin of commanderToSlug (lowercase → strip non
- * [a-z0-9\s-] → trim → whitespace runs to '-'). Prisma cannot filter on an
+ * The slug is matched in SQL against the denormalised Deck.commanderName with
+ * the SQL twin of commanderToSlug, the expression the partial index
+ * Deck_commanderSlug_v2_public_idx covers (migration 20261111210000): Unicode
+ * NFD, ASCII lowercase, JavaScript's whitespace mapped to a space, strip what
+ * is not [a-z0-9 -], trim, runs of spaces to '-'. Each backslash is doubled
+ * because this is a JavaScript template literal. Prisma cannot filter on an
  * expression, hence the raw id query.
  *
  * @param slug The commander slug from the URL.
@@ -41,8 +43,14 @@ async function findPublicDeckIdsByCommanderSlug(
     WHERE "isPublic" = true
       AND "commanderName" IS NOT NULL
       AND regexp_replace(
-            btrim(regexp_replace(lower("commanderName"), '[^a-z0-9[:space:]-]', '', 'g')),
-            '[[:space:]]+', '-', 'g'
+            btrim(regexp_replace(
+              regexp_replace(
+                lower(normalize("commanderName", NFD) COLLATE "C"),
+                '[\\t\\n\\v\\f\\r \\u00a0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000\\ufeff]', ' ', 'g'
+              ),
+              '[^a-z0-9 -]', '', 'g'
+            )),
+            ' +', '-', 'g'
           ) = ${slug}
   `;
   return rows.map((row) => row.id);
