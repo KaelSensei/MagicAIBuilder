@@ -57,6 +57,15 @@ services:
 
       # Ensure auth is bypassed for E2E
       PLAYWRIGHT_TEST: "1"
+      # The app is built once (`next build` below) and served with `next
+      # start`, not compiled route by route under `next dev`. On 2026-11-11 the
+      # dev server reached 3.9 GB RSS on the 7.7 GB host and restarted itself
+      # at its memory threshold. The build must be a *development* build: a
+      # production build inlines NODE_ENV="production" and so compiles out the
+      # PLAYWRIGHT_TEST bypass that every spec seeds its data through.
+      # `next.config.ts` allows that build only when both variables are set.
+      NODE_ENV: "development"
+      E2E_DEVELOPMENT_BUILD: "1"
       # Default to the FULL suite. `:-` would also swallow an explicit empty
       # value, so use `-`: setting PLAYWRIGHT_SPEC="" deliberately means "all
       # specs", while naming a file narrows the run to it.
@@ -69,23 +78,26 @@ services:
       #   @external — depends on third-party services (e.g. the live Moxfield
       #     API); a deck going private there once turned the gate red with no
       #     code change on our side.
-      #   @perf — asserts wall-clock latency against `next dev`, which compiles
-      #     routes on demand; the same endpoint measured 41ms alone and 5163ms
-      #     under full-suite contention.
+      #   @perf — asserts wall-clock latency. Under `next dev` the same
+      #     endpoint measured 41ms alone and 5163ms under full-suite contention;
+      #     the prebuilt server removes that cause, but a shared host or a CI
+      #     runner still adds noise the 1-second budget does not account for.
       # Set this to "" to run them deliberately.
       PLAYWRIGHT_GREP_INVERT: "${PLAYWRIGHT_GREP_INVERT-@external|@perf}"
-    # Two invocations cover every project while restarting next dev before
-    # authenticated flows; one long run reaches its memory restart threshold.
+    # One invocation covers every project. It used to be two, to restart
+    # `next dev` before the authenticated flows, because one long run reached
+    # the dev server's memory restart threshold; `next start` has none.
+    # `--no-lint`: lint, like the type check `next.config.ts` skips here, is
+    # gated by CI and the pre-PR gate, and this build only needs bundles.
     command: >
       sh -lc "
         pnpm exec prisma migrate deploy || exit $$?;
-        for project in chromium authenticated; do
-          if [ -n \"$${PLAYWRIGHT_GREP_INVERT}\" ]; then
-            pnpm exec playwright test $${PLAYWRIGHT_SPEC} --project \"$$project\" --grep-invert \"$${PLAYWRIGHT_GREP_INVERT}\" || exit $$?;
-          else
-            pnpm exec playwright test $${PLAYWRIGHT_SPEC} --project \"$$project\" || exit $$?;
-          fi;
-        done
+        pnpm exec next build --no-lint || exit $$?;
+        if [ -n \"$${PLAYWRIGHT_GREP_INVERT}\" ]; then
+          pnpm exec playwright test $${PLAYWRIGHT_SPEC} --project chromium --project authenticated --grep-invert \"$${PLAYWRIGHT_GREP_INVERT}\";
+        else
+          pnpm exec playwright test $${PLAYWRIGHT_SPEC} --project chromium --project authenticated;
+        fi
       "
 
 volumes:
