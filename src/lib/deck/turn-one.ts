@@ -21,8 +21,8 @@
  */
 
 import { extractColorPips } from "../mana/parse";
-import { OPENING_HAND_SIZE } from "../playtest/engine";
 
+import { OPENING_HAND_SIZE } from "./game-constants";
 import { countColorSources, PIP_COLORS, type PipColor } from "./mana-alignment";
 import type { DeckCard } from "./types";
 

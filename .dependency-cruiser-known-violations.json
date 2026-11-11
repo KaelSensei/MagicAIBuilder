@@ -379,47 +379,6 @@
   },
   {
     "type": "cycle",
-    "from": "src/lib/deck/turn-one.ts",
-    "to": "src/lib/playtest/engine.ts",
-    "unresolvedTo": "../playtest/engine",
-    "dependencyTypes": [
-      "local",
-      "import"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "no-circular"
-    },
-    "cycle": [
-      {
-        "name": "src/lib/playtest/engine.ts",
-        "dependencyTypes": [
-          "local",
-          "import"
-        ]
-      },
-      {
-        "name": "src/lib/deck/types.ts",
-        "dependencyTypes": [
-          "aliased",
-          "aliased-tsconfig",
-          "aliased-tsconfig-paths",
-          "local",
-          "type-only",
-          "import"
-        ]
-      },
-      {
-        "name": "src/lib/deck/turn-one.ts",
-        "dependencyTypes": [
-          "local",
-          "type-import"
-        ]
-      }
-    ]
-  },
-  {
-    "type": "cycle",
     "from": "src/lib/import/decklist-parse.ts",
     "to": "src/lib/import/url-import.ts",
     "unresolvedTo": "./url-import",
