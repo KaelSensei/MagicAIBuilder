@@ -43,7 +43,7 @@ export function withSavedCommandRow(
 ): Readonly<Record<string, Deck>> {
   const deck = decks[saved.deckId];
   const card = deck?.[saved.slot];
-  if (!deck || !card || card.id !== saved.placedId) return decks;
+  if (!deck || card?.id !== saved.placedId) return decks;
   const withRowId: DeckCard = { ...card, id: saved.rowId };
   const updated: Deck =
     saved.slot === "commander"

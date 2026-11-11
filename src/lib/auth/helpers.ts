@@ -57,11 +57,11 @@ const PLAYWRIGHT_USER = {
  * @param userId - the id the session token carries; empty when the token has none
  * @returns the user, or null when the token names no live row
  */
-async function findSessionUser(
+function findSessionUser(
   userId: string
 ): Promise<AuthenticatedSession["user"] | null> {
   if (!userId) {
-    return null;
+    return Promise.resolve(null);
   }
 
   return prisma.user.findUnique({

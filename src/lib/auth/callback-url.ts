@@ -4,8 +4,12 @@ export const DEFAULT_CALLBACK_URL = "/decks";
 /**
  * A base no real page can have. Parsing against it tells a path on this site
  * (same origin as the base) from anything that names another host.
+ *
+ * It is only a parse base and is never fetched. `https` and `http` are both
+ * special schemes, so the URL parser reads a path the same way against either
+ * (both read `\` as `/`); `https` keeps an insecure URL out of the code.
  */
-const PROBE_ORIGIN = "http://callback.invalid";
+const PROBE_ORIGIN = "https://callback.invalid";
 
 /**
  * Reduces a `callbackUrl` to a path on this site, or the deck list.

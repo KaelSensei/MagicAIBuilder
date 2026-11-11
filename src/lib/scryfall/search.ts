@@ -234,7 +234,8 @@ function partnerRequirementQuery(
 function anyOf(queries: readonly string[]): string {
   if (queries.length === 0) return "is:commander";
   if (queries.length === 1) return queries[0];
-  return `(${queries.map((query) => `(${query})`).join(" or ")})`;
+  const alternatives = queries.map((query) => `(${query})`).join(" or ");
+  return `(${alternatives})`;
 }
 
 /**
