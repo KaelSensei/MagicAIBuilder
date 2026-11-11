@@ -16,6 +16,7 @@ import { DeckCardOwnershipBadge } from "@/components/collection/DeckCardOwnershi
 import { useLocalizedDeckName } from "@/components/card/LocalizedDeckTextContext";
 import { getCardRoleExplanation } from "@/lib/deck/card-role-explanation";
 import { formatUsdPrice } from "@/i18n/number-format";
+import { CardRowActions } from "@/components/card/CardRowActions";
 interface CardListItemProps {
   readonly card: DeckCard;
   readonly onRemove?: (id: string) => void;
@@ -132,7 +133,7 @@ export function CardListItem({
   onMoveToMaybeboard,
   onMoveToSideboard,
   className,
-  showNotes: _showNotes,
+  showNotes = false,
 }: CardListItemProps) {
   const t = useTranslations("card");
   const locale = useLocale();
@@ -152,7 +153,7 @@ export function CardListItem({
     <CardTooltip card={card}>
       <motion.div
         className={cn(
-          "flex items-center gap-2 px-2 py-1.5 rounded hover:bg-[var(--surface-hover)] group transition-colors",
+          "relative flex items-center gap-2 px-2 py-1.5 rounded hover:bg-[var(--surface-hover)] group transition-colors",
           className
         )}
         layout
@@ -200,6 +201,7 @@ export function CardListItem({
             onFlip={flip}
           />
         )}
+        <CardRowActions card={card} showNotes={showNotes} />
         {onMoveToMaybeboard && (
           <button
             type="button"

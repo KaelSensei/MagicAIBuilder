@@ -28,7 +28,11 @@
     "add": "Ajouter une note",
     "edit": "Modifier la note",
     "editor": "Éditeur de note de carte",
-    "placeholder": "Ajoute une note privée pour cette carte…"
+    "placeholder": "Ajoute une note privée pour cette carte…",
+    "addNamed": "Ajouter une note à {name}",
+    "editNamed": "Modifier la note de {name}",
+    "fieldNamed": "Note sur {name}",
+    "hint": "Ctrl+Entrée pour enregistrer · Échap pour annuler"
   },
   "favorite": {
     "add": "Ajouter aux favoris",
