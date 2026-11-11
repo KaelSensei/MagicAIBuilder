@@ -75,12 +75,11 @@ Slice 4 is where this initiative earns its keep: a ManaBox preset turns "export,
 - Foils, signed cards, proxies and condition: ManaBox tracks proxy and signed state as first-class data. I-06's model must decide whether those travel, or the import silently flattens a distinction the player cares about.
 - Is there a legal or terms-of-service constraint on consuming another app's export on the player's behalf? The player owns their data and initiates the transfer, which is the defensible position — but it should be checked, not assumed.
 
-## Feature contract (Light, 2026-11-11)
+## Feature contract (Full, 2026-11-11)
 
 The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
 
 
-This file is light because the initiative is Later or Parked and is not in I-80 to I-98. The scenarios below are the bar for when it is promoted. They are not a promise to build it next.
 
 ### Summary and problem
 
@@ -103,7 +102,7 @@ See the roadmap persona table. This initiative serves the rows that list its id.
 
 #### US-26-01
 
-As a player, I want the outcome of I-26, so that the work in this file is the reason to build it.
+As a player, I want a player can bring a collection out of the app that already holds it, at printing level, without retyping it., so that this initiative's definition of done is met.
 
 #### US-26-02
 
@@ -193,6 +192,148 @@ None beyond the moved record.
 ### Sources
 
 - No external URL in the moved record. The record itself is the source for behaviour that is already in the code.
+
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-26-101
+
+As a player, I want the product to import from the CSV exports of the major collection apps, mapping to printing identity., so that a player can bring a collection out of the app that already holds it, at printing level, without retyping it.
+
+#### AC-26-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Import from the CSV exports of the major collection apps, mapping to printing identity.
+
+#### AC-26-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-26-102 Edge
+
+Given a list where one name does not resolve
+When the player confirms
+Then the unresolved name is shown first and nothing is written until they accept that list
+
+#### US-26-102
+
+As a player, I want the product to preview before writing: matched rows, unmatched rows, and duplicates, with the same disclosure discipline the deck import preview already uses., so that a player can bring a collection out of the app that already holds it, at printing level, without retyping it.
+
+#### AC-26-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Preview before writing: matched rows, unmatched rows, and duplicates, with the same disclosure discipline the deck import preview already uses.
+
+#### AC-26-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-26-105 Edge
+
+Given a list where one name does not resolve
+When the player confirms
+Then the unresolved name is shown first and nothing is written until they accept that list
+
+#### US-26-103
+
+As a player, I want the product to never silently merge., so that a player can bring a collection out of the app that already holds it, at printing level, without retyping it.
+
+#### AC-26-106 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Never silently merge. An ambiguous printing is reported, not guessed.
+
+#### AC-26-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-26-108 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-26-104
+
+As a player, I want the product to record the source and date of an import, so a collection's provenance is readable later., so that a player can bring a collection out of the app that already holds it, at printing level, without retyping it.
+
+#### AC-26-109 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Record the source and date of an import, so a collection's provenance is readable later.
+
+#### AC-26-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-26-111 Edge
+
+Given a list where one name does not resolve
+When the player confirms
+Then the unresolved name is shown first and nothing is written until they accept that list
+
+#### US-26-105
+
+As a player, I want the product to support re-import as reconciliation rather than duplication., so that a player can bring a collection out of the app that already holds it, at printing level, without retyping it.
+
+#### AC-26-112 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Support re-import as reconciliation rather than duplication.
+
+#### AC-26-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-26-114 Edge
+
+Given a list where one name does not resolve
+When the player confirms
+Then the unresolved name is shown first and nothing is written until they accept that list
+
+### UX states for this feature
+
+The player-visible outcome is: a player can bring a collection out of the app that already holds it, at printing level, without retyping it.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
 
 ### Record moved from the roadmap (2026-11-11)
 

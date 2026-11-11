@@ -219,12 +219,11 @@ Read on 2026-11-09 unless dated otherwise. "Search summary" means the official p
 26. Gigazine, [summary of PSA's 2025 counterfeit data](https://gigazine.net/gsc_news/en/20260512-tcg-fake), 2026-05-12.
 27. [MTGGoldfish Premium](https://www.mtggoldfish.com/premium) (search summary) and [TopDecked Powered features](https://topdecked.com/articles/powered-features).
 
-## Feature contract (Light, 2026-11-11)
+## Feature contract (Full, 2026-11-11)
 
 The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
 
 
-This file is light because the initiative is Later or Parked and is not in I-80 to I-98. The scenarios below are the bar for when it is promoted. They are not a promise to build it next.
 
 ### Summary and problem
 
@@ -247,7 +246,7 @@ See the roadmap persona table. This initiative serves the rows that list its id.
 
 #### US-33-01
 
-As a player, I want the outcome of I-33, so that the work in this file is the reason to build it.
+As a player, I want the owner can decide from measured evidence and a legal review whether MagicAIBuilder should ever hold buyers' money, and every rung below that decision is useful on its own., so that this initiative's definition of done is met.
 
 #### US-33-02
 
@@ -338,6 +337,170 @@ None beyond the moved record.
 
 - https://manapool.com/mass-entry-info
 - https://stripe.com/fr/connect/pricing
+
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-33-101
+
+As a player, I want the product to the owner confirms or edits the proposed gate thresholds and metric definitions as the first decision-log entry, before any measuring starts (slice 0)., so that the owner can decide from measured evidence and a legal review whether MagicAIBuilder should ever hold buyers' money, and every rung below that decision is useful on its own.
+
+#### AC-33-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: The owner confirms or edits the proposed gate thresholds and metric definitions as the first decision-log entry, before any measuring starts (slice 0).
+
+#### AC-33-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-33-102 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-33-102
+
+As a player, I want the product to specify the gate metrics with I-32: handoffs, network-reported attributed sales, monthly active buyers and wrong-printing reports (slice 1)., so that the owner can decide from measured evidence and a legal review whether MagicAIBuilder should ever hold buyers' money, and every rung below that decision is useful on its own.
+
+#### AC-33-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Specify the gate metrics with I-32: handoffs, network-reported attributed sales, monthly active buyers and wrong-printing reports (slice 1).
+
+#### AC-33-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-33-105 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-33-103
+
+As a player, I want the product to ask Cardmarket, Mana Pool and CardTrader for listing-level feeds and display rights, and record the answers (slice 4)., so that the owner can decide from measured evidence and a legal review whether MagicAIBuilder should ever hold buyers' money, and every rung below that decision is useful on its own.
+
+#### AC-33-106 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Ask Cardmarket, Mana Pool and CardTrader for listing-level feeds and display rights, and record the answers (slice 4).
+
+#### AC-33-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-33-108 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-33-104
+
+As a player, I want the product to measure stage 1 for six months with quarterly review entries, then choose the first market (slices 2–3)., so that the owner can decide from measured evidence and a legal review whether MagicAIBuilder should ever hold buyers' money, and every rung below that decision is useful on its own.
+
+#### AC-33-109 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Measure stage 1 for six months with quarterly review entries, then choose the first market (slices 2–3).
+
+#### AC-33-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-33-111 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-33-105
+
+As a player, I want the product to compare affiliate, take-rate and subscription income on measured numbers, then commission a legal review of stage 5 (slices 5–6)., so that the owner can decide from measured evidence and a legal review whether MagicAIBuilder should ever hold buyers' money, and every rung below that decision is useful on its own.
+
+#### AC-33-112 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Compare affiliate, take-rate and subscription income on measured numbers, then commission a legal review of stage 5 (slices 5–6).
+
+#### AC-33-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-33-114 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-33-106
+
+As a player, I want the product to log the owner's stage-5 go or no-go., so that the owner can decide from measured evidence and a legal review whether MagicAIBuilder should ever hold buyers' money, and every rung below that decision is useful on its own.
+
+#### AC-33-115 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Log the owner's stage-5 go or no-go. A "go" lands in the same pull request as the roadmap change that reverses the non-goal (slice 9).
+
+#### AC-33-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-33-117 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+### UX states for this feature
+
+The player-visible outcome is: the owner can decide from measured evidence and a legal review whether MagicAIBuilder should ever hold buyers' money, and every rung below that decision is useful on its own.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
 
 ### Record moved from the roadmap (2026-11-11)
 

@@ -373,6 +373,214 @@ Whether budget pages can show a full-deck estimate depends on a price source we 
 - https://scryfall.com/docs/api
 - https://serebii.net/tcgpocket/themedecks.shtml
 
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-54-101
+
+As a player, I want the product to a commander catalogue keyed by Oracle ID, rebuilt daily from I-67's card and Oracle Tags tables (re-pointed 2026-11-10 to I-67 slices 2 and 7) and never paged through search (slice 1)., so that a player narrows the commanders Scryfall says can lead a deck with filters for colours, play style, mechanics, complexity, bracket target, a budget for the whole deck and "not like my decks", and every result says why it matches, one line per filter with its source. The finder works signed out, and no model chooses, orders or describes a commander.
+
+#### AC-54-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A commander catalogue keyed by Oracle ID, rebuilt daily from I-67's card and Oracle Tags tables (re-pointed 2026-11-10 to I-67 slices 2 and 7) and never paged through search (slice 1). fetchAllPages (src/lib/scryfall/client.ts) stops after PAGE_SAFETY_CAP = 20 pages, 3,500 cards at 175 a page, fewer than the 3,754 commanders, and returns the partial list without an error; its callers today read the banned list and the Game Changers, far below the cap. buildCommanderSearchQuery (src/lib/scryfall/search.ts) searches by name and colours only.
+
+#### AC-54-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-54-102 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-54-102
+
+As a player, I want the product to one play-style vocabulary with versioned definitions, compiled both to a Scryfall query fragment and to a local predicate, with a daily conformance check and an owner-labelled fixture (slice 2)., so that a player narrows the commanders Scryfall says can lead a deck with filters for colours, play style, mechanics, complexity, bracket target, a budget for the whole deck and "not like my decks", and every result says why it matches, one line per filter with its source. The finder works signed out, and no model chooses, orders or describes a commander.
+
+#### AC-54-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: One play-style vocabulary with versioned definitions, compiled both to a Scryfall query fragment and to a local predicate, with a daily conformance check and an owner-labelled fixture (slice 2). It replaces three lists: the wizard's 8 strategies, the 11 ARCHETYPES (src/lib/ai/archetypes.ts) and the 17 themes of detectThemes (src/lib/deck/themes.ts), whose Tokens rule counts "put a", which also matches counters.
+
+#### AC-54-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-54-105 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-54-103
+
+As a player, I want the product to the finder page and route, signed out: colours, styles in and out, keywords and types, the Game Changer rule, the visible query, a funnel and one "why it matches" line per filter (slice 3); a complexity score with its factors (slice 4); and a seeded "Surprise me" (slice 5)., so that a player narrows the commanders Scryfall says can lead a deck with filters for colours, play style, mechanics, complexity, bracket target, a budget for the whole deck and "not like my decks", and every result says why it matches, one line per filter with its source. The finder works signed out, and no model chooses, orders or describes a commander.
+
+#### AC-54-106 Happy path
+
+Given a signed-out visitor and a public deck
+When the player uses this behaviour
+Then the behaviour holds: The finder page and route, signed out: colours, styles in and out, keywords and types, the Game Changer rule, the visible query, a funnel and one "why it matches" line per filter (slice 3); a complexity score with its factors (slice 4); and a seeded "Surprise me" (slice 5).
+
+#### AC-54-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-54-108 Edge
+
+Given the same inputs as a previous run
+When the player runs it again
+Then the reported figures match the first run
+
+#### US-54-104
+
+As a player, I want "Help me choose" in the wizard instead of "let the AI choose", and an honest budget label (slice 6)., so that a player narrows the commanders Scryfall says can lead a deck with filters for colours, play style, mechanics, complexity, bracket target, a budget for the whole deck and "not like my decks", and every result says why it matches, one line per filter with its source. The finder works signed out, and no model chooses, orders or describes a commander.
+
+#### AC-54-109 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then "Help me choose" in the wizard instead of "let the AI choose", and an honest budget label (slice 6). The budget label defect is recorded under I-02, and removing the prompt branch is I-02's change and the owner's decision.
+
+#### AC-54-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-54-111 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-54-105
+
+As a player, I want "Not like my decks" and "like a commander I enjoy" (slice 7), "Help me choose a commander" in I-39's first-run panel (slice 9), free text turned into the same visible filters through I-14 (slice 10), and saved finder profiles (slice 15)., so that a player narrows the commanders Scryfall says can lead a deck with filters for colours, play style, mechanics, complexity, bracket target, a budget for the whole deck and "not like my decks", and every result says why it matches, one line per filter with its source. The finder works signed out, and no model chooses, orders or describes a commander.
+
+#### AC-54-112 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then "Not like my decks" and "like a commander I enjoy" (slice 7), "Help me choose a commander" in I-39's first-run panel (slice 9), free text turned into the same visible filters through I-14 (slice 10), and saved finder profiles (slice 15).
+
+#### AC-54-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-54-114 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-54-106
+
+As a player, I want the product to later: a full-deck cost estimate and a bracket distribution from public decks, with n and date (slice 8); curated pages under I-34's policy, noindex until deck signals pass its thresholds (slice 11); collection-aware ranking (slice 12); similarity and popularity bands with their denominators (slice 13); and the French review (slice 16)., so that a player narrows the commanders Scryfall says can lead a deck with filters for colours, play style, mechanics, complexity, bracket target, a budget for the whole deck and "not like my decks", and every result says why it matches, one line per filter with its source. The finder works signed out, and no model chooses, orders or describes a commander.
+
+#### AC-54-115 Happy path
+
+Given a signed-out visitor and a public deck
+When the player uses this behaviour
+Then the behaviour holds: Later: a full-deck cost estimate and a bracket distribution from public decks, with n and date (slice 8); curated pages under I-34's policy, noindex until deck signals pass its thresholds (slice 11); collection-aware ranking (slice 12); similarity and popularity bands with their denominators (slice 13); and the French review (slice 16).
+
+#### AC-54-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-54-117 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-54-107
+
+As a player, I want the product to after I-30's decision: a paid entitlement for slice 12 (slice 14)., so that a player narrows the commanders Scryfall says can lead a deck with filters for colours, play style, mechanics, complexity, bracket target, a budget for the whole deck and "not like my decks", and every result says why it matches, one line per filter with its source. The finder works signed out, and no model chooses, orders or describes a commander.
+
+#### AC-54-118 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: After I-30's decision: a paid entitlement for slice 12 (slice 14).
+
+#### AC-54-119 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-54-120 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-54-108
+
+As a player, I want the product to a filter "can include card X": colour identity contains X's, X is legal, and X's Game Changer status fits the chosen bracket., so that a player narrows the commanders Scryfall says can lead a deck with filters for colours, play style, mechanics, complexity, bracket target, a budget for the whole deck and "not like my decks", and every result says why it matches, one line per filter with its source. The finder works signed out, and no model chooses, orders or describes a commander.
+
+#### AC-54-121 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A filter "can include card X": colour identity contains X's, X is legal, and X's Game Changer status fits the chosen bracket. Pokémon TCG Pocket builds theme decks around a "highlight card" (Serebii, seen 2026-11-10). Added 2026-11-11.
+
+#### AC-54-122 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-54-123 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+### UX states for this feature
+
+The player-visible outcome is: a player narrows the commanders Scryfall says can lead a deck with filters for colours, play style, mechanics, complexity, bracket target, a budget for the whole deck and "not like my decks", and every result says why it matches, one line per filter with its source. The finder works signed out, and no model chooses, orders or describes a commander.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
+
 ### Record moved from the roadmap (2026-11-11)
 
 Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.

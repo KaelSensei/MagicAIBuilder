@@ -358,6 +358,236 @@ Who the colour-blind and low-vision reviewers are is open. The European Accessib
 - https://www.reddit.com/r/MagicArena/comments/easwf2/
 - https://github.com/dequelabs/axe-core/blob/develop/doc/rule-descriptions.md
 
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-49-101
+
+As a player, I want the product to a colour-signal register, captures of six journeys at 200% zoom, at 320 px, under forced colours and under simulated colour vision, a pure src/lib/a11y/palette.ts, and a token contrast test that reads src/styles/globals.css (slices 1–2)., so that every signal a sighted player reads from colour has a second channel, status colours and charts pass contrast in both themes, text scales to 200% and reflows at 320 CSS px, and Windows contrast themes and reduced motion are honoured, with no "colour-blind mode" to find.
+
+#### AC-49-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A colour-signal register, captures of six journeys at 200% zoom, at 320 px, under forced colours and under simulated colour vision, a pure src/lib/a11y/palette.ts, and a token contrast test that reads src/styles/globals.css (slices 1–2).
+
+#### AC-49-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-49-102 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-49-102
+
+As a player, I want the product to an E2E harness that emulates protanopia, deuteranopia, tritanopia and achromatopsia, forced colours, zoom, reflow and text spacing, with reviewed baselines (slice 3)., so that every signal a sighted player reads from colour has a second channel, status colours and charts pass contrast in both themes, text scales to 200% and reflows at 320 CSS px, and Windows contrast themes and reduced motion are honoured, with no "colour-blind mode" to find.
+
+#### AC-49-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: An E2E harness that emulates protanopia, deuteranopia, tritanopia and achromatopsia, forced colours, zoom, reflow and text spacing, with reviewed baselines (slice 3). Today the repository has no axe tool and no screenshot test.
+
+#### AC-49-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-49-105 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-49-103
+
+As a player, I want the product to status tokens for both themes and a status icon primitive, then the migration of raw status colours, ending with a lint rule and an empty allowlist (slices 4–7)., so that every signal a sighted player reads from colour has a second channel, status colours and charts pass contrast in both themes, text scales to 200% and reflows at 320 CSS px, and Windows contrast themes and reduced motion are honoured, with no "colour-blind mode" to find.
+
+#### AC-49-106 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Status tokens for both themes and a status icon primitive, then the migration of raw status colours, ending with a lint rule and an empty allowlist (slices 4–7). Today 496 hard-coded red, green, amber, yellow, emerald, orange, rose or lime classes in 106 .tsx files have no dark: variant and no light-theme mapping; on white, red-400 measures 2.89:1, green-400 1.78:1 and amber-300 1.45:1, against 4.5:1. In src/components/deck/DeckStats.tsx a warning and an error share AlertTriangle and differ only by colour.
+
+#### AC-49-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-49-108 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-49-104
+
+As a player, I want the product to chart tokens and a ColorDistribution with labelled, outlined segments, a table view and a palette validated under simulation (slice 8)., so that every signal a sighted player reads from colour has a second channel, status colours and charts pass contrast in both themes, text scales to 200% and reflows at 320 CSS px, and Windows contrast themes and reduced motion are honoured, with no "colour-blind mode" to find.
+
+#### AC-49-109 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Chart tokens and a ColorDistribution with labelled, outlined segments, a table view and a palette validated under simulation (slice 8). Today src/components/deck/ColorDistribution.tsx separates its segments by hue alone, --mana-black measures 1.24:1 on the dark surface, and red and green fall under the distance threshold with protanopia.
+
+#### AC-49-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-49-111 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-49-105
+
+As a player, I want the product to manaCurve in one neutral hue, sized in rem, with a grid in both themes and a table view (slice 9)., so that every signal a sighted player reads from colour has a second channel, status colours and charts pass contrast in both themes, text scales to 200% and reflows at 320 CSS px, and Windows contrast themes and reduced motion are honoured, with no "colour-blind mode" to find.
+
+#### AC-49-112 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: ManaCurve in one neutral hue, sized in rem, with a grid in both themes and a table view (slice 9). Today src/components/deck/ManaCurve.tsx uses eight hues for eight mana values, and two of them are near-identical even with normal vision.
+
+#### AC-49-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-49-114 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-49-106
+
+As a player, I want the product to bracket colours that pass contrast in each theme, and a marker other than colour on selected colour filters (slice 10)., so that every signal a sighted player reads from colour has a second channel, status colours and charts pass contrast in both themes, text scales to 200% and reflows at 320 CSS px, and Windows contrast themes and reduced motion are honoured, with no "colour-blind mode" to find.
+
+#### AC-49-115 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Bracket colours that pass contrast in each theme, and a marker other than colour on selected colour filters (slice 10). Today BracketIndicator.tsx draws its number in green-400 and amber-400, at 1.78:1 and 1.72:1 on white, and the selected filter border in SearchFilters.tsx and BuilderColorSearchPicker.tsx measures 2.76:1, under 3:1.
+
+#### AC-49-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-49-117 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+#### US-49-107
+
+As a player, I want the product to text sizes on the rem scale, with no informational text under 12 px, then the reflow and zoom fixes that slice 1 finds (slices 11–12)., so that every signal a sighted player reads from colour has a second channel, status colours and charts pass contrast in both themes, text scales to 200% and reflows at 320 CSS px, and Windows contrast themes and reduced motion are honoured, with no "colour-blind mode" to find.
+
+#### AC-49-118 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Text sizes on the rem scale, with no informational text under 12 px, then the reflow and zoom fixes that slice 1 finds (slices 11–12). Today 154 uses of text-[7px] to text-[11px] sit in 51 files, and ManaSymbol.tsx draws cost letters at 7 to 9 px.
+
+#### AC-49-119 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-49-120 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-49-108
+
+As a player, I want the product to forced-colours and "more contrast" rules, a Display control for motion and contrast beside the theme buttons, and a review by a colour-blind and a low-vision player (slices 13–15)., so that every signal a sighted player reads from colour has a second channel, status colours and charts pass contrast in both themes, text scales to 200% and reflows at 320 CSS px, and Windows contrast themes and reduced motion are honoured, with no "colour-blind mode" to find.
+
+#### AC-49-121 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Forced-colours and "more contrast" rules, a Display control for motion and contrast beside the theme buttons, and a review by a colour-blind and a low-vision player (slices 13–15).
+
+#### AC-49-122 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-49-123 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-49-109
+
+As a player, I want **A voluntary accessibility statement (gap sweep, 2026-11-10),** generated from the six WCAG 2.2 AA audit bundles of I-04 and I-24., so that every signal a sighted player reads from colour has a second channel, status colours and charts pass contrast in both themes, text scales to 200% and reflows at 320 CSS px, and Windows contrast themes and reduced motion are honoured, with no "colour-blind mode" to find.
+
+#### AC-49-124 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then **A voluntary accessibility statement (gap sweep, 2026-11-10),** generated from the six WCAG 2.2 AA audit bundles of I-04 and I-24. Done means: the page lists each bundle's status and date. Whether the European Accessibility Act applies once a merchant of record hosts checkout is added to L-36.
+
+#### AC-49-125 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-49-126 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+### UX states for this feature
+
+The player-visible outcome is: every signal a sighted player reads from colour has a second channel, status colours and charts pass contrast in both themes, text scales to 200% and reflows at 320 CSS px, and Windows contrast themes and reduced motion are honoured, with no "colour-blind mode" to find.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
+
 ### Record moved from the roadmap (2026-11-11)
 
 Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.

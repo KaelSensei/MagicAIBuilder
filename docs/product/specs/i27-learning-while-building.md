@@ -71,12 +71,11 @@ Slice 1 is deliberately first: a coverage test that fails when a new warning cla
 - Does the comprehensive rules version need to be surfaced to the player, or only recorded? Recording it is the minimum; surfacing it may be noise for the beginner this initiative is for.
 - Is there an audience overlap with I-15's Rule 0 sheets? A player learning what "extra turns" means and a pod declaring it are the same vocabulary, and sharing the content would keep one definition rather than two.
 
-## Feature contract (Light, 2026-11-11)
+## Feature contract (Full, 2026-11-11)
 
 The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
 
 
-This file is light because the initiative is Later or Parked and is not in I-80 to I-98. The scenarios below are the bar for when it is promoted. They are not a promise to build it next.
 
 ### Summary and problem
 
@@ -99,7 +98,7 @@ See the roadmap persona table. This initiative serves the rows that list its id.
 
 #### US-27-01
 
-As a player, I want the outcome of I-27, so that the work in this file is the reason to build it.
+As a player, I want a new Commander player can understand _why_ the product flags something, in the moment, without leaving the deck., so that this initiative's definition of done is met.
 
 #### US-27-02
 
@@ -189,6 +188,126 @@ None beyond the moved record.
 ### Sources
 
 - No external URL in the moved record. The record itself is the source for behaviour that is already in the code.
+
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-27-101
+
+As a player, I want the product to attach a short, sourced explanation to each warning class — colour identity, singleton, bracket inputs, companion rules — reachable in one action from the warning., so that a new Commander player can understand _why_ the product flags something, in the moment, without leaving the deck.
+
+#### AC-27-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Attach a short, sourced explanation to each warning class — colour identity, singleton, bracket inputs, companion rules — reachable in one action from the warning.
+
+#### AC-27-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-27-102 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+#### US-27-102
+
+As a player, I want the product to link to the comprehensive rules reference where a rule is quoted, with its rules version., so that a new Commander player can understand _why_ the product flags something, in the moment, without leaving the deck.
+
+#### AC-27-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Link to the comprehensive rules reference where a rule is quoted, with its rules version.
+
+#### AC-27-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-27-105 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-27-103
+
+As a player, I want the product to keep explanations deterministic and authored., so that a new Commander player can understand _why_ the product flags something, in the moment, without leaving the deck.
+
+#### AC-27-106 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Keep explanations deterministic and authored. Do not generate rules text with the model.
+
+#### AC-27-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-27-108 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-27-104
+
+As a player, I want the product to never block or gate a build behind a lesson., so that a new Commander player can understand _why_ the product flags something, in the moment, without leaving the deck.
+
+#### AC-27-109 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Never block or gate a build behind a lesson.
+
+#### AC-27-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-27-111 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+### UX states for this feature
+
+The player-visible outcome is: a new Commander player can understand _why_ the product flags something, in the moment, without leaving the deck.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
 
 ### Record moved from the roadmap (2026-11-11)
 

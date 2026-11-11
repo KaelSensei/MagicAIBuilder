@@ -211,12 +211,11 @@ Slices 2 and 3 ship alone and close the two largest gaps: a deck link that previ
 20. Twitch Developers, [Embedding video and clips](https://dev.twitch.tv/docs/embed/video-and-clips/), `parent`, minimum size and `time`, read 2026-11-09.
 21. CNIL, [Cookies : solutions pour les outils de mesure d'audience](https://www.cnil.fr/fr/cookies-et-autres-traceurs/regles/cookies-solutions-pour-les-outils-de-mesure-daudience), published 2025-07-04, read 2026-11-09.
 
-## Feature contract (Light, 2026-11-11)
+## Feature contract (Full, 2026-11-11)
 
 The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
 
 
-This file is light because the initiative is Later or Parked and is not in I-80 to I-98. The scenarios below are the bar for when it is promoted. They are not a promise to build it next.
 
 ### Summary and problem
 
@@ -239,7 +238,7 @@ See the roadmap persona table. This initiative serves the rows that list its id.
 
 #### US-36-01
 
-As a player, I want the outcome of I-36, so that the work in this file is the reason to build it.
+As a player, I want a creator embeds a deck with one snippet, a deck link previews as the deck in Discord and on social sites, primers carry card links and timestamped video, and a developer reads public decks through a documented, attributed API., so that this initiative's definition of done is met.
 
 #### US-36-02
 
@@ -331,6 +330,192 @@ None beyond the moved record.
 - https://edhrec.com/articles/edhrec-founder-don-miner-to-speak-at-mv-con-2025
 - https://tappedout.net/mtg-forum/tappedout/is-tappedout-dying
 - https://www.reddit.com/r/EDH/comments/1wv8mf7/
+
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-36-101
+
+As a player, I want the product to one public projection of a deck, used by the deck page and by /api/deck/[id] for every caller but the owner, with a field snapshot test (slice 1)., so that a creator embeds a deck with one snippet, a deck link previews as the deck in Discord and on social sites, primers carry card links and timestamped video, and a developer reads public decks through a documented, attributed API.
+
+#### AC-36-100 Happy path
+
+Given a signed-out visitor and a public deck
+When the player uses this behaviour
+Then the behaviour holds: One public projection of a deck, used by the deck page and by /api/deck/[id] for every caller but the owner, with a field snapshot test (slice 1). See I-08. Shipped in #1312: non-owners get PUBLIC_DECK_SELECT, the deck page reads /api/deck/[id] through fetchPublicDeck, and the route test "serves an anonymous viewer only the fields the public deck page renders" is the field test; #1325 does the same for share links (checked on origin/dev at 72fbfc1 on 2026-11-10).
+
+#### AC-36-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-36-102 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-36-102
+
+As a player, I want the product to a deck image built only from stored data at /og/deck/{id}, Open Graph and Twitter tags on the deck page, a PNG default, and the free-text /api/og removed (slice 2)., so that a creator embeds a deck with one snippet, a deck link previews as the deck in Discord and on social sites, primers carry card links and timestamped video, and a developer reads public decks through a documented, attributed API.
+
+#### AC-36-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A deck image built only from stored data at /og/deck/{id}, Open Graph and Twitter tags on the deck page, a PNG default, and the free-text /api/og removed (slice 2).
+
+#### AC-36-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-36-105 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-36-103
+
+As a player, I want the product to an embed route rendered on the server, themed and localized, framable only under /embed/*, with no cookie, storage or third-party script and a per-deck switch (slice 3); optional legality, declared-bracket and dated-price badges, and an overlay layout for OBS (slices 4–5)., so that a creator embeds a deck with one snippet, a deck link previews as the deck in Discord and on social sites, primers carry card links and timestamped video, and a developer reads public decks through a documented, attributed API.
+
+#### AC-36-106 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: An embed route rendered on the server, themed and localized, framable only under /embed/*, with no cookie, storage or third-party script and a per-deck switch (slice 3); optional legality, declared-bracket and dated-price badges, and an overlay layout for OBS (slices 4–5).
+
+#### AC-36-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-36-108 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-36-104
+
+As a player, I want [[Card]] links in primers, unique heading anchors, and click-to-load YouTube (privacy-enhanced mode) and Twitch video blocks with timestamped sections (slices 6–8)., so that a creator embeds a deck with one snippet, a deck link previews as the deck in Discord and on social sites, primers carry card links and timestamped video, and a developer reads public decks through a documented, attributed API.
+
+#### AC-36-109 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then [[Card]] links in primers, unique heading anchors, and click-to-load YouTube (privacy-enhanced mode) and Twitch video blocks with timestamped sections (slices 6–8).
+
+#### AC-36-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-36-111 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-36-105
+
+As a player, I want the product to fork counts and attribution on every surface, and a creator page with a bio, links and pinned decks (slices 9–10)., so that a creator embeds a deck with one snippet, a deck link previews as the deck in Discord and on social sites, primers carry card links and timestamped video, and a developer reads public decks through a documented, attributed API.
+
+#### AC-36-112 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Fork counts and attribution on every surface, and a creator page with a bio, links and pinned decks (slices 9–10).
+
+#### AC-36-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-36-114 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-36-106
+
+As a player, I want the product to a public:read API scope with two attributed endpoints and a limiter on I-05 M2's shared store (one owner, decided 2026-11-10), behind a terms page reviewed by a lawyer (slice 11)., so that a creator embeds a deck with one snippet, a deck link previews as the deck in Discord and on social sites, primers carry card links and timestamped video, and a developer reads public decks through a documented, attributed API.
+
+#### AC-36-115 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A public:read API scope with two attributed endpoints and a limiter on I-05 M2's shared store (one owner, decided 2026-11-10), behind a terms page reviewed by a lawyer (slice 11).
+
+#### AC-36-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-36-117 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-36-107
+
+As a player, I want the product to a cookie-free view counter with daily-salted de-duplication and an owner toggle; views rank nothing (slice 12)., so that a creator embeds a deck with one snippet, a deck link previews as the deck in Discord and on social sites, primers carry card links and timestamped video, and a developer reads public decks through a documented, attributed API.
+
+#### AC-36-118 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A cookie-free view counter with daily-salted de-duplication and an owner toggle; views rank nothing (slice 12).
+
+#### AC-36-119 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-36-120 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+### UX states for this feature
+
+The player-visible outcome is: a creator embeds a deck with one snippet, a deck link previews as the deck in Discord and on social sites, primers carry card links and timestamped video, and a developer reads public decks through a documented, attributed API.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
 
 ### Record moved from the roadmap (2026-11-11)
 

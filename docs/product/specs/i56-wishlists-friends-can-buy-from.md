@@ -395,6 +395,192 @@ Whether one wanted list replaces I-44's want lists is the amendment the owner mu
 - https://help.elfster.com/en/articles/11517983-how-do-i-mark-that-i-bought-an-item-on-another-elfster-wishlist
 - https://docs.wishpicks.com/en/articles/16189859-how-does-gift-reservation-work
 
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-56-101
+
+As a player, I want the product to retire the favorites stubs: both routes, src/lib/favorites, FavoriteButton and the three models, with a migration that refuses to drop a non-empty table (slice 0)., so that a player keeps one wanted list, filled from the acquisition plan net of owned copies and by hand, with a priority, a printing or "any printing", a finish, a language and a minimum condition per item. They share it for gifts: a friend or relative marks "I'm buying this", so nobody buys the same card twice, and the owner never sees what was reserved. The same list feeds trade matching.
+
+#### AC-56-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Retire the favorites stubs: both routes, src/lib/favorites, FavoriteButton and the three models, with a migration that refuses to drop a non-empty table (slice 0). Today POST /api/favorites (src/app/api/favorites/route.ts) checks no session and answers 201 for data it discards, DELETE /api/favorites/[scryfallId] answers 200 the same way, and GET returns []. This answers I-44's open question 6.
+
+#### AC-56-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-56-102 Edge
+
+Given the account or the cache this behaviour changes
+When the player signs out or the deletion finishes
+Then the next request does not still show the private data
+
+#### US-56-102
+
+As a player, I want the product to one wanted list: WantedItem, an owner page, items added by hand with the printing selector, every item field, the "open to gifts" and "open to trades" switches, paste and export (slice 1)., so that a player keeps one wanted list, filled from the acquisition plan net of owned copies and by hand, with a priority, a printing or "any printing", a finish, a language and a minimum condition per item. They share it for gifts: a friend or relative marks "I'm buying this", so nobody buys the same card twice, and the owner never sees what was reserved. The same list feeds trade matching.
+
+#### AC-56-103 Happy path
+
+Given a signed-in operator
+When the player uses this behaviour
+Then the behaviour holds: One wanted list: WantedItem, an owner page, items added by hand with the printing selector, every item field, the "open to gifts" and "open to trades" switches, paste and export (slice 1).
+
+#### AC-56-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-56-105 Edge
+
+Given a list where one name does not resolve
+When the player confirms
+Then the unresolved name is shown first and nothing is written until they accept that list
+
+#### US-56-103
+
+As a player, I want the product to fill from the acquisition plan, with a preview of owned copies, intents and borrowed flags, and a refresh on request that never overwrites an item the player edited (slice 2)., so that a player keeps one wanted list, filled from the acquisition plan net of owned copies and by hand, with a priority, a printing or "any printing", a finish, a language and a minimum condition per item. They share it for gifts: a friend or relative marks "I'm buying this", so nobody buys the same card twice, and the owner never sees what was reserved. The same list feeds trade matching.
+
+#### AC-56-106 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Fill from the acquisition plan, with a preview of owned copies, intents and borrowed flags, and a refresh on request that never overwrites an item the player edited (slice 2).
+
+#### AC-56-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-56-108 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-56-104
+
+As a player, I want the product to a gift link: an unguessable token, an allowlisted page with plain-language items and dated USD prices, noindex, robots rules under both / and /fr/, and rotate and disable (slice 3)., so that a player keeps one wanted list, filled from the acquisition plan net of owned copies and by hand, with a priority, a printing or "any printing", a finish, a language and a minimum condition per item. They share it for gifts: a friend or relative marks "I'm buying this", so nobody buys the same card twice, and the owner never sees what was reserved. The same list feeds trade matching.
+
+#### AC-56-109 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A gift link: an unguessable token, an allowlisted page with plain-language items and dated USD prices, noindex, robots rules under both / and /fr/, and rotate and disable (slice 3). Today src/app/robots.ts disallows /share/ but not /fr/share/; that item is under I-08.
+
+#### AC-56-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-56-111 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-56-105
+
+As a player, I want the product to reservations, anonymous or signed in: a manage key stored only as a hash, quantities, states, expiry computed on read, a spoiler gate, owner responses identical whether or not anything is reserved, a blind reset and per-browser limits (slice 4)., so that a player keeps one wanted list, filled from the acquisition plan net of owned copies and by hand, with a priority, a printing or "any printing", a finish, a language and a minimum condition per item. They share it for gifts: a friend or relative marks "I'm buying this", so nobody buys the same card twice, and the owner never sees what was reserved. The same list feeds trade matching.
+
+#### AC-56-112 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Reservations, anonymous or signed in: a manage key stored only as a hash, quantities, states, expiry computed on read, a spoiler gate, owner responses identical whether or not anything is reserved, a blind reset and per-browser limits (slice 4).
+
+#### AC-56-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-56-114 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-56-106
+
+As a player, I want the product to later: received gifts into the collection, the gift-window notice in the plan, a store view with a QR code, and the seller handoff of a giver's reservations, with affiliate codes only after I-32 slice 6 and never on a list without the adult declaration (slices 5–8)., so that a player keeps one wanted list, filled from the acquisition plan net of owned copies and by hand, with a priority, a printing or "any printing", a finish, a language and a minimum condition per item. They share it for gifts: a friend or relative marks "I'm buying this", so nobody buys the same card twice, and the owner never sees what was reserved. The same list feeds trade matching.
+
+#### AC-56-115 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Later: received gifts into the collection, the gift-window notice in the plan, a store view with a QR code, and the seller handoff of a giver's reservations, with affiliate codes only after I-32 slice 6 and never on a list without the adult declaration (slices 5–8).
+
+#### AC-56-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-56-117 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-56-107
+
+As a player, I want the product to later: I-44's want side reading the items open to trades, once the owner confirms the amendment (slice 9); the friends and profile audiences, precons and sealed products, reports, blocking and export, the keep mark, market prices, and any-printing items that follow I-57's exclusions (slices 10–17)., so that a player keeps one wanted list, filled from the acquisition plan net of owned copies and by hand, with a priority, a printing or "any printing", a finish, a language and a minimum condition per item. They share it for gifts: a friend or relative marks "I'm buying this", so nobody buys the same card twice, and the owner never sees what was reserved. The same list feeds trade matching.
+
+#### AC-56-118 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Later: I-44's want side reading the items open to trades, once the owner confirms the amendment (slice 9); the friends and profile audiences, precons and sealed products, reports, blocking and export, the keep mark, market prices, and any-printing items that follow I-57's exclusions (slices 10–17).
+
+#### AC-56-119 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-56-120 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+### UX states for this feature
+
+The player-visible outcome is: a player keeps one wanted list, filled from the acquisition plan net of owned copies and by hand, with a priority, a printing or "any printing", a finish, a language and a minimum condition per item. They share it for gifts: a friend or relative marks "I'm buying this", so nobody buys the same card twice, and the owner never sees what was reserved. The same list feeds trade matching.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
+
 ### Record moved from the roadmap (2026-11-11)
 
 Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.

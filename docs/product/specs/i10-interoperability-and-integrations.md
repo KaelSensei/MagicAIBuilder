@@ -2,16 +2,15 @@
 
 **Status:** Shipped  
 **Priority:** Later  
-**Depth:** Light
+**Depth:** Full
 
 This file is the feature spec. It had no engineering-slice spec before 2026-11-11. It has no delivery-slice table, so the dependency generator does not pick slices from it until one is added.
 
-## Feature contract (Light, 2026-11-11)
+## Feature contract (Full, 2026-11-11)
 
 The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
 
 
-This file is light because the initiative is Later or Parked and is not in I-80 to I-98. The scenarios below are the bar for when it is promoted. They are not a promise to build it next.
 
 ### Summary and problem
 
@@ -34,7 +33,7 @@ See the roadmap persona table. This initiative serves the rows that list its id.
 
 #### US-10-01
 
-As a player, I want the outcome of I-10, so that the work in this file is the reason to build it.
+As a player, I want users can bring existing decks in, work on them here, and take the result wherever they play., so that this initiative's definition of done is met.
 
 #### US-10-02
 
@@ -129,6 +128,412 @@ None beyond the moved record.
 - https://archidekt.com/news/19248512
 - https://tappedout.net/mtg-forum/tappedout/import-deck-support-for-spelltable/
 - https://edhmat.com/vs/spelltable
+
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-10-101
+
+As a player, I want the product to treat import/export formats as versioned contracts with fixtures., so that users can bring existing decks in, work on them here, and take the result wherever they play.
+
+#### AC-10-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Treat import/export formats as versioned contracts with fixtures.
+
+#### AC-10-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-10-102 Edge
+
+Given a list where one name does not resolve
+When the player confirms
+Then the unresolved name is shown first and nothing is written until they accept that list
+
+#### US-10-102
+
+As a player, I want the product to add an import preview that shows zones, commanders, missing cards and duplicate decisions., so that users can bring existing decks in, work on them here, and take the result wherever they play.
+
+#### AC-10-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Add an import preview that shows zones, commanders, missing cards and duplicate decisions.
+
+#### AC-10-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-10-105 Edge
+
+Given a list where one name does not resolve
+When the player confirms
+Then the unresolved name is shown first and nothing is written until they accept that list
+
+#### US-10-103
+
+As a player, I want the product to show both parsed commanders in a pasted-list preview when a partner or Background is present (#1076)., so that users can bring existing decks in, work on them here, and take the result wherever they play.
+
+#### AC-10-106 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Show both parsed commanders in a pasted-list preview when a partner or Background is present (#1076).
+
+#### AC-10-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-10-108 Edge
+
+Given a list where one name does not resolve
+When the player confirms
+Then the unresolved name is shown first and nothing is written until they accept that list
+
+#### US-10-104
+
+As a player, I want the product to validate pasted-list names before confirmation and show unresolved cards in its preview (#1065)., so that users can bring existing decks in, work on them here, and take the result wherever they play.
+
+#### AC-10-109 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Validate pasted-list names before confirmation and show unresolved cards in its preview (#1065).
+
+#### AC-10-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-10-111 Edge
+
+Given a list where one name does not resolve
+When the player confirms
+Then the unresolved name is shown first and nothing is written until they accept that list
+
+#### US-10-105
+
+As a player, I want the product to prevent confirming a pasted-list preview when none of its cards resolves (#1074)., so that users can bring existing decks in, work on them here, and take the result wherever they play.
+
+#### AC-10-112 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Prevent confirming a pasted-list preview when none of its cards resolves (#1074).
+
+#### AC-10-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-10-114 Edge
+
+Given a list where one name does not resolve
+When the player confirms
+Then the unresolved name is shown first and nothing is written until they accept that list
+
+#### US-10-106
+
+As a player, I want the product to show duplicate decisions in pasted-list previews using the URL preview's matching policy (#1067)., so that users can bring existing decks in, work on them here, and take the result wherever they play.
+
+#### AC-10-115 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Show duplicate decisions in pasted-list previews using the URL preview's matching policy (#1067).
+
+#### AC-10-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-10-117 Edge
+
+Given a list where one name does not resolve
+When the player confirms
+Then the unresolved name is shown first and nothing is written until they accept that list
+
+#### US-10-107
+
+As a player, I want the product to preserve partner, companion, sideboard and Considering cards when a deck is exported, bulk-edited and reimported as plain text., so that users can bring existing decks in, work on them here, and take the result wherever they play.
+
+#### AC-10-118 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Preserve partner, companion, sideboard and Considering cards when a deck is exported, bulk-edited and reimported as plain text.
+
+#### AC-10-119 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-10-120 Edge
+
+Given a list where one name does not resolve
+When the player confirms
+Then the unresolved name is shown first and nothing is written until they accept that list
+
+#### US-10-108
+
+As a player, I want the product to export MTGO sideboard quantities as sideboard cards without including Considering cards in the playable list., so that users can bring existing decks in, work on them here, and take the result wherever they play.
+
+#### AC-10-121 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Export MTGO sideboard quantities as sideboard cards without including Considering cards in the playable list.
+
+#### AC-10-122 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-10-123 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-10-109
+
+As a player, I want the product to keep MTGO XML valid and card names intact when names contain XML-reserved characters., so that users can bring existing decks in, work on them here, and take the result wherever they play.
+
+#### AC-10-124 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Keep MTGO XML valid and card names intact when names contain XML-reserved characters.
+
+#### AC-10-125 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-10-126 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-10-110
+
+As a player, I want the product to keep Sideboard and Considering cards out of the TappedOut export's main list., so that users can bring existing decks in, work on them here, and take the result wherever they play.
+
+#### AC-10-127 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Keep Sideboard and Considering cards out of the TappedOut export's main list. exportTappedOut (src/lib/deck/export.ts) writes every entry of deck.cards, so they enter its main list unmarked. I-50 slice 0's fixtures catch it, and that slice fixes it.
+
+#### AC-10-128 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-10-129 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-10-111
+
+As a player, I want the product to improve round-trip fidelity for categories, printings, companions and sideboards across external formats., so that users can bring existing decks in, work on them here, and take the result wherever they play.
+
+#### AC-10-130 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Improve round-trip fidelity for categories, printings, companions and sideboards across external formats. EDHREC's October and November 2026 fixes for clipboard-to-Archidekt commander assignment and the Archidekt export link are a reminder to keep these fixtures current. They do not add a new integration.
+
+#### AC-10-131 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-10-132 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-10-112
+
+As a player, I want the product to offer opt-in integrations only when authentication, rate limits and ownership are clear., so that users can bring existing decks in, work on them here, and take the result wherever they play.
+
+#### AC-10-133 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Offer opt-in integrations only when authentication, rate limits and ownership are clear.
+
+#### AC-10-134 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-10-135 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-10-113
+
+As a player, I want **Owner decision: the Archidekt import and Archidekt's terms.** The shipped single-deck Archidekt import fetches archidekt.com/api/decks/{id}/ (src/lib/import/url-import.ts, checked on origin/dev at 72fbfc1)., so that users can bring existing decks in, work on them here, and take the result wherever they play.
+
+#### AC-10-136 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then **Owner decision: the Archidekt import and Archidekt's terms.** The shipped single-deck Archidekt import fetches archidekt.com/api/decks/{id}/ (src/lib/import/url-import.ts, checked on origin/dev at 72fbfc1). Archidekt's terms, effective 2018-09-07, name Archidekt LLC as the site's owner and forbid "automated searches, requests, or queries" and access "to build a similar or competitive website" (terms, both clauses read on 2026-11-10). The options are to ask Archidekt LLC in writing whether a read of a player's own deck at the player's request is allowed, or to move Archidekt to file import through I-62. Archidekt sits under Space Cow Media (landscape), so the letter can also cover I-29's partnership track. No request has been sent.
+
+#### AC-10-137 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-10-138 Edge
+
+Given a list where one name does not resolve
+When the player confirms
+Then the unresolved name is shown first and nothing is written until they accept that list
+
+#### US-10-114
+
+As a player, I want the product to prefer a stable public API over brittle scraping whenever a partner provides one., so that users can bring existing decks in, work on them here, and take the result wherever they play.
+
+#### AC-10-139 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Prefer a stable public API over brittle scraping whenever a partner provides one.
+
+#### AC-10-140 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-10-141 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-10-115
+
+As a player, I want the product to treat the Moxfield URL import as a brittle path rather than a stable contract., so that users can bring existing decks in, work on them here, and take the result wherever they play.
+
+#### AC-10-142 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Treat the Moxfield URL import as a brittle path rather than a stable contract. Moxfield has no public API, now answers programmatic requests behind Cloudflare, and requires authentication headers on its internal endpoints; other tools have moved to paste and CSV as the supported route. Detect the blocked case explicitly and tell the player to paste the list instead of reporting a generic import failure.
+
+#### AC-10-143 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-10-144 Edge
+
+Given a list where one name does not resolve
+When the player confirms
+Then the unresolved name is shown first and nothing is written until they accept that list
+
+#### US-10-116
+
+As a player, I want **Owner decision: the supported Moxfield route.** With honest headers, Moxfield answered both of the app's probes on 2026-11-09 with a Cloudflare block page (HTTP 403), so with the fix above Moxfield URL import fails for as long as Moxfield refuses honest requests., so that users can bring existing decks in, work on them here, and take the result wherever they play.
+
+#### AC-10-145 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then **Owner decision: the supported Moxfield route.** With honest headers, Moxfield answered both of the app's probes on 2026-11-09 with a Cloudflare block page (HTTP 403), so with the fix above Moxfield URL import fails for as long as Moxfield refuses honest requests. The options are to accept paste import as the supported Moxfield route, or to ask Moxfield for API access. No request has been sent to Moxfield. The source policy planned in I-29 forbids headers that impersonate a source, so restoring the old headers is not an option.
+
+#### AC-10-146 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-10-147 Edge
+
+Given a list where one name does not resolve
+When the player confirms
+Then the unresolved name is shown first and nothing is written until they accept that list
+
+#### US-10-117
+
+As a player, I want the product to resolve a pasted flavor name to the oracle card when the printed name misses., so that users can bring existing decks in, work on them here, and take the result wherever they play.
+
+#### AC-10-148 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Resolve a pasted flavor name to the oracle card when the printed name misses. A comment on Archidekt's January 2026 odds-and-ends thread asks for alternate names such as "Balin's Tomb" for Ancient Tomb; staff said a lookup on every import is slow and still called the miss a poor experience (thread, read 2026-11-11). Try flavor_name only after the oracle name fails, and show the oracle name that was chosen. Do not add a second card.
+
+#### AC-10-149 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-10-150 Edge
+
+Given a list where one name does not resolve
+When the player confirms
+Then the unresolved name is shown first and nothing is written until they accept that list
+
+### UX states for this feature
+
+The player-visible outcome is: users can bring existing decks in, work on them here, and take the result wherever they play.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
 
 ### Record moved from the roadmap (2026-11-11)
 

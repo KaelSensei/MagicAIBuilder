@@ -291,6 +291,346 @@ Whether the wizard may still ask a model to choose a commander is the open decis
 
 - No external URL in the moved record. The record itself is the source for behaviour that is already in the code.
 
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-02-101
+
+As a player, I want the product to conversational brief: commander, theme, play pattern, budget, power target and dislikes., so that a player can describe what they want and receive a legal, budget-aware and explainable plan.
+
+#### AC-02-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Conversational brief: commander, theme, play pattern, budget, power target and dislikes.
+
+#### AC-02-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-02-102 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-02-102
+
+As a player, I want the product to structured plan before card generation: gameplan, win conditions, roles and constraints., so that a player can describe what they want and receive a legal, budget-aware and explainable plan.
+
+#### AC-02-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Structured plan before card generation: gameplan, win conditions, roles and constraints.
+
+#### AC-02-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-02-105 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-02-103
+
+As a player, I want the product to explain every suggestion with evidence: role, synergy, curve, color identity, legality and price., so that a player can describe what they want and receive a legal, budget-aware and explainable plan.
+
+#### AC-02-106 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Explain every suggestion with evidence: role, synergy, curve, color identity, legality and price.
+
+#### AC-02-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-02-108 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-02-104
+
+As a player, I want the product to offer alternatives by budget, power and play pattern instead of one opaque answer., so that a player can describe what they want and receive a legal, budget-aware and explainable plan.
+
+#### AC-02-109 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Offer alternatives by budget, power and play pattern instead of one opaque answer.
+
+#### AC-02-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-02-111 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-02-105
+
+As a player, I want the product to diff a proposed change against the current deck before applying it., so that a player can describe what they want and receive a legal, budget-aware and explainable plan.
+
+#### AC-02-112 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Diff a proposed change against the current deck before applying it.
+
+#### AC-02-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-02-114 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-02-106
+
+As a player, I want the product to support "why is this card here?" and "what is the weakest card?" questions., so that a player can describe what they want and receive a legal, budget-aware and explainable plan.
+
+#### AC-02-115 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Support "why is this card here?" and "what is the weakest card?" questions.
+
+#### AC-02-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-02-117 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-02-107
+
+As a player, I want the product to add a deterministic post-generation validator; the LLM never decides legality., so that a player can describe what they want and receive a legal, budget-aware and explainable plan.
+
+#### AC-02-118 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Add a deterministic post-generation validator; the LLM never decides legality. **Correction 2026-11-09:** for the deck build route this validator checks structure only (see below). Suggestions are checked against Scryfall card data; generated decks are not. **2026-11-10:** #1318 checks generated decks against card data too; see the card-data item below.
+
+#### AC-02-119 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-02-120 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-02-108
+
+As a player, I want the product to build a small regression set: six validator cases, three generated decks and three suggestion cards (src/lib/ai/golden-evaluation.test.ts); no case calls a model., so that a player can describe what they want and receive a legal, budget-aware and explainable plan.
+
+#### AC-02-121 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Build a small regression set: six validator cases, three generated decks and three suggestion cards (src/lib/ai/golden-evaluation.test.ts); no case calls a model. **Corrected 2026-11-10** from "a golden evaluation set for valid cards, useful explanations", which no case measures (I-70).
+
+#### AC-02-122 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-02-123 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-02-109
+
+As a player, I want the product to expand the golden set from deterministic structural and evidence contracts to provider-backed qualitative evaluations only when a stable review rubric exists., so that a player can describe what they want and receive a legal, budget-aware and explainable plan.
+
+#### AC-02-124 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Expand the golden set from deterministic structural and evidence contracts to provider-backed qualitative evaluations only when a stable review rubric exists. Re-pointed 2026-11-10 to I-70: its bench scores recorded model replies by code, and rates prose only on a calibrated rubric that never gates.
+
+#### AC-02-125 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-02-126 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-02-110
+
+As a player, I want the product to keep the deterministic validator's verdict visible in the copilot's output instead of only applying it silently., so that a player can describe what they want and receive a legal, budget-aware and explainable plan.
+
+#### AC-02-127 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Keep the deterministic validator's verdict visible in the copilot's output instead of only applying it silently. Competing assistants either validate without explaining or explain without validating; the difference is only a differentiator if the player can see which claims were checked against card data and which are the model's reasoning.
+
+#### AC-02-128 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-02-129 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-02-111
+
+As a player, I want the product to check a generated deck against card data on the server before it reaches the player: every card exists, sits inside the commander's colour identity, is legal in Commander, and the Game Changer count fits the chosen bracket., so that a player can describe what they want and receive a legal, budget-aware and explainable plan.
+
+#### AC-02-130 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Check a generated deck against card data on the server before it reaches the player: every card exists, sits inside the commander's colour identity, is legal in Commander, and the Game Changer count fits the chosen bracket. Repair a failing card from a legal candidate pool rather than rejecting the whole build, and show each correction. Until this ships, do not label generated decks as verified.
+
+#### AC-02-131 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-02-132 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+#### US-02-112
+
+As a player, I want the product to record stop_reason and output token usage per AI route, and stop treating a truncated response as a parse failure., so that a player can describe what they want and receive a legal, budget-aware and explainable plan.
+
+#### AC-02-133 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Record stop_reason and output token usage per AI route, and stop treating a truncated response as a parse failure. Whether the default suggestion task is cut off at its 2,048-token cap is an estimate to verify.
+
+#### AC-02-134 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-02-135 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-02-113
+
+As a player, I want the product to publish a page that says where the product uses a language model and where it does not, and label each AI surface in the product., so that a player can describe what they want and receive a legal, budget-aware and explainable plan.
+
+#### AC-02-136 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Publish a page that says where the product uses a language model and where it does not, and label each AI surface in the product. Every deterministic surface (legality, colour identity, bracket rules, search syntax, playtest) must stay usable with the copilot switched off.
+
+#### AC-02-137 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-02-138 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+#### US-02-114
+
+As a player, I want the product to say whether the wizard's budget is a cap per card or a deck total., so that a player can describe what they want and receive a legal, budget-aware and explainable plan.
+
+#### AC-02-139 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Say whether the wizard's budget is a cap per card or a deck total. DeckWizard (src/components/deck/DeckWizard.tsx) offers "< $50", "$50 – $200" and "$200 – $500" (src/messages/en/deck.json), which read as deck totals, while src/app/api/ai/build/route.ts sends the chosen value to the model as a cap per card: the "$50 – $200" option becomes "$200 max per card". Only the step's subtitle says "per-card". I-54 requirement 5.4 asks for the honest label; its finder passes a deck total.
+
+#### AC-02-140 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-02-141 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+### UX states for this feature
+
+The player-visible outcome is: a player can describe what they want and receive a legal, budget-aware and explainable plan.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
+
 ### Record moved from the roadmap (2026-11-11)
 
 Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.

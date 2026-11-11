@@ -377,6 +377,214 @@ Whether the first recap cuts off at 30 November is open. A player under 15 and t
 - https://playgroup.gg/profiles/46552-eatman/rewind
 - https://road.cc/content/news/strava-year-sport-now-only-subscribers-317425
 
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-60-101
+
+As a player, I want the product to lawyer questions added to I-30's list, and the stats and recap paragraph for I-38's privacy policy (slice 0, no code)., so that a player sees statistics across their own decks on a private page: colours, commanders, the cards used most, brackets, deck value, cards shared across decks, and decks built and changed, each with its denominator. Each December, if they opted in, they get a Commander year in review in English or French, frozen at a stated cut-off, which they may keep private, share by link or show on their profile.
+
+#### AC-60-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Lawyer questions added to I-30's list, and the stats and recap paragraph for I-38's privacy policy (slice 0, no code).
+
+#### AC-60-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-60-102 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-60-102
+
+As a player, I want the product to a pure counting module: active decks, colours, commanders, the cards used most, shared cards, brackets, and decks built and changed., so that a player sees statistics across their own decks on a private page: colours, commanders, the cards used most, brackets, deck value, cards shared across decks, and decks built and changed, each with its denominator. Each December, if they opted in, they get a Commander year in review in English or French, frozen at a stated cut-off, which they may keep private, share by link or show on their profile.
+
+#### AC-60-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A pure counting module: active decks, colours, commanders, the cards used most, shared cards, brackets, and decks built and changed. A deck counts once, its builds through the main build, and a card once per deck (slice 1). It replaces src/lib/deck/analytics.ts, which only its own test imports, labels Scryfall's USD prices as euros and names a price tier "cEDH", conflating cost with power; slice 1 deletes it.
+
+#### AC-60-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-60-105 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-60-103
+
+As a player, I want the product to a /stats page and GET /api/user/stats in English and French, with accessible charts and tables (slice 2), and a value section with dated prices (slice 3)., so that a player sees statistics across their own decks on a private page: colours, commanders, the cards used most, brackets, deck value, cards shared across decks, and decks built and changed, each with its denominator. Each December, if they opted in, they get a Commander year in review in English or French, frozen at a stated cut-off, which they may keep private, share by link or show on their profile.
+
+#### AC-60-106 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A /stats page and GET /api/user/stats in English and French, with accessible charts and tables (slice 2), and a value section with dated prices (slice 3).
+
+#### AC-60-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-60-108 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-60-104
+
+As a player, I want the product to the recap: an opt-in, a job on 1 December over 1 January to 30 November, frozen YearRecap rows, an owner page, the December invitation, deletion and a tone deny-list test (slice 4), and an image download in both orientations and languages (slice 5)., so that a player sees statistics across their own decks on a private page: colours, commanders, the cards used most, brackets, deck value, cards shared across decks, and decks built and changed, each with its denominator. Each December, if they opted in, they get a Commander year in review in English or French, frozen at a stated cut-off, which they may keep private, share by link or show on their profile.
+
+#### AC-60-109 Happy path
+
+Given a signed-in operator
+When the player uses this behaviour
+Then the behaviour holds: The recap: an opt-in, a job on 1 December over 1 January to 30 November, frozen YearRecap rows, an owner page, the December invitation, deletion and a tone deny-list test (slice 4), and an image download in both orientations and languages (slice 5).
+
+#### AC-60-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-60-111 Edge
+
+Given the account or the cache this behaviour changes
+When the player signs out or the deletion finishes
+Then the next request does not still show the private data
+
+#### US-60-105
+
+As a player, I want the product to deck.origin written by the create, import, fork, duplicate and AI routes, so that built and imported decks are counted apart (slice 13)., so that a player sees statistics across their own decks on a private page: colours, commanders, the cards used most, brackets, deck value, cards shared across decks, and decks built and changed, each with its denominator. Each December, if they opted in, they get a Commander year in review in English or French, frozen at a stated cut-off, which they may keep private, share by link or show on their profile.
+
+#### AC-60-112 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Deck.origin written by the create, import, fork, duplicate and AI routes, so that built and imported decks are counted apart (slice 13). Today only forkedFromDeckId and isAIGenerated mark an origin.
+
+#### AC-60-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-60-114 Edge
+
+Given a list where one name does not resolve
+When the player confirms
+Then the unresolved name is shown first and nothing is written until they accept that list
+
+#### US-60-106
+
+As a player, I want the product to later: sharing levels, a preview, /u/{username}/recap/{year} and /recap/{token}, noindex and robots rules, revocation within 60 seconds and a report button (slice 6)., so that a player sees statistics across their own decks on a private page: colours, commanders, the cards used most, brackets, deck value, cards shared across decks, and decks built and changed, each with its denominator. Each December, if they opted in, they get a Commander year in review in English or French, frozen at a stated cut-off, which they may keep private, share by link or show on their profile.
+
+#### AC-60-115 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Later: sharing levels, a preview, /u/{username}/recap/{year} and /recap/{token}, noindex and robots rules, revocation within 60 seconds and a report button (slice 6). Every path under /u is public by prefix (PUBLIC_PAGE_PREFIXES in src/lib/auth/public-paths.ts), and src/app/sitemap.ts lists every user with a username, so the recap page checks its own visibility and stays out of the sitemap.
+
+#### AC-60-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-60-117 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-60-107
+
+As a player, I want the product to later: the public recap image and preview tags (slice 7), events and the owner's growth view (slice 8), a visitor call to action into an import-first first run (slice 9), games from I-35 (slice 10), a recap embed (slice 11), exact change counts from I-37's change log (slice 12), and a staggered-invitation experiment (slice 15)., so that a player sees statistics across their own decks on a private page: colours, commanders, the cards used most, brackets, deck value, cards shared across decks, and decks built and changed, each with its denominator. Each December, if they opted in, they get a Commander year in review in English or French, frozen at a stated cut-off, which they may keep private, share by link or show on their profile.
+
+#### AC-60-118 Happy path
+
+Given a signed-out visitor and a public deck
+When the player uses this behaviour
+Then the behaviour holds: Later: the public recap image and preview tags (slice 7), events and the owner's growth view (slice 8), a visitor call to action into an import-first first run (slice 9), games from I-35 (slice 10), a recap embed (slice 11), exact change counts from I-37's change log (slice 12), and a staggered-invitation experiment (slice 15).
+
+#### AC-60-119 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-60-120 Edge
+
+Given a list where one name does not resolve
+When the player confirms
+Then the unresolved name is shown first and nothing is written until they accept that list
+
+#### US-60-108
+
+As a player, I want the product to after I-30's decision: statistics over any date range and trends across several years (slice 14)., so that a player sees statistics across their own decks on a private page: colours, commanders, the cards used most, brackets, deck value, cards shared across decks, and decks built and changed, each with its denominator. Each December, if they opted in, they get a Commander year in review in English or French, frozen at a stated cut-off, which they may keep private, share by link or show on their profile.
+
+#### AC-60-121 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: After I-30's decision: statistics over any date range and trends across several years (slice 14).
+
+#### AC-60-122 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-60-123 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+### UX states for this feature
+
+The player-visible outcome is: a player sees statistics across their own decks on a private page: colours, commanders, the cards used most, brackets, deck value, cards shared across decks, and decks built and changed, each with its denominator. Each December, if they opted in, they get a Commander year in review in English or French, frozen at a stated cut-off, which they may keep private, share by link or show on their profile.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
+
 ### Record moved from the roadmap (2026-11-11)
 
 Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.

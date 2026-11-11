@@ -227,12 +227,11 @@ Read 2026-11-09 unless dated otherwise.
 36. Google Cloud, [Cloud Vision pricing](https://cloud.google.com/vision/pricing).
 37. MDN, [CSP: script-src](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/script-src), modified 2026-08-12.
 
-## Feature contract (Light, 2026-11-11)
+## Feature contract (Full, 2026-11-11)
 
 The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
 
 
-This file is light because the initiative is Later or Parked and is not in I-80 to I-98. The scenarios below are the bar for when it is promoted. They are not a promise to build it next.
 
 ### Summary and problem
 
@@ -255,7 +254,7 @@ See the roadmap persona table. This initiative serves the rows that list its id.
 
 #### US-40-01
 
-As a player, I want the outcome of I-40, so that the work in this file is the reason to build it.
+As a player, I want a player installs MagicAIBuilder to the home screen and uses its main journeys at phone size, tested on every push; camera scanning enters the product only if a published benchmark, Scryfall's written answer and the owner's decision allow it., so that this initiative's definition of done is met.
 
 #### US-40-02
 
@@ -345,6 +344,192 @@ None beyond the moved record.
 ### Sources
 
 - No external URL in the moved record. The record itself is the source for behaviour that is already in the code.
+
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-40-101
+
+As a player, I want the product to a manifest with PNG, maskable and apple-touch icons, theme colours from the Lumen tokens, viewportFit: "cover", appleWebApp and localized shortcuts, reachable without a session and guarded by a test (slice 1)., so that a player installs MagicAIBuilder to the home screen and uses its main journeys at phone size, tested on every push; camera scanning enters the product only if a published benchmark, Scryfall's written answer and the owner's decision allow it.
+
+#### AC-40-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A manifest with PNG, maskable and apple-touch icons, theme colours from the Lumen tokens, viewportFit: "cover", appleWebApp and localized shortcuts, reachable without a session and guarded by a test (slice 1).
+
+#### AC-40-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-40-102 Edge
+
+Given the account or the cache this behaviour changes
+When the player signs out or the deletion finishes
+Then the next request does not still show the private data
+
+#### US-40-102
+
+As a player, I want the product to safe-area insets on the builder's bottom bar and the header, an in-app way back on journey screens, and external links that open outside the app window (slice 2)., so that a player installs MagicAIBuilder to the home screen and uses its main journeys at phone size, tested on every push; camera scanning enters the product only if a published benchmark, Scryfall's written answer and the owner's decision allow it.
+
+#### AC-40-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Safe-area insets on the builder's bottom bar and the header, an in-app way back on journey screens, and external links that open outside the app window (slice 2).
+
+#### AC-40-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-40-105 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-40-103
+
+As a player, I want the product to an install help page in English and French, with no automatic prompt (slice 3)., so that a player installs MagicAIBuilder to the home screen and uses its main journeys at phone size, tested on every push; camera scanning enters the product only if a published benchmark, Scryfall's written answer and the owner's decision allow it.
+
+#### AC-40-106 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: An install help page in English and French, with no automatic prompt (slice 3).
+
+#### AC-40-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-40-108 Edge
+
+Given the French locale
+When the new controls render
+Then they come from the French catalogue and are not hard-coded English
+
+#### US-40-104
+
+As a player, I want the product to mobile WebKit and mobile Chromium Playwright projects running @phone journeys in the Docker gate, a Lighthouse mobile run, and a real-device checklist for staging (slices 4–5)., so that a player installs MagicAIBuilder to the home screen and uses its main journeys at phone size, tested on every push; camera scanning enters the product only if a published benchmark, Scryfall's written answer and the owner's decision allow it.
+
+#### AC-40-109 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Mobile WebKit and mobile Chromium Playwright projects running @phone journeys in the Docker gate, a Lighthouse mobile run, and a real-device checklist for staging (slices 4–5).
+
+#### AC-40-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-40-111 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-40-105
+
+As a player, I want the product to allow the camera and WebAssembly on the scan route only (part of slice 9)., so that a player installs MagicAIBuilder to the home screen and uses its main journeys at phone size, tested on every push; camera scanning enters the product only if a published benchmark, Scryfall's written answer and the owner's decision allow it.
+
+#### AC-40-112 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Allow the camera and WebAssembly on the scan route only (part of slice 9). Today src/lib/security-headers.ts sends Permissions-Policy: camera=() on every route, and src/lib/security-headers.test.ts asserts it, so getUserMedia fails; the production CSP has no 'wasm-unsafe-eval', so in-browser recognition would load in development and fail in production. Every other route keeps camera=().
+
+#### AC-40-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-40-114 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-40-106
+
+As a player, I want the product to a recognition benchmark under scripts/research/ on at least 300 photos of real cards, Scryfall's written answer on an index derived from its images, and the owner's recorded go or no-go (slices 6–7)., so that a player installs MagicAIBuilder to the home screen and uses its main journeys at phone size, tested on every push; camera scanning enters the product only if a published benchmark, Scryfall's written answer and the owner's decision allow it.
+
+#### AC-40-115 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A recognition benchmark under scripts/research/ on at least 300 photos of real cards, Scryfall's written answer on an index derived from its images, and the owner's recorded go or no-go (slices 6–7). No scanning code enters src/ before all three.
+
+#### AC-40-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-40-117 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-40-107
+
+As a player, I want the product to after a go: an index built from Scryfall bulk data, a signed-in scan route that stages rows through I-26 with "camera scan" provenance and never picks a printing silently, then bulk mode and server help (slices 8–12)., so that a player installs MagicAIBuilder to the home screen and uses its main journeys at phone size, tested on every push; camera scanning enters the product only if a published benchmark, Scryfall's written answer and the owner's decision allow it.
+
+#### AC-40-118 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: After a go: an index built from Scryfall bulk data, a signed-in scan route that stages rows through I-26 with "camera scan" provenance and never picks a printing silently, then bulk mode and server help (slices 8–12).
+
+#### AC-40-119 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-40-120 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+### UX states for this feature
+
+The player-visible outcome is: a player installs MagicAIBuilder to the home screen and uses its main journeys at phone size, tested on every push; camera scanning enters the product only if a published benchmark, Scryfall's written answer and the owner's decision allow it.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
 
 ### Record moved from the roadmap (2026-11-11)
 

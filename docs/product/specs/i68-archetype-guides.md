@@ -379,6 +379,192 @@ Guest authors and whether they are paid are open. EDHREC figures on a guide need
 - https://hearthstone.blizzard.com/en-us/blog/20056279
 - https://hearthstone.blizzard.com/news/24267727/35-0-patch-notes
 
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-68-101
+
+As a player, I want the product to delete src/lib/archetypes/archetypes.ts and its test, the fourth list of styles and the only unsourced counts in the code (slice 0, alone)., so that a player who wants to play a style, such as tokens, aristocrats or voltron, reads one sourced guide on how it wins, what it needs by role, how it changes across brackets 1 to 5, its mana and curve, its mulligans, what beats it, its budget paths and its common mistakes, then sees privately how their own deck compares. A named person writes each guide, a second person reviews it in each locale, and no model writes a word of it.
+
+#### AC-68-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Delete src/lib/archetypes/archetypes.ts and its test, the fourth list of styles and the only unsourced counts in the code (slice 0, alone).
+
+#### AC-68-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-68-102 Edge
+
+Given the account or the cache this behaviour changes
+When the player signs out or the deletion finishes
+Then the next request does not still show the private data
+
+#### US-68-102
+
+As a player, I want the product to extend I-28's content model with a styleId, ten section kinds and two qualifiers, reference for a count a named source published but nobody measured and experience for a named player's account, with a review record per locale and a coverage test (slice 1)., so that a player who wants to play a style, such as tokens, aristocrats or voltron, reads one sourced guide on how it wins, what it needs by role, how it changes across brackets 1 to 5, its mana and curve, its mulligans, what beats it, its budget paths and its common mistakes, then sees privately how their own deck compares. A named person writes each guide, a second person reviews it in each locale, and no model writes a word of it.
+
+#### AC-68-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Extend I-28's content model with a styleId, ten section kinds and two qualifiers, reference for a count a named source published but nobody measured and experience for a named player's account, with a review record per locale and a coverage test (slice 1).
+
+#### AC-68-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-68-105 Edge
+
+Given the French locale
+When the new controls render
+Then they come from the French catalogue and are not hard-coded English
+
+#### US-68-103
+
+As a player, I want the product to a dated demand register from EDHREC's tag counts, r/EDH titles and, once I-34 slice 8 exists, Search Console, with its method on /methods and no count on any guide page (slice 2); each I-54 style's usual I-65 routes (slice 3)., so that a player who wants to play a style, such as tokens, aristocrats or voltron, reads one sourced guide on how it wins, what it needs by role, how it changes across brackets 1 to 5, its mana and curve, its mulligans, what beats it, its budget paths and its common mistakes, then sees privately how their own deck compares. A named person writes each guide, a second person reviews it in each locale, and no model writes a word of it.
+
+#### AC-68-106 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A dated demand register from EDHREC's tag counts, r/EDH titles and, once I-34 slice 8 exists, Search Console, with its method on /methods and no count on any guide page (slice 2); each I-54 style's usual I-65 routes (slice 3).
+
+#### AC-68-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-68-108 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-68-104
+
+As a player, I want /guides/styles and one page per style and locale under I-34's new styleGuide page kind, noindex until reviewed, with Article markup and a "how this guide was made" block (slice 4); the first two English guides in the register's order, with reference figures and cited Data (slices 5 and 6); a glossary term per published style through I-64 (slice 7); links from ThemeDetector, the wizard's style step and I-54's results (slice 8); and freshness triggers and banners (slice 14)., so that a player who wants to play a style, such as tokens, aristocrats or voltron, reads one sourced guide on how it wins, what it needs by role, how it changes across brackets 1 to 5, its mana and curve, its mulligans, what beats it, its budget paths and its common mistakes, then sees privately how their own deck compares. A named person writes each guide, a second person reviews it in each locale, and no model writes a word of it.
+
+#### AC-68-109 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then /guides/styles and one page per style and locale under I-34's new styleGuide page kind, noindex until reviewed, with Article markup and a "how this guide was made" block (slice 4); the first two English guides in the register's order, with reference figures and cited Data (slices 5 and 6); a glossary term per published style through I-64 (slice 7); links from ThemeDetector, the wizard's style step and I-54's results (slice 8); and freshness triggers and banners (slice 14).
+
+#### AC-68-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-68-111 Edge
+
+Given the French locale
+When the new controls render
+Then they come from the French catalogue and are not hard-coded English
+
+#### US-68-105
+
+As a player, I want the product to later: a "your deck and this guide" panel, private and stored nowhere, built from I-54's style detection, I-65's route map, I-58's land check and I-28's keep profile and bracket check (slices 9 to 11); measured norms by style and bracket from I-29 in place of reference figures (slice 12); French editions with a named reviewer (slice 13); and one further guide per slice in the register's order (slice 15)., so that a player who wants to play a style, such as tokens, aristocrats or voltron, reads one sourced guide on how it wins, what it needs by role, how it changes across brackets 1 to 5, its mana and curve, its mulligans, what beats it, its budget paths and its common mistakes, then sees privately how their own deck compares. A named person writes each guide, a second person reviews it in each locale, and no model writes a word of it.
+
+#### AC-68-112 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Later: a "your deck and this guide" panel, private and stored nowhere, built from I-54's style detection, I-65's route map, I-58's land check and I-28's keep profile and bracket check (slices 9 to 11); measured norms by style and bracket from I-29 in place of reference figures (slice 12); French editions with a named reviewer (slice 13); and one further guide per slice in the register's order (slice 15).
+
+#### AC-68-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-68-114 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+#### US-68-106
+
+As a player, I want the product to reanimator, landfall and stax are sections of the graveyard, lands and control guides until I-54 decides whether they become styles, and wheels waits., so that a player who wants to play a style, such as tokens, aristocrats or voltron, reads one sourced guide on how it wins, what it needs by role, how it changes across brackets 1 to 5, its mana and curve, its mulligans, what beats it, its budget paths and its common mistakes, then sees privately how their own deck compares. A named person writes each guide, a second person reviews it in each locale, and no model writes a word of it.
+
+#### AC-68-115 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Reanimator, landfall and stax are sections of the graveyard, lands and control guides until I-54 decides whether they become styles, and wheels waits. The series follows I-54's vocabulary and keeps no list of its own.
+
+#### AC-68-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-68-117 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-68-107
+
+As a player, I want the product to a "starting skeleton" section kind, written and reviewed by the guide's named people:, so that a player who wants to play a style, such as tokens, aristocrats or voltron, reads one sourced guide on how it wins, what it needs by role, how it changes across brackets 1 to 5, its mana and curve, its mulligans, what beats it, its budget paths and its common mistakes, then sees privately how their own deck compares. A named person writes each guide, a second person reviews it in each locale, and no model writes a word of it.
+
+#### AC-68-118 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A "starting skeleton" section kind, written and reviewed by the guide's named people:
+
+#### AC-68-119 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-68-120 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+### UX states for this feature
+
+The player-visible outcome is: a player who wants to play a style, such as tokens, aristocrats or voltron, reads one sourced guide on how it wins, what it needs by role, how it changes across brackets 1 to 5, its mana and curve, its mulligans, what beats it, its budget paths and its common mistakes, then sees privately how their own deck compares. A named person writes each guide, a second person reviews it in each locale, and no model writes a word of it.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
+
 ### Record moved from the roadmap (2026-11-11)
 
 Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.

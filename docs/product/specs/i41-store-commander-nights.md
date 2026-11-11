@@ -220,12 +220,11 @@ Read 2026-11-09 unless dated.
 20. CNIL, "Recommandation 4 : rechercher le consentement d'un parent pour les mineurs de moins de 15 ans", 2021-06-09. https://cnil.fr/recommandation-4-rechercher-le-consentement-dun-parent-pour-les-mineurs-de-moins-de-15-ans
 21. Playgroup, Commander power level, updated 2026-11-10; added 2026-11-11. https://playgroup.gg/commander/power-level
 
-## Feature contract (Light, 2026-11-11)
+## Feature contract (Full, 2026-11-11)
 
 The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
 
 
-This file is light because the initiative is Later or Parked and is not in I-80 to I-98. The scenarios below are the bar for when it is promoted. They are not a promise to build it next.
 
 ### Summary and problem
 
@@ -248,7 +247,7 @@ See the roadmap persona table. This initiative serves the rows that list its id.
 
 #### US-41-01
 
-As a player, I want the outcome of I-41, so that the work in this file is the reason to build it.
+As a player, I want an organiser opens a casual Commander night, checks players in by QR code with or without an account, and forms pods of three to five by declared and estimated bracket. Players never pay, and a guest leaves only a nickname that is deleted within a day., so that this initiative's definition of done is met.
 
 #### US-41-02
 
@@ -339,6 +338,236 @@ None beyond the moved record.
 
 - https://playgroup.gg/commander/power-level
 - https://yugiohblog.konami.com/2025/genesys/different-point-caps-what-to-expect/
+
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-41-101
+
+As a player, I want the product to formPods, a pure function with allowed pod sizes, a maximum bracket spread, dedicated brackets, play-together groups and a deterministic tie-break, tested against a brute-force optimum (slice 1)., so that an organiser opens a casual Commander night, checks players in by QR code with or without an account, and forms pods of three to five by declared and estimated bracket. Players never pay, and a guest leaves only a nickname that is deleted within a day.
+
+#### AC-41-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then formPods, a pure function with allowed pod sizes, a maximum bracket spread, dedicated brackets, play-together groups and a deterministic tie-break, tested against a brute-force optimum (slice 1).
+
+#### AC-41-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-41-102 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+#### US-41-102
+
+As a player, I want the product to an account-free pod planner that prints pods and sends no label over the network (slice 2)., so that an organiser opens a casual Commander night, checks players in by QR code with or without an account, and forms pods of three to five by declared and estimated bracket. Players never pay, and a guest leaves only a nickname that is deleted within a day.
+
+#### AC-41-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: An account-free pod planner that prints pods and sends no label over the network (slice 2).
+
+#### AC-41-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-41-105 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-41-103
+
+As a player, I want the product to stores with owner and staff roles, a "not verified" label and noindex until verified; nights with a check-in window, capacity, house rules and a rotating QR token (slices 3–4)., so that an organiser opens a casual Commander night, checks players in by QR code with or without an account, and forms pods of three to five by declared and estimated bracket. Players never pay, and a guest leaves only a nickname that is deleted within a day.
+
+#### AC-41-106 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Stores with owner and staff roles, a "not verified" label and noindex until verified; nights with a check-in window, capacity, house rules and a rotating QR token (slices 3–4).
+
+#### AC-41-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-41-108 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-41-104
+
+As a player, I want the product to account check-in that freezes the deck version, the declared bracket and the estimate with its method, and guest check-in with a display name only, the GDPR Art., so that an organiser opens a casual Commander night, checks players in by QR code with or without an account, and forms pods of three to five by declared and estimated bracket. Players never pay, and a guest leaves only a nickname that is deleted within a day.
+
+#### AC-41-109 Happy path
+
+Given a guest with one unsaved session deck
+When the player uses this behaviour
+Then the behaviour holds: Account check-in that freezes the deck version, the declared bracket and the estimate with its method, and guest check-in with a display name only, the GDPR Art. 13 notice and a purge 24 hours after the night (slices 5–6). Deck.targetBracket is never read as a declaration.
+
+#### AC-41-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-41-111 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+#### US-41-105
+
+As a player, I want the product to an organiser screen with rounds, manual moves, latecomers, a waiting list and a "talk before the game" prompt at a gap of two brackets, then a public night page through I-36's public projection; a night creates no share link (slices 7–8)., so that an organiser opens a casual Commander night, checks players in by QR code with or without an account, and forms pods of three to five by declared and estimated bracket. Players never pay, and a guest leaves only a nickname that is deleted within a day.
+
+#### AC-41-112 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: An organiser screen with rounds, manual moves, latecomers, a waiting list and a "talk before the game" prompt at a gap of two brackets, then a public night page through I-36's public projection; a night creates no share link (slices 7–8).
+
+#### AC-41-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-41-114 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+#### US-41-106
+
+As a player, I want the product to consented I-15 sheets per pod, logging a game through I-35, and store verification with reports through I-38 (slices 9–11)., so that an organiser opens a casual Commander night, checks players in by QR code with or without an account, and forms pods of three to five by declared and estimated bracket. Players never pay, and a guest leaves only a nickname that is deleted within a day.
+
+#### AC-41-115 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Consented I-15 sheets per pod, logging a game through I-35, and store verification with reports through I-38 (slices 9–11).
+
+#### AC-41-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-41-117 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-41-107
+
+As a player, I want the product to store-private history and a pod-health report, then store-plan entitlements after I-30's decision (slices 12–13)., so that an organiser opens a casual Commander night, checks players in by QR code with or without an account, and forms pods of three to five by declared and estimated bracket. Players never pay, and a guest leaves only a nickname that is deleted within a day.
+
+#### AC-41-118 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Store-private history and a pod-health report, then store-plan entitlements after I-30's decision (slices 12–13).
+
+#### AC-41-119 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-41-120 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-41-108
+
+As a player, I want the product to revisit 6.2's one-gap rule (correction 2026-11-11 below)., so that an organiser opens a casual Commander night, checks players in by QR code with or without an account, and forms pods of three to five by declared and estimated bracket. Players never pay, and a guest leaves only a nickname that is deleted within a day.
+
+#### AC-41-121 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Revisit 6.2's one-gap rule (correction 2026-11-11 below). A one-bracket gap gets a soft prompt that cites the measured cost (Playgroup, updated 2026-11-10) and I-77's per-bracket accuracy. Added 2026-11-11.
+
+#### AC-41-122 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-41-123 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-41-109
+
+As a player, I want the product to a store's house rules use I-15's rule objects (I-53's types), including a Game Changer or points cap the store picks, printed on the night's sheet., so that an organiser opens a casual Commander night, checks players in by QR code with or without an account, and forms pods of three to five by declared and estimated bracket. Players never pay, and a guest leaves only a nickname that is deleted within a day.
+
+#### AC-41-124 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A store's house rules use I-15's rule objects (I-53's types), including a Game Changer or points cap the store picks, printed on the night's sheet. In Konami's Genesys, "stores can set their cap at 200, 50, or zero points", with an official tabulator (Konami, 2025-09-30). Whether a house verdict may change a public legality badge is D-90. Added 2026-11-11.
+
+#### AC-41-125 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-41-126 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+### UX states for this feature
+
+The player-visible outcome is: an organiser opens a casual Commander night, checks players in by QR code with or without an account, and forms pods of three to five by declared and estimated bracket. Players never pay, and a guest leaves only a nickname that is deleted within a day.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
 
 ### Record moved from the roadmap (2026-11-11)
 

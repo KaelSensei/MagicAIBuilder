@@ -426,6 +426,324 @@ The lawyer questions on the event store are the gate for slices that write it. U
 - https://hearthstone.blizzard.com/en-us/blog/20811880
 - https://mtgarena-support.wizards.com/hc/en-us/articles/35805365023124-Patch-Notes-2025-46-20
 
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-39-101
+
+As a player, I want the product to stop the onboarding modal opening on public pages and correct its two wrong lines (slice 1)., so that a visitor reaches a useful deck without an account and keeps it on signing up, and the owner counts activation and retention from the product's own database, with no third-party tracker.
+
+#### AC-39-100 Happy path
+
+Given a signed-out visitor and a public deck
+When the player uses this behaviour
+Then the behaviour holds: Stop the onboarding modal opening on public pages and correct its two wrong lines (slice 1). Today OnboardingWizard (src/components/onboarding/OnboardingWizard.tsx) mounts on every [locale] page through src/app/[locale]/providers.tsx, the landing and public deck pages included, and src/messages/en/onboarding.json points to a "New Deck" button the landing navbar lacks and to an AI wizard a guest cannot open.
+
+#### AC-39-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-39-102 Edge
+
+Given the French locale
+When the new controls render
+Then they come from the French catalogue and are not hard-coded English
+
+#### US-39-102
+
+As a player, I want the product to keep a guest's deck at sign-up (slices 2 and 6)., so that a visitor reaches a useful deck without an account and keeps it on signing up, and the owner counts activation and retention from the product's own database, with no third-party tracker.
+
+#### AC-39-103 Happy path
+
+Given a guest with one unsaved session deck
+When the player uses this behaviour
+Then the behaviour holds: Keep a guest's deck at sign-up (slices 2 and 6). Today SignUpForm (src/components/auth/SignUpForm.tsx) ignores callbackUrl and sends both sign-up routes to /decks, and nothing copies the guest deck from the browser into the account, so the new account starts empty. Slice 2 honours a same-origin callbackUrl and says honestly that the deck stays in the browser; slice 6 offers to save the guest deck and clears the local copy only after the server confirms.
+
+#### AC-39-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-39-105 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-39-103
+
+As a player, I want the product to tell a guest that AI suggestions need an account (slice 2)., so that a visitor reaches a useful deck without an account and keeps it on signing up, and the owner counts activation and retention from the product's own database, with no third-party tracker.
+
+#### AC-39-106 Happy path
+
+Given a guest with one unsaved session deck
+When the player uses this behaviour
+Then the behaviour holds: Tell a guest that AI suggestions need an account (slice 2). Today useAISuggestions (src/hooks/useAISuggestions.ts) shows the raw AI request failed (401) in the guest builder.
+
+#### AC-39-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-39-108 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-39-104
+
+As a player, I want the product to delete GET /api/templates or make it return real rows only (slice 3)., so that a visitor reaches a useful deck without an account and keeps it on signing up, and the owner counts activation and retention from the product's own database, with no third-party tracker.
+
+#### AC-39-109 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Delete GET /api/templates or make it return real rows only (slice 3). Today src/app/api/templates/route.ts returns two hard-coded templates for any commander, with invented authors ("CommunityBuilder", "TopPlayer") and upvote counts.
+
+#### AC-39-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-39-111 Edge
+
+Given the account or the cache this behaviour changes
+When the player signs out or the deletion finishes
+Then the next request does not still show the private data
+
+#### US-39-105
+
+As a player, I want the product to set Sentry's random-session replay to zero, keep error replays with explicit masking, and keep tokens, usernames and query strings out of URLs sent to third parties (slice 4)., so that a visitor reaches a useful deck without an account and keeps it on signing up, and the owner counts activation and retention from the product's own database, with no third-party tracker.
+
+#### AC-39-112 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Set Sentry's random-session replay to zero, keep error replays with explicit masking, and keep tokens, usernames and query strings out of URLs sent to third parties (slice 4). Today src/instrumentation-client.ts sets replaysSessionSampleRate: 0.01, and neither the replay nor the AI providers are disclosed; I-38 slice 6 discloses them.
+
+#### AC-39-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-39-114 Edge
+
+Given the account or the cache this behaviour changes
+When the player signs out or the deletion finishes
+Then the next request does not still show the private data
+
+#### US-39-106
+
+As a player, I want the product to an inline first-run panel and empty states that offer import and a sample deck, landing starts that work signed out, interim sample decks and a first-build checklist computed from the deck's state (slices 5, 7–9)., so that a visitor reaches a useful deck without an account and keeps it on signing up, and the owner counts activation and retention from the product's own database, with no third-party tracker.
+
+#### AC-39-115 Happy path
+
+Given a signed-out visitor and a public deck
+When the player uses this behaviour
+Then the behaviour holds: An inline first-run panel and empty states that offer import and a sample deck, landing starts that work signed out, interim sample decks and a first-build checklist computed from the deck's state (slices 5, 7–9).
+
+#### AC-39-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-39-117 Edge
+
+Given a list where one name does not resolve
+When the player confirms
+Then the unresolved name is shown first and nothing is written until they accept that list
+
+#### US-39-107
+
+As a player, I want the product to a first-party event store: seven allowlisted events, one activity row per account per day, guest counters with no identifier, an opt-out that deletes past rows, and a 25-month fold into cohort aggregates (slice 10)., so that a visitor reaches a useful deck without an account and keeps it on signing up, and the owner counts activation and retention from the product's own database, with no third-party tracker.
+
+#### AC-39-118 Happy path
+
+Given a guest with one unsaved session deck
+When the player uses this behaviour
+Then the behaviour holds: A first-party event store: seven allowlisted events, one activity row per account per day, guest counters with no identifier, an opt-out that deletes past rows, and a 25-month fold into cohort aggregates (slice 10).
+
+#### AC-39-119 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-39-120 Edge
+
+Given the account or the cache this behaviour changes
+When the player signs out or the deletion finishes
+Then the next request does not still show the private data
+
+#### US-39-108
+
+As a player, I want the product to instrumentation, then an owner-only activation view with n and 95% intervals (slices 11–12)., so that a visitor reaches a useful deck without an account and keeps it on signing up, and the owner counts activation and retention from the product's own database, with no third-party tracker.
+
+#### AC-39-121 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Instrumentation, then an owner-only activation view with n and 95% intervals (slices 11–12).
+
+#### AC-39-122 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-39-123 Edge
+
+Given the same inputs as a previous run
+When the player runs it again
+Then the reported figures match the first run
+
+#### US-39-109
+
+As a player, I want the product to i-30's evidence: 30-day active accounts, AI calls per active account, use of each paid candidate's free version, and one opt-in survey (slice 13)., so that a visitor reaches a useful deck without an account and keeps it on signing up, and the owner counts activation and retention from the product's own database, with no third-party tracker.
+
+#### AC-39-124 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: I-30's evidence: 30-day active accounts, AI calls per active account, use of each paid candidate's free version, and one opt-in survey (slice 13).
+
+#### AC-39-125 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-39-126 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-39-110
+
+As a player, I want the product to an experiment protocol: a dated file per experiment, a sample size fixed in advance, and significance read only at the planned end (slice 14)., so that a visitor reaches a useful deck without an account and keeps it on signing up, and the owner counts activation and retention from the product's own database, with no third-party tracker.
+
+#### AC-39-127 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: An experiment protocol: a dated file per experiment, a sample size fixed in advance, and significance read only at the planned end (slice 14).
+
+#### AC-39-128 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-39-129 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-39-111
+
+As a player, I want the product to on the empty builder (slice 5), pasting a recognised deck list with Ctrl/Cmd+V opens I-10's import preview, read from the paste event with no clipboard permission., so that a visitor reaches a useful deck without an account and keeps it on signing up, and the owner counts activation and retention from the product's own database, with no third-party tracker.
+
+#### AC-39-130 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: On the empty builder (slice 5), pasting a recognised deck list with Ctrl/Cmd+V opens I-10's import preview, read from the paste event with no clipboard permission. Hearthstone asks whether to use a copied list when a deck is created (Blizzard, 2017-06-01). Added 2026-11-11.
+
+#### AC-39-131 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-39-132 Edge
+
+Given a list where one name does not resolve
+When the player confirms
+Then the unresolved name is shown first and nothing is written until they accept that list
+
+#### US-39-112
+
+As a player, I want the product to the sample shelf (slice 8) groups decks by I-54 style and offers "Play a test hand" signed out before "Copy this deck"; 7.4 still excludes rewards., so that a visitor reaches a useful deck without an account and keeps it on signing up, and the owner counts activation and retention from the product's own database, with no third-party tracker.
+
+#### AC-39-133 Happy path
+
+Given a signed-out visitor and a public deck
+When the player uses this behaviour
+Then the behaviour holds: The sample shelf (slice 8) groups decks by I-54 style and offers "Play a test hand" signed out before "Copy this deck"; 7.4 still excludes rewards. Arena gives every player ten starter decks (Patch Notes 2025.46.20, search-index text). Added 2026-11-11.
+
+#### AC-39-134 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-39-135 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-39-113
+
+As a player, I want the product to neighbour changes, 2026-11-11: section 8.2 gains I-76's four count-only events (completion_run, completion_applied, completion_reverted, missing_card_path), and section 11 the derived "table day" metric I-79's gate A reads; export_done gains scope: deck | set., so that a visitor reaches a useful deck without an account and keeps it on signing up, and the owner counts activation and retention from the product's own database, with no third-party tracker.
+
+#### AC-39-136 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Neighbour changes, 2026-11-11: section 8.2 gains I-76's four count-only events (completion_run, completion_applied, completion_reverted, missing_card_path), and section 11 the derived "table day" metric I-79's gate A reads; export_done gains scope: deck | set.
+
+#### AC-39-137 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-39-138 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+### UX states for this feature
+
+The player-visible outcome is: a visitor reaches a useful deck without an account and keeps it on signing up, and the owner counts activation and retention from the product's own database, with no third-party tracker.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
+
 ### Record moved from the roadmap (2026-11-11)
 
 Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.

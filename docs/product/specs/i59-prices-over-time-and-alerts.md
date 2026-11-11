@@ -219,12 +219,11 @@ Slices 0 to 2 fix what players see today and need no decision. Slice 3 is the co
 24. IETF, [RFC 8058: Signaling One-Click Functionality for List Email Headers](https://datatracker.ietf.org/doc/html/rfc8058), January 2017.
 25. PostgreSQL 18, [Database Page Layout](https://www.postgresql.org/docs/current/storage-page-layout.html), read 2026-11-10.
 
-## Feature contract (Light, 2026-11-11)
+## Feature contract (Full, 2026-11-11)
 
 The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
 
 
-This file is light because the initiative is Later or Parked and is not in I-80 to I-98. The scenarios below are the bar for when it is promoted. They are not a promise to build it next.
 
 ### Summary and problem
 
@@ -247,7 +246,7 @@ See the roadmap persona table. This initiative serves the rows that list its id.
 
 #### US-59-01
 
-As a player, I want the outcome of I-59, so that the work in this file is the reason to build it.
+As a player, I want a player sees what a deck or their collection was worth over time, in euros or dollars, beside their own cards, and which cards on their lists moved in price or were just reprinted, each figure with its source and dates. When they ask for it, an alert tells them once, in an inbox or a daily digest, in neutral words., so that this initiative's definition of done is met.
 
 #### US-59-02
 
@@ -339,6 +338,258 @@ None beyond the moved record.
 - https://scryfall.com/docs/api
 - https://www.mtgstocks.com/go-premium
 - https://www.echomtg.com/plans/
+
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-59-101
+
+As a player, I want the product to measure the tracked printings, the distinct Scryfall IDs in decks, collections and favourites, and the database's free space, and record both (slice 0)., so that a player sees what a deck or their collection was worth over time, in euros or dollars, beside their own cards, and which cards on their lists moved in price or were just reprinted, each figure with its source and dates. When they ask for it, an alert tells them once, in an inbox or a daily digest, in neutral words.
+
+#### AC-59-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Measure the tracked printings, the distinct Scryfall IDs in decks, collections and favourites, and the database's free space, and record both (slice 0).
+
+#### AC-59-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-59-102 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-59-102
+
+As a player, I want the product to one deck value function for the stats panel, the analysis diff, the stats export and budget checks: the command zone and main deck in the total, Sideboard and Considering apart, the companion counted, unpriced cards counted, labelled "USD, read when each card was added" (slice 1)., so that a player sees what a deck or their collection was worth over time, in euros or dollars, beside their own cards, and which cards on their lists moved in price or were just reprinted, each figure with its source and dates. When they ask for it, an alert tells them once, in an inbox or a daily digest, in neutral words.
+
+#### AC-59-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: One deck value function for the stats panel, the analysis diff, the stats export and budget checks: the command zone and main deck in the total, Sideboard and Considering apart, the companion counted, unpriced cards counted, labelled "USD, read when each card was added" (slice 1). Today three totals disagree. useDeckPrice (src/hooks/useDeckPrice.ts) sums every row of deck.cards, Sideboard and Considering included, plus commander and partner; computeDeckStats (src/lib/deck/stats.ts) sums the main zone, commander and partner; buildExportMetadata (src/lib/export/stats-export.ts) sums deck.cards without the command zone; and none counts the companion.
+
+#### AC-59-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-59-105 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-59-103
+
+As a player, I want the product to neutral wording and one colour for up and down, checked in CI over the English and French catalogues (slice 2)., so that a player sees what a deck or their collection was worth over time, in euros or dollars, beside their own cards, and which cards on their lists moved in price or were just reprinted, each figure with its source and dates. When they ask for it, an alert tells them once, in an inbox or a daily digest, in neutral words.
+
+#### AC-59-106 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Neutral wording and one colour for up and down, checked in CI over the English and French catalogues (slice 2).
+
+#### AC-59-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-59-108 Edge
+
+Given the French locale
+When the new controls render
+Then they come from the French catalogue and are not hard-coded English
+
+#### US-59-104
+
+As a player, I want the product to stop treating the price the browser sent as current., so that a player sees what a deck or their collection was worth over time, in euros or dollars, beside their own cards, and which cards on their lists moved in price or were just reprinted, each figure with its source and dates. When they ask for it, an alert tells them once, in an inbox or a daily digest, in neutral words.
+
+#### AC-59-109 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Stop treating the price the browser sent as current. makeDeckCard (src/lib/deck/store-card-faces.ts) reads prices.usd in the browser, addCardSchema (src/lib/validation/card.ts) accepts any value from 0 to 100,000, the server stores it unchecked, and patchCardSchema has no price field, so nothing refreshes it. Until a printing has points, its stored price is shown only as "price when added", and totals read the series once it does (slices 1, 3 and 6). I-57 slice 1 fixes the swap that keeps the old price.
+
+#### AC-59-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-59-111 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-59-105
+
+As a player, I want the product to pricePoint for tracked printings, keyed by I-67's CardPrinting.key and written from I-67 slice 5's daily CardPrice (re-pointed 2026-11-10), daily for 90 days and weekly after, never by a job of its own, with a run report (slice 3), and a compressed daily archive of every paper printing outside the database, with its hash (slice 4)., so that a player sees what a deck or their collection was worth over time, in euros or dollars, beside their own cards, and which cards on their lists moved in price or were just reprinted, each figure with its source and dates. When they ask for it, an alert tells them once, in an inbox or a daily digest, in neutral words.
+
+#### AC-59-112 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: PricePoint for tracked printings, keyed by I-67's CardPrinting.key and written from I-67 slice 5's daily CardPrice (re-pointed 2026-11-10), daily for 90 days and weekly after, never by a job of its own, with a run report (slice 3), and a compressed daily archive of every paper printing outside the database, with its hash (slice 4). On the spec's estimate, every priced printing daily in PostgreSQL would fill the 500 MB free tier in about nine weeks, while 10,000 tracked printings take about 99 MB in year one.
+
+#### AC-59-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-59-114 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-59-106
+
+As a player, I want the product to a printing's chart in the printing selector and the card panel (slice 5), deck value over time for the current list at past prices and for each snapshot on its own date (slice 6), and collection value over time (slice 7)., so that a player sees what a deck or their collection was worth over time, in euros or dollars, beside their own cards, and which cards on their lists moved in price or were just reprinted, each figure with its source and dates. When they ask for it, an alert tells them once, in an inbox or a daily digest, in neutral words.
+
+#### AC-59-115 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A printing's chart in the printing selector and the card panel (slice 5), deck value over time for the current list at past prices and for each snapshot on its own date (slice 6), and collection value over time (slice 7).
+
+#### AC-59-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-59-117 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-59-107
+
+As a player, I want "Moved" marks on deck rows and the acquisition plan, then on the wanted list, want lists and bundles (slices 8–9), and a reprint watch for cards on any tracked list (slice 10)., so that a player sees what a deck or their collection was worth over time, in euros or dollars, beside their own cards, and which cards on their lists moved in price or were just reprinted, each figure with its source and dates. When they ask for it, an alert tells them once, in an inbox or a daily digest, in neutral words.
+
+#### AC-59-118 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then "Moved" marks on deck rows and the acquisition plan, then on the wanted list, want lists and bundles (slices 8–9), and a reprint watch for cards on any tracked list (slice 10).
+
+#### AC-59-119 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-59-120 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-59-108
+
+As a player, I want the product to alert rules over a card or a list, net of owned copies, that fire once per crossing, with an in-app inbox (slice 11); an email digest with its own opt-in, at most one a day, with one-click unsubscribe (slice 12); and "since added" once I-37 slice 12 records it (slice 14)., so that a player sees what a deck or their collection was worth over time, in euros or dollars, beside their own cards, and which cards on their lists moved in price or were just reprinted, each figure with its source and dates. When they ask for it, an alert tells them once, in an inbox or a daily digest, in neutral words.
+
+#### AC-59-121 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Alert rules over a card or a list, net of owned copies, that fire once per crossing, with an in-app inbox (slice 11); an email digest with its own opt-in, at most one a day, with one-click unsubscribe (slice 12); and "since added" once I-37 slice 12 records it (slice 14).
+
+#### AC-59-122 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-59-123 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-59-109
+
+As a player, I want the product to taken over on 2026-11-10, so that one series and one alert engine serve every list: I-32's price watch (requirements 6.3 and 6.4, slice 12), I-45's value history (requirement 5.1, slice 12) and I-56's wanted items in the price watch (slice 18)., so that a player sees what a deck or their collection was worth over time, in euros or dollars, beside their own cards, and which cards on their lists moved in price or were just reprinted, each figure with its source and dates. When they ask for it, an alert tells them once, in an inbox or a daily digest, in neutral words.
+
+#### AC-59-124 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Taken over on 2026-11-10, so that one series and one alert engine serve every list: I-32's price watch (requirements 6.3 and 6.4, slice 12), I-45's value history (requirement 5.1, slice 12) and I-56's wanted items in the price watch (slice 18). Slices 6, 7 and 11 to 13 cover them; each source keeps a pointer.
+
+#### AC-59-125 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-59-126 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-59-110
+
+As a player, I want the product to after I-30's decision and the lawyer's answer: alert rules above a free allowance, list-wide scopes and the email digest as a paid entitlement (slice 13)., so that a player sees what a deck or their collection was worth over time, in euros or dollars, beside their own cards, and which cards on their lists moved in price or were just reprinted, each figure with its source and dates. When they ask for it, an alert tells them once, in an inbox or a daily digest, in neutral words.
+
+#### AC-59-127 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: After I-30's decision and the lawyer's answer: alert rules above a free allowance, list-wide scopes and the email digest as a paid entitlement (slice 13).
+
+#### AC-59-128 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-59-129 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+### UX states for this feature
+
+The player-visible outcome is: a player sees what a deck or their collection was worth over time, in euros or dollars, beside their own cards, and which cards on their lists moved in price or were just reprinted, each figure with its source and dates. When they ask for it, an alert tells them once, in an inbox or a daily digest, in neutral words.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
 
 ### Record moved from the roadmap (2026-11-11)
 

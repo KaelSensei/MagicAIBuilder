@@ -211,7 +211,7 @@ A spec is a plan, not a record. It does not mark anything shipped — the roadma
 
 The roadmap is an index. Each initiative's detail lives in one file in this folder. Files that already had a slice table keep it; the player contract and the roadmap text that used to sit under the initiative were appended, under "Feature contract" and "Record moved from the roadmap". Initiatives that had no file now have one. Those new files have no delivery-slice table, so the dependency generator does not invent slices for them.
 
-`_TEMPLATE.md` is the shape of a new file. Depth is **Full** for Now, Next, and I-80 to I-98, and **Light** for the other Later and Parked initiatives. Light means the stories and the five standard scenarios are present, and the long market sweep was not rewritten.
+`_TEMPLATE.md` is the shape of a new file. Every initiative is **Full**, including Later and Parked. The moved roadmap text is kept in full, and each scope line also has a story, a happy path, a failure, and an edge case.
 
 New files this pass:
 

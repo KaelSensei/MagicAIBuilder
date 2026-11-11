@@ -429,6 +429,192 @@ GitHub Actions or a Vercel function is the owner's choice. The Tagger licence an
 - https://mtgjson.com/license/
 - https://mtgjson.com/faq/
 
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-67-101
+
+As a player, I want the product to slice 0, the owner's: one Default Cards load measured on a Hobby function against the Irish database, then the runner, a Vercel function (300 seconds at most, iad1 by default) or a GitHub Actions scheduled workflow (free on this public repository, but delayed under load, run from main only and disabled after 60 days without activity); the contact URL; and free database space, with I-59 slice 0., so that every initiative that needs cards, printings, prices, rulings or tags reads them from one set of versioned local tables, filled once a day from Scryfall's bulk files and MTGJSON's deck lists by one scheduled ingest, and learns what changed from one typed change log. A broken file leaves yesterday's data live, a daily check compares the tables with Scryfall's API, and no public card page, download or API comes from them.
+
+#### AC-67-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Slice 0, the owner's: one Default Cards load measured on a Hobby function against the Irish database, then the runner, a Vercel function (300 seconds at most, iad1 by default) or a GitHub Actions scheduled workflow (free on this public repository, but delayed under load, run from main only and disabled after 60 days without activity); the contact URL; and free database space, with I-59 slice 0.
+
+#### AC-67-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-67-102 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-67-102
+
+As a player, I want the product to a streamed bulk reader behind one CardSource interface, with line guards and hashes (slice 1); CardOracle, CardPrinting, CardSet and CardRelation with int4 keys that are never reused, loaded through staging, gates and one atomic diff, with a run report and an owner page (slice 2); the scheduled card-data job with a lease, catch-up, a dry run and a 36-hour alert (slice 3)., so that every initiative that needs cards, printings, prices, rulings or tags reads them from one set of versioned local tables, filled once a day from Scryfall's bulk files and MTGJSON's deck lists by one scheduled ingest, and learns what changed from one typed change log. A broken file leaves yesterday's data live, a daily check compares the tables with Scryfall's API, and no public card page, download or API comes from them.
+
+#### AC-67-103 Happy path
+
+Given a signed-in operator
+When the player uses this behaviour
+Then the behaviour holds: A streamed bulk reader behind one CardSource interface, with line guards and hashes (slice 1); CardOracle, CardPrinting, CardSet and CardRelation with int4 keys that are never reused, loaded through staging, gates and one atomic diff, with a run report and an owner page (slice 2); the scheduled card-data job with a lease, catch-up, a dry run and a 36-hour alert (slice 3).
+
+#### AC-67-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-67-105 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-67-103
+
+As a player, I want the product to cardDataChange: twelve typed events that carry keys and dates only, a catalogue and contract test on I-63's model, a cursor per consumer and a test harness (slice 4); today's price for every printing (slice 5), rulings (slice 6), Oracle Tags with a kill switch and no display (slice 7), and Scryfall's migrations, which rewrite a merged ID in every deck and collection table in one transaction (slice 8)., so that every initiative that needs cards, printings, prices, rulings or tags reads them from one set of versioned local tables, filled once a day from Scryfall's bulk files and MTGJSON's deck lists by one scheduled ingest, and learns what changed from one typed change log. A broken file leaves yesterday's data live, a daily check compares the tables with Scryfall's API, and no public card page, download or API comes from them.
+
+#### AC-67-106 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: CardDataChange: twelve typed events that carry keys and dates only, a catalogue and contract test on I-63's model, a cursor per consumer and a test harness (slice 4); today's price for every printing (slice 5), rulings (slice 6), Oracle Tags with a kill switch and no display (slice 7), and Scryfall's migrations, which rewrite a merged ID in every deck and collection table in one transaction (slice 8).
+
+#### AC-67-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-67-108 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-67-104
+
+As a player, I want the product to local reads instead of per-request calls: cards by key, one CDN-cached Game Changer and banned list until I-48 slice 1 serves its version, sets, and the card cache cut from 2,000 rows to 200 (slice 9); a local name index and printing lists for imports, the wizard, packages, AI checks and the printing selector (slice 10)., so that every initiative that needs cards, printings, prices, rulings or tags reads them from one set of versioned local tables, filled once a day from Scryfall's bulk files and MTGJSON's deck lists by one scheduled ingest, and learns what changed from one typed change log. A broken file leaves yesterday's data live, a daily check compares the tables with Scryfall's API, and no public card page, download or API comes from them.
+
+#### AC-67-109 Happy path
+
+Given a downloaded deck and no network
+When the player uses this behaviour
+Then the behaviour holds: Local reads instead of per-request calls: cards by key, one CDN-cached Game Changer and banned list until I-48 slice 1 serves its version, sets, and the card cache cut from 2,000 rows to 200 (slice 9); a local name index and printing lists for imports, the wizard, packages, AI checks and the printing selector (slice 10). Free-text search stays on Scryfall.
+
+#### AC-67-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-67-111 Edge
+
+Given a list where one name does not resolve
+When the player confirms
+Then the unresolved name is shown first and nothing is written until they accept that list
+
+#### US-67-105
+
+As a player, I want the product to a daily check of 25 random printings and every Game Changer against /cards/:id, counts checked against is:gamechanger and banned:commander, and a weekly hash of Scryfall's terms (slice 11); image versions and WebP URLs derived from the printing ID, after I-05's WebP item (slice 12); MTGJSON's new Commander decks into I-17's catalogue, sealed contents and MTGJSON's MIT notice (slice 13)., so that every initiative that needs cards, printings, prices, rulings or tags reads them from one set of versioned local tables, filled once a day from Scryfall's bulk files and MTGJSON's deck lists by one scheduled ingest, and learns what changed from one typed change log. A broken file leaves yesterday's data live, a daily check compares the tables with Scryfall's API, and no public card page, download or API comes from them.
+
+#### AC-67-112 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A daily check of 25 random printings and every Game Changer against /cards/:id, counts checked against is:gamechanger and banned:commander, and a weekly hash of Scryfall's terms (slice 11); image versions and WebP URLs derived from the printing ID, after I-05's WebP item (slice 12); MTGJSON's new Commander decks into I-17's catalogue, sealed contents and MTGJSON's MIT notice (slice 13).
+
+#### AC-67-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-67-114 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-67-106
+
+As a player, I want the product to later: French names from All Cards (slice 14) and a quarterly drill that rebuilds CardOracle from MTGJSON and reports the differences (slice 15)., so that every initiative that needs cards, printings, prices, rulings or tags reads them from one set of versioned local tables, filled once a day from Scryfall's bulk files and MTGJSON's deck lists by one scheduled ingest, and learns what changed from one typed change log. A broken file leaves yesterday's data live, a daily check compares the tables with Scryfall's API, and no public card page, download or API comes from them.
+
+#### AC-67-115 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Later: French names from All Cards (slice 14) and a quarterly drill that rebuilds CardOracle from MTGJSON and reports the differences (slice 15). Parked: an image mirror of about 6.7 GB of WebP for paper printings, beyond Supabase's 1 GB of free storage, until Scryfall requires one or the owner decides (slice 16).
+
+#### AC-67-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-67-117 Edge
+
+Given the French locale
+When the new controls render
+Then they come from the French catalogue and are not hard-coded English
+
+#### US-67-107
+
+As a player, I want the product to ownership re-pointed on 2026-11-10, each source keeping a dated note: the daily job of I-29 slice 1, I-32 slice 2 and I-54 slice 1 (slices 2 and 5); I-59's price series (slice 5); the job registered on I-63 slice 5's route (slice 3); I-47's rulings import and its rulings-file check (slices 6 and 11); the Oracle Tags read by I-54, I-65 and I-37 (slice 7); I-58's land catalogue (slices 2 and 4); I-48's comparison with Scryfall (slices 4 and 11); I-18's set corpus, I-40's recognition index and I-19's tokens (slice 2); I-17's and I-29's precons (slice 13); and I-66's moves 2 and 11 (slice 9)., so that every initiative that needs cards, printings, prices, rulings or tags reads them from one set of versioned local tables, filled once a day from Scryfall's bulk files and MTGJSON's deck lists by one scheduled ingest, and learns what changed from one typed change log. A broken file leaves yesterday's data live, a daily check compares the tables with Scryfall's API, and no public card page, download or API comes from them.
+
+#### AC-67-118 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Ownership re-pointed on 2026-11-10, each source keeping a dated note: the daily job of I-29 slice 1, I-32 slice 2 and I-54 slice 1 (slices 2 and 5); I-59's price series (slice 5); the job registered on I-63 slice 5's route (slice 3); I-47's rulings import and its rulings-file check (slices 6 and 11); the Oracle Tags read by I-54, I-65 and I-37 (slice 7); I-58's land catalogue (slices 2 and 4); I-48's comparison with Scryfall (slices 4 and 11); I-18's set corpus, I-40's recognition index and I-19's tokens (slice 2); I-17's and I-29's precons (slice 13); and I-66's moves 2 and 11 (slice 9). I-37 slice 12 adds DeckCard.oracleId once, backfilled from CardPrinting.
+
+#### AC-67-119 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-67-120 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+### UX states for this feature
+
+The player-visible outcome is: every initiative that needs cards, printings, prices, rulings or tags reads them from one set of versioned local tables, filled once a day from Scryfall's bulk files and MTGJSON's deck lists by one scheduled ingest, and learns what changed from one typed change log. A broken file leaves yesterday's data live, a daily check compares the tables with Scryfall's API, and no public card page, download or API comes from them.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
+
 ### Record moved from the roadmap (2026-11-11)
 
 Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.

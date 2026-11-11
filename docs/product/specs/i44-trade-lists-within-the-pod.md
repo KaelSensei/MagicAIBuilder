@@ -259,12 +259,11 @@ Read on 2026-11-09 unless dated otherwise. Reddit threads were read through the 
 17. Regulation (EU) 2016/679 (GDPR), Art. 25. <https://gdpr-info.eu/art-25-gdpr/>
 18. HMRC, International Exchange of Information Manual, IEIM901710 "Form of Consideration", the UK rules implementing the OECD model that DAC7 follows, updated 2026-10-15. The EU directive's own text was not read. <https://www.gov.uk/hmrc-internal-manuals/international-exchange-of-information/ieim901710>
 
-## Feature contract (Light, 2026-11-11)
+## Feature contract (Full, 2026-11-11)
 
 The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
 
 
-This file is light because the initiative is Later or Parked and is not in I-80 to I-98. The scenarios below are the bar for when it is promoted. They are not a promise to build it next.
 
 ### Summary and problem
 
@@ -287,7 +286,7 @@ See the roadmap persona table. This initiative serves the rows that list its id.
 
 #### US-44-01
 
-As a player, I want the outcome of I-44, so that the work in this file is the reason to build it.
+As a player, I want a player keeps have and want lists filled from the collection and the acquisition plan, shares them by link or with friends and the pod, compares both sides of a swap at dated prices, and agrees a card-for-card swap at a store or the next game, with no chat and no money., so that this initiative's definition of done is met.
 
 #### US-44-02
 
@@ -377,6 +376,192 @@ None beyond the moved record.
 ### Sources
 
 - No external URL in the moved record. The record itself is the source for behaviour that is already in the code.
+
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-44-101
+
+As a player, I want the product to private have and want lists with three strictness levels, pasted and exported in the deck text format (slice 1)., so that a player keeps have and want lists filled from the collection and the acquisition plan, shares them by link or with friends and the pod, compares both sides of a swap at dated prices, and agrees a card-for-card swap at a store or the next game, with no chat and no money.
+
+#### AC-44-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Private have and want lists with three strictness levels, pasted and exported in the deck text format (slice 1). "Any printing" matches by English name until Oracle identity is stored: I-37 slice 12 for deck cards, I-06 for collection rows.
+
+#### AC-44-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-44-102 Edge
+
+Given a list where one name does not resolve
+When the player confirms
+Then the unresolved name is shown first and nothing is written until they accept that list
+
+#### US-44-102
+
+As a player, I want the product to fill a have list from the collection and a want list from the acquisition plan, with a preview (slice 2)., so that a player keeps have and want lists filled from the collection and the acquisition plan, shares them by link or with friends and the pod, compares both sides of a swap at dated prices, and agrees a card-for-card swap at a store or the next game, with no chat and no money.
+
+#### AC-44-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Fill a have list from the collection and a want list from the acquisition plan, with a preview (slice 2).
+
+#### AC-44-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-44-105 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-44-103
+
+As a player, I want the product to a share link and QR code with an allowlisted public page, noindex and a robots rule (slice 3), and a balance view in USD or EUR from Scryfall's dated prices, with no account needed and no conversion (slice 4)., so that a player keeps have and want lists filled from the collection and the acquisition plan, shares them by link or with friends and the pod, compares both sides of a swap at dated prices, and agrees a card-for-card swap at a store or the next game, with no chat and no money.
+
+#### AC-44-106 Happy path
+
+Given a signed-out visitor and a public deck
+When the player uses this behaviour
+Then the behaviour holds: A share link and QR code with an allowlisted public page, noindex and a robots rule (slice 3), and a balance view in USD or EUR from Scryfall's dated prices, with no account needed and no conversion (slice 4).
+
+#### AC-44-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-44-108 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-44-104
+
+As a player, I want "Compare with mine", a friends audience of mutual follows, and trade-first marks on the acquisition plan (slices 5–7)., so that a player keeps have and want lists filled from the collection and the acquisition plan, shares them by link or with friends and the pod, compares both sides of a swap at dated prices, and agrees a card-for-card swap at a store or the next game, with no chat and no money.
+
+#### AC-44-109 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then "Compare with mine", a friends audience of mutual follows, and trade-first marks on the acquisition plan (slices 5–7).
+
+#### AC-44-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-44-111 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-44-105
+
+As a player, I want the product to a pod audience, then structured proposals between friends and pod members, with no free text, a 7-day expiry and a 30-day purge (slices 8–9)., so that a player keeps have and want lists filled from the collection and the acquisition plan, shares them by link or with friends and the pod, compares both sides of a swap at dated prices, and agrees a card-for-card swap at a store or the next game, with no chat and no money.
+
+#### AC-44-112 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A pod audience, then structured proposals between friends and pod members, with no free text, a 7-day expiry and a 30-day purge (slices 8–9).
+
+#### AC-44-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-44-114 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-44-106
+
+As a player, I want the product to reports for lists and proposals and a free-copies mode, then, after the lawyer answers, an adult declaration with a city opt-in, a store audience and on-demand nearby matches behind a density gate (slices 10–14)., so that a player keeps have and want lists filled from the collection and the acquisition plan, shares them by link or with friends and the pod, compares both sides of a swap at dated prices, and agrees a card-for-card swap at a store or the next game, with no chat and no money.
+
+#### AC-44-115 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Reports for lists and proposals and a free-copies mode, then, after the lawyer answers, an adult declaration with a city opt-in, a store audience and on-demand nearby matches behind a density gate (slices 10–14).
+
+#### AC-44-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-44-117 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-44-107
+
+As a player, I want the product to confirmed-partner bands instead of ratings (slice 15), and a continuous match watch only after I-30's decision (slice 16)., so that a player keeps have and want lists filled from the collection and the acquisition plan, shares them by link or with friends and the pod, compares both sides of a swap at dated prices, and agrees a card-for-card swap at a store or the next game, with no chat and no money.
+
+#### AC-44-118 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Confirmed-partner bands instead of ratings (slice 15), and a continuous match watch only after I-30's decision (slice 16).
+
+#### AC-44-119 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-44-120 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+### UX states for this feature
+
+The player-visible outcome is: a player keeps have and want lists filled from the collection and the acquisition plan, shares them by link or with friends and the pod, compares both sides of a swap at dated prices, and agrees a card-for-card swap at a store or the next game, with no chat and no money.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
 
 ### Record moved from the roadmap (2026-11-11)
 

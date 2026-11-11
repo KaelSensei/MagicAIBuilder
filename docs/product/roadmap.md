@@ -297,7 +297,7 @@ Read on 2026-11-11. No new initiative number.
 
 ## Initiative index
 
-The [glance table](#roadmap-at-a-glance) is the index: one row, the status, the priority, and the spec link. Now, Next, and I-80 to I-98 have a full feature contract. Other Later and Parked initiatives have a lighter file, with the same headings and the roadmap text moved across in full.
+The [glance table](#roadmap-at-a-glance) is the index: one row, the status, the priority, and the spec link. Every initiative, Later and Parked included, has a full feature contract. The roadmap text was moved into the spec and then expanded. Nothing was kept only in a shorter form.
 
 ## Delivery rules
 

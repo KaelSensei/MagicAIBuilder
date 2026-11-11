@@ -220,12 +220,11 @@ Read on 2026-11-10 unless stated otherwise. Reddit scores and comment counts are
 14. Archidekt, feature voting page. <https://archidekt.com/features>
 15. GDPR Recital 18, "Non-application to personal or household activities". <https://gdpr-info.eu/recitals/no-18/>
 
-## Feature contract (Light, 2026-11-11)
+## Feature contract (Full, 2026-11-11)
 
 The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
 
 
-This file is light because the initiative is Later or Parked and is not in I-80 to I-98. The scenarios below are the bar for when it is promoted. They are not a promise to build it next.
 
 ### Summary and problem
 
@@ -248,7 +247,7 @@ See the roadmap persona table. This initiative serves the rows that list its id.
 
 #### US-51-01
 
-As a player, I want the outcome of I-51, so that the work in this file is the reason to build it.
+As a player, I want a player records the cards and whole decks lent to or borrowed from friends, with dates, a return checklist and a history. A lent copy stays owned but is not available to a new deck, and a borrowed copy fills a deck tonight without hiding a purchase. A household shares one physical collection while each copy keeps its owner., so that this initiative's definition of done is met.
 
 #### US-51-02
 
@@ -341,6 +340,236 @@ None beyond the moved record.
 - https://apps.apple.com/us/app/mtg-trades/id736701892
 - https://apps.apple.com/us/app/deckhowler/id6740892169
 - https://deckbox.org/forum/viewtopic.php?id=516
+
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-51-101
+
+As a player, I want the product to a loan schema (CardLoan, CardLoanItem, CardLoanReturn) and one write module that keeps the copies out on open loans at or below a row's quantity, under a row lock (slice 1)., so that a player records the cards and whole decks lent to or borrowed from friends, with dates, a return checklist and a history. A lent copy stays owned but is not available to a new deck, and a borrowed copy fills a deck tonight without hiding a purchase. A household shares one physical collection while each copy keeps its owner.
+
+#### AC-51-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A loan schema (CardLoan, CardLoanItem, CardLoanReturn) and one write module that keeps the copies out on open loans at or below a row's quantity, under a row lock (slice 1). The collection routes answer 409 when a decrease or a deletion would leave fewer copies than are out, and a printing-swap merge moves the loan items. Today CollectionCard (prisma/schema.prisma) has no possession state, and POST /api/collection, PATCH /api/collection/[id] and DELETE /api/collection/[id] change quantities with nothing to protect. A loan can only be an owner-only card note, with no date or counterpart, that changes no count.
+
+#### AC-51-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-51-102 Edge
+
+Given the account or the cache this behaviour changes
+When the player signs out or the deletion finishes
+Then the next request does not still show the private data
+
+#### US-51-102
+
+As a player, I want the product to lend copies to a private label, with due dates, returns, closing as returned, given or lost, a history, and "Lent" beside "Used in decks" (slice 2)., so that a player records the cards and whole decks lent to or borrowed from friends, with dates, a return checklist and a history. A lent copy stays owned but is not available to a new deck, and a borrowed copy fills a deck tonight without hiding a purchase. A household shares one physical collection while each copy keeps its owner.
+
+#### AC-51-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Lend copies to a private label, with due dates, returns, closing as returned, given or lost, a history, and "Lent" beside "Used in decks" (slice 2).
+
+#### AC-51-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-51-105 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-51-103
+
+As a player, I want the product to lent copies unavailable in the lender's deck status and flagged in the acquisition plan; borrowed copies recorded from a label, assigned to a deck, shown as "borrowed" and never counted as owned (slices 3–4)., so that a player records the cards and whole decks lent to or borrowed from friends, with dates, a return checklist and a history. A lent copy stays owned but is not available to a new deck, and a borrowed copy fills a deck tonight without hiding a purchase. A household shares one physical collection while each copy keeps its owner.
+
+#### AC-51-106 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Lent copies unavailable in the lender's deck status and flagged in the acquisition plan; borrowed copies recorded from a label, assigned to a deck, shown as "borrowed" and never counted as owned (slices 3–4). Today getDeckCardStatuses (src/lib/collection/shopping-list.ts) knows only owned, proxy and missing.
+
+#### AC-51-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-51-108 Edge
+
+Given a card the player marked as a proxy
+When ownership and the deck total are shown
+Then the card is labelled proxy and is not counted as a physical copy the player owns
+
+#### US-51-104
+
+As a player, I want the product to lend a whole deck: a frozen list that survives the deck's deletion, a preview of proxies and missing cards, a banner and a return checklist (slice 5)., so that a player records the cards and whole decks lent to or borrowed from friends, with dates, a return checklist and a history. A lent copy stays owned but is not available to a new deck, and a borrowed copy fills a deck tonight without hiding a purchase. A household shares one physical collection while each copy keeps its owner.
+
+#### AC-51-109 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Lend a whole deck: a frozen list that survives the deck's deletion, a preview of proxies and missing cards, a banner and a return checklist (slice 5). DeckSnapshot cascades with its deck, so the loan keeps its own copy of the list.
+
+#### AC-51-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-51-111 Edge
+
+Given the account or the cache this behaviour changes
+When the player signs out or the deletion finishes
+Then the next request does not still show the private data
+
+#### US-51-105
+
+As a player, I want the product to a Due view computed on read, with reminders off by default (slice 6)., so that a player records the cards and whole decks lent to or borrowed from friends, with dates, a return checklist and a history. A lent copy stays owned but is not available to a new deck, and a borrowed copy fills a deck tonight without hiding a purchase. A household shares one physical collection while each copy keeps its owner.
+
+#### AC-51-112 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A Due view computed on read, with reminders off by default (slice 6).
+
+#### AC-51-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-51-114 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-51-106
+
+As a player, I want the product to loans between mutual follows: pending, accept, decline, a 14-day expiry, detach, and a return claim shown on both sides until the lender confirms it; then the borrower's read-only view of a lent deck through SHARED_DECK_SELECT (slices 7–8)., so that a player records the cards and whole decks lent to or borrowed from friends, with dates, a return checklist and a history. A lent copy stays owned but is not available to a new deck, and a borrowed copy fills a deck tonight without hiding a purchase. A household shares one physical collection while each copy keeps its owner.
+
+#### AC-51-115 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Loans between mutual follows: pending, accept, decline, a 14-day expiry, detach, and a return claim shown on both sides until the lender confirms it; then the borrower's read-only view of a lent deck through SHARED_DECK_SELECT (slices 7–8). No typed text crosses accounts.
+
+#### AC-51-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-51-117 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-51-107
+
+As a player, I want the product to a household of two to six accounts that see one physical collection, with each copy's owner and never its purchase price; loans inside it need no acceptance; then pod members as borrowers (slices 9–11)., so that a player records the cards and whole decks lent to or borrowed from friends, with dates, a return checklist and a history. A lent copy stays owned but is not available to a new deck, and a borrowed copy fills a deck tonight without hiding a purchase. A household shares one physical collection while each copy keeps its owner.
+
+#### AC-51-118 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A household of two to six accounts that see one physical collection, with each copy's owner and never its purchase price; loans inside it need no acceptance; then pod members as borrowers (slices 9–11).
+
+#### AC-51-119 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-51-120 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-51-108
+
+As a player, I want the product to loans in the full export, and lent copies excluded from I-16's free cards, I-43's pull lists, I-44's have lists and I-45's spare copies (slices 12–16)., so that a player records the cards and whole decks lent to or borrowed from friends, with dates, a return checklist and a history. A lent copy stays owned but is not available to a new deck, and a borrowed copy fills a deck tonight without hiding a purchase. A household shares one physical collection while each copy keeps its owner.
+
+#### AC-51-121 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Loans in the full export, and lent copies excluded from I-16's free cards, I-43's pull lists, I-44's have lists and I-45's spare copies (slices 12–16).
+
+#### AC-51-122 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-51-123 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-51-109
+
+As a player, I want the product to after I-63's email (slice 9) and I-30's decision: e-mail reminders, and the borrow plan in I-43's game-night planner (slices 17–18)., so that a player records the cards and whole decks lent to or borrowed from friends, with dates, a return checklist and a history. A lent copy stays owned but is not available to a new deck, and a borrowed copy fills a deck tonight without hiding a purchase. A household shares one physical collection while each copy keeps its owner.
+
+#### AC-51-124 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: After I-63's email (slice 9) and I-30's decision: e-mail reminders, and the borrow plan in I-43's game-night planner (slices 17–18).
+
+#### AC-51-125 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-51-126 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+### UX states for this feature
+
+The player-visible outcome is: a player records the cards and whole decks lent to or borrowed from friends, with dates, a return checklist and a history. A lent copy stays owned but is not available to a new deck, and a borrowed copy fills a deck tonight without hiding a purchase. A household shares one physical collection while each copy keeps its owner.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
 
 ### Record moved from the roadmap (2026-11-11)
 

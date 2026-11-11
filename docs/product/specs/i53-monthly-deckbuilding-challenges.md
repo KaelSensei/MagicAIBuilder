@@ -213,12 +213,11 @@ Read 2026-11-10 unless dated otherwise.
 16. Squire Patton Boggs, "Notion de loterie : nouvelle définition introduite par la loi Hamon", La Revue, 2014-04-14. Article numbers as of 2014; check the current text. https://larevue.squirepattonboggs.com/notion-de-loterie-nouvelle-definition-introduite-par-la-loi-hamon_a2309.html
 17. Olshan Frome Wolosky, "Are 'Popularity' Contests Where Consumers Vote for Winners Skill Contests?", undated (© 2026). https://www.olshanlaw.com/newsroom/publications/Popularity-Contests-Consumer-Vote
 
-## Feature contract (Light, 2026-11-11)
+## Feature contract (Full, 2026-11-11)
 
 The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
 
 
-This file is light because the initiative is Later or Parked and is not in I-80 to I-98. The scenarios below are the bar for when it is promoted. They are not a promise to build it next.
 
 ### Summary and problem
 
@@ -241,7 +240,7 @@ See the roadmap persona table. This initiative serves the rows that list its id.
 
 #### US-53-01
 
-As a player, I want the outcome of I-53, so that the work in this file is the reason to build it.
+As a player, I want a player reads a challenge brief, checks a deck against its rules with the product's deterministic tools, and enters a frozen list. Judges shortlist finalists, the community votes among them, and the results and the archive keep every brief, finalist and check report. Friends run private challenges the same way., so that this initiative's definition of done is met.
 
 #### US-53-02
 
@@ -335,6 +334,236 @@ None beyond the moved record.
 - https://www.reddit.com/r/EDH/comments/1ryag1n/
 - https://api.netrunnerdb.com/api/v3/public/restrictions
 - https://playriftbound.com/en-us/news/rules-and-releases/riftbound-core-rules-patch-notes/
+
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-53-101
+
+As a player, I want the product to checkDeckAgainstRules, a pure checker for legality, Game Changers, colour identity, slots, a frozen commander list, banned cards and the AI label, which replaces the orphan src/lib/challenges/challenges.ts and deletes it (slice 1)., so that a player reads a challenge brief, checks a deck against its rules with the product's deterministic tools, and enters a frozen list. Judges shortlist finalists, the community votes among them, and the results and the archive keep every brief, finalist and check report. Friends run private challenges the same way.
+
+#### AC-53-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then checkDeckAgainstRules, a pure checker for legality, Game Changers, colour identity, slots, a frozen commander list, banned cards and the AI label, which replaces the orphan src/lib/challenges/challenges.ts and deletes it (slice 1). That module, added in #246 on 2026-03-30, is imported by nothing, ranks entries by a score nothing computes, and grants a badge to the top 25% and a "golden-frame" cosmetic to the top 10%.
+
+#### AC-53-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-53-102 Edge
+
+Given a list where one name does not resolve
+When the player confirms
+Then the unresolved name is shown first and nothing is written until they accept that list
+
+#### US-53-102
+
+As a player, I want the product to price rules on I-32's dated prices in the brief's market, bracket rules from I-28 slice 7, and rarity from I-42 slice 10 (slices 2–4)., so that a player reads a challenge brief, checks a deck against its rules with the product's deterministic tools, and enters a frozen list. Judges shortlist finalists, the community votes among them, and the results and the archive keep every brief, finalist and check report. Friends run private challenges the same way.
+
+#### AC-53-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Price rules on I-32's dated prices in the brief's market, bracket rules from I-28 slice 7, and rarity from I-42 slice 10 (slices 2–4). Today DeckCard.price is Scryfall's usd with no date (src/lib/deck/pricing.ts), and no EUR price exists.
+
+#### AC-53-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-53-105 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-53-103
+
+As a player, I want the product to the challenge model, the brief page with each rule in plain English and French beside its machine form, and "Check my deck", which stores nothing (slices 5–6)., so that a player reads a challenge brief, checks a deck against its rules with the product's deterministic tools, and enters a frozen list. Judges shortlist finalists, the community votes among them, and the results and the archive keep every brief, finalist and check report. Friends run private challenges the same way.
+
+#### AC-53-106 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: The challenge model, the brief page with each rule in plain English and French beside its machine form, and "Check my deck", which stores nothing (slices 5–6).
+
+#### AC-53-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-53-108 Edge
+
+Given the French locale
+When the new controls render
+Then they come from the French catalogue and are not hard-coded English
+
+#### US-53-104
+
+As a player, I want the product to entries frozen through I-36's public projection with their check report, one per account or slot, a "changed since entry" notice, and a gallery ordered by a daily hash, never by votes (slice 7)., so that a player reads a challenge brief, checks a deck against its rules with the product's deterministic tools, and enters a frozen list. Judges shortlist finalists, the community votes among them, and the results and the archive keep every brief, finalist and check report. Friends run private challenges the same way.
+
+#### AC-53-109 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Entries frozen through I-36's public projection with their check report, one per account or slot, a "changed since entry" notice, and a gallery ordered by a daily hash, never by votes (slice 7). Deck.tags stays private: PUBLIC_DECK_SELECT (src/lib/deck/public-deck-select.ts) leaves it out, so a challenge cannot be a public tag.
+
+#### AC-53-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-53-111 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-53-105
+
+As a player, I want the product to private challenges for up to 12 members by invite link, with a seeded slot draw that any member can replay (slice 8)., so that a player reads a challenge brief, checks a deck against its rules with the product's deterministic tools, and enters a frozen list. Judges shortlist finalists, the community votes among them, and the results and the archive keep every brief, finalist and check report. Friends run private challenges the same way.
+
+#### AC-53-112 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Private challenges for up to 12 members by invite link, with a seeded slot draw that any member can replay (slice 8).
+
+#### AC-53-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-53-114 Edge
+
+Given the same inputs as a previous run
+When the player runs it again
+Then the reported figures match the first run
+
+#### US-53-106
+
+As a player, I want the product to judges, shortlists, notes, awards and the results page; reports, withdrawals and disqualifications through I-38's decisions; then a community vote among the finalists with weight one per account (slices 9–11)., so that a player reads a challenge brief, checks a deck against its rules with the product's deterministic tools, and enters a frozen list. Judges shortlist finalists, the community votes among them, and the results and the archive keep every brief, finalist and check report. Friends run private challenges the same way.
+
+#### AC-53-115 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Judges, shortlists, notes, awards and the results page; reports, withdrawals and disqualifications through I-38's decisions; then a community vote among the finalists with weight one per account (slices 9–11). Today POST /api/community/decks/[id]/vote has no rate limit, and rankDecksByScore (src/lib/community/votes.ts) orders commander discovery by vote score.
+
+#### AC-53-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-53-117 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-53-107
+
+As a player, I want the product to results statistics withheld below 10 entries, awards on profiles and deck pages, product events and the demand threshold, store challenges and opt-in announcements (slices 12–15)., so that a player reads a challenge brief, checks a deck against its rules with the product's deterministic tools, and enters a frozen list. Judges shortlist finalists, the community votes among them, and the results and the archive keep every brief, finalist and check report. Friends run private challenges the same way.
+
+#### AC-53-118 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Results statistics withheld below 10 entries, awards on profiles and deck pages, product events and the demand threshold, store challenges and opt-in announcements (slices 12–15).
+
+#### AC-53-119 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-53-120 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-53-108
+
+As a player, I want the product to after the lawyer's answers: a sponsor's text credit, and challenges with a prize that only judges award (slices 16–17)., so that a player reads a challenge brief, checks a deck against its rules with the product's deterministic tools, and enters a frozen list. Judges shortlist finalists, the community votes among them, and the results and the archive keep every brief, finalist and check report. Friends run private challenges the same way.
+
+#### AC-53-121 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: After the lawyer's answers: a sponsor's text credit, and challenges with a prize that only judges award (slices 16–17).
+
+#### AC-53-122 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-53-123 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-53-109
+
+As a player, I want the product to slice 1 adds rule types for tables, reused by I-15, I-41 and I-79:, so that a player reads a challenge brief, checks a deck against its rules with the product's deterministic tools, and enters a frozen list. Judges shortlist finalists, the community votes among them, and the results and the archive keep every brief, finalist and check report. Friends run private challenges the same way.
+
+#### AC-53-124 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Slice 1 adds rule types for tables, reused by I-15, I-41 and I-79:
+
+#### AC-53-125 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-53-126 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+### UX states for this feature
+
+The player-visible outcome is: a player reads a challenge brief, checks a deck against its rules with the product's deterministic tools, and enters a frozen list. Judges shortlist finalists, the community votes among them, and the results and the archive keep every brief, finalist and check report. Friends run private challenges the same way.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
 
 ### Record moved from the roadmap (2026-11-11)
 

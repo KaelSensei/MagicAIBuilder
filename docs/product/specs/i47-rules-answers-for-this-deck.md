@@ -388,6 +388,214 @@ Whether French players see official English rulings or a labelled unofficial tra
 - https://magic.wizards.com/en/rules
 - https://scryfall.com/docs/api
 
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-47-101
+
+As a player, I want the product to a Comprehensive Rules import script with a diff report, landing as a reviewed PR; an update to the 2026-11-06 version; and one served copy, with a test that fails when a committed copy differs (slice 1)., so that a player opens any card in the builder or on a public deck and reads its official rulings with their dates and sources, follows each keyword to its rule in a stated version of the Comprehensive Rules, and later reads reviewed notes on the interactions in this deck. When nothing reviewed applies, the product says so and points to a judge.
+
+#### AC-47-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A Comprehensive Rules import script with a diff report, landing as a reviewed PR; an update to the 2026-11-06 version; and one served copy, with a test that fails when a committed copy differs (slice 1). Today the app serves src/lib/rules/data/MagicCompRules-20260807.txt, two versions behind the file Wizards links (rules page). Between the two, 109 rules moved to a new number with the same text, 211 changed text under the same number, chapter 715 became "Saga Cards", and 903.5e became 903.5f. Two more copies sit at the 2026-02-27 version, in docs/rules/ and .agents/skills/mtg-rules/references/comprehensive-rules.txt.
+
+#### AC-47-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-47-102 Edge
+
+Given a list where one name does not resolve
+When the player confirms
+Then the unresolved name is shown first and nothing is written until they accept that list
+
+#### US-47-102
+
+As a player, I want the product to rule addresses: an id on each paragraph, /rules/comprehensive?rule=903.9a, linked cross-references and search results, and the French date and strings (slice 2)., so that a player opens any card in the builder or on a public deck and reads its official rulings with their dates and sources, follows each keyword to its rule in a stated version of the Comprehensive Rules, and later reads reviewed notes on the interactions in this deck. When nothing reviewed applies, the product says so and points to a judge.
+
+#### AC-47-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Rule addresses: an id on each paragraph, /rules/comprehensive?rule=903.9a, linked cross-references and search results, and the French date and strings (slice 2). Today src/components/rules/ComprehensiveRulesView.tsx renders one chapter per ?chapter= with no anchor per rule, "No matching rules found." is hard-coded English, and the French page shows the English date.
+
+#### AC-47-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-47-105 Edge
+
+Given the French locale
+When the new controls render
+Then they come from the French catalogue and are not hard-coded English
+
+#### US-47-103
+
+As a player, I want the product to a weekly server-side import of Scryfall's rulings file into CardRuling, with RulingsImport and RulingChange, and DeckCard.oracleId with a backfill (slice 3)., so that a player opens any card in the builder or on a public deck and reads its official rulings with their dates and sources, follows each keyword to its rule in a stated version of the Comprehensive Rules, and later reads reviewed notes on the interactions in this deck. When nothing reviewed applies, the product says so and points to a judge.
+
+#### AC-47-106 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A weekly server-side import of Scryfall's rulings file into CardRuling, with RulingsImport and RulingChange, and DeckCard.oracleId with a backfill (slice 3).
+
+#### AC-47-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-47-108 Edge
+
+Given a list where one name does not resolve
+When the player confirms
+Then the unresolved name is shown first and nothing is written until they accept that list
+
+#### US-47-104
+
+As a player, I want the product to a deck rules API and a builder panel with source labels, dates and the file date, which retires the browser fetch (slice 4)., so that a player opens any card in the builder or on a public deck and reads its official rulings with their dates and sources, follows each keyword to its rule in a stated version of the Comprehensive Rules, and later reads reviewed notes on the interactions in this deck. When nothing reviewed applies, the product says so and points to a judge.
+
+#### AC-47-109 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A deck rules API and a builder panel with source labels, dates and the file date, which retires the browser fetch (slice 4). Today src/lib/scryfall/rulings.ts fetches rulings from the browser outside the request queue, and src/components/card/CardRulingsPanel.tsx, reached only from PrintingSelectorModal.tsx, titles every ruling "Oracle rulings", so Scryfall's own notes read as official.
+
+#### AC-47-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-47-111 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-47-105
+
+As a player, I want the product to rulings on the public deck page through the allowlist, and keyword-to-rule links with a reviewed alias table and a catalogue test (slices 5–6)., so that a player opens any card in the builder or on a public deck and reads its official rulings with their dates and sources, follows each keyword to its rule in a stated version of the Comprehensive Rules, and later reads reviewed notes on the interactions in this deck. When nothing reviewed applies, the product says so and points to a judge.
+
+#### AC-47-112 Happy path
+
+Given a signed-out visitor and a public deck
+When the player uses this behaviour
+Then the behaviour holds: Rulings on the public deck page through the allowlist, and keyword-to-rule links with a reviewed alias table and a catalogue test (slices 5–6). Today PublicDeckCards.tsx shows neither Oracle text nor rulings, and PUBLIC_DECK_CARD_SELECT (src/lib/deck/public-deck-select.ts) carries neither.
+
+#### AC-47-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-47-114 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-47-106
+
+As a player, I want the product to a weekly freshness check for the rules and the rulings file, which opens an issue and never deploys rules text (slice 7)., so that a player opens any card in the builder or on a public deck and reads its official rulings with their dates and sources, follows each keyword to its rule in a stated version of the Comprehensive Rules, and later reads reviewed notes on the interactions in this deck. When nothing reviewed applies, the product says so and points to a judge.
+
+#### AC-47-115 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A weekly freshness check for the rules and the rulings file, which opens an issue and never deploys rules text (slice 7).
+
+#### AC-47-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-47-117 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-47-107
+
+As a player, I want the product to later: the notes' content model, citation contract and drift rules; a review record, "Report a rules error" and a public changelog of notes; a first catalogue of Commander notes on 903.3d, 903.8, 903.9a and 903.9b; and "Worth knowing in this deck" (slices 8–11)., so that a player opens any card in the builder or on a public deck and reads its official rulings with their dates and sources, follows each keyword to its rule in a stated version of the Comprehensive Rules, and later reads reviewed notes on the interactions in this deck. When nothing reviewed applies, the product says so and points to a judge.
+
+#### AC-47-118 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Later: the notes' content model, citation contract and drift rules; a review record, "Report a rules error" and a public changelog of notes; a first catalogue of Commander notes on 903.3d, 903.8, 903.9a and 903.9b; and "Worth knowing in this deck" (slices 8–11). A note whose cited rule changes goes back to review and stops rendering.
+
+#### AC-47-119 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-47-120 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-47-108
+
+As a player, I want the product to later: rulings and notes in I-19's offline copy and I-24's export (slice 12); the rules watch as entries in I-48's per-deck report (slice 13); and model retrieval of citations only if the owner decides for it (slice 14)., so that a player opens any card in the builder or on a public deck and reads its official rulings with their dates and sources, follows each keyword to its rule in a stated version of the Comprehensive Rules, and later reads reviewed notes on the interactions in this deck. When nothing reviewed applies, the product says so and points to a judge.
+
+#### AC-47-121 Happy path
+
+Given a downloaded deck and no network
+When the player uses this behaviour
+Then the behaviour holds: Later: rulings and notes in I-19's offline copy and I-24's export (slice 12); the rules watch as entries in I-48's per-deck report (slice 13); and model retrieval of citations only if the owner decides for it (slice 14).
+
+#### AC-47-122 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-47-123 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+### UX states for this feature
+
+The player-visible outcome is: a player opens any card in the builder or on a public deck and reads its official rulings with their dates and sources, follows each keyword to its rule in a stated version of the Comprehensive Rules, and later reads reviewed notes on the interactions in this deck. When nothing reviewed applies, the product says so and points to a judge.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
+
 ### Record moved from the roadmap (2026-11-11)
 
 Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.

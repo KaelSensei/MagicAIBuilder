@@ -238,6 +238,302 @@ Who writes the editorial bundles, and when a sealed price may appear, wait on I-
 - https://draftsim.com/mtg-arena-brawl-precon/
 - https://hearthstone.blizzard.com/en-us/news/24198086
 
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-17-101
+
+As a player, I want the product to keep a versioned catalog of official precon lists, each with a dated source., so that a player can open a dated official precon, see the diff from that list, and apply a reversible budget bundle on a separate working copy.
+
+#### AC-17-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Keep a versioned catalog of official precon lists, each with a dated source.
+
+#### AC-17-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-17-102 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-17-102
+
+As a player, I want the product to show the diff from the sealed list, and keep the commander until the player changes it., so that a player can open a dated official precon, see the diff from that list, and apply a reversible budget bundle on a separate working copy.
+
+#### AC-17-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Show the diff from the sealed list, and keep the commander until the player changes it.
+
+#### AC-17-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-17-105 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-17-103
+
+As a player, I want the product to offer editorial swap bundles by budget band, separate from I-02 suggestions., so that a player can open a dated official precon, see the diff from that list, and apply a reversible budget bundle on a separate working copy.
+
+#### AC-17-106 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Offer editorial swap bundles by budget band, separate from I-02 suggestions.
+
+#### AC-17-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-17-108 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-17-104
+
+As a player, I want the product to apply each bundle to a distinct working copy, and make the bundle reversible., so that a player can open a dated official precon, see the diff from that list, and apply a reversible budget bundle on a separate working copy.
+
+#### AC-17-109 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Apply each bundle to a distinct working copy, and make the bundle reversible.
+
+#### AC-17-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-17-111 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-17-105
+
+As a player, I want the product to label every price as an estimate, not a guaranteed quote., so that a player can open a dated official precon, see the diff from that list, and apply a reversible budget bundle on a separate working copy.
+
+#### AC-17-112 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Label every price as an estimate, not a guaranteed quote.
+
+#### AC-17-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-17-114 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-17-106
+
+As a player, I want the product to import Secret Lair drops into the catalogue from MTGJSON's deck files, which list each drop's cards by Scryfall ID under the MIT licence, dated and versioned like precons (slice 7)., so that a player can open a dated official precon, see the diff from that list, and apply a reversible budget bundle on a separate working copy.
+
+#### AC-17-115 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Import Secret Lair drops into the catalogue from MTGJSON's deck files, which list each drop's cards by Scryfall ID under the MIT licence, dated and versioned like precons (slice 7). MTGJSON 5.3.0+20261109 lists 782 "Secret Lair Drop" decks and 206 "Commander Deck" decks; refreshes reach the product through a reviewed pull request.
+
+#### AC-17-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-17-117 Edge
+
+Given a list where one name does not resolve
+When the player confirms
+Then the unresolved name is shown first and nothing is written until they accept that list
+
+#### US-17-107
+
+As a player, I want the product to for the missing cards in I-06's plan or in one deck's shopping list, list the fixed-content products that hold them, precons and Secret Lair drops, ranked by missing copies covered and showing the singles value of those copies (slice 8)., so that a player can open a dated official precon, see the diff from that list, and apply a reversible budget bundle on a separate working copy.
+
+#### AC-17-118 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: For the missing cards in I-06's plan or in one deck's shopping list, list the fixed-content products that hold them, precons and Secret Lair drops, ranked by missing copies covered and showing the singles value of those copies (slice 8).
+
+#### AC-17-119 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-17-120 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-17-108
+
+As a player, I want the product to name, in the printing selector, the precon or Secret Lair drop that each printing came from (slice 8)., so that a player can open a dated official precon, see the diff from that list, and apply a reversible budget bundle on a separate working copy.
+
+#### AC-17-121 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Name, in the printing selector, the precon or Secret Lair drop that each printing came from (slice 8).
+
+#### AC-17-122 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-17-123 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-17-109
+
+As a player, I want "I bought this precon" adds a catalogue version's cards to the collection with its printings, through I-06's model, and one undo; the working copy then starts as owned., so that a player can open a dated official precon, see the diff from that list, and apply a reversible budget bundle on a separate working copy.
+
+#### AC-17-124 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then "I bought this precon" adds a catalogue version's cards to the collection with its printings, through I-06's model, and one undo; the working copy then starts as owned. "Also a function to auto add precons to your inventory" (Dragon Shield reviews, 2025-09-18). Added 2026-11-11.
+
+#### AC-17-125 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-17-126 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-17-110
+
+As a player, I want the product to upgrade ledger., so that a player can open a dated official precon, see the diff from that list, and apply a reversible budget bundle on a separate working copy.
+
+#### AC-17-127 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Upgrade ledger. Each applied bundle or manual upgrade step is a linked version recording:
+
+#### AC-17-128 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-17-129 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-17-111
+
+As a player, I want "This precon would cost you X": the singles value of the cards the player lacks, set against the sealed price once I-32 has one (extends slice 8)., so that a player can open a dated official precon, see the diff from that list, and apply a reversible budget bundle on a separate working copy.
+
+#### AC-17-130 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then "This precon would cost you X": the singles value of the cards the player lacks, set against the sealed price once I-32 has one (extends slice 8). Arena prices a Brawl precon down by the cards owned (Draftsim, updated 2025-05-19, search summary). Added 2026-11-11.
+
+#### AC-17-131 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-17-132 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-17-112
+
+As a player, I want the product to open a catalogue precon in the playtest, signed out, before "Copy this deck" (slice 2 with I-07)., so that a player can open a dated official precon, see the diff from that list, and apply a reversible budget bundle on a separate working copy.
+
+#### AC-17-133 Happy path
+
+Given a signed-out visitor and a public deck
+When the player uses this behaviour
+Then the behaviour holds: Open a catalogue precon in the playtest, signed out, before "Copy this deck" (slice 2 with I-07). Hearthstone lends six decks for seven days, then the player keeps one (32.2, 2025-04-24). Added 2026-11-11.
+
+#### AC-17-134 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-17-135 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+### UX states for this feature
+
+The player-visible outcome is: a player can open a dated official precon, see the diff from that list, and apply a reversible budget bundle on a separate working copy.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
+
 ### Record moved from the roadmap (2026-11-11)
 
 Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.

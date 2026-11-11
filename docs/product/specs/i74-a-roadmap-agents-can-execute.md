@@ -377,6 +377,170 @@ The registry format is D-85. Protecting `dev` and `staging` is D-87 and needs no
 
 - https://code.claude.com/docs/en/best-practices
 
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-74-101
+
+As a player, I want the product to slice 0, the owner's: the registry format (D-85), how the caps are enforced, with the forbidden list, the CLAUDE.md line and where run records go (D-86), and protecting dev with the guard as a required check (D-87)., so that each scheduled run picks a slice from a lane computed on origin/dev, skips one whose files a queued branch or an open PR already changes, claims it with a draft PR before writing code, stops at a budget and leaves a record; the tables people read are generated from one slice registry and fail CI when stale; and what a run must never do is refused by deny rules, a hook and a required CI check, not by its prompt.
+
+#### AC-74-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Slice 0, the owner's: the registry format (D-85), how the caps are enforced, with the forbidden list, the CLAUDE.md line and where run records go (D-86), and protecting dev with the guard as a required check (D-87).
+
+#### AC-74-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-74-102 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-74-102
+
+As a player, I want **Owner actions, found 2026-11-10.** The precheck and the run prompt live on the VPS, outside the repository, and CLAUDE.md is the owner's to change., so that each scheduled run picks a slice from a lane computed on origin/dev, skips one whose files a queued branch or an open PR already changes, claims it with a draft PR before writing code, stops at a budget and leaves a record; the tables people read are generated from one slice registry and fail CI when stale; and what a run must never do is refused by deny rules, a hook and a required CI check, not by its prompt.
+
+#### AC-74-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then **Owner actions, found 2026-11-10.** The precheck and the run prompt live on the VPS, outside the repository, and CLAUDE.md is the owner's to change. The precheck (~/bin/mab-automation-precheck) counts only open PRs whose head contains roadmap-, while the runs of 2026-11-08 pushed fix/bracket-warning-unique-names-20261108 and fix/card-add-command-pairing-20261108; done means it counts KaelSensei/auto- heads, drafts included (requirement 4.5). The run prompt still tells a run to fix root-owned test reports with sudo chown, which #1302 made unnecessary, since scripts/e2e-pre-push.sh now clears them through a container; done means the line is gone, since sudo is on the forbidden list. scripts/git-prune.sh, which CLAUDE.md recommends for cleanup, force-removes every other worktree and deletes every unprotected local and remote branch, so a run that used it would delete the queue and the other runs' worktrees; done means the prompt and the run guard forbid it and a run removes only what it created (requirement 4.4).
+
+#### AC-74-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-74-105 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+#### US-74-103
+
+As a player, I want the product to one JSON file of slices per spec in docs/product/slices/, validated with zod (slice 1); the migration of the 61 tables with a parity report against the scripts kept outside the repository (slice 2); renderers for the glance table, the lane, the dependency page and spec tables (slice 3); and pnpm roadmap:generate and roadmap:check in CI, so that a stale generated section fails its PR (slice 4)., so that each scheduled run picks a slice from a lane computed on origin/dev, skips one whose files a queued branch or an open PR already changes, claims it with a draft PR before writing code, stops at a budget and leaves a record; the tables people read are generated from one slice registry and fail CI when stale; and what a run must never do is refused by deny rules, a hook and a required CI check, not by its prompt.
+
+#### AC-74-106 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: One JSON file of slices per spec in docs/product/slices/, validated with zod (slice 1); the migration of the 61 tables with a parity report against the scripts kept outside the repository (slice 2); renderers for the glance table, the lane, the dependency page and spec tables (slice 3); and pnpm roadmap:generate and roadmap:check in CI, so that a stale generated section fails its PR (slice 4).
+
+#### AC-74-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-74-108 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-74-104
+
+As a player, I want the product to the run protocol: a live lane on origin/dev that drops shipped, claimed and overlapping slices (slice 5); an empty push that skips the E2E gate, so a claim costs nothing (slice 6); a run-only settings file with deny rules and a PreToolUse guard (slice 7), and a CI job, "Unattended run guard", for KaelSensei/auto- heads (slice 8); run records, a budget watchdog and a salvage bundle (slice 9); and docs/engineering/unattended-runs.md with the canonical prompt, which the owner applies to the three automations (slice 10)., so that each scheduled run picks a slice from a lane computed on origin/dev, skips one whose files a queued branch or an open PR already changes, claims it with a draft PR before writing code, stops at a budget and leaves a record; the tables people read are generated from one slice registry and fail CI when stale; and what a run must never do is refused by deny rules, a hook and a required CI check, not by its prompt.
+
+#### AC-74-109 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: The run protocol: a live lane on origin/dev that drops shipped, claimed and overlapping slices (slice 5); an empty push that skips the E2E gate, so a claim costs nothing (slice 6); a run-only settings file with deny rules and a PreToolUse guard (slice 7), and a CI job, "Unattended run guard", for KaelSensei/auto- heads (slice 8); run records, a budget watchdog and a salvage bundle (slice 9); and docs/engineering/unattended-runs.md with the canonical prompt, which the owner applies to the three automations (slice 10).
+
+#### AC-74-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-74-111 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-74-105
+
+As a player, I want the product to the lane recomputed after each merge into dev (slice 11), a weekly summary of wasted runs (slice 12), and the owner making the guard a required check on dev and pushing queued branches as draft PRs (slice 13)., so that each scheduled run picks a slice from a lane computed on origin/dev, skips one whose files a queued branch or an open PR already changes, claims it with a draft PR before writing code, stops at a budget and leaves a record; the tables people read are generated from one slice registry and fail CI when stale; and what a run must never do is refused by deny rules, a hook and a required CI check, not by its prompt.
+
+#### AC-74-112 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: The lane recomputed after each merge into dev (slice 11), a weekly summary of wasted runs (slice 12), and the owner making the guard a required check on dev and pushing queued branches as draft PRs (slice 13).
+
+#### AC-74-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-74-114 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-74-106
+
+As a player, I want the product to later: retire the outside scripts and name the registry on the dependency page (slice 14); let runs take size M slices if four weeks of records support it (slice 15)., so that each scheduled run picks a slice from a lane computed on origin/dev, skips one whose files a queued branch or an open PR already changes, claims it with a draft PR before writing code, stops at a budget and leaves a record; the tables people read are generated from one slice registry and fail CI when stale; and what a run must never do is refused by deny rules, a hook and a required CI check, not by its prompt.
+
+#### AC-74-115 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Later: retire the outside scripts and name the registry on the dependency page (slice 14); let runs take size M slices if four weeks of records support it (slice 15).
+
+#### AC-74-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-74-117 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+### UX states for this feature
+
+The player-visible outcome is: each scheduled run picks a slice from a lane computed on origin/dev, skips one whose files a queued branch or an open PR already changes, claims it with a draft PR before writing code, stops at a budget and leaves a record; the tables people read are generated from one slice registry and fail CI when stale; and what a run must never do is refused by deny rules, a hook and a required CI check, not by its prompt.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
+
 ### Record moved from the roadmap (2026-11-11)
 
 Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.

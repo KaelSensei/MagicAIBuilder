@@ -138,6 +138,522 @@ Whether a 30-day trash is compatible with erasure stays L-52.
 - https://apps.apple.com/us/app/manabox-mtg/id1460407674
 - https://draftsim.com/mtg-arena-brawl-guide/
 
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-01-101
+
+As a player, I want the product to persist main, sideboard and maybeboard zones as the single database source of truth., so that a player can build, reorganize and refine a deck without losing cards, context or intent.
+
+#### AC-01-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Persist main, sideboard and maybeboard zones as the single database source of truth. The saved card zone wins over the legacy maybeboard mirror, and that mirror is derived from the zone (#1263, promoted to main in #1273).
+
+#### AC-01-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-01-102 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-01-102
+
+As a player, I want the product to preserve zone and quantity when changing a card printing., so that a player can build, reorganize and refine a deck without losing cards, context or intent.
+
+#### AC-01-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Preserve zone and quantity when changing a card printing.
+
+#### AC-01-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-01-105 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-01-103
+
+As a player, I want the product to restore the previous card printing and notify the player when its save fails., so that a player can build, reorganize and refine a deck without losing cards, context or intent.
+
+#### AC-01-106 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Restore the previous card printing and notify the player when its save fails.
+
+#### AC-01-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-01-108 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-01-104
+
+As a player, I want the product to complete cross-zone drag and drop with clear drop targets and no layout jump., so that a player can build, reorganize and refine a deck without losing cards, context or intent.
+
+#### AC-01-109 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Complete cross-zone drag and drop with clear drop targets and no layout jump. Zone targets stay mounted and do not resize, and the smallest target under the pointer wins (#1264, promoted to main in #1273).
+
+#### AC-01-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-01-111 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-01-105
+
+As a player, I want the product to keep optimistic updates, undo and failed-save recovery consistent., so that a player can build, reorganize and refine a deck without losing cards, context or intent.
+
+#### AC-01-112 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Keep optimistic updates, undo and failed-save recovery consistent.
+
+#### AC-01-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-01-114 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-01-106
+
+As a player, I want the product to add Docker-backed E2E coverage for add, move, reload and recovery flows., so that a player can build, reorganize and refine a deck without losing cards, context or intent.
+
+#### AC-01-115 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Add Docker-backed E2E coverage for add, move, reload and recovery flows.
+
+#### AC-01-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-01-117 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-01-107
+
+As a player, I want the product to add keyboard and mobile alternatives for every drag action., so that a player can build, reorganize and refine a deck without losing cards, context or intent.
+
+#### AC-01-118 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Add keyboard and mobile alternatives for every drag action.
+
+#### AC-01-119 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-01-120 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-01-108
+
+As a player, I want the product to add a compact activity indicator instead of blocking the whole editor during saves., so that a player can build, reorganize and refine a deck without losing cards, context or intent.
+
+#### AC-01-121 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Add a compact activity indicator instead of blocking the whole editor during saves.
+
+#### AC-01-122 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-01-123 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-01-109
+
+As a player, I want the product to organize decks into user-defined folders, with move, filter and bulk-move actions., so that a player can build, reorganize and refine a deck without losing cards, context or intent.
+
+#### AC-01-124 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Organize decks into user-defined folders, with move, filter and bulk-move actions.
+
+#### AC-01-125 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-01-126 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-01-110
+
+As a player, I want the product to save reusable card packages such as mana bases, interaction suites or tribal cores and preview their legal additions before applying them., so that a player can build, reorganize and refine a deck without losing cards, context or intent.
+
+#### AC-01-127 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Save reusable card packages such as mana bases, interaction suites or tribal cores and preview their legal additions before applying them.
+
+#### AC-01-128 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-01-129 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-01-111
+
+As a player, I want the product to honor existing named capped-copy exceptions in singleton card packages, counting existing copies and quantities across printings (#850)., so that a player can build, reorganize and refine a deck without losing cards, context or intent.
+
+#### AC-01-130 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Honor existing named capped-copy exceptions in singleton card packages, counting existing copies and quantities across printings (#850).
+
+#### AC-01-131 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-01-132 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-01-112
+
+As a player, I want the product to apply existing format copy limits to non-singleton card packages, combining deck and package quantities across printings (#852)., so that a player can build, reorganize and refine a deck without losing cards, context or intent.
+
+#### AC-01-133 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Apply existing format copy limits to non-singleton card packages, combining deck and package quantities across printings (#852).
+
+#### AC-01-134 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-01-135 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-01-113
+
+As a player, I want the product to honor Oracle-text multiple-copy exceptions in packages using canonical Scryfall data, never stored author metadata (#854)., so that a player can build, reorganize and refine a deck without losing cards, context or intent.
+
+#### AC-01-136 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Honor Oracle-text multiple-copy exceptions in packages using canonical Scryfall data, never stored author metadata (#854). The existing policy ceiling of 99 copies remains unchanged.
+
+#### AC-01-137 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-01-138 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-01-114
+
+As a player, I want the product to limit canonically restricted package cards to one copy, including existing deck quantities; a single restricted card remains allowed (#859)., so that a player can build, reorganize and refine a deck without losing cards, context or intent.
+
+#### AC-01-139 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Limit canonically restricted package cards to one copy, including existing deck quantities; a single restricted card remains allowed (#859).
+
+#### AC-01-140 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-01-141 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-01-115
+
+As a player, I want the product to add a required-token and emblem summary derived from the current deck, with export support., so that a player can build, reorganize and refine a deck without losing cards, context or intent.
+
+#### AC-01-142 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Add a required-token and emblem summary derived from the current deck, with export support.
+
+#### AC-01-143 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-01-144 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-01-116
+
+As a player, I want the product to save card notes on a signed-in deck., so that a player can build, reorganize and refine a deck without losing cards, context or intent.
+
+#### AC-01-145 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Save card notes on a signed-in deck. patchCardSchema (src/lib/validation/card.ts) has no notes field, so zod drops it, and updateCardNotes (src/lib/db/deck-api.ts) reports success while the server saves nothing. Found by the 2026-11-10 security audit. Once notes save, the fork leak under I-08 (L1) becomes medium, so fix that first.
+
+#### AC-01-146 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-01-147 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-01-117
+
+As a player, I want the product to make bulk edit apply only what changed., so that a player can build, reorganize and refine a deck without losing cards, context or intent.
+
+#### AC-01-148 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Make bulk edit apply only what changed. Saving in src/components/deck/BulkEditModal.tsx called removeAllCards, cleared the commander, partner and companion, then re-added every line by name, one request per card, and exportToText (src/lib/deck/import.ts) writes only quantity name. Every save therefore reset printings to Scryfall's default, re-derived categories and dropped notes, unchanged lines included. The requests were not one transaction, so a failure after the delete left a partial deck. Shipped in #1314: the save compares the text with the deck line by line (src/lib/deck/bulk-edit.ts), unchanged lines keep their rows, printings, categories and notes, and the change set is applied in one transaction by PATCH /api/decks/[id]/cards, which answers 409 on a stale row and writes nothing. A printing typed in the text is still not applied. The full diff-and-apply bulk edit, with printing, finish and tags in the line syntax, is I-37 slice 16.
+
+#### AC-01-149 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-01-150 Edge
+
+Given a list where one name does not resolve
+When the player confirms
+Then the unresolved name is shown first and nothing is written until they accept that list
+
+#### US-01-118
+
+As a player, I want the product to deleting a deck moves it to a trash the owner can restore it from for N days (D-92), then purges it; folders gain bulk delete into the same trash., so that a player can build, reorganize and refine a deck without losing cards, context or intent.
+
+#### AC-01-151 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Deleting a deck moves it to a trash the owner can restore it from for N days (D-92), then purges it; folders gain bulk delete into the same trash. Moxfield restores deleted decks (RESTORE_DELETED_DECK, code, 2026-05-14), and r/Moxfield asked to delete "literally hundreds of old decks" at once (thread, 2026-09-28). Deck has no deleted, archived or locked field (prisma/schema.prisma). Whether the trash fits erasure is L-52. Added 2026-11-11.
+
+#### AC-01-152 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-01-153 Edge
+
+Given the account or the cache this behaviour changes
+When the player signs out or the deletion finishes
+Then the next request does not still show the private data
+
+#### US-01-119
+
+As a player, I want the product to archive a deck: hidden from the library, pickers and pod lists, never deleted, restored in one action., so that a player can build, reorganize and refine a deck without losing cards, context or intent.
+
+#### AC-01-154 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Archive a deck: hidden from the library, pickers and pod lists, never deleted, restored in one action. TopDecked archives and colour-codes decks (App Store, seen 2026-11-10). Added 2026-11-11.
+
+#### AC-01-155 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-01-156 Edge
+
+Given the account or the cache this behaviour changes
+When the player signs out or the deletion finishes
+Then the next request does not still show the private data
+
+#### US-01-120
+
+As a player, I want the product to lock a deck's card list until its owner unlocks it, with notes and proxy marks still editable; I-50 slice 10's deck check link freezes the locked list for the pod., so that a player can build, reorganize and refine a deck without losing cards, context or intent.
+
+#### AC-01-157 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Lock a deck's card list until its owner unlocks it, with notes and proxy marks still editable; I-50 slice 10's deck check link freezes the locked list for the pod. ManaBox locks decks (FAQ, seen 2026-11-10; 4.3.0, 2026-11-03). Added 2026-11-11.
+
+#### AC-01-158 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-01-159 Edge
+
+Given a card the player marked as a proxy
+When ownership and the deck total are shown
+Then the card is labelled proxy and is not counted as a physical copy the player owns
+
+#### US-01-121
+
+As a player, I want the product to once a commander is set, builder search defaults to its colour identity, with one visible chip to widen it., so that a player can build, reorganize and refine a deck without losing cards, context or intent.
+
+#### AC-01-160 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Once a commander is set, builder search defaults to its colour identity, with one visible chip to widen it. DEFAULT_FILTERS.colors is empty and nothing sets it from the commander (src/app/[locale]/builder/[deckId]/page.tsx). Arena's Brawl builder narrows to the commander's identity (Draftsim, updated 2025-12-22, search summary). Added 2026-11-11.
+
+#### AC-01-161 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-01-162 Edge
+
+Given the French locale
+When the new controls render
+Then they come from the French catalogue and are not hard-coded English
+
+#### US-01-122
+
+As a player, I want **Owner decision, 2026-11-10: re-mount the orphaned deck fields.** The deck's tags, description, target bracket, budget, inline card notes and owned/buy badges are to be shown and editable again where the editor lost them (decided)., so that a player can build, reorganize and refine a deck without losing cards, context or intent.
+
+#### AC-01-163 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then **Owner decision, 2026-11-10: re-mount the orphaned deck fields.** The deck's tags, description, target bracket, budget, inline card notes and owned/buy badges are to be shown and editable again where the editor lost them (decided). The badges also concern I-06, and the tags I-37.
+
+#### AC-01-164 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-01-165 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+### UX states for this feature
+
+The player-visible outcome is: a player can build, reorganize and refine a deck without losing cards, context or intent.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
+
 ### Record moved from the roadmap (2026-11-11)
 
 Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.

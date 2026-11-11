@@ -139,6 +139,566 @@ Who registers the domain, and which function region production uses, stay owner 
 - https://scryfall.com/docs/api/rate-limits
 - https://scryfall.com/docs/api/bulk-data
 
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-05-101
+
+As a player, I want **Due before 2027-01-01:** move card images to Scryfall's WebP keys and migrate the stored image URLs., so that a broken deployment or regression is detected before users depend on it.
+
+#### AC-05-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then **Due before 2027-01-01:** move card images to Scryfall's WebP keys and migrate the stored image URLs. Scryfall announced on 2026-10-14 that "After January 1st, 2027, the small, large, border_crop, and art_crop JPEG versions will no longer be available". The normal JPEG is renamed jpeg in the API and stays available; PNG images can no longer be hotlinked; and the User-Agent policy is strictly enforced for scripted image requests. The WebP keys are thumb (146 × 204), grid (488 × 680), display (672 × 936), crop (480 × 680) and art (blog).
+
+#### AC-05-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-05-102 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-05-102
+
+As a player, I want the product to add UptimeRobot or an equivalent monitor for /api/health., so that a broken deployment or regression is detected before users depend on it.
+
+#### AC-05-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Add UptimeRobot or an equivalent monitor for /api/health.
+
+#### AC-05-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-05-105 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-05-103
+
+As a player, I want the product to run Playwright E2E in Docker as the authoritative integration environment., so that a broken deployment or regression is detected before users depend on it.
+
+#### AC-05-106 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Run Playwright E2E in Docker as the authoritative integration environment.
+
+#### AC-05-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-05-108 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-05-104
+
+As a player, I want the product to give scheduled agent runs and manual pushes enough room on the VPS., so that a broken deployment or regression is detected before users depend on it.
+
+#### AC-05-109 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Give scheduled agent runs and manual pushes enough room on the VPS. They share one machine with about 7.6 GiB of RAM and 4 vCPUs. On 2026-11-09 they collided twice on the pre-push gate, and background tasks were killed for memory pressure. Decide between scheduling agents outside working sessions, capping concurrent builds and E2E runs, or a larger machine.
+
+#### AC-05-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-05-111 Edge
+
+Given the account or the cache this behaviour changes
+When the player signs out or the deletion finishes
+Then the next request does not still show the private data
+
+#### US-05-105
+
+As a player, I want **Owner action: the code names a domain nobody has registered.** magicaibuilder.com is hard-coded in src/components/JsonLd.tsx:34, the site URL in the structured data; in src/lib/http.ts:8, the contact URL in the User-Agent sent to Scryfall, Commander Spellbook and every other source; and in src/lib/seo/alternates.ts:24, the fallback for canonicals, hreflang, robots.txt and the sitemap when NEXT_PUBLIC_BASE_URL is unset (checked on origin/dev at 72fbfc1)., so that a broken deployment or regression is detected before users depend on it.
+
+#### AC-05-112 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then **Owner action: the code names a domain nobody has registered.** magicaibuilder.com is hard-coded in src/components/JsonLd.tsx:34, the site URL in the structured data; in src/lib/http.ts:8, the contact URL in the User-Agent sent to Scryfall, Commander Spellbook and every other source; and in src/lib/seo/alternates.ts:24, the fallback for canonicals, hreflang, robots.txt and the sitemap when NEXT_PUBLIC_BASE_URL is unset (checked on origin/dev at 72fbfc1). Verisign's RDAP lookup answered 404 for the domain on 2026-11-10 (lookup), so anyone may register it and receive the contact traffic and the canonical signals. The repository's homepage is magic-ai-builder.vercel.app. Done means: the owner registers the domain, or all three read the production domain from one setting and a production build fails when it is unset (I-66 requirement 5.4).
+
+#### AC-05-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-05-114 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-05-106
+
+As a player, I want **Owner question: where do the functions run?** No vercel.json exists on origin/dev, so the function region is whatever the Vercel dashboard holds, and new projects run functions in Washington, D.C., so that a broken deployment or regression is detected before users depend on it.
+
+#### AC-05-115 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then **Owner question: where do the functions run?** No vercel.json exists on origin/dev, so the function region is whatever the Vercel dashboard holds, and new projects run functions in Washington, D.C. (iad1) unless a region is set (Vercel, read 2026-11-10). docs/engineering/infrastructure.md puts the database behind aws-0-eu-west-1.pooler.supabase.com, in Ireland, so each query may cross the Atlantic. The owner records the region in use; I-66 slice 6 compares durationMs by route before moving functions to Dublin (dub1), where CPU and memory cost about 31% more.
+
+#### AC-05-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-05-117 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-05-107
+
+As a player, I want the product to meter AI usage per user and enforce a monthly quota before any public launch or paid tier., so that a broken deployment or regression is detected before users depend on it.
+
+#### AC-05-118 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Meter AI usage per user and enforce a monthly quota before any public launch or paid tier. Today the only AI limits are per minute (5 builds and 10 suggestions per user per 60 seconds) in an in-memory store that is per instance, and no token metering exists. The theoretical worst case for one account is three orders of magnitude above a few-euro plan (I-02). I-30 slices 1 and 2 specify the metering and the quota.
+
+#### AC-05-119 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-05-120 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-05-108
+
+As a player, I want the product to rate-limit the public read route GET /api/deck/[id]., so that a broken deployment or regression is detected before users depend on it.
+
+#### AC-05-121 Happy path
+
+Given a signed-out visitor and a public deck
+When the player uses this behaviour
+Then the behaviour holds: Rate-limit the public read route GET /api/deck/[id]. It serves any public deck to any caller with no key and no limit, and the middleware matcher skips /api (src/middleware.ts). #1312 limited the fields it returns (I-08); this item stays open until a limit is verified.
+
+#### AC-05-122 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-05-123 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-05-109
+
+As a player, I want the product to keep docs/project/changelog.md and docs/project/progress.md current after each merge batch, as the project instructions require., so that a broken deployment or regression is detected before users depend on it.
+
+#### AC-05-124 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Keep docs/project/changelog.md and docs/project/progress.md current after each merge batch, as the project instructions require. Neither changed between 2026-10-28 and 2026-11-09 while 196 commits reached dev; a catch-up is in preparation.
+
+#### AC-05-125 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-05-126 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-05-110
+
+As a player, I want the product to end the session when an account is deleted., so that a broken deployment or regression is detected before users depend on it.
+
+#### AC-05-127 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: End the session when an account is deleted. DELETE /api/user/profile (src/app/api/user/profile/route.ts) deletes the user but does not sign out, sessions are JWTs valid for 7 days (src/lib/auth/edge-config.ts), and until #1319, on the next authenticated request, resolveAuthenticatedUser (src/lib/auth/helpers.ts) missed the id and re-created the user from the token's email, name and image, so a deleted account came back, empty, from any device still signed in. I-38 slice 2 owns the tombstone and the regression test.
+
+#### AC-05-128 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-05-129 Edge
+
+Given the account or the cache this behaviour changes
+When the player signs out or the deletion finishes
+Then the next request does not still show the private data
+
+#### US-05-111
+
+As a player, I want **H1, high:** accept only a same-origin callbackUrl at sign-in., so that a broken deployment or regression is detected before users depend on it.
+
+#### AC-05-130 Happy path
+
+Given a guest with one unsaved session deck
+When the player uses this behaviour
+Then **H1, high:** accept only a same-origin callbackUrl at sign-in. After a password sign-in, src/components/auth/SignInForm.tsx navigates to the raw query parameter, and the CSP allows inline script (src/lib/security-headers.ts). So ?callbackUrl=javascript:… runs in the app's origin, and an https:// value redirects off-site. The form also shows any ?error= text verbatim. Fix branch in flight: the guest-deck branch fix/guest-deck-survives-sign-up (I-39 slice 2), no PR yet.
+
+#### AC-05-131 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-05-132 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-05-112
+
+As a player, I want **H2, high:** stop linking a Google sign-in to an unverified account., so that a broken deployment or regression is detected before users depend on it.
+
+#### AC-05-133 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then **H2, high:** stop linking a Google sign-in to an unverified account. src/lib/auth/config.ts set allowDangerousEmailAccountLinking: true, and src/app/api/auth/signup/route.ts creates a password account for any email without verifying it. An attacker who signed up with a victim's address took over the account when the victim first used Google. Signup's 409 also reveals which emails have an account. Shipped in #1321: the Google provider no longer sets the flag, so such a sign-in returns OAuthAccountNotLinked with a message to use the email and password. Google-first and already linked accounts are unchanged. The 409, email verification and linking Google from settings wait for an email sender (I-38).
+
+#### AC-05-134 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-05-135 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-05-113
+
+As a player, I want **H3, high:** write the shared Scryfall caches on the server only., so that a broken deployment or regression is detected before users depend on it.
+
+#### AC-05-136 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then **H3, high:** write the shared Scryfall caches on the server only. POST /api/cache/search and POST /api/cache/cards (src/app/api/cache/*/route.ts) stored any JSON a signed-in user sent, and src/lib/scryfall/client.ts returned it unchecked. One account could therefore forge the banlist and the Game Changer list that every player loads (src/hooks/useBanlist.ts, src/hooks/useGameChangers.ts). Shipped in #1322: both routes answer GET only, fill a miss from Scryfall on the server, check the body's shape and store under srv1: keys, so rows that clients wrote are never read again. Fills are limited per IP, per instance (M2).
+
+#### AC-05-137 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-05-138 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-05-114
+
+As a player, I want **M1, medium:** validate POST /api/ai/suggest with a bounded schema., so that a broken deployment or regression is detected before users depend on it.
+
+#### AC-05-139 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then **M1, medium:** validate POST /api/ai/suggest with a bounded schema. src/app/api/ai/suggest/route.ts puts bracketWarnings, detectedThemes, gameChangersList and categories into the prompt with no size limit and no sanitising, so one free account can send very large prompts on the paid provider key. /api/ai/build already uses a bounded schema.
+
+#### AC-05-140 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-05-141 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+#### US-05-115
+
+As a player, I want **M2, medium:** keep rate limits in a shared store and add a per-IP login limit., so that a broken deployment or regression is detected before users depend on it.
+
+#### AC-05-142 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then **M2, medium:** keep rate limits in a shared store and add a per-IP login limit. src/lib/rate-limit.ts holds counters in each serverless instance's memory, and the login limit in src/lib/auth/config.ts is keyed on the email only, so trying one password across many emails is never limited. The AI quota above, the GET /api/deck/[id] limit and I-38's comment limits all need this store.
+
+#### AC-05-143 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-05-144 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-05-116
+
+As a player, I want **M3, medium:** bound user writes., so that a broken deployment or regression is detected before users depend on it.
+
+#### AC-05-145 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then **M3, medium:** bound user writes. The collection schemas (src/app/api/collection/route.ts, src/app/api/collection/[id]/route.ts) have no length limit and no row cap, and the search cache takes 500 KB per entry under unlimited keys. One account can fill the 500 MB database, and every write then fails. Cap field sizes and rows per user.
+
+#### AC-05-146 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-05-147 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-05-117
+
+As a player, I want **L2, low:** test that every API route declares its access., so that a broken deployment or regression is detected before users depend on it.
+
+#### AC-05-148 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then **L2, low:** test that every API route declares its access. The middleware matcher skips /api (src/middleware.ts), so the API allowlist in src/lib/auth/edge-config.ts is never read, and a new route that forgets its guard is silently public. Add an inventory test that fails when a handler neither calls a guard nor appears in an explicit public list.
+
+#### AC-05-149 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-05-150 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-05-118
+
+As a player, I want the product to delete the components that are never rendered: TemplatesModal, BudgetOptimizationModal, PricingShoppingListModal, SharePopover, DeckDescriptionEditor and DeckTagsEditor in src/components/deck/, and CardNoteInline in src/components/card/., so that a broken deployment or regression is detected before users depend on it.
+
+#### AC-05-151 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Delete the components that are never rendered: TemplatesModal, BudgetOptimizationModal, PricingShoppingListModal, SharePopover, DeckDescriptionEditor and DeckTagsEditor in src/components/deck/, and CardNoteInline in src/components/card/. Outside their own files, nothing imports them on dev at 576f680. TemplatesModal is the only caller of GET /api/templates, which returns two hard-coded fake templates (I-39 slice 3), so both can go together. The hook src/hooks/useTypewriter.ts has no consumer either. I-08's primer-length item cites DeckDescriptionEditor; re-check it against the editor that is rendered.
+
+#### AC-05-152 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-05-153 Edge
+
+Given a list where one name does not resolve
+When the player confirms
+Then the unresolved name is shown first and nothing is written until they accept that list
+
+#### US-05-119
+
+As a player, I want the product to keep the gate order explicit: typecheck, lint, unit tests, E2E policy, SonarCloud., so that a broken deployment or regression is detected before users depend on it.
+
+#### AC-05-154 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Keep the gate order explicit: typecheck, lint, unit tests, E2E policy, SonarCloud.
+
+#### AC-05-155 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-05-156 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-05-120
+
+As a player, I want the product to require SonarCloud open issues to be zero before PR creation or merge., so that a broken deployment or regression is detected before users depend on it.
+
+#### AC-05-157 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Require SonarCloud open issues to be zero before PR creation or merge.
+
+#### AC-05-158 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-05-159 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-05-121
+
+As a player, I want the product to record the E2E Docker strategy and required environment variables., so that a broken deployment or regression is detected before users depend on it.
+
+#### AC-05-160 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Record the E2E Docker strategy and required environment variables.
+
+#### AC-05-161 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-05-162 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-05-122
+
+As a player, I want the product to upgrade Prisma only after the local Node toolchain is at least 22.12., so that a broken deployment or regression is detected before users depend on it.
+
+#### AC-05-163 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Upgrade Prisma only after the local Node toolchain is at least 22.12.
+
+#### AC-05-164 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-05-165 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-05-123
+
+As a player, I want the product to confirm Scryfall's current per-endpoint request limits and bulk-data format against Scryfall's own documentation, then align the client limiter., so that a broken deployment or regression is detected before users depend on it.
+
+#### AC-05-166 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Confirm Scryfall's current per-endpoint request limits and bulk-data format against Scryfall's own documentation, then align the client limiter. src/lib/scryfall/client.ts sends User-Agent and Accept and serialises calls behind a 100 ms mutex, which honours a 10 req/s sustained ceiling but not a stricter per-endpoint search limit; bulk files are reported to have moved to gzipped JSONL on 2026-07-20. Scryfall blocks automated fetching, so a human must read the policy before the limiter changes.
+
+#### AC-05-167 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-05-168 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-05-124
+
+As a player, I want the product to add request latency and failure visibility for profile, deck and Scryfall paths before adopting heavier observability., so that a broken deployment or regression is detected before users depend on it.
+
+#### AC-05-169 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Add request latency and failure visibility for profile, deck and Scryfall paths before adopting heavier observability.
+
+#### AC-05-170 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-05-171 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+### UX states for this feature
+
+The player-visible outcome is: a broken deployment or regression is detected before users depend on it.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
+
 ### Record moved from the roadmap (2026-11-11)
 
 Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.

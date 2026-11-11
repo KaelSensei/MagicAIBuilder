@@ -378,6 +378,280 @@ A comment on Moxfield feedback 1440, read 2026-11-11, asks to keep a card and na
 - https://edhrec.com/articles/edhrec-guide-to-commander-brackets
 - https://archidekt.com/forum/thread/14634208
 
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-55-101
+
+As a player, I want the product to resolveBuild and the diff to a normalised change set, as pure modules with fixtures, command zone first (slice 1)., so that a player keeps several builds of one deck, such as a Bracket 2 and a Bracket 3 version or a budget and a "bling" version, as named differences from one main list. Each build shows its legality, bracket estimate and price; a change to the main list never lands silently in a build; and a swap kit says which cards to carry to play any of them.
+
+#### AC-55-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then resolveBuild and the diff to a normalised change set, as pure modules with fixtures, command zone first (slice 1). The pieces exist: src/lib/deck/bulk-edit.ts (#1314) diffs a list into a change set that PATCH /api/decks/[id]/cards applies in one transaction, and src/lib/deck/deck-version.ts (#1315) says when two lists are the same version.
+
+#### AC-55-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-55-102 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-55-102
+
+As a player, I want the product to deckBuild and DeckBuildChange with owner routes; a build created from the main list, a snapshot or a pasted list; and a fingerprint of the main list, with 409 on a stale write (slice 2)., so that a player keeps several builds of one deck, such as a Bracket 2 and a Bracket 3 version or a budget and a "bling" version, as named differences from one main list. Each build shows its legality, bracket estimate and price; a change to the main list never lands silently in a build; and a swap kit says which cards to carry to play any of them.
+
+#### AC-55-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: DeckBuild and DeckBuildChange with owner routes; a build created from the main list, a snapshot or a pasted list; and a fingerprint of the main list, with 409 on a stale write (slice 2). Today POST /api/decks/[id]/duplicate makes an unlinked copy, and Deck holds one targetBracket and one manualBracket (prisma/schema.prisma).
+
+#### AC-55-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-55-105 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+#### US-55-103
+
+As a player, I want the product to a build switcher, editing inside a build with text markers on changed rows, an "Out of this build" group, and bulk edit on a build (slice 3)., so that a player keeps several builds of one deck, such as a Bracket 2 and a Bracket 3 version or a budget and a "bling" version, as named differences from one main list. Each build shows its legality, bracket estimate and price; a change to the main list never lands silently in a build; and a swap kit says which cards to carry to play any of them.
+
+#### AC-55-106 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A build switcher, editing inside a build with text markers on changed rows, an "Out of this build" group, and bulk edit on a build (slice 3).
+
+#### AC-55-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-55-108 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-55-104
+
+As a player, I want the product to a differences panel, a swap list as text and CSV, and a zone-aware comparison of builds and snapshots (slice 4)., so that a player keeps several builds of one deck, such as a Bracket 2 and a Bracket 3 version or a budget and a "bling" version, as named differences from one main list. Each build shows its legality, bracket estimate and price; a change to the main list never lands silently in a build; and a swap kit says which cards to carry to play any of them.
+
+#### AC-55-109 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A differences panel, a swap list as text and CSV, and a zone-aware comparison of builds and snapshots (slice 4). Today compareDeckCards (src/lib/deck/comparison.ts) matches cards by name with no zone, so a sideboard copy and a main-deck copy count as one card.
+
+#### AC-55-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-55-111 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-55-105
+
+As a player, I want the product to legality, a bracket estimate, a target bracket and a price per build, and the build count and bracket range in the deck list (slice 5)., so that a player keeps several builds of one deck, such as a Bracket 2 and a Bracket 3 version or a budget and a "bling" version, as named differences from one main list. Each build shows its legality, bracket estimate and price; a change to the main list never lands silently in a build; and a swap kit says which cards to carry to play any of them.
+
+#### AC-55-112 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Legality, a bracket estimate, a target bracket and a price per build, and the build count and bracket range in the deck list (slice 5).
+
+#### AC-55-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-55-114 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-55-106
+
+As a player, I want the product to changes held or absorbed when the main list moves, a review with three choices, a 409 on edits while changes are held, and a notice naming each build whose legality or estimate moved (slice 6)., so that a player keeps several builds of one deck, such as a Bracket 2 and a Bracket 3 version or a budget and a "bling" version, as named differences from one main list. Each build shows its legality, bracket estimate and price; a change to the main list never lands silently in a build; and a swap kit says which cards to carry to play any of them.
+
+#### AC-55-115 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Changes held or absorbed when the main list moves, a review with three choices, a 409 on edits while changes are held, and a notice naming each build whose legality or estimate moved (slice 6).
+
+#### AC-55-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-55-117 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-55-107
+
+As a player, I want the product to promotion to the main build with a preview of every other build, "Make this the main build" with its invariant, and the same preview before a snapshot restore (slice 7)., so that a player keeps several builds of one deck, such as a Bracket 2 and a Bracket 3 version or a budget and a "bling" version, as named differences from one main list. Each build shows its legality, bracket estimate and price; a change to the main list never lands silently in a build; and a swap kit says which cards to carry to play any of them.
+
+#### AC-55-118 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Promotion to the main build with a preview of every other build, "Make this the main build" with its invariant, and the same preview before a snapshot restore (slice 7). Snapshot restore today leaves the deck's commander fields as they were; the item is under I-37.
+
+#### AC-55-119 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-55-120 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-55-108
+
+As a player, I want the product to copies counted as the largest need across a deck's builds, not their sum, in buildAcquisitionPlan (src/lib/collection/acquisition-plan.ts), with an "assembled separately" switch (slice 9)., so that a player keeps several builds of one deck, such as a Bracket 2 and a Bracket 3 version or a budget and a "bling" version, as named differences from one main list. Each build shows its legality, bracket estimate and price; a change to the main list never lands silently in a build; and a swap kit says which cards to carry to play any of them.
+
+#### AC-55-121 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Copies counted as the largest need across a deck's builds, not their sum, in buildAcquisitionPlan (src/lib/collection/acquisition-plan.ts), with an "assembled separately" switch (slice 9). Today the plan sums decks, so two duplicated builds count each shared card twice.
+
+#### AC-55-122 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-55-123 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-55-109
+
+As a player, I want **Make this deck cheaper (gap sweep, 2026-11-10),** with I-14 and I-59., so that a player keeps several builds of one deck, such as a Bracket 2 and a Bracket 3 version or a budget and a "bling" version, as named differences from one main list. Each build shows its legality, bracket estimate and price; a change to the main list never lands silently in a build; and a swap kit says which cards to carry to play any of them.
+
+#### AC-55-124 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then **Make this deck cheaper (gap sweep, 2026-11-10),** with I-14 and I-59. EDHREC publishes budget and expensive average-deck variants per commander (URL pattern …/average-decks/<commander>/…/expensive, seen in search results on 2026-11-10).
+
+#### AC-55-125 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-55-126 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-55-110
+
+As a player, I want the product to later: a build from another owned deck and a near-duplicate suggestion (slice 8); a playtest of a build (slice 10); shown builds on public and share pages, forks of a build and builds in the public comparison (slice 11); the swap kit and switch lists (slice 12); a Rule 0 sheet, an offline download and a game seat per build (slice 13); I-48's report per build (slice 14); and packages and I-17 upgrade tiers applied as a build (slice 15)., so that a player keeps several builds of one deck, such as a Bracket 2 and a Bracket 3 version or a budget and a "bling" version, as named differences from one main list. Each build shows its legality, bracket estimate and price; a change to the main list never lands silently in a build; and a swap kit says which cards to carry to play any of them.
+
+#### AC-55-127 Happy path
+
+Given a downloaded deck and no network
+When the player uses this behaviour
+Then the behaviour holds: Later: a build from another owned deck and a near-duplicate suggestion (slice 8); a playtest of a build (slice 10); shown builds on public and share pages, forks of a build and builds in the public comparison (slice 11); the swap kit and switch lists (slice 12); a Rule 0 sheet, an offline download and a game seat per build (slice 13); I-48's report per build (slice 14); and packages and I-17 upgrade tiers applied as a build (slice 15).
+
+#### AC-55-128 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-55-129 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-55-111
+
+As a player, I want the product to after I-30's decision: fit a build to its target bracket with deterministic swap candidates (slice 16)., so that a player keeps several builds of one deck, such as a Bracket 2 and a Bracket 3 version or a budget and a "bling" version, as named differences from one main list. Each build shows its legality, bracket estimate and price; a change to the main list never lands silently in a build; and a swap kit says which cards to carry to play any of them.
+
+#### AC-55-130 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: After I-30's decision: fit a build to its target bracket with deterministic swap candidates (slice 16).
+
+#### AC-55-131 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-55-132 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+### UX states for this feature
+
+The player-visible outcome is: a player keeps several builds of one deck, such as a Bracket 2 and a Bracket 3 version or a budget and a "bling" version, as named differences from one main list. Each build shows its legality, bracket estimate and price; a change to the main list never lands silently in a build; and a swap kit says which cards to carry to play any of them.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
+
 ### Record moved from the roadmap (2026-11-11)
 
 Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.

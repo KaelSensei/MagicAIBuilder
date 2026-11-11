@@ -134,6 +134,412 @@ Remapping of single keys waits on I-37's registry.
 
 - https://www.reddit.com/r/EDH/comments/1r863kj/
 
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-04-101
+
+As a player, I want the product to bound collection loading to 15 seconds and show a localized retry rather than an endless spinner or a false empty state; retain cached cards after failed refreshes (#1013)., so that the product feels as reliable and polished as the tools players already use.
+
+#### AC-04-100 Happy path
+
+Given a downloaded deck and no network
+When the player uses this behaviour
+Then the behaviour holds: Bound collection loading to 15 seconds and show a localized retry rather than an endless spinner or a false empty state; retain cached cards after failed refreshes (#1013).
+
+#### AC-04-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-04-102 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-04-102
+
+As a player, I want the product to time out stalled acquisition-plan loading after 15 seconds and expose its existing localized retry action without losing close/filter cancellation (#995)., so that the product feels as reliable and polished as the tools players already use.
+
+#### AC-04-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Time out stalled acquisition-plan loading after 15 seconds and expose its existing localized retry action without losing close/filter cancellation (#995).
+
+#### AC-04-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-04-105 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-04-103
+
+As a player, I want the product to fix profile and deck loading states so no request appears to hang indefinitely., so that the product feels as reliable and polished as the tools players already use.
+
+#### AC-04-106 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Fix profile and deck loading states so no request appears to hang indefinitely.
+
+#### AC-04-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-04-108 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-04-104
+
+As a player, I want the product to use route-level skeletons and cached session/profile data where safe., so that the product feels as reliable and polished as the tools players already use.
+
+#### AC-04-109 Happy path
+
+Given a downloaded deck and no network
+When the player uses this behaviour
+Then the behaviour holds: Use route-level skeletons and cached session/profile data where safe.
+
+#### AC-04-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-04-111 Edge
+
+Given the account or the cache this behaviour changes
+When the player signs out or the deletion finishes
+Then the next request does not still show the private data
+
+#### US-04-105
+
+As a player, I want the product to remove React refresh loops, hover jitter, layout shifts and unstable card previews., so that the product feels as reliable and polished as the tools players already use.
+
+#### AC-04-112 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Remove React refresh loops, hover jitter, layout shifts and unstable card previews.
+
+#### AC-04-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-04-114 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-04-106
+
+As a player, I want the product to make warning panels collapsible and dismissible, with accessible close controls., so that the product feels as reliable and polished as the tools players already use.
+
+#### AC-04-115 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Make warning panels collapsible and dismissible, with accessible close controls.
+
+#### AC-04-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-04-117 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-04-107
+
+As a player, I want the product to keep the color identity banner subtle: official mana symbols, restrained background and stable dimensions., so that the product feels as reliable and polished as the tools players already use.
+
+#### AC-04-118 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Keep the color identity banner subtle: official mana symbols, restrained background and stable dimensions.
+
+#### AC-04-119 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-04-120 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-04-108
+
+As a player, I want the product to make card zoom intentional in "View all cards" contexts, not a global hover effect., so that the product feels as reliable and polished as the tools players already use.
+
+#### AC-04-121 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Make card zoom intentional in "View all cards" contexts, not a global hover effect.
+
+#### AC-04-122 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-04-123 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-04-109
+
+As a player, I want the product to explain the empty EDHREC missing-card filter when all popular cards are already in the deck; removing the filter restores the list., so that the product feels as reliable and polished as the tools players already use.
+
+#### AC-04-124 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Explain the empty EDHREC missing-card filter when all popular cards are already in the deck; removing the filter restores the list.
+
+#### AC-04-125 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-04-126 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-04-110
+
+As a player, I want the product to keep EDHREC recommendation add actions visible without hover, with a 40 px touch target and keyboard focus outline (#1058)., so that the product feels as reliable and polished as the tools players already use.
+
+#### AC-04-127 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Keep EDHREC recommendation add actions visible without hover, with a 40 px touch target and keyboard focus outline (#1058).
+
+#### AC-04-128 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-04-129 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-04-111
+
+As a player, I want the product to make keyboard shortcuts safe while typing and for assistive technology., so that the product feels as reliable and polished as the tools players already use.
+
+#### AC-04-130 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Make keyboard shortcuts safe while typing and for assistive technology. src/hooks/useKeyboardShortcuts.ts handled Ctrl/Cmd shortcuts before it checked whether the focus was in a text field, so Ctrl+Z in a card note undid the last deck change instead of the typing. / and ? stayed silent in text fields, but no setting turned them off or remapped them, which WCAG 2.1.4 (Level A) requires of single-character shortcuts that work outside a focused control. I-37 slice 3 adds the shortcut registry.
+
+#### AC-04-131 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-04-132 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-04-112
+
+As a player, I want the product to preserve the established dark/light design language while improving hierarchy, spacing and responsive behavior., so that the product feels as reliable and polished as the tools players already use.
+
+#### AC-04-133 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Preserve the established dark/light design language while improving hierarchy, spacing and responsive behavior.
+
+#### AC-04-134 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-04-135 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-04-113
+
+As a player, I want the product to add visual regression coverage for the Deck Editor, banner, warning panel and card hover states., so that the product feels as reliable and polished as the tools players already use.
+
+#### AC-04-136 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Add visual regression coverage for the Deck Editor, banner, warning panel and card hover states.
+
+#### AC-04-137 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-04-138 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-04-114
+
+As a player, I want **Accessibility bundle 1, dialogs (WCAG 4.1.2, 2.4.3, 2.1.2, 2.4.11).** src/components/ui/Modal.tsx has no role="dialog", aria-modal or label, no focus trap and no focus restore, and its global Escape listener closes the Export and Proxy dialogs together., so that the product feels as reliable and polished as the tools players already use.
+
+#### AC-04-139 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then **Accessibility bundle 1, dialogs (WCAG 4.1.2, 2.4.3, 2.1.2, 2.4.11).** src/components/ui/Modal.tsx has no role="dialog", aria-modal or label, no focus trap and no focus restore, and its global Escape listener closes the Export and Proxy dialogs together. src/components/playtest/PlaytestModal.tsx and src/components/collection/AddToCollectionDialog.tsx leave focus on the page underneath, and the close buttons in ImportDialog.tsx and PrintingSelectorModal.tsx have no name. Rebuild Modal on @radix-ui/react-dialog, which seven dialogs already use. Fix branch in flight: fix/a11y-dialog-focus.
+
+#### AC-04-140 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-04-141 Edge
+
+Given a card the player marked as a proxy
+When ownership and the deck total are shown
+Then the card is labelled proxy and is not counted as a physical copy the player owns
+
+#### US-04-115
+
+As a player, I want **Accessibility bundle 4, forms and status messages (1.3.1, 3.3.2, 1.3.5, 4.1.3, 2.2.1).** The builder search, the search filters, the import, bulk-edit and export text boxes, the life tracker, snapshots, the wizard and the comment forms are named only by a placeholder or by a caption not tied to the field (src/components/search/SearchBar.tsx, src/components/search/SearchFilters.tsx and others)., so that the product feels as reliable and polished as the tools players already use.
+
+#### AC-04-142 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then **Accessibility bundle 4, forms and status messages (1.3.1, 3.3.2, 1.3.5, 4.1.3, 2.2.1).** The builder search, the search filters, the import, bulk-edit and export text boxes, the life tracker, snapshots, the wizard and the comment forms are named only by a placeholder or by a caption not tied to the field (src/components/search/SearchBar.tsx, src/components/search/SearchFilters.tsx and others). The sign-in and sign-up fields have no autoComplete. Search results, import feedback and the sign-in and deck-list errors are not announced, and toasts vanish after 3 seconds (src/hooks/useToast.ts).
+
+#### AC-04-143 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-04-144 Edge
+
+Given a list where one name does not resolve
+When the player confirms
+Then the unresolved name is shown first and nothing is written until they accept that list
+
+#### US-04-116
+
+As a player, I want **Accessibility bundle 5, keyboard, visible focus and target size (2.1.1, 2.4.7, 1.4.13, 2.5.7, 2.5.8).** Each search result is two nested buttons, and Enter starts a dnd-kit drag (src/components/card/DraggableCard.tsx, src/components/card/CardImage.tsx)., so that the product feels as reliable and polished as the tools players already use.
+
+#### AC-04-145 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then **Accessibility bundle 5, keyboard, visible focus and target size (2.1.1, 2.4.7, 1.4.13, 2.5.7, 2.5.8).** Each search result is two nested buttons, and Enter starts a dnd-kit drag (src/components/card/DraggableCard.tsx, src/components/card/CardImage.tsx). The Duplicate and Delete buttons sit inside the deck card's link (src/components/deck/HomeDeckCard.tsx). Card previews open on hover only. Several controls stay invisible or lose their focus ring when focused, and the view toggles and review stars are under 24 px.
+
+#### AC-04-146 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-04-147 Edge
+
+Given the account or the cache this behaviour changes
+When the player signs out or the deletion finishes
+Then the next request does not still show the private data
+
+#### US-04-117
+
+As a player, I want the product to scan the builder for accessibility automatically., so that the product feels as reliable and polished as the tools players already use.
+
+#### AC-04-148 Happy path
+
+Given a signed-out visitor and a public deck
+When the player uses this behaviour
+Then the behaviour holds: Scan the builder for accessibility automatically. No axe tool is in the repo (no jest-axe, vitest-axe, axe-core or @axe-core/playwright), and Lighthouse CI checks accessibility only on /, /fr and /auth/signin, so the builder is never scanned. Add @axe-core/playwright to the Docker E2E gate for the builder, the playtest and the public deck page, and use role queries in unit tests.
+
+#### AC-04-149 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-04-150 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+### UX states for this feature
+
+The player-visible outcome is: the product feels as reliable and polished as the tools players already use.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
+
 ### Record moved from the roadmap (2026-11-11)
 
 Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.

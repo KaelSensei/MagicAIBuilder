@@ -374,6 +374,170 @@ A getting-started email stays off unless D-78 changes. Creator seats stay behind
 
 - https://support.cardcastle.co/articles/2014406-referral-program
 
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-72-101
+
+As a player, I want the product to slice 0, no code: the answer to D-78 (this initiative recommends none now, and a reminder the player sets once D-50 is answered), the creator programme (D-80), the referral terms (one month each, at most six credited months a year, proposed), and L-43 (e) to (h) for counsel., so that every way a Commander player arrives, from a shared deck or a creator's decklist to a pod invite or a referral link, leads into an account without losing the page; the owner sees sign-ups, activation and time to the first full-size deck by entry; rewards are months of the plan, never cash; and nothing brings a player back that the player did not set up.
+
+#### AC-72-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Slice 0, no code: the answer to D-78 (this initiative recommends none now, and a reminder the player sets once D-50 is answered), the creator programme (D-80), the referral terms (one month each, at most six credited months a year, proposed), and L-43 (e) to (h) for counsel.
+
+#### AC-72-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-72-102 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-72-102
+
+As a player, I want the product to a signed-out fork and "Build your own" on public deck and share pages, through credentials and Google sign-up and back to the builder on the fork (slice 1); User.signupEntry and User.signupVia written once from allowlisted enums, via only on the product's own links (embed, Discord, recap), and a share_action event in I-39's allowlist (slice 2); a loop view in I-39's owner page with n and intervals (slice 3)., so that every way a Commander player arrives, from a shared deck or a creator's decklist to a pod invite or a referral link, leads into an account without losing the page; the owner sees sign-ups, activation and time to the first full-size deck by entry; rewards are months of the plan, never cash; and nothing brings a player back that the player did not set up.
+
+#### AC-72-103 Happy path
+
+Given a signed-out visitor and a public deck
+When the player uses this behaviour
+Then the behaviour holds: A signed-out fork and "Build your own" on public deck and share pages, through credentials and Google sign-up and back to the builder on the fork (slice 1); User.signupEntry and User.signupVia written once from allowlisted enums, via only on the product's own links (embed, Discord, recap), and a share_action event in I-39's allowlist (slice 2); a loop view in I-39's owner page with n and intervals (slice 3).
+
+#### AC-72-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-72-105 Edge
+
+Given the same inputs as a previous run
+When the player runs it again
+Then the reported figures match the first run
+
+#### US-72-103
+
+As a player, I want the product to whatItTakes, a pure function that turns I-66's payers into the sign-ups a month each goal needs, with fixture tests (slice 5)., so that every way a Commander player arrives, from a shared deck or a creator's decklist to a pod invite or a referral link, leads into an account without losing the page; the owner sees sign-ups, activation and time to the first full-size deck by entry; rewards are months of the plan, never cash; and nothing brings a player back that the player did not set up.
+
+#### AC-72-106 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then whatItTakes, a pure function that turns I-66's payers into the sign-ups a month each goal needs, with fixture tests (slice 5). On the spec's assumptions the floor needs about 244 a month and a living thousands (computed).
+
+#### AC-72-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-72-108 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-72-104
+
+As a player, I want the product to the publishing calendar, which says which content ships when: docs/product/publishing-calendar.md, each row with its source, read date, output slice and named owner, reading set dates and milestones from I-73's release calendar once it exists (slice 7), and a docs check that fails on a missing field and lists rows due within 30 days (slice 8)., so that every way a Commander player arrives, from a shared deck or a creator's decklist to a pod invite or a referral link, leads into an account without losing the page; the owner sees sign-ups, activation and time to the first full-size deck by entry; rewards are months of the plan, never cash; and nothing brings a player back that the player did not set up.
+
+#### AC-72-109 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: The publishing calendar, which says which content ships when: docs/product/publishing-calendar.md, each row with its source, read date, output slice and named owner, reading set dates and milestones from I-73's release calendar once it exists (slice 7), and a docs check that fails on a missing field and lists rows due within 30 days (slice 8). Moved 2026-11-10 from I-34's "publishing calendar" item.
+
+#### AC-72-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-72-111 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-72-105
+
+As a player, I want the product to returning players: only events the player set up bring them back (a rules change on a deck they own, a price rule on their wanted list, a radar watch they turned on), through I-63's categories, with a guard test that no producer reads activity or session data (slice 9)., so that every way a Commander player arrives, from a shared deck or a creator's decklist to a pod invite or a referral link, leads into an account without losing the page; the owner sees sign-ups, activation and time to the first full-size deck by entry; rewards are months of the plan, never cash; and nothing brings a player back that the player did not set up.
+
+#### AC-72-112 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Returning players: only events the player set up bring them back (a rules change on a deck they own, a price rule on their wanted list, a radar watch they turned on), through I-63's categories, with a guard test that no producer reads activity or session data (slice 9).
+
+#### AC-72-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-72-114 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-72-106
+
+As a player, I want the product to later: a share-to-signup rate per 1,000 public deck and embed views (slice 4) and the "what it takes" panel with measured rates (slice 6); a reminder the player sets on one deck, blocked on D-78 and D-50 (slice 10); the referral code, /join/{code} with no cookie and the labelling text in English and French (slice 11), and the credit ledger, applied after the 14-day withdrawal window, void on refund and capped at six months a year (slice 12), both moved from I-30; the creator kit (slice 13), moved from I-36, and operator-verified links (slice 14); early access and a capped complimentary seat for creators, if D-80 allows (slice 15); a pod invite that opens the pod's comparison signed out, after D-40 (slice 16)., so that every way a Commander player arrives, from a shared deck or a creator's decklist to a pod invite or a referral link, leads into an account without losing the page; the owner sees sign-ups, activation and time to the first full-size deck by entry; rewards are months of the plan, never cash; and nothing brings a player back that the player did not set up.
+
+#### AC-72-115 Happy path
+
+Given a signed-out visitor and a public deck
+When the player uses this behaviour
+Then the behaviour holds: Later: a share-to-signup rate per 1,000 public deck and embed views (slice 4) and the "what it takes" panel with measured rates (slice 6); a reminder the player sets on one deck, blocked on D-78 and D-50 (slice 10); the referral code, /join/{code} with no cookie and the labelling text in English and French (slice 11), and the credit ledger, applied after the 14-day withdrawal window, void on refund and capped at six months a year (slice 12), both moved from I-30; the creator kit (slice 13), moved from I-36, and operator-verified links (slice 14); early access and a capped complimentary seat for creators, if D-80 allows (slice 15); a pod invite that opens the pod's comparison signed out, after D-40 (slice 16).
+
+#### AC-72-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-72-117 Edge
+
+Given the French locale
+When the new controls render
+Then they come from the French catalogue and are not hard-coded English
+
+### UX states for this feature
+
+The player-visible outcome is: every way a Commander player arrives, from a shared deck or a creator's decklist to a pod invite or a referral link, leads into an account without losing the page; the owner sees sign-ups, activation and time to the first full-size deck by entry; rewards are months of the plan, never cash; and nothing brings a player back that the player did not set up.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
+
 ### Record moved from the roadmap (2026-11-11)
 
 Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.

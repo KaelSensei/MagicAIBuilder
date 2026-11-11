@@ -392,6 +392,302 @@ How many cards a role needs, and whether Tagger tags may be used, are open. The 
 - https://edhrec.com/articles/how-much-information-should-be-shared-during-rule-zero
 - https://inkbornforge.substack.com/p/supporter-feature-deck-insights
 
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-65-101
+
+As a player, I want the product to route kinds, roles and answer classes as versioned data in I-54's definition format, each route naming the Comprehensive Rules entry that ends the game (104.2b, 104.3b to 104.3e, 903.10a), with Oracle-pattern and keyword clauses and fixtures (slice 1)., so that a player opens a deck and sees each way it can end a game: the combos Spellbook finds, an alternative win, commander damage, combat, drain, mill, poison or a lock. Each route lists its cards by role with a count, the tutors that can find its pieces, the protection that can defend them, a turn estimate labelled as an estimate and the kinds of cards that commonly stop it. Code computes every fact, and nothing grades the deck.
+
+#### AC-65-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Route kinds, roles and answer classes as versioned data in I-54's definition format, each route naming the Comprehensive Rules entry that ends the game (104.2b, 104.3b to 104.3e, 903.10a), with Oracle-pattern and keyword clauses and fixtures (slice 1).
+
+#### AC-65-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-65-102 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-65-102
+
+As a player, I want the product to read manaValueNeeded, bracketTag, each result's status and each piece's zoneLocations from the one Spellbook call that #1324 makes, and map Spellbook's results to route kinds through a tested table; an unmapped result shows as "combo: other result" (slice 2)., so that a player opens a deck and sees each way it can end a game: the combos Spellbook finds, an alternative win, commander damage, combat, drain, mill, poison or a lock. Each route lists its cards by role with a count, the tutors that can find its pieces, the protection that can defend them, a turn estimate labelled as an estimate and the kinds of cards that commonly stop it. Code computes every fact, and nothing grades the deck.
+
+#### AC-65-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Read manaValueNeeded, bracketTag, each result's status and each piece's zoneLocations from the one Spellbook call that #1324 makes, and map Spellbook's results to route kinds through a tested table; an unmapped result shows as "combo: other result" (slice 2). Today src/lib/combos/find-my-combos.ts reads none of the four.
+
+#### AC-65-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-65-105 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+#### US-65-103
+
+As a player, I want the product to computeRouteMap, a pure function: combo and single-card routes, route roles per card that never overwrite the player's category, the count per role, cards shared between routes, tutors listed by the pieces they reach and protection by what it covers (slice 3)., so that a player opens a deck and sees each way it can end a game: the combos Spellbook finds, an alternative win, commander damage, combat, drain, mill, poison or a lock. Each route lists its cards by role with a count, the tutors that can find its pieces, the protection that can defend them, a turn estimate labelled as an estimate and the kinds of cards that commonly stop it. Code computes every fact, and nothing grades the deck.
+
+#### AC-65-106 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then computeRouteMap, a pure function: combo and single-card routes, route roles per card that never overwrite the player's category, the count per role, cards shared between routes, tutors listed by the pieces they reach and protection by what it covers (slice 3). categorizeCard (src/lib/deck/categories.ts) keeps the player's category; on 35 hand-picked route cards it labels no combat, drain, mill, equipment, combo or lock card winCondition.
+
+#### AC-65-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-65-108 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-65-104
+
+As a player, I want the product to turn estimates, always labelled: a mana-only floor with and without one cheap ramp piece, Spellbook's speed band from manaValueNeeded, and the hits needed for 21 commander damage, with the target bracket's official turn expectation beside them from I-28's constants, hidden until I-28 slice 2 (slice 4)., so that a player opens a deck and sees each way it can end a game: the combos Spellbook finds, an alternative win, commander damage, combat, drain, mill, poison or a lock. Each route lists its cards by role with a count, the tutors that can find its pieces, the protection that can defend them, a turn estimate labelled as an estimate and the kinds of cards that commonly stop it. Code computes every fact, and nothing grades the deck.
+
+#### AC-65-109 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Turn estimates, always labelled: a mana-only floor with and without one cheap ramp piece, Spellbook's speed band from manaValueNeeded, and the hits needed for 21 commander damage, with the target bracket's official turn expectation beside them from I-28's constants, hidden until I-28 slice 2 (slice 4). No damage clock is simulated.
+
+#### AC-65-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-65-111 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+#### US-65-105
+
+As a player, I want the product to common answers, attached only when a route's pieces match, from a versioned table of classes such as graveyard exile, artifact removal and "can't win" effects, never naming an opponent's card (slice 5)., so that a player opens a deck and sees each way it can end a game: the combos Spellbook finds, an alternative win, commander damage, combat, drain, mill, poison or a lock. Each route lists its cards by role with a count, the tutors that can find its pieces, the protection that can defend them, a turn estimate labelled as an estimate and the kinds of cards that commonly stop it. Code computes every fact, and nothing grades the deck.
+
+#### AC-65-112 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Common answers, attached only when a route's pieces match, from a versioned table of classes such as graveyard exile, artifact removal and "can't win" effects, never naming an opponent's card (slice 5).
+
+#### AC-65-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-65-114 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-65-106
+
+As a player, I want the product to a builder panel, "How this deck wins", in English and French, that absorbs the combos panel, with a test that fails on a verdict word in any template (slice 6); owner overrides of route roles, stored per deck (slice 7)., so that a player opens a deck and sees each way it can end a game: the combos Spellbook finds, an alternative win, commander damage, combat, drain, mill, poison or a lock. Each route lists its cards by role with a count, the tutors that can find its pieces, the protection that can defend them, a turn estimate labelled as an estimate and the kinds of cards that commonly stop it. Code computes every fact, and nothing grades the deck.
+
+#### AC-65-115 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A builder panel, "How this deck wins", in English and French, that absorbs the combos panel, with a test that fails on a verdict word in any template (slice 6); owner overrides of route roles, stored per deck (slice 7).
+
+#### AC-65-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-65-117 Edge
+
+Given the French locale
+When the new controls render
+Then they come from the French catalogue and are not hard-coded English
+
+#### US-65-107
+
+As a player, I want the product to tagger clauses from the Oracle Tags that I-67 slice 7 loads (re-pointed 2026-11-10), with a daily check of each definition against a Scryfall otag: query (slice 8)., so that a player opens a deck and sees each way it can end a game: the combos Spellbook finds, an alternative win, commander damage, combat, drain, mill, poison or a lock. Each route lists its cards by role with a count, the tutors that can find its pieces, the protection that can defend them, a turn estimate labelled as an estimate and the kinds of cards that commonly stop it. Code computes every fact, and nothing grades the deck.
+
+#### AC-65-118 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Tagger clauses from the Oracle Tags that I-67 slice 7 loads (re-pointed 2026-11-10), with a daily check of each definition against a Scryfall otag: query (slice 8). Blocked for release until Scryfall answers on the tags; without them the map says "function tags unavailable: fewer cards recognised".
+
+#### AC-65-119 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-65-120 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-65-108
+
+As a player, I want the product to the public deck page's setting, off by default, route kinds only, or the full map, and GET /api/decks/[id]/routes (slice 9); I-15's calculated line with "copy into my sheet", and the primer's "Win conditions" section pre-filled (slice 10); and the wizard's plan-versus-result check, which never blocks a build (slice 11)., so that a player opens a deck and sees each way it can end a game: the combos Spellbook finds, an alternative win, commander damage, combat, drain, mill, poison or a lock. Each route lists its cards by role with a count, the tutors that can find its pieces, the protection that can defend them, a turn estimate labelled as an estimate and the kinds of cards that commonly stop it. Code computes every fact, and nothing grades the deck.
+
+#### AC-65-121 Happy path
+
+Given a signed-out visitor and a public deck
+When the player uses this behaviour
+Then the behaviour holds: The public deck page's setting, off by default, route kinds only, or the full map, and GET /api/decks/[id]/routes (slice 9); I-15's calculated line with "copy into my sheet", and the primer's "Win conditions" section pre-filled (slice 10); and the wizard's plan-versus-result check, which never blocks a build (slice 11). Today DeckPlan.winConditions (src/lib/ai/deck-plan.ts) is fixed text per strategy that nothing checks against the built deck.
+
+#### AC-65-122 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-65-123 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-65-109
+
+As a player, I want **Combos one card away (gap sweep, 2026-11-10).** parseFindMyCombos (src/lib/combos/find-my-combos.ts) reads only results.included; its own comment says the "almost included" buckets are combos the deck lacks a card for, and Spellbook already returns them in the response that #1324 fetches once per deck (verified on origin/dev at 72fbfc1)., so that a player opens a deck and sees each way it can end a game: the combos Spellbook finds, an alternative win, commander damage, combat, drain, mill, poison or a lock. Each route lists its cards by role with a count, the tutors that can find its pieces, the protection that can defend them, a turn estimate labelled as an estimate and the kinds of cards that commonly stop it. Code computes every fact, and nothing grades the deck.
+
+#### AC-65-124 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then **Combos one card away (gap sweep, 2026-11-10).** parseFindMyCombos (src/lib/combos/find-my-combos.ts) reads only results.included; its own comment says the "almost included" buckets are combos the deck lacks a card for, and Spellbook already returns them in the response that #1324 fetches once per deck (verified on origin/dev at 72fbfc1). Grimoria lists combos "missing one piece" (spec).
+
+#### AC-65-125 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-65-126 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-65-110
+
+As a player, I want the product to later: a model rewording of a templated sentence, accepted only if it keeps every card name, number and rule and adds no verdict, labelled and counted against I-30's allowance (slice 12); assembly odds from I-31's seeded engine (slice 13); routes compared across builds and snapshots, then across a pod's consented decks (slices 14 and 15); and, after I-30's decision, a paid entitlement for the comparisons (slice 16)., so that a player opens a deck and sees each way it can end a game: the combos Spellbook finds, an alternative win, commander damage, combat, drain, mill, poison or a lock. Each route lists its cards by role with a count, the tutors that can find its pieces, the protection that can defend them, a turn estimate labelled as an estimate and the kinds of cards that commonly stop it. Code computes every fact, and nothing grades the deck.
+
+#### AC-65-127 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Later: a model rewording of a templated sentence, accepted only if it keeps every card name, number and rule and adds no verdict, labelled and counted against I-30's allowance (slice 12); assembly odds from I-31's seeded engine (slice 13); routes compared across builds and snapshots, then across a pod's consented decks (slices 14 and 15); and, after I-30's decision, a paid entitlement for the comparisons (slice 16).
+
+#### AC-65-128 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-65-129 Edge
+
+Given the same inputs as a previous run
+When the player runs it again
+Then the reported figures match the first run
+
+#### US-65-111
+
+As a player, I want the product to slice 15 depends on slice 6 and I-15 slice 3 instead of slice 14, so a pod's first comparison does not wait for builds (I-55)., so that a player opens a deck and sees each way it can end a game: the combos Spellbook finds, an alternative win, commander damage, combat, drain, mill, poison or a lock. Each route lists its cards by role with a count, the tutors that can find its pieces, the protection that can defend them, a turn estimate labelled as an estimate and the kinds of cards that commonly stop it. Code computes every fact, and nothing grades the deck.
+
+#### AC-65-130 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Slice 15 depends on slice 6 and I-15 slice 3 instead of slice 14, so a pod's first comparison does not wait for builds (I-55). Its first view of the player's own pod stays free (D-95). This answers the strongest Commander ask in the player-voice sample. Added 2026-11-11.
+
+#### AC-65-131 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-65-132 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-65-112
+
+As a player, I want the product to table effects belong to I-78, which reuses slice 1's clause and definition format and its verdict-word list, published as a shared deck-analysis module; slice 1 also carries I-76's slot roles under their own ids (pointer, 2026-11-11)., so that a player opens a deck and sees each way it can end a game: the combos Spellbook finds, an alternative win, commander damage, combat, drain, mill, poison or a lock. Each route lists its cards by role with a count, the tutors that can find its pieces, the protection that can defend them, a turn estimate labelled as an estimate and the kinds of cards that commonly stop it. Code computes every fact, and nothing grades the deck.
+
+#### AC-65-133 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Table effects belong to I-78, which reuses slice 1's clause and definition format and its verdict-word list, published as a shared deck-analysis module; slice 1 also carries I-76's slot roles under their own ids (pointer, 2026-11-11). I-65's outcome, routes and answer classes do not change.
+
+#### AC-65-134 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-65-135 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+### UX states for this feature
+
+The player-visible outcome is: a player opens a deck and sees each way it can end a game: the combos Spellbook finds, an alternative win, commander damage, combat, drain, mill, poison or a lock. Each route lists its cards by role with a count, the tutors that can find its pieces, the protection that can defend them, a turn estimate labelled as an estimate and the kinds of cards that commonly stop it. Code computes every fact, and nothing grades the deck.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
+
 ### Record moved from the roadmap (2026-11-11)
 
 Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.

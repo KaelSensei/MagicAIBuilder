@@ -409,6 +409,236 @@ Whether a Moxfield bulk export exists, and whether a primer over 2,000 character
 - https://github.com/moxfield/moxfield-public/issues/54
 - https://archidekt.com/news/5891613
 
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-62-101
+
+As a player, I want the product to a source register with one dated row per source (files, terms, robots.txt, verdict), and a dated guide per source at /[locale]/move in English and French, marked after 90 days as possibly out of date (slice 0)., so that a player who keeps decks on another site downloads them with that site's own export, drops every file here at once, sees each deck and what it will lose before anything is written, confirms, and gets a report. A second run with the same files changes nothing, and the product never logs in to, scrapes or calls the other site.
+
+#### AC-62-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A source register with one dated row per source (files, terms, robots.txt, verdict), and a dated guide per source at /[locale]/move in English and French, marked after 90 days as possibly out of date (slice 0).
+
+#### AC-62-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-62-102 Edge
+
+Given the French locale
+When the new controls render
+Then they come from the French catalogue and are not hard-coded English
+
+#### US-62-102
+
+As a player, I want the product to a normalized bundle and a text adapter that reads many .txt files at once and keeps (SET) number, *F* and #tag as data, coordinated with I-57 slice 6 (slice 1); the server write of one deck with all its rows in one transaction (slice 2)., so that a player who keeps decks on another site downloads them with that site's own export, drops every file here at once, sees each deck and what it will lose before anything is written, confirms, and gets a report. A second run with the same files changes nothing, and the product never logs in to, scrapes or calls the other site.
+
+#### AC-62-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A normalized bundle and a text adapter that reads many .txt files at once and keeps (SET) number, *F* and #tag as data, coordinated with I-57 slice 6 (slice 1); the server write of one deck with all its rows in one transaction (slice 2).
+
+#### AC-62-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-62-105 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-62-103
+
+As a player, I want the product to importBatch and ImportedDeckLink with staging, fingerprints and content hashes, and unconfirmed bundles deleted after 24 hours (slice 3); a preview with an include switch per deck, zones, commanders, unresolved names and a loss table per field (slice 4)., so that a player who keeps decks on another site downloads them with that site's own export, drops every file here at once, sees each deck and what it will lose before anything is written, confirms, and gets a report. A second run with the same files changes nothing, and the product never logs in to, scrapes or calls the other site.
+
+#### AC-62-106 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: ImportBatch and ImportedDeckLink with staging, fingerprints and content hashes, and unconfirmed bundles deleted after 24 hours (slice 3); a preview with an include switch per deck, zones, commanders, unresolved names and a loss table per field (slice 4).
+
+#### AC-62-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-62-108 Edge
+
+Given a list where one name does not resolve
+When the player confirms
+Then the unresolved name is shown first and nothing is written until they accept that list
+
+#### US-62-104
+
+As a player, I want the product to commit, retry and a report, every new deck private, with origin migration and an automatic snapshot (slice 5); re-import where an unchanged deck is skipped, a deck changed on the source is a diff, and a deck changed on both sides is a conflict that defaults to keeping the player's version (slice 6)., so that a player who keeps decks on another site downloads them with that site's own export, drops every file here at once, sees each deck and what it will lose before anything is written, confirms, and gets a report. A second run with the same files changes nothing, and the product never logs in to, scrapes or calls the other site.
+
+#### AC-62-109 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Commit, retry and a report, every new deck private, with origin migration and an automatic snapshot (slice 5); re-import where an unchanged deck is skipped, a deck changed on the source is a diff, and a deck changed on both sides is a conflict that defaults to keeping the player's version (slice 6).
+
+#### AC-62-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-62-111 Edge
+
+Given a list where one name does not resolve
+When the player confirms
+Then the unresolved name is shown first and nothing is written until they accept that list
+
+#### US-62-105
+
+As a player, I want the product to archidekt files with an editable category-to-zone mapping saved per source (slice 7), Moxfield files (slice 8), TappedOut, Deckstats, MTGGoldfish and Scryfall files (slice 9), and a zip whose directories become folders (slice 10)., so that a player who keeps decks on another site downloads them with that site's own export, drops every file here at once, sees each deck and what it will lose before anything is written, confirms, and gets a report. A second run with the same files changes nothing, and the product never logs in to, scrapes or calls the other site.
+
+#### AC-62-112 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Archidekt files with an editable category-to-zone mapping saved per source (slice 7), Moxfield files (slice 8), TappedOut, Deckstats, MTGGoldfish and Scryfall files (slice 9), and a zip whose directories become folders (slice 10). From slice 8, while Moxfield refuses honest requests, I-10's Moxfield profile panel links to the Moxfield guide.
+
+#### AC-62-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-62-114 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-62-106
+
+As a player, I want the product to source printings through I-57's resolver, a Scryfall ID first, then set and collector number (slice 11)., so that a player who keeps decks on another site downloads them with that site's own export, drops every file here at once, sees each deck and what it will lose before anything is written, confirms, and gets a report. A second run with the same files changes nothing, and the product never logs in to, scrapes or calls the other site.
+
+#### AC-62-115 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Source printings through I-57's resolver, a Scryfall ID first, then set and collector number (slice 11). The move-in is announced only after this slice, because lost printings are what a collector notices first.
+
+#### AC-62-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-62-117 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-62-107
+
+As a player, I want the product to after their owners: finish and language (slice 12), custom categories and tags (slice 13), primers within I-08's limit (slice 14), collection files through I-26's pipeline (slice 15) and want lists into I-56's wanted list (slice 16)., so that a player who keeps decks on another site downloads them with that site's own export, drops every file here at once, sees each deck and what it will lose before anything is written, confirms, and gets a report. A second run with the same files changes nothing, and the product never logs in to, scrapes or calls the other site.
+
+#### AC-62-118 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: After their owners: finish and language (slice 12), custom categories and tags (slice 13), primers within I-08's limit (slice 14), collection files through I-26's pipeline (slice 15) and want lists into I-56's wanted list (slice 16).
+
+#### AC-62-119 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-62-120 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-62-108
+
+As a player, I want the product to migration_finished, the origin split and the primary metric in I-39's owner view (slice 17), and entry points on an empty /decks, in I-39's first-run panel and in settings (slice 18)., so that a player who keeps decks on another site downloads them with that site's own export, drops every file here at once, sees each deck and what it will lose before anything is written, confirms, and gets a report. A second run with the same files changes nothing, and the product never logs in to, scrapes or calls the other site.
+
+#### AC-62-121 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then migration_finished, the origin split and the primary metric in I-39's owner view (slice 17), and entry points on an empty /decks, in I-39's first-run panel and in settings (slice 18).
+
+#### AC-62-122 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-62-123 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-62-109
+
+As a player, I want the product to archidekt's terms forbid the API reads that I-10's shipped single-deck import makes; the owner decision is recorded in I-10., so that a player who keeps decks on another site downloads them with that site's own export, drops every file here at once, sees each deck and what it will lose before anything is written, confirms, and gets a report. A second run with the same files changes nothing, and the product never logs in to, scrapes or calls the other site.
+
+#### AC-62-124 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Archidekt's terms forbid the API reads that I-10's shipped single-deck import makes; the owner decision is recorded in I-10. Until a written answer, I-62 reads Archidekt files only, and an API route for any source (slice 19) stays blocked.
+
+#### AC-62-125 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-62-126 Edge
+
+Given a list where one name does not resolve
+When the player confirms
+Then the unresolved name is shown first and nothing is written until they accept that list
+
+### UX states for this feature
+
+The player-visible outcome is: a player who keeps decks on another site downloads them with that site's own export, drops every file here at once, sees each deck and what it will lose before anything is written, confirms, and gets a report. A second run with the same files changes nothing, and the product never logs in to, scrapes or calls the other site.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
+
 ### Record moved from the roadmap (2026-11-11)
 
 Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.

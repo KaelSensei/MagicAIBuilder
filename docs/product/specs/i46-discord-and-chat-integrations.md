@@ -378,6 +378,192 @@ Whether a paid plan that posts to Discord is a paid feature of a Discord app is 
 
 - https://support-dev.discord.com/hc/en-us/articles/8563934450327-Discord-Developer-Policy
 
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-46-101
+
+As a player, I want the product to a preview contract for every public page: full Open Graph and Twitter tags, theme-color, byte budgets, and a crawler path with no redirect and no cookie, under conformance tests (slice 1)., so that a deck link pasted into Discord, Slack, WhatsApp or Telegram shows the commander art with its artist, the deck's name and author, its declared bracket and its legality; a pod compares its decks with a slash command; and a creator's server receives deck updates by webhook. No bot reads the conversation.
+
+#### AC-46-100 Happy path
+
+Given a signed-out visitor and a public deck
+When the player uses this behaviour
+Then the behaviour holds: A preview contract for every public page: full Open Graph and Twitter tags, theme-color, byte budgets, and a crawler path with no redirect and no cookie, under conformance tests (slice 1). Metadata must read the database directly: today fetchPublicDeck (src/lib/deck/public-deck.ts) calls the page's own API with a 15-second timeout, above Discord's 10-second budget for a whole preview.
+
+#### AC-46-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-46-102 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-46-102
+
+As a player, I want the product to show deck previews large and credit the artist (slice 1)., so that a deck link pasted into Discord, Slack, WhatsApp or Telegram shows the commander art with its artist, the deck's name and author, its declared bracket and its legality; a pod compares its decks with a slash command; and a creator's server receives deck updates by webhook. No bot reads the conversation.
+
+#### AC-46-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Show deck previews large and credit the artist (slice 1). Today src/app/[locale]/deck/[id]/page.tsx sets og:image to the commander's Scryfall artCropUri with no twitter:card, so Discord shows only a small thumbnail, and DeckCard stores no artist, so the art crop reaches chat without the artist credit Scryfall requires.
+
+#### AC-46-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-46-105 Edge
+
+Given the French locale
+When the new controls render
+Then they come from the French catalogue and are not hard-coded English
+
+#### US-46-103
+
+As a player, I want the product to replace the SVG default image with a PNG (slice 1)., so that a deck link pasted into Discord, Slack, WhatsApp or Telegram shows the commander art with its artist, the deck's name and author, its declared bracket and its legality; a pod compares its decks with a slash command; and a creator's server receives deck updates by webhook. No bot reads the conversation.
+
+#### AC-46-106 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Replace the SVG default image with a PNG (slice 1). src/app/[locale]/layout.tsx declares /og-image.svg, and Discord does not render SVG, so every page other than a deck or share page unfurls with no image.
+
+#### AC-46-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-46-108 Edge
+
+Given the French locale
+When the new controls render
+Then they come from the French catalogue and are not hard-coded English
+
+#### US-46-104
+
+As a player, I want the product to deck previews from I-36's /og/deck/{id} with dimensions, alt text and a version parameter, then an oEmbed author line and a Discord component embed with "Open deck" and "Playtest" buttons (slices 2–3)., so that a deck link pasted into Discord, Slack, WhatsApp or Telegram shows the commander art with its artist, the deck's name and author, its declared bracket and its legality; a pod compares its decks with a slash command; and a creator's server receives deck updates by webhook. No bot reads the conversation.
+
+#### AC-46-109 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Deck previews from I-36's /og/deck/{id} with dimensions, alt text and a version parameter, then an oEmbed author line and a Discord component embed with "Open deck" and "Playtest" buttons (slices 2–3).
+
+#### AC-46-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-46-111 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-46-105
+
+As a player, I want the product to a pure chat formatter from the public projection, then deck-update feeds by channel webhook on an explicit "Publish update", at most one post per deck an hour, with the webhook URL stored encrypted (slices 4–5)., so that a deck link pasted into Discord, Slack, WhatsApp or Telegram shows the commander art with its artist, the deck's name and author, its declared bracket and its legality; a pod compares its decks with a slash command; and a creator's server receives deck updates by webhook. No bot reads the conversation.
+
+#### AC-46-112 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A pure chat formatter from the public projection, then deck-update feeds by channel webhook on an explicit "Publish update", at most one post per deck an hour, with the webhook URL stored encrypted (slices 4–5).
+
+#### AC-46-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-46-114 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-46-106
+
+As a player, I want the product to the Discord app: a signed interactions endpoint with no Gateway connection and no MESSAGE_CONTENT, server settings, shared rate limits, then /deck, /bracket-check, /combo, /lineup, /gamenight and /card (slices 6–13)., so that a deck link pasted into Discord, Slack, WhatsApp or Telegram shows the commander art with its artist, the deck's name and author, its declared bracket and its legality; a pod compares its decks with a slash command; and a creator's server receives deck updates by webhook. No bot reads the conversation.
+
+#### AC-46-115 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: The Discord app: a signed interactions endpoint with no Gateway connection and no MESSAGE_CONTENT, server settings, shared rate limits, then /deck, /bracket-check, /combo, /lineup, /gamenight and /card (slices 6–13).
+
+#### AC-46-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-46-117 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+#### US-46-107
+
+As a player, I want the product to install and command counters for I-39, then verification and a public install link once I-38's privacy policy and terms exist (slices 14–15)., so that a deck link pasted into Discord, Slack, WhatsApp or Telegram shows the commander art with its artist, the deck's name and author, its declared bracket and its legality; a pod compares its decks with a slash command; and a creator's server receives deck updates by webhook. No bot reads the conversation.
+
+#### AC-46-118 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Install and command counters for I-39, then verification and a public install link once I-38's privacy policy and terms exist (slices 14–15).
+
+#### AC-46-119 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-46-120 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+### UX states for this feature
+
+The player-visible outcome is: a deck link pasted into Discord, Slack, WhatsApp or Telegram shows the commander art with its artist, the deck's name and author, its declared bracket and its legality; a pod compares its decks with a slash command; and a creator's server receives deck updates by webhook. No bot reads the conversation.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
+
 ### Record moved from the roadmap (2026-11-11)
 
 Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.

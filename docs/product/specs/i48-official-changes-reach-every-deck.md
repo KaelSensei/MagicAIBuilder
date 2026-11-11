@@ -353,6 +353,214 @@ Where the version is published from, the database or a reviewed file, is an owne
 - https://netrunnerdb.com/en/decklist/6092a490-4d1a-4f83-b9eb-440e7d07c657
 - https://github.com/arkham-build/arkham.build/releases/tag/v2.20.0
 
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-48-101
+
+As a player, I want the product to commanderRulesVersion, seeded with the history from the list before 2025-02-11 to 2026-02-09 (40, 61, 51 and 53 Game Changers in the four dated versions), and one "version in force" reader for the bracket score, the stats, the companion check and /rules/game-changers (slice 1)., so that when Wizards changes the Commander banned list, the Game Changers or the brackets, every saved deck is assessed against the dated version in force. The owner sees which decks changed, why, and replacement candidates chosen by a visible rule; anyone, without an account, can read what each announcement changed and check a list against it.
+
+#### AC-48-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: CommanderRulesVersion, seeded with the history from the list before 2025-02-11 to 2026-02-09 (40, 61, 51 and 53 Game Changers in the four dated versions), and one "version in force" reader for the bracket score, the stats, the companion check and /rules/game-changers (slice 1). This closes I-03's open item. Today src/hooks/useGameChangers.ts and src/hooks/useBanlist.ts read Scryfall live in the browser, with no date; BRACKET_DEFINITIONS (src/lib/constants/brackets.ts) and the floors in src/lib/deck/bracket.ts are code; and Lutri's companion ban is hard-coded in src/lib/deck/companion.ts.
+
+#### AC-48-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-48-102 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+#### US-48-102
+
+As a player, I want the product to assessDeck and compareAssessments, Game Changer and banned status derived for every reader, and a method version on the bracket estimate (slice 2)., so that when Wizards changes the Commander banned list, the Game Changers or the brackets, every saved deck is assessed against the dated version in force. The owner sees which decks changed, why, and replacement candidates chosen by a visible rule; anyone, without an account, can read what each announcement changed and check a list against it.
+
+#### AC-48-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then assessDeck and compareAssessments, Game Changer and banned status derived for every reader, and a method version on the bracket estimate (slice 2). Today src/lib/deck/store.ts sets isGameChanger and isBanned when a card is added, POST /api/decks/[id]/cards stores the client's values, and computeDeckStats (src/lib/deck/stats.ts) and scoreBracket count the stored flags. Nothing recomputes them, so a deck saved before 2026-02-09 with Farewell counts no Game Changer today. Fork (src/lib/deck/fork.ts), duplicate, snapshot restore (src/lib/deck/snapshot-restore.ts) and the public and share views copy or show the stale flags; I-42 records the same defect for isBanned.
+
+#### AC-48-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-48-105 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+#### US-48-103
+
+As a player, I want the product to announcement records and public /rules/changes pages in English, backfilled for the four past announcements, then "Is my deck affected?" without an account (slices 3–4)., so that when Wizards changes the Commander banned list, the Game Changers or the brackets, every saved deck is assessed against the dated version in force. The owner sees which decks changed, why, and replacement candidates chosen by a visible rule; anyone, without an account, can read what each announcement changed and check a list against it.
+
+#### AC-48-106 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Announcement records and public /rules/changes pages in English, backfilled for the four past announcements, then "Is my deck affected?" without an account (slices 3–4).
+
+#### AC-48-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-48-108 Edge
+
+Given the French locale
+When the new controls render
+Then they come from the French catalogue and are not hard-coded English
+
+#### US-48-104
+
+As a player, I want the product to the owner's impact, computed on the next deck-list load or deck open with no scheduled job: a first catch-up run, a dated notice on the deck list and in the editor, and a report that sets the declared bracket against the new estimate (slice 5)., so that when Wizards changes the Commander banned list, the Game Changers or the brackets, every saved deck is assessed against the dated version in force. The owner sees which decks changed, why, and replacement candidates chosen by a visible rule; anyone, without an account, can read what each announcement changed and check a list against it.
+
+#### AC-48-109 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: The owner's impact, computed on the next deck-list load or deck open with no scheduled job: a first catch-up run, a dated notice on the deck list and in the editor, and a report that sets the declared bracket against the new estimate (slice 5).
+
+#### AC-48-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-48-111 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+#### US-48-105
+
+As a player, I want the product to a publishing workflow: a moderator's draft, a comparison with Scryfall's lists, then publication (slice 6)., so that when Wizards changes the Commander banned list, the Game Changers or the brackets, every saved deck is assessed against the dated version in force. The owner sees which decks changed, why, and replacement candidates chosen by a visible rule; anyone, without an account, can read what each announcement changed and check a list against it.
+
+#### AC-48-112 Happy path
+
+Given a signed-in operator
+When the player uses this behaviour
+Then the behaviour holds: A publishing workflow: a moderator's draft, a comparison with Scryfall's lists, then publication (slice 6).
+
+#### AC-48-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-48-114 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-48-106
+
+As a player, I want the product to replacement candidates from a Scryfall query the player can read, in a fixed order, through the reviewed diff and never applied automatically (slice 7); the French pages, noindex until reviewed (slice 8)., so that when Wizards changes the Commander banned list, the Game Changers or the brackets, every saved deck is assessed against the dated version in force. The owner sees which decks changed, why, and replacement candidates chosen by a visible rule; anyone, without an account, can read what each announcement changed and check a list against it.
+
+#### AC-48-115 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Replacement candidates from a Scryfall query the player can read, in a fixed order, through the reviewed diff and never applied automatically (slice 7); the French pages, noindex until reviewed (slice 8).
+
+#### AC-48-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-48-117 Edge
+
+Given the French locale
+When the new controls render
+Then they come from the French catalogue and are not hard-coded English
+
+#### US-48-107
+
+As a player, I want the product to later: an "under review" state from I-42's drift check, counts per commander from public decks only, and an opt-in e-mail per announcement (slices 9–11); the cross-deck fix planner after I-30's decision (slice 12)., so that when Wizards changes the Commander banned list, the Game Changers or the brackets, every saved deck is assessed against the dated version in force. The owner sees which decks changed, why, and replacement candidates chosen by a visible rule; anyone, without an account, can read what each announcement changed and check a list against it.
+
+#### AC-48-118 Happy path
+
+Given a signed-out visitor and a public deck
+When the player uses this behaviour
+Then the behaviour holds: Later: an "under review" state from I-42's drift check, counts per commander from public decks only, and an opt-in e-mail per announcement (slices 9–11); the cross-deck fix planner after I-30's decision (slice 12).
+
+#### AC-48-119 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-48-120 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-48-108
+
+As a player, I want the product to neighbour change from I-77, 2026-11-11: assessDeck (2.1) returns I-77's explainBracket output for floors, terms and reasons, and 2.5's method version is I-77's BRACKET_METHOD_VERSION, so slice 2 also waits for I-77 slice 1., so that when Wizards changes the Commander banned list, the Game Changers or the brackets, every saved deck is assessed against the dated version in force. The owner sees which decks changed, why, and replacement candidates chosen by a visible rule; anyone, without an account, can read what each announcement changed and check a list against it.
+
+#### AC-48-121 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Neighbour change from I-77, 2026-11-11: assessDeck (2.1) returns I-77's explainBracket output for floors, terms and reasons, and 2.5's method version is I-77's BRACKET_METHOD_VERSION, so slice 2 also waits for I-77 slice 1. **Corrected 2026-11-11:** the claim that no deckbuilder tells an owner a saved deck changed status holds among Magic deckbuilders only; NetrunnerDB's decklist pages say a list "is not legal for tournament play currently" (decklist, 2018-07-05), and arkham.build pins a taboo version per deck (v2.20.0, 2025-04-22).
+
+#### AC-48-122 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-48-123 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+### UX states for this feature
+
+The player-visible outcome is: when Wizards changes the Commander banned list, the Game Changers or the brackets, every saved deck is assessed against the dated version in force. The owner sees which decks changed, why, and replacement candidates chosen by a visible rule; anyone, without an account, can read what each announcement changed and check a list against it.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
+
 ### Record moved from the roadmap (2026-11-11)
 
 Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.

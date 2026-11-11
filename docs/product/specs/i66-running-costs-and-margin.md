@@ -427,6 +427,192 @@ Which Vercel and Supabase plans production uses, and when Pro starts, are owner 
 - https://vercel.com/docs/limits/fair-use-guidelines
 - https://vercel.com/docs/caching/cdn-cache
 
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-66-101
+
+As a player, I want the product to slice 0, no code: the plans and function region in use today, when to move to Vercel Pro and Supabase Pro, the domain, the budget amounts and whether reaching a budget pauses the site; a written question to Vercel on commercial use, which joins I-30 requirement 7.2., so that the owner knows what one more active player costs each month, free or paying, which plan limit breaks first and when, and what the product spends with each provider, from dated prices, provider exports and the database's own counts. An alert fires before a limit or a budget is reached, and no player is tracked for it.
+
+#### AC-66-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Slice 0, no code: the plans and function region in use today, when to move to Vercel Pro and Supabase Pro, the domain, the budget amounts and whether reaching a budget pauses the site; a written question to Vercel on commercial use, which joins I-30 requirement 7.2.
+
+#### AC-66-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-66-102 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-66-102
+
+As a player, I want the product to a dated price book of every provider except AI and payments, and the cost model per active player as pure functions with 13 labelled assumptions, tested against the spec's tables (slice 1); a measurement script that prints Vercel usage by project and region, database and table sizes, active and stored accounts and the next build route table (slice 2)., so that the owner knows what one more active player costs each month, free or paying, which plan limit breaks first and when, and what the product spends with each provider, from dated prices, provider exports and the database's own counts. An alert fires before a limit or a budget is reached, and no player is tracked for it.
+
+#### AC-66-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A dated price book of every provider except AI and payments, and the cost model per active player as pure functions with 13 labelled assumptions, tested against the spec's tables (slice 1); a measurement script that prints Vercel usage by project and region, database and table sizes, active and stored accounts and the next build route table (slice 2).
+
+#### AC-66-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-66-105 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-66-103
+
+As a player, I want the product to s-maxage with stale-while-revalidate on 200 answers from /api/cache/search and /api/cache/cards, never on 400, 429 or 502 (slice 3), and a CDN caching header on /api/proxy-card-image, with the response bytes in its log line (slice 4)., so that the owner knows what one more active player costs each month, free or paying, which plan limit breaks first and when, and what the product spends with each provider, from dated prices, provider exports and the database's own counts. An alert fires before a limit or a budget is reached, and no player is tracked for it.
+
+#### AC-66-106 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then s-maxage with stale-while-revalidate on 200 answers from /api/cache/search and /api/cache/cards, never on 400, 429 or 502 (slice 3), and a CDN caching header on /api/proxy-card-image, with the response bytes in its log line (slice 4).
+
+#### AC-66-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-66-108 Edge
+
+Given a card the player marked as a proxy
+When ownership and the deck total are shown
+Then the card is labelled proxy and is not counted as a physical copy the player owns
+
+#### US-66-104
+
+As a player, I want the product to speed Insights and Sentry on-error replay sample rates set from slice 2's counts (slice 5); the function region chosen by comparing durationMs by route, then set in the dashboard or in the vercel.json that I-63 slice 5 creates (slice 6); and an explicit Prisma connection_limit in the documented production URL, with the infrastructure doc corrected to 500 MB (slice 7)., so that the owner knows what one more active player costs each month, free or paying, which plan limit breaks first and when, and what the product spends with each provider, from dated prices, provider exports and the database's own counts. An alert fires before a limit or a budget is reached, and no player is tracked for it.
+
+#### AC-66-109 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Speed Insights and Sentry on-error replay sample rates set from slice 2's counts (slice 5); the function region chosen by comparing durationMs by route, then set in the dashboard or in the vercel.json that I-63 slice 5 creates (slice 6); and an explicit Prisma connection_limit in the documented production URL, with the infrastructure doc corrected to 500 MB (slice 7).
+
+#### AC-66-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-66-111 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-66-105
+
+As a player, I want the product to a monthly report script that prints every provider's cost with its source, the denominators, the plan-limit table and the break-even under I-30's prices, and stores nothing (slice 8)., so that the owner knows what one more active player costs each month, free or paying, which plan limit breaks first and when, and what the product spends with each provider, from dated prices, provider exports and the database's own counts. An alert fires before a limit or a budget is reached, and no player is tracked for it.
+
+#### AC-66-112 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A monthly report script that prints every provider's cost with its source, the denominators, the plan-limit table and the break-even under I-30's prices, and stores nothing (slice 8). Active players are counted from Deck.updatedAt and, once I-30 slice 1 merges, AiUsage, until I-39's event store replaces them; a missing input shows "not available", never zero.
+
+#### AC-66-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-66-114 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-66-106
+
+As a player, I want the product to later: stored months and the cost section of I-30's owner page (slice 9); Vercel's signed budget.reached webhook (slice 10); daily threshold checks on I-63's job route for database size, Hobby allotments, early AI thresholds and a Speed Insights pause (slice 11); and static regeneration for public deck, profile and commander pages, with the saving measured (slice 12)., so that the owner knows what one more active player costs each month, free or paying, which plan limit breaks first and when, and what the product spends with each provider, from dated prices, provider exports and the database's own counts. An alert fires before a limit or a budget is reached, and no player is tracked for it.
+
+#### AC-66-115 Happy path
+
+Given a signed-out visitor and a public deck
+When the player uses this behaviour
+Then the behaviour holds: Later: stored months and the cost section of I-30's owner page (slice 9); Vercel's signed budget.reached webhook (slice 10); daily threshold checks on I-63's job route for database size, Hobby allotments, early AI thresholds and a Speed Insights pause (slice 11); and static regeneration for public deck, profile and commander pages, with the saving measured (slice 12).
+
+#### AC-66-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-66-117 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-66-107
+
+As a player, I want the product to changes to neighbours, recorded on 2026-11-10: I-30's assumption A2 cites requirement 5, I-05 M3 and the I-59 spec say 500 MB, and the unregistered fallback domain and the function region are I-05 items., so that the owner knows what one more active player costs each month, free or paying, which plan limit breaks first and when, and what the product spends with each provider, from dated prices, provider exports and the database's own counts. An alert fires before a limit or a budget is reached, and no player is tracked for it.
+
+#### AC-66-118 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Changes to neighbours, recorded on 2026-11-10: I-30's assumption A2 cites requirement 5, I-05 M3 and the I-59 spec say 500 MB, and the unregistered fallback domain and the function region are I-05 items. The comment in src/lib/cache-limits.ts still says 512 MB and is corrected with the code.
+
+#### AC-66-119 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-66-120 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+### UX states for this feature
+
+The player-visible outcome is: the owner knows what one more active player costs each month, free or paying, which plan limit breaks first and when, and what the product spends with each provider, from dated prices, provider exports and the database's own counts. An alert fires before a limit or a budget is reached, and no player is tracked for it.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
+
 ### Record moved from the roadmap (2026-11-11)
 
 Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.

@@ -98,12 +98,11 @@ Slice 1 is the one carrying real risk: it introduces the first non-owner writer 
 - Should a public deck accept patches from anyone, as a pull request does? That is a moderation surface, and I-08's report-and-review queue exists precisely because the project decided moderation needs deliberate design. Start invitation-only.
 - Does this initiative need the owner to be able to counter-propose? That is a conversation, and conversations live in I-08.
 
-## Feature contract (Light, 2026-11-11)
+## Feature contract (Full, 2026-11-11)
 
 The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
 
 
-This file is light because the initiative is Later or Parked and is not in I-80 to I-98. The scenarios below are the bar for when it is promoted. They are not a promise to build it next.
 
 ### Summary and problem
 
@@ -126,7 +125,7 @@ See the roadmap persona table. This initiative serves the rows that list its id.
 
 #### US-20-01
 
-As a player, I want the outcome of I-20, so that the work in this file is the reason to build it.
+As a player, I want an owner can invite someone to propose a deck patch, then accept or reject that patch without handing over the deck., so that this initiative's definition of done is met.
 
 #### US-20-02
 
@@ -218,6 +217,170 @@ None beyond the moved record.
 - https://www.reddit.com/r/EDH/comments/1uqynon/
 - https://www.reddit.com/r/EDH/comments/1vzwh0m/
 - https://edhrec.com/guides/how-to-use-archidekt-the-mtg-deckbuilding-site
+
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-20-101
+
+As a player, I want the product to invite a collaborator with a revocable role that can propose a patch and cannot publish it., so that an owner can invite someone to propose a deck patch, then accept or reject that patch without handing over the deck.
+
+#### AC-20-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Invite a collaborator with a revocable role that can propose a patch and cannot publish it.
+
+#### AC-20-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-20-102 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-20-102
+
+As a player, I want the product to let the owner accept or reject the patch, and keep an attribution log., so that an owner can invite someone to propose a deck patch, then accept or reject that patch without handing over the deck.
+
+#### AC-20-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Let the owner accept or reject the patch, and keep an attribution log.
+
+#### AC-20-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-20-105 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-20-103
+
+As a player, I want the product to preserve version history so a patch does not silently overwrite the deck., so that an owner can invite someone to propose a deck patch, then accept or reject that patch without handing over the deck.
+
+#### AC-20-106 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Preserve version history so a patch does not silently overwrite the deck.
+
+#### AC-20-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-20-108 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-20-104
+
+As a player, I want the product to keep the owner's private collection inaccessible to the collaborator., so that an owner can invite someone to propose a deck patch, then accept or reject that patch without handing over the deck.
+
+#### AC-20-109 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Keep the owner's private collection inaccessible to the collaborator.
+
+#### AC-20-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-20-111 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-20-105
+
+As a player, I want the product to leave real-time co-editing out of this initiative., so that an owner can invite someone to propose a deck patch, then accept or reject that patch without handing over the deck.
+
+#### AC-20-112 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Leave real-time co-editing out of this initiative.
+
+#### AC-20-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-20-114 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-20-106
+
+As a player, I want the product to later, behind D-91: a co-author the owner invites by name may edit the card list directly., so that an owner can invite someone to propose a deck patch, then accept or reject that patch without handing over the deck.
+
+#### AC-20-115 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Later, behind D-91: a co-author the owner invites by name may edit the card list directly. Every change is attributed in I-37's history; the co-author never touches settings, privacy, publishing or deletion, and sees no live presence. Moxfield: "Enable other authors to edit this deck" (code, 2026-05-14). Archidekt collaborators cannot change "the deck's main settings" (EDHREC guide, 2025-12-17). The non-goal "Do not start collaboration with live co-editing" stands as written. Added 2026-11-11.
+
+#### AC-20-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-20-117 Edge
+
+Given the account or the cache this behaviour changes
+When the player signs out or the deletion finishes
+Then the next request does not still show the private data
+
+### UX states for this feature
+
+The player-visible outcome is: an owner can invite someone to propose a deck patch, then accept or reject that patch without handing over the deck.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
 
 ### Record moved from the roadmap (2026-11-11)
 

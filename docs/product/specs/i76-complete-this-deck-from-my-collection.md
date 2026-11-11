@@ -399,6 +399,170 @@ Which signals may order candidates is D-88. A full 100-card list generated from 
 
 - https://hearthstone.blizzard.com/en-us/news/22938500/developer-insights-smart-deck-builder
 
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-76-101
+
+As a player, I want the product to owner decisions first: which signals may order candidates and whether model-free completion is free per deck (D-88), and who owns the role targets per bracket (D-64) (slice 0)., so that a player with a commander and part of a deck asks the product to finish it, reviews the proposals slot by slot (owned and free copies first, each with its role and reason, inside colour identity, legality, the target bracket and the budget), applies them as one reviewed change and reverts it in one action; any missing card in a deck, precon copy or import offers an owned card that does the same job.
+
+#### AC-76-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Owner decisions first: which signals may order candidates and whether model-free completion is free per deck (D-88), and who owns the role targets per bracket (D-64) (slice 0).
+
+#### AC-76-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-76-102 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+#### US-76-102
+
+As a player, I want the product to slot roles as versioned data in I-65 slice 1's format, several per card, which the owner may add or remove per deck (slice 1); role targets per bracket from I-28's Recommended ranges, stored once, with a test that fails when the guide and the data differ (slice 2); isLegalCandidate in format rules: identity, legality, copy limits, the Game Changer limit, conservative extra-turn and land-denial classes below Bracket 4, and the companion (slice 3)., so that a player with a commander and part of a deck asks the product to finish it, reviews the proposals slot by slot (owned and free copies first, each with its role and reason, inside colour identity, legality, the target bracket and the budget), applies them as one reviewed change and reverts it in one action; any missing card in a deck, precon copy or import offers an owned card that does the same job.
+
+#### AC-76-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Slot roles as versioned data in I-65 slice 1's format, several per card, which the owner may add or remove per deck (slice 1); role targets per bracket from I-28's Recommended ranges, stored once, with a test that fails when the guide and the data differ (slice 2); isLegalCandidate in format rules: identity, legality, copy limits, the Game Changer limit, conservative extra-turn and land-denial classes below Bracket 4, and the companion (slice 3).
+
+#### AC-76-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-76-105 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+#### US-76-103
+
+As a player, I want the product to the owned pool from CollectionCard, by name until I-67's Oracle IDs (slice 4); proposeCompletion with ranking rule v1 (availability, roles below their minimum, plan fit, curve fit, colour demand, price, then name), lands first, then roles, plan and flex slots, a reason in English and French on every line, and a read-only route (slice 5); the two-card combo guard below Bracket 4, at proposal and before apply (slice 6); twelve partial fixture decks and a before-and-after report as a CI gate on any ranking change (slice 7)., so that a player with a commander and part of a deck asks the product to finish it, reviews the proposals slot by slot (owned and free copies first, each with its role and reason, inside colour identity, legality, the target bracket and the budget), applies them as one reviewed change and reverts it in one action; any missing card in a deck, precon copy or import offers an owned card that does the same job.
+
+#### AC-76-106 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: The owned pool from CollectionCard, by name until I-67's Oracle IDs (slice 4); proposeCompletion with ranking rule v1 (availability, roles below their minimum, plan fit, curve fit, colour demand, price, then name), lands first, then roles, plan and flex slots, a reason in English and French on every line, and a read-only route (slice 5); the two-card combo guard below Bracket 4, at proposal and before apply (slice 6); twelve partial fixture decks and a before-and-after report as a CI gate on any ranking change (slice 7).
+
+#### AC-76-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-76-108 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-76-104
+
+As a player, I want the product to the review panel: a role meter, slot by slot with up to four alternatives, "Fill this role" and "Fill the rest" as explicit buttons, and a before-and-after summary (slice 8); apply and revert through I-58 slice 16's reviewed change set (slice 9); the owned substitute for one missing card, which I-06's missing-card panel, I-17's working copies and I-62's import report call (slice 10)., so that a player with a commander and part of a deck asks the product to finish it, reviews the proposals slot by slot (owned and free copies first, each with its role and reason, inside colour identity, legality, the target bracket and the budget), applies them as one reviewed change and reverts it in one action; any missing card in a deck, precon copy or import offers an owned card that does the same job.
+
+#### AC-76-109 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: The review panel: a role meter, slot by slot with up to four alternatives, "Fill this role" and "Fill the rest" as explicit buttons, and a before-and-after summary (slice 8); apply and revert through I-58 slice 16's reviewed change set (slice 9); the owned substitute for one missing card, which I-06's missing-card panel, I-17's working copies and I-62's import report call (slice 10).
+
+#### AC-76-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-76-111 Edge
+
+Given a list where one name does not resolve
+When the player confirms
+Then the unresolved name is shown first and nothing is written until they accept that list
+
+#### US-76-105
+
+As a player, I want the product to free copies first and a "free copies only" pool (slice 11); a per-card cap and a budget to acquire (slice 12); "owned first" and "any card" pools from I-67's catalogue, with guest and pasted proposals (slice 13); printings through I-57 (slice 14); "Another proposal" with a visible seed (slice 15); EDHREC inclusion as a labelled column with its sample, never the order (slice 16)., so that a player with a commander and part of a deck asks the product to finish it, reviews the proposals slot by slot (owned and free copies first, each with its role and reason, inside colour identity, legality, the target bracket and the budget), applies them as one reviewed change and reverts it in one action; any missing card in a deck, precon copy or import offers an owned card that does the same job.
+
+#### AC-76-112 Happy path
+
+Given a guest with one unsaved session deck
+When the player uses this behaviour
+Then the behaviour holds: Free copies first and a "free copies only" pool (slice 11); a per-card cap and a budget to acquire (slice 12); "owned first" and "any card" pools from I-67's catalogue, with guest and pasted proposals (slice 13); printings through I-57 (slice 14); "Another proposal" with a visible seed (slice 15); EDHREC inclusion as a labelled column with its sample, never the order (slice 16).
+
+#### AC-76-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-76-114 Edge
+
+Given a list where one name does not resolve
+When the player confirms
+Then the unresolved name is shown first and nothing is written until they accept that list
+
+#### US-76-106
+
+As a player, I want the product to later: count-only acceptance events through I-39 (slice 17); measured norms in place of ranges after the owner approves them (slice 18); model rewording of reasons with a post-check (slice 19); an AI mode that picks numbered cards from the legal pool, re-checked by code and scored on I-70's bench (slice 20); the collection-wide allocation of owned copies across decks, a paid candidate (slice 21)., so that a player with a commander and part of a deck asks the product to finish it, reviews the proposals slot by slot (owned and free copies first, each with its role and reason, inside colour identity, legality, the target bracket and the budget), applies them as one reviewed change and reverts it in one action; any missing card in a deck, precon copy or import offers an owned card that does the same job.
+
+#### AC-76-115 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Later: count-only acceptance events through I-39 (slice 17); measured norms in place of ranges after the owner approves them (slice 18); model rewording of reasons with a post-check (slice 19); an AI mode that picks numbered cards from the legal pool, re-checked by code and scored on I-70's bench (slice 20); the collection-wide allocation of owned copies across decks, a paid candidate (slice 21).
+
+#### AC-76-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-76-117 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+### UX states for this feature
+
+The player-visible outcome is: a player with a commander and part of a deck asks the product to finish it, reviews the proposals slot by slot (owned and free copies first, each with its role and reason, inside colour identity, legality, the target bracket and the budget), applies them as one reviewed change and reverts it in one action; any missing card in a deck, precon copy or import offers an owned card that does the same job.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
+
 ### Record moved from the roadmap (2026-11-11)
 
 Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.

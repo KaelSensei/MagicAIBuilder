@@ -2,16 +2,15 @@
 
 **Status:** Shipped  
 **Priority:** Later  
-**Depth:** Light
+**Depth:** Full
 
 This file is the feature spec. It had no engineering-slice spec before 2026-11-11. It has no delivery-slice table, so the dependency generator does not pick slices from it until one is added.
 
-## Feature contract (Light, 2026-11-11)
+## Feature contract (Full, 2026-11-11)
 
 The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
 
 
-This file is light because the initiative is Later or Parked and is not in I-80 to I-98. The scenarios below are the bar for when it is promoted. They are not a promise to build it next.
 
 ### Summary and problem
 
@@ -34,7 +33,7 @@ See the roadmap persona table. This initiative serves the rows that list its id.
 
 #### US-11-01
 
-As a player, I want the outcome of I-11, so that the work in this file is the reason to build it.
+As a player, I want users can understand the interface and card data in a language and market they actually use., so that this initiative's definition of done is met.
 
 #### US-11-02
 
@@ -124,6 +123,280 @@ None beyond the moved record.
 ### Sources
 
 - No external URL in the moved record. The record itself is the source for behaviour that is already in the code.
+
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-11-101
+
+As a player, I want the product to finish and review one additional locale end to end before activating it., so that users can understand the interface and card data in a language and market they actually use.
+
+#### AC-11-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Finish and review one additional locale end to end before activating it.
+
+#### AC-11-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-11-102 Edge
+
+Given the French locale
+When the new controls render
+Then they come from the French catalogue and are not hard-coded English
+
+#### US-11-102
+
+As a player, I want the product to keep dormant catalogs out of routing until human review is complete., so that users can understand the interface and card data in a language and market they actually use.
+
+#### AC-11-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Keep dormant catalogs out of routing until human review is complete.
+
+#### AC-11-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-11-105 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-11-103
+
+As a player, I want the product to complete locale-aware currency formatting without implying that USD data is a local-market quote., so that users can understand the interface and card data in a language and market they actually use.
+
+#### AC-11-106 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Complete locale-aware currency formatting without implying that USD data is a local-market quote.
+
+#### AC-11-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-11-108 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-11-104
+
+As a player, I want the product to test dates, numbers, pluralization, mana symbols and card text together., so that users can understand the interface and card data in a language and market they actually use.
+
+#### AC-11-109 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Test dates, numbers, pluralization, mana symbols and card text together.
+
+#### AC-11-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-11-111 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-11-105
+
+As a player, I want the product to localize page metadata and complete hreflang., so that users can understand the interface and card data in a language and market they actually use.
+
+#### AC-11-112 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Localize page metadata and complete hreflang. generateMetadata in src/app/[locale]/deck/[id]/page.tsx and src/app/[locale]/commanders/[slug]/decks/page.tsx writes English titles and descriptions in both locales. Sitemap entries (entryFor in src/lib/seo/sitemap.ts) carry en and fr alternates but no x-default, which the pages themselves declare through buildAlternates. I-34 slice 1 adds x-default to the sitemap and requires localized metadata on every page it adds or touches.
+
+#### AC-11-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-11-114 Edge
+
+Given the French locale
+When the new controls render
+Then they come from the French catalogue and are not hard-coded English
+
+#### US-11-106
+
+As a player, I want the product to localize the editor's mobile controls., so that users can understand the interface and card data in a language and market they actually use.
+
+#### AC-11-115 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Localize the editor's mobile controls. Below lg, the builder's tab labels "Search", "Deck" and "Stats" are hard-coded English in src/app/[locale]/builder/[deckId]/page.tsx, as are the search colour filter's tooltips, "White" to "Colorless". I-37 slice 7 replaces the tabs with a toolbar whose labels come from the message catalogues; I-13 owns its visual layer. Shipped in #1323: the tab bar and colour picker moved into BuilderMobileTabBar and BuilderColorSearchPicker, and they, the filters toggle, the title bar's action labels and the AI badge read builder.* keys, translated in French. Not checked in a browser.
+
+#### AC-11-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-11-117 Edge
+
+Given the French locale
+When the new controls render
+Then they come from the French catalogue and are not hard-coded English
+
+#### US-11-107
+
+As a player, I want the product to translate the hard-coded English that the 2026-11-10 audit found on dev at 65e6230: about 180 user-visible strings in five bundles., so that users can understand the interface and card data in a language and market they actually use.
+
+#### AC-11-118 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Translate the hard-coded English that the 2026-11-10 audit found on dev at 65e6230: about 180 user-visible strings in five bundles. Several components hard-code a string that already has a catalog key.
+
+#### AC-11-119 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-11-120 Edge
+
+Given the French locale
+When the new controls render
+Then they come from the French catalogue and are not hard-coded English
+
+#### US-11-108
+
+As a player, I want the product to translate the French keys still equal to English: the whole deck.ratings.* block (about 19 keys), profile.followers, followingCount, signInToFollow, followFailed, badgeCommunityBuilder and badgeHighlyRated, plus deck.comparison.secondDeck and deck.stats.removal., so that users can understand the interface and card data in a language and market they actually use.
+
+#### AC-11-121 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Translate the French keys still equal to English: the whole deck.ratings.* block (about 19 keys), profile.followers, followingCount, signInToFollow, followFailed, badgeCommunityBuilder and badgeHighlyRated, plus deck.comparison.secondDeck and deck.stats.removal. In all, 136 of 1,385 French values equal English, most of them legitimately (Foil, CSV).
+
+#### AC-11-122 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-11-123 Edge
+
+Given the French locale
+When the new controls render
+Then they come from the French catalogue and are not hard-coded English
+
+#### US-11-109
+
+As a player, I want the product to type-check t() keys., so that users can understand the interface and card data in a language and market they actually use.
+
+#### AC-11-124 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Type-check t() keys. next-intl has no AppConfig Messages augmentation in the repo, so a misspelt key is not a tsc error.
+
+#### AC-11-125 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-11-126 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-11-110
+
+As a player, I want the product to merge the two catalog parity tests., so that users can understand the interface and card data in a language and market they actually use.
+
+#### AC-11-127 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Merge the two catalog parity tests. src/i18n/catalog.test.ts repeats for French the key-parity check that src/i18n/messages.test.ts runs for all ten locales, and neither compares values.
+
+#### AC-11-128 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-11-129 Edge
+
+Given the French locale
+When the new controls render
+Then they come from the French catalogue and are not hard-coded English
+
+#### US-11-111
+
+As a player, I want the product to stop new hard-coded strings with lint: react/jsx-no-literals with an allowlist of about 36 punctuation and brand strings, plus a targeted no-restricted-syntax rule for literal aria-label, title, placeholder and alt text., so that users can understand the interface and card data in a language and market they actually use.
+
+#### AC-11-130 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Stop new hard-coded strings with lint: react/jsx-no-literals with an allowlist of about 36 punctuation and brand strings, plus a targeted no-restricted-syntax rule for literal aria-label, title, placeholder and alt text. The first comes from eslint-plugin-react, already installed through eslint-config-next, and the second is core ESLint, so no dependency is added. Land them with the last of bundles 1 to 3, so pnpm lint stays at zero warnings. Lint cannot see strings in src/lib; bundles 4 and 5 fix those at the source.
+
+#### AC-11-131 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-11-132 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+### UX states for this feature
+
+The player-visible outcome is: users can understand the interface and card data in a language and market they actually use.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
 
 ### Record moved from the roadmap (2026-11-11)
 

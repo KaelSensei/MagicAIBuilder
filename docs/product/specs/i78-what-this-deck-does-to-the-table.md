@@ -390,6 +390,126 @@ Whether heuristic classes reach the sheet before they are measured is open. Tagg
 - https://magic.wizards.com/en/news/announcements/commander-brackets-beta-update-october-21-2025
 - https://www.reddit.com/r/EDH/comments/1orb6cd/
 
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-78-101
+
+As a player, I want the product to twenty classes in six groups as versioned data in I-65 slice 1's clause format, each match with a scope (each player, each opponent, one opponent, a chosen player) and an Exact or Heuristic label: mass land denial follows Wizards' definition, extra turns list every phrasing, and the monarch means bringing it into the game., so that the deck page lists, with counts and the cards, what the deck gives to, takes from and provokes in the other three players: group hug, gifts, wheels and donation; group slug, mass removal, theft and taxes; goad, forced attacks and attack deterrents; the monarch, the initiative and votes; effects that grow per opponent; and the four categories the bracket rules name (Game Changers, mass land denial, extra turns, two-card combos). Each class is labelled exact or heuristic, never as an opinion, and the Rule 0 sheet and the pod fit check read one line from it.
+
+#### AC-78-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Twenty classes in six groups as versioned data in I-65 slice 1's clause format, each match with a scope (each player, each opponent, one opponent, a chosen player) and an Exact or Heuristic label: mass land denial follows Wizards' definition, extra turns list every phrasing, and the monarch means bringing it into the game. classifyCard, computeTableProfile and a typed table line; punisher stays "not checked" until Tagger clauses (slice 1).
+
+#### AC-78-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-78-102 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-78-102
+
+As a player, I want the product to the builder panel "What this deck does to the table": the table line, each class with its cards and the clause that matched, Exact and Heuristic badges, the bracket-rule group with its zeros, "two-card combos not checked" when Spellbook is down, and English and French templates that pass I-65's verdict-word test with "salty", "archenemy", "threat" and "unfair" added (slice 2)., so that the deck page lists, with counts and the cards, what the deck gives to, takes from and provokes in the other three players: group hug, gifts, wheels and donation; group slug, mass removal, theft and taxes; goad, forced attacks and attack deterrents; the monarch, the initiative and votes; effects that grow per opponent; and the four categories the bracket rules name (Game Changers, mass land denial, extra turns, two-card combos). Each class is labelled exact or heuristic, never as an opinion, and the Rule 0 sheet and the pod fit check read one line from it.
+
+#### AC-78-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: The builder panel "What this deck does to the table": the table line, each class with its cards and the clause that matched, Exact and Heuristic badges, the bracket-rule group with its zeros, "two-card combos not checked" when Spellbook is down, and English and French templates that pass I-65's verdict-word test with "salty", "archenemy", "threat" and "unfair" added (slice 2).
+
+#### AC-78-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-78-105 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-78-103
+
+As a player, I want the product to the Rule 0 sheet: the table line in I-15's calculated column, and computed counts with their cards beside the declared combos, extra turns and resource denial fields, with "copy into my sheet"; no declared field is ever filled (slice 3)., so that the deck page lists, with counts and the cards, what the deck gives to, takes from and provokes in the other three players: group hug, gifts, wheels and donation; group slug, mass removal, theft and taxes; goad, forced attacks and attack deterrents; the monarch, the initiative and votes; effects that grow per opponent; and the four categories the bracket rules name (Game Changers, mass land denial, extra turns, two-card combos). Each class is labelled exact or heuristic, never as an opinion, and the Rule 0 sheet and the pod fit check read one line from it.
+
+#### AC-78-106 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: The Rule 0 sheet: the table line in I-15's calculated column, and computed counts with their cards beside the declared combos, extra turns and resource denial fields, with "copy into my sheet"; no declared field is ever filled (slice 3).
+
+#### AC-78-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-78-108 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-78-104
+
+As a player, I want the product to later: about 30 owner-labelled decks and precision and recall per class on the methods page, with a floor that takes a weak class off the sheet (slice 4); each consented deck's line in I-15's pod fit check, with mismatches worded as questions that name the cards (slice 5); "built on the board or from hand" per route, labelled estimate (slice 6); the owner's switch for public pages (slice 7); Tagger clauses and the punisher class after L-22 (slice 8); community salt beside the profile, labelled as opinion, after D-25 (slice 9)., so that the deck page lists, with counts and the cards, what the deck gives to, takes from and provokes in the other three players: group hug, gifts, wheels and donation; group slug, mass removal, theft and taxes; goad, forced attacks and attack deterrents; the monarch, the initiative and votes; effects that grow per opponent; and the four categories the bracket rules name (Game Changers, mass land denial, extra turns, two-card combos). Each class is labelled exact or heuristic, never as an opinion, and the Rule 0 sheet and the pod fit check read one line from it.
+
+#### AC-78-109 Happy path
+
+Given a signed-out visitor and a public deck
+When the player uses this behaviour
+Then the behaviour holds: Later: about 30 owner-labelled decks and precision and recall per class on the methods page, with a floor that takes a weak class off the sheet (slice 4); each consented deck's line in I-15's pod fit check, with mismatches worded as questions that name the cards (slice 5); "built on the board or from hand" per route, labelled estimate (slice 6); the owner's switch for public pages (slice 7); Tagger clauses and the punisher class after L-22 (slice 8); community salt beside the profile, labelled as opinion, after D-25 (slice 9).
+
+#### AC-78-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-78-111 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+### UX states for this feature
+
+The player-visible outcome is: the deck page lists, with counts and the cards, what the deck gives to, takes from and provokes in the other three players: group hug, gifts, wheels and donation; group slug, mass removal, theft and taxes; goad, forced attacks and attack deterrents; the monarch, the initiative and votes; effects that grow per opponent; and the four categories the bracket rules name (Game Changers, mass land denial, extra turns, two-card combos). Each class is labelled exact or heuristic, never as an opinion, and the Rule 0 sheet and the pod fit check read one line from it.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
+
 ### Record moved from the roadmap (2026-11-11)
 
 Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.

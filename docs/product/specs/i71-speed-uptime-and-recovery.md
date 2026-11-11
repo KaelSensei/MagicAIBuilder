@@ -378,6 +378,192 @@ A 24-hour loss target, and whether point-in-time recovery waits for revenue, are
 - https://supabase.com/pricing
 - https://vercel.com/docs/speed-insights/limits-and-pricing
 
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-71-101
+
+As a player, I want the product to slice 0, no code: the 99.5% objective, a 24-hour data-loss target and a 4-hour restore target, the export runner (a scheduled GitHub workflow or the VPS) and its storage account, the phone channel, the field-data option, and whether Lighthouse becomes a required check on promotion PRs., so that if the database were lost tonight, yesterday's decks come back within four hours from an encrypted copy kept off the production stack, by a procedure tested every quarter; the owner's phone rings within 15 minutes of an outage; and each key route has a speed budget, measured on real players or enforced in CI.
+
+#### AC-71-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Slice 0, no code: the 99.5% objective, a 24-hour data-loss target and a 4-hour restore target, the export runner (a scheduled GitHub workflow or the VPS) and its storage account, the phone channel, the field-data option, and whether Lighthouse becomes a required check on promotion PRs. Point-in-time recovery is option (f) of D-04.
+
+#### AC-71-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-71-102 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-71-102
+
+As a player, I want **Owner awareness, now: a production reset with no backup.** docs/engineering/infrastructure.md lines 348 to 364 give npx prisma db push --force-reset against the production DATABASE_URL, while production on Supabase Free keeps no backups and no export exists (verified on origin/dev at 72fbfc1)., so that if the database were lost tonight, yesterday's decks come back within four hours from an encrypted copy kept off the production stack, by a procedure tested every quarter; the owner's phone rings within 15 minutes of an outage; and each key route has a speed budget, measured on real players or enforced in CI.
+
+#### AC-71-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then **Owner awareness, now: a production reset with no backup.** docs/engineering/infrastructure.md lines 348 to 364 give npx prisma db push --force-reset against the production DATABASE_URL, while production on Supabase Free keeps no backups and no export exists (verified on origin/dev at 72fbfc1). Slice 1 guards it: a pnpm script for production schema changes takes an export first and refuses --force-reset and migrate reset for a production host, and the "Production" reset section is removed.
+
+#### AC-71-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-71-105 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-71-103
+
+As a player, I want the product to a daily export of the public schema, all data except the three cache tables, encrypted with the owner's public key before it leaves the runner and never uploaded as a workflow artifact of this public repository, kept 14 daily, 8 weekly and 12 monthly in object storage outside Vercel and Supabase, with a manifest and a heartbeat that alerts on a missing export, a 20% size drop or an empty table (slice 2)., so that if the database were lost tonight, yesterday's decks come back within four hours from an encrypted copy kept off the production stack, by a procedure tested every quarter; the owner's phone rings within 15 minutes of an outage; and each key route has a speed budget, measured on real players or enforced in CI.
+
+#### AC-71-106 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A daily export of the public schema, all data except the three cache tables, encrypted with the owner's public key before it leaves the runner and never uploaded as a workflow artifact of this public repository, kept 14 daily, 8 weekly and 12 monthly in object storage outside Vercel and Supabase, with a manifest and a heartbeat that alerts on a missing export, a 20% size drop or an empty table (slice 2).
+
+#### AC-71-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-71-108 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-71-104
+
+As a player, I want the product to a quarterly restore drill into a scratch database: row counts against the manifest, the schema against prisma/schema.prisma, a smoke script, and the restore time recorded in docs/engineering/restore-drills.md., so that if the database were lost tonight, yesterday's decks come back within four hours from an encrypted copy kept off the production stack, by a procedure tested every quarter; the owner's phone rings within 15 minutes of an outage; and each key route has a speed budget, measured on real players or enforced in CI.
+
+#### AC-71-109 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A quarterly restore drill into a scratch database: row counts against the manifest, the schema against prisma/schema.prisma, a smoke script, and the restore time recorded in docs/engineering/restore-drills.md. Once I-38's deletion tombstone exists, every deletion recorded after the export is re-applied before the database serves players (slice 3).
+
+#### AC-71-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-71-111 Edge
+
+Given the account or the cache this behaviour changes
+When the player signs out or the deletion finishes
+Then the next request does not still show the private data
+
+#### US-71-105
+
+As a player, I want the product to alerts: "down" reaches the owner's phone within 15 minutes and never on one failed check, with a page check of / beside I-52's /api/health monitor, and everything else arrives by email at most once a day (slice 4); a runbook with one section per scenario, an incident record template and the additive-migration rule (slice 5)., so that if the database were lost tonight, yesterday's decks come back within four hours from an encrypted copy kept off the production stack, by a procedure tested every quarter; the owner's phone rings within 15 minutes of an outage; and each key route has a speed budget, measured on real players or enforced in CI.
+
+#### AC-71-112 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Alerts: "down" reaches the owner's phone within 15 minutes and never on one failed check, with a page check of / beside I-52's /api/health monitor, and everything else arrives by email at most once a day (slice 4); a runbook with one section per scenario, an incident record template and the additive-migration rule (slice 5).
+
+#### AC-71-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-71-114 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-71-106
+
+As a player, I want the product to cI budgets that cannot flake: Lighthouse with explicit median-run aggregation and LCP and CLS per URL (slice 6), compressed JavaScript per key route against perf-budgets.json (slice 7), and Prisma queries per request on a seeded fixture, which also lets Lighthouse audit a deck page and a commander listing (slice 8)., so that if the database were lost tonight, yesterday's decks come back within four hours from an encrypted copy kept off the production stack, by a procedure tested every quarter; the owner's phone rings within 15 minutes of an outage; and each key route has a speed budget, measured on real players or enforced in CI.
+
+#### AC-71-115 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: CI budgets that cannot flake: Lighthouse with explicit median-run aggregation and LCP and CLS per URL (slice 6), compressed JavaScript per key route against perf-budgets.json (slice 7), and Prisma queries per request on a seeded fixture, which also lets Lighthouse audit a deck page and a commander listing (slice 8).
+
+#### AC-71-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-71-117 Edge
+
+Given the same inputs as a previous run
+When the player runs it again
+Then the reported figures match the first run
+
+#### US-71-107
+
+As a player, I want the product to later: a first-party vitals beacon that stores daily histograms only, off until L-13 (b) is answered (slice 9); a paginated collection API and a virtualised list within 200 ms of INP on 20,000 rows (slice 10); degraded modes, a dated Spellbook fallback, "Saving paused" and a copilot "unavailable" state (slice 11); the readiness check that I-30 slice 9 waits for (slice 12)., so that if the database were lost tonight, yesterday's decks come back within four hours from an encrypted copy kept off the production stack, by a procedure tested every quarter; the owner's phone rings within 15 minutes of an outage; and each key route has a speed budget, measured on real players or enforced in CI.
+
+#### AC-71-118 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Later: a first-party vitals beacon that stores daily histograms only, off until L-13 (b) is answered (slice 9); a paginated collection API and a virtualised list within 200 ms of INP on 20,000 rows (slice 10); degraded modes, a dated Spellbook fallback, "Saving paused" and a copilot "unavailable" state (slice 11); the readiness check that I-30 slice 9 waits for (slice 12).
+
+#### AC-71-119 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-71-120 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+### UX states for this feature
+
+The player-visible outcome is: if the database were lost tonight, yesterday's decks come back within four hours from an encrypted copy kept off the production stack, by a procedure tested every quarter; the owner's phone rings within 15 minutes of an outage; and each key route has a speed budget, measured on real players or enforced in CI.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
+
 ### Record moved from the roadmap (2026-11-11)
 
 Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.

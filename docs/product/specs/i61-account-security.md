@@ -409,6 +409,258 @@ Recovery when every second factor is lost, and the minimum password length, are 
 - https://authjs.dev/getting-started/authentication/webauthn
 - https://www.rfc-editor.org/rfc/rfc9116
 
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-61-101
+
+As a player, I want the product to verify passwords in full: Argon2id for new hashes, a bcrypt hash upgraded at the next sign-in, 12 to 128 characters for new passwords, autocomplete and a show-password toggle (slice 5, first)., so that a player sees where their account is signed in and ends any session, signs in with a passkey, turns on two-step sign-in with recovery codes, changes or resets a password, and gets a notice when something changes. A forgotten password no longer means a lost account, and the throttle that slows an attacker never locks out the owner.
+
+#### AC-61-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Verify passwords in full: Argon2id for new hashes, a bcrypt hash upgraded at the next sign-in, 12 to 128 characters for new passwords, autocomplete and a show-password toggle (slice 5, first). Today signup (src/app/api/auth/signup/route.ts) accepts 8 to 128 characters and hashes with bcryptjs cost 12. bcryptjs 3.0.3 reads at most 72 bytes and does not check the length, so two passwords that share their first 72 bytes both work.
+
+#### AC-61-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-61-102 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-61-102
+
+As a player, I want the product to a session registry: a UserSession row per sign-in, its id in the JWT, one resolver for requireAuth and the ten direct auth() reads, sign-out and deletion that revoke the row, and limits of 7 days inactive and 30 days absolute (slice 2)., so that a player sees where their account is signed in and ends any session, signs in with a passkey, turns on two-step sign-in with recovery codes, changes or resets a password, and gets a notice when something changes. A forgotten password no longer means a lost account, and the throttle that slows an attacker never locks out the owner.
+
+#### AC-61-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A session registry: a UserSession row per sign-in, its id in the JWT, one resolver for requireAuth and the ten direct auth() reads, sign-out and deletion that revoke the row, and limits of 7 days inactive and 30 days absolute (slice 2). Today src/lib/auth/edge-config.ts issues JWT sessions of 7 days, re-issued once a day on use, so an active session never expires. Sign-out only clears the cookie (src/components/auth/UserMenu.tsx), so a copied token stays valid for up to 7 days, and ten pages and routes read auth() without the user lookup that requireAuth makes since #1319.
+
+#### AC-61-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-61-105 Edge
+
+Given the account or the cache this behaviour changes
+When the player signs out or the deletion finishes
+Then the next request does not still show the private data
+
+#### US-61-103
+
+As a player, I want the product to re-authentication within the last 10 minutes before sensitive actions: password, passkeys, two-step, recovery codes, email, Google linking, sessions, API keys and account deletion (slice 3)., so that a player sees where their account is signed in and ends any session, signs in with a passkey, turns on two-step sign-in with recovery codes, changes or resets a password, and gets a notice when something changes. A forgotten password no longer means a lost account, and the throttle that slows an attacker never locks out the owner.
+
+#### AC-61-106 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Re-authentication within the last 10 minutes before sensitive actions: password, passkeys, two-step, recovery codes, email, Google linking, sessions, API keys and account deletion (slice 3). Today DELETE /api/user/profile and POST /api/user/api-keys act on the session alone.
+
+#### AC-61-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-61-108 Edge
+
+Given the account or the cache this behaviour changes
+When the player signs out or the deletion finishes
+Then the next request does not still show the private data
+
+#### US-61-104
+
+As a player, I want the product to settings → Security: active sessions with a device label and a country, never the IP address, "sign out everywhere else" and a 90-day event log (slice 4)., so that a player sees where their account is signed in and ends any session, signs in with a passkey, turns on two-step sign-in with recovery codes, changes or resets a password, and gets a notice when something changes. A forgotten password no longer means a lost account, and the throttle that slows an attacker never locks out the owner.
+
+#### AC-61-109 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Settings → Security: active sessions with a device label and a country, never the IP address, "sign out everywhere else" and a 90-day event log (slice 4).
+
+#### AC-61-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-61-111 Edge
+
+Given the account or the cache this behaviour changes
+When the player signs out or the deletion finishes
+Then the next request does not still show the private data
+
+#### US-61-105
+
+As a player, I want the product to change the password with the current one, with an offer to end other sessions (slice 6), and a breached-password check at signup, change and sign-in that sends only the first five hex characters of a SHA-1 hash to Pwned Passwords, with a bundled list as fallback (slice 7)., so that a player sees where their account is signed in and ends any session, signs in with a passkey, turns on two-step sign-in with recovery codes, changes or resets a password, and gets a notice when something changes. A forgotten password no longer means a lost account, and the throttle that slows an attacker never locks out the owner.
+
+#### AC-61-112 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Change the password with the current one, with an offer to end other sessions (slice 6), and a breached-password check at signup, change and sign-in that sends only the first five hex characters of a SHA-1 hash to Pwned Passwords, with a bundled list as fallback (slice 7). Today no route changes a password, and nothing refuses a common one.
+
+#### AC-61-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-61-114 Edge
+
+Given the account or the cache this behaviour changes
+When the player signs out or the deletion finishes
+Then the next request does not still show the private data
+
+#### US-61-106
+
+As a player, I want the product to passkeys with autofill, rename, removal and a last-way-in rule (slice 8), and optional two-step sign-in with ten single-use recovery codes, asked after password and Google sign-in (slice 9)., so that a player sees where their account is signed in and ends any session, signs in with a passkey, turns on two-step sign-in with recovery codes, changes or resets a password, and gets a notice when something changes. A forgotten password no longer means a lost account, and the throttle that slows an attacker never locks out the owner.
+
+#### AC-61-115 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Passkeys with autofill, rename, removal and a last-way-in rule (slice 8), and optional two-step sign-in with ten single-use recovery codes, asked after password and Google sign-in (slice 9). No SMS codes.
+
+#### AC-61-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-61-117 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-61-107
+
+As a player, I want the product to emailVerified from Google's claim, linking Google from Settings, and clearing the stored Google tokens nothing reads (slice 10); Google's Cross-Account Protection receiver (slice 15)., so that a player sees where their account is signed in and ends any session, signs in with a passkey, turns on two-step sign-in with recovery codes, changes or resets a password, and gets a notice when something changes. A forgotten password no longer means a lost account, and the throttle that slows an attacker never locks out the owner.
+
+#### AC-61-118 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then emailVerified from Google's claim, linking Google from Settings, and clearing the stored Google tokens nothing reads (slice 10); Google's Cross-Account Protection receiver (slice 15).
+
+#### AC-61-119 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-61-120 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-61-108
+
+As a player, I want the product to login throttling on I-05's shared store: a per-IP bucket across all addresses, a per-address backoff to a 15-minute cap, the password disabled after 100 consecutive failures, a separate bucket for the owner's devices, and the same answer for an unknown address (slice 1)., so that a player sees where their account is signed in and ends any session, signs in with a passkey, turns on two-step sign-in with recovery codes, changes or resets a password, and gets a notice when something changes. A forgotten password no longer means a lost account, and the throttle that slows an attacker never locks out the owner.
+
+#### AC-61-121 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Login throttling on I-05's shared store: a per-IP bucket across all addresses, a per-address backoff to a 15-minute cap, the password disabled after 100 consecutive failures, a separate bucket for the owner's devices, and the same answer for an unknown address (slice 1). Today src/lib/rate-limit.ts keeps counters in each instance's memory, and the login limit in src/lib/auth/config.ts allows 10 attempts per 15 minutes keyed on the email only, successes included. One password tried across many emails is never limited, and ten failures lock the owner out of that instance. Passkey, Google and reset sign-in stay open while password attempts wait.
+
+#### AC-61-122 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-61-123 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-61-109
+
+As a player, I want the product to after I-63 slice 7 (formerly I-38 slice 13): email verification and a neutral signup answer that ends the 409 enumeration (slice 11); password reset, which hands a never-verified account to whoever proves the mailbox, and "set a password" for Google-only accounts (slice 12); security notice emails with "This wasn't me" (slice 13); and an email change with a revert link (slice 14)., so that a player sees where their account is signed in and ends any session, signs in with a passkey, turns on two-step sign-in with recovery codes, changes or resets a password, and gets a notice when something changes. A forgotten password no longer means a lost account, and the throttle that slows an attacker never locks out the owner.
+
+#### AC-61-124 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: After I-63 slice 7 (formerly I-38 slice 13): email verification and a neutral signup answer that ends the 409 enumeration (slice 11); password reset, which hands a never-verified account to whoever proves the mailbox, and "set a password" for Google-only accounts (slice 12); security notice emails with "This wasn't me" (slice 13); and an email change with a revert link (slice 14). Today no password reset exists and no email is ever sent, so a player who forgets the password, or whose address was squatted before #1321, has no way back.
+
+#### AC-61-125 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-61-126 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-61-110
+
+As a player, I want **A security contact (gap sweep, 2026-11-10).** No security.txt and no vulnerability disclosure policy exist on origin/dev at 72fbfc1, only docs/security/security.md., so that a player sees where their account is signed in and ends any session, signs in with a passkey, turns on two-step sign-in with recovery codes, changes or resets a password, and gets a notice when something changes. A forgotten password no longer means a lost account, and the throttle that slows an attacker never locks out the owner.
+
+#### AC-61-127 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then **A security contact (gap sweep, 2026-11-10).** No security.txt and no vulnerability disclosure policy exist on origin/dev at 72fbfc1, only docs/security/security.md. Serve /.well-known/security.txt (Contact, Expires, Policy, Preferred-Languages en, fr) under RFC 9116, linked to a short disclosure policy page. Done means: a test fails when Expires is less than 30 days away. The contact address is owner decision D-79, and no personal email goes into the docs.
+
+#### AC-61-128 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-61-129 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+### UX states for this feature
+
+The player-visible outcome is: a player sees where their account is signed in and ends any session, signs in with a passkey, turns on two-step sign-in with recovery codes, changes or resets a password, and gets a notice when something changes. A forgotten password no longer means a lost account, and the throttle that slows an attacker never locks out the owner.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
+
 ### Record moved from the roadmap (2026-11-11)
 
 Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.

@@ -374,6 +374,192 @@ Whether the first mulligan is free in Duel Commander is unanswered. Pauper Comma
 
 - https://magic.wizards.com/en/news/mtg-arena/introducing-ranked-brawl
 
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-42-101
+
+As a player, I want the product to a format picker at creation and in deck settings; switching re-validates and removes no card (slice 1)., so that a player chooses a deck's format, sees each legality verdict with its named, dated list, and builds and playtests a Duel Commander deck at 20 life with no free mulligan and no banned-as-commander card in the command zone.
+
+#### AC-42-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A format picker at creation and in deck settings; switching re-validates and removes no card (slice 1). Today src/components/deck/FormatSelector.tsx is never rendered and createDeck sends no format, so every deck created in the app is a Commander deck. Duel Commander lists from the MTGTop8 meta panel (src/lib/meta/mtgtop8.ts, src/components/deck/MetaPanel.tsx) and Moxfield duel imports (src/lib/import/url-import.ts) land in those decks, with the multiplayer banned list, 40 life and the free mulligan.
+
+#### AC-42-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-42-102 Edge
+
+Given a list where one name does not resolve
+When the player confirms
+Then the unresolved name is shown first and nothing is written until they accept that list
+
+#### US-42-102
+
+As a player, I want the product to legality computed on the server from Scryfall at each deck load, with a per-format meaning for restricted and the fetch date shown; a client-sent isBanned is never trusted (slice 2)., so that a player chooses a deck's format, sees each legality verdict with its named, dated list, and builds and playtests a Duel Commander deck at 20 life with no free mulligan and no banned-as-commander card in the command zone.
+
+#### AC-42-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Legality computed on the server from Scryfall at each deck load, with a per-format meaning for restricted and the fetch date shown; a client-sent isBanned is never trusted (slice 2).
+
+#### AC-42-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-42-105 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-42-103
+
+As a player, I want the product to a Duel Commander format: 100 cards, 20 life, no free mulligan, no bracket scoring or Game Changer toast, and banned-as-commander cards excluded from the commander picker (slice 3)., so that a player chooses a deck's format, sees each legality verdict with its named, dated list, and builds and playtests a Duel Commander deck at 20 life with no free mulligan and no banned-as-commander card in the command zone.
+
+#### AC-42-106 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A Duel Commander format: 100 cards, 20 life, no free mulligan, no bracket scoring or Game Changer toast, and banned-as-commander cards excluded from the commander picker (slice 3).
+
+#### AC-42-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-42-108 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+#### US-42-104
+
+As a player, I want the product to one commander cast from the command zone per game with two commanders, and imports and meta labels that offer a Duel Commander deck instead of adding its cards silently to a Commander deck (slices 4–5)., so that a player chooses a deck's format, sees each legality verdict with its named, dated list, and builds and playtests a Duel Commander deck at 20 life with no free mulligan and no banned-as-commander card in the command zone.
+
+#### AC-42-109 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: One commander cast from the command zone per game with two commanders, and imports and meta labels that offer a Duel Commander deck instead of adding its cards silently to a Commander deck (slices 4–5).
+
+#### AC-42-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-42-111 Edge
+
+Given a list where one name does not resolve
+When the player confirms
+Then the unresolved name is shown first and nothing is written until they accept that list
+
+#### US-42-105
+
+As a player, I want the product to a source register that names duelcommander.org, and a scheduled drift check against Scryfall that marks a list "under review" on a mismatch (slice 6)., so that a player chooses a deck's format, sees each legality verdict with its named, dated list, and builds and playtests a Duel Commander deck at 20 life with no free mulligan and no banned-as-commander card in the command zone.
+
+#### AC-42-112 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A source register that names duelcommander.org, and a scheduled drift check against Scryfall that marks a list "under review" on a mismatch (slice 6).
+
+#### AC-42-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-42-114 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-42-106
+
+As a player, I want the product to later: a player-count choice in the playtest, which closes I-07's follow-up from #1301; the Brawl split; Oathbreaker; Pauper Commander; ban notices on saved decks; cEDH link-outs; Canadian Highlander; and Tiny Leaders, parked on demand (slices 7–14)., so that a player chooses a deck's format, sees each legality verdict with its named, dated list, and builds and playtests a Duel Commander deck at 20 life with no free mulligan and no banned-as-commander card in the command zone.
+
+#### AC-42-115 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Later: a player-count choice in the playtest, which closes I-07's follow-up from #1301; the Brawl split; Oathbreaker; Pauper Commander; ban notices on saved decks; cEDH link-outs; Canadian Highlander; and Tiny Leaders, parked on demand (slices 7–14).
+
+#### AC-42-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-42-117 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-42-107
+
+As a player, I want the product to correct the Brawl row (2026-11-11) and record Arena's Competitive Brawl: ten banned commanders, deck composition "not a factor for matchmaking", and "There is no free mulligan in Competitive Brawl" (Wizards, 2026-06-08)., so that a player chooses a deck's format, sees each legality verdict with its named, dated list, and builds and playtests a Duel Commander deck at 20 life with no free mulligan and no banned-as-commander card in the command zone.
+
+#### AC-42-118 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Correct the Brawl row (2026-11-11) and record Arena's Competitive Brawl: ten banned commanders, deck composition "not a factor for matchmaking", and "There is no free mulligan in Competitive Brawl" (Wizards, 2026-06-08). Wizards' own article dates Ranked Brawl to an event "From June 2–15" and Competitive Brawl to "June 23"; it never mentions 2023, and no source for a 2023 ranked Brawl was found. Requirement 4.3 sets the free mulligan by player count, which cannot model Arena's two-player Competitive Brawl. Added 2026-11-11.
+
+#### AC-42-119 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-42-120 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+### UX states for this feature
+
+The player-visible outcome is: a player chooses a deck's format, sees each legality verdict with its named, dated list, and builds and playtests a Duel Commander deck at 20 life with no free mulligan and no banned-as-commander card in the command zone.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
+
 ### Record moved from the roadmap (2026-11-11)
 
 Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.

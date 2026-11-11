@@ -134,6 +134,104 @@ Outside demand was not found. The panel stays Later until players record session
 
 - https://playgroup.gg/playgroup-live/how-sparring-works
 
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-81-101
+
+As a player, I want the product to for one snapshot, aggregate recorded sessions: count, the turn the commander was first cast, lands played on turns 1 to 5, and cards drawn and never cast., so that after several recorded goldfish sessions of one deck version, the player sees what those sessions did — when the commander was first cast, how many lands were played by turn, which cards were drawn and never cast — with the session count, and with no win rate.
+
+#### AC-81-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: For one snapshot, aggregate recorded sessions: count, the turn the commander was first cast, lands played on turns 1 to 5, and cards drawn and never cast. Ignore sessions recorded before #1307, which dealt the wrong library.
+
+#### AC-81-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-81-102 Edge
+
+Given the account or the cache this behaviour changes
+When the player signs out or the deletion finishes
+Then the next request does not still show the private data
+
+#### US-81-102
+
+As a player, I want the product to below five sessions, show the count and the sentence "Not enough sessions", and no percentage., so that after several recorded goldfish sessions of one deck version, the player sees what those sessions did — when the commander was first cast, how many lands were played by turn, which cards were drawn and never cast — with the session count, and with no win rate.
+
+#### AC-81-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Below five sessions, show the count and the sentence "Not enough sessions", and no percentage.
+
+#### AC-81-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-81-105 Edge
+
+Given the account or the cache this behaviour changes
+When the player signs out or the deletion finishes
+Then the next request does not still show the private data
+
+#### US-81-103
+
+As a player, I want the product to label the panel "Goldfish., so that after several recorded goldfish sessions of one deck version, the player sees what those sessions did — when the commander was first cast, how many lands were played by turn, which cards were drawn and never cast — with the session count, and with no win rate.
+
+#### AC-81-106 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Label the panel "Goldfish. No opponents. Not a win rate." Do not rank cards. Do not send the panel to a model.
+
+#### AC-81-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-81-108 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+### UX states for this feature
+
+The player-visible outcome is: after several recorded goldfish sessions of one deck version, the player sees what those sessions did — when the commander was first cast, how many lands were played by turn, which cards were drawn and never cast — with the session count, and with no win rate.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
+
 ### Record moved from the roadmap (2026-11-11)
 
 Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.

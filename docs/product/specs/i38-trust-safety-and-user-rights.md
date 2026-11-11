@@ -375,6 +375,324 @@ Who moderates, and how fast, is an owner question. The lawyer questions are alre
 - https://company.wizards.com/en/legal/fancontentpolicy
 - https://eur-lex.europa.eu/eli/reg/2016/679/oj
 
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-38-101
+
+As a player, I want the product to slice 0, no code: counsel's written answers to the spec's lawyer questions, added to I-30's slice 0., so that a player can report anything public, learn why something was hidden and contest it, block another player, read who runs the site and how their data is used, download everything tied to their account and delete it for good.
+
+#### AC-38-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Slice 0, no code: counsel's written answers to the spec's lawyer questions, added to I-30's slice 0.
+
+#### AC-38-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-38-102 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-38-102
+
+As a player, I want the product to a legal notice and a DSA contact page in French and English, linked from every footer (slice 1)., so that a player can report anything public, learn why something was hidden and contest it, block another player, read who runs the site and how their data is used, download everything tied to their account and delete it for good.
+
+#### AC-38-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A legal notice and a DSA contact page in French and English, linked from every footer (slice 1).
+
+#### AC-38-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-38-105 Edge
+
+Given the French locale
+When the new controls render
+Then they come from the French catalogue and are not hard-coded English
+
+#### US-38-103
+
+As a player, I want the product to end the session when an account is deleted, with a 7-day tombstone and a regression test that replays a still-valid JWT (slice 2, first)., so that a player can report anything public, learn why something was hidden and contest it, block another player, read who runs the site and how their data is used, download everything tied to their account and delete it for good.
+
+#### AC-38-106 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: End the session when an account is deleted, with a 7-day tombstone and a regression test that replays a still-valid JWT (slice 2, first). Today DELETE /api/user/profile (src/app/api/user/profile/route.ts) does not sign out. Until #1319, resolveAuthenticatedUser (src/lib/auth/helpers.ts) re-created the deleted user from the token's email on the next request. I-05 records the same defect.
+
+#### AC-38-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-38-108 Edge
+
+Given the account or the cache this behaviour changes
+When the player signs out or the deletion finishes
+Then the next request does not still show the private data
+
+#### US-38-104
+
+As a player, I want the product to apply the deletion cascade of the spec's table 6.4 (slice 3)., so that a player can report anything public, learn why something was hidden and contest it, block another player, read who runs the site and how their data is used, download everything tied to their account and delete it for good.
+
+#### AC-38-109 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Apply the deletion cascade of the spec's table 6.4 (slice 3). Today DeckComment.parent cascades (prisma/schema.prisma), so deleting an account deletes every reply other players wrote under its comments, and DeckReport cascades from its reporter, so the reports the user filed disappear with their decisions. Replies must survive under a cleared comment, forks must show a neutral label, and reports and decisions must stay, anonymised.
+
+#### AC-38-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-38-111 Edge
+
+Given the account or the cache this behaviour changes
+When the player signs out or the deletion finishes
+Then the next request does not still show the private data
+
+#### US-38-105
+
+As a player, I want the product to a full JSON export with a versioned schema and a guard test, then a Settings → Account page that downloads it and deletes the account after re-authentication (slices 4–5)., so that a player can report anything public, learn why something was hidden and contest it, block another player, read who runs the site and how their data is used, download everything tied to their account and delete it for good.
+
+#### AC-38-112 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A full JSON export with a versioned schema and a guard test, then a Settings → Account page that downloads it and deletes the account after re-authentication (slices 4–5).
+
+#### AC-38-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-38-114 Edge
+
+Given the account or the cache this behaviour changes
+When the player signs out or the deletion finishes
+Then the next request does not still show the private data
+
+#### US-38-106
+
+As a player, I want the product to a privacy policy rendered from the retention constants and listing every processor, and terms with moderation rules and a minimum age, accepted and recorded at signup (slices 6–7)., so that a player can report anything public, learn why something was hidden and contest it, block another player, read who runs the site and how their data is used, download everything tied to their account and delete it for good.
+
+#### AC-38-115 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A privacy policy rendered from the retention constants and listing every processor, and terms with moderation rules and a minimum age, accepted and recorded at signup (slices 6–7). Today src/instrumentation-client.ts records Sentry Session Replay for 1% of all sessions and every session with an error, and prompts go to Anthropic with OpenAI as fallback (src/app/api/ai/build/route.ts, src/app/api/ai/suggest/route.ts); none of this is disclosed, because no privacy page exists. I-39 slice 4 sets random-session replay to zero.
+
+#### AC-38-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-38-117 Edge
+
+Given the account or the cache this behaviour changes
+When the player signs out or the deletion finishes
+Then the next request does not still show the private data
+
+#### US-38-107
+
+As a player, I want the product to return only the fields the share view needs from GET /api/share/[token]., so that a player can report anything public, learn why something was hidden and contest it, block another player, read who runs the site and how their data is used, download everything tied to their account and delete it for good.
+
+#### AC-38-118 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Return only the fields the share view needs from GET /api/share/[token]. src/app/api/share/[token]/route.ts returned the whole deck row minus the token, userId, budget and manualBracket included. Shipped in #1325 through the SHARED_DECK_SELECT allowlist; I-08 records the same item.
+
+#### AC-38-119 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-38-120 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+#### US-38-108
+
+As a player, I want the product to a generic Report for every public item with a signed-out notice form and an acknowledgement, then hide, restore and posting restrictions filtered from every public surface (slices 8–9)., so that a player can report anything public, learn why something was hidden and contest it, block another player, read who runs the site and how their data is used, download everything tied to their account and delete it for good.
+
+#### AC-38-121 Happy path
+
+Given a signed-out visitor and a public deck
+When the player uses this behaviour
+Then the behaviour holds: A generic Report for every public item with a signed-out notice form and an acknowledgement, then hide, restore and posting restrictions filtered from every public surface (slices 8–9).
+
+#### AC-38-122 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-38-123 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-38-109
+
+As a player, I want the product to statements of reasons to the author and the notifier, a police-referral action and appeals within six months (slices 10–11)., so that a player can report anything public, learn why something was hidden and contest it, block another player, read who runs the site and how their data is used, download everything tied to their account and delete it for good.
+
+#### AC-38-124 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Statements of reasons to the author and the notifier, a police-referral action and appeals within six months (slices 10–11).
+
+#### AC-38-125 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-38-126 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-38-110
+
+As a player, I want the product to block, a per-deck comment switch, and rate limits on comments and reviews (slice 12)., so that a player can report anything public, learn why something was hidden and contest it, block another player, read who runs the site and how their data is used, download everything tied to their account and delete it for good.
+
+#### AC-38-127 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Block, a per-deck comment switch, and rate limits on comments and reviews (slice 12).
+
+#### AC-38-128 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-38-129 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-38-111
+
+As a player, I want **L4, low (security audit, 2026-11-10):** stop a repeated report reopening a closed deck report., so that a player can report anything public, learn why something was hidden and contest it, block another player, read who runs the site and how their data is used, download everything tied to their account and delete it for good.
+
+#### AC-38-130 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then **L4, low (security audit, 2026-11-10):** stop a repeated report reopening a closed deck report. src/app/api/community/decks/[id]/reports/route.ts upserts with status: "pending", so a reporter can send a dismissed report back to the queue after every decision. Fix branch in flight: fix/api-small-hardening, no PR yet.
+
+#### AC-38-131 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-38-132 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-38-112
+
+As a player, I want the product to after slice 0: a transactional email sender with an exit path, a daily retention job with a dry run, and email copies of statements of reasons (slices 13–15)., so that a player can report anything public, learn why something was hidden and contest it, block another player, read who runs the site and how their data is used, download everything tied to their account and delete it for good.
+
+#### AC-38-133 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: After slice 0: a transactional email sender with an exit path, a daily retention job with a dry run, and email copies of statements of reasons (slices 13–15).
+
+#### AC-38-134 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-38-135 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-38-113
+
+As a player, I want **A record of processing and a breach procedure (slice 16, added 2026-11-10 from the gap sweep).** GDPR Art., so that a player can report anything public, learn why something was hidden and contest it, block another player, read who runs the site and how their data is used, download everything tied to their account and delete it for good.
+
+#### AC-38-136 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then **A record of processing and a breach procedure (slice 16, added 2026-11-10 from the gap sweep).** GDPR Art. 30 asks for records, and its exemption below 250 people does not cover processing that is "not occasional"; Art. 33 asks for notice to the CNIL within 72 hours, and Art. 34 to the people affected (GDPR, standard text, not fetched this pass). Neither appears in docs/. Lawyer question L-44.
+
+#### AC-38-137 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-38-138 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+### UX states for this feature
+
+The player-visible outcome is: a player can report anything public, learn why something was hidden and contest it, block another player, read who runs the site and how their data is used, download everything tied to their account and delete it for good.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
+
 ### Record moved from the roadmap (2026-11-11)
 
 Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.

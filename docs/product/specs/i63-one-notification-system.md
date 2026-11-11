@@ -430,6 +430,280 @@ Amazon SES, Resend or Postmark is the owner's choice. Whether a notice the playe
 - https://vercel.com/docs/cron-jobs/manage-cron-jobs
 - https://itunes.apple.com/us/rss/customerreviews/page=1/id=1669698500/sortby=mostrecent/json
 
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-63-101
+
+As a player, I want the product to slice 0, no code: the provider, the sending subdomains and the job cadence; the lawyer questions join I-30 requirement 7.2 through I-38 slice 0., so that a player reads every notice in one inbox, chooses per category whether it reaches them in the app, by email or in a digest, and stops any email in one click; security and account notices always arrive and cannot be turned off. Every initiative that tells a player something does it through one call, and nothing is sent that the player did not ask for or cause.
+
+#### AC-63-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Slice 0, no code: the provider, the sending subdomains and the job cadence; the lawyer questions join I-30 requirement 7.2 through I-38 slice 0.
+
+#### AC-63-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-63-102 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-63-102
+
+As a player, I want the product to an event model and catalogue: notify() inside the producer's transaction, payloads of ids and enums only, entries rendered in English and French from current data, so a deleted or hidden subject shows "This is no longer available", dedupe and collapse, no event for the recipient's own action or from a blocked or restricted actor, and a harness and contract test every producer uses (slice 1)., so that a player reads every notice in one inbox, chooses per category whether it reaches them in the app, by email or in a digest, and stops any email in one click; security and account notices always arrive and cannot be turned off. Every initiative that tells a player something does it through one call, and nothing is sent that the player did not ask for or cause.
+
+#### AC-63-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: An event model and catalogue: notify() inside the producer's transaction, payloads of ids and enums only, entries rendered in English and French from current data, so a deleted or hidden subject shows "This is no longer available", dedupe and collapse, no event for the recipient's own action or from a blocked or restricted actor, and a harness and contract test every producer uses (slice 1).
+
+#### AC-63-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-63-105 Edge
+
+Given the account or the cache this behaviour changes
+When the player signs out or the deletion finishes
+Then the next request does not still show the private data
+
+#### US-63-103
+
+As a player, I want /notifications and a header bell counting to "9+", with read, read all and archive, and entries purged 180 days after creation on write; no count in the tab title, favicon or badge, and no sound (slice 2)., so that a player reads every notice in one inbox, chooses per category whether it reaches them in the app, by email or in a digest, and stops any email in one click; security and account notices always arrive and cannot be turned off. Every initiative that tells a player something does it through one call, and nothing is sent that the player did not ask for or cause.
+
+#### AC-63-106 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then /notifications and a header bell counting to "9+", with read, read all and archive, and entries purged 180 days after creation on write; no count in the tab title, favicon or badge, and no sound (slice 2).
+
+#### AC-63-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-63-108 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-63-104
+
+As a player, I want the product to settings → Notifications as a matrix of category and channel, linked from the user menu and every email: in the app on for events aimed at the player, email and push off for every activity category, security and account cells locked; a consent log with the wording version; locale, time zone, quiet hours on from 22:00 to 08:00, and a pause (slice 3)., so that a player reads every notice in one inbox, chooses per category whether it reaches them in the app, by email or in a digest, and stops any email in one click; security and account notices always arrive and cannot be turned off. Every initiative that tells a player something does it through one call, and nothing is sent that the player did not ask for or cause.
+
+#### AC-63-109 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Settings → Notifications as a matrix of category and channel, linked from the user menu and every email: in the app on for events aimed at the player, email and push off for every activity category, security and account cells locked; a consent log with the wording version; locale, time zone, quiet hours on from 22:00 to 08:00, and a pause (slice 3). It replaces the four switches that nothing reads: NotificationPreference (prisma/schema.prisma, acc66d01, 2026-11-02) holds replies, mentions, follows and watchedDecks, all true by default, read only by its route and the /settings/notifications page, which no link reaches (src/components/auth/UserMenu.tsx links only /settings/api-keys). The migration copies them to the in-app cells and turns every email cell off, since nothing was ever delivered.
+
+#### AC-63-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-63-111 Edge
+
+Given the French locale
+When the new controls render
+Then they come from the French catalogue and are not hard-coded English
+
+#### US-63-105
+
+As a player, I want the product to replies and follows (I-08) as the first producers (slice 4)., so that a player reads every notice in one inbox, chooses per category whether it reaches them in the app, by email or in a digest, and stops any email in one click; security and account notices always arrive and cannot be turned off. Every initiative that tells a player something does it through one call, and nothing is sent that the player did not ask for or cause.
+
+#### AC-63-112 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Replies and follows (I-08) as the first producers (slice 4). Only these two of the four switches have a source today; no code parses mentions, and no deck can be watched.
+
+#### AC-63-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-63-114 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-63-106
+
+As a player, I want the product to one job route, /api/jobs/[job], behind CRON_SECRET in a new vercel.json, with a lease, catch-up and a dry run (slice 5)., so that a player reads every notice in one inbox, chooses per category whether it reaches them in the app, by email or in a digest, and stops any email in one click; security and account notices always arrive and cannot be turned off. Every initiative that tells a player something does it through one call, and nothing is sent that the player did not ask for or cause.
+
+#### AC-63-115 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: One job route, /api/jobs/[job], behind CRON_SECRET in a new vercel.json, with a lease, catch-up and a dry run (slice 5). I-38's retention job and, when it runs on Vercel, I-67's card-data job (I-67 slice 3, re-pointed 2026-11-10) register here.
+
+#### AC-63-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-63-117 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-63-107
+
+As a player, I want the product to an EmailTransport with log and test transports, a transactional and a notification stream on separate subdomains, SPF, DKIM and DMARC from the first send, templates in English and French, and caps that keep sign-up and reset forms from flooding a victim's mailbox (slice 6); the provider in production, with signed bounce and complaint webhooks and suppression (slice 7, which is I-38 slice 13)., so that a player reads every notice in one inbox, chooses per category whether it reaches them in the app, by email or in a digest, and stops any email in one click; security and account notices always arrive and cannot be turned off. Every initiative that tells a player something does it through one call, and nothing is sent that the player did not ask for or cause.
+
+#### AC-63-118 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: An EmailTransport with log and test transports, a transactional and a notification stream on separate subdomains, SPF, DKIM and DMARC from the first send, templates in English and French, and caps that keep sign-up and reset forms from flooding a victim's mailbox (slice 6); the provider in production, with signed bounce and complaint webhooks and suppression (slice 7, which is I-38 slice 13).
+
+#### AC-63-119 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-63-120 Edge
+
+Given the French locale
+When the new controls render
+Then they come from the French catalogue and are not hard-coded English
+
+#### US-63-108
+
+As a player, I want the product to one-click unsubscribe on every notification email, with a GET that changes nothing and a confirmation page that needs no sign-in (slice 8); immediate activity email, to a verified address only, paced and held by quiet hours (slice 9); a daily or weekly digest (slice 10); and a deliverability page for the owner (slice 11)., so that a player reads every notice in one inbox, chooses per category whether it reaches them in the app, by email or in a digest, and stops any email in one click; security and account notices always arrive and cannot be turned off. Every initiative that tells a player something does it through one call, and nothing is sent that the player did not ask for or cause.
+
+#### AC-63-121 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: One-click unsubscribe on every notification email, with a GET that changes nothing and a confirmation page that needs no sign-in (slice 8); immediate activity email, to a verified address only, paced and held by quiet hours (slice 9); a daily or weekly digest (slice 10); and a deliverability page for the owner (slice 11).
+
+#### AC-63-122 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-63-123 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-63-109
+
+As a player, I want the product to taken over on 2026-11-10, each source keeping a pointer: I-38 slice 13's sender (slice 7), I-59's inbox and email digest (slices 2 and 10), and I-08's in-product notifications (slices 1 to 4)., so that a player reads every notice in one inbox, chooses per category whether it reaches them in the app, by email or in a digest, and stops any email in one click; security and account notices always arrive and cannot be turned off. Every initiative that tells a player something does it through one call, and nothing is sent that the player did not ask for or cause.
+
+#### AC-63-124 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Taken over on 2026-11-10, each source keeping a pointer: I-38 slice 13's sender (slice 7), I-59's inbox and email digest (slices 2 and 10), and I-08's in-product notifications (slices 1 to 4). I-48's rulesChangesEmail, I-52's requestUpdates and I-59's priceAlertEmail become categories, not columns.
+
+#### AC-63-125 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-63-126 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-63-110
+
+As a player, I want the product to blocked: web push for installed apps, per device and category, until the owner reverses I-40 requirement 2.6 (slice 12)., so that a player reads every notice in one inbox, chooses per category whether it reaches them in the app, by email or in a digest, and stops any email in one click; security and account notices always arrive and cannot be turned off. Every initiative that tells a player something does it through one call, and nothing is sent that the player did not ask for or cause.
+
+#### AC-63-127 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Blocked: web push for installed apps, per device and category, until the owner reverses I-40 requirement 2.6 (slice 12).
+
+#### AC-63-128 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-63-129 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-63-111
+
+As a player, I want the product to an event "a pod member published or changed a deck": opt-in per pod, chronological, with no counts, streaks or ranking, shown on I-15's pod page., so that a player reads every notice in one inbox, chooses per category whether it reaches them in the app, by email or in a digest, and stops any email in one click; security and account notices always arrive and cannot be turned off. Every initiative that tells a player something does it through one call, and nothing is sent that the player did not ask for or cause.
+
+#### AC-63-130 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: An event "a pod member published or changed a deck": opt-in per pod, chronological, with no counts, streaks or ranking, shown on I-15's pod page. "I'd like an option to 'share' that I built a new deck and be able to see that of my friends as well" (Mythic Tools reviews, 2026-07-19). Added 2026-11-11.
+
+#### AC-63-131 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-63-132 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+### UX states for this feature
+
+The player-visible outcome is: a player reads every notice in one inbox, chooses per category whether it reaches them in the app, by email or in a digest, and stops any email in one click; security and account notices always arrive and cannot be turned off. Every initiative that tells a player something does it through one call, and nothing is sent that the player did not ask for or cause.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
+
 ### Record moved from the roadmap (2026-11-11)
 
 Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.

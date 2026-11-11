@@ -242,6 +242,368 @@ Whether the first comparison is free stays D-95. I-88 only writes fields this sh
 - https://edhrec.com/articles/digital-deckbuilding-archidekt-deck-comparison-and-edhrec-salt-scores
 - https://magic.wizards.com/en/news/announcements/commander-brackets-beta-update-october-21-2025
 
+## Expanded scenarios
+
+These scenarios are added. They do not replace the contract above or the moved record below. Each one is a scope line from that record, written out as a story and as Given/When/Then, including the failure and the edge case.
+
+#### US-15-101
+
+As a player, I want the product to record intentions, combos, extra turns, resource denial, proxies and house rules on a per-deck or per-pod sheet., so that a playgroup can share intentions and house rules before a game, and can tell those preferences apart from official rules.
+
+#### AC-15-100 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Record intentions, combos, extra turns, resource denial, proxies and house rules on a per-deck or per-pod sheet.
+
+#### AC-15-101 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-15-102 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-15-102
+
+As a player, I want the product to keep the profile private by default, and share it only with an explicit consent action., so that a playgroup can share intentions and house rules before a game, and can tell those preferences apart from official rules.
+
+#### AC-15-103 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Keep the profile private by default, and share it only with an explicit consent action.
+
+#### AC-15-104 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-15-105 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-15-103
+
+As a player, I want the product to compare up to four decks on the same sheet., so that a playgroup can share intentions and house rules before a game, and can tell those preferences apart from official rules.
+
+#### AC-15-106 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Compare up to four decks on the same sheet.
+
+#### AC-15-107 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-15-108 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-15-104
+
+As a player, I want the product to keep preference and salt-style scores separate from official rules, bracket and ban data., so that a playgroup can share intentions and house rules before a game, and can tell those preferences apart from official rules.
+
+#### AC-15-109 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Keep preference and salt-style scores separate from official rules, bracket and ban data.
+
+#### AC-15-110 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-15-111 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+#### US-15-105
+
+As a player, I want the product to state on the sheet that it does not guarantee a balanced game., so that a playgroup can share intentions and house rules before a game, and can tell those preferences apart from official rules.
+
+#### AC-15-112 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: State on the sheet that it does not guarantee a balanced game.
+
+#### AC-15-113 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-15-114 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-15-106
+
+As a player, I want the product to a structured house rule "no cards printed only in Universes Beyond" on the sheet, checked against each deck through I-57's card-level flag instead of free text., so that a playgroup can share intentions and house rules before a game, and can tell those preferences apart from official rules.
+
+#### AC-15-115 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A structured house rule "no cards printed only in Universes Beyond" on the sheet, checked against each deck through I-57's card-level flag instead of free text. Cube Cobra merged a preference that hides such cards from search and suggestions on 2026-11-02 (PR #3118).
+
+#### AC-15-116 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-15-117 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-15-107
+
+As a player, I want the product to a pod game-night planner, after the pods of spec slice 3: a recurring night with an RSVP that names the deck version and the declared bracket each player brings, the pod's sheet attached, tables formed by I-41's pairing policy, and I-35's log prompted after the game; I-46 may post the reminder to Discord., so that a playgroup can share intentions and house rules before a game, and can tell those preferences apart from official rules.
+
+#### AC-15-118 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: A pod game-night planner, after the pods of spec slice 3: a recurring night with an RSVP that names the deck version and the declared bracket each player brings, the pod's sheet attached, tables formed by I-41's pairing policy, and I-35's log prompted after the game; I-46 may post the reminder to Discord. It works before the table and needs no chat. It is free, with a possible pod-pass perk under I-30. Playgroup.gg added "a calendar tool, recurring game nights" to its playgroups on 2026-11-04 (post). It sits here rather than in I-23, because the RSVP carries the deck and declared bracket this sheet already holds, while I-23 is a Discord surface planned for 2027.
+
+#### AC-15-119 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-15-120 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+#### US-15-108
+
+As a player, I want the product to pod fit (spec slice 4)., so that a playgroup can share intentions and house rules before a game, and can tell those preferences apart from official rules.
+
+#### AC-15-121 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Pod fit (spec slice 4). The comparison adds a computed column per deck: I-77's estimate with its floors, I-65's route line and earliest-turn estimate, interaction by answer class, tutors and fast mana, and I-78's table-effect line. Each is labelled Computed, and mismatch prompts are questions, never verdicts. West Games compares "your score to the pod you expect" (page, 2026-07-28). r/EDH has 76 "my playgroup" titles with 2,548 points since 2025-01-01 (Arctic Shift, read 2026-11-10). Whether this first comparison is free is D-95. Added 2026-11-11.
+
+#### AC-15-122 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-15-123 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+#### US-15-109
+
+As a player, I want the product to beside a mismatch prompt, cite the measured cost of a gap with its date: "one bracket above … about five percentage points"; "two brackets above wins roughly 30% of four-player games, against an expected 25%" (Playgroup, updated 2026-11-10)., so that a playgroup can share intentions and house rules before a game, and can tell those preferences apart from official rules.
+
+#### AC-15-124 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Beside a mismatch prompt, cite the measured cost of a gap with its date: "one bracket above … about five percentage points"; "two brackets above wins roughly 30% of four-player games, against an expected 25%" (Playgroup, updated 2026-11-10). Added 2026-11-11.
+
+#### AC-15-125 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-15-126 Edge
+
+Given a card with no stored price
+When the total is shown
+Then the missing price is labelled unknown and is not shown as zero
+
+#### US-15-110
+
+As a player, I want the product to house rules become rule objects checked by I-53's checkDeckAgainstRules:, so that a playgroup can share intentions and house rules before a game, and can tell those preferences apart from official rules.
+
+#### AC-15-127 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: House rules become rule objects checked by I-53's checkDeckAgainstRules:
+
+#### AC-15-128 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-15-129 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-15-111
+
+As a player, I want the product to declared exceptions: a deck lists the exceptions its pod agreed (an unbanned card, proxies), and the editor shows them as declared., so that a playgroup can share intentions and house rules before a game, and can tell those preferences apart from official rules.
+
+#### AC-15-130 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Declared exceptions: a deck lists the exceptions its pod agreed (an unbanned card, proxies), and the editor shows them as declared. The official verdict stays one line away, and public views say "declared exceptions" (D-90). Piltover Archive sets a Competitive or Casual ruleset per deck (update, 2025-06-22). Added 2026-11-11.
+
+#### AC-15-131 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-15-132 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-15-112
+
+As a player, I want the product to sheet fields: the time available for the evening; each player's limits ("boundaries"); and a one-screen card with a QR code (I-50 slice 11) for a player who arrives late., so that a playgroup can share intentions and house rules before a game, and can tell those preferences apart from official rules.
+
+#### AC-15-133 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Sheet fields: the time available for the evening; each player's limits ("boundaries"); and a one-screen card with a QR code (I-50 slice 11) for a player who arrives late. r/EDH: "What time does everyone need to leave?", 30 points, 40 comments (thread, 2026-11-10). rule0.carrd.co lists "boundaries" (page, seen 2026-11-10). Added 2026-11-11.
+
+#### AC-15-134 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-15-135 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+#### US-15-113
+
+As a player, I want the product to the official column gains "table attention flags" from I-78: Game Changers, mass land denial, extra turns, early two-card combos, and the theft and stax classes., so that a playgroup can share intentions and house rules before a game, and can tell those preferences apart from official rules.
+
+#### AC-15-136 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: The official column gains "table attention flags" from I-78: Game Changers, mass land denial, extra turns, early two-card combos, and the theft and stax classes. They are labelled as categories; salt stays slice 5 behind D-25. Archidekt shows a deck's Salt Sum against a distribution (EDHREC, 2024-03-27). Added 2026-11-11.
+
+#### AC-15-137 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-15-138 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+#### US-15-114
+
+As a player, I want the product to neighbour changes, 2026-11-11: the computed column shows I-77's estimate with its method version and audit link, so spec slice 2 waits for I-77 slice 1; it also shows I-78's table line and, beside the declared combos, extra turns and resource denial fields, the computed counts with "copy into my sheet", and no declared field is ever filled (1.3)., so that a playgroup can share intentions and house rules before a game, and can tell those preferences apart from official rules.
+
+#### AC-15-139 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Neighbour changes, 2026-11-11: the computed column shows I-77's estimate with its method version and audit link, so spec slice 2 waits for I-77 slice 1; it also shows I-78's table line and, beside the declared combos, extra turns and resource denial fields, the computed counts with "copy into my sheet", and no declared field is ever filled (1.3). Requirement 1.1 accepts an I-79 table set, whose balance view reuses slice 4's layout; a set is one author's decks, not a pod (D-40).
+
+#### AC-15-140 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-15-141 Edge
+
+Given the result of this behaviour
+When the screen renders the words it is allowed to use
+Then it does not call the deck fair, unfair, salty, or a win rate unless the moved record already quotes that phrase from a named source
+
+#### US-15-115
+
+As a player, I want the product to download one .ics file for a planned night: the date, the pod's name and a link to the sheet., so that a playgroup can share intentions and house rules before a game, and can tell those preferences apart from official rules.
+
+#### AC-15-142 Happy path
+
+Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
+When the player uses this behaviour
+Then the behaviour holds: Download one .ics file for a planned night: the date, the pod's name and a link to the sheet. No Google account and no mail. Recurrence is a later line in the same file, still with no external calendar service.
+
+#### AC-15-143 Failure
+
+Given the same starting point and the write or the upstream source fails
+When the player retries or leaves
+Then the last confirmed state is unchanged, nothing is half-written, and the message is a catalogue string rather than a stack trace
+
+#### AC-15-144 Edge
+
+Given an empty list and a missing optional field
+When the screen renders
+Then the player sees an empty state that names what is missing, and the page does not crash or invent a value
+
+### UX states for this feature
+
+The player-visible outcome is: a playgroup can share intentions and house rules before a game, and can tell those preferences apart from official rules.
+
+| State | What the player sees |
+| --- | --- |
+| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
+| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
+| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
+| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
+| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
+| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
+| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
+| English | New controls use the `en` catalogue. |
+| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
+| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
+| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
+| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
+| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+
+### Alternate paths
+
+- The player cancels before confirming. Nothing is written.
+- The player confirms, the request fails, and they retry. The retry uses the last confirmed state, not a mixture of the failed attempt and the old one.
+- The player switches locale in the middle of the flow. The draft they already typed is kept. Chrome strings switch. Card names and oracle text stay the printing's language.
+- Two writes overlap. Each field rolls back to its own last confirmed value. One failure does not undo the other field's success.
+
 ### Record moved from the roadmap (2026-11-11)
 
 Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.
