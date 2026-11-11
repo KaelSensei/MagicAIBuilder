@@ -157,12 +157,19 @@ function buildGuestClaimBody(deck: Deck): CreateDeckWithCardsBody {
 /**
  * 53-bit string hash (cyrb53). Not cryptographic: it only has to tell two
  * versions of one user's guest deck apart.
+ *
+ * It hashes UTF-16 code units, not code points, and must keep doing so. The
+ * key is stored on the saved deck (`@@unique([userId, idempotencyKey])`), so a
+ * retry sent after a release must hash to the key the earlier build stored;
+ * hashing code points would change the key of any deck with a character
+ * outside the Basic Multilingual Plane (an emoji in its name) and save it
+ * twice. Code units also map every string to one sequence, so no text is lost.
  */
 function hash53(text: string): number {
   let h1 = 0xdeadbeef;
   let h2 = 0x41c6ce57;
   for (let index = 0; index < text.length; index++) {
-    const code = text.charCodeAt(index);
+    const code = text.charCodeAt(index); // NOSONAR S7758 AaHKH1lD4GE9QO0TVZrs: code units keep stored keys stable
     h1 = Math.imul(h1 ^ code, 2654435761);
     h2 = Math.imul(h2 ^ code, 1597334677);
   }
