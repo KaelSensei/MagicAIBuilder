@@ -1,5 +1,12 @@
 "use client";
-// Search results panel with grid/list toggle
+/**
+ * The search panel's result list, as a grid or a list, with its count and its empty states.
+ *
+ * Card catalog context, search panel. The builder page feeds it from `useCardSearchResults`;
+ * with "Collection only" on, the notices of `CollectionOnlyNotice` explain what the list holds.
+ *
+ * @module components/search/SearchResults
+ */
 import { useTranslations } from "next-intl";
 import { Loader2, AlertCircle, LayoutGrid, List } from "lucide-react";
 import { CardGrid } from "@/components/card/CardGrid";
@@ -7,6 +14,11 @@ import { CardSearchListItem } from "@/components/card/CardSearchListItem";
 import { useDeckStore } from "@/lib/deck/store";
 import type { DeckZone } from "@/lib/deck/types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
+import type { CollectionOnlyState } from "@/hooks/useCardSearchResults";
+import {
+  CollectionOnlyBlockedState,
+  CollectionOnlyCoverageNote,
+} from "./CollectionOnlyNotice";
 
 interface SearchResultsProps {
   readonly cards: readonly ScryfallCard[];
@@ -17,8 +29,14 @@ interface SearchResultsProps {
   readonly draggable?: boolean;
   readonly onAddToMaybeboard?: (card: ScryfallCard) => void;
   readonly onAddToZone?: (card: ScryfallCard, zone: DeckZone) => void;
+  /** Set while "Collection only" filters `cards`; changes the count and the empty states. */
+  readonly collectionOnly?: CollectionOnlyState;
 }
 
+/**
+ * Shows, in this order of precedence: a spinner while loading, the error, a "Collection only"
+ * notice when there was no collection to filter by, an empty state, or the cards with their count.
+ */
 export function SearchResults({
   cards,
   isLoading,
@@ -28,6 +46,7 @@ export function SearchResults({
   onAddToMaybeboard,
   onAddToZone,
   draggable = false,
+  collectionOnly,
 }: SearchResultsProps) {
   const t = useTranslations("search");
   const viewMode = useDeckStore((s) => s.searchViewMode);
@@ -57,10 +76,23 @@ export function SearchResults({
     );
   }
 
+  if (collectionOnly && collectionOnly.kind !== "scanned") {
+    return <CollectionOnlyBlockedState state={collectionOnly} />;
+  }
+
+  const coverageNote = collectionOnly && (
+    <CollectionOnlyCoverageNote
+      scannedCards={collectionOnly.scannedCards}
+      totalMatches={collectionOnly.totalMatches}
+      complete={collectionOnly.complete}
+    />
+  );
+
   if (cards.length === 0) {
     return (
-      <div className="flex items-center justify-center h-40 text-[var(--text-secondary)] text-sm">
-        {t("noResults")}
+      <div className="flex flex-col items-center justify-center h-40 text-[var(--text-secondary)] text-sm">
+        <p>{t(collectionOnly ? "collectionOnly.noMatch" : "noResults")}</p>
+        {coverageNote}
       </div>
     );
   }
@@ -69,10 +101,16 @@ export function SearchResults({
     <div className="flex flex-col">
       {/* Header: count + view toggle */}
       <div className="flex items-center justify-between px-3 py-1.5">
-        {totalCards != null && (
+        {collectionOnly ? (
           <p className="text-xs text-[var(--text-secondary)]">
-            {t("resultCount", { count: totalCards })}
+            {t("collectionOnly.ownedCount", { count: cards.length })}
           </p>
+        ) : (
+          totalCards != null && (
+            <p className="text-xs text-[var(--text-secondary)]">
+              {t("resultCount", { count: totalCards })}
+            </p>
+          )
         )}
         <div className="flex items-center gap-1 ml-auto">
           <button
@@ -103,6 +141,7 @@ export function SearchResults({
           </button>
         </div>
       </div>
+      {coverageNote}
 
       {viewMode === "grid" ? (
         <CardGrid

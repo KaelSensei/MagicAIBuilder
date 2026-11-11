@@ -420,7 +420,9 @@ When you have cards in your collection:
 **In Search Results:**
 
 - Cards you own show a green **In Collection (xN)** badge
-- Use the **📦 Show only collection cards** toggle in the filters to limit search results to cards you own
+- Turn on **📦 Only cards I own** in the filters to list only the cards you own. Any printing counts: a card you own in one edition is listed whatever printing the search shows, and a double-faced card counts by its front face. The filter works in name search, including when you pick a commander, partner or companion; set and colour search ignore it.
+- The filter keeps the cards you own among the most-played matches, checking up to 700 of them. When a search matches more, a note says how many were checked: narrow the search to check the rest.
+- Signed out, or with an empty collection, the results say so instead of showing an empty list.
 
 **In the Deck Editor (List view):**
 
@@ -434,7 +436,7 @@ This lets you instantly see what you need to buy to complete a deck.
 
 ### Tips
 
-- The collection filter only appears if you have at least one card in your collection
+- The **In Collection (xN)** badge counts the exact printing shown, so a card listed by **Only cards I own** may show no badge when you own a different printing
 - Foil and non-foil copies are tracked separately
 - Collection data is stored in the same PostgreSQL database as your decks
 

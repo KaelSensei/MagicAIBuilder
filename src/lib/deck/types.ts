@@ -169,6 +169,10 @@ export interface SearchFilters {
   subtype: string;
   keyword: string;
   interactionType: InteractionType | null;
+  /**
+   * List only cards whose Oracle card the player owns, in any printing. Applied in the browser
+   * by `useCardSearchResults`; it adds nothing to the Scryfall query.
+   */
   collectionOnly?: boolean;
 }
 

@@ -33,7 +33,7 @@ import { addNamedCardToZone } from "@/lib/deck/ai-add-card";
 import { logger } from "@/lib/logger";
 import { useUIStore } from "@/lib/ui/store";
 import { useBracketScore } from "@/hooks/useBracketScore";
-import { useCardSearch } from "@/hooks/useCardSearch";
+import { useCardSearchResults } from "@/hooks/useCardSearchResults";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { Header } from "@/components/layout/Header";
 import { SearchBar } from "@/components/search/SearchBar";
@@ -278,7 +278,7 @@ export default function BuilderPage() {
   const params = useParams();
   const router = useRouter();
   const deckId = params.deckId as string;
-  const { data: sessionData } = useSession();
+  const { data: sessionData, status: sessionStatus } = useSession();
 
   const setActiveDeck = useDeckStore((s) => s.setActiveDeck);
   const addCard = useDeckStore((s) => s.addCard);
@@ -457,11 +457,13 @@ export default function BuilderPage() {
     format: deck?.format,
   });
 
-  const {
-    data: searchData,
-    isLoading: searchLoading,
-    error: searchError,
-  } = useCardSearch(query);
+  // Set and colour search show no filters panel, so a "Collection only" left on there must not
+  // filter a list whose toggle the player cannot see.
+  const searchResults = useCardSearchResults(query, {
+    collectionOnly: searchMode === "name" && filters.collectionOnly === true,
+    sessionStatus,
+  });
+  const searchLoading = searchResults.isLoading;
 
   const handleSearch = useCallback((text: string) => {
     setSearchText(text);
@@ -522,7 +524,7 @@ export default function BuilderPage() {
 
   // Keyboard shortcuts — global listener
   useKeyboardShortcuts({
-    searchResults: searchData?.data ?? [],
+    searchResults: searchResults.cards,
     onAddCard: handleCardClick,
     isInputFocused,
   });
@@ -978,10 +980,11 @@ export default function BuilderPage() {
 
             <div className="flex-1 overflow-y-auto">
               <SearchResults
-                cards={searchData?.data ?? []}
+                cards={searchResults.cards}
                 isLoading={searchLoading}
-                error={searchError instanceof Error ? searchError : null}
-                totalCards={searchData?.total_cards}
+                error={searchResults.error}
+                totalCards={searchResults.totalCards}
+                collectionOnly={searchResults.collectionOnly}
                 onCardClick={handleCardClick}
                 onAddToMaybeboard={addToMaybeboard}
                 onAddToZone={handleAddToZone}

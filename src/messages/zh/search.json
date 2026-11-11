@@ -12,6 +12,14 @@
   "noSetsFound": "No sets found for \"{query}\"",
   "clearSet": "Clear selected set",
   "setsAvailable": "{count, plural, one {# set available} other {# sets available}} — type to search",
+  "collectionOnly": {
+    "signedOut": "Sign in and add cards to your collection to see only the cards you own.",
+    "emptyCollection": "Your collection is empty. Add cards to it, and this filter will show only the cards you own.",
+    "collectionUnavailable": "Your collection could not be loaded, so the cards you own cannot be shown. Reload the page to try again.",
+    "noMatch": "None of the cards you own match this search.",
+    "ownedCount": "{count, plural, one {# card you own} other {# cards you own}}",
+    "partialScan": "Checked the {scanned, number} most-played of {total, number} matching cards. Narrow your search to check the rest."
+  },
   "filters": {
     "colors": "Colors",
     "colorless": "Colorless (c:c) — artifacts, Eldrazi, etc.",
@@ -35,8 +43,7 @@
     "atMost": "≤",
     "subtypeExample": "e.g. Elf, Dragon",
     "keywordExample": "e.g. Flying, Trample",
-    "collectionOnlyActive": "Collection only",
-    "collectionOnlyToggle": "Show collection only",
+    "collectionOnly": "Only cards I own",
     "presets": "Presets",
     "presetNamePlaceholder": "Preset name…",
     "savePreset": "Save",
