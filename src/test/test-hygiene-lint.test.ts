@@ -6,7 +6,8 @@
  * - `vitest/prefer-import-in-mock`: a mock names its module through
  *   `import("…")`, so `tsc` checks the path and the factory;
  * - `no-restricted-syntax`: no new mock of an internal module (`@/…` or a
- *   relative path), in either form;
+ *   relative path), in either form, except the two transitional seams
+ *   (`@/lib/db/prisma`, `@/lib/auth/config`);
  * - `vitest/no-focused-tests` and `vitest/no-disabled-tests`: no committed
  *   `.only` and no `.skip`.
  *
@@ -68,6 +69,26 @@ describe("mock rules", () => {
       ]);
     }
   );
+
+  it.each(["@/lib/db/prisma", "@/lib/auth/config"])(
+    "accepts a mock of %s, a transitional seam with no port yet, and still asks for the typed form",
+    async (specifier) => {
+      const source = `${VI}.mock(import("${specifier}"));\n${VI}.mock("${specifier}");\n`;
+
+      expect(await rulesReportedFor(source)).toEqual([
+        "vitest/prefer-import-in-mock",
+      ]);
+    }
+  );
+
+  it.each([
+    ["a module beside a seam", "@/lib/auth/helpers"],
+    ["a path that only starts like a seam", "@/lib/db/prisma-cache"],
+  ])("still flags a mock of %s", async (_kind, specifier) => {
+    const source = `${VI}.mock(import("${specifier}"));\n`;
+
+    expect(await rulesReportedFor(source)).toEqual(["no-restricted-syntax"]);
+  });
 
   it("accepts a typed mock of a package, such as a framework module", async () => {
     const source = `${VI}.mock(import("next/navigation"), () => ({}));\n`;

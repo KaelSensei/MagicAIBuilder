@@ -18,7 +18,7 @@
   },
   "src/app/[locale]/commanders/[slug]/decks/page.test.tsx": {
     "no-restricted-syntax": {
-      "count": 3
+      "count": 2
     },
     "vitest/prefer-import-in-mock": {
       "count": 6
@@ -31,7 +31,7 @@
   },
   "src/app/[locale]/deck/[id]/page.test.tsx": {
     "no-restricted-syntax": {
-      "count": 4
+      "count": 3
     },
     "vitest/prefer-import-in-mock": {
       "count": 5
@@ -97,7 +97,7 @@
   },
   "src/app/[locale]/u/[username]/page.test.tsx": {
     "no-restricted-syntax": {
-      "count": 3
+      "count": 2
     },
     "vitest/prefer-import-in-mock": {
       "count": 6
@@ -105,7 +105,7 @@
   },
   "src/app/api/ai/allowance/route.test.ts": {
     "no-restricted-syntax": {
-      "count": 2
+      "count": 1
     },
     "vitest/prefer-import-in-mock": {
       "count": 2
@@ -118,12 +118,12 @@
   },
   "src/app/api/ai/build/route.card-names.test.ts": {
     "no-restricted-syntax": {
-      "count": 3
+      "count": 2
     }
   },
   "src/app/api/ai/build/route.test.ts": {
     "no-restricted-syntax": {
-      "count": 3
+      "count": 2
     },
     "vitest/prefer-import-in-mock": {
       "count": 3
@@ -139,12 +139,12 @@
   },
   "src/app/api/ai/suggest/route.card-names.test.ts": {
     "no-restricted-syntax": {
-      "count": 3
+      "count": 2
     }
   },
   "src/app/api/ai/suggest/route.test.ts": {
     "no-restricted-syntax": {
-      "count": 3
+      "count": 2
     },
     "vitest/prefer-import-in-mock": {
       "count": 3
@@ -164,28 +164,8 @@
       "count": 3
     }
   },
-  "src/app/api/auth/[...nextauth]/route.test.ts": {
-    "no-restricted-syntax": {
-      "count": 1
-    }
-  },
-  "src/app/api/auth/signup/route.test.ts": {
-    "no-restricted-syntax": {
-      "count": 1
-    }
-  },
-  "src/app/api/cache/cards/route.test.ts": {
-    "no-restricted-syntax": {
-      "count": 1
-    }
-  },
   "src/app/api/cache/cards/route.ts": {
     "no-restricted-imports": {
-      "count": 1
-    }
-  },
-  "src/app/api/cache/search/route.test.ts": {
-    "no-restricted-syntax": {
       "count": 1
     }
   },
@@ -196,7 +176,7 @@
   },
   "src/app/api/collection/[id]/route.test.ts": {
     "no-restricted-syntax": {
-      "count": 2
+      "count": 1
     }
   },
   "src/app/api/collection/[id]/route.ts": {
@@ -206,22 +186,22 @@
   },
   "src/app/api/collection/acquisition-plan/route.test.ts": {
     "no-restricted-syntax": {
-      "count": 2
+      "count": 1
     }
   },
   "src/app/api/collection/route.test.ts": {
     "no-restricted-syntax": {
-      "count": 3
+      "count": 2
     }
   },
   "src/app/api/collection/usage/route.test.ts": {
     "no-restricted-syntax": {
-      "count": 2
+      "count": 1
     }
   },
   "src/app/api/community/card-packages/[packageId]/apply/route.test.ts": {
     "no-restricted-syntax": {
-      "count": 3
+      "count": 2
     }
   },
   "src/app/api/community/card-packages/[packageId]/apply/route.ts": {
@@ -234,7 +214,7 @@
   },
   "src/app/api/community/card-packages/[packageId]/preview/route.test.ts": {
     "no-restricted-syntax": {
-      "count": 3
+      "count": 2
     }
   },
   "src/app/api/community/card-packages/[packageId]/preview/route.ts": {
@@ -244,12 +224,7 @@
   },
   "src/app/api/community/card-packages/route.test.ts": {
     "no-restricted-syntax": {
-      "count": 2
-    }
-  },
-  "src/app/api/community/commanders/[slug]/decks/route.test.ts": {
-    "no-restricted-syntax": {
-      "count": 2
+      "count": 1
     }
   },
   "src/app/api/community/commanders/[slug]/decks/route.ts": {
@@ -259,17 +234,12 @@
   },
   "src/app/api/community/deck-folders/[folderId]/route.test.ts": {
     "no-restricted-syntax": {
-      "count": 2
+      "count": 1
     }
   },
   "src/app/api/community/deck-folders/route.test.ts": {
     "no-restricted-syntax": {
-      "count": 2
-    }
-  },
-  "src/app/api/community/decks/[id]/comments/[commentId]/route.test.ts": {
-    "no-restricted-syntax": {
-      "count": 2
+      "count": 1
     }
   },
   "src/app/api/community/decks/[id]/comments/[commentId]/route.ts": {
@@ -277,18 +247,8 @@
       "count": 1
     }
   },
-  "src/app/api/community/decks/[id]/comments/route.test.ts": {
-    "no-restricted-syntax": {
-      "count": 2
-    }
-  },
   "src/app/api/community/decks/[id]/comments/route.ts": {
     "@typescript-eslint/consistent-type-assertions": {
-      "count": 2
-    }
-  },
-  "src/app/api/community/decks/[id]/ratings/route.test.ts": {
-    "no-restricted-syntax": {
       "count": 2
     }
   },
@@ -297,19 +257,9 @@
       "count": 1
     }
   },
-  "src/app/api/community/decks/[id]/reports/route.test.ts": {
-    "no-restricted-syntax": {
-      "count": 2
-    }
-  },
   "src/app/api/community/decks/[id]/save/route.test.ts": {
     "no-restricted-syntax": {
-      "count": 2
-    }
-  },
-  "src/app/api/community/decks/[id]/vote/route.test.ts": {
-    "no-restricted-syntax": {
-      "count": 2
+      "count": 1
     }
   },
   "src/app/api/community/decks/[id]/vote/route.ts": {
@@ -317,77 +267,49 @@
       "count": 1
     }
   },
-  "src/app/api/community/users/[username]/follow/route.test.ts": {
-    "no-restricted-syntax": {
-      "count": 2
-    }
-  },
   "src/app/api/deck-folders/[folderId]/route.test.ts": {
     "no-restricted-syntax": {
-      "count": 2
-    }
-  },
-  "src/app/api/deck-folders/route.test.ts": {
-    "no-restricted-syntax": {
-      "count": 2
-    }
-  },
-  "src/app/api/deck/[id]/route.test.ts": {
-    "no-restricted-syntax": {
-      "count": 2
+      "count": 1
     }
   },
   "src/app/api/decks/[id]/acquisition-intent/route.test.ts": {
     "no-restricted-syntax": {
-      "count": 2
+      "count": 1
     }
   },
   "src/app/api/decks/[id]/cards/[cardId]/route.test.ts": {
     "no-restricted-syntax": {
-      "count": 2
+      "count": 1
     }
   },
   "src/app/api/decks/[id]/cards/route.patch.test.ts": {
     "no-restricted-syntax": {
-      "count": 3
+      "count": 2
     }
   },
   "src/app/api/decks/[id]/cards/route.test.ts": {
     "no-restricted-syntax": {
-      "count": 3
-    }
-  },
-  "src/app/api/decks/[id]/duplicate/route.test.ts": {
-    "no-restricted-syntax": {
-      "count": 2
+      "count": 1
     }
   },
   "src/app/api/decks/[id]/folder/route.test.ts": {
     "no-restricted-syntax": {
-      "count": 2
+      "count": 1
     }
   },
   "src/app/api/decks/[id]/fork/route.test.ts": {
     "no-restricted-syntax": {
-      "count": 3
+      "count": 1
     }
   },
   "src/app/api/decks/[id]/legality/route.test.ts": {
     "no-restricted-syntax": {
-      "count": 3
-    }
-  },
-  "src/app/api/decks/[id]/playtest-sessions/route.deck-version.test.ts": {
-    "no-restricted-syntax": {
-      "count": 2
-    },
-    "vitest/prefer-import-in-mock": {
       "count": 1
     }
   },
-  "src/app/api/decks/[id]/playtest-sessions/route.test.ts": {
-    "no-restricted-syntax": {
-      "count": 2
+  "src/app/api/decks/[id]/playtest-sessions/route.deck-version.test.ts": {
+    "vitest/prefer-import-in-mock": {
+      "count": 1
     }
   },
   "src/app/api/decks/[id]/playtest-sessions/route.ts": {
@@ -397,37 +319,22 @@
   },
   "src/app/api/decks/[id]/route.test.ts": {
     "no-restricted-syntax": {
-      "count": 3
-    }
-  },
-  "src/app/api/decks/[id]/share/route.test.ts": {
-    "no-restricted-syntax": {
-      "count": 2
+      "count": 1
     }
   },
   "src/app/api/decks/[id]/snapshots/[snapshotId]/restore/route.test.ts": {
     "no-restricted-syntax": {
-      "count": 2
-    }
-  },
-  "src/app/api/decks/[id]/snapshots/[snapshotId]/route.test.ts": {
-    "no-restricted-syntax": {
-      "count": 2
-    }
-  },
-  "src/app/api/decks/[id]/snapshots/route.test.ts": {
-    "no-restricted-syntax": {
-      "count": 2
+      "count": 1
     }
   },
   "src/app/api/decks/folders/route.test.ts": {
     "no-restricted-syntax": {
-      "count": 2
+      "count": 1
     }
   },
   "src/app/api/decks/route.test.ts": {
     "no-restricted-syntax": {
-      "count": 3
+      "count": 1
     }
   },
   "src/app/api/decks/route.ts": {
@@ -435,14 +342,9 @@
       "count": 1
     }
   },
-  "src/app/api/error-body-shapes.test.ts": {
-    "no-restricted-syntax": {
-      "count": 2
-    }
-  },
   "src/app/api/health/route.test.ts": {
     "no-restricted-syntax": {
-      "count": 2
+      "count": 1
     }
   },
   "src/app/api/import/moxfield-user/route.test.ts": {
@@ -457,7 +359,7 @@
   },
   "src/app/api/meta/[commanderSlug]/route.test.ts": {
     "no-restricted-syntax": {
-      "count": 6
+      "count": 4
     }
   },
   "src/app/api/meta/[commanderSlug]/route.ts": {
@@ -470,67 +372,45 @@
   },
   "src/app/api/moderation/deck-reports/[reportId]/route.test.ts": {
     "no-restricted-syntax": {
-      "count": 2
+      "count": 1
     }
   },
   "src/app/api/moderation/deck-reports/route.test.ts": {
     "no-restricted-syntax": {
-      "count": 2
+      "count": 1
     }
   },
-  "src/app/api/route-policy.test.ts": {
+  "src/app/api/search/translate/route.test.ts": {
     "no-restricted-syntax": {
-      "count": 2
+      "count": 4
+    },
+    "vitest/prefer-import-in-mock": {
+      "count": 4
     }
   },
   "src/app/api/share/route.test.ts": {
     "no-restricted-syntax": {
-      "count": 2
+      "count": 1
     }
   },
   "src/app/api/user/api-keys/[id]/route.test.ts": {
     "no-restricted-syntax": {
-      "count": 3
+      "count": 2
     }
   },
   "src/app/api/user/api-keys/route.test.ts": {
     "no-restricted-syntax": {
-      "count": 3
+      "count": 2
     }
   },
   "src/app/api/user/init/route.test.ts": {
     "no-restricted-syntax": {
-      "count": 2
-    }
-  },
-  "src/app/api/user/notification-preferences/route.test.ts": {
-    "no-restricted-syntax": {
-      "count": 2
-    }
-  },
-  "src/app/api/user/onboarding/route.test.ts": {
-    "no-restricted-syntax": {
-      "count": 2
-    }
-  },
-  "src/app/api/user/profile/account-lifecycle.test.ts": {
-    "no-restricted-syntax": {
-      "count": 2
-    }
-  },
-  "src/app/api/user/profile/route.test.ts": {
-    "no-restricted-syntax": {
-      "count": 2
+      "count": 1
     }
   },
   "src/app/api/user/username/route.test.ts": {
     "no-restricted-syntax": {
-      "count": 2
-    }
-  },
-  "src/app/api/users/[username]/route.test.ts": {
-    "no-restricted-syntax": {
-      "count": 2
+      "count": 1
     }
   },
   "src/app/api/users/[username]/route.ts": {
@@ -540,17 +420,17 @@
   },
   "src/app/api/v1/collection/route.test.ts": {
     "no-restricted-syntax": {
-      "count": 3
+      "count": 2
     }
   },
   "src/app/api/v1/decks/[id]/route.test.ts": {
     "no-restricted-syntax": {
-      "count": 3
+      "count": 2
     }
   },
   "src/app/api/v1/decks/route.test.ts": {
     "no-restricted-syntax": {
-      "count": 3
+      "count": 2
     }
   },
   "src/app/og/deck/[id]/route.test.tsx": {
@@ -559,11 +439,6 @@
     },
     "vitest/prefer-import-in-mock": {
       "count": 2
-    }
-  },
-  "src/app/sitemap.test.ts": {
-    "no-restricted-syntax": {
-      "count": 1
     }
   },
   "src/components/auth/AuthCallbackUrl.test.tsx": {
@@ -1381,9 +1256,6 @@
     }
   },
   "src/components/playtest/RecordResultBar.deck-version.test.tsx": {
-    "no-restricted-syntax": {
-      "count": 2
-    },
     "vitest/prefer-import-in-mock": {
       "count": 1
     }
@@ -1692,16 +1564,13 @@
     }
   },
   "src/lib/ai/usage/meter.test.ts": {
-    "no-restricted-syntax": {
-      "count": 1
-    },
     "vitest/prefer-import-in-mock": {
       "count": 1
     }
   },
   "src/lib/api/authenticate.test.ts": {
     "no-restricted-syntax": {
-      "count": 3
+      "count": 2
     }
   },
   "src/lib/api/openapi.ts": {
@@ -1711,7 +1580,7 @@
   },
   "src/lib/auth/config.test.ts": {
     "no-restricted-syntax": {
-      "count": 2
+      "count": 1
     },
     "vitest/prefer-import-in-mock": {
       "count": 4
@@ -1722,11 +1591,6 @@
       "count": 1
     }
   },
-  "src/lib/auth/helpers.test.ts": {
-    "no-restricted-syntax": {
-      "count": 2
-    }
-  },
   "src/lib/auth/helpers.ts": {
     "@typescript-eslint/consistent-type-assertions": {
       "count": 1
@@ -1734,7 +1598,7 @@
   },
   "src/lib/auth/require-moderator.test.ts": {
     "no-restricted-syntax": {
-      "count": 2
+      "count": 1
     }
   },
   "src/lib/collection/acquisition-plan.ts": {
@@ -1757,7 +1621,7 @@
   },
   "src/lib/collection/store.collection-route.test.ts": {
     "no-restricted-syntax": {
-      "count": 2
+      "count": 1
     }
   },
   "src/lib/collection/store.ts": {
@@ -1771,11 +1635,6 @@
     }
   },
   "src/lib/community/verified-package-cards.test.ts": {
-    "no-restricted-syntax": {
-      "count": 1
-    }
-  },
-  "src/lib/community/visible-deck.test.ts": {
     "no-restricted-syntax": {
       "count": 1
     }
@@ -1885,9 +1744,6 @@
     }
   },
   "src/lib/deck/social-image.test.ts": {
-    "no-restricted-syntax": {
-      "count": 1
-    },
     "vitest/prefer-import-in-mock": {
       "count": 1
     }
@@ -1977,7 +1833,7 @@
   },
   "src/lib/deck/store-notes-persistence.test.ts": {
     "no-restricted-syntax": {
-      "count": 3
+      "count": 2
     }
   },
   "src/lib/deck/store-notes.test.ts": {
@@ -2068,7 +1924,7 @@
   },
   "src/lib/meta/snapshots.test.ts": {
     "no-restricted-syntax": {
-      "count": 2
+      "count": 1
     }
   },
   "src/lib/playtest/engine.ts": {

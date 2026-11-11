@@ -51,23 +51,49 @@ const VI_MOCK_CALL =
 const INTERNAL_PATH = "/^(@\\u002F|\\.)/";
 
 /**
+ * Mocked modules the internal-mock ban lets through, for now.
+ *
+ * Why: a route handler reaches the database through `@/lib/db/prisma` and the
+ * session through Auth.js's `auth()` in `@/lib/auth/config`. Until a context
+ * has a repository port and an injected session (phases 3 and later of the
+ * migration, ADR 0001 and docs/engineering/architecture.md), its route
+ * characterization tests can only replace those two modules with a mock.
+ *
+ * This exemption is transitional. Each context's move series removes it for
+ * its own routes once its repository port lands: a config block for that
+ * context's tests applies the ban without the exemption. The list is deleted
+ * when the last context has moved. These mocks still take the typed form
+ * (`prefer-import-in-mock`).
+ */
+const TRANSITIONAL_MOCK_SEAMS = ["@/lib/db/prisma", "@/lib/auth/config"];
+
+/** esquery conditions that keep the transitional seams out of a selector on `field`. */
+function exceptSeams(field) {
+  return TRANSITIONAL_MOCK_SEAMS.map((seam) => `[${field}!='${seam}']`).join(
+    ""
+  );
+}
+
+const INTERNAL_MOCK_MESSAGE =
+  "Do not mock a module of this repository (ADR 0005, rule 5): test through its public behaviour, with an in-memory fake behind a port or MSW for HTTP.";
+
+/**
  * `no-restricted-syntax` entries for ADR 0005, rule 5: no new mock of an
  * internal module, in the string form or the typed `import()` form. Test the
  * behaviour through the module's public surface, with in-memory fakes behind
- * a port and MSW at the HTTP boundary. Packages (`next/navigation`) may still
- * be mocked. Existing internal mocks are the baseline in
- * `eslint-suppressions.json`; they go as their context migrates.
+ * a port and MSW at the HTTP boundary. Packages (`next/navigation`) and the
+ * transitional seams above may still be mocked. Existing internal mocks are
+ * the baseline in `eslint-suppressions.json`; they go as their context
+ * migrates.
  */
 const INTERNAL_MOCK_BANS = [
   {
-    selector: `${VI_MOCK_CALL}[arguments.0.type='Literal'][arguments.0.value=${INTERNAL_PATH}]`,
-    message:
-      "Do not mock a module of this repository (ADR 0005, rule 5): test through its public behaviour, with an in-memory fake behind a port or MSW for HTTP.",
+    selector: `${VI_MOCK_CALL}[arguments.0.type='Literal'][arguments.0.value=${INTERNAL_PATH}]${exceptSeams("arguments.0.value")}`,
+    message: INTERNAL_MOCK_MESSAGE,
   },
   {
-    selector: `${VI_MOCK_CALL}[arguments.0.type='ImportExpression'][arguments.0.source.value=${INTERNAL_PATH}]`,
-    message:
-      "Do not mock a module of this repository (ADR 0005, rule 5): test through its public behaviour, with an in-memory fake behind a port or MSW for HTTP.",
+    selector: `${VI_MOCK_CALL}[arguments.0.type='ImportExpression'][arguments.0.source.value=${INTERNAL_PATH}]${exceptSeams("arguments.0.source.value")}`,
+    message: INTERNAL_MOCK_MESSAGE,
   },
 ];
 
@@ -281,9 +307,11 @@ const eslintConfig = [
   // Test hygiene (ADR 0005, rules 5 and 7). `@vitest/eslint-plugin` knows
   // Vitest's API, so its rules read `vi.mock` and `it.only` the way Vitest
   // does. The mocks that predate these rules are recorded in
-  // `eslint-suppressions.json`, like the other ratchets; this block must stay
-  // the last one to set `no-restricted-syntax` for test files
-  // (`src/test/test-hygiene-lint.test.ts` fails otherwise).
+  // `eslint-suppressions.json`, like the other ratchets. ESLint keeps only
+  // the last block's options for a rule, so a later block may set
+  // `no-restricted-syntax` for test files only to tighten the ban for one
+  // context (see TRANSITIONAL_MOCK_SEAMS); `src/test/test-hygiene-lint.test.ts`
+  // fails if the ban is lost.
   {
     files: VITEST_FILES,
     plugins: { vitest },
