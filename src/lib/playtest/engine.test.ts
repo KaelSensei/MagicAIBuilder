@@ -21,10 +21,10 @@ import {
   applyEditActionLogEntry,
   applyRemoveActionLogEntry,
   PHASES,
-  STARTING_LIFE,
   maxMulligans,
 } from "./engine";
 import type { PlaytestEngine } from "./engine";
+import { STARTING_LIFE } from "@/lib/deck/game-constants";
 import type { DeckCard } from "@/lib/deck/types";
 
 function makeCard(id: string, name = "Test Card"): DeckCard {

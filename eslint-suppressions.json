@@ -1845,7 +1845,7 @@
       "count": 1
     },
     "no-restricted-imports": {
-      "count": 2
+      "count": 1
     }
   },
   "src/lib/deck/validation.ts": {

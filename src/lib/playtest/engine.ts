@@ -21,6 +21,7 @@
  */
 
 import type { DeckCard } from "@/lib/deck/types";
+import { OPENING_HAND_SIZE, STARTING_LIFE } from "@/lib/deck/game-constants";
 import { randomIntBelow } from "@/lib/crypto-random";
 
 // ─── Ports ───────────────────────────────────────────────────────────────
@@ -64,13 +65,13 @@ export const defaultPlaytestDeps: PlaytestDeps = {
 };
 
 // ─── Constants ─────────────────────────────────────────────────────────────
-/** Commander default; per-format totals live in FORMAT_CONFIG.startingLife. */
-export const STARTING_LIFE = 40;
+// The opening hand size and the starting life total are game rules shared with deck analysis:
+// they live in `lib/deck/game-constants.ts`.
 
-/** Opening hand size; every London mulligan draws this many again (CR 103.5). */
-export const OPENING_HAND_SIZE = 7;
-
-/** Smallest opening hand the playtest lets a player mulligan down to. */
+/**
+ * Smallest opening hand the playtest lets a player mulligan down to. A playtest choice, not a
+ * rule: CR 103.5 lets a player take mulligans "until their opening hand would be zero cards".
+ */
 const MIN_KEPT_HAND_SIZE = 1;
 
 export const PHASES = [
