@@ -225,14 +225,23 @@ Every value below is a local test fixture, not a secret. No variable has to be e
 | `@typescript-eslint/max-params`                 | 3 parameters                                             |
 | `@typescript-eslint/consistent-type-assertions` | no cast (`x as T`, `<T>x`); `as const` stays allowed     |
 | `@typescript-eslint/no-non-null-assertion`      | no non-null assertion (`x!`)                             |
+| `no-restricted-imports`                         | the import boundaries below                              |
 
-Comments and blank lines never count toward a line limit, so the comment standard cannot push a module over one. The rules apply to shipped code: every `src/**/*.{ts,tsx}` file except `*.test.{ts,tsx}`, `src/test/**` and the `testing/` and `fixtures/` folders. Tests keep the preset rules.
+Comments and blank lines never count toward a line limit, so the comment standard cannot push a module over one. The rules apply to shipped code: every `src/**/*.{ts,tsx}` file except `*.test.{ts,tsx}`, `src/test/**` and the `testing/` and `fixtures/` folders. Tests keep the preset rules, except for the `../` ban below.
+
+The import boundaries, phase 1. `no-restricted-imports` matches the specifier as written, which is enough because cross-folder imports use the `@/` alias; dependency-cruiser adds the transitive view in stage 3.
+
+- `src/lib` does not import `@/components`, `@/hooks` or `@/app`.
+- `src/components` and `src/hooks` do not import `@/app`, `@/lib/db/prisma` or `@prisma/client`.
+- Shipped code does not import `@/test` or a `testing/` folder.
+- No file under `src`, tests included, imports a `../` path, which would slip past the rules above.
+- `src/modules/*/domain/` and `index.ts` do not import React, Next.js, Zustand, Prisma or an outer layer; `src/modules/*/client/`, `ui/` and `client.ts` do not import Prisma, `server-only`, a `server.ts`, `application/` or `infrastructure/`. No module exists yet, so these bans start with no breach.
 
 `next build` does not lint (`eslint.ignoreDuringBuilds` in `next.config.ts`): it calls the ESLint Node.js API, which ignores the suppressions file in ESLint 9. `pnpm lint` in CI and lint-staged on commit run the ESLint CLI, which applies it.
 
 ### Shrinking the baseline
 
-1. Fix the breach: split the module, extract the function, flatten the nesting, replace the cast or the `!` with a type guard, a Zod parse at the boundary or `satisfies`.
+1. Fix the breach: split the module, extract the function, flatten the nesting, replace the cast or the `!` with a type guard, a Zod parse at the boundary or `satisfies`, move the shared type down to the layer that owns it.
 2. Run `pnpm lint --prune-suppressions`. It lowers the counts in `eslint-suppressions.json`, deletes the entries that reached zero and drops the paths that no longer exist.
 3. Commit the smaller `eslint-suppressions.json` with the fix. The pre-commit hook lints staged files against it, so the commit fails until step 2 is done.
 

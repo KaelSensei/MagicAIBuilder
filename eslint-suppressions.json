@@ -64,6 +64,16 @@
       "count": 3
     }
   },
+  "src/app/api/cache/cards/route.ts": {
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "src/app/api/cache/search/route.ts": {
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
   "src/app/api/collection/[id]/route.ts": {
     "@typescript-eslint/max-params": {
       "count": 1
@@ -420,6 +430,9 @@
     },
     "max-lines-per-function": {
       "count": 2
+    },
+    "no-restricted-imports": {
+      "count": 1
     }
   },
   "src/components/deck/DecksHomeControls.tsx": {
@@ -429,6 +442,11 @@
   },
   "src/components/deck/ExportModal.tsx": {
     "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/deck/GeneratedDeckCorrections.tsx": {
+    "no-restricted-imports": {
       "count": 1
     }
   },
@@ -753,6 +771,9 @@
   "src/hooks/useAIDeckBuild.ts": {
     "@typescript-eslint/consistent-type-assertions": {
       "count": 1
+    },
+    "no-restricted-imports": {
+      "count": 1
     }
   },
   "src/hooks/useAISuggestions.ts": {
@@ -806,6 +827,26 @@
       "count": 2
     }
   },
+  "src/lib/ai/deck-plan.ts": {
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "src/lib/ai/generated-deck-legality.ts": {
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "src/lib/ai/generated-deck-size.ts": {
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "src/lib/ai/generated-deck-validation.ts": {
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
   "src/lib/ai/model-reply.ts": {
     "complexity": {
       "count": 1
@@ -816,6 +857,16 @@
       "count": 2
     },
     "complexity": {
+      "count": 1
+    }
+  },
+  "src/lib/ai/suggestion-review.ts": {
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "src/lib/ai/suggestion-stream.ts": {
+    "no-restricted-imports": {
       "count": 1
     }
   },
@@ -895,8 +946,33 @@
       "count": 1
     }
   },
+  "src/lib/deck/commander-save-recovery.ts": {
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
   "src/lib/deck/companion.ts": {
     "@typescript-eslint/max-params": {
+      "count": 1
+    }
+  },
+  "src/lib/deck/fixtures/moxfield-v1.ts": {
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "src/lib/deck/fixtures/partner-cards.ts": {
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "src/lib/deck/fixtures/plain-text-roundtrip-v1.ts": {
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "src/lib/deck/fixtures/plain-text-v1.ts": {
+    "no-restricted-imports": {
       "count": 1
     }
   },
@@ -918,6 +994,9 @@
   "src/lib/deck/mana-alignment.ts": {
     "@typescript-eslint/consistent-type-assertions": {
       "count": 5
+    },
+    "no-restricted-imports": {
+      "count": 1
     }
   },
   "src/lib/deck/multiples.ts": {
@@ -979,6 +1058,9 @@
     },
     "max-lines-per-function": {
       "count": 7
+    },
+    "no-restricted-imports": {
+      "count": 1
     }
   },
   "src/lib/deck/templates.ts": {
@@ -994,6 +1076,9 @@
   "src/lib/deck/turn-one.ts": {
     "@typescript-eslint/max-params": {
       "count": 1
+    },
+    "no-restricted-imports": {
+      "count": 2
     }
   },
   "src/lib/deck/validation.ts": {
