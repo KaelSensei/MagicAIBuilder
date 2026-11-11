@@ -11,6 +11,7 @@
  * is still served. Two concurrent fills may each pass the count, so the cap is
  * soft by a few rows.
  */
+import "server-only";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { toJsonPayload } from "@/lib/api/json-payload";

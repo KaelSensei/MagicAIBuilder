@@ -8,6 +8,7 @@
  * Parsing happens server-side only; the ~1 MB file is read once per process
  * and the parsed result is cached at module level.
  */
+import "server-only";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { parseRulesEffectiveDate } from "./effective-date";

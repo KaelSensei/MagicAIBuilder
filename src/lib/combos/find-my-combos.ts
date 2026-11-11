@@ -1,4 +1,5 @@
 // Server side of combo detection: one Commander Spellbook "find my combos" call per deck.
+import "server-only";
 import { z } from "zod";
 import { USER_AGENT } from "@/lib/http";
 import type { DeckComboQuery } from "@/lib/combos/deck-query";

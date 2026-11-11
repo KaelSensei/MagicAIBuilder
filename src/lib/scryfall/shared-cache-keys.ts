@@ -8,6 +8,7 @@
  * are never read again: no key built here can equal one of them. Change the
  * namespace to retire every stored row at once.
  */
+import "server-only";
 import { createHash } from "node:crypto";
 
 /** Prefix of every row key the server writes; rows without it are retired. */

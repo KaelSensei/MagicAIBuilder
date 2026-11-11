@@ -1,3 +1,15 @@
+/**
+ * The Auth.js settings the Edge middleware can run: JWT sessions, the sign-in
+ * pages, the Google provider and the `authorized` callback that guards private
+ * paths.
+ *
+ * `config.ts` spreads these settings and adds what needs Node. Server-only
+ * because it holds the Google client secret; Next bundles middleware in a
+ * server layer, where `server-only` resolves to an empty module.
+ *
+ * @module auth/edge-config
+ */
+import "server-only";
 import type { NextAuthConfig } from "next-auth";
 import Google from "next-auth/providers/google";
 import {
@@ -22,7 +34,7 @@ const PUBLIC_API_PATH_PREFIXES: readonly string[] = [
 ];
 
 /**
- * Edge-compatible auth config — used by middleware only.
+ * Edge-compatible auth config, run by the middleware and extended by config.ts.
  * Does NOT import Prisma or bcryptjs (both are Node.js-only).
  * Credentials provider is omitted here; it runs server-side in config.ts.
  */
