@@ -385,9 +385,10 @@ Rules for every series:
 - **One context per series of small pull requests.** Pure moves and logic changes are separate
   pull requests. A behaviour change found during a refactor gets its own `fix/` pull request with
   a Red test; it is never hidden in a move.
-- **Moves are made by a committed, idempotent codemod** driven by a move map. It rewrites static
-  imports, `import()` expressions, `vi.mock` paths and `require` calls. Files move byte-identical,
-  so git's rename detection carries concurrent edits across.
+- **Moves are made by a committed, idempotent codemod** driven by a move map (see
+  [Running a move](#running-a-move) below). It rewrites static imports, `import()` expressions,
+  `vi.mock` paths and `require` calls. Files move byte-identical, so git's rename detection carries
+  concurrent edits across.
 - **Temporary re-export shims** are allowed only within a series and are removed at its end, with
   one known exception: a shim cannot be removed while the on-hold AI metering branch
   (`feat/ai-usage-metering-and-monthly-quota`) still imports the old path. The move codemod also
@@ -399,6 +400,20 @@ Rules for every series:
   for the owner, not deleted.
 - **Each series ends** with the context's `README.md`, its `docs/functional/<context>.md`, its
   comments brought to the standard, and its dependency-cruiser rules at `error`.
+
+### Running a move
+
+A move pull request appends its entries to `scripts/refactor/moves.json` and runs
+`pnpm refactor:apply-moves` (first with `--dry-run`). The codemod moves each file with `git mv`,
+rewrites every module specifier that names it in `src/`, `e2e/` and `scripts/` (imports, `import()`
+and `typeof import()`, `require`, and the path of every `vi.mock`-family call), keeps `@/`
+specifiers as `@/`, keeps the dependency-cruiser baseline and the ESLint suppressions in step with
+the moved paths, and refuses to write anything if a specifier would resolve to no file. It leaves the
+rewrites unstaged, so the pure renames are committed first and the rewrites second. The map only
+grows, and a second run changes nothing, so a branch that predates a move is rebased and then runs
+the same command. Root configs and docs that name a moved path are checked by hand with
+`git grep` until the codemod covers them. Details and limits:
+[scripts/refactor/README.md](../../scripts/refactor/README.md).
 
 ## How to read the code base today
 
