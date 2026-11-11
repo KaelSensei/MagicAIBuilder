@@ -29,6 +29,11 @@ export type CardCategory =
   | "other";
 export type DeckZone = "main" | "sideboard" | "maybeboard";
 export type { BracketLevel };
+
+/**
+ * One face of a two-faced card (CR 712.1), with its own name, mana cost, type line, rules text
+ * and images. `DeckCard.cardFaces` holds the front face, then the back face.
+ */
 export interface CardFace {
   name: string;
   manaCost: string;
@@ -137,13 +142,4 @@ export interface SearchFilters {
    * by `useCardSearchResults`; it adds nothing to the Scryfall query.
    */
   collectionOnly?: boolean;
-}
-
-export interface CardFace {
-  name: string;
-  manaCost: string;
-  typeLine: string;
-  oracleText: string;
-  imageUri: string;
-  artCropUri: string;
 }
