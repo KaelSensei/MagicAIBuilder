@@ -1,4 +1,10 @@
 "use client";
+/**
+ * One row of a deck zone in the editor's list view: quantity, name, mana
+ * value, the row's badges and its move and remove actions.
+ *
+ * @module card/CardListItem
+ */
 import { motion } from "framer-motion";
 import { useLocale, useTranslations } from "next-intl";
 import { X, AlertTriangle, Zap, Bookmark, RefreshCw, Layers, CircleHelp } from "lucide-react";
@@ -6,6 +12,7 @@ import { useState } from "react";
 import { cn } from "@/components/ui/utils";
 import type { DeckCard } from "@/lib/deck/types";
 import { CardTooltip } from "@/components/card/CardTooltip";
+import { DeckCardOwnershipBadge } from "@/components/collection/DeckCardOwnershipBadge";
 import { useLocalizedDeckName } from "@/components/card/LocalizedDeckTextContext";
 import { getCardRoleExplanation } from "@/lib/deck/card-role-explanation";
 import { formatUsdPrice } from "@/i18n/number-format";
@@ -114,6 +121,11 @@ function CardRoleExplanation({ card }: { readonly card: DeckCard }) {
     </div>
   );
 }
+/**
+ * A deck card row. Each move or remove button appears only when its handler
+ * is passed; the ownership badge appears once the player's collection holds
+ * any card.
+ */
 export function CardListItem({
   card,
   onRemove,
@@ -169,6 +181,7 @@ export function CardListItem({
             {formatUsdPrice(locale, card.price)}
           </span>
         )}
+        <DeckCardOwnershipBadge card={card} />
         {card.isGameChanger && (
           <span title={t("gameChanger")}>
             <Zap className="w-3 h-3 text-amber-400" />

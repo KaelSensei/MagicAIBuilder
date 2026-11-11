@@ -91,7 +91,8 @@
     "owned": "Possédée",
     "ownedCount": "Possédée (×{count})",
     "buy": "Acheter",
-    "notOwned": "Absente de ta collection — à acheter",
+    "ownedDetail": "Possédée : {owned, plural, one {# exemplaire} other {# exemplaires}} de cette édition dans ta collection",
+    "buyDetail": "À acheter : {missing, plural, one {# exemplaire manquant} other {# exemplaires manquants}} de cette édition, {owned} dans ta collection",
     "inCollection": "En collection ×{count}"
   },
   "dialog": {
