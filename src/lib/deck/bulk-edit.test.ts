@@ -1,9 +1,19 @@
+/** Bulk edit: planning a pasted decklist against the deck, and resolving its command zone. */
 import { describe, expect, it } from "vitest";
 import { planBulkEdit, resolveBulkEdit } from "./bulk-edit";
 import { parseTextDecklist } from "./import";
 import type { DeckCard } from "./types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import { buildScryfallNameIndex } from "@/lib/scryfall/name-index";
+import type { PairingCard } from "./partner-abilities";
+import {
+  AMY_POND,
+  PIR,
+  SHABRAZ,
+  TENTH_DOCTOR,
+  TYMNA,
+  WILSON,
+} from "./fixtures/partner-cards";
 
 /** A Scryfall card whose printing id derives from its name. */
 function scryfall(
@@ -27,6 +37,18 @@ function scryfall(
     legalities: { commander: "legal" },
     ...extra,
   };
+}
+
+/** The Partner line as Oracle prints it on Kraum and Thrasios. */
+const PARTNER_LINE =
+  "Partner (You can have two commanders if both have partner.)";
+
+/** A Scryfall card carrying a fixture's name, type line and Oracle text. */
+function scryfallOf(card: PairingCard): ScryfallCard {
+  return scryfall(card.name, {
+    type_line: card.typeLine,
+    oracle_text: card.oracleText,
+  });
 }
 
 /** A deck row; only the fields the planner compares are meaningful. */
@@ -117,8 +139,14 @@ describe("resolveBulkEdit — command zone", () => {
     const result = resolveBulkEdit(
       plan,
       buildScryfallNameIndex([
-        scryfall("Kraum, Ludevic's Opus", { keywords: ["Partner"] }),
-        scryfall("Thrasios, Triton Hero", { keywords: ["Partner"] }),
+        scryfall("Kraum, Ludevic's Opus", {
+          keywords: ["Partner"],
+          oracle_text: PARTNER_LINE,
+        }),
+        scryfall("Thrasios, Triton Hero", {
+          keywords: ["Partner"],
+          oracle_text: PARTNER_LINE,
+        }),
       ])
     );
 
@@ -159,6 +187,42 @@ describe("resolveBulkEdit — command zone", () => {
     ]);
 
     expect(result).toEqual({ status: "invalidPartner", name: "Sol Ring" });
+  });
+
+  it("refuses a partner-with card that names another commander (CR 702.124j)", () => {
+    const result = resolveText(
+      "Commander\n1 Pir, Imaginative Rascal\n1 Shabraz, the Skyshark",
+      [scryfallOf(PIR), scryfallOf(SHABRAZ)]
+    );
+
+    expect(result).toEqual({
+      status: "invalidPartner",
+      name: "Shabraz, the Skyshark",
+    });
+  });
+
+  it("refuses a Partner commander beside a choose-a-Background commander (CR 702.124k)", () => {
+    const result = resolveText(
+      "Commander\n1 Wilson, Refined Grizzly\n1 Tymna the Weaver",
+      [scryfallOf(WILSON), scryfallOf(TYMNA)]
+    );
+
+    expect(result).toEqual({
+      status: "invalidPartner",
+      name: "Tymna the Weaver",
+    });
+  });
+
+  it("records the Doctor's companion pairing Amy Pond uses with a Doctor (CR 702.124g)", () => {
+    const result = resolveText("Commander\n1 Amy Pond\n1 The Tenth Doctor", [
+      scryfallOf(AMY_POND),
+      scryfallOf(TENTH_DOCTOR),
+    ]);
+
+    expect(result).toMatchObject({
+      status: "ready",
+      edit: { commandZone: { patch: { pairingType: "doctor" } } },
+    });
   });
 
   it("refuses the commander's own card as its partner", () => {

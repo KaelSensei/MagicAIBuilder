@@ -5,27 +5,37 @@ MagicAIBuilder supports “two-slot” commander configurations using a single m
 - `commander`: the primary commander slot
 - `partner`: the secondary slot (label depends on pairing type)
 
-This applies to:
+This applies to every partner ability of CR 702.124:
 
-- Partner
-- Partner With
-- Friends Forever
-- Doctor + Doctor’s Companion
-- Choose a Background + Background
+- Partner (702.124h)
+- Partner—[text]: Character select, Father & son, Friends forever, Survivors (702.124i)
+- Partner with [name] (702.124j)
+- Choose a Background + a legendary Background (702.124k)
+- Doctor’s companion + a legendary Time Lord Doctor with no other creature types (702.124m)
 
 ---
 
-## Pairing types (how we detect them)
+## One rule, one place
 
-Pairing type is derived from the **commander’s** oracle text / keywords (via Scryfall data):
+`pairCommanders(a, b)` in `src/lib/deck/pairing.ts` decides whether two cards can share
+the command zone and which pairing they use. The deck store (`setCommander`, `setPartner`),
+the bulk editor, the AI build check and `PATCH /api/decks/[id]` all call it.
 
-- Partner → `partner`
-- Partner with … → `partner_with`
-- Friends forever → `friends_forever`
-- Doctor’s companion → `doctor`
-- Choose a Background → `background`
+- Abilities are read from each card’s **Oracle text**, line by line
+  (`src/lib/deck/partner-abilities.ts`). Scryfall’s keyword list is not used: it tags
+  “Partner with” and every “Partner—[text]” card with plain “Partner” too.
+- Abilities never combine (702.124f). A card with two, such as Amy Pond, may use either
+  (702.124g).
+- A Time Lord Doctor and a Background have no partner ability, but either one opens the
+  second slot for the card that can join it.
+- The deck stores the pairing a pair uses in `pairingType`. A lone commander stores its first
+  pairing in Oracle order; it only sets the slot label.
 
-The “partner slot” label in the UI changes accordingly (Partner / Background / …).
+## Partner-slot search
+
+The search is built from the commander’s partner abilities, one query per ability, joined
+with `or`: Pir searches `!"Toothy, Imaginary Friend"`, Clara Oswald searches Time Lord Doctors,
+and Amy Pond searches Rory Williams or a Time Lord Doctor.
 
 ---
 
