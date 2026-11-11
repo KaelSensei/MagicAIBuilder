@@ -1,0 +1,15 @@
+Commander (2)
+1x Thrasios, Triton Hero [Commander{top}]
+1x Tymna the Weaver [Commander{top}]
+
+Mainboard (4)
+1x Sol Ring [Ramp]
+1x Rhystic Study [Draw]
+1x Arcane Signet (ELD) 331 [Ramp]
+1x Mystic Remora [Card Advantage]
+
+Sideboard (2)
+2x Negate [Other]
+
+Considering (1)
+1x Ponder [Draw]
