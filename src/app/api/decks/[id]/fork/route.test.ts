@@ -8,14 +8,17 @@ const { mockAuth, mockUserFindUnique, mockDeckFindUnique, mockDeckCreate } =
     mockDeckCreate: vi.fn(),
   }));
 
-vi.mock("@/lib/auth/config", () => ({ auth: mockAuth }));
-vi.mock("@/lib/db/prisma", () => ({
-  prisma: {
+vi.mock(import("@/lib/auth/config"), () => ({ auth: mockAuth }));
+vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
+  const { stubPrisma } = await import("@/test/prisma-stub");
+  return stubPrisma(await importOriginal(), {
     user: { findUnique: mockUserFindUnique },
     deck: { findUnique: mockDeckFindUnique, create: mockDeckCreate },
-  },
+  });
+});
+vi.mock(import("@/lib/logger"), () => ({
+  logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
-vi.mock("@/lib/logger", () => ({ logger: { error: vi.fn() } }));
 
 import { POST } from "./route";
 

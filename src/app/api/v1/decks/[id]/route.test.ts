@@ -6,14 +6,21 @@ const { mockRequireScope, mockFindFirst, mockLogError } = vi.hoisted(() => ({
   mockLogError: vi.fn(),
 }));
 
-vi.mock("@/lib/api/authenticate", async () => {
+vi.mock(import("@/lib/api/authenticate"), async () => {
   const actual = await vi.importActual<typeof import("@/lib/api/authenticate")>(
     "@/lib/api/authenticate"
   );
   return { ...actual, requireApiScope: mockRequireScope };
 });
-vi.mock("@/lib/db/prisma", () => ({ prisma: { deck: { findFirst: mockFindFirst } } }));
-vi.mock("@/lib/logger", () => ({ logger: { error: mockLogError } }));
+vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
+  const { stubPrisma } = await import("@/test/prisma-stub");
+  return stubPrisma(await importOriginal(), {
+    deck: { findFirst: mockFindFirst },
+  });
+});
+vi.mock(import("@/lib/logger"), () => ({
+  logger: { info: vi.fn(), warn: vi.fn(), error: mockLogError },
+}));
 
 import { GET } from "./route";
 import { apiError } from "@/lib/api/authenticate";

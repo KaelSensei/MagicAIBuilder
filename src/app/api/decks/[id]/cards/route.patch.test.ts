@@ -85,10 +85,10 @@ const db = vi.hoisted((): FakeDatabase => ({
 }));
 
 const getCardCollection = vi.hoisted(() => vi.fn());
-vi.mock("@/lib/scryfall/client", () => ({ getCardCollection }));
+vi.mock(import("@/lib/scryfall/client"), () => ({ getCardCollection }));
 
 const requireDeckOwner = vi.hoisted(() => vi.fn());
-vi.mock("@/lib/auth/helpers", () => ({ requireDeckOwner }));
+vi.mock(import("@/lib/auth/helpers"), () => ({ requireDeckOwner }));
 
 /** Prisma-shaped delegates that read and write one set of tables. */
 function clientOver(tables: Tables) {
@@ -153,8 +153,9 @@ function clientOver(tables: Tables) {
   };
 }
 
-vi.mock("@/lib/db/prisma", () => ({
-  prisma: {
+vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
+  const { stubPrisma } = await import("@/test/prisma-stub");
+  return stubPrisma(await importOriginal(), {
     get deckCard() {
       return clientOver(db.committed).deckCard;
     },
@@ -169,8 +170,8 @@ vi.mock("@/lib/db/prisma", () => ({
         return result;
       }
     ),
-  },
-}));
+  });
+});
 
 import { PATCH } from "./route";
 

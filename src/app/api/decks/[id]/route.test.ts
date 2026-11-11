@@ -10,18 +10,23 @@ const { mockFindUnique, mockUpdate, mockDelete, mockUserFindUnique, mockUserUpse
     mockUserUpsert: vi.fn(),
   }));
 
-vi.mock("@/lib/db/prisma", () => ({
-  prisma: {
-    deck: { findUnique: mockFindUnique, update: mockUpdate, delete: mockDelete },
+vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
+  const { stubPrisma } = await import("@/test/prisma-stub");
+  return stubPrisma(await importOriginal(), {
+    deck: {
+      findUnique: mockFindUnique,
+      update: mockUpdate,
+      delete: mockDelete,
+    },
     user: { findUnique: mockUserFindUnique, upsert: mockUserUpsert },
-  },
-}));
+  });
+});
 
 const { mockAuth } = vi.hoisted(() => ({ mockAuth: vi.fn() }));
-vi.mock("@/lib/auth/config", () => ({ auth: mockAuth }));
+vi.mock(import("@/lib/auth/config"), () => ({ auth: mockAuth }));
 
 const { mockGetCardCollection } = vi.hoisted(() => ({ mockGetCardCollection: vi.fn() }));
-vi.mock("@/lib/scryfall/client", () => ({ getCardCollection: mockGetCardCollection }));
+vi.mock(import("@/lib/scryfall/client"), () => ({ getCardCollection: mockGetCardCollection }));
 
 import { DELETE, GET, PATCH } from "./route";
 import type { PairingCard } from "@/lib/deck/partner-abilities";

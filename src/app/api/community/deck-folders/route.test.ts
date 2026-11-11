@@ -7,13 +7,17 @@ const { mockRequireAuth, mockFolderCreate, mockFolderFindMany, mockSavedFindMany
   mockSavedFindMany: vi.fn(),
 }));
 
-vi.mock("@/lib/auth/helpers", () => ({ requireAuth: mockRequireAuth }));
-vi.mock("@/lib/db/prisma", () => ({
-  prisma: {
-    publicDeckFolder: { create: mockFolderCreate, findMany: mockFolderFindMany },
+vi.mock(import("@/lib/auth/helpers"), () => ({ requireAuth: mockRequireAuth }));
+vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
+  const { stubPrisma } = await import("@/test/prisma-stub");
+  return stubPrisma(await importOriginal(), {
+    publicDeckFolder: {
+      create: mockFolderCreate,
+      findMany: mockFolderFindMany,
+    },
     savedPublicDeck: { findMany: mockSavedFindMany },
-  },
-}));
+  });
+});
 
 import { GET, POST } from "./route";
 

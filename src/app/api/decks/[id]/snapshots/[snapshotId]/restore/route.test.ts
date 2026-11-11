@@ -8,12 +8,13 @@ const mocks = vi.hoisted(() => ({
   createMany: vi.fn(),
 }));
 
-vi.mock("@/lib/auth/helpers", () => ({
+vi.mock(import("@/lib/auth/helpers"), () => ({
   requireDeckOwner: mocks.requireDeckOwner,
 }));
 
-vi.mock("@/lib/db/prisma", () => ({
-  prisma: {
+vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
+  const { stubPrisma } = await import("@/test/prisma-stub");
+  return stubPrisma(await importOriginal(), {
     deckSnapshot: { findFirst: mocks.findSnapshot },
     deck: { findUnique: mocks.findDeck },
     $transaction: vi.fn(async (run: (tx: unknown) => Promise<void>) =>
@@ -24,8 +25,8 @@ vi.mock("@/lib/db/prisma", () => ({
         },
       })
     ),
-  },
-}));
+  });
+});
 
 import { POST } from "./route";
 

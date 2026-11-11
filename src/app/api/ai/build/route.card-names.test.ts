@@ -11,12 +11,17 @@ const db = await vi.hoisted(async () => {
   return createAiUsageDb();
 });
 
-vi.mock("@/lib/auth/helpers", () => ({ requireAuth: mocks.requireAuth }));
-vi.mock("@/lib/rate-limit", () => ({
+vi.mock(import("@/lib/auth/helpers"), () => ({
+  requireAuth: mocks.requireAuth,
+}));
+vi.mock(import("@/lib/rate-limit"), () => ({
   checkRateLimit: () => ({ allowed: true, retryAfterMs: 0 }),
 }));
 // The route reserves a metered AI call before it reaches the model.
-vi.mock("@/lib/db/prisma", () => ({ prisma: db }));
+vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
+  const { stubPrisma } = await import("@/test/prisma-stub");
+  return stubPrisma(await importOriginal(), db);
+});
 
 import { resetAiUsageDb } from "@/test/ai-usage-db";
 import { POST } from "./route";

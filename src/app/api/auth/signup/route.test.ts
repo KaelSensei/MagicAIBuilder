@@ -7,14 +7,15 @@ const { mockUserFindUnique, mockUserCreate } = vi.hoisted(() => ({
   mockUserCreate: vi.fn(),
 }));
 
-vi.mock("@/lib/db/prisma", () => ({
-  prisma: {
+vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
+  const { stubPrisma } = await import("@/test/prisma-stub");
+  return stubPrisma(await importOriginal(), {
     user: {
       findUnique: mockUserFindUnique,
       create: mockUserCreate,
     },
-  },
-}));
+  });
+});
 
 // ─── Mock bcryptjs ────────────────────────────────────────────────────────────
 
@@ -22,7 +23,7 @@ const { mockHash } = vi.hoisted(() => ({
   mockHash: vi.fn(),
 }));
 
-vi.mock("bcryptjs", () => ({
+vi.mock(import("bcryptjs"), () => ({
   hash: mockHash,
 }));
 

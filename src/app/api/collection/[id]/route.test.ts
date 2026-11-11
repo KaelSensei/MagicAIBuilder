@@ -16,10 +16,11 @@ import {
 
 const { requireAuth } = vi.hoisted(() => ({ requireAuth: vi.fn() }));
 
-vi.mock("@/lib/auth/helpers", () => ({ requireAuth }));
-vi.mock("@/lib/db/prisma", async () => {
+vi.mock(import("@/lib/auth/helpers"), () => ({ requireAuth }));
+vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
+  const { stubPrisma } = await import("@/test/prisma-stub");
   const { collectionDb: db } = await import("@/test/collection-db-fake");
-  return { prisma: db.prisma };
+  return stubPrisma(await importOriginal(), db.prisma);
 });
 
 import { DELETE, PATCH } from "./route";

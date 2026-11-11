@@ -2,9 +2,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { deckCard, FAKE_DECK, playtestDb } from "@/test/playtest-db-fake";
 
-vi.mock("@/lib/db/prisma", async () => {
+vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
+  const { stubPrisma } = await import("@/test/prisma-stub");
   const { playtestDb: db } = await import("@/test/playtest-db-fake");
-  return { prisma: db.prisma };
+  return stubPrisma(await importOriginal(), db.prisma);
 });
 
 vi.mock("@/lib/auth/config", () => ({

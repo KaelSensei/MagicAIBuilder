@@ -6,10 +6,13 @@ const { mockFindFirst, mockUpdate, mockRequireAuth } = vi.hoisted(() => ({
   mockRequireAuth: vi.fn(),
 }));
 
-vi.mock("@/lib/db/prisma", () => ({
-  prisma: { user: { findFirst: mockFindFirst, update: mockUpdate } },
-}));
-vi.mock("@/lib/auth/helpers", () => ({ requireAuth: mockRequireAuth }));
+vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
+  const { stubPrisma } = await import("@/test/prisma-stub");
+  return stubPrisma(await importOriginal(), {
+    user: { findFirst: mockFindFirst, update: mockUpdate },
+  });
+});
+vi.mock(import("@/lib/auth/helpers"), () => ({ requireAuth: mockRequireAuth }));
 
 import { PATCH } from "./route";
 import { logger } from "@/lib/logger";

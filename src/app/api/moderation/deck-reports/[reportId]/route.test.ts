@@ -5,10 +5,13 @@ const { mockRequireModerator, mockReportUpdateMany } = vi.hoisted(() => ({
   mockReportUpdateMany: vi.fn(),
 }));
 
-vi.mock("@/lib/auth/require-moderator", () => ({ requireModerator: mockRequireModerator }));
-vi.mock("@/lib/db/prisma", () => ({
-  prisma: { deckReport: { updateMany: mockReportUpdateMany } },
-}));
+vi.mock(import("@/lib/auth/require-moderator"), () => ({ requireModerator: mockRequireModerator }));
+vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
+  const { stubPrisma } = await import("@/test/prisma-stub");
+  return stubPrisma(await importOriginal(), {
+    deckReport: { updateMany: mockReportUpdateMany },
+  });
+});
 
 import { PATCH } from "./route";
 

@@ -10,18 +10,17 @@ const { mockDeckFindUnique, mockLoggerError } = vi.hoisted(() => ({
   mockLoggerError: vi.fn(),
 }));
 
-vi.mock("@/lib/db/prisma", () => ({
-  prisma: {
+vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
+  const { stubPrisma } = await import("@/test/prisma-stub");
+  return stubPrisma(await importOriginal(), {
     deck: {
       findUnique: mockDeckFindUnique,
     },
-  },
-}));
+  });
+});
 
-vi.mock("@/lib/logger", () => ({
-  logger: {
-    error: mockLoggerError,
-  },
+vi.mock(import("@/lib/logger"), () => ({
+  logger: { info: vi.fn(), warn: vi.fn(), error: mockLoggerError },
 }));
 
 // ─── Import route handler after mocks are in place ───────────────────────────

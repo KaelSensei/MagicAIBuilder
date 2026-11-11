@@ -7,14 +7,15 @@ const { mockDeckFindFirst, mockPackageFindFirst, mockRequireAuth, mockGetCardCol
   mockGetCardCollection: vi.fn(),
 }));
 
-vi.mock("@/lib/auth/helpers", () => ({ requireAuth: mockRequireAuth }));
-vi.mock("@/lib/scryfall/client", () => ({ getCardCollection: mockGetCardCollection }));
-vi.mock("@/lib/db/prisma", () => ({
-  prisma: {
+vi.mock(import("@/lib/auth/helpers"), () => ({ requireAuth: mockRequireAuth }));
+vi.mock(import("@/lib/scryfall/client"), () => ({ getCardCollection: mockGetCardCollection }));
+vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
+  const { stubPrisma } = await import("@/test/prisma-stub");
+  return stubPrisma(await importOriginal(), {
     deck: { findFirst: mockDeckFindFirst },
     cardPackage: { findFirst: mockPackageFindFirst },
-  },
-}));
+  });
+});
 
 import { POST } from "./route";
 
