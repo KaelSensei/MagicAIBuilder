@@ -11,6 +11,8 @@
   "removeNamed": "Retirer {name}",
   "setAsCommander": "Définir comme commandant",
   "setAsCommanderNamed": "Définir {name} comme commandant",
+  "changePrinting": "Changer d'édition",
+  "changePrintingNamed": "Changer l'édition de {name}",
   "noText": "Aucun texte",
   "noCardsFound": "Aucune carte trouvée",
   "loadingPrintings": "Chargement des éditions…",

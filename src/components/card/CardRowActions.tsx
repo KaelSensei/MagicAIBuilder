@@ -9,14 +9,16 @@
  *
  * These controls were orphaned: `CardNoteInline` was never mounted, because
  * `CardListItem` ignored its `showNotes` prop (since #156), and the quantity
- * stepper and "set as commander" went when 95c93075 (#163) rewrote the row
- * for double-faced cards.
+ * stepper, "set as commander" and "change printing" went when 95c93075 (#163)
+ * rewrote the row for double-faced cards.
  *
  * @module card/CardRowActions
  */
-import { Crown, Minus, Plus } from "lucide-react";
+import { Crown, Image as ImageIcon, Minus, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useState } from "react";
 import { CardNoteInline } from "@/components/card/CardNoteInline";
+import { PrintingSelectorModal } from "@/components/card/PrintingSelectorModal";
 import { cn } from "@/components/ui/utils";
 import { isCommanderEligible } from "@/lib/deck/commander-eligibility";
 import { maxQuantity } from "@/lib/deck/multiples";
@@ -33,8 +35,10 @@ const ROW_BUTTON =
   "opacity-0 group-hover:opacity-60 focus-visible:opacity-100 hover:!opacity-100 transition-opacity p-0.5 rounded text-[var(--text-secondary)]";
 
 /**
- * The row's card in the Scryfall shape that the catalogue rules read. It
- * carries only what the row stored; nothing is invented to fill the type.
+ * The row's card in the Scryfall shape that the catalogue rules and the
+ * printing selector read. It carries only what the row stored; nothing is
+ * invented to fill the type. The id is the row's printing, so the selector
+ * opens on the printing the deck holds.
  */
 function asCatalogCard(card: DeckCard): ScryfallCard {
   return {
@@ -48,6 +52,8 @@ function asCatalogCard(card: DeckCard): ScryfallCard {
     power: card.power ?? undefined,
     toughness: card.toughness ?? undefined,
     layout: card.layout,
+    image_uris: card.imageUri ? { grid: card.imageUri } : undefined,
+    prices: card.price === null ? undefined : { usd: String(card.price) },
     card_faces: card.cardFaces?.map((face) => ({
       name: face.name,
       mana_cost: face.manaCost,
@@ -150,8 +156,38 @@ function SetAsCommanderButton({ card }: { readonly card: DeckCard }) {
 }
 
 /**
- * The row's edit buttons: the note (when `showNotes` is set) and "set as
- * commander" (on a card that can be one).
+ * Opens the printing selector for the row and saves the chosen printing with
+ * `swapCardPrinting`, which keeps the row's quantity, zone, category and note.
+ */
+function ChangePrintingButton({ card }: { readonly card: DeckCard }) {
+  const t = useTranslations("card");
+  const [isOpen, setIsOpen] = useState(false);
+  const swapCardPrinting = useDeckStore((s) => s.swapCardPrinting);
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setIsOpen(true)}
+        aria-label={t("changePrintingNamed", { name: card.name })}
+        title={t("changePrinting")}
+        className={cn(ROW_BUTTON, "hover:text-[var(--accent-text)]")}
+      >
+        <ImageIcon className="w-3 h-3" aria-hidden="true" />
+      </button>
+      {isOpen && (
+        <PrintingSelectorModal
+          card={asCatalogCard(card)}
+          onSelect={(printing) => void swapCardPrinting(card.id, printing)}
+          onClose={() => setIsOpen(false)}
+        />
+      )}
+    </>
+  );
+}
+
+/**
+ * The row's edit buttons: the note (when `showNotes` is set), "set as
+ * commander" (on a card that can be one) and "change printing".
  */
 export function CardRowActions({ card, showNotes }: CardRowActionsProps) {
   return (
@@ -164,6 +200,7 @@ export function CardRowActions({ card, showNotes }: CardRowActionsProps) {
         />
       )}
       <SetAsCommanderButton card={card} />
+      <ChangePrintingButton card={card} />
     </>
   );
 }

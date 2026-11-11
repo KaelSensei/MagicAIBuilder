@@ -11,6 +11,8 @@
   "removeNamed": "Remove {name}",
   "setAsCommander": "Set as commander",
   "setAsCommanderNamed": "Set {name} as commander",
+  "changePrinting": "Change printing",
+  "changePrintingNamed": "Change the printing of {name}",
   "noCardsFound": "No cards found",
   "loadingPrintings": "Loading printings…",
   "printingsAvailable": "{count, plural, one {# printing available} other {# printings available}}",

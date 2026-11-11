@@ -7,12 +7,14 @@
  * deck API and answers it as the server would.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { createGuestDeck } from "@/lib/deck/guest-deck";
 import { useDeckStore } from "@/lib/deck/store";
 import type { DeckCard } from "@/lib/deck/types";
+import type { ScryfallCard } from "@/lib/scryfall/types";
 import { CardListItem } from "./CardListItem";
 
 const DECK_ID = "deck-1";
@@ -428,5 +430,149 @@ describe("set as commander on a deck row", () => {
     expect(
       screen.queryByRole("button", { name: /as commander/ })
     ).not.toBeInTheDocument();
+  });
+});
+
+describe("change printing on a deck row", () => {
+  const C21_ID = "c21a6e4f-6f1d-4c3d-9a3e-1f2b3c4d5e6f";
+  const CMM_ID = "cmm0b2a1-7d3e-4f5a-8b6c-9d0e1f2a3b4c";
+  const solRing = deckRow({
+    id: "row-sol-ring",
+    scryfallId: C21_ID,
+    name: "Sol Ring",
+    manaCost: "{1}",
+    cmc: 1,
+    typeLine: "Artifact",
+    oracleText: "{T}: Add {C}{C}.",
+    colorIdentity: [],
+    category: "ramp",
+    imageUri: `https://cards.scryfall.io/grid/front/c/2/${C21_ID}.webp`,
+  });
+
+  function printing(id: string, set: string, setName: string): ScryfallCard {
+    return {
+      id,
+      name: "Sol Ring",
+      mana_cost: "{1}",
+      cmc: 1,
+      type_line: "Artifact",
+      oracle_text: "{T}: Add {C}{C}.",
+      color_identity: [],
+      set,
+      set_name: setName,
+      lang: "en",
+      image_uris: {
+        grid: `https://cards.scryfall.io/grid/front/c/x/${id}.webp`,
+        art: `https://cards.scryfall.io/art/front/c/x/${id}.webp`,
+      },
+    };
+  }
+
+  /** Answers Scryfall's printing search with two printings; the deck API as usual. */
+  async function scryfallAndDeckApi(
+    input: RequestInfo | URL,
+    init?: RequestInit
+  ): Promise<Response> {
+    const url = requestUrl(input);
+    if (url.hostname !== "api.scryfall.com") return deckApi(input, init);
+    const data = [
+      printing(CMM_ID, "cmm", "Commander Masters"),
+      printing(C21_ID, "c21", "Commander 2021"),
+    ];
+    return Response.json({
+      object: "list",
+      total_cards: data.length,
+      has_more: false,
+      data,
+    });
+  }
+
+  function renderRow(locale: "en" | "fr" = "en") {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    return renderWithIntl(
+      <QueryClientProvider client={queryClient}>
+        <CardListItem card={solRing} />
+      </QueryClientProvider>,
+      { locale }
+    );
+  }
+
+  beforeEach(() => {
+    vi.stubGlobal("fetch", vi.fn(scryfallAndDeckApi));
+  });
+
+  it("swaps the row to the printing the player picks", async () => {
+    const user = userEvent.setup();
+    openSavedDeck(solRing);
+    renderRow();
+
+    await user.click(
+      screen.getByRole("button", { name: "Change the printing of Sol Ring" })
+    );
+    expect(
+      screen.getByRole("dialog", { name: "Sol Ring" })
+    ).toBeInTheDocument();
+    await user.click(
+      await screen.findByRole("button", {
+        name: "Sol Ring — Commander Masters",
+      })
+    );
+
+    await waitFor(() =>
+      expect(requests).toEqual([
+        expect.objectContaining({
+          method: "PATCH",
+          path: `/api/decks/${DECK_ID}/cards/row-sol-ring`,
+          body: expect.objectContaining({ scryfallId: CMM_ID }),
+        }),
+      ])
+    );
+    expect(storedRow("row-sol-ring")?.scryfallId).toBe(CMM_ID);
+    expect(storedRow("row-sol-ring")?.quantity).toBe(1);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("hides the row's hover preview so it does not cover the selector", async () => {
+    openSavedDeck(solRing);
+    renderRow();
+    vi.useFakeTimers();
+    try {
+      fireEvent.mouseEnter(screen.getByText("Sol Ring"), {
+        clientX: 10,
+        clientY: 10,
+      });
+      await act(async () => {
+        vi.advanceTimersByTime(400);
+      });
+      expect(screen.getByRole("img", { name: "Sol Ring" })).toBeInTheDocument();
+
+      const button = screen.getByRole("button", {
+        name: "Change the printing of Sol Ring",
+      });
+      fireEvent.pointerDown(button);
+      fireEvent.click(button);
+    } finally {
+      vi.useRealTimers();
+    }
+
+    expect(
+      screen.getByRole("dialog", { name: "Sol Ring" })
+    ).toBeInTheDocument();
+    // The open dialog hides the rest of the page from assistive technology,
+    // so look past aria-hidden: the preview must be gone from the screen.
+    expect(
+      screen.queryByRole("img", { name: "Sol Ring", hidden: true })
+    ).not.toBeInTheDocument();
+  });
+
+  it("names the button in the player's language", () => {
+    openSavedDeck(solRing);
+    renderRow("fr");
+
+    expect(
+      screen.getByRole("button", { name: "Changer l'édition de Sol Ring" })
+    ).toBeInTheDocument();
   });
 });

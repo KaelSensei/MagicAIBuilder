@@ -53,6 +53,11 @@ export function CardTooltip({ card, children }: CardTooltipProps) {
     ? cloneElement(child as React.ReactElement<React.HTMLAttributes<HTMLElement>>, {
         onMouseEnter: handleMouseEnter,
         onMouseLeave: handleMouseLeave,
+        // A press opens something of the row's own, such as the printing
+        // selector. React counts a portalled dialog as inside the row, so
+        // moving onto it fires no mouse leave, and the preview, drawn above
+        // everything, would stay over the dialog.
+        onPointerDown: handleMouseLeave,
       })
     : child;
 
