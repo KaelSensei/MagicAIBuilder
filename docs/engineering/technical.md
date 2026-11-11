@@ -983,7 +983,7 @@ graph TB
         DEV[Developer]
         DOCKER[Docker\nPostgreSQL]
         HUSKY[Husky\npre-commit]
-        LINT[lint-staged\nnext lint + prettier]
+        LINT[lint-staged\neslint + prettier]
     end
 
     subgraph CI["⚙️ GitHub Actions CI"]
@@ -1065,7 +1065,7 @@ Two different URLs are required — one for migrations, one for the running app:
 
 - GitHub Actions CI on every push and PR: lint → typecheck → test with coverage → build
 - Branch protection on `main`: `CI / Lint, Typecheck, Test, Build` is the **only required** status check
-- Pre-commit hooks via Husky + lint-staged: `next lint --fix` + `prettier --write`
+- Pre-commit hooks via Husky + lint-staged: `eslint --fix` + `prettier --write`
 - SonarCloud quality gate runs on every PR via `sonar.yml` but is **NOT a required check** in branch protection
 
 > **Do not add `SonarCloud Code Analysis` as a required branch protection check.**
