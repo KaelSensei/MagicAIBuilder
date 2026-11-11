@@ -2,8 +2,30 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth/config";
 import { logger } from "@/lib/logger";
 import { findDeckForViewer } from "@/lib/deck/deck-for-viewer";
+import {
+  PUBLIC_DECK_READ_WINDOW_MS,
+  PUBLIC_DECK_READS_PER_CLIENT,
+} from "@/lib/deck/public-read-policy";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 type Params = { params: Promise<{ id: string }> };
+
+/** A 429 once this client has spent its read budget, otherwise null. */
+function readRateLimitResponse(request: Request): NextResponse | null {
+  const limit = checkRateLimit(
+    `deck-read:${getClientIp(request)}`,
+    PUBLIC_DECK_READS_PER_CLIENT,
+    PUBLIC_DECK_READ_WINDOW_MS
+  );
+  if (limit.allowed) return null;
+  return NextResponse.json(
+    { error: "Too many deck requests" },
+    {
+      status: 429,
+      headers: { "Retry-After": String(Math.ceil(limit.retryAfterMs / 1000)) },
+    }
+  );
+}
 
 /**
  * GET /api/deck/[id] — public deck view, no auth required for a public deck.
@@ -11,8 +33,16 @@ type Params = { params: Promise<{ id: string }> };
  * The owner gets their whole deck, public or private. Anyone else gets a
  * public deck read through the public allowlist, and a private deck 404s.
  * See {@link findDeckForViewer}.
+ *
+ * Anyone may call it without a key, so each client address gets
+ * {@link PUBLIC_DECK_READS_PER_CLIENT} reads per minute, counted before the id
+ * is checked or the deck is read. The limiter is in-memory and per instance
+ * (`src/lib/rate-limit.ts`).
  */
-export async function GET(_req: Request, { params }: Params) {
+export async function GET(request: Request, { params }: Params) {
+  const rateLimited = readRateLimitResponse(request);
+  if (rateLimited) return rateLimited;
+
   const { id } = await params;
 
   if (!id || id.length > 50) {
