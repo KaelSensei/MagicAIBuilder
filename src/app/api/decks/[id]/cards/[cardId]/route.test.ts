@@ -10,7 +10,7 @@ const mocks = vi.hoisted(() => ({
   requireDeckOwner: vi.fn(),
   findFirst: vi.fn(),
   updateCard: vi.fn(),
-  updateDeck: vi.fn(),
+  claimDeckVersion: vi.fn(),
 }));
 
 vi.mock(import("@/lib/auth/helpers"), () => ({
@@ -20,12 +20,17 @@ vi.mock(import("@/lib/auth/helpers"), () => ({
 vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
   const { stubPrisma } = await import("@/test/prisma-stub");
   const deckCard = { findFirst: mocks.findFirst, update: mocks.updateCard };
-  const deck = { update: mocks.updateDeck };
+  // The deck repository claims the deck's next version and reads it back in
+  // the card's transaction (lib/deck/deck-repository.ts).
+  const deck = {
+    updateMany: mocks.claimDeckVersion,
+    findUnique: async () => ({ version: 1 }),
+  };
   return stubPrisma(await importOriginal(), {
     deckCard,
     deck,
-    // The card and the deck update share a transaction (B2-09). Here it runs on
-    // the same mocks; route.atomic.test.ts checks what a failure leaves stored.
+    // Here the transaction runs on the same mocks; route.atomic.test.ts and
+    // route.version.test.ts check what a failure or a stale version stores.
     $transaction: (
       run: (tx: {
         deck: typeof deck;
@@ -72,7 +77,7 @@ describe("PATCH /api/decks/[id]/cards/[cardId]", () => {
     mocks.requireDeckOwner.mockResolvedValue({ deck: { id: "deck-1" } });
     mocks.findFirst.mockResolvedValue({ id: "card-1", deckId: "deck-1" });
     mocks.updateCard.mockResolvedValue({ id: "card-1" });
-    mocks.updateDeck.mockResolvedValue({ id: "deck-1" });
+    mocks.claimDeckVersion.mockResolvedValue({ count: 1 });
   });
 
   it("updates printing fields without replacing the deck card", async () => {
@@ -90,7 +95,7 @@ describe("PATCH /api/decks/[id]/cards/[cardId]", () => {
 
     expect(response.status).toBe(200);
     expect(mocks.updateCard).toHaveBeenCalledWith({
-      where: { id: "card-1" },
+      where: { id: "card-1", deckId: "deck-1" },
       data: {
         scryfallId: "123e4567-e89b-12d3-a456-426614174000",
         imageUri: "https://cards.example/normal.jpg",
@@ -110,7 +115,7 @@ describe("PATCH /api/decks/[id]/cards/[cardId]", () => {
 
     expect(response.status).toBe(200);
     expect(mocks.updateCard).toHaveBeenCalledWith({
-      where: { id: "card-1" },
+      where: { id: "card-1", deckId: "deck-1" },
       data: { quantity: 3 },
     });
   });

@@ -29,7 +29,12 @@ vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
       return storedRow();
     }),
   };
-  const deck = { update: vi.fn(async () => ({ id: "deck-1" })) };
+  // The deck repository claims the deck's next version and reads it back in
+  // the card's transaction (lib/deck/deck-repository.ts).
+  const deck = {
+    updateMany: vi.fn(async () => ({ count: 1 })),
+    findUnique: vi.fn(async () => ({ version: 1 })),
+  };
   return stubPrisma(await importOriginal(), {
     deckCard,
     deck,

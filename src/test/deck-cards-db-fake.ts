@@ -2,14 +2,17 @@
  * In-memory `Deck` and `DeckCard` tables with the commit rule of a Prisma
  * interactive transaction, for the card routes under `/api/decks/[id]/cards`.
  *
- * Why: those routes must change a card and the deck's `updatedAt` together or
- * not at all (B2-09). A test can only see that through what stays stored when
- * the second write fails. So a write made outside `$transaction` lands in the
- * stored tables at once, and a write made through the `tx` client lands only
- * when the transaction's callback resolves; a throw discards it.
+ * Why: those routes must change a card, the deck's `updatedAt` and its
+ * `version` together or not at all (B2-09, and the optimistic lock of
+ * `lib/deck/deck-repository.ts`). A test can only see that through what stays
+ * stored when one of the writes fails. So a write made outside `$transaction`
+ * lands in the stored tables at once, and a write made through the `tx`
+ * client lands only when the transaction's callback resolves; a throw
+ * discards it.
  *
  * Rows reuse the deck-card shape of {@link deckCard} from the playtest fake.
- * `select` and `include` are ignored: a lookup returns the whole row.
+ * `select` and `include` are ignored: a lookup returns the whole row. A
+ * `where` value of `undefined` filters nothing, as in Prisma.
  */
 import {
   deckCard,
@@ -24,15 +27,21 @@ export type FakeCardsDeck = {
   readonly commanderId: string | null;
   readonly partnerId: string | null;
   readonly updatedAt: Date;
+  /** The optimistic-lock counter: how many card writes the deck has saved. */
+  readonly version: number;
 };
 
-/** The deck every reset starts from: owned by `FAKE_DECK.userId`, last edited 2026-11-01. */
+/**
+ * The deck every reset starts from: owned by `FAKE_DECK.userId`, last edited
+ * 2026-11-01, after seven saved writes.
+ */
 export const CARDS_DECK: FakeCardsDeck = {
   id: FAKE_DECK.id,
   userId: FAKE_DECK.userId,
   commanderId: null,
   partnerId: null,
   updatedAt: new Date("2026-11-01T10:00:00.000Z"),
+  version: 7,
 };
 
 type Filter = Readonly<Record<string, unknown>>;
@@ -49,7 +58,18 @@ interface Tables {
  * @returns Whether the row holds every value of the filter.
  */
 function matches(row: Filter, where: Filter): boolean {
-  return Object.entries(where).every(([key, value]) => row[key] === value);
+  return Object.entries(where).every(
+    ([key, value]) => value === undefined || row[key] === value
+  );
+}
+
+/** The `where` and `data` of the version claim (`deck.updateMany`). */
+interface VersionClaim {
+  readonly where: { readonly id: string; readonly version?: number };
+  readonly data: {
+    readonly version: { readonly increment: number };
+    readonly updatedAt: Date;
+  };
 }
 
 /**
@@ -60,7 +80,22 @@ function matches(row: Filter, where: Filter): boolean {
 function createDeckCardsDb() {
   const stored: Tables = { deck: CARDS_DECK, cards: [] };
   let failDeckTouch = false;
+  let failCardWrite = false;
   let createdCount = 0;
+
+  /** Throws once when a test planned the deck write to fail. */
+  const throwIfDeckTouchFails = (): void => {
+    if (!failDeckTouch) return;
+    failDeckTouch = false;
+    throw new Error("deck update failed");
+  };
+
+  /** Throws once when a test planned the card write to fail. */
+  const throwIfCardWriteFails = (): void => {
+    if (!failCardWrite) return;
+    failCardWrite = false;
+    throw new Error("card write failed");
+  };
 
   /** Prisma-shaped delegates that read and write one copy of the tables. */
   const delegatesOver = (tables: Tables) => ({
@@ -77,20 +112,29 @@ function createDeckCardsDb() {
         readonly where: { readonly id: string };
         readonly data: Partial<FakeCardsDeck>;
       }) => {
-        if (failDeckTouch) {
-          failDeckTouch = false;
-          throw new Error("deck update failed");
-        }
+        throwIfDeckTouchFails();
         if (tables.deck.id !== where.id)
           throw new Error("Record to update not found.");
         tables.deck = { ...tables.deck, ...data };
         return tables.deck;
+      },
+      /** The compare-and-swap of the deck version: 1 when the filter matched. */
+      updateMany: async ({ where, data }: VersionClaim) => {
+        throwIfDeckTouchFails();
+        if (!matches(tables.deck, where)) return { count: 0 };
+        tables.deck = {
+          ...tables.deck,
+          version: tables.deck.version + data.version.increment,
+          updatedAt: data.updatedAt,
+        };
+        return { count: 1 };
       },
     },
     deckCard: {
       findFirst: async ({ where }: { readonly where: Filter }) =>
         tables.cards.find((card) => matches(card, where)) ?? null,
       create: async ({ data }: { readonly data: Partial<FakeDeckCard> }) => {
+        throwIfCardWriteFails();
         createdCount += 1;
         const card: FakeDeckCard = {
           ...deckCard(`created ${createdCount}`),
@@ -104,28 +148,27 @@ function createDeckCardsDb() {
         where,
         data,
       }: {
-        readonly where: { readonly id: string };
+        readonly where: Filter;
         readonly data: Partial<FakeDeckCard>;
       }) => {
-        const current = tables.cards.find((card) => card.id === where.id);
+        throwIfCardWriteFails();
+        const current = tables.cards.find((card) => matches(card, where));
         if (!current) throw new Error("Record to update not found.");
         const next: FakeDeckCard = { ...current, ...data };
         tables.cards = tables.cards.map((card) =>
-          card.id === where.id ? next : card
+          card === current ? next : card
         );
         return next;
       },
-      delete: async ({
-        where,
-      }: {
-        readonly where: { readonly id: string };
-      }) => {
-        const current = tables.cards.find((card) => card.id === where.id);
+      delete: async ({ where }: { readonly where: Filter }) => {
+        throwIfCardWriteFails();
+        const current = tables.cards.find((card) => matches(card, where));
         if (!current) throw new Error("Record to delete does not exist.");
-        tables.cards = tables.cards.filter((card) => card.id !== where.id);
+        tables.cards = tables.cards.filter((card) => card !== current);
         return current;
       },
       deleteMany: async ({ where }: { readonly where: Filter }) => {
+        throwIfCardWriteFails();
         const kept = tables.cards.filter((card) => !matches(card, where));
         const count = tables.cards.length - kept.length;
         tables.cards = kept;
@@ -173,11 +216,24 @@ function createDeckCardsDb() {
       stored.deck = CARDS_DECK;
       stored.cards = cards;
       failDeckTouch = false;
+      failCardWrite = false;
       createdCount = 0;
     },
-    /** Makes the next `deck.update` throw, as a lost connection or a deck deleted mid-request would. */
+    /**
+     * Makes the next deck write (`deck.update`, or the version claim
+     * `deck.updateMany`) throw, as a lost connection or a deck deleted
+     * mid-request would.
+     */
     failNextDeckTouch(): void {
       failDeckTouch = true;
+    },
+    /**
+     * Makes the next card write (`deckCard.create`, `update`, `delete` or
+     * `deleteMany`) throw, as a constraint violation or a lost connection
+     * would.
+     */
+    failNextCardWrite(): void {
+      failCardWrite = true;
     },
     /** @returns The stored deck row. */
     deck: (): FakeCardsDeck => stored.deck,

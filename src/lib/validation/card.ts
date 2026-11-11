@@ -68,6 +68,40 @@ export const addCardSchema = z.object({
 export type AddCardInput = z.infer<typeof addCardSchema>;
 
 /**
+ * A deck version as a writer read it (`Deck.version`). The upper bound is
+ * PostgreSQL's INTEGER maximum, the column's type: a larger number could
+ * never match and would make Prisma throw instead of answering 409.
+ */
+export const deckVersionSchema = z.number().int().min(0).max(2_147_483_647);
+
+/**
+ * The optimistic-lock field of a card write's JSON body. Optional, so clients
+ * that predate the lock keep working: without it the write is not checked.
+ */
+const expectedVersionField = { expectedVersion: deckVersionSchema.optional() };
+
+/** Body of POST /api/decks/[id]/cards: one card, and the version the writer read. */
+export const addCardRequestSchema = addCardSchema.extend(expectedVersionField);
+
+/**
+ * Query string of the card DELETE routes: `?expectedVersion=<n>`, optional.
+ *
+ * Why the query and not a body: a DELETE body "has no generally defined
+ * semantics" and some intermediaries reject it (RFC 9110 §9.3.5,
+ * https://www.rfc-editor.org/rfc/rfc9110#section-9.3.5, read 2026-11-11).
+ * Only plain decimal digits are accepted: `Number("")` is 0 and
+ * `Number("1e3")` is 1000, neither of which a client meant.
+ */
+export const cardDeleteQuerySchema = z.object({
+  expectedVersion: z
+    .string()
+    .regex(/^\d{1,10}$/, "Expected a non-negative whole number")
+    .transform(Number)
+    .pipe(deckVersionSchema)
+    .optional(),
+});
+
+/**
  * Longest private note a player may keep on one deck card, in UTF-16 code
  * units. It matches the `maxLength` of the note editor's textarea
  * (`CardNoteInline`), so the server never rejects what the editor let through.
@@ -91,6 +125,10 @@ export const patchCardSchema = z.object({
 });
 
 export type PatchCardInput = z.infer<typeof patchCardSchema>;
+
+/** Body of PATCH /api/decks/[id]/cards/[cardId]: the columns, and the version the writer read. */
+export const patchCardRequestSchema =
+  patchCardSchema.extend(expectedVersionField);
 
 /** Most rows one bulk edit may touch: the text parser reads at most 500 lines. */
 export const MAX_BULK_CARD_CHANGES = 500;
