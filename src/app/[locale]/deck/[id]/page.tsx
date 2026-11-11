@@ -6,22 +6,26 @@ import {
   deckImageVersion,
   DECK_IMAGE_SIZE,
 } from "@/lib/seo/deck-image";
-import { headers } from "next/headers";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 import { getTranslations } from "next-intl/server";
 import { Header } from "@/components/layout/Header";
 import { PublicDeckView } from "@/components/profile/PublicDeckView";
-import { fetchPublicDeck } from "@/lib/deck/public-deck";
+import { findDeckForViewer } from "@/lib/deck/deck-for-viewer";
 import { auth } from "@/lib/auth/config";
 
 interface Params {
   readonly params: Promise<{ locale: string; id: string }>;
 }
 
-async function fetchDeckForViewer(id: string) {
-  const cookieHeader = (await headers()).get("cookie");
-  return fetchPublicDeck(id, cookieHeader);
-}
+/**
+ * The deck as this request's viewer may see it, read once per request:
+ * `generateMetadata` and the page share the result.
+ */
+const fetchDeckForViewer = cache(async (id: string) => {
+  const session = await auth();
+  return findDeckForViewer(id, session?.user?.id ?? null);
+});
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { id, locale } = await params;

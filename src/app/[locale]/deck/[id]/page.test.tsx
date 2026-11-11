@@ -1,9 +1,8 @@
 import { afterEach, expect, it, vi } from "vitest";
 import type { PublicCard, PublicDeck } from "@/lib/deck/public-deck";
 
-const fetchPublicDeck = vi.hoisted(() => vi.fn());
-vi.mock("@/lib/deck/public-deck", () => ({ fetchPublicDeck }));
-vi.mock("next/headers", () => ({ headers: async () => new Headers() }));
+const findDeckForViewer = vi.hoisted(() => vi.fn());
+vi.mock(import("@/lib/deck/deck-for-viewer"), () => ({ findDeckForViewer }));
 vi.mock("next/navigation", () => ({
   notFound: () => {
     throw new Error("NOT_FOUND");
@@ -59,10 +58,10 @@ const DECK_LANGUAGES = {
   "x-default": "/deck/deck-1",
 };
 
-afterEach(() => fetchPublicDeck.mockReset());
+afterEach(() => findDeckForViewer.mockReset());
 
 it("does not label an unavailable public deck as missing in metadata", async () => {
-  fetchPublicDeck.mockRejectedValue(new Error("PUBLIC_DECK_UNAVAILABLE"));
+  findDeckForViewer.mockRejectedValue(new Error("PUBLIC_DECK_UNAVAILABLE"));
 
   const metadata = await generateMetadata({
     params: Promise.resolve({ locale: "en", id: "deck-1" }),
@@ -72,7 +71,7 @@ it("does not label an unavailable public deck as missing in metadata", async () 
 });
 
 it("describes a public deck in English, canonical at its unprefixed URL", async () => {
-  fetchPublicDeck.mockResolvedValue(PUBLIC_DECK);
+  findDeckForViewer.mockResolvedValue(PUBLIC_DECK);
 
   const metadata = await generateMetadata({
     params: Promise.resolve({ locale: "en", id: "deck-1" }),
@@ -93,7 +92,7 @@ it("describes a public deck in English, canonical at its unprefixed URL", async 
 });
 
 it("describes a public deck in French under /fr, canonical at its own French URL", async () => {
-  fetchPublicDeck.mockResolvedValue(PUBLIC_DECK);
+  findDeckForViewer.mockResolvedValue(PUBLIC_DECK);
 
   const metadata = await generateMetadata({
     params: Promise.resolve({ locale: "fr", id: "deck-1" }),
@@ -114,7 +113,7 @@ it("describes a public deck in French under /fr, canonical at its own French URL
 });
 
 it("names a missing author and commander in the page's language", async () => {
-  fetchPublicDeck.mockResolvedValue({ ...PUBLIC_DECK, cards: [], user: null });
+  findDeckForViewer.mockResolvedValue({ ...PUBLIC_DECK, cards: [], user: null });
 
   const metadata = await generateMetadata({
     params: Promise.resolve({ locale: "fr", id: "deck-1" }),
@@ -127,12 +126,12 @@ it("names a missing author and commander in the page's language", async () => {
 });
 
 it("titles a missing or unavailable deck in French under /fr", async () => {
-  fetchPublicDeck.mockResolvedValueOnce(null);
+  findDeckForViewer.mockResolvedValueOnce(null);
   const missing = await generateMetadata({
     params: Promise.resolve({ locale: "fr", id: "missing" }),
   });
 
-  fetchPublicDeck.mockRejectedValueOnce(new Error("PUBLIC_DECK_UNAVAILABLE"));
+  findDeckForViewer.mockRejectedValueOnce(new Error("PUBLIC_DECK_UNAVAILABLE"));
   const unavailable = await generateMetadata({
     params: Promise.resolve({ locale: "fr", id: "deck-1" }),
   });
@@ -142,7 +141,7 @@ it("titles a missing or unavailable deck in French under /fr", async () => {
 });
 
 it("passes a temporary deck failure to the retryable route error boundary", async () => {
-  fetchPublicDeck.mockRejectedValue(new Error("PUBLIC_DECK_UNAVAILABLE"));
+  findDeckForViewer.mockRejectedValue(new Error("PUBLIC_DECK_UNAVAILABLE"));
 
   await expect(
     PublicDeckPage({ params: Promise.resolve({ locale: "en", id: "deck-1" }) })
@@ -150,7 +149,7 @@ it("passes a temporary deck failure to the retryable route error boundary", asyn
 });
 
 it("keeps a missing deck as not found", async () => {
-  fetchPublicDeck.mockResolvedValue(null);
+  findDeckForViewer.mockResolvedValue(null);
 
   await expect(
     PublicDeckPage({ params: Promise.resolve({ locale: "en", id: "missing" }) })
@@ -188,7 +187,7 @@ const SOCIAL_DECK = {
 const DECK_IMAGE_URL = `/og/deck/deck-1?v=${deckImageVersion(SOCIAL_DECK)}`;
 
 it("points Open Graph and Twitter at the deck image built from stored data", async () => {
-  fetchPublicDeck.mockResolvedValue(SOCIAL_DECK);
+  findDeckForViewer.mockResolvedValue(SOCIAL_DECK);
 
   const metadata = await generateMetadata({
     params: Promise.resolve({ locale: "en", id: "deck-1" }),
@@ -212,7 +211,7 @@ it("points Open Graph and Twitter at the deck image built from stored data", asy
 });
 
 it("describes the deck image in the page's language", async () => {
-  fetchPublicDeck.mockResolvedValue(SOCIAL_DECK);
+  findDeckForViewer.mockResolvedValue(SOCIAL_DECK);
 
   const metadata = await generateMetadata({
     params: Promise.resolve({ locale: "fr", id: "deck-1" }),
@@ -226,7 +225,7 @@ it("describes the deck image in the page's language", async () => {
 });
 
 it("sets no deck image for a deck the viewer cannot see", async () => {
-  fetchPublicDeck.mockResolvedValue(null);
+  findDeckForViewer.mockResolvedValue(null);
 
   const metadata = await generateMetadata({
     params: Promise.resolve({ locale: "en", id: "private-deck" }),

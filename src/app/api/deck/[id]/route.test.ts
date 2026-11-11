@@ -11,6 +11,7 @@ vi.mock("@/lib/db/prisma", () => ({
 vi.mock("@/lib/auth/config", () => ({ auth: mockAuth }));
 
 import { GET } from "./route";
+import { PUBLIC_DECK_READS_PER_CLIENT } from "@/lib/deck/public-read-policy";
 
 /**
  * GET /api/deck/[id] is unauthenticated: it serves any public deck to anyone,
@@ -240,6 +241,23 @@ async function getDeck(id = "deck-1"): Promise<Response> {
   });
 }
 
+/** A read from one client address, as the trusted proxy reports it. */
+async function getDeckFrom(clientIp: string, id = "deck-1"): Promise<Response> {
+  return GET(
+    new Request(`http://localhost:3000/api/deck/${id}`, {
+      headers: { "x-real-ip": clientIp },
+    }),
+    { params: Promise.resolve({ id }) }
+  );
+}
+
+/** Spends a client's whole read budget, checking each read succeeds. */
+async function exhaustReadBudget(clientIp: string): Promise<void> {
+  for (let read = 0; read < PUBLIC_DECK_READS_PER_CLIENT; read++) {
+    expect((await getDeckFrom(clientIp)).status).toBe(200);
+  }
+}
+
 /** What the owner received before the public allowlist existed. */
 function ownerView(row: typeof PUBLIC_DECK_ROW | typeof PRIVATE_DECK_ROW) {
   const { shareToken: _shareToken, createdAt, updatedAt, ...columns } = row;
@@ -364,5 +382,32 @@ describe("GET /api/deck/[id] — the public view", () => {
 
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual(PUBLIC_VIEW);
+  });
+});
+
+describe("GET /api/deck/[id] — reads per client", () => {
+  it("refuses a client past its per-minute budget, with Retry-After, without reading the deck", async () => {
+    signedOut();
+    await exhaustReadBudget("203.0.113.10");
+    mockDeckFindUnique.mockClear();
+
+    const refused = await getDeckFrom("203.0.113.10");
+
+    expect(refused.status).toBe(429);
+    const retryAfterSeconds = Number(refused.headers.get("Retry-After"));
+    expect(retryAfterSeconds).toBeGreaterThan(0);
+    expect(retryAfterSeconds).toBeLessThanOrEqual(60);
+    expect(mockDeckFindUnique).not.toHaveBeenCalled();
+  });
+
+  it("keeps serving another client while one is refused", async () => {
+    signedOut();
+    await exhaustReadBudget("203.0.113.20");
+    expect((await getDeckFrom("203.0.113.20")).status).toBe(429);
+
+    const other = await getDeckFrom("198.51.100.20");
+
+    expect(other.status).toBe(200);
+    expect(await other.json()).toEqual(PUBLIC_VIEW);
   });
 });

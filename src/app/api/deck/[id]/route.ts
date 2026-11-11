@@ -1,39 +1,48 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db/prisma";
 import { auth } from "@/lib/auth/config";
 import { logger } from "@/lib/logger";
-import type { PublicDeck } from "@/lib/deck/public-deck";
+import { findDeckForViewer } from "@/lib/deck/deck-for-viewer";
 import {
-  PUBLIC_DECK_AUTHOR_SELECT,
-  PUBLIC_DECK_SELECT,
-} from "@/lib/deck/public-deck-select";
+  PUBLIC_DECK_READ_WINDOW_MS,
+  PUBLIC_DECK_READS_PER_CLIENT,
+} from "@/lib/deck/public-read-policy";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 type Params = { params: Promise<{ id: string }> };
 
-/** The viewer's own deck, whole except for its share token. */
-function findOwnedDeck(id: string, ownerId: string) {
-  return prisma.deck.findUnique({
-    where: { id, userId: ownerId },
-    omit: { shareToken: true },
-    include: { cards: true, user: { select: PUBLIC_DECK_AUTHOR_SELECT } },
-  });
-}
-
-/** A public deck, read through the public allowlist only. */
-function findPublicDeck(id: string) {
-  return prisma.deck.findUnique({
-    where: { id, isPublic: true },
-    select: PUBLIC_DECK_SELECT,
-  });
+/** A 429 once this client has spent its read budget, otherwise null. */
+function readRateLimitResponse(request: Request): NextResponse | null {
+  const limit = checkRateLimit(
+    `deck-read:${getClientIp(request)}`,
+    PUBLIC_DECK_READS_PER_CLIENT,
+    PUBLIC_DECK_READ_WINDOW_MS
+  );
+  if (limit.allowed) return null;
+  return NextResponse.json(
+    { error: "Too many deck requests" },
+    {
+      status: 429,
+      headers: { "Retry-After": String(Math.ceil(limit.retryAfterMs / 1000)) },
+    }
+  );
 }
 
 /**
  * GET /api/deck/[id] — public deck view, no auth required for a public deck.
  *
  * The owner gets their whole deck, public or private. Anyone else gets a
- * public deck read through {@link PUBLIC_DECK_SELECT}, and a private deck 404s.
+ * public deck read through the public allowlist, and a private deck 404s.
+ * See {@link findDeckForViewer}.
+ *
+ * Anyone may call it without a key, so each client address gets
+ * {@link PUBLIC_DECK_READS_PER_CLIENT} reads per minute, counted before the id
+ * is checked or the deck is read. The limiter is in-memory and per instance
+ * (`src/lib/rate-limit.ts`).
  */
-export async function GET(_req: Request, { params }: Params) {
+export async function GET(request: Request, { params }: Params) {
+  const rateLimited = readRateLimitResponse(request);
+  if (rateLimited) return rateLimited;
+
   const { id } = await params;
 
   if (!id || id.length > 50) {
@@ -42,22 +51,11 @@ export async function GET(_req: Request, { params }: Params) {
 
   try {
     const session = await auth();
-    const viewerId = session?.user?.id ?? null;
-
-    // A signed-out viewer owns nothing, so never match a deck whose userId is null.
-    const ownedDeck =
-      viewerId === null ? null : await findOwnedDeck(id, viewerId);
-    if (ownedDeck) {
-      return NextResponse.json({ ...ownedDeck, isOwner: true });
-    }
-
-    const publicDeck = await findPublicDeck(id);
-    if (!publicDeck) {
+    const deck = await findDeckForViewer(id, session?.user?.id ?? null);
+    if (!deck) {
       return NextResponse.json({ error: "Deck not found" }, { status: 404 });
     }
-
-    const body: PublicDeck = { ...publicDeck, isOwner: false };
-    return NextResponse.json(body);
+    return NextResponse.json(deck);
   } catch (error) {
     logger.error(
       error instanceof Error ? error.message : "unknown",
