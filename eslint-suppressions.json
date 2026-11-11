@@ -755,7 +755,7 @@
       "count": 1
     }
   },
-  "src/components/deck/CombosPanel.tsx": {
+  "src/modules/combos/ui/CombosPanel.tsx": {
     "complexity": {
       "count": 1
     },
@@ -1421,7 +1421,7 @@
       "count": 1
     }
   },
-  "src/hooks/useCombos.test.ts": {
+  "src/modules/combos/client/useCombos.test.ts": {
     "no-restricted-syntax": {
       "count": 1
     }
