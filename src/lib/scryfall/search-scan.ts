@@ -18,7 +18,7 @@ import type { ScryfallCard, ScryfallSearchResponse } from "./types";
  * Cards in one Scryfall search page.
  * Source: https://scryfall.com/docs/api/cards/search (read 2026-11-11).
  */
-export const SCRYFALL_SEARCH_PAGE_SIZE = 175;
+const SCRYFALL_SEARCH_PAGE_SIZE = 175;
 
 /**
  * Least spacing between two page requests of one scan, in milliseconds. Scryfall allows

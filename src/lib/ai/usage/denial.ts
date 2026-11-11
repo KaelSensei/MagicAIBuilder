@@ -91,7 +91,7 @@ const DENIAL_BODY = z.discriminatedUnion("code", [
  * @param body - the parsed JSON of a non-OK AI response
  * @returns the denial, or `undefined` when the body is any other error
  */
-export function readAiCallDenial(body: unknown): AiCallDenial | undefined {
+function readAiCallDenial(body: unknown): AiCallDenial | undefined {
   return DENIAL_BODY.safeParse(body).data;
 }
 

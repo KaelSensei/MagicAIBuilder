@@ -25,7 +25,7 @@ import type { Prisma } from "@prisma/client";
  */
 
 /** Card columns the share page renders; owner notes and `zone` are deliberately absent. */
-export const SHARED_DECK_CARD_SELECT = {
+const SHARED_DECK_CARD_SELECT = {
   id: true,
   name: true,
   manaCost: true,

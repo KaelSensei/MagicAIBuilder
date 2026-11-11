@@ -9,7 +9,7 @@ import {
 import { logger } from "@/lib/logger";
 
 /** Holds the `createdAt` of the guest deck the user chose not to save. */
-export const GUEST_CLAIM_DECLINED_STORAGE_KEY =
+const GUEST_CLAIM_DECLINED_STORAGE_KEY =
   "magic-ai-builder:guest-claim-declined:v1";
 
 /** Limits `POST /api/decks` applies; guest decks never passed through it. */
@@ -53,7 +53,7 @@ function commandZoneOf(deck: Deck): readonly DeckCard[] {
  * @param deck - a guest deck read from this browser
  * @returns its summary, or null when it holds no card at all
  */
-export function summarizeGuestDeck(deck: Deck): GuestDeckSummary | null {
+function summarizeGuestDeck(deck: Deck): GuestDeckSummary | null {
   const cards = cardsFromZoneSource(deck);
   const commandZone = commandZoneOf(deck);
   if (cards.length === 0 && commandZone.length === 0) return null;
@@ -134,7 +134,7 @@ function claimCards(deck: Deck): AddCardPayload[] {
  * @param deck - the guest deck
  * @returns the request body
  */
-export function buildGuestClaimBody(deck: Deck): CreateDeckWithCardsBody {
+function buildGuestClaimBody(deck: Deck): CreateDeckWithCardsBody {
   return {
     name: deck.name.trim().slice(0, MAX_NAME_LENGTH) || FALLBACK_NAME,
     format: deck.format,
@@ -184,7 +184,7 @@ function hash53(text: string): number {
  * @param body - the request body
  * @returns the key to send as `Idempotency-Key`
  */
-export function guestClaimKey(body: CreateDeckWithCardsBody): string {
+function guestClaimKey(body: CreateDeckWithCardsBody): string {
   return `guest-claim-${hash53(JSON.stringify(body)).toString(36).padStart(11, "0")}`;
 }
 

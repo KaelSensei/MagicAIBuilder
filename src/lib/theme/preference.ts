@@ -42,7 +42,7 @@ export const DARK_COLOR_SCHEME_QUERY = "(prefers-color-scheme: dark)";
  * @param value - untrusted storage or event payload
  * @returns true when the value is `light` or `dark`
  */
-export function isThemeMode(value: unknown): value is ThemeMode {
+function isThemeMode(value: unknown): value is ThemeMode {
   return value === "light" || value === "dark";
 }
 
@@ -52,7 +52,7 @@ export function isThemeMode(value: unknown): value is ThemeMode {
  * @param value - untrusted storage payload
  * @returns true when the value is `light`, `dark`, or `system`
  */
-export function isThemePreference(value: unknown): value is ThemePreference {
+function isThemePreference(value: unknown): value is ThemePreference {
   return value === "light" || value === "dark" || value === "system";
 }
 
