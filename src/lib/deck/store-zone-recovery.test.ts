@@ -1,24 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { installFakeDeckClient } from "@/test/fake-deck-client";
+import { recordToasts } from "@/test/toast-recorder";
 import type { DeckCard } from "./types";
 import { createEmptyDeck } from "./store-factories";
+import { useDeckStore } from "./store";
 
-const mocks = vi.hoisted(() => ({
-  updateCardZone: vi.fn(),
-  updateDeck: vi.fn(),
-  addToast: vi.fn(),
-}));
-
-vi.mock(import("@/lib/db/deck-api"), () => ({
-  updateCardZone: mocks.updateCardZone,
-  updateDeck: mocks.updateDeck,
-}));
-vi.mock(import("@/hooks/useToast"), async (importOriginal) => {
-  const { useToastStore } = await importOriginal();
-  useToastStore.setState({ add: mocks.addToast });
-  return { useToastStore };
-});
-
-const { useDeckStore } = await import("./store");
+const deckApi = installFakeDeckClient();
+const mocks = {
+  updateCardZone: deckApi.updateCardZone,
+  updateDeck: deckApi.updateDeck,
+  addToast: recordToasts(),
+};
 
 /**
  * Seed one owned deck with a main-zone card.

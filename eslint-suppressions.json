@@ -1717,7 +1717,7 @@
   },
   "src/lib/deck/store-bulk-edit.test.ts": {
     "no-restricted-syntax": {
-      "count": 4
+      "count": 2
     },
     "vitest/prefer-import-in-mock": {
       "count": 1
@@ -1731,19 +1731,9 @@
       "count": 1
     }
   },
-  "src/lib/deck/store-command-zone-rows.test.ts": {
-    "no-restricted-syntax": {
-      "count": 2
-    }
-  },
-  "src/lib/deck/store-commander-recovery.test.ts": {
-    "no-restricted-syntax": {
-      "count": 2
-    }
-  },
   "src/lib/deck/store-core.test.ts": {
     "no-restricted-syntax": {
-      "count": 4
+      "count": 2
     },
     "vitest/prefer-import-in-mock": {
       "count": 1
@@ -1759,22 +1749,9 @@
       "count": 1
     }
   },
-  "src/lib/deck/store-hydration.test.ts": {
-    "no-restricted-syntax": {
-      "count": 1
-    }
-  },
   "src/lib/deck/store-load-error.test.ts": {
     "no-restricted-syntax": {
       "count": 2
-    }
-  },
-  "src/lib/deck/store-maybeboard.test.ts": {
-    "no-restricted-syntax": {
-      "count": 2
-    },
-    "vitest/prefer-import-in-mock": {
-      "count": 1
     }
   },
   "src/lib/deck/store-missing.test.ts": {
@@ -1787,27 +1764,7 @@
   },
   "src/lib/deck/store-notes-persistence.test.ts": {
     "no-restricted-syntax": {
-      "count": 2
-    }
-  },
-  "src/lib/deck/store-notes.test.ts": {
-    "no-restricted-syntax": {
-      "count": 2
-    }
-  },
-  "src/lib/deck/store-pairing.test.ts": {
-    "no-restricted-syntax": {
-      "count": 2
-    }
-  },
-  "src/lib/deck/store-reload.test.ts": {
-    "no-restricted-syntax": {
-      "count": 2
-    }
-  },
-  "src/lib/deck/store-zone-recovery.test.ts": {
-    "no-restricted-syntax": {
-      "count": 2
+      "count": 1
     }
   },
   "src/lib/deck/store.ts": {

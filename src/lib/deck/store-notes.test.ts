@@ -4,38 +4,19 @@
  *   - updateCardNotes
  *   - addTag / removeTag
  *
- * We mock deck-api entirely so no network or DB calls are made.
+ * The fake deck API (`src/test/fake-deck-client.ts`) answers the store's
+ * requests in memory, so no network or DB calls are made.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Mock } from "vitest";
-
-// ─── Mock deck-api before importing the store ─────────────────────────────────
-vi.mock(import("@/lib/db/deck-api"), () => ({
-  fetchDecks: vi.fn().mockResolvedValue({ decks: [], total: 0, page: 0, limit: 20 }),
-  createDeck: vi.fn(),
-  updateDeck: vi.fn().mockResolvedValue({}),
-  deleteDeck: vi.fn(),
-  addCard: vi.fn(),
-  removeCard: vi.fn(),
-  updateCardCategory: vi.fn(),
-  updateCardNotes: vi.fn().mockResolvedValue({}),
-  removeAllCards: vi.fn(),
-  lookupCardCache: vi.fn().mockResolvedValue(null),
-}));
-
-// Toasts are the player's only signal that a save failed, so tests read them.
-const toastAdd = vi.hoisted(() => vi.fn());
-vi.mock(import("@/hooks/useToast"), async (importOriginal) => {
-  const { useToastStore } = await importOriginal();
-  useToastStore.setState({ add: toastAdd });
-  return { useToastStore };
-});
-
-import * as deckApi from "@/lib/db/deck-api";
 import type { Deck, DeckCard } from "@/lib/deck/types";
+import { useDeckStore } from "@/lib/deck/store";
+import { installFakeDeckClient } from "@/test/fake-deck-client";
+import { recordToasts } from "@/test/toast-recorder";
 
-// Import the store AFTER mocks are set up
-const { useDeckStore } = await import("@/lib/deck/store");
+const deckApi = installFakeDeckClient();
+// Toasts are the player's only signal that a save failed, so tests read them.
+const toastAdd = recordToasts();
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

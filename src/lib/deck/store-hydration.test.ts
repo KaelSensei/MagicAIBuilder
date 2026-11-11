@@ -7,36 +7,23 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-
-const { mockFetchDeck, mockFetchDecks } = vi.hoisted(() => ({
-  mockFetchDeck: vi.fn(),
-  mockFetchDecks: vi.fn(),
-}));
-
-vi.mock(import("@/lib/db/deck-api"), () => ({
-  fetchDeck: mockFetchDeck,
-  fetchDecks: mockFetchDecks,
-  createDeck: vi.fn(),
-  updateDeck: vi.fn(),
-  deleteDeck: vi.fn(),
-  duplicateDeck: vi.fn(),
-  addCard: vi.fn(),
-  removeCard: vi.fn(),
-  updateCardCategory: vi.fn(),
-  updateCardNotes: vi.fn(),
-  updateCardZone: vi.fn(),
-  updateCardMaybeboard: vi.fn(),
-  removeAllCards: vi.fn(),
-  lookupCardCache: vi.fn(),
-  lookupSearchCache: vi.fn(),
-}));
+import type { ApiDeck, ApiDeckCard } from "@/lib/db/deck-api";
+import { installFakeDeckClient } from "@/test/fake-deck-client";
 
 import { useDeckStore } from "./store";
 
+const deckApi = installFakeDeckClient();
+const mockFetchDeck = deckApi.fetchDeck;
+const mockFetchDecks = deckApi.fetchDecks;
+
 /** An API card as the deck endpoints return it. */
-function apiCard(id: string, overrides: Record<string, unknown> = {}) {
+function apiCard(
+  id: string,
+  overrides: Partial<ApiDeckCard> = {}
+): ApiDeckCard {
   return {
     id,
+    deckId: "deck-1",
     scryfallId: id,
     name: `Card ${id}`,
     manaCost: "{1}",
@@ -60,7 +47,10 @@ function apiCard(id: string, overrides: Record<string, unknown> = {}) {
 }
 
 /** An API deck, shaped like the full single-deck endpoint. */
-function apiDeck(cardIds: readonly string[], overrides: Record<string, unknown> = {}) {
+function apiDeck(
+  cardIds: readonly string[],
+  overrides: Partial<ApiDeck> = {}
+): ApiDeck {
   return {
     id: "deck-1",
     name: "Cold Load Deck",
@@ -75,9 +65,12 @@ function apiDeck(cardIds: readonly string[], overrides: Record<string, unknown> 
     isPublic: false,
     isAIGenerated: false,
     commanderId: null,
+    commanderName: null,
     partnerId: null,
     companionId: null,
     pairingType: "none",
+    companion: null,
+    maybeboard: [],
     cards: cardIds.map((id) => apiCard(id)),
     createdAt: "2026-01-01T00:00:00.000Z",
     updatedAt: "2026-01-01T00:00:00.000Z",

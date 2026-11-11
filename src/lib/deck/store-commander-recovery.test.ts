@@ -2,28 +2,19 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { ScryfallCard } from "@/lib/scryfall/types";
+import { installFakeDeckClient } from "@/test/fake-deck-client";
+import { recordToasts } from "@/test/toast-recorder";
 import { createEmptyDeck } from "./store-factories";
 import type { Deck, DeckCard } from "./types";
+import { useDeckStore } from "./store";
 
-const mocks = vi.hoisted(() => ({
-  updateDeck: vi.fn(),
-  addCard: vi.fn(),
-  removeCard: vi.fn(),
-  addToast: vi.fn(),
-}));
-
-vi.mock(import("@/lib/db/deck-api"), () => ({
-  updateDeck: mocks.updateDeck,
-  addCard: mocks.addCard,
-  removeCard: mocks.removeCard,
-}));
-vi.mock(import("@/hooks/useToast"), async (importOriginal) => {
-  const { useToastStore } = await importOriginal();
-  useToastStore.setState({ add: mocks.addToast });
-  return { useToastStore };
-});
-
-const { useDeckStore } = await import("./store");
+const deckApi = installFakeDeckClient();
+const mocks = {
+  updateDeck: deckApi.updateDeck,
+  addCard: deckApi.addCard,
+  removeCard: deckApi.removeCard,
+  addToast: recordToasts(),
+};
 
 /**
  * Build a command-zone card as the store holds it after a load.
@@ -130,9 +121,6 @@ function commandZone(): Pick<Deck, "commander" | "partner" | "pairingType"> {
 describe("commander save recovery", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.updateDeck.mockResolvedValue({});
-    mocks.addCard.mockResolvedValue({ id: "saved-row" });
-    mocks.removeCard.mockResolvedValue(undefined);
     seedPartnerPair();
   });
 
@@ -166,7 +154,7 @@ describe("commander save recovery", () => {
   });
 
   it("does not roll back a newer commander when an older save fails", async () => {
-    const olderSave = Promise.withResolvers<unknown>();
+    const olderSave = Promise.withResolvers<void>();
     mocks.updateDeck.mockReturnValueOnce(olderSave.promise);
 
     const failedAttempt = useDeckStore.getState().setCommander(ATRAXA);
@@ -184,7 +172,7 @@ describe("commander save recovery", () => {
   });
 
   it("keeps a partner chosen while the failed commander save was pending", async () => {
-    const commanderSave = Promise.withResolvers<unknown>();
+    const commanderSave = Promise.withResolvers<void>();
     mocks.updateDeck.mockReturnValueOnce(commanderSave.promise);
 
     const failedAttempt = useDeckStore.getState().setCommander(KRAUM);

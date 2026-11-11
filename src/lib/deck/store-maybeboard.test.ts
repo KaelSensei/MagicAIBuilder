@@ -1,51 +1,20 @@
 /**
  * Unit tests for maybeboard actions in the deck store.
  *
- * The store makes HTTP calls via deck-api. We mock that module so tests are
- * fully synchronous / offline.
+ * The store makes HTTP calls via deck-api; the fake deck API
+ * (`src/test/fake-deck-client.ts`) answers them in memory.
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-// ── Mock deck-api BEFORE importing the store ──────────────────────────────────
-vi.mock("@/lib/db/deck-api", () => ({
-  addCard: vi.fn(async (_deckId: string, payload: Record<string, unknown>) => ({
-    ...payload,
-    id: `${String(payload.scryfallId)}-saved`,
-    deckId: "deck-1",
-    scryfallId: payload.scryfallId,
-    isCommander: false,
-    isPartner: false,
-    isMaybeboard: payload.zone === "maybeboard",
-  })),
-  removeCard: vi.fn(async () => undefined),
-  updateCardZone: vi.fn(async (_deckId: string, cardId: string, zone: string) => ({
-    id: cardId,
-    zone,
-  })),
-  updateCardMaybeboard: vi.fn(async (_deckId: string, cardId: string, isMaybeboard: boolean) => ({
-    id: cardId,
-    isMaybeboard,
-  })),
-  fetchDecks: vi.fn(async () => ({ decks: [], total: 0, page: 0, limit: 20 })),
-  createDeck: vi.fn(async () => ({ id: "deck-1", name: "Test", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), cards: [] })),
-  updateDeck: vi.fn(async () => ({})),
-  deleteDeck: vi.fn(async () => undefined),
-  updateCardCategory: vi.fn(async () => ({})),
-  removeAllCards: vi.fn(async () => undefined),
-}));
-
-// ── Mock useToast (imported inside store) ─────────────────────────────────────
-vi.mock(import("@/hooks/useToast"), async (importOriginal) => {
-  const { useToastStore } = await importOriginal();
-  useToastStore.setState({ add: vi.fn() });
-  return { useToastStore };
-});
-
 import { useDeckStore } from "@/lib/deck/store";
-import * as deckApi from "@/lib/db/deck-api";
 import type { Deck, DeckCard } from "@/lib/deck/types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
+import { installFakeDeckClient } from "@/test/fake-deck-client";
+import { recordToasts } from "@/test/toast-recorder";
+
+const deckApi = installFakeDeckClient();
+recordToasts();
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
