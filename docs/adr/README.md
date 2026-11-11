@@ -12,17 +12,18 @@ Records), following Michael Nygard's original proposal,
 
 ## Index
 
-| ADR                                                                   | Title                                                                     | Status   | Date       |
-| --------------------------------------------------------------------- | ------------------------------------------------------------------------- | -------- | ---------- |
-| [0001](0001-modular-monolith-by-bounded-context.md)                   | Organise the code as a modular monolith, one module per bounded context   | Accepted | 2026-11-10 |
-| [0002](0002-module-entry-points-index-server-client.md)               | Give each module three entry points: `index.ts`, `server.ts`, `client.ts` | Accepted | 2026-11-10 |
-| [0003](0003-domain-as-readonly-data-and-pure-functions.md)            | Model the domain as readonly data and pure functions                      | Accepted | 2026-11-10 |
-| [0004](0004-anti-corruption-layers-for-external-providers.md)         | Put an anti-corruption layer in front of every external provider          | Accepted | 2026-11-10 |
-| [0005](0005-testing-strategy-fakes-contracts-and-characterization.md) | Test with in-memory fakes, contract tests and characterization tests      | Accepted | 2026-11-10 |
-| [0006](0006-comment-and-documentation-standard.md)                    | Adopt a comment and documentation standard built on information           | Accepted | 2026-11-10 |
-| [0007](0007-architecture-enforcement-in-stages.md)                    | Enforce the architecture with tools, introduced in stages                 | Accepted | 2026-11-10 |
-| [0008](0008-english-only.md)                                          | Write code, comments, docs, commits and PRs in English                    | Accepted | 2026-11-10 |
-| [0009](0009-legality-is-a-report-and-the-server-owns-rules.md)        | Report legality on the deck, and let the server own the rules             | Accepted | 2026-11-10 |
+| ADR                                                                   | Title                                                                                                     | Status   | Date       |
+| --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | -------- | ---------- |
+| [0001](0001-modular-monolith-by-bounded-context.md)                   | Organise the code as a modular monolith, one module per bounded context                                   | Accepted | 2026-11-10 |
+| [0002](0002-module-entry-points-index-server-client.md)               | Give each module three entry points: `index.ts`, `server.ts`, `client.ts`                                 | Accepted | 2026-11-10 |
+| [0003](0003-domain-as-readonly-data-and-pure-functions.md)            | Model the domain as readonly data and pure functions                                                      | Accepted | 2026-11-10 |
+| [0004](0004-anti-corruption-layers-for-external-providers.md)         | Put an anti-corruption layer in front of every external provider                                          | Accepted | 2026-11-10 |
+| [0005](0005-testing-strategy-fakes-contracts-and-characterization.md) | Test with in-memory fakes, contract tests and characterization tests                                      | Accepted | 2026-11-10 |
+| [0006](0006-comment-and-documentation-standard.md)                    | Adopt a comment and documentation standard built on information                                           | Accepted | 2026-11-10 |
+| [0007](0007-architecture-enforcement-in-stages.md)                    | Enforce the architecture with tools, introduced in stages                                                 | Accepted | 2026-11-10 |
+| [0008](0008-english-only.md)                                          | Write code, comments, docs, commits and PRs in English                                                    | Accepted | 2026-11-10 |
+| [0009](0009-legality-is-a-report-and-the-server-owns-rules.md)        | Report legality on the deck, and let the server own the rules                                             | Accepted | 2026-11-10 |
+| [0010](0010-coverage-scope-by-layer.md)                               | Scope coverage by layer: keep module UI out of the Sonar figure, and set floors on domain and application | Proposed | 2026-11-11 |
 
 Add a row here in the same pull request that adds an ADR. A test that fails when this index and
 the files in this folder disagree is planned (see [ADR 0006](0006-comment-and-documentation-standard.md)).
