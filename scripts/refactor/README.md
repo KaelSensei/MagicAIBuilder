@@ -175,3 +175,16 @@ npx vitest run scripts/refactor
 `apply-moves.test.ts` and `config-pass.test.ts` run the codemod over throwaway git repositories
 (`testing/fixture-repo.ts`); `migration-guard-rule.test.ts` runs the guard rule through ESLint and
 checks that `eslint.config.mjs` turns it on; `move-map.test.ts` pins the map validation.
+
+## Dead-export report
+
+`dead-exports-report.ts` is not part of the codemod. It lists the exports under `src/` that no
+production module imports, for the dead-code slices:
+
+```bash
+npx tsx scripts/refactor/dead-exports-report.ts          # one row per export, tab-separated
+npx tsx scripts/refactor/dead-exports-report.ts --json
+```
+
+It is advisory and has no tests: check every row by hand before deleting anything. Its header
+says what it skips and what it can miss. Knip replaces it once the advisory Knip report lands.
