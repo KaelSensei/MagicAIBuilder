@@ -1,0 +1,74 @@
+You are a Magic: The Gathering Commander expert. Analyze this deck and suggest targeted improvements.
+
+DECK INFO:
+- Commander: Talrand, Sky Summoner
+- Color Identity: U
+- Total cards: 101
+- Average CMC: 1.91
+- Current Bracket: 3/5
+- Target Bracket: 3/5
+- Budget: No per-card budget limit
+- Archetype: Spellslinger
+- Detected Themes: Spellslinger, Card draw
+
+PLAYER DECK BRIEF:
+  No additional preferences provided
+
+CATEGORY BREAKDOWN:
+  ramp: 2
+  draw: 5
+  removal: 2
+  creatures: 1
+  lands: 1
+
+BRACKET DIMENSION SCORES (1=weak, 5=strong):
+  ramp: 2/4
+  draw: 4/4
+  removal: 2/4
+  winSpeed: 2/4
+  avgCmc: 4/4
+
+GAME CHANGERS IN DECK (2):
+  Rhystic Study, Cyclonic Rift
+
+IDENTIFIED GAPS / WARNINGS:
+  - Only 1 land: Commander decks usually run 36 or more
+
+ALL CURRENT CARDS (100):
+Test Card 001, Test Card 002, Test Card 003, Test Card 004, Test Card 005, Test Card 006, Test Card 007, Test Card 008, Test Card 009, Test Card 010, Test Card 011, Test Card 012, Test Card 013, Test Card 014, Test Card 015, Test Card 016, Test Card 017, Test Card 018, Test Card 019, Test Card 020, Test Card 021, Test Card 022, Test Card 023, Test Card 024, Test Card 025, Test Card 026, Test Card 027, Test Card 028, Test Card 029, Test Card 030, Test Card 031, Test Card 032, Test Card 033, Test Card 034, Test Card 035, Test Card 036, Test Card 037, Test Card 038, Test Card 039, Test Card 040, Test Card 041, Test Card 042, Test Card 043, Test Card 044, Test Card 045, Test Card 046, Test Card 047, Test Card 048, Test Card 049, Test Card 050, Test Card 051, Test Card 052, Test Card 053, Test Card 054, Test Card 055, Test Card 056, Test Card 057, Test Card 058, Test Card 059, Test Card 060, Test Card 061, Test Card 062, Test Card 063, Test Card 064, Test Card 065, Test Card 066, Test Card 067, Test Card 068, Test Card 069, Test Card 070, Test Card 071, Test Card 072, Test Card 073, Test Card 074, Test Card 075, Test Card 076, Test Card 077, Test Card 078, Test Card 079, Test Card 080, Test Card 081, Test Card 082, Test Card 083, Test Card 084, Test Card 085, Test Card 086, Test Card 087, Test Card 088, Test Card 089, Test Card 090, Test Card 091, Test Card 092, Test Card 093, Test Card 094, Test Card 095, Test Card 096, Test Card 097, Test Card 098, Test Card 099, Test Card 100
+
+PRIVATE USER-OWNED PLAYTEST EVIDENCE:
+  None recorded
+
+ARCHETYPE GUIDANCE (Spellslinger):
+Focus on copy effects (Swarm Intelligence, Thousand-Year Storm, Reverberate), instant/sorcery payoffs (Guttersnipe, Runechanter's Pike, Aria of Flame), cantrips for velocity, and protection for the commander.
+
+TASK:
+1. Suggest exactly 8 cards to ADD. They should synergize with Talrand, Sky Summoner, align with the archetype above, fill the gaps, match bracket 3, respect budget, and NOT already be in the deck. Include 2–4 sentences of rationale per card. For each card, include up to 3 distinct alternatives: a cheaper budget option, a different power-level option, and a different playstyle option. Never repeat a main suggestion or a card already in the deck.
+2. Suggest exactly 4 cards to REMOVE. They must be actual cards from the deck above that have low synergy with the archetype, are redundant, or push the bracket too high. Include an explanation per removal.
+
+Respond ONLY in this JSON format (no markdown):
+{
+  "analysis": "2-3 sentences on current state, strengths, and main gaps",
+  "suggestions": [
+    {
+      "name": "Exact Card Name",
+      "reason": "One sentence explaining synergy with Talrand, Sky Summoner",
+      "category": "ramp|draw|removal|boardWipe|creature|land|protection|winCondition|other",
+      "priority": "high|medium|low",
+      "alternatives": [
+        {
+          "name": "Exact Alternative Card Name",
+          "reason": "Why this is a meaningful alternative",
+          "dimension": "budget|power|playstyle"
+        }
+      ]
+    }
+  ],
+  "removals": [
+    {
+      "name": "Exact Card Name From Deck",
+      "reason": "One sentence explaining why it underperforms"
+    }
+  ]
+}
