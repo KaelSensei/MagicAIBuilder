@@ -19,6 +19,7 @@ import { useTranslations } from "next-intl";
 import { getFormatConfig } from "@/lib/deck/formats";
 import { useDeckStore } from "@/lib/deck/store";
 import type { Deck } from "@/lib/deck/types";
+import { DeckBudgetInput } from "./DeckBudgetInput";
 import { DeckDescriptionEditor } from "./DeckDescriptionEditor";
 import { DeckTagsEditor } from "./DeckTagsEditor";
 import { DeckTargetBracketPicker } from "./DeckTargetBracketPicker";
@@ -26,14 +27,14 @@ import { DeckTargetBracketPicker } from "./DeckTargetBracketPicker";
 /** The deck fields this panel shows and edits. */
 export type DeckDetails = Pick<
   Deck,
-  "id" | "format" | "description" | "tags" | "targetBracket"
+  "id" | "format" | "description" | "tags" | "targetBracket" | "budget"
 >;
 
 interface DeckDetailsPanelProps {
   /**
    * The store's active deck, as the store holds it: a failed save then shows
    * the restored value. It must be the active deck because `setTargetBracket`
-   * writes to the active deck rather than to a deck id.
+   * and `setBudget` write to the active deck rather than to a deck id.
    */
   readonly deck: DeckDetails;
 }
@@ -43,6 +44,7 @@ export function DeckDetailsPanel({ deck }: DeckDetailsPanelProps) {
   const t = useTranslations("builder.details");
   const headingId = useId();
   const setTargetBracket = useDeckStore((state) => state.setTargetBracket);
+  const setBudget = useDeckStore((state) => state.setBudget);
 
   return (
     <section
@@ -64,6 +66,10 @@ export function DeckDetailsPanel({ deck }: DeckDetailsPanelProps) {
           onChange={(bracket) => void setTargetBracket(bracket)}
         />
       )}
+      <DeckBudgetInput
+        value={deck.budget}
+        onCommit={(budget) => void setBudget(budget)}
+      />
     </section>
   );
 }

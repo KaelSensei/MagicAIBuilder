@@ -836,6 +836,10 @@ Field `tags String[] @default([])` on `Deck` (PostgreSQL array). Tags are synced
 
 Field `targetBracket Int @default(3)` on `Deck`: the official Commander Bracket (1 Exhibition to 5 cEDH, `BRACKET_LEVELS` in `src/lib/constants/brackets.ts`) the player builds for. `DeckTargetBracketPicker`, in the **Deck details** panel, sets it through `setTargetBracket`, which writes to the store's active deck. It is shown only for formats with `hasBracketScoring` (Commander). `GameChangersBadge` and the `DeckStats` benchmarks measure the deck against it; `BracketIndicator` shows it beside the bracket estimate when they differ.
 
+### Budget per Card
+
+Field `budget` on `Deck`: the most the player wants to pay for one card, in US dollars, or `null` for no limit. `PATCH /api/decks/[id]` accepts a positive number or `null`. `DeckBudgetInput`, in the **Deck details** panel, saves it through `setBudget` (on the active deck) when the player presses Enter or leaves the field with a changed amount; an empty field saves `null`, and zero, a negative amount or text is refused in the field with a message. `computeDeckStats` lists the cards priced above it as over budget, and the deck wizard and `POST /api/ai/build` treat it as a maximum per card.
+
 ---
 
 ## Phase Roadmap

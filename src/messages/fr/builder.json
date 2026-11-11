@@ -26,7 +26,10 @@
   "details": {
     "title": "Détails du deck",
     "targetBracket": "Bracket cible",
-    "targetBracketOption": "Bracket {level} : {name}"
+    "targetBracketOption": "Bracket {level} : {name}",
+    "budget": "Budget par carte",
+    "budgetHint": "En dollars US. Laissez le champ vide pour ne fixer aucune limite.",
+    "budgetInvalid": "Saisissez un montant supérieur à zéro, ou laissez le champ vide pour ne fixer aucune limite."
   },
   "searchCommander": "Recherchez un commandant ci-dessus",
   "searchPartner": "Recherchez un {partnerLabel}",

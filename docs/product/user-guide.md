@@ -234,11 +234,12 @@ The editor shows a **short rule summary** where the app encodes it (for example 
 
 ### Deck Details
 
-The **Deck details** panel opens the right panel (the **Stats** tab on a phone). It holds the settings of the deck itself, and each one is saved as soon as you change it:
+The **Deck details** panel opens the right panel (the **Stats** tab on a phone). It holds the settings of the deck itself; every change is saved with the deck:
 
 - **Description** — your notes on how the deck plays. Click the pencil to write, or open the line and click the text; an empty description offers a **primer template** (game plan, mulligan guide, win conditions…). It saves when you click **Save**, press Ctrl+Enter (Cmd+Enter on a Mac) or click away; Esc drops your changes. Up to 2,000 characters.
 - **Tags** — short labels such as `casual` or `WIP`. Click **Add tag**, type a tag and press Enter; Tab takes the first suggestion. Click × on a tag to remove it.
 - **Target bracket** (Commander only) — the bracket you are building for, from 1 Exhibition to 5 cEDH. The Game Changers badge and the deck checks measure your deck against it; the bracket score below is the app's own reading of your list.
+- **Budget per card** — the most you want to pay for one card, in US dollars. Type an amount and press Enter or click away; leave the field empty for no limit. When some cards cost more, the stats show how many in a **Budget** box, as **Over budget**.
 
 ### Deck Statistics
 

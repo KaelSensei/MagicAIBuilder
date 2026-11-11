@@ -26,7 +26,10 @@
   "details": {
     "title": "Deck details",
     "targetBracket": "Target bracket",
-    "targetBracketOption": "Bracket {level}: {name}"
+    "targetBracketOption": "Bracket {level}: {name}",
+    "budget": "Budget per card",
+    "budgetHint": "In US dollars. Leave the field empty for no limit.",
+    "budgetInvalid": "Enter an amount above zero, or leave the field empty for no limit."
   },
   "searchCommander": "Search for a commander above",
   "searchPartner": "Search for a {partnerLabel}",

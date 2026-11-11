@@ -6,7 +6,7 @@
  * counts as working when the deck in the store changes and the matching
  * `PATCH /api/decks/[id]` leaves the page.
  */
-import { screen, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useDeckStore } from "@/lib/deck/store";
@@ -25,6 +25,8 @@ interface SentRequest {
 }
 
 let sent: SentRequest[] = [];
+/** The status the fake server answers every request with. */
+let serverStatus = 200;
 
 /** Bodies of the deck metadata saves, in the order they were sent. */
 function deckPatches(): readonly unknown[] {
@@ -60,6 +62,7 @@ function renderPanel(locale: "en" | "fr" = "en") {
 
 beforeEach(() => {
   sent = [];
+  serverStatus = 200;
   vi.stubGlobal(
     "fetch",
     vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -70,7 +73,7 @@ beforeEach(() => {
           typeof init?.body === "string" ? JSON.parse(init.body) : undefined,
       });
       return new Response("{}", {
-        status: 200,
+        status: serverStatus,
         headers: { "Content-Type": "application/json" },
       });
     })
@@ -223,6 +226,109 @@ describe("DeckDetailsPanel", () => {
       expect(
         within(details).queryByRole("group", { name: "Target bracket" })
       ).toBeNull();
+    });
+  });
+
+  describe("budget", () => {
+    it("saves the budget per card the player types", async () => {
+      const user = userEvent.setup();
+      openDeck();
+      renderPanel();
+      const details = screen.getByRole("region", { name: "Deck details" });
+
+      await user.type(
+        within(details).getByRole("spinbutton", { name: "Budget per card" }),
+        "2.5{Enter}"
+      );
+
+      expect(storedDeck()?.budget).toBe(2.5);
+      expect(deckPatches()).toEqual([{ budget: 2.5 }]);
+    });
+
+    it("saves no limit when the player clears the budget", async () => {
+      const user = userEvent.setup();
+      openDeck({ budget: 5 });
+      renderPanel();
+      const details = screen.getByRole("region", { name: "Deck details" });
+
+      await user.clear(
+        within(details).getByRole("spinbutton", { name: "Budget per card" })
+      );
+      await user.tab();
+
+      expect(storedDeck()?.budget).toBeNull();
+      expect(deckPatches()).toEqual([{ budget: null }]);
+    });
+
+    it("sends nothing when the player leaves the budget as it was", async () => {
+      const user = userEvent.setup();
+      openDeck({ budget: 5 });
+      renderPanel();
+      const details = screen.getByRole("region", { name: "Deck details" });
+
+      await user.click(
+        within(details).getByRole("spinbutton", { name: "Budget per card" })
+      );
+      await user.keyboard("{Enter}");
+      await user.tab();
+
+      expect(deckPatches()).toEqual([]);
+    });
+
+    it("refuses a budget of zero, says why and saves nothing", async () => {
+      const user = userEvent.setup();
+      openDeck({ budget: 5 });
+      renderPanel();
+      const details = screen.getByRole("region", { name: "Deck details" });
+      const budget = within(details).getByRole("spinbutton", {
+        name: "Budget per card",
+      });
+
+      await user.clear(budget);
+      await user.type(budget, "0{Enter}");
+
+      expect(within(details).getByRole("alert")).toHaveTextContent(
+        "Enter an amount above zero, or leave the field empty for no limit."
+      );
+      expect(budget).toBeInvalid();
+      expect(storedDeck()?.budget).toBe(5);
+      expect(deckPatches()).toEqual([]);
+    });
+
+    it("labels the budget, its unit and its error in French", async () => {
+      const user = userEvent.setup();
+      openDeck();
+      renderPanel("fr");
+      const details = screen.getByRole("region", { name: "Détails du deck" });
+      const budget = within(details).getByRole("spinbutton", {
+        name: "Budget par carte",
+      });
+
+      expect(budget).toHaveAccessibleDescription(
+        "En dollars US. Laissez le champ vide pour ne fixer aucune limite."
+      );
+      await user.type(budget, "-3{Enter}");
+      expect(within(details).getByRole("alert")).toHaveTextContent(
+        "Saisissez un montant supérieur à zéro, ou laissez le champ vide pour ne fixer aucune limite."
+      );
+    });
+
+    it("shows the saved budget again when the save fails", async () => {
+      const user = userEvent.setup();
+      serverStatus = 500;
+      openDeck({ budget: 5 });
+      renderPanel();
+      const details = screen.getByRole("region", { name: "Deck details" });
+      const budget = within(details).getByRole("spinbutton", {
+        name: "Budget per card",
+      });
+
+      await user.clear(budget);
+      await user.type(budget, "2.5{Enter}");
+
+      await waitFor(() => expect(deckPatches()).toEqual([{ budget: 2.5 }]));
+      await waitFor(() => expect(storedDeck()?.budget).toBe(5));
+      expect(budget).toHaveValue(5);
     });
   });
 });
