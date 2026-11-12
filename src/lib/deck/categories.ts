@@ -2,9 +2,6 @@
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import type { CardCategory } from "./types";
 
-export function isDfcLayout(card: ScryfallCard): boolean {
-  return (card.layout === "modal_dfc" || card.layout === "transform" || card.layout === "reversible_card" || card.layout === "double_faced_token") && (card.card_faces?.length ?? 0) >= 2;
-}
 export function isMdfcWithLandBack(card: ScryfallCard): boolean {
   if (card.layout !== "modal_dfc") return false;
   return (card.card_faces?.[1]?.type_line ?? "").toLowerCase().includes("land");

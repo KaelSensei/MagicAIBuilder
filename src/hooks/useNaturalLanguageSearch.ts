@@ -43,7 +43,7 @@ export function useNaturalLanguageSearchAvailability(): boolean {
  * @param input - description, locale, deck context, and a cancel signal
  * @returns the query and deck context, or a stable error code
  */
-export async function requestScryfallQuery(input: {
+async function requestScryfallQuery(input: {
   readonly description: string;
   readonly locale: SearchDescriptionLocale;
   readonly context: NaturalLanguageSearchContext;

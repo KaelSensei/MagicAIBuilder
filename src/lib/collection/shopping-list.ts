@@ -38,14 +38,6 @@ export interface DeckCardStatusItem {
   readonly price: number | null;
 }
 
-export interface CollectionStats {
-  readonly ownedCount: number;
-  readonly totalCount: number;
-  readonly completionRatio: number;
-  readonly missingCost: number;
-  readonly missingCount: number;
-}
-
 export interface DeckCollectionSummary {
   readonly totalQuantity: number;
   readonly ownedQuantity: number;
@@ -257,42 +249,6 @@ export function getMissingCollectionCards(
     missingById.delete(scryfallId);
   }
   return missingCards;
-}
-
-// ─── Collection stats ─────────────────────────────────────────────────────────
-
-/** Compute owned/missing counts and missing cost for a deck. Basic lands are always counted as owned. */
-export function computeCollectionStats(
-  deckCards: readonly DeckCard[],
-  commander: DeckCard | null,
-  partner: DeckCard | null,
-  ownedScryfallIds: ReadonlySet<string>
-): CollectionStats {
-  const allCards = collectAllCards(deckCards, commander, partner);
-  const totalCount = allCards.length;
-  let ownedCount = 0;
-  let missingCost = 0;
-
-  for (const card of allCards) {
-    const isOwned =
-      isBasicLand(card.typeLine) ||
-      ownedScryfallIds.has(card.scryfallId ?? card.id);
-    if (isOwned) {
-      ownedCount++;
-    } else {
-      missingCost += (card.price ?? 0) * card.quantity;
-    }
-  }
-
-  const completionRatio = totalCount > 0 ? ownedCount / totalCount : 0;
-
-  return {
-    ownedCount,
-    totalCount,
-    completionRatio,
-    missingCost: Math.round(missingCost * 100) / 100,
-    missingCount: totalCount - ownedCount,
-  };
 }
 
 // ─── Text export ──────────────────────────────────────────────────────────────

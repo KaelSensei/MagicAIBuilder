@@ -70,7 +70,7 @@ export type PublicDeckRecord = Prisma.DeckGetPayload<{
  * zone that keeps a maybeboard card out of the main deck. Neither belongs to
  * the owner. The owner's notes stay out.
  */
-export const FORK_SOURCE_CARD_SELECT = {
+const FORK_SOURCE_CARD_SELECT = {
   ...PUBLIC_DECK_CARD_SELECT,
   manaCost: true,
   typeLine: true,

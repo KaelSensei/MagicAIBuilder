@@ -19,7 +19,7 @@ export const SHARED_CACHE_NAMESPACE = "srv1:";
 export const MAX_SEARCH_QUERY_LENGTH = 1000;
 
 /** Highest search page the cache accepts; Scryfall pages hold 175 cards. */
-export const MAX_SEARCH_PAGE = 100;
+const MAX_SEARCH_PAGE = 100;
 
 /**
  * Letters, marks and digits of any script, punctuation, symbols and the plain

@@ -51,20 +51,3 @@ export function maxQuantity(
   if (CAPPED_MULTIPLES[cardName] !== undefined) return CAPPED_MULTIPLES[cardName];
   return getFormatConfig(format).maxCopiesPerCard;
 }
-
-/**
- * Whether a card can have more than 1 copy in the given format.
- * @param cardName - Card name
- * @param typeLine - Card type line
- * @param oracleText - Oracle text
- * @param format - Deck format
- * @returns True if the card allows more than 1 copy
- */
-export function allowsMultiples(
-  cardName: string,
-  typeLine: string,
-  oracleText: string = "",
-  format: DeckFormat = "commander"
-): boolean {
-  return maxQuantity(cardName, typeLine, oracleText, format) > 1;
-}

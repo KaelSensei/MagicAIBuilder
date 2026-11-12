@@ -41,5 +41,3 @@ export const buildSchema = z.object({
   bracket: z.number().int().min(1).max(5),
   commanderName: z.string().max(200).nullable().optional().default(null),
 });
-
-export type BuildInput = z.infer<typeof buildSchema>;

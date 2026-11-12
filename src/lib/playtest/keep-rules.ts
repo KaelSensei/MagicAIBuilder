@@ -223,7 +223,7 @@ const ROWS_BY_CLASS = new Map<string, BracketRow>(
  * @param tally - mulligans taken and whether the first one is free
  * @returns the stage of the hand being judged
  */
-export function keepStage(tally: MulliganTally): KeepStage {
+function keepStage(tally: MulliganTally): KeepStage {
   if (tally.mulliganCount === 0) return "firstSeven";
   if (tally.firstMulliganFree && tally.mulliganCount === 1) return "freeSeven";
   const size = keptOpeningHandSize(tally);

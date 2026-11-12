@@ -55,18 +55,3 @@ export function toDeckReview(row: DeckRatingRow): DeckReview | null {
     createdAt: row.createdAt,
   };
 }
-
-/**
- * Extracts every written review from a set of rating rows, preserving order.
- *
- * @param rows Persisted rating rows.
- * @returns Only the rows that carry a written review.
- */
-export function toDeckReviews(rows: readonly DeckRatingRow[]): DeckReview[] {
-  const reviews: DeckReview[] = [];
-  for (const row of rows) {
-    const review = toDeckReview(row);
-    if (review !== null) reviews.push(review);
-  }
-  return reviews;
-}

@@ -105,15 +105,14 @@ an account, and the deck list's sort and grouping preferences are kept in `local
 
 ### TanStack Query Keys
 
-| Hook                           | Query Key                                   | Cache TTL |
-| ------------------------------ | ------------------------------------------- | --------- |
-| `useCardSearch(query)`         | `["scryfall", "search", query]`             | 5 min     |
-| `useCardSearchInfinite(query)` | `["scryfall", "search", "infinite", query]` | 5 min     |
-| `useCardLookup(id)`            | `["scryfall", "card", "id", id]`            | 24h       |
-| `useCardLookupByName(name)`    | `["scryfall", "card", "name", name]`        | 24h       |
-| `useGameChangers()`            | `["scryfall", "game-changers"]`             | 24h       |
-| `useBanlist(format)`           | `["scryfall", "banlist", format]`           | 24h       |
-| `useCombos(deck)`              | `["combos", "spellbook", queryKey]`         | 1h        |
+| Hook                        | Query Key                            | Cache TTL |
+| --------------------------- | ------------------------------------ | --------- |
+| `useCardSearch(query)`      | `["scryfall", "search", query]`      | 5 min     |
+| `useCardLookup(id)`         | `["scryfall", "card", "id", id]`     | 24h       |
+| `useCardLookupByName(name)` | `["scryfall", "card", "name", name]` | 24h       |
+| `useGameChangers()`         | `["scryfall", "game-changers"]`      | 24h       |
+| `useBanlist(format)`        | `["scryfall", "banlist", format]`    | 24h       |
+| `useCombos(deck)`           | `["combos", "spellbook", queryKey]`  | 1h        |
 
 ### Scryfall Rate Limiting
 

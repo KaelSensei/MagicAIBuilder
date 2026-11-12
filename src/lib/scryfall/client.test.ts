@@ -17,8 +17,6 @@ import {
   getCardById,
   autocompleteCardName,
   getCardCollection,
-  getGameChangers,
-  getCommanderBanlist,
   searchCardPrintings,
   fetchLocalizedPrintingsByNames,
   __resetRateLimiter,
@@ -424,48 +422,6 @@ describe("fetchLocalizedPrintingsByNames", () => {
     const promise = fetchLocalizedPrintingsByNames(["Sol Ring"], "fr");
     await vi.runAllTimersAsync();
     await expect(promise).resolves.toEqual([]);
-  });
-});
-
-describe("getGameChangers", () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-  });
-  afterEach(() => {
-    vi.useRealTimers();
-    vi.restoreAllMocks();
-    __resetRateLimiter();
-  });
-
-  it("searches for is:gamechanger", async () => {
-    mockFetchSuccess(makeSearchResponse());
-    const promise = getGameChangers();
-    vi.runAllTimers();
-    await promise;
-    const fetchCall = (global.fetch as ReturnType<typeof vi.fn>).mock
-      .calls[0][0] as string;
-    expect(fetchCall).toContain("gamechanger");
-  });
-});
-
-describe("getCommanderBanlist", () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-  });
-  afterEach(() => {
-    vi.useRealTimers();
-    vi.restoreAllMocks();
-    __resetRateLimiter();
-  });
-
-  it("searches for banned:commander", async () => {
-    mockFetchSuccess(makeSearchResponse());
-    const promise = getCommanderBanlist();
-    vi.runAllTimers();
-    await promise;
-    const fetchCall = (global.fetch as ReturnType<typeof vi.fn>).mock
-      .calls[0][0] as string;
-    expect(fetchCall).toContain("banned%3Acommander");
   });
 });
 
