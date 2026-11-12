@@ -177,6 +177,11 @@ export async function readNdjsonOnFakeClock(response: Response): Promise<{
   })();
 
   const deadline = performance.now() + 5_000;
+  // The two awaits stay sequential, in a loop (SonarCloud S9382 notwithstanding):
+  // each turn first yields a macrotask so the route's pending I/O and `pump`
+  // can run, then fires the next fake timer. Running them in parallel, or
+  // advancing every timer at once, would fire a pacing timer before the chunk
+  // it paces was read, and the recorded arrival times would be wrong.
   while (!finished) {
     if (performance.now() > deadline) {
       throw new Error("The stream did not end within five real seconds.");
