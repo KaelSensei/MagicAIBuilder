@@ -4,10 +4,8 @@ import { Link } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { useSession } from "next-auth/react";
 import { ArrowRight, Sparkles } from "lucide-react";
+import { ButtonLink } from "@/components/ui/ButtonLink";
 import { HeroPreview } from "./HeroPreview";
-
-const PRIMARY_LINK_CLASS =
-  "inline-flex items-center gap-2 rounded-[var(--lumen-radius-pill)] bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white shadow-[var(--lumen-shadow-sm)] transition-colors hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]";
 
 const SECONDARY_LINK_CLASS =
   "inline-flex items-center rounded-[var(--lumen-radius-pill)] px-4 py-2.5 text-sm font-medium text-[var(--accent-text)] transition-colors hover:bg-[var(--accent-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]";
@@ -45,10 +43,11 @@ export function Hero() {
           {t("hero.subtitle")}
         </p>
         <div className="mt-8 flex flex-wrap items-center gap-3">
-          <Link href={ctaHref} className={PRIMARY_LINK_CLASS}>
+          {/* gap-2 keeps the arrow 8px from the label, as the landing drew it. */}
+          <ButtonLink href={ctaHref} size="lg" className="gap-2">
             {ctaLabel}
             <ArrowRight className="h-4 w-4" aria-hidden="true" />
-          </Link>
+          </ButtonLink>
           <Link href="#capabilities" className={SECONDARY_LINK_CLASS}>
             {t("hero.secondaryCta")}
           </Link>
