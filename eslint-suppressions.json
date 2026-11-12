@@ -1209,7 +1209,7 @@
       "count": 1
     }
   },
-  "src/components/rules/ComprehensiveRulesView.test.tsx": {
+  "src/modules/rules-reference/ui/ComprehensiveRulesView.test.tsx": {
     "no-restricted-syntax": {
       "count": 1
     },
@@ -1217,12 +1217,12 @@
       "count": 1
     }
   },
-  "src/components/rules/ComprehensiveRulesView.tsx": {
+  "src/modules/rules-reference/ui/ComprehensiveRulesView.tsx": {
     "max-lines-per-function": {
       "count": 1
     }
   },
-  "src/components/rules/GameChangersPageClient.tsx": {
+  "src/modules/rules-reference/ui/GameChangersPageClient.tsx": {
     "complexity": {
       "count": 1
     },
