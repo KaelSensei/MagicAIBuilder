@@ -11,7 +11,7 @@ import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithIntl } from "@/test/render-with-intl";
-import { useMsw } from "@/test/msw";
+import { setupMsw } from "@/test/msw";
 import { SharePopover } from "./SharePopover";
 
 const DECK_ID = "deck-1";
@@ -19,7 +19,7 @@ const SHARE_URL = "https://magicaibuilder.test/share/abc123XYZABC";
 
 describe("SharePopover", () => {
   let sent: string[] = [];
-  const server = useMsw(
+  const server = setupMsw(
     http.post(`/api/decks/${DECK_ID}/share`, () => {
       sent.push("POST");
       return HttpResponse.json({

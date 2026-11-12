@@ -12,7 +12,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { SessionProvider, useSession } from "next-auth/react";
-import { useMsw } from "@/test/msw";
+import { setupMsw } from "@/test/msw";
 import type { UserInitData } from "@/lib/auth/user-init";
 import { InitProvider, useInitContext } from "./InitProvider";
 
@@ -65,7 +65,7 @@ function renderProvider(onInitialized: (data: UserInitData) => void) {
 }
 
 describe("InitProvider", () => {
-  const server = useMsw(
+  const server = setupMsw(
     http.get("/api/auth/session", () => HttpResponse.json(SIGNED_IN_SESSION)),
     http.get("/api/user/init", () => HttpResponse.json(BOOTSTRAP_PAYLOAD))
   );
