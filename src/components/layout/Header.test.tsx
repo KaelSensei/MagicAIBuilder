@@ -5,6 +5,7 @@ import React from "react";
 import { NextIntlClientProvider } from "next-intl";
 import enCommon from "@/messages/en/common.json";
 import frCommon from "@/messages/fr/common.json";
+import { useToastStore } from "@/hooks/useToast";
 
 let createDeckImpl: (name: string) => Promise<string> = async (_name: string) =>
   "deck-0";
@@ -269,5 +270,62 @@ describe("Header deck actions and mobile menu (characterization)", () => {
     expect(
       screen.getAllByRole("navigation", { name: "My Decks" })
     ).toHaveLength(1);
+  });
+});
+
+/*
+ * A failed creation used to reject unhandled: the button spun, then came back,
+ * and the player saw nothing. The header now reports it in a toast.
+ */
+describe("Header deck creation failures", () => {
+  beforeEach(() => {
+    router.push.mockReset();
+    useToastStore.setState({ toasts: [] });
+  });
+
+  it("tells the player why New Deck failed and lets them try again", async () => {
+    createDeckImpl = async () => {
+      throw new Error("HTTP 500");
+    };
+    const { Header } = await import("./Header");
+
+    renderWithIntl(React.createElement(Header));
+    const newDeck = screen.getByRole("button", { name: "New Deck" });
+    await userEvent.click(newDeck);
+
+    await waitFor(() =>
+      expect(useToastStore.getState().toasts).toEqual([
+        expect.objectContaining({
+          type: "error",
+          message: "Could not create the deck — HTTP 500",
+        }),
+      ])
+    );
+    expect(newDeck).toBeEnabled();
+    expect(router.push).not.toHaveBeenCalled();
+  });
+
+  it("tells the player why Import failed, without activating a deck", async () => {
+    createDeckImpl = async () => {
+      throw new Error("HTTP 503");
+    };
+    const setActiveDeck = vi.fn((_id: string) => {});
+    setActiveDeckImpl = (id: string) => setActiveDeck(id);
+    const { Header } = await import("./Header");
+
+    renderWithIntl(React.createElement(Header));
+    const importButton = screen.getByRole("button", { name: "Import" });
+    await userEvent.click(importButton);
+
+    await waitFor(() =>
+      expect(useToastStore.getState().toasts).toEqual([
+        expect.objectContaining({
+          type: "error",
+          message: "Could not create the deck — HTTP 503",
+        }),
+      ])
+    );
+    expect(importButton).toBeEnabled();
+    expect(setActiveDeck).not.toHaveBeenCalled();
   });
 });

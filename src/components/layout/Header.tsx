@@ -10,7 +10,9 @@ import { HeaderMobileMenu } from "@/components/layout/HeaderMobileMenu";
 import { LocaleSwitcher } from "@/components/layout/LocaleSwitcher";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { Button } from "@/components/ui/Button";
+import { useToastStore } from "@/hooks/useToast";
 import { useDeckStore } from "@/lib/deck/store";
+import { logger } from "@/lib/logger";
 
 interface HeaderProps {
   readonly deckId?: string;
@@ -50,6 +52,23 @@ export function Header({ deckId }: HeaderProps = {}) {
 
   const createDeck = useDeckStore((s) => s.createDeck);
   const setActiveDeck = useDeckStore((s) => s.setActiveDeck);
+  const addToast = useToastStore((s) => s.add);
+
+  const reportCreateFailure = useCallback(
+    (operation: string, error: unknown) => {
+      // Logging alone made the button look inert: it spun, the request failed,
+      // and the player was left on the same screen with no explanation.
+      logger.error("Unexpected error", operation, error);
+      addToast(
+        "error",
+        t("nav.createFailed", {
+          reason:
+            error instanceof Error ? error.message : t("nav.unknownError"),
+        })
+      );
+    },
+    [addToast, t]
+  );
 
   const handleNewDeck = useCallback(async () => {
     if (isCreatingDeck) return;
@@ -59,10 +78,12 @@ export function Header({ deckId }: HeaderProps = {}) {
       // locale, as the imported-deck name below already does.
       const id = await createDeck(t("nav.newDeck"));
       router.push(`/builder/${id}`);
+    } catch (error) {
+      reportCreateFailure("Header.handleNewDeck", error);
     } finally {
       setIsCreatingDeck(false);
     }
-  }, [createDeck, isCreatingDeck, router, t]);
+  }, [createDeck, isCreatingDeck, reportCreateFailure, router, t]);
 
   const handleImportFromHome = useCallback(async () => {
     if (isCreatingImportDeck) return;
@@ -73,10 +94,19 @@ export function Header({ deckId }: HeaderProps = {}) {
       );
       await setActiveDeck(id);
       setImportOpen(true);
+    } catch (error) {
+      reportCreateFailure("Header.handleImportFromHome", error);
     } finally {
       setIsCreatingImportDeck(false);
     }
-  }, [createDeck, format, isCreatingImportDeck, setActiveDeck, t]);
+  }, [
+    createDeck,
+    format,
+    isCreatingImportDeck,
+    reportCreateFailure,
+    setActiveDeck,
+    t,
+  ]);
 
   const handleCloseMenu = useCallback(() => {
     setMenuOpen(false);

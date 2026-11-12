@@ -6,7 +6,9 @@
     "rules": "Rules",
     "newDeck": "New Deck",
     "import": "Import",
-    "importedDeck": "Imported Deck — {date}"
+    "importedDeck": "Imported Deck — {date}",
+    "createFailed": "デッキを作成できませんでした — {reason}",
+    "unknownError": "不明なエラー"
   },
   "theme": {
     "toggle": "テーマを切り替える",
