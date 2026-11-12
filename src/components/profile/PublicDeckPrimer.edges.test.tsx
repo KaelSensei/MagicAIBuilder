@@ -1,17 +1,21 @@
 /**
- * Characterization of the primer's Markdown edges (P1-20): which link destinations become
- * links, how they open, and the ids headings get.
+ * The primer's Markdown edges (P1-20): which link destinations become links, how they open,
+ * and the ids headings get.
  *
  * Community context. `PublicDeckPrimer` renders a public deck's description, which its owner
- * writes and every visitor reads, so its link policy is a security boundary: only `http:`,
- * `https:`, `mailto:`, a path starting with `/` and a fragment starting with `#` become links.
- * COM-19 moves the parser into the community domain; these tests pin what it does today,
- * including two gaps (a protocol-relative URL passes as a path; an upper-case scheme loses
- * `target` and `rel`) and the duplicate heading ids B2-22 will fix.
+ * writes and every visitor reads, so its link policy is a security boundary. `classifyUserLink`
+ * decides it: an http(s) URL on another host, in any case or protocol-relative, opens in a new
+ * tab; a site path or a fragment opens in the same tab; anything else stays plain text.
+ * The link tests state that policy. The block tests characterize what the parser does today,
+ * before COM-19 moves it into the community domain, including the duplicate heading ids B2-22
+ * will fix.
  */
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { PublicDeckPrimer } from "./PublicDeckPrimer";
+
+/** An author's link to another site: no opener, no referrer, and not endorsed for search. */
+const EXTERNAL_REL = "noopener noreferrer nofollow ugc";
 
 function renderPrimer(description: string): void {
   render(<PublicDeckPrimer description={description} />);
@@ -22,13 +26,14 @@ function headingIds(): readonly string[] {
   return screen.getAllByRole("heading").map((heading) => heading.id);
 }
 
-describe("PublicDeckPrimer links (characterization)", () => {
+describe("PublicDeckPrimer links", () => {
   it.each([
     ["a javascript: URL", "javascript:alert(1)"],
     ["a javascript: URL in capitals", "JavaScript:alert(1)"],
     ["a data: URL", "data:text/html,<b>hi</b>"],
     ["a vbscript: URL", "vbscript:msgbox(1)"],
     ["a file: URL", "file:///etc/passwd"],
+    ["a mailto: address", "mailto:owner@example.com"],
   ])("renders the label as plain text for %s", (_case, destination) => {
     renderPrimer(`See [the trick](${destination}) now.`);
 
@@ -49,19 +54,18 @@ describe("PublicDeckPrimer links (characterization)", () => {
     ["http:", "http://example.com/guide"],
     ["https:", "https://example.com/guide"],
   ])(
-    "opens an %s link in a new tab without referrer or opener",
+    "opens an %s link in a new tab, without referrer or opener, marked as user content",
     (_scheme, destination) => {
       renderPrimer(`Read [the guide](${destination}).`);
 
       const link = screen.getByRole("link", { name: "the guide" });
       expect(link).toHaveAttribute("href", destination);
       expect(link).toHaveAttribute("target", "_blank");
-      expect(link).toHaveAttribute("rel", "noreferrer noopener");
+      expect(link).toHaveAttribute("rel", EXTERNAL_REL);
     }
   );
 
   it.each([
-    ["a mailto: address", "mailto:owner@example.com"],
     ["a site path", "/decks/42"],
     ["a fragment", "#primer-game-plan"],
   ])(
@@ -76,22 +80,31 @@ describe("PublicDeckPrimer links (characterization)", () => {
     }
   );
 
-  it("currently links a protocol-relative URL as if it were a site path, in the same tab (pinned; new follow-up, see the P1-20 PR)", () => {
+  it("opens a protocol-relative URL as an external link to the host it names", () => {
     renderPrimer("Read [the guide](//evil.example/phish).");
 
     const link = screen.getByRole("link", { name: "the guide" });
-    expect(link).toHaveAttribute("href", "//evil.example/phish");
-    expect(link).not.toHaveAttribute("target");
-    expect(link).not.toHaveAttribute("rel");
+    expect(link).toHaveAttribute("href", "https://evil.example/phish");
+    expect(link).toHaveAttribute("target", "_blank");
+    expect(link).toHaveAttribute("rel", EXTERNAL_REL);
   });
 
-  it("currently opens an upper-case HTTP link in the same tab, with no rel (pinned; new follow-up, see the P1-20 PR)", () => {
+  it("opens a backslash spelling of another host as an external link, which browsers read as //host", () => {
+    renderPrimer("Read [the guide](/\\evil.example/phish).");
+
+    const link = screen.getByRole("link", { name: "the guide" });
+    expect(link).toHaveAttribute("href", "https://evil.example/phish");
+    expect(link).toHaveAttribute("target", "_blank");
+    expect(link).toHaveAttribute("rel", EXTERNAL_REL);
+  });
+
+  it("opens an upper-case HTTPS link in a new tab, at its canonical lower-case address", () => {
     renderPrimer("Read [the guide](HTTPS://EXAMPLE.COM/GUIDE).");
 
     const link = screen.getByRole("link", { name: "the guide" });
-    expect(link).toHaveAttribute("href", "HTTPS://EXAMPLE.COM/GUIDE");
-    expect(link).not.toHaveAttribute("target");
-    expect(link).not.toHaveAttribute("rel");
+    expect(link).toHaveAttribute("href", "https://example.com/GUIDE");
+    expect(link).toHaveAttribute("target", "_blank");
+    expect(link).toHaveAttribute("rel", EXTERNAL_REL);
   });
 
   it("ends a destination at its first closing parenthesis and keeps the rest as text", () => {
