@@ -218,12 +218,12 @@ How to read it:
 **Where the code contradicts the map today.** The architecture audit measured these inversions;
 each is removed by a phase 1 slice or by its context's move series.
 
-| Inversion                              | Evidence                                                                                                                                                           | Fix                                                                              |
-| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------- |
-| Card catalog imports deck building     | 23 imports, for example deck-aware widgets in `src/components/card/` and `src/lib/scryfall/client.ts:14` importing `lookupCardCache` from `src/lib/db/deck-api.ts` | Deck-aware widgets move to deck building; the cache client moves to card catalog |
-| Playtest and AI depend on each other   | `src/lib/playtest/ai-context.ts` imports the AI schema while the AI route imports `ai-context`                                                                     | `ai-context.ts` moves to the AI copilot                                          |
-| The app shell depends on deck building | `src/components/layout/Header.tsx:7,13` imports the import dialog and the deck store                                                                               | The header takes its actions as a slot                                           |
-| Deck store calls the collection store  | `src/lib/deck/store.ts:12`                                                                                                                                         | Composed in the UI instead                                                       |
+| Inversion                              | Evidence                                                                                                                                                        | Fix                                                                                        |
+| -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| Card catalog imports deck building     | Deck-aware widgets in `src/components/card/` and `src/components/search/`, and `src/lib/scryfall/search.ts:2-9` importing deck types, formats and pairing rules | Deck-aware widgets move to deck building; the types and formats search needs move upstream |
+| Playtest and AI depend on each other   | `src/lib/playtest/ai-context.ts` imports the AI schema while the AI route imports `ai-context`                                                                  | `ai-context.ts` moves to the AI copilot                                                    |
+| The app shell depends on deck building | `src/components/layout/Header.tsx:7,13` imports the import dialog and the deck store                                                                            | The header takes its actions as a slot                                                     |
+| Deck store calls the collection store  | `src/lib/deck/store.ts:12`                                                                                                                                      | Composed in the UI instead                                                                 |
 
 ## Layers and dependency rules
 
