@@ -31,6 +31,18 @@ function parseHttpUrl(value: string): URL | null {
 }
 
 /**
+ * Drops every trailing slash of `href` in one pass over its tail.
+ *
+ * A `/\/+$/` replace backtracks from every slash of a long run that ends in
+ * another character, which is quadratic (SonarCloud S8786); this scan is linear.
+ */
+function withoutTrailingSlashes(href: string): string {
+  let end = href.length;
+  while (end > 0 && href[end - 1] === "/") end -= 1;
+  return href.slice(0, end);
+}
+
+/**
  * Resolves the Scryfall API origin from the variable's raw value.
  *
  * @param raw - the value of `SCRYFALL_API_BASE_URL`; undefined or blank means unset
@@ -47,7 +59,7 @@ export function resolveScryfallApiBaseUrl(raw: string | undefined): string {
       `${SCRYFALL_API_BASE_URL_VARIABLE} must be an absolute http(s) URL without query or fragment, got "${raw}"`
     );
   }
-  return url.href.replace(/\/+$/, "");
+  return withoutTrailingSlashes(url.href);
 }
 
 /**

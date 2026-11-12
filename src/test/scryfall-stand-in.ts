@@ -78,37 +78,183 @@ interface NameTerms {
 }
 
 /**
- * One term of a query: `!"exact"` or `!exact` (1, 2), `key:value` with a quoted, regex or bare
- * value (3, 4, 5), a quoted phrase (6), or a bare word (7).
+ * One term of a Scryfall query, as its syntax spells it (https://scryfall.com/docs/syntax, read
+ * 2026-11-12): `!"exact"` or `!exact`; `key:value`, or `key>=value` and the other comparisons,
+ * with a quoted, `/regex/` or bare value kept as written; a quoted phrase; or a bare word.
  */
-const TERM =
-  /!"([^"]*)"|!(\S+)|-?([a-z_]+)(?::|[<>=!]=?)("[^"]*"|\/[^/]*\/|\S+)()|"([^"]*)"|(\S+)/gi;
+type QueryTerm =
+  | { readonly kind: "exact"; readonly name: string }
+  | { readonly kind: "pair"; readonly key: string; readonly value: string }
+  | { readonly kind: "phrase"; readonly text: string }
+  | { readonly kind: "word"; readonly text: string };
 
-function parseNameTerms(query: string): NameTerms {
-  const exact: string[] = [];
-  const patterns: RegExp[] = [];
-  const words: string[] = [];
-  let lang: string | null = null;
-  // Parentheses group OR clauses, which this matcher does not model.
-  for (const match of query.replaceAll(/[()]/g, " ").matchAll(TERM)) {
-    const [, exactQuoted, exactBare, key, value, , phrase, word] = match;
-    if (exactQuoted !== undefined || exactBare !== undefined) {
-      exact.push(exactQuoted ?? exactBare ?? "");
-    } else if (key !== undefined && value !== undefined) {
-      const lowerKey = key.toLowerCase();
-      if (lowerKey === "lang") lang = value.toLowerCase();
-      if (lowerKey === "name" && value.startsWith("/")) {
-        patterns.push(new RegExp(value.slice(1, -1), "i"));
-      } else if (lowerKey === "name") {
-        words.push(value.replaceAll('"', ""));
-      }
-    } else if (phrase !== undefined) {
-      words.push(phrase);
-    } else if (word !== undefined && word.toUpperCase() !== "OR") {
-      words.push(word);
+/** A term read from a query and the index just past it. */
+interface ScannedTerm {
+  readonly term: QueryTerm;
+  readonly end: number;
+}
+
+/** A slice of a query and the index just past it. */
+interface ScannedText {
+  readonly text: string;
+  readonly end: number;
+}
+
+function isWhitespace(char: string | undefined): boolean {
+  return char === undefined || /\s/.test(char);
+}
+
+/** A key of a `key:value` term is letters and underscores; the value runs on from the operator. */
+function isKeyChar(char: string | undefined): boolean {
+  return char !== undefined && /[a-z_]/i.test(char);
+}
+
+/** The text between `delimiter` at `start` and its next occurrence; null when unopened or unclosed. */
+function readDelimited(
+  query: string,
+  start: number,
+  delimiter: string
+): ScannedText | null {
+  if (query[start] !== delimiter) return null;
+  const close = query.indexOf(delimiter, start + 1);
+  return close === -1
+    ? null
+    : { text: query.slice(start + 1, close), end: close + 1 };
+}
+
+/** The run of non-whitespace characters from `start`, possibly empty. */
+function readBareRun(query: string, start: number): ScannedText {
+  let end = start;
+  while (end < query.length && !isWhitespace(query[end])) end += 1;
+  return { text: query.slice(start, end), end };
+}
+
+/** `!"exact name"` or `!exact`; null when `!` stands alone. */
+function readExact(query: string, start: number): ScannedTerm | null {
+  if (query[start] !== "!") return null;
+  const quoted = readDelimited(query, start + 1, '"');
+  const { text, end } = quoted ?? readBareRun(query, start + 1);
+  if (quoted === null && text === "") return null;
+  return { term: { kind: "exact", name: text }, end };
+}
+
+/** The length of the operator at `index`: `:`, or `<`, `>`, `=`, `!` with an optional `=`; 0 if none. */
+function operatorLength(query: string, index: number): number {
+  const char = query[index];
+  if (char === ":") return 1;
+  if (char === "<" || char === ">" || char === "=" || char === "!") {
+    return query[index + 1] === "=" ? 2 : 1;
+  }
+  return 0;
+}
+
+/** `key:value`, with an optional leading `-`; null when no key, operator or value is there. */
+function readPair(query: string, start: number): ScannedTerm | null {
+  const keyStart = query[start] === "-" ? start + 1 : start;
+  let keyEnd = keyStart;
+  while (isKeyChar(query[keyEnd])) keyEnd += 1;
+  const operator = operatorLength(query, keyEnd);
+  if (keyEnd === keyStart || operator === 0) return null;
+  const valueStart = keyEnd + operator;
+  const value =
+    readDelimited(query, valueStart, '"') ??
+    readDelimited(query, valueStart, "/") ??
+    readBareRun(query, valueStart);
+  if (value.end === valueStart) return null;
+  const term: QueryTerm = {
+    kind: "pair",
+    key: query.slice(keyStart, keyEnd),
+    value: query.slice(valueStart, value.end),
+  };
+  return { term, end: value.end };
+}
+
+function readPhrase(query: string, start: number): ScannedTerm | null {
+  const quoted = readDelimited(query, start, '"');
+  return quoted === null
+    ? null
+    : { term: { kind: "phrase", text: quoted.text }, end: quoted.end };
+}
+
+function readWord(query: string, start: number): ScannedTerm {
+  const { text, end } = readBareRun(query, start);
+  return { term: { kind: "word", text }, end };
+}
+
+/** The terms of `query` in order, each read with the first spelling that fits at its position. */
+function scanQueryTerms(query: string): readonly QueryTerm[] {
+  const terms: QueryTerm[] = [];
+  let index = 0;
+  while (index < query.length) {
+    if (isWhitespace(query[index])) {
+      index += 1;
+      continue;
+    }
+    const scanned =
+      readExact(query, index) ??
+      readPair(query, index) ??
+      readPhrase(query, index) ??
+      readWord(query, index);
+    terms.push(scanned.term);
+    index = scanned.end;
+  }
+  return terms;
+}
+
+/** {@link NameTerms} while a query is being folded into it. */
+interface NameTermsDraft {
+  readonly exact: string[];
+  readonly patterns: RegExp[];
+  readonly words: string[];
+  lang: string | null;
+}
+
+/** `lang:` picks the language, `name:` names the card as a regex or words; any other key narrows nothing. */
+function collectPair(draft: NameTermsDraft, key: string, value: string): void {
+  const lowerKey = key.toLowerCase();
+  if (lowerKey === "lang") draft.lang = value.toLowerCase();
+  if (lowerKey !== "name") return;
+  if (value.startsWith("/")) {
+    draft.patterns.push(new RegExp(value.slice(1, -1), "i"));
+  } else {
+    draft.words.push(value.replaceAll('"', ""));
+  }
+}
+
+function collectTerm(draft: NameTermsDraft, term: QueryTerm): void {
+  switch (term.kind) {
+    case "exact":
+      draft.exact.push(term.name);
+      return;
+    case "pair":
+      collectPair(draft, term.key, term.value);
+      return;
+    case "phrase":
+      draft.words.push(term.text);
+      return;
+    case "word":
+      // Bare `OR` joins clauses on Scryfall; here it is simply not a name.
+      if (term.text.toUpperCase() !== "OR") draft.words.push(term.text);
+      return;
+    default: {
+      const unhandled: never = term;
+      return unhandled;
     }
   }
-  return { exact, patterns, words, lang };
+}
+
+function parseNameTerms(query: string): NameTerms {
+  const draft: NameTermsDraft = {
+    exact: [],
+    patterns: [],
+    words: [],
+    lang: null,
+  };
+  // Parentheses group OR clauses, which this matcher does not model.
+  for (const term of scanQueryTerms(query.replaceAll(/[()]/g, " "))) {
+    collectTerm(draft, term);
+  }
+  return draft;
 }
 
 function matchesNameTerms(card: ScryfallCard, terms: NameTerms): boolean {
@@ -165,22 +311,28 @@ const namedNotFound = (name: string): ScryfallError => ({
   details: `No cards found matching “${name}”`,
 });
 
+/**
+ * The cards a `named` lookup may answer with: the card bearing `asked` as a whole name, else,
+ * for a fuzzy lookup only, every card whose name contains it.
+ */
+function namedCandidates(
+  asked: string,
+  fuzzy: boolean
+): readonly ScryfallCard[] {
+  const byExactName = STAND_IN_CARDS.find((card) => hasName(card, asked));
+  if (byExactName !== undefined) return [byExactName];
+  if (!fuzzy) return [];
+  const wanted = asked.toLowerCase();
+  return uniqueByCard(
+    STAND_IN_CARDS.filter((card) => card.name.toLowerCase().includes(wanted))
+  );
+}
+
 /** `exact` is a whole name; `fuzzy` is satisfied by the one card whose name contains it. */
 function namedResponse(params: URLSearchParams): Response {
   const exact = params.get("exact");
-  const fuzzy = params.get("fuzzy");
-  const asked = exact ?? fuzzy ?? "";
-  const byExactName = STAND_IN_CARDS.find((card) => hasName(card, asked));
-  const candidates =
-    byExactName !== undefined
-      ? [byExactName]
-      : exact === null
-        ? uniqueByCard(
-            STAND_IN_CARDS.filter((card) =>
-              card.name.toLowerCase().includes(asked.toLowerCase())
-            )
-          )
-        : [];
+  const asked = exact ?? params.get("fuzzy") ?? "";
+  const candidates = namedCandidates(asked, exact === null);
   const [card] = candidates;
   return candidates.length === 1 && card !== undefined
     ? HttpResponse.json(card)
@@ -198,7 +350,9 @@ function autocompleteResponse(params: URLSearchParams): Response {
         .some((word) => typed !== "" && word.startsWith(typed))
     ).map((card) => card.name)
   );
-  const data = [...names].sort().slice(0, AUTOCOMPLETE_LIMIT);
+  const data = [...names]
+    .sort((left, right) => left.localeCompare(right, "en"))
+    .slice(0, AUTOCOMPLETE_LIMIT);
   return HttpResponse.json({
     object: "catalog",
     total_values: data.length,

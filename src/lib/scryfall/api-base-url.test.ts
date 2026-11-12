@@ -29,6 +29,27 @@ describe("resolveScryfallApiBaseUrl", () => {
     );
   });
 
+  it("drops every trailing slash, however many", () => {
+    expect(resolveScryfallApiBaseUrl("https://mirror.example.test///")).toBe(
+      "https://mirror.example.test"
+    );
+    expect(resolveScryfallApiBaseUrl("http://scryfall:8787/api///")).toBe(
+      "http://scryfall:8787/api"
+    );
+  });
+
+  it("resolves a path of many slashes in linear time, so a hostile value cannot stall startup", () => {
+    // A backtracking `/\/+$/` took about 3 s here on the VPS; the scan takes
+    // about 60 ms, most of it URL parsing. The 1 s ceiling still fails the
+    // regex by a wide margin while leaving room for a loaded CI machine.
+    const hostile = `http://scryfall:8787/${"/".repeat(50_000)}x`;
+    const started = performance.now();
+    const resolved = resolveScryfallApiBaseUrl(hostile);
+    const elapsedMs = performance.now() - started;
+    expect(resolved).toBe(hostile);
+    expect(elapsedMs).toBeLessThan(1000);
+  });
+
   it.each([
     "scryfall:8787",
     "ftp://scryfall",
