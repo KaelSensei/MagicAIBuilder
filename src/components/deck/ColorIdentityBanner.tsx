@@ -150,10 +150,13 @@ export function ColorIdentityBanner({
           </div>
         </div>
       </div>
+      {/* `z-20` stacks the button above the `z-10` content row, which fills the
+          banner: without it the row took every click and the commander could
+          not be removed with a mouse (caught by e2e/commander-journey). */}
       <button
         type="button"
         onClick={onRemove}
-        className="absolute top-1 right-1 opacity-0 group-hover/banner:opacity-100 focus-visible:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg"
+        className="absolute top-1 right-1 z-20 opacity-0 group-hover/banner:opacity-100 focus-visible:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg"
         // The "×" content would be the button's name; the title alone is only a
         // description, so the label repeats it as the name.
         aria-label={t("actions.removeNamed", { name })}
