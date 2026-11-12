@@ -111,6 +111,15 @@ describe("getFormatConfig", () => {
     expect(cfg.label).toBe("Commander");
     expect(cfg.deckSize).toBe(100);
   });
+
+  // A stored format is a plain string; a name that `Object.prototype` answers
+  // must not read a function off the config table.
+  it.each(["toString", "constructor", "hasOwnProperty"])(
+    "falls back to Commander for the inherited object key %s",
+    (key) => {
+      expect(getFormatConfig(key)).toBe(FORMAT_CONFIG.commander);
+    }
+  );
 });
 
 describe("FORMAT_OPTIONS", () => {
