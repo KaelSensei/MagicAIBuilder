@@ -9,7 +9,10 @@
  *   relative path), in either form, except the two transitional seams
  *   (`@/lib/db/prisma`, `@/lib/auth/config`);
  * - `vitest/no-focused-tests` and `vitest/no-disabled-tests`: no committed
- *   `.only` and no `.skip`.
+ *   `.only` and no `.skip`;
+ * - `no-restricted-syntax`, tightened outside `src/test/`: no hand-rolled
+ *   `NextIntlClientProvider` or `new QueryClient(…)` in a test, which render
+ *   through the shared kit (`src/test/render.tsx`, master plan P1-26).
  *
  * ESLint keeps only the last config object that sets a rule for a file, so a
  * later block that sets `no-restricted-syntax` for test files would silently
@@ -33,6 +36,9 @@ const VI = "vi";
 /** A test file in `src/lib/`, where the rules apply. */
 const TEST_FILE = join(REPO_ROOT, "src/lib/example.test.ts");
 
+/** A test of the kit itself, in `src/test/`, where the provider ban does not apply. */
+const KIT_TEST_FILE = join(REPO_ROOT, "src/test/example.test.ts");
+
 let eslint: ESLint;
 
 beforeAll(() => {
@@ -40,8 +46,11 @@ beforeAll(() => {
 });
 
 /** The rule ids ESLint reports for `source` linted as a test file, in order. */
-async function rulesReportedFor(source: string): Promise<readonly string[]> {
-  const [result] = await eslint.lintText(source, { filePath: TEST_FILE });
+async function rulesReportedFor(
+  source: string,
+  filePath = TEST_FILE
+): Promise<readonly string[]> {
+  const [result] = await eslint.lintText(source, { filePath });
   return (result?.messages ?? []).map((message) => message.ruleId ?? "fatal");
 }
 
@@ -107,6 +116,54 @@ describe("mock rules", () => {
     const source = `${VI}.mock(import("next/navigation"), () => ({}));\n`;
 
     expect(await rulesReportedFor(source)).toEqual([]);
+  });
+});
+
+describe("hand-rolled providers", () => {
+  const OWN_PROVIDER =
+    'import { NextIntlClientProvider } from "next-intl";\nexport const Provider = NextIntlClientProvider;\n';
+  const OWN_CLIENT =
+    'import { QueryClient } from "@tanstack/react-query";\nexport const client = new QueryClient();\n';
+
+  it("rejects a test that imports NextIntlClientProvider, and names the kit helpers to use", async () => {
+    const [result] = await eslint.lintText(OWN_PROVIDER, {
+      filePath: TEST_FILE,
+    });
+
+    expect(
+      (result?.messages ?? []).map((message) => [
+        message.ruleId,
+        message.message.includes("renderWithIntl"),
+      ])
+    ).toEqual([["no-restricted-syntax", true]]);
+  });
+
+  it("rejects a test that builds its own QueryClient, and names aTestQueryClient", async () => {
+    const [result] = await eslint.lintText(OWN_CLIENT, {
+      filePath: TEST_FILE,
+    });
+
+    expect(
+      (result?.messages ?? []).map((message) => [
+        message.ruleId,
+        message.message.includes("aTestQueryClient"),
+      ])
+    ).toEqual([["no-restricted-syntax", true]]);
+  });
+
+  it("keeps the mock ban in the same file: the tightened block repeats it", async () => {
+    const source = `${OWN_CLIENT}${VI}.mock(import("@/lib/logger"));\n`;
+
+    expect(await rulesReportedFor(source)).toEqual([
+      "no-restricted-syntax",
+      "no-restricted-syntax",
+    ]);
+  });
+
+  it("accepts both in a test under src/test/, where the kit's own tests exercise the providers", async () => {
+    const source = `${OWN_PROVIDER}${OWN_CLIENT}`;
+
+    expect(await rulesReportedFor(source, KIT_TEST_FILE)).toEqual([]);
   });
 });
 
