@@ -4,13 +4,17 @@
  *
  * - Client-side pagination (data fetched via TanStack Query / Scryfall)
  * - Page size: 25 (configurable via PAGE_SIZE constant)
- * - URL reflects current page: ?page=N
- * - Scroll to top on page change
+ * - URL reflects current page: ?page=N, and a ?page=N link opens page N once the list is known
+ * - Scroll to top on page change, not on the first load
  * - Card grid with normal-sized images, click-to-zoom, printing selector
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { useRouter, useSearchParams } from "next/navigation";
+import {
+  type ReadonlyURLSearchParams,
+  useRouter,
+  useSearchParams,
+} from "next/navigation";
 import { BookOpen, Loader2, Search, Shield, Zap, X } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { useLocalizedGameChangersList } from "@/hooks/useGameChangers";
@@ -28,6 +32,15 @@ import type { ScryfallCard } from "@/lib/scryfall/types";
 const PAGE_SIZE = 25;
 
 type Tab = "game-changers" | "banlist";
+
+/**
+ * The page a `?page=N` link names, or `null` when the URL has no page or an unusable one
+ * (`?page=0`, `?page=abc`, `?page=1.5`).
+ */
+function pageNamedByUrl(searchParams: ReadonlyURLSearchParams): number | null {
+  const page = Number(searchParams.get("page"));
+  return Number.isInteger(page) && page > 0 ? page : null;
+}
 
 // ---------------------------------------------------------------------------
 // Card component — grid tile with normal-sized image
@@ -239,9 +252,9 @@ export function GameChangersPageClient() {
   const [zoomedCard, setZoomedCard] = useState<ScryfallCard | null>(null);
   const [printingsCard, setPrintingsCard] = useState<ScryfallCard | null>(null);
 
-  // Read initial page from URL
-  const urlPage = Number(searchParams.get("page") ?? "1");
-  const [currentPage, setCurrentPage] = useState(urlPage > 0 ? urlPage : 1);
+  // A link may name a page; it is shown as soon as the list confirms it exists.
+  const linkedPage = pageNamedByUrl(searchParams);
+  const [currentPage, setCurrentPage] = useState(linkedPage ?? 1);
 
   // Scryfall queries
   const {
@@ -283,26 +296,61 @@ export function GameChangersPageClient() {
     return filtered.slice(start, start + PAGE_SIZE);
   }, [filtered, safePage]);
 
-  // Sync URL when page changes
-  const updatePage = useCallback(
+  const isLoading = activeTab === "game-changers" ? gcLoading : blLoading;
+  const isError = activeTab === "game-changers" ? gcError : blError;
+
+  // The URL mirrors the page so the visitor can share or reload it.
+  const writePageToUrl = useCallback(
     (page: number) => {
-      setCurrentPage(page);
       const params = new URLSearchParams(searchParams.toString());
       params.set("page", String(page));
       router.replace(`?${params.toString()}`, { scroll: false });
-      topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     },
     [router, searchParams]
   );
 
-  // Reset to page 1 when tab or search changes
-  useEffect(() => {
-    updatePage(1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, search]);
+  // Pager navigation: show the page, write it to the URL, bring the title back into view.
+  const goToPage = useCallback(
+    (page: number) => {
+      setCurrentPage(page);
+      writePageToUrl(page);
+      topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    },
+    [writePageToUrl]
+  );
 
-  const isLoading = activeTab === "game-changers" ? gcLoading : blLoading;
-  const isError = activeTab === "game-changers" ? gcError : blError;
+  // Another list or another search starts over from page 1.
+  const selectTab = useCallback(
+    (tab: Tab) => {
+      if (tab === activeTab) return;
+      setActiveTab(tab);
+      goToPage(1);
+    },
+    [activeTab, goToPage]
+  );
+
+  const changeSearch = useCallback(
+    (value: string) => {
+      setSearch(value);
+      goToPage(1);
+    },
+    [goToPage]
+  );
+
+  // A link may name a page the list does not have, or no page at all: the visitor then lands on
+  // page 1 and the URL says so (RR-01 pins this). The page count is known only once Scryfall has
+  // answered, so the check waits for the list and runs once. A link to a page the list has is left
+  // alone: no reset, no URL write and no scroll, so the visitor sees the page they were sent to.
+  const deepLinkChecked = useRef(false);
+  useEffect(() => {
+    if (deepLinkChecked.current || isLoading) return;
+    deepLinkChecked.current = true;
+    if (isError) return;
+    const landingPage = currentPage > totalPages ? 1 : currentPage;
+    if (landingPage === linkedPage) return;
+    setCurrentPage(landingPage);
+    writePageToUrl(landingPage);
+  }, [isLoading, isError, currentPage, totalPages, linkedPage, writePageToUrl]);
 
   const handleZoomClick = useCallback((card: ScryfallCard) => {
     setZoomedCard(card);
@@ -351,7 +399,7 @@ export function GameChangersPageClient() {
       <div className="flex gap-1 p-1 rounded-lg bg-[var(--surface)] border border-[var(--border)] w-fit">
         <button
           type="button"
-          onClick={() => setActiveTab("game-changers")}
+          onClick={() => selectTab("game-changers")}
           className={cn(
             "flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors",
             activeTab === "game-changers"
@@ -369,7 +417,7 @@ export function GameChangersPageClient() {
         </button>
         <button
           type="button"
-          onClick={() => setActiveTab("banlist")}
+          onClick={() => selectTab("banlist")}
           className={cn(
             "flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors",
             activeTab === "banlist"
@@ -399,7 +447,7 @@ export function GameChangersPageClient() {
           type="search"
           placeholder={t("searchPlaceholder")}
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => changeSearch(e.target.value)}
           className="w-full pl-9 pr-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent)] transition-colors"
         />
       </div>
@@ -458,7 +506,7 @@ export function GameChangersPageClient() {
           <Pagination
             currentPage={safePage}
             totalPages={totalPages}
-            onPageChange={updatePage}
+            onPageChange={goToPage}
             className="mt-2"
           />
         </>

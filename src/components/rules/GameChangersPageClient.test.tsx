@@ -371,8 +371,36 @@ describe("pagination", () => {
     });
   });
 
-  it("pins: a ?page=2 link currently opens page 1 and rewrites the URL to page=1 (see RR-04)", async () => {
+  it("opens the page a ?page=2 link names once the list has loaded", async () => {
     await openPage("page=2");
+
+    expect(visibleCardNames()).toEqual([
+      "Game Changer 26",
+      "Game Changer 27",
+      "Game Changer 28",
+      "Game Changer 29",
+      "Game Changer 30",
+    ]);
+    expect(pageIndicator()).toHaveTextContent("Page 2 / 2");
+  });
+
+  it("keeps page=2 in the URL of a link that names a page the list has", async () => {
+    await openPage("page=2");
+
+    expect(router.replace).not.toHaveBeenCalled();
+  });
+
+  it("does not scroll on the first load of a ?page=2 link", async () => {
+    await openPage("page=2");
+
+    expect(Element.prototype.scrollIntoView).not.toHaveBeenCalled();
+  });
+
+  it("still returns to page 1 when the visitor changes tab after opening a ?page=2 link", async () => {
+    const { user } = await openPage("page=2");
+
+    await user.click(tab(BANLIST_TAB));
+    await user.click(tab(GAME_CHANGERS_TAB));
 
     expect(visibleCardNames()[0]).toBe("Game Changer 1");
     expect(pageIndicator()).toHaveTextContent("Page 1 / 2");
