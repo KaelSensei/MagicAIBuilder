@@ -377,27 +377,6 @@ describe("POST /api/ai/suggest event stream", () => {
       expect((await readAsPanel(body)).result.suggestions).toEqual([]);
     });
 
-    it("currently fails the whole stream, after the call was counted, when the reply's suggestions are not a list (pinned; see B2-50)", async () => {
-      vi.spyOn(logger, "error").mockImplementation(() => undefined);
-      server.use(
-        anthropicAnswers(
-          JSON.stringify({ analysis: "x", suggestions: "Swan Song" })
-        )
-      );
-
-      const { events } = await streamFor();
-
-      expect(events.map(({ event }) => event)).toEqual([
-        { type: "error", message: "AI suggestion failed" },
-      ]);
-      expect(db.aiUsage.create).toHaveBeenCalledWith({
-        data: expect.objectContaining({
-          outcome: "ok",
-          countsAgainstAllowance: true,
-        }),
-      });
-    });
-
     it("streams an empty analysis and done for a reply that is an empty object", async () => {
       server.use(anthropicAnswers("{}"));
 
@@ -423,6 +402,163 @@ describe("POST /api/ai/suggest event stream", () => {
       expect(
         suggestionsOf(events).every(({ evidence }) => !evidence.verified)
       ).toBe(true);
+    });
+  });
+
+  // I-30 requirement 4.4: a reply the player cannot use gives the unit back.
+  describe("replies with the wrong shape or without a usable entry", () => {
+    it("gives the call back and streams the error when the reply's suggestions are not a list", async () => {
+      const logError = vi
+        .spyOn(logger, "error")
+        .mockImplementation(() => undefined);
+      server.use(anthropicAnswers(JSON.stringify({ suggestions: "Sol Ring" })));
+
+      const { events } = await streamFor();
+
+      expect(events.map(({ event }) => event)).toEqual([
+        { type: "error", message: "AI suggestion failed" },
+      ]);
+      expect(logError).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message:
+            "Suggestion reply rejected: The AI returned suggestions that are not a list.",
+        }),
+        "POST /api/ai/suggest"
+      );
+      expect(scryfallAsked).toEqual([]);
+      expect(db.aiUsage.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          outcome: "rejectedByValidator",
+          countsAgainstAllowance: false,
+        }),
+      });
+      expect(db.usageCounter.updateMany).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ key: "ai.suggest" }),
+          data: { used: { decrement: 1 } },
+        })
+      );
+    });
+
+    it("drops the suggestions and removals that name no card, streams the rest and counts the call", async () => {
+      server.use(
+        anthropicAnswers(
+          JSON.stringify({
+            analysis: "One card.",
+            suggestions: [
+              { reason: "Lost its name.", category: "draw", priority: "high" },
+              {
+                name: "",
+                reason: "Blank.",
+                category: "draw",
+                priority: "high",
+              },
+              "Swan Song",
+              {
+                name: "Swan Song",
+                reason: "Protects Talrand.",
+                category: "protection",
+                priority: "high",
+                alternatives: [
+                  { reason: "Nameless alternative.", dimension: "budget" },
+                  { name: "Dispel", reason: "Cheaper.", dimension: "budget" },
+                ],
+              },
+            ],
+            removals: [
+              { reason: "Nameless cut." },
+              { name: "Opt", reason: "Low impact." },
+            ],
+          })
+        )
+      );
+
+      const { events } = await streamFor();
+
+      expect(typesOf(events)).toEqual([
+        "analysis",
+        "suggestion",
+        "removal",
+        "done",
+      ]);
+      expect(suggestionsOf(events).map(({ name }) => name)).toEqual([
+        "Swan Song",
+      ]);
+      expect(scryfallAsked).toEqual([["Swan Song", "Dispel"]]);
+      expect(db.aiUsage.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          outcome: "ok",
+          countsAgainstAllowance: true,
+        }),
+      });
+    });
+
+    it("gives the call back when no entry names a card and the reply has no analysis", async () => {
+      vi.spyOn(logger, "error").mockImplementation(() => undefined);
+      server.use(
+        anthropicAnswers(
+          JSON.stringify({
+            suggestions: [{ reason: "Lost its name." }],
+            removals: [],
+          })
+        )
+      );
+
+      const { events } = await streamFor();
+
+      expect(events.map(({ event }) => event)).toEqual([
+        { type: "error", message: "AI suggestion failed" },
+      ]);
+      expect(db.aiUsage.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          outcome: "rejectedByValidator",
+          countsAgainstAllowance: false,
+        }),
+      });
+    });
+
+    it("counts a reply that answers a why-card question with analysis alone", async () => {
+      server.use(
+        anthropicAnswers(
+          JSON.stringify({
+            analysis: "Sol Ring accelerates Talrand.",
+            suggestions: [],
+            removals: [],
+          })
+        )
+      );
+
+      const { events } = await streamFor({
+        ...TALRAND_SUGGEST_REQUEST,
+        question: { type: "why-card", cardName: "Sol Ring" },
+      });
+
+      expect(typesOf(events)).toEqual(["analysis", "done"]);
+      expect(db.aiUsage.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          outcome: "ok",
+          countsAgainstAllowance: true,
+        }),
+      });
+    });
+
+    it("counts the recorded reply and streams every entry of it", async () => {
+      const { events } = await streamFor();
+
+      expect(typesOf(events)).toEqual([
+        "analysis",
+        ...Array(8).fill("suggestion"),
+        ...Array(4).fill("removal"),
+        "done",
+      ]);
+      expect(db.aiUsage.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          outcome: "ok",
+          countsAgainstAllowance: true,
+        }),
+      });
+      // The reservation is the only counter write: nothing was given back.
+      expect(db.usageCounter.updateMany).toHaveBeenCalledTimes(1);
     });
   });
 

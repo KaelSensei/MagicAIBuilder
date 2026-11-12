@@ -33,6 +33,7 @@ import {
   type AiCallTicket,
 } from "@/lib/ai/usage/meter";
 import { reserveAiCallForRoute } from "@/lib/ai/usage/route-gate";
+import { readSuggestReply } from "@/lib/ai/suggest-reply-validation";
 
 export const runtime = "nodejs";
 
@@ -337,26 +338,28 @@ ${task}`;
  *
  * @param provider - the provider that answered, shown in the panel
  * @returns an interpreter that fails with `parseFailed` on text that is not
- *   a JSON object
+ *   JSON, and with `rejectedByValidator` on JSON that is not a usable reply
+ *   (`readSuggestReply`), so that either failure gives the call back
  */
 function interpretSuggestReply(
   provider: AIProvider
 ): (text: string) => ReplyInterpretation<SuggestResponse> {
   return (text) => {
+    let parsed: unknown;
     try {
-      const parsed = JSON.parse(text);
-      return {
-        ok: true,
-        value: {
-          suggestions: parsed.suggestions ?? [],
-          removals: parsed.removals ?? [],
-          analysis: parsed.analysis ?? "",
-          provider,
-        },
-      };
+      parsed = JSON.parse(text);
     } catch (error) {
       return replyParseFailed(error);
     }
+    const reading = readSuggestReply(parsed);
+    if (!reading.ok) {
+      return {
+        ok: false,
+        outcome: "rejectedByValidator",
+        error: new Error(`Suggestion reply rejected: ${reading.reason}`),
+      };
+    }
+    return { ok: true, value: { ...reading.content, provider } };
   };
 }
 
