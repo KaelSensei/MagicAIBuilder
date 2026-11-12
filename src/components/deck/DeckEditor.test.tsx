@@ -191,6 +191,10 @@ beforeEach(() => {
 
 describe("characterization: DeckEditor commands", () => {
   setupMsw(
+    http.patch("/api/decks/:id/command-zone", async ({ request }) => {
+      await record(request);
+      return HttpResponse.json({ cards: [], version: 1 });
+    }),
     http.patch("/api/decks/:id/cards/:cardId", async ({ request, params }) => {
       await record(request);
       return HttpResponse.json({ id: params.cardId });
@@ -424,7 +428,7 @@ describe("characterization: DeckEditor commands", () => {
   });
 
   describe("command zone", () => {
-    it("clears the commander through the store: the deck's command zone first, then the commander's row", async () => {
+    it("clears the commander through the store in one request: the deck's command zone and the commander's row together", async () => {
       renderEditor(talrandDeck());
 
       await userEvent.click(
@@ -434,15 +438,19 @@ describe("characterization: DeckEditor commands", () => {
       await waitFor(() =>
         expect(sent).toEqual([
           {
-            line: `PATCH /api/decks/${DECK_ID}`,
+            line: `PATCH /api/decks/${DECK_ID}/command-zone`,
             body: {
-              commanderId: null,
-              commanderName: null,
-              partnerId: null,
-              pairingType: "none",
+              removeCardIds: [],
+              clearCommandSlots: ["commander", "partner"],
+              addCards: [],
+              commandZone: {
+                commanderId: null,
+                commanderName: null,
+                partnerId: null,
+                pairingType: "none",
+              },
             },
           },
-          { line: `DELETE /api/decks/${DECK_ID}/cards/${TALRAND.id}` },
         ])
       );
       expect(storedDeck()?.commander).toBeNull();
@@ -491,17 +499,21 @@ describe("characterization: DeckEditor commands", () => {
       await waitFor(() =>
         expect(sent).toEqual([
           {
-            line: `PATCH /api/decks/${DECK_ID}`,
-            body: { partnerId: null, pairingType: "partner" },
+            line: `PATCH /api/decks/${DECK_ID}/command-zone`,
+            body: {
+              removeCardIds: [],
+              clearCommandSlots: ["partner"],
+              addCards: [],
+              commandZone: { partnerId: null, pairingType: "partner" },
+            },
           },
-          { line: `DELETE /api/decks/${DECK_ID}/cards/${tymna.id}` },
         ])
       );
       expect(storedDeck()?.partner).toBeNull();
       expect(storedDeck()?.commander).toEqual(thrasios);
     });
 
-    it("clears the companion through the store: its row first, then the deck's companion id", async () => {
+    it("clears the companion through the store in one request: its row and the deck's companion id together", async () => {
       const keruga = deckCard("Keruga, the Macrosage", {
         manaCost: "{5}{G/U}{G/U}",
         cmc: 7,
@@ -523,8 +535,15 @@ describe("characterization: DeckEditor commands", () => {
 
       await waitFor(() =>
         expect(sent).toEqual([
-          { line: `DELETE /api/decks/${DECK_ID}/cards/${keruga.id}` },
-          { line: `PATCH /api/decks/${DECK_ID}`, body: { companionId: null } },
+          {
+            line: `PATCH /api/decks/${DECK_ID}/command-zone`,
+            body: {
+              removeCardIds: [],
+              clearCommandSlots: ["companion"],
+              addCards: [],
+              commandZone: { companionId: null },
+            },
+          },
         ])
       );
       expect(storedDeck()?.companion).toBeNull();

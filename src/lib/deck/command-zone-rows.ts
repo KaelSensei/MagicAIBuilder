@@ -9,6 +9,7 @@
 //
 // @module deck/command-zone-rows
 import * as deckApi from "@/lib/db/deck-api";
+import type { ApiDeckCard } from "@/lib/db/deck-api";
 import { logger } from "@/lib/logger";
 
 import type { Deck, DeckCard } from "./types";
@@ -50,6 +51,34 @@ export function withSavedCommandRow(
       ? { ...deck, commander: withRowId }
       : { ...deck, partner: withRowId };
   return { ...decks, [saved.deckId]: updated };
+}
+
+/**
+ * Gives the commander and partner the ids of the rows one command-zone save
+ * answered. A row is matched to its slot by its role flags, and to the card on
+ * screen by the printing id the card was placed with, through
+ * {@link withSavedCommandRow}; the companion is set by its caller instead,
+ * since it is shown only once saved.
+ *
+ * @param decks - Decks held in the store
+ * @param deckId - Deck the change was made on
+ * @param rows - The rows the save added
+ * @returns The decks with the saved row ids in place
+ */
+export function withSavedCommandRows(
+  decks: Readonly<Record<string, Deck>>,
+  deckId: string,
+  rows: readonly ApiDeckCard[]
+): Readonly<Record<string, Deck>> {
+  return rows.reduce((current, row) => {
+    if (!row.isCommander) return current;
+    return withSavedCommandRow(current, {
+      deckId,
+      slot: row.isPartner ? "partner" : "commander",
+      placedId: row.scryfallId,
+      rowId: row.id,
+    });
+  }, decks);
 }
 
 /**

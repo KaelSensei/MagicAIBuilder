@@ -528,6 +528,61 @@ export async function applyCardChanges(
   return res.json();
 }
 
+/**
+ * One change of the command zone, which the server stores in one transaction
+ * (`PATCH /api/decks/[id]/command-zone`): the rows that leave, the rows that
+ * enter and the deck fields that record the result.
+ */
+export interface CommandZoneChangeRequest {
+  /** Main-deck rows that leave with the change, such as a promoted card's row. */
+  readonly removeCardIds: readonly string[];
+  /** Slots whose rows are removed, whichever rows hold them. */
+  readonly clearCommandSlots: readonly CommandSlot[];
+  /** The rows that fill the changed slots. */
+  readonly addCards: readonly AddCardPayload[];
+  /** The deck fields to write; an absent key keeps the stored value. */
+  readonly commandZone: Partial<CommandZonePatch>;
+  /** The deck version the client last read; absent means "do not check". */
+  readonly expectedVersion?: number;
+}
+
+/** What a saved command-zone change answers: the rows it added, in the order sent, and the deck's new version. */
+export interface CommandZoneSaved {
+  readonly cards: ApiDeckCard[];
+  readonly version: number;
+}
+
+/**
+ * Changes the command zone atomically: either every row and field of the
+ * change is saved or none is. The guest deck keeps no version, so its answer
+ * carries version 0 and rows whose id is their printing id, as `addCard` does.
+ *
+ * @param deckId - deck to change
+ * @param change - rows to remove and add, and the deck fields to write
+ * @returns the added rows and the deck's new version
+ * @throws When the server refused the change (400, 409 for a stale copy, 500); the deck is then unchanged
+ */
+export async function changeCommandZone(
+  deckId: string,
+  change: CommandZoneChangeRequest
+): Promise<CommandZoneSaved> {
+  if (isGuestDeckId(deckId)) {
+    return {
+      cards: change.addCards.map((payload) =>
+        guestRowFromPayload(deckId, payload.scryfallId, payload)
+      ),
+      version: 0,
+    };
+  }
+  const res = await fetch(`/api/decks/${deckId}/command-zone`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(change),
+  });
+  if (!res.ok) await handleApiError(res, "changeCommandZone");
+  return res.json();
+}
+
 function normalizeCardCategory(category: string | undefined): CardCategory {
   const categories: readonly CardCategory[] = [
     "commander",

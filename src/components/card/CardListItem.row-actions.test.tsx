@@ -39,7 +39,10 @@ function requestUrl(input: RequestInfo | URL): URL {
   return new URL(href, "http://localhost");
 }
 
-/** Records a deck API request and answers it with a successful empty row. */
+/**
+ * Records a deck API request and answers it with a successful empty row, or
+ * with an empty command-zone save for the command-zone route.
+ */
 async function deckApi(
   input: RequestInfo | URL,
   init?: RequestInit
@@ -48,6 +51,9 @@ async function deckApi(
   const body: unknown =
     typeof init?.body === "string" ? JSON.parse(init.body) : undefined;
   requests.push({ method: init?.method ?? "GET", path: url.pathname, body });
+  if (url.pathname.endsWith("/command-zone")) {
+    return Response.json({ cards: [], version: 1 });
+  }
   return Response.json({ id: "saved-row" });
 }
 
@@ -439,16 +445,19 @@ describe("set as commander on a deck row", () => {
       })
     );
 
+    // One request: the row leaves the list and the commander enters together.
     await waitFor(() =>
       expect(requests.map(({ method, path }) => `${method} ${path}`)).toEqual([
-        `DELETE /api/decks/${DECK_ID}/cards/row-atraxa`,
-        `PATCH /api/decks/${DECK_ID}`,
-        `POST /api/decks/${DECK_ID}/cards`,
+        `PATCH /api/decks/${DECK_ID}/command-zone`,
       ])
     );
-    expect(requests[1]?.body).toMatchObject({
-      commanderId: atraxa.scryfallId,
-      commanderName: "Atraxa, Praetors' Voice",
+    expect(requests[0]?.body).toMatchObject({
+      removeCardIds: ["row-atraxa"],
+      clearCommandSlots: ["commander"],
+      commandZone: {
+        commanderId: atraxa.scryfallId,
+        commanderName: "Atraxa, Praetors' Voice",
+      },
     });
     expect(useDeckStore.getState().decks[DECK_ID]?.commander?.name).toBe(
       "Atraxa, Praetors' Voice"

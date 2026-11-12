@@ -72,8 +72,7 @@ function activeDeck(): Deck {
 }
 
 beforeEach(() => {
-  vi.mocked(deckApi.updateDeck).mockClear();
-  vi.mocked(deckApi.addCard).mockClear();
+  vi.mocked(deckApi.changeCommandZone).mockClear();
   toastAdd.mockClear();
 });
 
@@ -112,8 +111,7 @@ describe("setPartner — refuses a second commander CR 702.124 forbids", () => {
 
       expect(activeDeck().partner).toBeNull();
       expect(activeDeck().pairingType).toBe(pairing);
-      expect(deckApi.updateDeck).not.toHaveBeenCalled();
-      expect(deckApi.addCard).not.toHaveBeenCalled();
+      expect(deckApi.changeCommandZone).not.toHaveBeenCalled();
       expect(toastAdd).toHaveBeenCalledWith(
         "warning",
         `${partner.name} cannot share the command zone with ${commander.name}.`
@@ -130,9 +128,11 @@ describe("setPartner — records the pairing the two commanders use", () => {
 
     expect(activeDeck().partner?.name).toBe("The Tenth Doctor");
     expect(activeDeck().pairingType).toBe("doctor");
-    expect(deckApi.updateDeck).toHaveBeenCalledWith(
+    expect(deckApi.changeCommandZone).toHaveBeenCalledWith(
       "deck-1",
-      expect.objectContaining({ pairingType: "doctor" })
+      expect.objectContaining({
+        commandZone: expect.objectContaining({ pairingType: "doctor" }),
+      })
     );
   });
 
@@ -154,9 +154,15 @@ describe("setCommander — keeps the partner only when the pair stays legal", ()
 
     expect(activeDeck().partner).toBeNull();
     expect(activeDeck().pairingType).toBe("partner_with");
-    expect(deckApi.updateDeck).toHaveBeenCalledWith(
+    expect(deckApi.changeCommandZone).toHaveBeenCalledWith(
       "deck-1",
-      expect.objectContaining({ partnerId: null, pairingType: "partner_with" })
+      expect.objectContaining({
+        clearCommandSlots: ["commander", "partner"],
+        commandZone: expect.objectContaining({
+          partnerId: null,
+          pairingType: "partner_with",
+        }),
+      })
     );
   });
 

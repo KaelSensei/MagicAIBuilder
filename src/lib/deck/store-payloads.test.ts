@@ -1,6 +1,6 @@
 /**
  * Characterization suite for the exact add-card request each deck store
- * action sends, and for the order of the requests a command-zone change sends.
+ * action sends, and for the one request a command-zone change sends.
  *
  * Seven actions build the 18-field add-card body by hand today. DB-10 replaces
  * those literals with one payload builder; this suite pins every body first,
@@ -463,8 +463,10 @@ describe("the add-card request each action sends", () => {
   });
 });
 
-describe("the requests a command-zone change sends, in order", () => {
-  it("setCommander patches the deck, adds a commander row flagged from the store's lists, then deletes the replaced commander row", async () => {
+describe("the one request a command-zone change sends", () => {
+  const COMMAND_ZONE_ROUTE = `PATCH ${DECK_ROUTE}/command-zone`;
+
+  it("setCommander clears the commander slot, adds a commander row flagged from the store's lists and writes the deck's command fields", async () => {
     useDeckStore.setState({
       gameChangerNames: new Set(["Purphoros, God of the Forge"]),
     });
@@ -473,42 +475,44 @@ describe("the requests a command-zone change sends, in order", () => {
 
     expect(server.received).toEqual([
       {
-        route: `PATCH ${DECK_ROUTE}`,
+        route: COMMAND_ZONE_ROUTE,
         body: {
-          commanderId: "scry-purphoros",
-          commanderName: "Purphoros, God of the Forge",
-          pairingType: "none",
+          removeCardIds: [],
+          clearCommandSlots: ["commander"],
+          addCards: [
+            {
+              scryfallId: "scry-purphoros",
+              name: "Purphoros, God of the Forge",
+              manaCost: "{3}{R}",
+              cmc: 4,
+              typeLine: "Legendary Enchantment Creature — God",
+              oracleText: "Indestructible",
+              power: "6",
+              toughness: "5",
+              colorIdentity: ["R"],
+              isGameChanger: true,
+              isBanned: false,
+              price: 3.1,
+              imageUri: "https://img.test/purphoros-grid.webp",
+              artCropUri: "https://img.test/purphoros-art.webp",
+              category: "commander",
+              quantity: 1,
+              isCommander: true,
+              isPartner: false,
+              zone: "main",
+            },
+          ],
+          commandZone: {
+            commanderId: "scry-purphoros",
+            commanderName: "Purphoros, God of the Forge",
+            pairingType: "none",
+          },
         },
       },
-      {
-        route: `POST ${CARDS_ROUTE}`,
-        // No zone: the add-card route defaults it to "main" (validation/card.ts). DB-10 sends it.
-        body: {
-          scryfallId: "scry-purphoros",
-          name: "Purphoros, God of the Forge",
-          manaCost: "{3}{R}",
-          cmc: 4,
-          typeLine: "Legendary Enchantment Creature — God",
-          oracleText: "Indestructible",
-          power: "6",
-          toughness: "5",
-          colorIdentity: ["R"],
-          isGameChanger: true,
-          isBanned: false,
-          price: 3.1,
-          imageUri: "https://img.test/purphoros-grid.webp",
-          artCropUri: "https://img.test/purphoros-art.webp",
-          category: "commander",
-          quantity: 1,
-          isCommander: true,
-          isPartner: false,
-        },
-      },
-      { route: `DELETE ${CARDS_ROUTE}/${KRENKO.id}`, body: undefined },
     ]);
   });
 
-  it("setPartner patches the deck, then adds a partner row, currently without the Game Changer flag from the store's list (pinned; see B2-30)", async () => {
+  it("setPartner clears the partner slot and adds a partner row, currently without the Game Changer flag from the store's list (pinned; see B2-30)", async () => {
     useDeckStore.setState({
       decks: {
         [DECK_ID]: openDeck({ commander: THRASIOS, pairingType: "partner" }),
@@ -520,38 +524,41 @@ describe("the requests a command-zone change sends, in order", () => {
 
     expect(server.received).toEqual([
       {
-        route: `PATCH ${DECK_ROUTE}`,
-        body: { partnerId: "scry-tymna", pairingType: "partner" },
-      },
-      {
-        route: `POST ${CARDS_ROUTE}`,
-        // No zone: the add-card route defaults it to "main" (validation/card.ts). DB-10 sends it.
+        route: COMMAND_ZONE_ROUTE,
         body: {
-          scryfallId: "scry-tymna",
-          name: "Tymna the Weaver",
-          manaCost: "{1}{W}{B}",
-          cmc: 3,
-          typeLine: "Legendary Creature — Human Cleric",
-          oracleText:
-            "Lifelink\nPartner (You can have two commanders if both have partner.)",
-          power: "2",
-          toughness: "2",
-          colorIdentity: ["W", "B"],
-          isGameChanger: false,
-          isBanned: false,
-          price: null,
-          imageUri: "https://img.test/tymna-grid.webp",
-          artCropUri: "https://img.test/tymna-art.webp",
-          category: "commander",
-          quantity: 1,
-          isCommander: true,
-          isPartner: true,
+          removeCardIds: [],
+          clearCommandSlots: ["partner"],
+          addCards: [
+            {
+              scryfallId: "scry-tymna",
+              name: "Tymna the Weaver",
+              manaCost: "{1}{W}{B}",
+              cmc: 3,
+              typeLine: "Legendary Creature — Human Cleric",
+              oracleText:
+                "Lifelink\nPartner (You can have two commanders if both have partner.)",
+              power: "2",
+              toughness: "2",
+              colorIdentity: ["W", "B"],
+              isGameChanger: false,
+              isBanned: false,
+              price: null,
+              imageUri: "https://img.test/tymna-grid.webp",
+              artCropUri: "https://img.test/tymna-art.webp",
+              category: "commander",
+              quantity: 1,
+              isCommander: true,
+              isPartner: true,
+              zone: "main",
+            },
+          ],
+          commandZone: { partnerId: "scry-tymna", pairingType: "partner" },
         },
       },
     ]);
   });
 
-  it("setCompanion deletes the previous companion row, adds the new one, currently without the Game Changer flag from the store's list, then patches the deck (pinned; see B2-30)", async () => {
+  it("setCompanion clears the companion slot, adds the new row, currently without the Game Changer flag from the store's list (pinned; see B2-30), and writes companionId", async () => {
     useDeckStore.setState({
       decks: { [DECK_ID]: openDeck({ companion: JEGANTHA }) },
       gameChangerNames: new Set(["Lurrus of the Dream-Den"]),
@@ -560,33 +567,38 @@ describe("the requests a command-zone change sends, in order", () => {
     await useDeckStore.getState().setCompanion(LURRUS);
 
     expect(server.received).toEqual([
-      { route: `DELETE ${CARDS_ROUTE}/${JEGANTHA.id}`, body: undefined },
       {
-        route: `POST ${CARDS_ROUTE}`,
-        // No zone: the add-card route defaults it to "main" (validation/card.ts). DB-10 sends it.
+        route: COMMAND_ZONE_ROUTE,
         body: {
-          scryfallId: "scry-lurrus",
-          name: "Lurrus of the Dream-Den",
-          manaCost: "{1}{W/B}{W/B}",
-          cmc: 3,
-          typeLine: "Legendary Creature — Cat Nightmare",
-          oracleText:
-            "Companion — Each permanent card in your starting deck has mana value 2 or less.\nLifelink",
-          power: "3",
-          toughness: "2",
-          colorIdentity: ["W", "B"],
-          isGameChanger: false,
-          isBanned: false,
-          price: null,
-          imageUri: "https://img.test/lurrus-grid.webp",
-          artCropUri: "https://img.test/lurrus-art.webp",
-          category: "companion",
-          quantity: 1,
-          isCommander: false,
-          isPartner: false,
+          removeCardIds: [],
+          clearCommandSlots: ["companion"],
+          addCards: [
+            {
+              scryfallId: "scry-lurrus",
+              name: "Lurrus of the Dream-Den",
+              manaCost: "{1}{W/B}{W/B}",
+              cmc: 3,
+              typeLine: "Legendary Creature — Cat Nightmare",
+              oracleText:
+                "Companion — Each permanent card in your starting deck has mana value 2 or less.\nLifelink",
+              power: "3",
+              toughness: "2",
+              colorIdentity: ["W", "B"],
+              isGameChanger: false,
+              isBanned: false,
+              price: null,
+              imageUri: "https://img.test/lurrus-grid.webp",
+              artCropUri: "https://img.test/lurrus-art.webp",
+              category: "companion",
+              quantity: 1,
+              isCommander: false,
+              isPartner: false,
+              zone: "main",
+            },
+          ],
+          commandZone: { companionId: "scry-lurrus" },
         },
       },
-      { route: `PATCH ${DECK_ROUTE}`, body: { companionId: "scry-lurrus" } },
     ]);
   });
 });

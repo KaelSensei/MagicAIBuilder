@@ -16,7 +16,9 @@
  * - `seedDeck` stores a deck as the database would hold it, and `savedDeck`
  *   reads it back. A held deck behaves like the routes: rows persist, and a
  *   row it does not hold answers 404. The bulk change (`applyCardChanges`)
- *   skips the route's stale-row check.
+ *   skips the route's stale-row check. The command-zone change
+ *   (`changeCommandZone`) applies all of it or, for a row it does not hold,
+ *   none of it and answers 500 as the route does.
  * - A deck it does not hold accepts every write and keeps nothing, as the
  *   per-file `vi.mock` factories this kit replaced did: most store tests open a
  *   deck by setting the store's state, not through the API. Reading such a
@@ -39,6 +41,7 @@ import type {
   ApiDeckCard,
   ApiDeckListResponse,
   applyCardChanges,
+  changeCommandZone,
   createDeck,
   DeckCardChanges,
   deleteDeck,
@@ -116,6 +119,7 @@ type UpdateCardPrinting = Answers<
   ApiDeckCard
 >;
 type ApplyCardChanges = Answering<typeof applyCardChanges>;
+type ChangeCommandZone = Answering<typeof changeCommandZone>;
 
 /** The deck client's operations, as spies whose default answers are in-memory. */
 export interface DeckApiOperations {
@@ -133,6 +137,7 @@ export interface DeckApiOperations {
   readonly updateCardQuantity: Mock<UpdateCardQuantity>;
   readonly updateCardPrinting: Mock<UpdateCardPrinting>;
   readonly applyCardChanges: Mock<ApplyCardChanges>;
+  readonly changeCommandZone: Mock<ChangeCommandZone>;
 }
 
 /** The in-memory deck API: its operations, and the decks it holds. */
@@ -282,6 +287,37 @@ export function createInMemoryDeckApi(): InMemoryDeckApi {
     return structuredClone(row);
   };
 
+  /**
+   * Applies a command-zone change to a held deck as the route does: all of it,
+   * or none of it when a row to remove is not held.
+   */
+  const applyCommandZoneChange: ChangeCommandZone = (deckId, change) =>
+    prismaQuery(() => {
+      const rows = change.addCards.map((payload) =>
+        rowFromPayload(deckId, nextId("row"), payload)
+      );
+      const deck = held(deckId);
+      // The fake keeps no version: every answer says 0.
+      if (!deck) return { cards: structuredClone(rows), version: 0 };
+      const leaving = new Set(change.removeCardIds);
+      const holdsEveryLeavingRow = change.removeCardIds.every((cardId) =>
+        deck.cards.some((row) => row.id === cardId)
+      );
+      if (!holdsEveryLeavingRow) {
+        throw new DeckApiRefusal(500, "Failed to save the command zone");
+      }
+      const kept = withoutCommandSlots(
+        deck.cards.filter((row) => !leaving.has(row.id)),
+        change.clearCommandSlots
+      );
+      decks.set(deckId, {
+        ...deck,
+        ...change.commandZone,
+        cards: [...kept, ...rows],
+      });
+      return { cards: structuredClone(rows), version: 0 };
+    });
+
   const operations: DeckApiOperations = {
     fetchDecks: vi.fn<FetchDecks>((page: number, limit: number) =>
       prismaQuery(() => {
@@ -393,6 +429,7 @@ export function createInMemoryDeckApi(): InMemoryDeckApi {
         return structuredClone(saved);
       })
     ),
+    changeCommandZone: vi.fn<ChangeCommandZone>(applyCommandZoneChange),
   };
 
   return {

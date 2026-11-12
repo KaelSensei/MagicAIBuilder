@@ -63,6 +63,23 @@ vi.mock(import("@/lib/db/deck-api"), () => ({
   updateCardCategory: vi.fn().mockResolvedValue({}),
   updateCardNotes: vi.fn().mockResolvedValue({}),
   updateCardZone: vi.fn().mockResolvedValue({}),
+  // Answers each added command-zone row under the saved id `saved-db-id`.
+  changeCommandZone: vi
+    .fn()
+    .mockImplementation(
+      async (
+        deckId: string,
+        change: { readonly addCards: readonly Record<string, unknown>[] }
+      ) => ({
+        cards: change.addCards.map((payload) => ({
+          ...payload,
+          id: "saved-db-id",
+          deckId,
+          notes: null,
+        })),
+        version: 1,
+      })
+    ),
 }));
 
 vi.mock(import("@/hooks/useToast"), async (importOriginal) => {
@@ -607,14 +624,17 @@ describe("useDeckStore — setCommander", () => {
     expect(deck.commander?.category).toBe("commander");
   });
 
-  it("calls updateDeck API with commanderId", async () => {
+  it("sends the commander's printing id in the one command-zone request", async () => {
     const card = makeScryfallCard({ id: "atraxa-id", name: "Atraxa" });
     await useDeckStore.getState().setCommander(card);
 
-    expect(deckApi.updateDeck).toHaveBeenCalledWith(
+    expect(deckApi.changeCommandZone).toHaveBeenCalledWith(
       "deck-1",
-      expect.objectContaining({ commanderId: "atraxa-id" })
+      expect.objectContaining({
+        commandZone: expect.objectContaining({ commanderId: "atraxa-id" }),
+      })
     );
+    expect(deckApi.updateDeck).not.toHaveBeenCalled();
   });
 
   it("marks commander as game changer when name is in gameChangerNames", async () => {
@@ -628,9 +648,9 @@ describe("useDeckStore — setCommander", () => {
 
   it("does nothing when no active deck", async () => {
     useDeckStore.setState({ activeDeckId: null });
-    vi.mocked(deckApi.updateDeck).mockClear();
+    vi.mocked(deckApi.changeCommandZone).mockClear();
     await useDeckStore.getState().setCommander(makeScryfallCard());
-    expect(deckApi.updateDeck).not.toHaveBeenCalled();
+    expect(deckApi.changeCommandZone).not.toHaveBeenCalled();
   });
 });
 
@@ -665,19 +685,25 @@ describe("useDeckStore — clearCommander", () => {
     expect(useDeckStore.getState().decks["deck-1"].partner).toBeNull();
   });
 
-  it("calls updateDeck with commanderId null", async () => {
+  it("empties the commander and partner fields in the one command-zone request", async () => {
     await useDeckStore.getState().clearCommander();
-    expect(deckApi.updateDeck).toHaveBeenCalledWith(
+    expect(deckApi.changeCommandZone).toHaveBeenCalledWith(
       "deck-1",
-      expect.objectContaining({ commanderId: null })
+      expect.objectContaining({
+        clearCommandSlots: ["commander", "partner"],
+        commandZone: expect.objectContaining({
+          commanderId: null,
+          partnerId: null,
+        }),
+      })
     );
   });
 
   it("does nothing when no active deck", async () => {
     useDeckStore.setState({ activeDeckId: null });
-    vi.mocked(deckApi.updateDeck).mockClear();
+    vi.mocked(deckApi.changeCommandZone).mockClear();
     await useDeckStore.getState().clearCommander();
-    expect(deckApi.updateDeck).not.toHaveBeenCalled();
+    expect(deckApi.changeCommandZone).not.toHaveBeenCalled();
   });
 });
 
@@ -705,8 +731,7 @@ describe("useDeckStore — setPartner", () => {
         pairingType: "father_son",
       })
     );
-    vi.mocked(deckApi.updateDeck).mockClear();
-    vi.mocked(deckApi.addCard).mockClear();
+    vi.mocked(deckApi.changeCommandZone).mockClear();
     toastAdd.mockClear();
 
     await useDeckStore.getState().setPartner(
@@ -722,8 +747,7 @@ describe("useDeckStore — setPartner", () => {
     expect(useDeckStore.getState().decks["deck-1"].partner).toEqual(
       previousPartner
     );
-    expect(deckApi.updateDeck).not.toHaveBeenCalled();
-    expect(deckApi.addCard).not.toHaveBeenCalled();
+    expect(deckApi.changeCommandZone).not.toHaveBeenCalled();
     expect(toastAdd).toHaveBeenCalledWith(
       "warning",
       "Tymna the Weaver cannot share the command zone with Kratos, Stoic Father."
@@ -756,12 +780,15 @@ describe("useDeckStore — setPartner", () => {
     expect(useDeckStore.getState().decks["deck-1"].partner).toBeNull();
   });
 
-  it("calls updateDeck with partnerId", async () => {
+  it("sends the partner's printing id in the one command-zone request", async () => {
     const card = makeScryfallCard({ id: "tana-id", name: "Tana" });
     await useDeckStore.getState().setPartner(card);
-    expect(deckApi.updateDeck).toHaveBeenCalledWith(
+    expect(deckApi.changeCommandZone).toHaveBeenCalledWith(
       "deck-1",
-      expect.objectContaining({ partnerId: "tana-id" })
+      expect.objectContaining({
+        clearCommandSlots: ["partner"],
+        commandZone: expect.objectContaining({ partnerId: "tana-id" }),
+      })
     );
   });
 
@@ -777,10 +804,9 @@ describe("useDeckStore — setPartner", () => {
         pairingType: "partner",
       })
     );
-    vi.mocked(deckApi.updateDeck).mockRejectedValueOnce(
+    vi.mocked(deckApi.changeCommandZone).mockRejectedValueOnce(
       new Error("Save failed")
     );
-    vi.mocked(deckApi.addCard).mockClear();
     toastAdd.mockClear();
 
     await useDeckStore.getState().setPartner(
@@ -798,7 +824,6 @@ describe("useDeckStore — setPartner", () => {
       "error",
       expect.stringContaining("partner")
     );
-    expect(deckApi.addCard).not.toHaveBeenCalled();
   });
 
   it("restores the previous partner when clearing it fails", async () => {
@@ -813,7 +838,7 @@ describe("useDeckStore — setPartner", () => {
         pairingType: "partner",
       })
     );
-    vi.mocked(deckApi.updateDeck).mockRejectedValueOnce(
+    vi.mocked(deckApi.changeCommandZone).mockRejectedValueOnce(
       new Error("Save failed")
     );
     toastAdd.mockClear();
@@ -829,7 +854,7 @@ describe("useDeckStore — setPartner", () => {
     );
   });
 
-  it("keeps the saved partner when only the card row fails", async () => {
+  it("restores the previous partner when the one request that saves the replacement fails", async () => {
     const previousPartner = makeDeckCard({
       id: "previous-partner",
       name: "Tana, the Bloodsower",
@@ -841,7 +866,9 @@ describe("useDeckStore — setPartner", () => {
         pairingType: "partner",
       })
     );
-    vi.mocked(deckApi.addCard).mockRejectedValueOnce(new Error("Save failed"));
+    vi.mocked(deckApi.changeCommandZone).mockRejectedValueOnce(
+      new Error("Save failed")
+    );
     toastAdd.mockClear();
 
     await useDeckStore.getState().setPartner(
@@ -853,10 +880,9 @@ describe("useDeckStore — setPartner", () => {
     );
 
     const deck = useDeckStore.getState().decks["deck-1"];
-    expect(deck.partner?.id).toBe("replacement-partner");
-    expect(deck.partner?.name).toBe("Tymna the Weaver");
+    expect(deck.partner).toEqual(previousPartner);
     expect(deck.pairingType).toBe("partner");
-    expect(toastAdd).not.toHaveBeenCalledWith(
+    expect(toastAdd).toHaveBeenCalledWith(
       "error",
       expect.stringContaining("partner")
     );
@@ -875,8 +901,12 @@ describe("useDeckStore — setPartner", () => {
       })
     );
     const failedUpdate =
-      Promise.withResolvers<Awaited<ReturnType<typeof deckApi.updateDeck>>>();
-    vi.mocked(deckApi.updateDeck).mockReturnValueOnce(failedUpdate.promise);
+      Promise.withResolvers<
+        Awaited<ReturnType<typeof deckApi.changeCommandZone>>
+      >();
+    vi.mocked(deckApi.changeCommandZone).mockReturnValueOnce(
+      failedUpdate.promise
+    );
     toastAdd.mockClear();
 
     const failedSave = useDeckStore.getState().setPartner(
@@ -907,9 +937,9 @@ describe("useDeckStore — setPartner", () => {
 
   it("does nothing when no active deck", async () => {
     useDeckStore.setState({ activeDeckId: null });
-    vi.mocked(deckApi.updateDeck).mockClear();
+    vi.mocked(deckApi.changeCommandZone).mockClear();
     await useDeckStore.getState().setPartner(makeScryfallCard());
-    expect(deckApi.updateDeck).not.toHaveBeenCalled();
+    expect(deckApi.changeCommandZone).not.toHaveBeenCalled();
   });
 
   it("supports Choose a Background commander + Background partner without replacing commander", async () => {
@@ -970,7 +1000,7 @@ describe("useDeckStore — setCompanion", () => {
   });
 
   it("clears companion when null is passed", async () => {
-    vi.mocked(deckApi.removeCard).mockClear();
+    vi.mocked(deckApi.changeCommandZone).mockClear();
     useDeckStore.setState((s) => ({
       decks: {
         ...s.decks,
@@ -986,17 +1016,15 @@ describe("useDeckStore — setCompanion", () => {
     }));
     await useDeckStore.getState().setCompanion(null);
     expect(useDeckStore.getState().decks["deck-1"].companion).toBeNull();
-    expect(deckApi.removeCard).toHaveBeenCalledWith(
-      "deck-1",
-      "companion-db-id"
-    );
-    expect(deckApi.updateDeck).toHaveBeenCalledWith(
-      "deck-1",
-      expect.objectContaining({ companionId: null })
-    );
+    expect(deckApi.changeCommandZone).toHaveBeenCalledWith("deck-1", {
+      removeCardIds: [],
+      clearCommandSlots: ["companion"],
+      addCards: [],
+      commandZone: { companionId: null },
+    });
   });
 
-  it("calls updateDeck with companionId", async () => {
+  it("sends the companion's printing id in the one command-zone request", async () => {
     const card = makeScryfallCard({
       id: "lurrus-id",
       name: "Lurrus of the Dream-Den",
@@ -1005,11 +1033,14 @@ describe("useDeckStore — setCompanion", () => {
       color_identity: ["W", "B"],
       cmc: 3,
     });
-    vi.mocked(deckApi.updateDeck).mockClear();
+    vi.mocked(deckApi.changeCommandZone).mockClear();
     await useDeckStore.getState().setCompanion(card);
-    expect(deckApi.updateDeck).toHaveBeenCalledWith(
+    expect(deckApi.changeCommandZone).toHaveBeenCalledWith(
       "deck-1",
-      expect.objectContaining({ companionId: "lurrus-id" })
+      expect.objectContaining({
+        clearCommandSlots: ["companion"],
+        commandZone: { companionId: "lurrus-id" },
+      })
     );
   });
 
