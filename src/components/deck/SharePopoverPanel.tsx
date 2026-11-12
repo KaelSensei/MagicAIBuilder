@@ -56,6 +56,12 @@ function ShareLinkRow({ shareUrl }: { readonly shareUrl: string }) {
 /**
  * A non-modal dialog named "Share deck", drawn under the trigger.
  *
+ * It is a native `<dialog open>`: the element carries the dialog role itself,
+ * and `SharePopover` keeps the closing (Escape, a press outside) and the
+ * anchoring, which a modal `showModal()` would take over. The user-agent
+ * stylesheet centres a dialog in its containing block and caps its size to
+ * that block, so the classes reset the left edge, the margins and the caps.
+ *
  * The switch is named for the action it performs next ("Enable sharing" /
  * "Disable sharing") and is disabled while a request is in flight.
  */
@@ -69,11 +75,11 @@ export function SharePopoverPanel({
   const { isEnabled, shareUrl, loading } = link;
 
   return (
-    <div
+    <dialog
+      open
       id={id}
-      role="dialog"
       aria-label={t("share.title")}
-      className="absolute right-0 top-full z-50 mt-2 w-72 rounded-[var(--lumen-radius-xl)] border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--lumen-shadow-md)]"
+      className="absolute left-auto right-0 top-full z-50 m-0 mt-2 w-72 max-w-none max-h-none rounded-[var(--lumen-radius-xl)] border border-[var(--border)] bg-[var(--surface)] p-4 text-[var(--text-primary)] shadow-[var(--lumen-shadow-md)]"
     >
       <div className="mb-3 flex items-center justify-between">
         <h3 className="text-sm font-semibold text-[var(--text-primary)]">
@@ -134,6 +140,6 @@ export function SharePopoverPanel({
           {t("share.enableToGenerate")}
         </p>
       )}
-    </div>
+    </dialog>
   );
 }

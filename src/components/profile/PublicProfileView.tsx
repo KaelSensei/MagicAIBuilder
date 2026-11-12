@@ -2,7 +2,7 @@
 // Public profile page — shows user info + list of public decks
 import { Link } from "@/i18n/navigation";
 import { useFormatter, useTranslations } from "next-intl";
-import { User, Layers } from "lucide-react";
+import { Layers } from "lucide-react";
 import { useState } from "react";
 import type { PlayerBadge } from "@/lib/social/follow";
 import { FollowButton } from "@/components/community/FollowButton";
@@ -44,6 +44,13 @@ interface PublicProfileViewProps {
   readonly canFollow: boolean;
 }
 
+/**
+ * The avatar shown when a profile has no image or its image fails to load: a
+ * neutral silhouette served from `public/`, so the fallback is a real `<img>`
+ * named after the member and cannot itself fail on a remote host.
+ */
+const AVATAR_PLACEHOLDER_SRC = "/images/avatar-placeholder.svg";
+
 const BRACKET_COLORS: Record<number, string> = {
   1: "text-green-400 border-green-400/30 bg-green-400/10",
   2: "text-blue-400 border-blue-400/30 bg-blue-400/10",
@@ -76,13 +83,12 @@ export function PublicProfileView({ profile, canFollow }: PublicProfileViewProps
             className="w-16 h-16 rounded-full border-2 border-[var(--border)] object-cover"
           />
         ) : (
-          <div
-            role="img"
-            aria-label={displayName}
-            className="w-16 h-16 rounded-full border-2 border-[var(--border)] bg-[var(--surface)] flex items-center justify-center"
-          >
-            <User className="w-8 h-8 text-[var(--text-secondary)]" />
-          </div>
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={AVATAR_PLACEHOLDER_SRC}
+            alt={displayName}
+            className="w-16 h-16 rounded-full border-2 border-[var(--border)] bg-[var(--surface)] p-4"
+          />
         )}
         <div className="flex flex-col gap-2">
           <h1 className="text-2xl font-bold text-[var(--text-primary)]">{displayName}</h1>

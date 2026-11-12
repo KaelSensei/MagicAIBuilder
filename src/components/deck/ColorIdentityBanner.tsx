@@ -94,6 +94,8 @@ export function ColorIdentityBanner({
   const t = useTranslations("builder");
   // The banner is a group named by the card it shows, so its pips and remove
   // button are announced with their card rather than as loose controls (TT-11).
+  // `<fieldset>` is the native group; `min-w-0` undoes its user-agent
+  // `min-inline-size: min-content`, which would stop `flex-1` from shrinking.
   const nameId = useId();
   const displayColors = useMemo(
     () => getDisplayColorIdentity(colorIdentity),
@@ -101,10 +103,9 @@ export function ColorIdentityBanner({
   );
 
   return (
-    <div
-      role="group"
+    <fieldset
       aria-labelledby={nameId}
-      className="group/banner relative flex-1 h-[82px] overflow-hidden rounded-lg border border-white/10 text-white shadow-[0_18px_50px_rgba(0,0,0,0.22)]"
+      className="group/banner relative min-w-0 flex-1 h-[82px] overflow-hidden rounded-lg border border-white/10 text-white shadow-[0_18px_50px_rgba(0,0,0,0.22)]"
       style={{ backgroundImage: COLOR_IDENTITY_BANNER_BACKGROUND }}
     >
       <div
@@ -160,6 +161,6 @@ export function ColorIdentityBanner({
       >
         ×
       </button>
-    </div>
+    </fieldset>
   );
 }

@@ -274,6 +274,16 @@ The internal-mock ban follows [tdd-with-ai.md](tdd-with-ai.md): test through the
 
 `next build` does not lint (`eslint.ignoreDuringBuilds` in `next.config.ts`): it calls the ESLint Node.js API, which ignores the suppressions file in ESLint 9. `pnpm lint` in CI and lint-staged on commit run the ESLint CLI, which applies it.
 
+### Sonar parity rules
+
+SonarCloud is advisory (see _What is reported but does not block_), so a finding it raises on a pull request reaches the author after the push, and the same kinds came back PR after PR. Each of those Sonar rules now has an ESLint twin that fails `pnpm lint` and the pre-commit hook. The plugins come with `eslint-config-next`; `eslint.config.mjs` only turns the rules on, for every `.ts` and `.tsx` file under `src/` and `e2e/`, tests included. `src/test/sonar-parity-lint.test.ts` pins them.
+
+| ESLint rule                     | Sonar rule | Rejects                                                                                              | Write instead                                                                                                                                                                                                                                 | Baseline when it arrived                   |
+| ------------------------------- | ---------- | ---------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| `jsx-a11y/prefer-tag-over-role` | S6819      | a `role` that a native element already carries, such as `<div role="dialog">` or `<span role="img">` | the element: `<dialog open>`, `<fieldset>`, `<output>`, `<img alt>`, `<button type="button">`, and a focusable `<hr>` with `aria-valuenow` for a window splitter. Roles with no element (`switch`, `tooltip`, `menu`, `toolbar`) stay allowed | none: the 8 hits were fixed in the same PR |
+
+A native element brings its user-agent stylesheet along. Tailwind's preflight resets margins, padding and borders, but not everything: `<dialog>` is centred in its containing block and capped to its size (`left-auto`, `m-0`, `max-w-none max-h-none` undo it), `<fieldset>` refuses to shrink below its content (`min-w-0`), and `<hr>` has no height, a top border and hides overflow (`h-auto border-0 overflow-visible`).
+
 ### Shrinking the baseline
 
 1. Fix the breach: split the module, extract the function, flatten the nesting, replace the cast or the `!` with a type guard, a Zod parse at the boundary or `satisfies`, move the shared type down to the layer that owns it. In a test, convert a string mock with the autofix, or replace an internal mock with a fake.

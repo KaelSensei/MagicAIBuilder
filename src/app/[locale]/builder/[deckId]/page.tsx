@@ -1091,22 +1091,23 @@ export default function BuilderPage() {
             </div>
           </motion.div>
 
-          {/* Resize handle between panel 1 and 2 — hidden on mobile */}
-          <div
-            role="slider"
+          {/* Resize handle between panel 1 and 2 — hidden on mobile. A focusable
+              <hr> with a value is the WAI-ARIA window splitter: the native
+              separator, valued by the panel width it moves. The classes undo the
+              user-agent rule (`height: 0`, a top border, `overflow: hidden`) and
+              the `before:` box widens the 4px line into an 8px grab area. */}
+          <hr
             aria-label={t("actions.resizePanel")}
-            aria-orientation="horizontal"
+            aria-orientation="vertical"
             aria-valuemin={220}
             aria-valuemax={520}
             aria-valuenow={searchPanelWidth}
             tabIndex={0}
             onMouseDown={handleSearchResize}
             onKeyDown={handleSearchResizeKeyDown}
-            className="hidden lg:block w-1 shrink-0 cursor-col-resize hover:bg-[var(--accent)]/40 active:bg-[var(--accent)]/60 transition-colors group relative z-10"
+            className="hidden lg:block relative z-10 h-auto w-1 shrink-0 self-stretch overflow-visible border-0 cursor-col-resize transition-colors hover:bg-[var(--accent)]/40 active:bg-[var(--accent)]/60 before:absolute before:inset-y-0 before:-left-0.5 before:-right-0.5"
             title={t("actions.resizeHint")}
-          >
-            <div className="absolute inset-y-0 -left-0.5 -right-0.5" />
-          </div>
+          />
 
           {/* Panel 2: Deck Editor (flex-1) */}
           <motion.div

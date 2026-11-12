@@ -54,9 +54,10 @@ export function CollectionCardTooltip({ card, children }: CollectionCardTooltipP
 
   return (
     <>
+      {/* A hover trigger only: it must not take over the children's name, which
+          `role="img"` did by making them presentational. The preview image
+          below carries the "Preview of …" name instead. */}
       <span
-        role="img"
-        aria-label={t("previewOf", { name: card.name })}
         onMouseEnter={handleMouseEnter}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
@@ -71,7 +72,7 @@ export function CollectionCardTooltip({ card, children }: CollectionCardTooltipP
           >
             <Image
               src={normalizeScryfallImageUrl(card.imageUri)}
-              alt={card.name}
+              alt={t("previewOf", { name: card.name })}
               width={223}
               height={310}
               unoptimized
