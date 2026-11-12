@@ -87,7 +87,11 @@ export interface Deck {
   /** Derived mirror of cards whose persisted zone is "maybeboard". */
   maybeboard: DeckCard[];
   format: DeckFormat;
-  /** Total card count (including commander/partner/companion). Set from _count on listing, derived from cards on full load. */
+  /**
+   * Row count, command zone included. The server's `_count` while the deck is
+   * the listing stub; the rows held once loaded, kept in step by every edit
+   * (`loaded-card-count.ts`). `isDeckStub` compares the two.
+   */
   cardCount: number;
   targetBracket: BracketLevel;
   manualBracket: BracketLevel | null;

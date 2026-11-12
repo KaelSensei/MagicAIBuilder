@@ -32,6 +32,7 @@ import {
   makeDeckCard,
 } from "./store-factories";
 import { cardsFromZoneSource, deckFromZoneCards } from "./zone-source";
+import { withLoadedCardCount } from "./loaded-card-count";
 import type { BulkEdit } from "./bulk-edit";
 import {
   commandZoneOf,
@@ -165,14 +166,18 @@ function syncDeckCards(deck: Deck, cards: readonly DeckCard[]): Deck {
   return deckFromZoneCards(deck, cards);
 }
 
+/**
+ * The deck after an edit of its card rows: zones re-read, `cardCount` back in
+ * step with the rows held, and the edit dated.
+ */
 function updateDeckCards(
   deck: Deck,
   update: (cards: DeckCard[]) => DeckCard[]
 ): Deck {
-  return {
+  return withLoadedCardCount({
     ...syncDeckCards(deck, update(uniqueDeckCards(deck))),
     updatedAt: new Date(),
-  };
+  });
 }
 
 interface PendingQuantityWrite {
@@ -410,12 +415,12 @@ function restorePartnerAfterFailedSave(
   setDeckState({
     decks: {
       ...state.decks,
-      [save.activeDeckId]: {
+      [save.activeDeckId]: withLoadedCardCount({
         ...currentDeck,
         partner: save.previousPartner,
         pairingType: save.previousPairingType,
         updatedAt: new Date(),
-      },
+      }),
     },
   });
   useToastStore
@@ -1146,11 +1151,11 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     set((state) => ({
       decks: {
         ...state.decks,
-        [activeDeckId]: {
+        [activeDeckId]: withLoadedCardCount({
           ...state.decks[activeDeckId],
           ...attempted,
           updatedAt: new Date(),
-        },
+        }),
       },
     }));
 
@@ -1225,11 +1230,11 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     set((state) => ({
       decks: {
         ...state.decks,
-        [activeDeckId]: {
+        [activeDeckId]: withLoadedCardCount({
           ...state.decks[activeDeckId],
           ...attempted,
           updatedAt: new Date(),
-        },
+        }),
       },
     }));
     set({ isSyncing: true });
@@ -1296,12 +1301,12 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     set((state) => ({
       decks: {
         ...state.decks,
-        [activeDeckId]: {
+        [activeDeckId]: withLoadedCardCount({
           ...state.decks[activeDeckId],
           partner: deckCard,
           pairingType: effectivePairingType,
           updatedAt: new Date(),
-        },
+        }),
       },
     }));
 
@@ -1378,11 +1383,11 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         set((state) => ({
           decks: {
             ...state.decks,
-            [activeDeckId]: {
+            [activeDeckId]: withLoadedCardCount({
               ...state.decks[activeDeckId],
               companion: null,
               updatedAt: new Date(),
-            },
+            }),
           },
         }));
       } catch (err) {
@@ -1449,7 +1454,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       set((state) => ({
         decks: {
           ...state.decks,
-          [activeDeckId]: {
+          [activeDeckId]: withLoadedCardCount({
             ...state.decks[activeDeckId],
             companion: {
               ...deckCard,
@@ -1457,7 +1462,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
               scryfallId: created.scryfallId,
             },
             updatedAt: new Date(),
-          },
+          }),
         },
       }));
     } catch (err) {

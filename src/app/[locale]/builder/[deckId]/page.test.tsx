@@ -870,5 +870,37 @@ describe("characterization: builder page shell", () => {
         within(islands).getByRole("button", { name: "Remove a copy of Island" })
       ).toBeEnabled();
     });
+
+    // Found by the P1-12 journeys (2026-11-12): the row left the deck, but the page swapped the
+    // editor for "Loading deck…" and never came back, because the store still counted the row.
+    it("keeps the editor open, a card lighter, after a row is removed", async () => {
+      server.use(
+        http.delete("/api/decks/:id/cards/:cardId", async ({ request }) => {
+          await record(request);
+          return new HttpResponse(null, { status: 204 });
+        })
+      );
+      await openSavedDeck();
+
+      await userEvent.click(
+        screen.getByRole("button", { name: "Remove Counterspell" })
+      );
+
+      await waitFor(() =>
+        expect(deckApiLines()).toContain(
+          `DELETE /api/decks/${DECK_ID}/cards/${COUNTERSPELL.id}`
+        )
+      );
+      expect(screen.queryByText("Loading deck…")).not.toBeInTheDocument();
+      expect(
+        screen.getByRole("heading", { level: 1, name: "Talrand Spells" })
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: "Main (13)" })
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: "Remove Counterspell" })
+      ).not.toBeInTheDocument();
+    });
   });
 });
