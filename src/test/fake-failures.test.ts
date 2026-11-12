@@ -197,33 +197,41 @@ describe("inMemoryDeckApi", () => {
     },
     {
       name: "removeCard of a row a held deck does not hold",
-      call: () => deckApi.removeCard(HELD_DECK, MISSING_ROW_ID),
+      call: () => deckApi.removeCard({ deckId: HELD_DECK }, MISSING_ROW_ID),
       message: "Card not found",
     },
     {
       name: "updateCardCategory of a row a held deck does not hold",
-      call: () => deckApi.updateCardCategory(HELD_DECK, MISSING_ROW_ID, "ramp"),
+      call: () =>
+        deckApi.updateCardCategory(
+          { deckId: HELD_DECK },
+          MISSING_ROW_ID,
+          "ramp"
+        ),
       message: "Card not found",
     },
     {
       name: "updateCardNotes of a row a held deck does not hold",
-      call: () => deckApi.updateCardNotes(HELD_DECK, MISSING_ROW_ID, null),
+      call: () =>
+        deckApi.updateCardNotes({ deckId: HELD_DECK }, MISSING_ROW_ID, null),
       message: "Card not found",
     },
     {
       name: "updateCardZone of a row a held deck does not hold",
-      call: () => deckApi.updateCardZone(HELD_DECK, MISSING_ROW_ID, "main"),
+      call: () =>
+        deckApi.updateCardZone({ deckId: HELD_DECK }, MISSING_ROW_ID, "main"),
       message: "Card not found",
     },
     {
       name: "updateCardQuantity of a row a held deck does not hold",
-      call: () => deckApi.updateCardQuantity(HELD_DECK, MISSING_ROW_ID, 2),
+      call: () =>
+        deckApi.updateCardQuantity({ deckId: HELD_DECK }, MISSING_ROW_ID, 2),
       message: "Card not found",
     },
     {
       name: "updateCardPrinting of a row a held deck does not hold",
       call: () =>
-        deckApi.updateCardPrinting(HELD_DECK, MISSING_ROW_ID, {
+        deckApi.updateCardPrinting({ deckId: HELD_DECK }, MISSING_ROW_ID, {
           scryfallId: "scry-other-printing",
         }),
       message: "Card not found",
