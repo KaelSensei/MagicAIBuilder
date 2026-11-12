@@ -35,7 +35,9 @@ import {
   eventsPageLatin1Bytes,
 } from "./fixtures/mtgtop8-events-v1";
 import {
+  RECORDED_KNOWN_CARD_NAME,
   RECORDED_UNKNOWN_CARD_NAME,
+  knownCardPageLatin1Bytes,
   unknownCardPageLatin1Bytes,
 } from "./fixtures/mtgtop8-card-search-v1";
 import {
@@ -506,20 +508,47 @@ describe("the Meta Insights adapters replay the recorded pages", () => {
       );
     });
 
-    it("currently returns the whole EDH section for a commander MTGTop8 does not list: the card-content fallback is ignored by the site (pinned; see follow-up on fetch.ts fetchTournamentData)", async () => {
+    it("shows no tournament deck for a commander without archetype whose name MTGTop8's card search does not know", async () => {
       server.use(searchResultsAnswer(unknownCardPageLatin1Bytes()));
 
-      const { decks } = await fetchTournamentData(RECORDED_UNKNOWN_CARD_NAME);
+      const result = await fetchTournamentData(RECORDED_UNKNOWN_CARD_NAME);
 
       const body = new URLSearchParams(await received[1].text());
       expect(body.get("cards")).toBe(RECORDED_UNKNOWN_CARD_NAME);
       expect(body.has("archetype_sel[EDH]")).toBe(false);
-      // The recording answered "44269 decks matching"; neither deck has anything
-      // to do with the searched name, and the adapter cannot tell.
+      // The recording answered "44269 decks matching", the whole EDH section,
+      // with an empty card filter echoed in its form: none of those decks is
+      // the commander's, so the tab shows the "no recorded deck" state.
+      expect(result).toEqual({ decks: [] });
+    });
+
+    it("keeps the decks containing the card for a commander without archetype that MTGTop8's card search does know", async () => {
+      server.use(searchResultsAnswer(knownCardPageLatin1Bytes()));
+
+      const { decks } = await fetchTournamentData(RECORDED_KNOWN_CARD_NAME);
+
+      const body = new URLSearchParams(await received[1].text());
+      expect(body.get("cards")).toBe(RECORDED_KNOWN_CARD_NAME);
+      // The recording echoed the card and answered "15 decks matching"; the
+      // adapter keeps its cap of five.
       expect(decks.map((deck) => deck.name)).toEqual([
-        "Teddy Riner Président !",
-        "Jcvd",
+        "Dog's Rulez",
+        "Dog's Rulez",
+        "Dog's Rulez",
+        "Yoshimaru, Ever Faithful + Rograkh, Son Of Rohgahh",
+        "General Ferrous Rokiric",
       ]);
+      expect(decks[0]).toEqual({
+        name: "Dog's Rulez",
+        player: "Nacho",
+        format: "Duel Commander",
+        event: "Saturduel @ Magic Barcelona (Barcelona)",
+        eventLevel: 1,
+        placement: "6",
+        date: "2025-03-08",
+        url: "https://www.mtgtop8.com/event?e=65809&d=697625&f=EDH",
+        source: "mtgtop8",
+      });
     });
 
     describe("failures", () => {
@@ -563,6 +592,17 @@ describe("the Meta Insights adapters replay the recorded pages", () => {
         expect(await fetchTournamentData(RECORDED_EVENTS_COMMANDER)).toEqual({
           decks: [],
         });
+      });
+
+      it("rejects a card-search page that lost its card field rather than reading it as an ignored filter", async () => {
+        const withoutCardField = new TextDecoder("iso-8859-1")
+          .decode(knownCardPageLatin1Bytes())
+          .replace("name=cards", "name=card_list");
+        server.use(searchResultsAnswer(latin1Bytes(withoutCardField)));
+
+        await expect(
+          fetchTournamentData(RECORDED_KNOWN_CARD_NAME)
+        ).rejects.toThrow("Invalid MTGTop8 response: card filter echo missing");
       });
 
       it("rejects an empty search body as an unrecognizable page rather than an empty feed", async () => {

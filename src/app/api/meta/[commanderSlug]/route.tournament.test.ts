@@ -18,6 +18,10 @@ import {
   RECORDED_ARCHETYPE_IDS,
   searchFormLatin1Bytes,
 } from "@/lib/meta/fixtures/mtgtop8-search-form-v1";
+import {
+  RECORDED_UNKNOWN_CARD_NAME,
+  unknownCardPageLatin1Bytes,
+} from "@/lib/meta/fixtures/mtgtop8-card-search-v1";
 import { setupMsw } from "@/test/msw";
 
 const fake = vi.hoisted(() => ({
@@ -51,6 +55,9 @@ const EOMER_RESULTS_HTML = `
   <td class=S12 align=center>8</td>
   <td class=S11>05/05/24</td>
 </tr>`;
+
+/** A card search MTGTop8 applied (the form echoes the card) that matched no deck. */
+const EOWYN_EMPTY_CARD_SEARCH_HTML = `<textarea name=cards style="width:230;height:60;">eowyn fearless knight</textarea><table></table>`;
 
 /** The bodies of the POST /search requests the route sent, in order. */
 const searchesSent: URLSearchParams[] = [];
@@ -109,7 +116,12 @@ describe("GET /api/meta/:commanderSlug?source=tournament for an accented command
     server.use(
       http.post(SEARCH_URL, async ({ request }) => {
         searchesSent.push(new URLSearchParams(await request.text()));
-        return HttpResponse.text("<table></table>");
+        return HttpResponse.arrayBuffer(
+          latin1Bytes(EOWYN_EMPTY_CARD_SEARCH_HTML),
+          {
+            headers: { "Content-Type": "text/html; charset=ISO-8859-1" },
+          }
+        );
       })
     );
 
@@ -119,5 +131,43 @@ describe("GET /api/meta/:commanderSlug?source=tournament for an accented command
     await expect(response.json()).resolves.toMatchObject({ decks: [] });
     expect(searchesSent[0].get("cards")).toBe("eowyn fearless knight");
     expect(searchesSent[0].has("archetype_sel[EDH]")).toBe(false);
+  });
+});
+
+describe("GET /api/meta/:commanderSlug?source=tournament for a commander MTGTop8 does not know", () => {
+  it("answers the fresh 'no recorded deck' state, not an error, when the site ignores the card search", async () => {
+    server.use(
+      http.post(SEARCH_URL, async ({ request }) => {
+        searchesSent.push(new URLSearchParams(await request.text()));
+        return HttpResponse.arrayBuffer(unknownCardPageLatin1Bytes(), {
+          headers: { "Content-Type": "text/html; charset=ISO-8859-1" },
+        });
+      })
+    );
+    const slug = RECORDED_UNKNOWN_CARD_NAME.toLowerCase().replaceAll(" ", "-");
+
+    const response = await GET(...requestFor(slug));
+
+    expect(searchesSent[0].get("cards")).toBe(
+      RECORDED_UNKNOWN_CARD_NAME.toLowerCase()
+    );
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({
+      decks: [],
+      _meta: {
+        source: "tournament",
+        cached: false,
+        observedAt: expect.any(String),
+      },
+    });
+    // A genuine empty feed is cached like any other answer; nothing stale is served.
+    expect(fake.upsertMetaCache).toHaveBeenCalledTimes(1);
+    expect(fake.upsertMetaCache.mock.calls[0][0]).toMatchObject({
+      create: {
+        commanderSlug: slug,
+        source: "tournament",
+        data: { decks: [] },
+      },
+    });
   });
 });

@@ -45,6 +45,7 @@ import {
   findArchetypeId,
   parseArchetypeOptions,
   parseSearchResults,
+  readCardFilterEcho,
 } from "./mtgtop8";
 
 function inclusionFromEdhrecView(view: EdhrecCardView): number {
@@ -179,10 +180,14 @@ async function loadArchetypeOptions(): Promise<ReadonlyMap<string, number>> {
  *
  * Searches MTGTop8 by commander archetype (decks *led* by the commander) and
  * falls back to a card-content search for a commander the site has not
- * classified. Failures propagate so the route can serve stale cache without
- * replacing a previously good feed.
+ * classified. The site ignores a card name it does not know and answers with
+ * the whole EDH section; its echoed form tells the two apart, and an ignored
+ * filter reads as "no recorded deck", not as 44,000 unrelated ones. Failures
+ * propagate so the route can serve stale cache without replacing a previously
+ * good feed.
  *
  * @param commanderName - display name, or the slug's words as the meta route passes them
+ * @returns the five most recent decks, or none when MTGTop8 has no deck for the commander
  */
 export async function fetchTournamentData(
   commanderName: string
@@ -197,6 +202,10 @@ export async function fetchTournamentData(
     },
     body: buildSearchBody({ archetypeId, commanderName }).toString(),
   });
-  const decks = parseSearchResults(decodeLatin1(await res.arrayBuffer()));
+  const page = decodeLatin1(await res.arrayBuffer());
+  if (archetypeId === null && readCardFilterEcho(page) === null) {
+    return { decks: [] };
+  }
+  const decks = parseSearchResults(page);
   return { decks: decks.slice(0, MAX_TOURNAMENT_DECKS) };
 }
