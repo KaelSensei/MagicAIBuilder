@@ -10,7 +10,8 @@
  * the exported functions only, so the move into `src/modules/meta-insights`
  * (MI-03) changes nothing here but import paths. The recordings, with their
  * dates and sources, are `fixtures/edhrec-commander-v1.ts`,
- * `fixtures/mtgtop8-search-form-v1.ts` and `fixtures/mtgtop8-events-v1.ts`.
+ * `fixtures/mtgtop8-search-form-v1.ts`, `fixtures/mtgtop8-events-v1.ts` and
+ * `fixtures/mtgtop8-card-search-v1.ts`.
  *
  * The node environment matches where the adapters run: `GET /api/meta/[slug]`
  * calls them on the server.
@@ -31,10 +32,12 @@ import {
 import {
   RECORDED_EVENTS_ARCHETYPE_ID,
   RECORDED_EVENTS_COMMANDER,
-  RECORDED_UNKNOWN_CARD_NAME,
   eventsPageLatin1Bytes,
-  unknownCardPageLatin1Bytes,
 } from "./fixtures/mtgtop8-events-v1";
+import {
+  RECORDED_UNKNOWN_CARD_NAME,
+  unknownCardPageLatin1Bytes,
+} from "./fixtures/mtgtop8-card-search-v1";
 import {
   __resetArchetypeCache,
   fetchEdhrecData,
