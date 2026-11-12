@@ -8,9 +8,8 @@ import {
   toScryfallLang,
 } from "@/lib/scryfall/localized";
 import type { Deck, DeckCard } from "@/lib/deck/types";
+import { STALE_TIME_24H } from "@/lib/query/stale-times";
 import { useMemo } from "react";
-
-const STALE_TIME_24H = 24 * 60 * 60 * 1000;
 
 /** Fetches the Game Changers list from Scryfall (all pages) */
 export function useGameChangersList() {
