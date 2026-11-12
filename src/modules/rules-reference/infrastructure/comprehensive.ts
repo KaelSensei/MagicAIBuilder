@@ -11,7 +11,7 @@
 import "server-only";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { parseRulesEffectiveDate } from "./effective-date";
+import { parseRulesEffectiveDate } from "@/modules/rules-reference/domain/effective-date";
 
 export interface RuleParagraph {
   /** Rule reference like "100.1" or "100.1a"; null for example/plain lines. */
@@ -185,8 +185,9 @@ export function parseComprehensiveRules(raw: string): ComprehensiveRules {
 const RULES_FILE = path.join(
   process.cwd(),
   "src",
-  "lib",
-  "rules",
+  "modules",
+  "rules-reference",
+  "infrastructure",
   "data",
   "MagicCompRules-20260807.txt"
 );

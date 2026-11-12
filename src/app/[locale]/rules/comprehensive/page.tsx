@@ -1,5 +1,5 @@
 import { Header } from "@/components/layout/Header";
-import { ComprehensiveRulesView } from "@/components/rules/ComprehensiveRulesView";
+import { ComprehensiveRulesView } from "@/modules/rules-reference/ui/ComprehensiveRulesView";
 import { fixedPageMetadata } from "@/lib/seo/page-metadata";
 
 export const generateMetadata = fixedPageMetadata("rules.comprehensive");

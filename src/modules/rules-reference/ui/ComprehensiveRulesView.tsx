@@ -10,7 +10,7 @@ import {
   loadComprehensiveRules,
   searchComprehensiveRules,
   type RulesChapter,
-} from "@/lib/rules/comprehensive";
+} from "@/modules/rules-reference/infrastructure/comprehensive";
 import { cn } from "@/components/ui/utils";
 
 const GLOSSARY_KEY = "glossary";
