@@ -729,6 +729,7 @@
     "nothingPlanned": "当前没有计划购买的卡牌",
     "sessionOnly": "此套牌的计划保存在当前浏览器中。收藏不会更改。",
     "intentSaved": "此套牌的计划会在已登录设备间私密保存。收藏不会更改。",
+    "saveFailed": "Could not save your choice — try again",
     "deferredCount": "稍后购买 {count} 张卡牌",
     "knownSubtotal": "已知价格小计",
     "priceUnavailable": "价格不可用",

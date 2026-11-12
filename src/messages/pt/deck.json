@@ -729,6 +729,7 @@
     "nothingPlanned": "Nenhuma carta planejada para agora",
     "sessionOnly": "Salvo neste navegador para este deck. Sua coleção não muda.",
     "intentSaved": "Salvo em privado para este deck nos seus dispositivos conectados. Sua coleção não muda.",
+    "saveFailed": "Could not save your choice — try again",
     "deferredCount": "{count} cartas para mais tarde",
     "knownSubtotal": "Subtotal conhecido",
     "priceUnavailable": "Preço indisponível",
