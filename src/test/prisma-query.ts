@@ -17,13 +17,19 @@
  * write lands before the caller awaits. A method that cannot fail returns
  * `Promise.resolve(…)` directly instead.
  *
+ * Why not `new Promise((resolve) => resolve(body()))`: SonarCloud S4634 reads
+ * it as a trivial promise. The `try`/`catch` keeps the contract: a throw from
+ * `body` becomes a rejection, and the call itself never throws.
+ *
  * @param body - The query: reads or writes the fake's tables and returns the
  *   result, or throws the error Prisma would report.
  * @returns A promise that resolves with what `body` returns, or rejects with
  *   what it throws.
  */
 export function prismaQuery<Result>(body: () => Result): Promise<Result> {
-  return new Promise((resolve) => {
-    resolve(body());
-  });
+  try {
+    return Promise.resolve(body());
+  } catch (error) {
+    return Promise.reject(error);
+  }
 }

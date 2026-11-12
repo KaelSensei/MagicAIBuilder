@@ -13,6 +13,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { collectionDb, collectionRow } from "./collection-db-fake";
 import { CARDS_DECK, deckCardsDb } from "./deck-cards-db-fake";
+import { createInMemoryDeckApi, emptyApiDeck } from "./in-memory-deck-api";
 import { deckCard } from "./playtest-db-fake";
 import { getTranslations } from "./server-intl";
 
@@ -161,6 +162,71 @@ describe("collectionDb", () => {
       call: () =>
         collectionDb.prisma.collectionCard.delete({ where: MISSING_ROW }),
       message: "Record to delete does not exist.",
+    },
+  ];
+
+  it.each(failures)(
+    "characterization: $name rejects, and the call does not throw",
+    async ({ call, message }) => {
+      await expect(returnedPromise(call)).rejects.toThrow(message);
+    }
+  );
+});
+
+describe("inMemoryDeckApi", () => {
+  const deckApi = createInMemoryDeckApi();
+  const HELD_DECK = "deck-held";
+  const MISSING_DECK = "deck-missing";
+  const MISSING_ROW_ID = "row-missing";
+
+  beforeEach(() => {
+    deckApi.reset();
+    deckApi.seedDeck(emptyApiDeck(HELD_DECK));
+  });
+
+  const failures: readonly FailingCall[] = [
+    {
+      name: "fetchDeck of a deck it does not hold",
+      call: () => deckApi.fetchDeck(MISSING_DECK),
+      message: "Deck not found",
+    },
+    {
+      name: "duplicateDeck of a deck it does not hold",
+      call: () => deckApi.duplicateDeck(MISSING_DECK),
+      message: "Deck not found",
+    },
+    {
+      name: "removeCard of a row a held deck does not hold",
+      call: () => deckApi.removeCard(HELD_DECK, MISSING_ROW_ID),
+      message: "Card not found",
+    },
+    {
+      name: "updateCardCategory of a row a held deck does not hold",
+      call: () => deckApi.updateCardCategory(HELD_DECK, MISSING_ROW_ID, "ramp"),
+      message: "Card not found",
+    },
+    {
+      name: "updateCardNotes of a row a held deck does not hold",
+      call: () => deckApi.updateCardNotes(HELD_DECK, MISSING_ROW_ID, null),
+      message: "Card not found",
+    },
+    {
+      name: "updateCardZone of a row a held deck does not hold",
+      call: () => deckApi.updateCardZone(HELD_DECK, MISSING_ROW_ID, "main"),
+      message: "Card not found",
+    },
+    {
+      name: "updateCardQuantity of a row a held deck does not hold",
+      call: () => deckApi.updateCardQuantity(HELD_DECK, MISSING_ROW_ID, 2),
+      message: "Card not found",
+    },
+    {
+      name: "updateCardPrinting of a row a held deck does not hold",
+      call: () =>
+        deckApi.updateCardPrinting(HELD_DECK, MISSING_ROW_ID, {
+          scryfallId: "scry-other-printing",
+        }),
+      message: "Card not found",
     },
   ];
 
