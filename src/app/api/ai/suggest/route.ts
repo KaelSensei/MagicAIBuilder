@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 import { forEachSequential } from "@/lib/async/sequential";
-import { sanitizeForPrompt } from "@/lib/validation/ai";
+import {
+  MAX_BRACKET_WARNING_LENGTH,
+  MAX_THEME_NAME_LENGTH,
+  sanitizeForPrompt,
+  suggestSchema,
+  type SuggestBody,
+} from "@/lib/validation/ai";
 import { ARCHETYPE_PROMPT_HINTS, ARCHETYPES } from "@/lib/ai/archetypes";
 import type { Archetype } from "@/lib/ai/archetypes";
 import { logger } from "@/lib/logger";
@@ -76,36 +82,10 @@ type SuggestionOrigin =
     }
   | { readonly kind: "placeholder" };
 
-interface BracketDimensions {
-  ramp: number;
-  draw: number;
-  removal: number;
-  winSpeed: number;
-  avgCmc: number;
-}
-
-interface SuggestRequest {
-  deckId: string;
-  commanderName: string | null;
-  partnerName: string | null;
-  colorIdentity: string[];
-  cardNames: string[];
-  categories: Record<string, number>;
-  avgCmc: number;
-  bracket: number;
-  bracketDimensions?: BracketDimensions;
-  bracketWarnings?: string[];
-  targetBracket: number;
-  budget: number | null;
-  gameChangersCount: number;
-  gameChangersList?: string[];
-  detectedThemes?: string[];
-  archetype?: string;
-  budgetPerCard?: number | null;
-  cardPrices?: Record<string, number | null>; // name → price for budget filtering
-  brief?: unknown;
+/** A parsed suggestion request whose deck question has been read. */
+type SuggestRequest = Omit<SuggestBody, "question"> & {
   question?: DeckQuestion;
-}
+};
 
 export interface CardSuggestion {
   name: string;
@@ -554,28 +534,27 @@ export async function POST(request: Request) {
     );
   }
 
-  let body: SuggestRequest;
+  let raw: unknown;
   try {
-    body = await request.json();
+    raw = await request.json();
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
-  if (
-    typeof body.deckId !== "string" ||
-    !body.colorIdentity ||
-    !Array.isArray(body.cardNames) ||
-    body.cardNames.length > 100 ||
-    !body.cardNames.every((name) => typeof name === "string")
-  )
+  const parsed = suggestSchema.safeParse(raw);
+  if (!parsed.success)
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
 
-  const question = readDeckQuestion(body.question, body.cardNames);
-  if (body.question !== undefined && question === undefined) {
+  const question = readDeckQuestion(
+    parsed.data.question,
+    parsed.data.cardNames
+  );
+  if (parsed.data.question !== undefined && question === undefined) {
     return NextResponse.json(
       { error: "Invalid deck question" },
       { status: 400 }
     );
   }
+  const body: SuggestRequest = { ...parsed.data, question };
   body.cardNames = body.cardNames.map((name) => sanitizeForPrompt(name, 200));
   body.question =
     question?.type === "why-card"
@@ -590,6 +569,15 @@ export async function POST(request: Request) {
     body.commanderName = sanitizeForPrompt(body.commanderName, 200);
   if (body.partnerName)
     body.partnerName = sanitizeForPrompt(body.partnerName, 200);
+  body.gameChangersList = body.gameChangersList?.map((name) =>
+    sanitizeForPrompt(name, 200)
+  );
+  body.bracketWarnings = body.bracketWarnings?.map((warning) =>
+    sanitizeForPrompt(warning, MAX_BRACKET_WARNING_LENGTH)
+  );
+  body.detectedThemes = body.detectedThemes?.map((theme) =>
+    sanitizeForPrompt(theme, MAX_THEME_NAME_LENGTH)
+  );
 
   // A model call needs a call from this month's allowance before anything
   // else is loaded, so a refusal is cheap and can still be an HTTP status.
