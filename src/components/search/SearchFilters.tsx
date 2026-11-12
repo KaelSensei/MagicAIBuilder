@@ -5,6 +5,7 @@ import { useCallback, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Check } from "lucide-react";
 import { cn } from "@/components/ui/utils";
+import { inputCls, NumInput, TabButton } from "./SearchFilterControls";
 import { manaSymbolSvgUrl } from "@/lib/scryfall/constants";
 import type {
   CmcMode,
@@ -72,70 +73,6 @@ function loadPresets(): FilterPreset[] {
 function persistPresets(presets: FilterPreset[]): void {
   localStorage.setItem(PRESETS_STORAGE_KEY, JSON.stringify(presets));
 }
-
-const inputCls =
-  "text-xs bg-[var(--surface)] border border-[var(--border)] rounded px-2 py-1 " +
-  "text-[var(--text-primary)] outline-none focus:border-[var(--accent)]";
-
-function TabButton({
-  active,
-  onClick,
-  title,
-  children,
-}: {
-  readonly active: boolean;
-  readonly onClick: () => void;
-  readonly title?: string;
-  readonly children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      title={title}
-      onClick={onClick}
-      className={cn(
-        "px-2 py-0.5 text-xs rounded transition-colors",
-        active
-          ? "bg-[var(--accent)] text-white"
-          : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-white/5"
-      )}
-    >
-      {children}
-    </button>
-  );
-}
-TabButton.displayName = "TabButton";
-
-function NumInput({
-  value,
-  onChange,
-  placeholder,
-  min = 0,
-  max,
-  className,
-}: {
-  readonly value: number | null;
-  readonly onChange: (v: number | null) => void;
-  readonly placeholder: string;
-  readonly min?: number;
-  readonly max?: number;
-  readonly className?: string;
-}) {
-  return (
-    <input
-      type="number"
-      min={min}
-      max={max}
-      value={value ?? ""}
-      placeholder={placeholder}
-      onChange={(e) =>
-        onChange(e.target.value === "" ? null : Number(e.target.value))
-      }
-      className={cn(inputCls, className)}
-    />
-  );
-}
-NumInput.displayName = "NumInput";
 
 interface SearchFiltersProps {
   readonly filters: SearchFilters;
