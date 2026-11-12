@@ -12,7 +12,9 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const toastAdd = vi.hoisted(() => vi.fn());
 
 vi.mock(import("@/lib/db/deck-api"), () => ({
-  fetchDecks: vi.fn().mockResolvedValue({ decks: [], total: 0, page: 0, limit: 20 }),
+  fetchDecks: vi
+    .fn()
+    .mockResolvedValue({ decks: [], total: 0, page: 0, limit: 20 }),
   createDeck: vi.fn().mockResolvedValue({
     id: "deck-1",
     name: "Test Deck",
@@ -60,9 +62,7 @@ vi.mock(import("@/lib/db/deck-api"), () => ({
   removeCard: vi.fn().mockResolvedValue(undefined),
   updateCardCategory: vi.fn().mockResolvedValue({}),
   updateCardNotes: vi.fn().mockResolvedValue({}),
-  updateCardMaybeboard: vi.fn().mockResolvedValue({}),
   updateCardZone: vi.fn().mockResolvedValue({}),
-  removeAllCards: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock(import("@/hooks/useToast"), async (importOriginal) => {
@@ -120,7 +120,14 @@ function makeScryfallCard(overrides: Partial<ScryfallCard> = {}): ScryfallCard {
     set_name: "Limited Edition Alpha",
     rarity: "common",
     prices: { usd: "1.00", usd_foil: null, eur: null },
-    image_uris: { small: "", normal: "", large: "", art_crop: "", border_crop: "", png: "" },
+    image_uris: {
+      small: "",
+      normal: "",
+      large: "",
+      art_crop: "",
+      border_crop: "",
+      png: "",
+    },
     card_faces: undefined,
     keywords: [],
     legalities: { commander: "legal" },
@@ -168,7 +175,9 @@ describe("useDeckStore — undo", () => {
   it("does not announce a late successful undo for a deleted deck", async () => {
     const card = makeDeckCard();
     seedDeck(makeActiveDeck({ cards: [card] }));
-    useDeckStore.setState({ undoStack: [{ type: "ADD_CARD", deckId: "deck-1", card }] });
+    useDeckStore.setState({
+      undoStack: [{ type: "ADD_CARD", deckId: "deck-1", card }],
+    });
     const pending = Promise.withResolvers<void>();
     vi.mocked(deckApi.removeCard).mockReturnValueOnce(pending.promise);
     vi.mocked(deckApi.deleteDeck).mockResolvedValueOnce(undefined);
@@ -186,8 +195,11 @@ describe("useDeckStore — undo", () => {
 
   it("does not announce a late successful restoration for a deleted deck", async () => {
     const card = makeDeckCard();
-    useDeckStore.setState({ undoStack: [{ type: "REMOVE_CARD", deckId: "deck-1", card }] });
-    const pending = Promise.withResolvers<Awaited<ReturnType<typeof deckApi.addCard>>>();
+    useDeckStore.setState({
+      undoStack: [{ type: "REMOVE_CARD", deckId: "deck-1", card }],
+    });
+    const pending =
+      Promise.withResolvers<Awaited<ReturnType<typeof deckApi.addCard>>>();
     vi.mocked(deckApi.addCard).mockReturnValueOnce(pending.promise);
     vi.mocked(deckApi.deleteDeck).mockResolvedValueOnce(undefined);
     toastAdd.mockClear();
@@ -195,8 +207,12 @@ describe("useDeckStore — undo", () => {
 
     await useDeckStore.getState().deleteDeck("deck-1");
     pending.resolve({
-      ...card, id: "saved-card", deckId: "deck-1", scryfallId: card.id,
-      isCommander: false, isPartner: false,
+      ...card,
+      id: "saved-card",
+      deckId: "deck-1",
+      scryfallId: card.id,
+      isCommander: false,
+      isPartner: false,
     });
     await undo;
 
@@ -208,7 +224,9 @@ describe("useDeckStore — undo", () => {
   it("does not restore a failed pending addition undo after its deck is deleted", async () => {
     const card = makeDeckCard();
     const action: import("@/lib/deck/store").DeckAction = {
-      type: "ADD_CARD", deckId: "deck-1", card,
+      type: "ADD_CARD",
+      deckId: "deck-1",
+      card,
     };
     seedDeck(makeActiveDeck({ cards: [card] }));
     useDeckStore.setState({ undoStack: [action] });
@@ -227,10 +245,13 @@ describe("useDeckStore — undo", () => {
 
   it("does not restore a failed pending removal undo after its deck is deleted", async () => {
     const action: import("@/lib/deck/store").DeckAction = {
-      type: "REMOVE_CARD", deckId: "deck-1", card: makeDeckCard(),
+      type: "REMOVE_CARD",
+      deckId: "deck-1",
+      card: makeDeckCard(),
     };
     useDeckStore.setState({ undoStack: [action] });
-    const pending = Promise.withResolvers<Awaited<ReturnType<typeof deckApi.addCard>>>();
+    const pending =
+      Promise.withResolvers<Awaited<ReturnType<typeof deckApi.addCard>>>();
     vi.mocked(deckApi.addCard).mockReturnValueOnce(pending.promise);
     vi.mocked(deckApi.deleteDeck).mockResolvedValueOnce(undefined);
     const undo = useDeckStore.getState().undo();
@@ -247,10 +268,14 @@ describe("useDeckStore — undo", () => {
     const card = makeDeckCard();
     const deletedCard = makeDeckCard({ id: "deleted-card" });
     const retainedAction: import("@/lib/deck/store").DeckAction = {
-      type: "ADD_CARD", deckId: "deck-1", card,
+      type: "ADD_CARD",
+      deckId: "deck-1",
+      card,
     };
     const deletedAction: import("@/lib/deck/store").DeckAction = {
-      type: "ADD_CARD", deckId: "deck-2", card: deletedCard,
+      type: "ADD_CARD",
+      deckId: "deck-2",
+      card: deletedCard,
     };
     useDeckStore.setState({
       decks: {
@@ -274,12 +299,18 @@ describe("useDeckStore — undo", () => {
   it("preserves the deck and undo history when deletion is rejected", async () => {
     const deck = makeActiveDeck();
     const action: import("@/lib/deck/store").DeckAction = {
-      type: "ADD_CARD", deckId: deck.id, card: makeDeckCard(),
+      type: "ADD_CARD",
+      deckId: deck.id,
+      card: makeDeckCard(),
     };
     useDeckStore.setState({ decks: { [deck.id]: deck }, undoStack: [action] });
-    vi.mocked(deckApi.deleteDeck).mockRejectedValueOnce(new Error("Deletion rejected"));
+    vi.mocked(deckApi.deleteDeck).mockRejectedValueOnce(
+      new Error("Deletion rejected")
+    );
 
-    await expect(useDeckStore.getState().deleteDeck(deck.id)).rejects.toThrow("Deletion rejected");
+    await expect(useDeckStore.getState().deleteDeck(deck.id)).rejects.toThrow(
+      "Deletion rejected"
+    );
 
     expect(useDeckStore.getState().decks[deck.id]).toEqual(deck);
     expect(useDeckStore.getState().undoStack).toEqual([action]);
@@ -288,11 +319,18 @@ describe("useDeckStore — undo", () => {
   });
 
   it("preserves cards and the undo action when name-only matching is ambiguous", async () => {
-    const cards = ["printing-1", "printing-2"].map((id) => makeDeckCard({ id, name: "Counterspell", isMaybeboard: false }));
+    const cards = ["printing-1", "printing-2"].map((id) =>
+      makeDeckCard({ id, name: "Counterspell", isMaybeboard: false })
+    );
     const action: import("@/lib/deck/store").DeckAction = {
-      type: "ADD_CARD", deckId: "deck-1", card: makeDeckCard({ id: "missing-id", name: "Counterspell" }),
+      type: "ADD_CARD",
+      deckId: "deck-1",
+      card: makeDeckCard({ id: "missing-id", name: "Counterspell" }),
     };
-    useDeckStore.setState({ decks: { "deck-1": makeActiveDeck({ cards }) }, undoStack: [action] });
+    useDeckStore.setState({
+      decks: { "deck-1": makeActiveDeck({ cards }) },
+      undoStack: [action],
+    });
     vi.mocked(deckApi.removeCard).mockClear();
     toastAdd.mockClear();
 
@@ -305,8 +343,16 @@ describe("useDeckStore — undo", () => {
   });
 
   it("undoes the recorded card rather than an earlier printing with the same name", async () => {
-    const earlier = makeDeckCard({ id: "earlier-printing", name: "Counterspell", isMaybeboard: false });
-    const added = makeDeckCard({ id: "added-printing", name: "Counterspell", isMaybeboard: false });
+    const earlier = makeDeckCard({
+      id: "earlier-printing",
+      name: "Counterspell",
+      isMaybeboard: false,
+    });
+    const added = makeDeckCard({
+      id: "added-printing",
+      name: "Counterspell",
+      isMaybeboard: false,
+    });
     useDeckStore.setState({
       decks: { "deck-1": makeActiveDeck({ cards: [earlier, added] }) },
       undoStack: [{ type: "ADD_CARD", deckId: "deck-1", card: added }],
@@ -315,29 +361,41 @@ describe("useDeckStore — undo", () => {
     await useDeckStore.getState().undo();
 
     expect(useDeckStore.getState().decks["deck-1"].cards).toEqual([earlier]);
-    expect(deckApi.removeCard).toHaveBeenLastCalledWith("deck-1", "added-printing");
+    expect(deckApi.removeCard).toHaveBeenLastCalledWith(
+      "deck-1",
+      "added-printing"
+    );
   });
 
-  it.each(["ADD_CARD", "REMOVE_CARD"])("preserves %s undo when its deck is not loaded", async (type) => {
-    const card = makeDeckCard({ id: "card-1" });
-    const action: import("@/lib/deck/store").DeckAction = type === "ADD_CARD"
-      ? { type: "ADD_CARD", deckId: "unloaded-deck", card }
-      : { type: "REMOVE_CARD", deckId: "unloaded-deck", card };
-    useDeckStore.setState({ undoStack: [action] });
-    toastAdd.mockClear();
-    vi.mocked(deckApi.addCard).mockClear();
-    vi.mocked(deckApi.removeCard).mockClear();
+  it.each(["ADD_CARD", "REMOVE_CARD"])(
+    "preserves %s undo when its deck is not loaded",
+    async (type) => {
+      const card = makeDeckCard({ id: "card-1" });
+      const action: import("@/lib/deck/store").DeckAction =
+        type === "ADD_CARD"
+          ? { type: "ADD_CARD", deckId: "unloaded-deck", card }
+          : { type: "REMOVE_CARD", deckId: "unloaded-deck", card };
+      useDeckStore.setState({ undoStack: [action] });
+      toastAdd.mockClear();
+      vi.mocked(deckApi.addCard).mockClear();
+      vi.mocked(deckApi.removeCard).mockClear();
 
-    await useDeckStore.getState().undo();
+      await useDeckStore.getState().undo();
 
-    expect(useDeckStore.getState().undoStack).toEqual([action]);
-    expect(deckApi.addCard).not.toHaveBeenCalled();
-    expect(deckApi.removeCard).not.toHaveBeenCalled();
-    expect(toastAdd).toHaveBeenCalledWith("error", expect.any(String));
-  });
+      expect(useDeckStore.getState().undoStack).toEqual([action]);
+      expect(deckApi.addCard).not.toHaveBeenCalled();
+      expect(deckApi.removeCard).not.toHaveBeenCalled();
+      expect(toastAdd).toHaveBeenCalledWith("error", expect.any(String));
+    }
+  );
 
   it("does not add a duplicate when a removed card is already present", async () => {
-    const card = makeDeckCard({ id: "card-1", isMaybeboard: false, zone: "sideboard", quantity: 3 });
+    const card = makeDeckCard({
+      id: "card-1",
+      isMaybeboard: false,
+      zone: "sideboard",
+      quantity: 3,
+    });
     useDeckStore.setState({
       decks: { "deck-1": makeActiveDeck({ cards: [card] }) },
       undoStack: [{ type: "REMOVE_CARD", deckId: "deck-1", card }],
@@ -353,24 +411,50 @@ describe("useDeckStore — undo", () => {
 
   it("uses the printing identifier when restoring a removed card", async () => {
     const card = makeDeckCard({ id: "old-row-id", scryfallId: "printing-id" });
-    useDeckStore.setState({ undoStack: [{ type: "REMOVE_CARD", deckId: "deck-1", card }] });
+    useDeckStore.setState({
+      undoStack: [{ type: "REMOVE_CARD", deckId: "deck-1", card }],
+    });
     await useDeckStore.getState().undo();
-    expect(deckApi.addCard).toHaveBeenLastCalledWith("deck-1", expect.objectContaining({ scryfallId: "printing-id" }));
+    expect(deckApi.addCard).toHaveBeenLastCalledWith(
+      "deck-1",
+      expect.objectContaining({ scryfallId: "printing-id" })
+    );
   });
 
   it("uses the saved row identifier for subsequent removal of a restored card", async () => {
-    const card = makeDeckCard({ id: "old-row-id", scryfallId: "printing-id", zone: "sideboard", quantity: 3 });
-    useDeckStore.setState({ undoStack: [{ type: "REMOVE_CARD", deckId: "deck-1", card }] });
+    const card = makeDeckCard({
+      id: "old-row-id",
+      scryfallId: "printing-id",
+      zone: "sideboard",
+      quantity: 3,
+    });
+    useDeckStore.setState({
+      undoStack: [{ type: "REMOVE_CARD", deckId: "deck-1", card }],
+    });
     await useDeckStore.getState().undo();
-    const restored = useDeckStore.getState().decks["deck-1"].cards.find((entry) => entry.name === card.name);
-    expect(restored).toMatchObject({ id: "saved-db-id", scryfallId: "printing-id", zone: "sideboard", quantity: 3 });
+    const restored = useDeckStore
+      .getState()
+      .decks["deck-1"].cards.find((entry) => entry.name === card.name);
+    expect(restored).toMatchObject({
+      id: "saved-db-id",
+      scryfallId: "printing-id",
+      zone: "sideboard",
+      quantity: 3,
+    });
     await useDeckStore.getState().removeCard("saved-db-id");
-    expect(deckApi.removeCard).toHaveBeenLastCalledWith("deck-1", "saved-db-id");
+    expect(deckApi.removeCard).toHaveBeenLastCalledWith(
+      "deck-1",
+      "saved-db-id"
+    );
   });
 
   it("removes the unsaved restored card and keeps retry when undoing a removal fails", async () => {
     const card = makeDeckCard({ id: "card-1", zone: "sideboard", quantity: 3 });
-    const action: import("@/lib/deck/store").DeckAction = { type: "REMOVE_CARD", deckId: "deck-1", card };
+    const action: import("@/lib/deck/store").DeckAction = {
+      type: "REMOVE_CARD",
+      deckId: "deck-1",
+      card,
+    };
     useDeckStore.setState({
       decks: { "deck-1": makeActiveDeck({ cards: [] }) },
       undoStack: [action],
@@ -387,8 +471,17 @@ describe("useDeckStore — undo", () => {
   });
 
   it("restores the card and retry action when undoing an addition fails", async () => {
-    const card = makeDeckCard({ id: "card-1", isMaybeboard: false, quantity: 3, zone: "sideboard" });
-    const action: import("@/lib/deck/store").DeckAction = { type: "ADD_CARD", deckId: "deck-1", card };
+    const card = makeDeckCard({
+      id: "card-1",
+      isMaybeboard: false,
+      quantity: 3,
+      zone: "sideboard",
+    });
+    const action: import("@/lib/deck/store").DeckAction = {
+      type: "ADD_CARD",
+      deckId: "deck-1",
+      card,
+    };
     useDeckStore.setState({
       decks: { "deck-1": makeActiveDeck({ cards: [card] }) },
       undoStack: [action],
@@ -404,26 +497,38 @@ describe("useDeckStore — undo", () => {
     expect(toastAdd).not.toHaveBeenCalledWith("info", expect.any(String));
   });
 
-  it.each(["ADD_CARD", "REMOVE_CARD"])("targets the recorded deck for %s after switching decks", async (type) => {
-    const card = makeDeckCard({ id: "card-1", name: "Counterspell", isMaybeboard: false });
-    const recordedAction: import("@/lib/deck/store").DeckAction = type === "ADD_CARD"
-      ? { type: "ADD_CARD", deckId: "deck-1", card }
-      : { type: "REMOVE_CARD", deckId: "deck-1", card };
-    useDeckStore.setState({
-      decks: {
-        "deck-1": makeActiveDeck({ cards: type === "ADD_CARD" ? [card] : [] }),
-        "deck-2": makeActiveDeck({ id: "deck-2", cards: [card] }),
-      },
-      activeDeckId: "deck-2",
-      undoStack: [recordedAction],
-    });
+  it.each(["ADD_CARD", "REMOVE_CARD"])(
+    "targets the recorded deck for %s after switching decks",
+    async (type) => {
+      const card = makeDeckCard({
+        id: "card-1",
+        name: "Counterspell",
+        isMaybeboard: false,
+      });
+      const recordedAction: import("@/lib/deck/store").DeckAction =
+        type === "ADD_CARD"
+          ? { type: "ADD_CARD", deckId: "deck-1", card }
+          : { type: "REMOVE_CARD", deckId: "deck-1", card };
+      useDeckStore.setState({
+        decks: {
+          "deck-1": makeActiveDeck({
+            cards: type === "ADD_CARD" ? [card] : [],
+          }),
+          "deck-2": makeActiveDeck({ id: "deck-2", cards: [card] }),
+        },
+        activeDeckId: "deck-2",
+        undoStack: [recordedAction],
+      });
 
-    await useDeckStore.getState().undo();
+      await useDeckStore.getState().undo();
 
-    expect(useDeckStore.getState().decks["deck-2"].cards).toEqual([card]);
-    expect(useDeckStore.getState().decks["deck-1"].cards).toHaveLength(type === "ADD_CARD" ? 0 : 1);
-    expect(useDeckStore.getState().activeDeckId).toBe("deck-2");
-  });
+      expect(useDeckStore.getState().decks["deck-2"].cards).toEqual([card]);
+      expect(useDeckStore.getState().decks["deck-1"].cards).toHaveLength(
+        type === "ADD_CARD" ? 0 : 1
+      );
+      expect(useDeckStore.getState().activeDeckId).toBe("deck-2");
+    }
+  );
 
   it("does nothing when undo stack is empty", async () => {
     useDeckStore.setState({ undoStack: [] });
@@ -506,7 +611,10 @@ describe("useDeckStore — setCommander", () => {
     const card = makeScryfallCard({ id: "atraxa-id", name: "Atraxa" });
     await useDeckStore.getState().setCommander(card);
 
-    expect(deckApi.updateDeck).toHaveBeenCalledWith("deck-1", expect.objectContaining({ commanderId: "atraxa-id" }));
+    expect(deckApi.updateDeck).toHaveBeenCalledWith(
+      "deck-1",
+      expect.objectContaining({ commanderId: "atraxa-id" })
+    );
   });
 
   it("marks commander as game changer when name is in gameChangerNames", async () => {
@@ -528,7 +636,13 @@ describe("useDeckStore — setCommander", () => {
 
 describe("useDeckStore — clearCommander", () => {
   beforeEach(() => {
-    const deck = makeActiveDeck({ commander: makeDeckCard({ id: "cmd-1", name: "Atraxa", category: "commander" }) });
+    const deck = makeActiveDeck({
+      commander: makeDeckCard({
+        id: "cmd-1",
+        name: "Atraxa",
+        category: "commander",
+      }),
+    });
     seedDeck(deck);
   });
 
@@ -541,7 +655,10 @@ describe("useDeckStore — clearCommander", () => {
     useDeckStore.setState((s) => ({
       decks: {
         ...s.decks,
-        "deck-1": { ...s.decks["deck-1"], partner: makeDeckCard({ name: "Partner" }) },
+        "deck-1": {
+          ...s.decks["deck-1"],
+          partner: makeDeckCard({ name: "Partner" }),
+        },
       },
     }));
     await useDeckStore.getState().clearCommander();
@@ -550,7 +667,10 @@ describe("useDeckStore — clearCommander", () => {
 
   it("calls updateDeck with commanderId null", async () => {
     await useDeckStore.getState().clearCommander();
-    expect(deckApi.updateDeck).toHaveBeenCalledWith("deck-1", expect.objectContaining({ commanderId: null }));
+    expect(deckApi.updateDeck).toHaveBeenCalledWith(
+      "deck-1",
+      expect.objectContaining({ commanderId: null })
+    );
   });
 
   it("does nothing when no active deck", async () => {
@@ -599,7 +719,9 @@ describe("useDeckStore — setPartner", () => {
       })
     );
 
-    expect(useDeckStore.getState().decks["deck-1"].partner).toEqual(previousPartner);
+    expect(useDeckStore.getState().decks["deck-1"].partner).toEqual(
+      previousPartner
+    );
     expect(deckApi.updateDeck).not.toHaveBeenCalled();
     expect(deckApi.addCard).not.toHaveBeenCalled();
     expect(toastAdd).toHaveBeenCalledWith(
@@ -609,7 +731,10 @@ describe("useDeckStore — setPartner", () => {
   });
 
   it("sets partner on the active deck", async () => {
-    const card = makeScryfallCard({ name: "Tana, the Bloodsower", keywords: ["Partner"] });
+    const card = makeScryfallCard({
+      name: "Tana, the Bloodsower",
+      keywords: ["Partner"],
+    });
     await useDeckStore.getState().setPartner(card);
 
     const deck = useDeckStore.getState().decks["deck-1"];
@@ -618,7 +743,13 @@ describe("useDeckStore — setPartner", () => {
 
   it("clears partner when null is passed", async () => {
     useDeckStore.setState((s) => ({
-      decks: { ...s.decks, "deck-1": { ...s.decks["deck-1"], partner: makeDeckCard({ name: "Tana" }) } },
+      decks: {
+        ...s.decks,
+        "deck-1": {
+          ...s.decks["deck-1"],
+          partner: makeDeckCard({ name: "Tana" }),
+        },
+      },
     }));
     await useDeckStore.getState().setPartner(null);
 
@@ -628,7 +759,10 @@ describe("useDeckStore — setPartner", () => {
   it("calls updateDeck with partnerId", async () => {
     const card = makeScryfallCard({ id: "tana-id", name: "Tana" });
     await useDeckStore.getState().setPartner(card);
-    expect(deckApi.updateDeck).toHaveBeenCalledWith("deck-1", expect.objectContaining({ partnerId: "tana-id" }));
+    expect(deckApi.updateDeck).toHaveBeenCalledWith(
+      "deck-1",
+      expect.objectContaining({ partnerId: "tana-id" })
+    );
   });
 
   it("restores the previous partner when saving the replacement fails", async () => {
@@ -637,19 +771,25 @@ describe("useDeckStore — setPartner", () => {
       name: "Tana, the Bloodsower",
       category: "commander",
     });
-    seedDeck(makeActiveDeck({
-      partner: previousPartner,
-      pairingType: "partner",
-    }));
-    vi.mocked(deckApi.updateDeck).mockRejectedValueOnce(new Error("Save failed"));
+    seedDeck(
+      makeActiveDeck({
+        partner: previousPartner,
+        pairingType: "partner",
+      })
+    );
+    vi.mocked(deckApi.updateDeck).mockRejectedValueOnce(
+      new Error("Save failed")
+    );
     vi.mocked(deckApi.addCard).mockClear();
     toastAdd.mockClear();
 
-    await useDeckStore.getState().setPartner(makeScryfallCard({
-      id: "replacement-partner",
-      name: "Tymna the Weaver",
-      keywords: ["Partner"],
-    }));
+    await useDeckStore.getState().setPartner(
+      makeScryfallCard({
+        id: "replacement-partner",
+        name: "Tymna the Weaver",
+        keywords: ["Partner"],
+      })
+    );
 
     const deck = useDeckStore.getState().decks["deck-1"];
     expect(deck.partner).toEqual(previousPartner);
@@ -667,11 +807,15 @@ describe("useDeckStore — setPartner", () => {
       name: "Tana, the Bloodsower",
       category: "commander",
     });
-    seedDeck(makeActiveDeck({
-      partner: previousPartner,
-      pairingType: "partner",
-    }));
-    vi.mocked(deckApi.updateDeck).mockRejectedValueOnce(new Error("Save failed"));
+    seedDeck(
+      makeActiveDeck({
+        partner: previousPartner,
+        pairingType: "partner",
+      })
+    );
+    vi.mocked(deckApi.updateDeck).mockRejectedValueOnce(
+      new Error("Save failed")
+    );
     toastAdd.mockClear();
 
     await useDeckStore.getState().setPartner(null);
@@ -691,18 +835,22 @@ describe("useDeckStore — setPartner", () => {
       name: "Tana, the Bloodsower",
       category: "commander",
     });
-    seedDeck(makeActiveDeck({
-      partner: previousPartner,
-      pairingType: "partner",
-    }));
+    seedDeck(
+      makeActiveDeck({
+        partner: previousPartner,
+        pairingType: "partner",
+      })
+    );
     vi.mocked(deckApi.addCard).mockRejectedValueOnce(new Error("Save failed"));
     toastAdd.mockClear();
 
-    await useDeckStore.getState().setPartner(makeScryfallCard({
-      id: "replacement-partner",
-      name: "Tymna the Weaver",
-      keywords: ["Partner"],
-    }));
+    await useDeckStore.getState().setPartner(
+      makeScryfallCard({
+        id: "replacement-partner",
+        name: "Tymna the Weaver",
+        keywords: ["Partner"],
+      })
+    );
 
     const deck = useDeckStore.getState().decks["deck-1"];
     expect(deck.partner?.id).toBe("replacement-partner");
@@ -720,24 +868,31 @@ describe("useDeckStore — setPartner", () => {
       name: "Tana, the Bloodsower",
       category: "commander",
     });
-    seedDeck(makeActiveDeck({
-      partner: previousPartner,
-      pairingType: "partner",
-    }));
-    const failedUpdate = Promise.withResolvers<Awaited<ReturnType<typeof deckApi.updateDeck>>>();
+    seedDeck(
+      makeActiveDeck({
+        partner: previousPartner,
+        pairingType: "partner",
+      })
+    );
+    const failedUpdate =
+      Promise.withResolvers<Awaited<ReturnType<typeof deckApi.updateDeck>>>();
     vi.mocked(deckApi.updateDeck).mockReturnValueOnce(failedUpdate.promise);
     toastAdd.mockClear();
 
-    const failedSave = useDeckStore.getState().setPartner(makeScryfallCard({
-      id: "replacement-partner",
-      name: "Tymna the Weaver",
-      keywords: ["Partner"],
-    }));
-    await useDeckStore.getState().setPartner(makeScryfallCard({
-      id: "newer-partner",
-      name: "Thrasios, Triton Hero",
-      keywords: ["Partner"],
-    }));
+    const failedSave = useDeckStore.getState().setPartner(
+      makeScryfallCard({
+        id: "replacement-partner",
+        name: "Tymna the Weaver",
+        keywords: ["Partner"],
+      })
+    );
+    await useDeckStore.getState().setPartner(
+      makeScryfallCard({
+        id: "newer-partner",
+        name: "Thrasios, Triton Hero",
+        keywords: ["Partner"],
+      })
+    );
     failedUpdate.reject(new Error("Save failed"));
     await failedSave;
 
@@ -821,14 +976,24 @@ describe("useDeckStore — setCompanion", () => {
         ...s.decks,
         "deck-1": {
           ...s.decks["deck-1"],
-          companion: makeDeckCard({ id: "companion-db-id", name: "Lurrus", category: "companion" }),
+          companion: makeDeckCard({
+            id: "companion-db-id",
+            name: "Lurrus",
+            category: "companion",
+          }),
         },
       },
     }));
     await useDeckStore.getState().setCompanion(null);
     expect(useDeckStore.getState().decks["deck-1"].companion).toBeNull();
-    expect(deckApi.removeCard).toHaveBeenCalledWith("deck-1", "companion-db-id");
-    expect(deckApi.updateDeck).toHaveBeenCalledWith("deck-1", expect.objectContaining({ companionId: null }));
+    expect(deckApi.removeCard).toHaveBeenCalledWith(
+      "deck-1",
+      "companion-db-id"
+    );
+    expect(deckApi.updateDeck).toHaveBeenCalledWith(
+      "deck-1",
+      expect.objectContaining({ companionId: null })
+    );
   });
 
   it("calls updateDeck with companionId", async () => {
@@ -842,7 +1007,10 @@ describe("useDeckStore — setCompanion", () => {
     });
     vi.mocked(deckApi.updateDeck).mockClear();
     await useDeckStore.getState().setCompanion(card);
-    expect(deckApi.updateDeck).toHaveBeenCalledWith("deck-1", expect.objectContaining({ companionId: "lurrus-id" }));
+    expect(deckApi.updateDeck).toHaveBeenCalledWith(
+      "deck-1",
+      expect.objectContaining({ companionId: "lurrus-id" })
+    );
   });
 
   it("does not set companion without a commander", async () => {
@@ -858,10 +1026,14 @@ describe("useDeckStore — setCompanion", () => {
 
 describe("useDeckStore failed removal recovery", () => {
   it("restores card order while preserving a concurrent successful removal", async () => {
-    const cards = ["card-1", "card-2", "card-3"].map((id) => makeDeckCard({ id }));
+    const cards = ["card-1", "card-2", "card-3"].map((id) =>
+      makeDeckCard({ id })
+    );
     seedDeck(makeActiveDeck({ cards }));
     let finishRemoval = () => {};
-    const pendingRemoval = new Promise<void>((resolve) => { finishRemoval = resolve; });
+    const pendingRemoval = new Promise<void>((resolve) => {
+      finishRemoval = resolve;
+    });
     vi.mocked(deckApi.removeCard).mockImplementationOnce(async () => {
       await pendingRemoval;
       throw new Error("offline");
@@ -872,7 +1044,9 @@ describe("useDeckStore failed removal recovery", () => {
     finishRemoval();
     await rejectedRemoval;
 
-    expect(useDeckStore.getState().decks["deck-1"].cards.map((card) => card.id)).toEqual(["card-2", "card-3"]);
+    expect(
+      useDeckStore.getState().decks["deck-1"].cards.map((card) => card.id)
+    ).toEqual(["card-2", "card-3"]);
     expect(useDeckStore.getState().undoStack).toHaveLength(1);
     const undoAction = useDeckStore.getState().undoStack[0];
     expect(undoAction?.type).toBe("REMOVE_CARD");
@@ -881,7 +1055,12 @@ describe("useDeckStore failed removal recovery", () => {
   });
 
   it("restores a rejected removal without leaving a false undo entry", async () => {
-    const card = makeDeckCard({ id: "card-1", zone: "sideboard", isMaybeboard: false, quantity: 3 });
+    const card = makeDeckCard({
+      id: "card-1",
+      zone: "sideboard",
+      isMaybeboard: false,
+      quantity: 3,
+    });
     seedDeck(makeActiveDeck({ cards: [card] }));
     vi.mocked(deckApi.removeCard).mockRejectedValueOnce(new Error("offline"));
 
@@ -895,7 +1074,11 @@ describe("useDeckStore failed removal recovery", () => {
 
 describe("useDeckStore category save recovery", () => {
   it("restores the confirmed category when two rapid saves fail", async () => {
-    seedDeck(makeActiveDeck({ cards: [makeDeckCard({ id: "card-1", category: "instant" })] }));
+    seedDeck(
+      makeActiveDeck({
+        cards: [makeDeckCard({ id: "card-1", category: "instant" })],
+      })
+    );
     vi.mocked(deckApi.updateCardCategory)
       .mockRejectedValueOnce(new Error("offline"))
       .mockRejectedValueOnce(new Error("offline"));
@@ -904,38 +1087,60 @@ describe("useDeckStore category save recovery", () => {
     const second = useDeckStore.getState().updateCardCategory("card-1", "draw");
     await Promise.all([first, second]);
 
-    expect(useDeckStore.getState().decks["deck-1"].cards[0].category).toBe("instant");
+    expect(useDeckStore.getState().decks["deck-1"].cards[0].category).toBe(
+      "instant"
+    );
     expect(useDeckStore.getState().isSyncing).toBe(false);
   });
 
   it("saves rapid category edits in order", async () => {
-    seedDeck(makeActiveDeck({ cards: [makeDeckCard({ id: "card-1", category: "instant" })] }));
+    seedDeck(
+      makeActiveDeck({
+        cards: [makeDeckCard({ id: "card-1", category: "instant" })],
+      })
+    );
     let finishFirst = () => {};
-    const pendingFirst = new Promise<void>((resolve) => { finishFirst = resolve; });
+    const pendingFirst = new Promise<void>((resolve) => {
+      finishFirst = resolve;
+    });
     vi.mocked(deckApi.updateCardCategory).mockImplementationOnce(async () => {
       await pendingFirst;
       throw new Error("offline");
     });
     const first = useDeckStore.getState().updateCardCategory("card-1", "ramp");
-    await vi.waitFor(() => expect(deckApi.updateCardCategory).toHaveBeenCalled());
-    const callsBeforeSecond = vi.mocked(deckApi.updateCardCategory).mock.calls.length;
+    await vi.waitFor(() =>
+      expect(deckApi.updateCardCategory).toHaveBeenCalled()
+    );
+    const callsBeforeSecond = vi.mocked(deckApi.updateCardCategory).mock.calls
+      .length;
     const second = useDeckStore.getState().updateCardCategory("card-1", "draw");
     await Promise.resolve();
-    const callsWithFirstPending = vi.mocked(deckApi.updateCardCategory).mock.calls.length;
+    const callsWithFirstPending = vi.mocked(deckApi.updateCardCategory).mock
+      .calls.length;
     finishFirst();
     await Promise.all([first, second]);
 
     expect(callsWithFirstPending).toBe(callsBeforeSecond);
-    expect(useDeckStore.getState().decks["deck-1"].cards[0].category).toBe("draw");
+    expect(useDeckStore.getState().decks["deck-1"].cards[0].category).toBe(
+      "draw"
+    );
   });
 
   it("restores the previous category and warns when saving fails", async () => {
-    seedDeck(makeActiveDeck({ cards: [makeDeckCard({ id: "card-1", category: "instant" })] }));
-    vi.mocked(deckApi.updateCardCategory).mockRejectedValueOnce(new Error("offline"));
+    seedDeck(
+      makeActiveDeck({
+        cards: [makeDeckCard({ id: "card-1", category: "instant" })],
+      })
+    );
+    vi.mocked(deckApi.updateCardCategory).mockRejectedValueOnce(
+      new Error("offline")
+    );
 
     await useDeckStore.getState().updateCardCategory("card-1", "ramp");
 
-    expect(useDeckStore.getState().decks["deck-1"].cards[0].category).toBe("instant");
+    expect(useDeckStore.getState().decks["deck-1"].cards[0].category).toBe(
+      "instant"
+    );
     expect(toastAdd).toHaveBeenCalledWith("error", expect.any(String));
     expect(useDeckStore.getState().isSyncing).toBe(false);
   });
@@ -943,12 +1148,22 @@ describe("useDeckStore category save recovery", () => {
 
 describe("useDeckStore — updateCardNotes", () => {
   beforeEach(() => {
-    seedDeck(makeActiveDeck({ cards: [makeDeckCard({ id: "card-1", name: "Counterspell" })] }));
+    seedDeck(
+      makeActiveDeck({
+        cards: [makeDeckCard({ id: "card-1", name: "Counterspell" })],
+      })
+    );
   });
   it("keeps saving visible when a zone move finishes before a pending note", async () => {
-    seedDeck(makeActiveDeck({ cards: [makeDeckCard({ id: "card-1", notes: "Saved note" })] }));
+    seedDeck(
+      makeActiveDeck({
+        cards: [makeDeckCard({ id: "card-1", notes: "Saved note" })],
+      })
+    );
     let finishNote = () => {};
-    const pendingNote = new Promise<void>((resolve) => { finishNote = resolve; });
+    const pendingNote = new Promise<void>((resolve) => {
+      finishNote = resolve;
+    });
     vi.mocked(deckApi.updateCardNotes).mockImplementationOnce(async () => {
       await pendingNote;
       throw new Error("offline");
@@ -963,49 +1178,79 @@ describe("useDeckStore — updateCardNotes", () => {
     expect(savingWithNotePending).toBe(true);
     expect(useDeckStore.getState().isSyncing).toBe(false);
     expect(useDeckStore.getState().decks["deck-1"].cards[0]).toMatchObject({
-      notes: "Saved note", zone: "sideboard",
+      notes: "Saved note",
+      zone: "sideboard",
     });
   });
 
   it("updates notes optimistically", async () => {
     await useDeckStore.getState().updateCardNotes("card-1", "Draw 2");
-    const card = useDeckStore.getState().decks["deck-1"].cards.find((c) => c.id === "card-1");
+    const card = useDeckStore
+      .getState()
+      .decks["deck-1"].cards.find((c) => c.id === "card-1");
     expect(card?.notes).toBe("Draw 2");
   });
 
   it("restores saved notes and notifies after a failed save", async () => {
-    vi.mocked(deckApi.updateCardNotes).mockRejectedValueOnce(new Error("offline"));
-    seedDeck(makeActiveDeck({ cards: [makeDeckCard({ id: "card-1", notes: "Saved note" })] }));
+    vi.mocked(deckApi.updateCardNotes).mockRejectedValueOnce(
+      new Error("offline")
+    );
+    seedDeck(
+      makeActiveDeck({
+        cards: [makeDeckCard({ id: "card-1", notes: "Saved note" })],
+      })
+    );
 
     await useDeckStore.getState().updateCardNotes("card-1", "Unsaved note");
 
-    expect(useDeckStore.getState().decks["deck-1"].cards[0].notes).toBe("Saved note");
-    expect(toastAdd).toHaveBeenCalledWith("error", expect.stringContaining("notes"));
+    expect(useDeckStore.getState().decks["deck-1"].cards[0].notes).toBe(
+      "Saved note"
+    );
+    expect(toastAdd).toHaveBeenCalledWith(
+      "error",
+      expect.stringContaining("notes")
+    );
   });
 
   it("restores the confirmed note after two rapid edits both fail", async () => {
     vi.mocked(deckApi.updateCardNotes)
       .mockRejectedValueOnce(new Error("offline"))
       .mockRejectedValueOnce(new Error("offline"));
-    seedDeck(makeActiveDeck({ cards: [makeDeckCard({ id: "card-1", notes: "Saved note" })] }));
+    seedDeck(
+      makeActiveDeck({
+        cards: [makeDeckCard({ id: "card-1", notes: "Saved note" })],
+      })
+    );
 
-    const first = useDeckStore.getState().updateCardNotes("card-1", "First edit");
-    const second = useDeckStore.getState().updateCardNotes("card-1", "Second edit");
+    const first = useDeckStore
+      .getState()
+      .updateCardNotes("card-1", "First edit");
+    const second = useDeckStore
+      .getState()
+      .updateCardNotes("card-1", "Second edit");
     await Promise.all([first, second]);
 
-    expect(useDeckStore.getState().decks["deck-1"].cards[0].notes).toBe("Saved note");
+    expect(useDeckStore.getState().decks["deck-1"].cards[0].notes).toBe(
+      "Saved note"
+    );
     expect(useDeckStore.getState().isSyncing).toBe(false);
   });
 
   it("clears notes when null is passed", async () => {
     await useDeckStore.getState().updateCardNotes("card-1", null);
-    const card = useDeckStore.getState().decks["deck-1"].cards.find((c) => c.id === "card-1");
+    const card = useDeckStore
+      .getState()
+      .decks["deck-1"].cards.find((c) => c.id === "card-1");
     expect(card?.notes).toBeNull();
   });
 
   it("calls updateCardNotes API", async () => {
     await useDeckStore.getState().updateCardNotes("card-1", "Test note");
-    expect(deckApi.updateCardNotes).toHaveBeenCalledWith("deck-1", "card-1", "Test note");
+    expect(deckApi.updateCardNotes).toHaveBeenCalledWith(
+      "deck-1",
+      "card-1",
+      "Test note"
+    );
   });
 
   it("does nothing when no active deck", async () => {
@@ -1018,12 +1263,16 @@ describe("useDeckStore — updateCardNotes", () => {
 
 describe("useDeckStore — moveCardToZone", () => {
   beforeEach(() => {
-    seedDeck(makeActiveDeck({ cards: [makeDeckCard({ id: "card-1", zone: "main" })] }));
+    seedDeck(
+      makeActiveDeck({ cards: [makeDeckCard({ id: "card-1", zone: "main" })] })
+    );
   });
 
   it("updates card zone optimistically", async () => {
     await useDeckStore.getState().moveCardToZone("card-1", "sideboard");
-    const card = useDeckStore.getState().decks["deck-1"].cards.find((c) => c.id === "card-1");
+    const card = useDeckStore
+      .getState()
+      .decks["deck-1"].cards.find((c) => c.id === "card-1");
     expect(card?.zone).toBe("sideboard");
   });
 
@@ -1037,13 +1286,19 @@ describe("useDeckStore — moveCardToZone", () => {
 
   it("calls updateCardZone API", async () => {
     await useDeckStore.getState().moveCardToZone("card-1", "maybeboard");
-    expect(deckApi.updateCardZone).toHaveBeenCalledWith("deck-1", "card-1", "maybeboard");
+    expect(deckApi.updateCardZone).toHaveBeenCalledWith(
+      "deck-1",
+      "card-1",
+      "maybeboard"
+    );
   });
 
   it("persists a card added directly to a secondary zone", async () => {
     await useDeckStore.getState().addCard(makeScryfallCard(), 1, "sideboard");
     const deck = useDeckStore.getState().decks["deck-1"];
-    expect(deck.cards.find((card) => card.name === "Lightning Bolt")?.zone).toBe("sideboard");
+    expect(
+      deck.cards.find((card) => card.name === "Lightning Bolt")?.zone
+    ).toBe("sideboard");
     expect(deckApi.addCard).toHaveBeenCalledWith(
       "deck-1",
       expect.objectContaining({ zone: "sideboard" })
@@ -1083,7 +1338,10 @@ describe("useDeckStore — addToMaybeboard", () => {
     useDeckStore.setState((s) => ({
       decks: {
         ...s.decks,
-        "deck-1": { ...s.decks["deck-1"], maybeboard: [makeDeckCard({ name: "Brainstorm" })] },
+        "deck-1": {
+          ...s.decks["deck-1"],
+          maybeboard: [makeDeckCard({ name: "Brainstorm" })],
+        },
       },
     }));
     await useDeckStore.getState().addToMaybeboard(card);
@@ -1101,7 +1359,11 @@ describe("useDeckStore — addToMaybeboard", () => {
 
 describe("useDeckStore — removeFromMaybeboard", () => {
   beforeEach(() => {
-    seedDeck(makeActiveDeck({ maybeboard: [makeDeckCard({ id: "card-1", name: "Brainstorm" })] }));
+    seedDeck(
+      makeActiveDeck({
+        maybeboard: [makeDeckCard({ id: "card-1", name: "Brainstorm" })],
+      })
+    );
   });
 
   it("removes card from maybeboard", async () => {
@@ -1124,7 +1386,11 @@ describe("useDeckStore — removeFromMaybeboard", () => {
 
 describe("useDeckStore — moveToMaybeboard", () => {
   beforeEach(() => {
-    seedDeck(makeActiveDeck({ cards: [makeDeckCard({ id: "card-1", name: "Counterspell" })] }));
+    seedDeck(
+      makeActiveDeck({
+        cards: [makeDeckCard({ id: "card-1", name: "Counterspell" })],
+      })
+    );
   });
 
   it("moves card from deck to maybeboard", async () => {
@@ -1139,19 +1405,33 @@ describe("useDeckStore — moveToMaybeboard", () => {
 
   it("persists the maybeboard zone", async () => {
     await useDeckStore.getState().moveToMaybeboard("card-1");
-    expect(deckApi.updateCardZone).toHaveBeenCalledWith("deck-1", "card-1", "maybeboard");
+    expect(deckApi.updateCardZone).toHaveBeenCalledWith(
+      "deck-1",
+      "card-1",
+      "maybeboard"
+    );
   });
 
   it("does nothing when card not found", async () => {
-    vi.mocked(deckApi.updateCardMaybeboard).mockClear();
+    vi.mocked(deckApi.updateCardZone).mockClear();
     await useDeckStore.getState().moveToMaybeboard("nonexistent");
-    expect(deckApi.updateCardMaybeboard).not.toHaveBeenCalled();
+    expect(deckApi.updateCardZone).not.toHaveBeenCalled();
   });
 });
 
 describe("useDeckStore — moveToDeck", () => {
   beforeEach(() => {
-    seedDeck(makeActiveDeck({ maybeboard: [makeDeckCard({ id: "card-1", name: "Counterspell", isMaybeboard: true })] }));
+    seedDeck(
+      makeActiveDeck({
+        maybeboard: [
+          makeDeckCard({
+            id: "card-1",
+            name: "Counterspell",
+            isMaybeboard: true,
+          }),
+        ],
+      })
+    );
   });
 
   it("moves card from maybeboard to deck", async () => {
@@ -1166,7 +1446,11 @@ describe("useDeckStore — moveToDeck", () => {
 
   it("persists the main zone", async () => {
     await useDeckStore.getState().moveToDeck("card-1");
-    expect(deckApi.updateCardZone).toHaveBeenCalledWith("deck-1", "card-1", "main");
+    expect(deckApi.updateCardZone).toHaveBeenCalledWith(
+      "deck-1",
+      "card-1",
+      "main"
+    );
   });
 
   it("does not move if card already in deck (same name)", async () => {
@@ -1179,15 +1463,15 @@ describe("useDeckStore — moveToDeck", () => {
         },
       },
     }));
-    vi.mocked(deckApi.updateCardMaybeboard).mockClear();
+    vi.mocked(deckApi.updateCardZone).mockClear();
     await useDeckStore.getState().moveToDeck("card-1");
-    expect(deckApi.updateCardMaybeboard).not.toHaveBeenCalled();
+    expect(deckApi.updateCardZone).not.toHaveBeenCalled();
   });
 
   it("does nothing when card not found in maybeboard", async () => {
-    vi.mocked(deckApi.updateCardMaybeboard).mockClear();
+    vi.mocked(deckApi.updateCardZone).mockClear();
     await useDeckStore.getState().moveToDeck("nonexistent");
-    expect(deckApi.updateCardMaybeboard).not.toHaveBeenCalled();
+    expect(deckApi.updateCardZone).not.toHaveBeenCalled();
   });
 });
 
@@ -1195,13 +1479,21 @@ describe("useDeckStore — updateDeckDescription", () => {
   beforeEach(() => seedDeck());
 
   it("updates description optimistically", async () => {
-    await useDeckStore.getState().updateDeckDescription("deck-1", "A great deck");
-    expect(useDeckStore.getState().decks["deck-1"].description).toBe("A great deck");
+    await useDeckStore
+      .getState()
+      .updateDeckDescription("deck-1", "A great deck");
+    expect(useDeckStore.getState().decks["deck-1"].description).toBe(
+      "A great deck"
+    );
   });
 
   it("calls updateDeck API with description", async () => {
-    await useDeckStore.getState().updateDeckDescription("deck-1", "A great deck");
-    expect(deckApi.updateDeck).toHaveBeenCalledWith("deck-1", { description: "A great deck" });
+    await useDeckStore
+      .getState()
+      .updateDeckDescription("deck-1", "A great deck");
+    expect(deckApi.updateDeck).toHaveBeenCalledWith("deck-1", {
+      description: "A great deck",
+    });
   });
 });
 
@@ -1231,7 +1523,10 @@ describe("useDeckStore — addTag / removeTag", () => {
 
   it("removeTag removes tag from deck", async () => {
     useDeckStore.setState((s) => ({
-      decks: { ...s.decks, "deck-1": { ...s.decks["deck-1"], tags: ["aggro", "combo"] } },
+      decks: {
+        ...s.decks,
+        "deck-1": { ...s.decks["deck-1"], tags: ["aggro", "combo"] },
+      },
     }));
     await useDeckStore.getState().removeTag("deck-1", "aggro");
     expect(useDeckStore.getState().decks["deck-1"].tags).not.toContain("aggro");
@@ -1240,7 +1535,9 @@ describe("useDeckStore — addTag / removeTag", () => {
 
   it("addTag calls updateDeck API", async () => {
     await useDeckStore.getState().addTag("deck-1", "stax");
-    expect(deckApi.updateDeck).toHaveBeenCalledWith("deck-1", { tags: ["stax"] });
+    expect(deckApi.updateDeck).toHaveBeenCalledWith("deck-1", {
+      tags: ["stax"],
+    });
   });
 });
 
@@ -1261,7 +1558,12 @@ describe("useDeckStore — setDeckGridCols", () => {
 describe("useDeckStore — duplicateDeck", () => {
   beforeEach(() => {
     seedDeck();
-    vi.mocked(deckApi.fetchDecks).mockResolvedValue({ decks: [], total: 0, page: 0, limit: 20 });
+    vi.mocked(deckApi.fetchDecks).mockResolvedValue({
+      decks: [],
+      total: 0,
+      page: 0,
+      limit: 20,
+    });
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: () => Promise.resolve({ id: "deck-2", name: "Test Deck (copy)" }),
@@ -1275,7 +1577,9 @@ describe("useDeckStore — duplicateDeck", () => {
 
   it("calls /api/decks/:id/duplicate with POST", async () => {
     await useDeckStore.getState().duplicateDeck("deck-1");
-    expect(global.fetch).toHaveBeenCalledWith("/api/decks/deck-1/duplicate", { method: "POST" });
+    expect(global.fetch).toHaveBeenCalledWith("/api/decks/deck-1/duplicate", {
+      method: "POST",
+    });
   });
 });
 
@@ -1283,15 +1587,28 @@ describe("useDeckStore — updateCardQuantity", () => {
   beforeEach(() => {
     toastAdd.mockClear();
     // Use a basic land — maxQuantity returns 99 for basic lands, allowing increments
-    seedDeck(makeActiveDeck({
-      cards: [makeDeckCard({ id: "card-1", name: "Island", typeLine: "Basic Land — Island", quantity: 1 })],
-    }));
-    global.fetch = vi.fn().mockResolvedValue({ ok: true }) as unknown as typeof fetch;
+    seedDeck(
+      makeActiveDeck({
+        cards: [
+          makeDeckCard({
+            id: "card-1",
+            name: "Island",
+            typeLine: "Basic Land — Island",
+            quantity: 1,
+          }),
+        ],
+      })
+    );
+    global.fetch = vi
+      .fn()
+      .mockResolvedValue({ ok: true }) as unknown as typeof fetch;
   });
 
   it("increments quantity by delta", async () => {
     await useDeckStore.getState().updateCardQuantity("card-1", 1);
-    const card = useDeckStore.getState().decks["deck-1"].cards.find((c) => c.id === "card-1");
+    const card = useDeckStore
+      .getState()
+      .decks["deck-1"].cards.find((c) => c.id === "card-1");
     expect(card?.quantity).toBe(2);
   });
 
@@ -1314,33 +1631,44 @@ describe("useDeckStore — updateCardQuantity", () => {
     expect(useDeckStore.getState().decks["deck-1"].cards[0].quantity).toBe(2);
   });
 
-  it.each(["note", "zone"])("keeps saving visible when a %s finishes before a pending quantity", async (action) => {
-    let finishQuantity = () => {};
-    const pendingQuantity = new Promise<void>((resolve) => { finishQuantity = resolve; });
-    vi.mocked(global.fetch).mockImplementationOnce(async () => {
-      await pendingQuantity;
-      return new Response(null, { status: 200 });
-    });
+  it.each(["note", "zone"])(
+    "keeps saving visible when a %s finishes before a pending quantity",
+    async (action) => {
+      let finishQuantity = () => {};
+      const pendingQuantity = new Promise<void>((resolve) => {
+        finishQuantity = resolve;
+      });
+      vi.mocked(global.fetch).mockImplementationOnce(async () => {
+        await pendingQuantity;
+        return new Response(null, { status: 200 });
+      });
 
-    const quantity = useDeckStore.getState().updateCardQuantity("card-1", 1);
-    await vi.waitFor(() => expect(useDeckStore.getState().decks["deck-1"].cards[0].quantity).toBe(2));
-    if (action === "note") {
-      await useDeckStore.getState().updateCardNotes("card-1", "Saved note");
-    } else {
-      await useDeckStore.getState().moveCardToZone("card-1", "sideboard");
+      const quantity = useDeckStore.getState().updateCardQuantity("card-1", 1);
+      await vi.waitFor(() =>
+        expect(useDeckStore.getState().decks["deck-1"].cards[0].quantity).toBe(
+          2
+        )
+      );
+      if (action === "note") {
+        await useDeckStore.getState().updateCardNotes("card-1", "Saved note");
+      } else {
+        await useDeckStore.getState().moveCardToZone("card-1", "sideboard");
+      }
+      const savingWithQuantityPending = useDeckStore.getState().isSyncing;
+      finishQuantity();
+      await quantity;
+
+      expect(savingWithQuantityPending).toBe(true);
+      expect(useDeckStore.getState().isSyncing).toBe(false);
+      expect(useDeckStore.getState().decks["deck-1"].cards[0].quantity).toBe(2);
     }
-    const savingWithQuantityPending = useDeckStore.getState().isSyncing;
-    finishQuantity();
-    await quantity;
-
-    expect(savingWithQuantityPending).toBe(true);
-    expect(useDeckStore.getState().isSyncing).toBe(false);
-    expect(useDeckStore.getState().decks["deck-1"].cards[0].quantity).toBe(2);
-  });
+  );
 
   it("keeps saving visible when quantity finishes before a pending note", async () => {
     let finishNote = () => {};
-    const pendingNote = new Promise<void>((resolve) => { finishNote = resolve; });
+    const pendingNote = new Promise<void>((resolve) => {
+      finishNote = resolve;
+    });
     vi.mocked(deckApi.updateCardNotes).mockImplementationOnce(async () => {
       await pendingNote;
       throw new Error("offline");
@@ -1358,7 +1686,9 @@ describe("useDeckStore — updateCardQuantity", () => {
   });
 
   it("restores the saved quantity and warns when the server rejects the update", async () => {
-    vi.mocked(global.fetch).mockResolvedValueOnce(new Response(null, { status: 500 }));
+    vi.mocked(global.fetch).mockResolvedValueOnce(
+      new Response(null, { status: 500 })
+    );
 
     await useDeckStore.getState().updateCardQuantity("card-1", 1);
 
@@ -1379,13 +1709,22 @@ describe("useDeckStore — updateCardQuantity", () => {
   it("restores the last confirmed quantity after two rapid updates", async () => {
     let finishFirst: ((response: Response) => void) | undefined;
     vi.mocked(global.fetch)
-      .mockImplementationOnce(() => new Promise<Response>((resolve) => { finishFirst = resolve; }))
+      .mockImplementationOnce(
+        () =>
+          new Promise<Response>((resolve) => {
+            finishFirst = resolve;
+          })
+      )
       .mockResolvedValueOnce(new Response(null, { status: 500 }));
 
     const first = useDeckStore.getState().updateCardQuantity("card-1", 1);
-    await vi.waitFor(() => expect(useDeckStore.getState().decks["deck-1"].cards[0].quantity).toBe(2));
+    await vi.waitFor(() =>
+      expect(useDeckStore.getState().decks["deck-1"].cards[0].quantity).toBe(2)
+    );
     const second = useDeckStore.getState().updateCardQuantity("card-1", 1);
-    await vi.waitFor(() => expect(useDeckStore.getState().decks["deck-1"].cards[0].quantity).toBe(3));
+    await vi.waitFor(() =>
+      expect(useDeckStore.getState().decks["deck-1"].cards[0].quantity).toBe(3)
+    );
     finishFirst?.(new Response(null, { status: 200 }));
     await Promise.all([first, second]);
 
@@ -1401,12 +1740,21 @@ describe("useDeckStore — updateCardQuantity", () => {
         ...s.decks,
         "deck-1": {
           ...s.decks["deck-1"],
-          cards: [makeDeckCard({ id: "card-1", name: "Island", typeLine: "Basic Land — Island", quantity: 3 })],
+          cards: [
+            makeDeckCard({
+              id: "card-1",
+              name: "Island",
+              typeLine: "Basic Land — Island",
+              quantity: 3,
+            }),
+          ],
         },
       },
     }));
     await useDeckStore.getState().updateCardQuantity("card-1", -1);
-    const card = useDeckStore.getState().decks["deck-1"].cards.find((c) => c.id === "card-1");
+    const card = useDeckStore
+      .getState()
+      .decks["deck-1"].cards.find((c) => c.id === "card-1");
     expect(card?.quantity).toBe(2);
   });
 

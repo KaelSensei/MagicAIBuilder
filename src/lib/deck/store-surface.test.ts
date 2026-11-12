@@ -59,8 +59,6 @@ const ACTIONS = [
   "forgetGuestDeck",
   "getActiveDeck",
   "loadDecks",
-  "markBanned",
-  "markGameChanger",
   "moveCardToZone",
   "moveToDeck",
   "moveToMaybeboard",

@@ -370,10 +370,6 @@ export interface DeckStore {
   setManualBracket: (bracket: BracketLevel | null) => Promise<void>;
   setBudget: (budget: number | null) => Promise<void>;
 
-  // Game Changer / banlist enrichment
-  markGameChanger: (cardName: string) => void;
-  markBanned: (cardName: string) => void;
-
   // Computed getters
   getActiveDeck: () => Deck | null;
 }
@@ -2390,34 +2386,6 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       pendingBudgetWrites -= 1;
       set({ isSyncing: hasPendingSaves() });
     }
-  },
-
-  markGameChanger: (cardName: string) => {
-    const { activeDeckId } = get();
-    if (!activeDeckId) return;
-    set((state) => ({
-      decks: {
-        ...state.decks,
-        [activeDeckId]: updateDeckCards(state.decks[activeDeckId], (cards) =>
-          cards.map((c) =>
-            c.name === cardName ? { ...c, isGameChanger: true } : c
-          )
-        ),
-      },
-    }));
-  },
-
-  markBanned: (cardName: string) => {
-    const { activeDeckId } = get();
-    if (!activeDeckId) return;
-    set((state) => ({
-      decks: {
-        ...state.decks,
-        [activeDeckId]: updateDeckCards(state.decks[activeDeckId], (cards) =>
-          cards.map((c) => (c.name === cardName ? { ...c, isBanned: true } : c))
-        ),
-      },
-    }));
   },
 
   addToMaybeboard: async (card: ScryfallCard) => {

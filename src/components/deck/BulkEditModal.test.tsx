@@ -117,9 +117,6 @@ vi.mock("@/lib/db/deck-api", () => ({
   removeCard: vi.fn(async (_deckId: string, cardId: string) => {
     server.rows = server.rows.filter((row) => row.id !== cardId);
   }),
-  removeAllCards: vi.fn(async () => {
-    server.rows = [];
-  }),
   applyCardChanges: vi.fn(async (deckId: string, changes: DeckCardChanges) => {
     if (
       changes.removeCardIds.some(

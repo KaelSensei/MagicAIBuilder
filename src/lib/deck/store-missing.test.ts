@@ -55,11 +55,6 @@ vi.mock("@/lib/db/deck-api", () => ({
   })),
   removeCard: vi.fn(async () => undefined),
   updateCardCategory: vi.fn(async () => ({})),
-  updateCardMaybeboard: vi.fn(async (_deckId: string, cardId: string, isMaybeboard: boolean) => ({
-    id: cardId,
-    isMaybeboard,
-  })),
-  removeAllCards: vi.fn(async () => undefined),
   updateCardZone: vi.fn(async (_deckId: string, cardId: string, zone: string) => ({
     id: cardId,
     zone,

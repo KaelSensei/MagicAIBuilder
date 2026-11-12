@@ -102,7 +102,6 @@ type UpdateCardPrinting = Answers<
   ApiDeckCard
 >;
 type ApplyCardChanges = Answering<typeof DeckClient.applyCardChanges>;
-type RemoveAllCards = Answering<typeof DeckClient.removeAllCards>;
 
 /** The deck client's operations, as spies whose default answers are in-memory. */
 export interface DeckApiOperations {
@@ -120,7 +119,6 @@ export interface DeckApiOperations {
   readonly updateCardQuantity: Mock<UpdateCardQuantity>;
   readonly updateCardPrinting: Mock<UpdateCardPrinting>;
   readonly applyCardChanges: Mock<ApplyCardChanges>;
-  readonly removeAllCards: Mock<RemoveAllCards>;
 }
 
 /** The in-memory deck API: its operations, and the decks it holds. */
@@ -359,10 +357,6 @@ export function createInMemoryDeckApi(): InMemoryDeckApi {
       };
       if (held(deckId)) decks.set(deckId, saved);
       return structuredClone(saved);
-    }),
-    removeAllCards: vi.fn<RemoveAllCards>(async (deckId: string) => {
-      const deck = held(deckId);
-      if (deck) deck.cards = [];
     }),
   };
 
