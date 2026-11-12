@@ -1,6 +1,7 @@
 /** Zod schemas for deck requests: card ids, pairing types, and the create and patch bodies. */
 import { z } from "zod";
 import { ALL_FORMATS } from "@/lib/deck/formats";
+import { PAIRING_TYPES } from "@/lib/deck/types";
 
 /**
  * Card ID accepted for commander and partner slots: any non-blank string.
@@ -10,11 +11,11 @@ export const deckCardIdSchema = z
   .string()
   .refine((id) => id.trim().length > 0, { message: "Card ID must not be blank" });
 
-/** How the commander pairs with a second command-zone card. */
-export const pairingTypeSchema = z.enum([
-  "none", "partner", "partner_with", "friends_forever", "background", "doctor", "character_select", "father_son",
-  "survivors",
-]);
+/**
+ * How the commander pairs with a second command-zone card: one of the deck domain's
+ * `PAIRING_TYPES` (CR 702.124). The OpenAPI document lists its options in the same order.
+ */
+export const pairingTypeSchema = z.enum(PAIRING_TYPES);
 
 // Schema for PATCH /api/decks/[id]
 export const patchDeckSchema = z.object({

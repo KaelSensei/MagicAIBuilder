@@ -5,30 +5,53 @@
  * playtest modules, which import it back: the analysis report types (`DeckStats`, `BracketScore`)
  * live in `analysis-types.ts`, the playtest state in `lib/playtest/engine.ts`.
  *
+ * The card categories and the commander pairing types are `as const` tuples: the unions here and
+ * the request schemas in `lib/validation` derive from them, so the two cannot drift apart.
+ *
  * @module deck/types
  */
 
 import type { DeckFormat } from "./formats";
 import type { BracketLevel } from "@/lib/constants/brackets";
-export type CardCategory =
-  | "commander"
-  | "companion"
-  | "creature"
-  | "instant"
-  | "sorcery"
-  | "artifact"
-  | "enchantment"
-  | "planeswalker"
-  | "land"
-  | "ramp"
-  | "draw"
-  | "removal"
-  | "boardWipe"
-  | "winCondition"
-  | "protection"
-  | "other";
+
+/**
+ * Every category a deck card can be filed under. `DeckCard.category` stores one as a plain
+ * string, so renaming a value needs a data migration.
+ *
+ * - `commander` files the commander (CR 903.3) and, with a partner ability, the second commander
+ *   (CR 702.124a); `companion` files the companion (CR 702.139a).
+ * - `creature` to `land` are card types (CR 205.2a).
+ * - `ramp` to `protection` are deck-building roles the app assigns; no rule defines them.
+ * - `other` is what a card write gets when it names no category.
+ */
+export const CARD_CATEGORIES = [
+  "commander",
+  "companion",
+  "creature",
+  "instant",
+  "sorcery",
+  "artifact",
+  "enchantment",
+  "planeswalker",
+  "land",
+  "ramp",
+  "draw",
+  "removal",
+  "boardWipe",
+  "winCondition",
+  "protection",
+  "other",
+] as const;
+
+/** A category a deck card is filed under: one of {@link CARD_CATEGORIES}. */
+export type CardCategory = (typeof CARD_CATEGORIES)[number];
 export type DeckZone = "main" | "sideboard" | "maybeboard";
 export type { BracketLevel };
+
+/**
+ * One face of a two-faced card (CR 712.1), with its own name, mana cost, type line, rules text
+ * and images. `DeckCard.cardFaces` holds the front face, then the back face.
+ */
 export interface CardFace {
   name: string;
   manaCost: string;
@@ -64,17 +87,33 @@ export interface DeckCard {
   cardFaces?: [CardFace, CardFace];
   isFlexibleLand?: boolean;
 }
-/** How a deck's second commander is allowed, one value per partner ability (CR 702.124). */
-export type CommanderPairingType =
-  | "none"
-  | "partner"
-  | "partner_with"
-  | "friends_forever"
-  | "background"
-  | "doctor"
-  | "character_select"
-  | "father_son"
-  | "survivors";
+/**
+ * Every way a deck can hold its commander: alone, or with a second commander under one partner
+ * ability. `Deck.pairingType` stores one as a plain string, so renaming a value needs a data
+ * migration. `pairing.ts` decides which value two cards use.
+ *
+ * - `none`: a single commander (CR 903.3).
+ * - `partner`: "Partner" (CR 702.124h).
+ * - `partner_with`: "Partner with [name]" (CR 702.124j).
+ * - `friends_forever`, `character_select`, `father_son`, `survivors`: the four "partner—[text]"
+ *   abilities (CR 702.124i).
+ * - `background`: "Choose a Background" (CR 702.124k).
+ * - `doctor`: "Doctor's companion" (CR 702.124m).
+ */
+export const PAIRING_TYPES = [
+  "none",
+  "partner",
+  "partner_with",
+  "friends_forever",
+  "background",
+  "doctor",
+  "character_select",
+  "father_son",
+  "survivors",
+] as const;
+
+/** How a deck's second commander is allowed: one of {@link PAIRING_TYPES} (CR 702.124). */
+export type CommanderPairingType = (typeof PAIRING_TYPES)[number];
 export interface Deck {
   id: string;
   name: string;
@@ -137,13 +176,4 @@ export interface SearchFilters {
    * by `useCardSearchResults`; it adds nothing to the Scryfall query.
    */
   collectionOnly?: boolean;
-}
-
-export interface CardFace {
-  name: string;
-  manaCost: string;
-  typeLine: string;
-  oracleText: string;
-  imageUri: string;
-  artCropUri: string;
 }
