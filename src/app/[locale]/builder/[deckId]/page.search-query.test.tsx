@@ -311,7 +311,7 @@ describe("characterization: the builder's name search with a plain-language quer
     await lastSearchIs(TRANSLATED);
     const sent = searched.length;
 
-    await user.click(button("🏔 Land"));
+    await user.click(button("Land"));
     await user.click(button("Green"));
     expect(screen.getByText(`Query: ${TRANSLATED}`)).toBeDefined();
 

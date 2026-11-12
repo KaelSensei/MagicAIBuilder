@@ -28,7 +28,7 @@
     "landsTitle": "Terrains (t:land)",
     "match": "Filtre :",
     "cmc": "CMC",
-    "price": "Prix",
+    "priceUsd": "Prix (USD)",
     "type": "Type",
     "keyword": "MC",
     "power": "For",
@@ -47,7 +47,21 @@
     "presets": "Préréglages",
     "presetNamePlaceholder": "Nom du préréglage…",
     "savePreset": "Enregistrer",
-    "loadPreset": "Charger un préréglage…"
+    "loadPreset": "Charger un préréglage…",
+    "fieldLabels": {
+      "cmcMin": "Valeur de mana minimale",
+      "cmcMax": "Valeur de mana maximale",
+      "cmcExact": "Valeur de mana exacte",
+      "priceMin": "Prix minimum en dollars US",
+      "priceMax": "Prix maximum en dollars US",
+      "keyword": "Capacité mot-clé",
+      "powerMin": "Force minimale",
+      "powerMax": "Force maximale",
+      "toughnessMin": "Endurance minimale",
+      "toughnessMax": "Endurance maximale",
+      "presetName": "Nom du préréglage",
+      "savedPresets": "Préréglages enregistrés"
+    }
   },
   "colors": {
     "W": "Blanc",

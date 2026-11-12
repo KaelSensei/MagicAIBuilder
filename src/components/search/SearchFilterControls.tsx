@@ -53,6 +53,8 @@ TabButton.displayName = "TabButton";
  * A number field for one bound of a filter. An emptied field reports `null`, so the bound is
  * dropped rather than read as zero.
  *
+ * @param props.label - the accessible name; the placeholder is a hint, not a name, and the
+ *   visible word next to a pair of bounds cannot name both of them
  * @param props.value - the current bound, or `null` for none
  * @param props.onChange - receives the typed number, or `null` when the field is emptied
  * @param props.placeholder - the hint shown while the field is empty
@@ -60,6 +62,7 @@ TabButton.displayName = "TabButton";
  * @param props.max - the highest accepted value, when the filter has one
  */
 export function NumInput({
+  label,
   value,
   onChange,
   placeholder,
@@ -67,6 +70,7 @@ export function NumInput({
   max,
   className,
 }: {
+  readonly label: string;
   readonly value: number | null;
   readonly onChange: (v: number | null) => void;
   readonly placeholder: string;
@@ -77,6 +81,7 @@ export function NumInput({
   return (
     <input
       type="number"
+      aria-label={label}
       min={min}
       max={max}
       value={value ?? ""}

@@ -1,7 +1,7 @@
 "use client";
 // Advanced search filters — color (OR/AND/EXACT), lands, colorless, CMC modes,
 // price range, subtype, keyword, power/toughness, interaction type, Collection only, presets
-import { useCallback, useState } from "react";
+import { useCallback, useId, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Check } from "lucide-react";
 import { cn } from "@/components/ui/utils";
@@ -90,6 +90,9 @@ export function SearchFilters({
 
   const [presets, setPresets] = useState<FilterPreset[]>(loadPresets);
   const [presetName, setPresetName] = useState("");
+  // Ids that tie the visible Type and Role words to their fields as labels.
+  const subtypeId = useId();
+  const roleId = useId();
 
   const showPowerToughness = filters.types.some(
     (t) => t.toLowerCase() === "creature"
@@ -136,7 +139,10 @@ export function SearchFilters({
 
   return (
     <div className={cn("space-y-3 p-3", className)}>
-      {/* ── Colors ── */}
+      {/* ── Colors ──
+          Each colour, Colorless and Land is a toggle button: the name stays the same and
+          aria-pressed carries the state, as the WAI-ARIA APG toggle button asks:
+          https://www.w3.org/WAI/ARIA/apg/patterns/button/ (read 2026-11-12) */}
       <div>
         <p className="text-xs text-[var(--text-secondary)] mb-1.5 uppercase tracking-wide">
           {tf("colors")}
@@ -146,6 +152,7 @@ export function SearchFilters({
             <button
               key={code}
               type="button"
+              aria-pressed={filters.colors.includes(code)}
               title={t(`colors.${code}`)}
               onClick={() => toggleColor(code)}
               className={cn(
@@ -169,6 +176,7 @@ export function SearchFilters({
           {/* Colorless (c:c) — truly colorless, mutually exclusive with WUBRG */}
           <button
             type="button"
+            aria-pressed={filters.colorlessFilter}
             title={tf("colorless")}
             onClick={toggleColorless}
             className={cn(
@@ -191,6 +199,7 @@ export function SearchFilters({
           {/* Lands toggle — t:land, composable with color filter */}
           <button
             type="button"
+            aria-pressed={filters.landFilter}
             title={tf("landsTitle")}
             onClick={toggleLands}
             className={cn(
@@ -200,7 +209,7 @@ export function SearchFilters({
                 : "border-[var(--border)] text-[var(--text-secondary)] opacity-70 hover:opacity-100"
             )}
           >
-            🏔 {tf("lands")}
+            <span aria-hidden="true">🏔</span> {tf("lands")}
           </button>
         </div>
 
@@ -255,6 +264,7 @@ export function SearchFilters({
         </div>
         {filters.cmcMode === "exact" && (
           <NumInput
+            label={tf("fieldLabels.cmcExact")}
             value={filters.cmcExact}
             onChange={(v) => onChange({ ...filters, cmcExact: v })}
             placeholder={tf("cmcExample")}
@@ -264,6 +274,7 @@ export function SearchFilters({
         )}
         {filters.cmcMode === "min" && (
           <NumInput
+            label={tf("fieldLabels.cmcMin")}
             value={filters.cmcMin}
             onChange={(v) => onChange({ ...filters, cmcMin: v })}
             placeholder={tf("atLeast")}
@@ -273,6 +284,7 @@ export function SearchFilters({
         )}
         {filters.cmcMode === "max" && (
           <NumInput
+            label={tf("fieldLabels.cmcMax")}
             value={filters.cmcMax}
             onChange={(v) => onChange({ ...filters, cmcMax: v })}
             placeholder={tf("atMost")}
@@ -283,6 +295,7 @@ export function SearchFilters({
         {filters.cmcMode === "range" && (
           <div className="flex gap-2 items-center">
             <NumInput
+              label={tf("fieldLabels.cmcMin")}
               value={filters.cmcMin}
               onChange={(v) => onChange({ ...filters, cmcMin: v })}
               placeholder={tf("min")}
@@ -291,6 +304,7 @@ export function SearchFilters({
             />
             <span className="text-[var(--text-secondary)] text-xs">—</span>
             <NumInput
+              label={tf("fieldLabels.cmcMax")}
               value={filters.cmcMax}
               onChange={(v) => onChange({ ...filters, cmcMax: v })}
               placeholder={tf("max")}
@@ -304,9 +318,10 @@ export function SearchFilters({
       {/* ── Price ── */}
       <div className="flex gap-2 items-center">
         <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wide w-10 shrink-0">
-          {tf("price")} (USD)
+          {tf("priceUsd")}
         </p>
         <NumInput
+          label={tf("fieldLabels.priceMin")}
           value={filters.priceMin}
           onChange={(v) => onChange({ ...filters, priceMin: v })}
           placeholder={tf("minPrice")}
@@ -314,6 +329,7 @@ export function SearchFilters({
         />
         <span className="text-[var(--text-secondary)] text-xs">—</span>
         <NumInput
+          label={tf("fieldLabels.priceMax")}
           value={filters.priceMax}
           onChange={(v) => onChange({ ...filters, priceMax: v })}
           placeholder={tf("maxPrice")}
@@ -323,10 +339,14 @@ export function SearchFilters({
 
       {/* ── Subtype ── */}
       <div className="flex gap-2 items-center">
-        <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wide w-10 shrink-0">
+        <label
+          htmlFor={subtypeId}
+          className="text-xs text-[var(--text-secondary)] uppercase tracking-wide w-10 shrink-0"
+        >
           {tf("type")}
-        </p>
+        </label>
         <input
+          id={subtypeId}
           type="text"
           value={filters.subtype}
           onChange={(e) => onChange({ ...filters, subtype: e.target.value })}
@@ -342,6 +362,7 @@ export function SearchFilters({
         </p>
         <input
           type="text"
+          aria-label={tf("fieldLabels.keyword")}
           value={filters.keyword}
           onChange={(e) => onChange({ ...filters, keyword: e.target.value })}
           placeholder={tf("keywordExample")}
@@ -357,6 +378,7 @@ export function SearchFilters({
               {tf("power")}
             </p>
             <NumInput
+              label={tf("fieldLabels.powerMin")}
               value={filters.powerMin}
               onChange={(v) => onChange({ ...filters, powerMin: v })}
               placeholder={tf("min")}
@@ -364,6 +386,7 @@ export function SearchFilters({
             />
             <span className="text-[var(--text-secondary)] text-xs">—</span>
             <NumInput
+              label={tf("fieldLabels.powerMax")}
               value={filters.powerMax}
               onChange={(v) => onChange({ ...filters, powerMax: v })}
               placeholder={tf("max")}
@@ -375,6 +398,7 @@ export function SearchFilters({
               {tf("toughness")}
             </p>
             <NumInput
+              label={tf("fieldLabels.toughnessMin")}
               value={filters.toughnessMin}
               onChange={(v) => onChange({ ...filters, toughnessMin: v })}
               placeholder={tf("min")}
@@ -382,6 +406,7 @@ export function SearchFilters({
             />
             <span className="text-[var(--text-secondary)] text-xs">—</span>
             <NumInput
+              label={tf("fieldLabels.toughnessMax")}
               value={filters.toughnessMax}
               onChange={(v) => onChange({ ...filters, toughnessMax: v })}
               placeholder={tf("max")}
@@ -393,10 +418,14 @@ export function SearchFilters({
 
       {/* ── Interaction archetype ── */}
       <div className="flex gap-2 items-center">
-        <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wide w-10 shrink-0">
+        <label
+          htmlFor={roleId}
+          className="text-xs text-[var(--text-secondary)] uppercase tracking-wide w-10 shrink-0"
+        >
           {tf("role")}
-        </p>
+        </label>
         <select
+          id={roleId}
           value={filters.interactionType ?? ""}
           onChange={(e) =>
             onChange({
@@ -452,6 +481,7 @@ export function SearchFilters({
         <div className="flex gap-1.5">
           <input
             type="text"
+            aria-label={tf("fieldLabels.presetName")}
             value={presetName}
             onChange={(e) => setPresetName(e.target.value)}
             onKeyDown={(e) => {
@@ -471,6 +501,7 @@ export function SearchFilters({
         </div>
         {presets.length > 0 && (
           <select
+            aria-label={tf("fieldLabels.savedPresets")}
             defaultValue=""
             onChange={(e) => {
               if (e.target.value) {
