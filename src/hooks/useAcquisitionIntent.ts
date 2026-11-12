@@ -9,11 +9,33 @@ import {
 } from "@/lib/collection/acquisition-intent";
 
 /**
+ * Lays the choices made while a load was in flight over the loaded map.
+ *
+ * The load answers with the rows as they were when the request left, so a
+ * choice saved in the meantime is newer than the row it would replace.
+ *
+ * @param loaded - the deck's saved modes as the route answered
+ * @param choices - the choices made since the load was requested
+ * @returns `loaded` with each choice applied to its printing
+ */
+function overlayChoices(
+  loaded: Readonly<Record<string, AcquisitionMode>>,
+  choices: Readonly<Record<string, AcquisitionChoice>>
+): Readonly<Record<string, AcquisitionMode>> {
+  return Object.entries(choices).reduce(
+    (merged, [scryfallId, choice]) =>
+      applyAcquisitionChoice(merged, scryfallId, choice),
+    loaded
+  );
+}
+
+/**
  * Saved buy / proxy choices for one deck's shopping list.
  *
  * A failed toggle rolls back only that printing, and only when it is still the
  * latest toggle for that printing. Replacing the whole map would wipe a later
- * successful choice on a different card.
+ * successful choice on a different card. For the same reason the load, when it
+ * answers, keeps every choice made while it was in flight.
  *
  * @param deckId - deck whose intents are loaded and updated
  * @returns the current modes and a setter for one printing
@@ -22,27 +44,38 @@ export function useAcquisitionIntent(deckId: string): {
   readonly intentById: Readonly<Record<string, AcquisitionMode>>;
   readonly setIntent: (scryfallId: string, mode: AcquisitionChoice) => void;
 } {
-  const [intentById, setIntentById] = useState<Readonly<Record<string, AcquisitionMode>>>({});
+  const [intentById, setIntentById] = useState<
+    Readonly<Record<string, AcquisitionMode>>
+  >({});
   const intentRef = useRef(intentById);
   const requestIds = useRef<Record<string, number>>({});
+  /** Choices still standing since the current load was requested, by printing. */
+  const choicesSinceLoad = useRef<Record<string, AcquisitionChoice>>({});
 
-  const replaceIntents = useCallback((next: Readonly<Record<string, AcquisitionMode>>) => {
-    intentRef.current = next;
-    setIntentById(next);
-  }, []);
+  const replaceIntents = useCallback(
+    (next: Readonly<Record<string, AcquisitionMode>>) => {
+      intentRef.current = next;
+      setIntentById(next);
+    },
+    []
+  );
 
   useEffect(() => {
     let active = true;
+    choicesSinceLoad.current = {};
     void fetch(`/api/decks/${encodeURIComponent(deckId)}/acquisition-intent`)
-      .then(async (response) => (response.ok ? response.json() : { intents: [] }))
+      .then(async (response) =>
+        response.ok ? response.json() : { intents: [] }
+      )
       .then((payload: unknown) => {
         if (!active) return;
         const intents = readAcquisitionIntents(payload);
         if (intents === null) return;
-        replaceIntents(intents);
+        replaceIntents(overlayChoices(intents, choicesSinceLoad.current));
       })
       .catch(() => {
-        if (active) replaceIntents({});
+        if (active)
+          replaceIntents(overlayChoices({}, choicesSinceLoad.current));
       });
     return () => {
       active = false;
@@ -54,20 +87,32 @@ export function useAcquisitionIntent(deckId: string): {
       const previous = intentRef.current[scryfallId];
       const requestId = (requestIds.current[scryfallId] ?? 0) + 1;
       requestIds.current[scryfallId] = requestId;
-      replaceIntents(applyAcquisitionChoice(intentRef.current, scryfallId, mode));
+      choicesSinceLoad.current[scryfallId] = mode;
+      replaceIntents(
+        applyAcquisitionChoice(intentRef.current, scryfallId, mode)
+      );
 
       const revert = () => {
         if (requestIds.current[scryfallId] !== requestId) return;
+        // The server never took this choice: the loaded row is the truth again.
+        delete choicesSinceLoad.current[scryfallId];
         replaceIntents(
-          applyAcquisitionChoice(intentRef.current, scryfallId, previous ?? "buy_now")
+          applyAcquisitionChoice(
+            intentRef.current,
+            scryfallId,
+            previous ?? "buy_now"
+          )
         );
       };
 
-      void fetch(`/api/decks/${encodeURIComponent(deckId)}/acquisition-intent`, {
-        method: "PUT",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ scryfallId, mode }),
-      })
+      void fetch(
+        `/api/decks/${encodeURIComponent(deckId)}/acquisition-intent`,
+        {
+          method: "PUT",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ scryfallId, mode }),
+        }
+      )
         .then((response) => {
           if (!response.ok) revert();
         })

@@ -489,20 +489,73 @@ describe("useAcquisitionIntent: when a save fails", () => {
 // ---------------------------------------------------------------------------
 
 describe("useAcquisitionIntent: a choice made before the saved intents arrive", () => {
-  it("currently lets the late load overwrite the choice, although the save succeeded (pinned; COL-06)", async () => {
-    const load = gatedReply(() => HttpResponse.json({ intents: [] }));
+  /** Renders the hook with the first load held back, serving `saved` once released. */
+  async function renderWithLoadHeld(saved: readonly unknown[]) {
+    const load = gatedReply(() => HttpResponse.json({ intents: saved }));
     server.use(http.get(INTENT_ROUTE, load.handler));
-    const { result } = renderIntents();
+    const rendered = renderIntents();
     await waitFor(() => expect(sentRequests("GET")).toHaveLength(1));
+    return { ...rendered, releaseLoad: load.open };
+  }
+
+  it("keeps the choice when the load arrives, and takes the loaded values for the other cards", async () => {
+    const { result, releaseLoad } = await renderWithLoadHeld([
+      { scryfallId: SIGNET, mode: "buy_later" },
+    ]);
 
     act(() => result.current.setIntent(SOL_RING, "proxy_now"));
     await waitFor(() => expect(sentRequests("PUT")).toHaveLength(1));
     expect(result.current.intentById).toEqual({ [SOL_RING]: "proxy_now" });
 
-    load.open();
+    releaseLoad();
 
-    // The load replaces the whole map (`useAcquisitionIntent.ts:40-42`), so the
-    // saved proxy_now choice disappears until the modal is reopened.
+    await waitFor(() =>
+      expect(result.current.intentById).toEqual({
+        [SOL_RING]: "proxy_now",
+        [SIGNET]: "buy_later",
+      })
+    );
+    // The PUT saved the choice; the screen must not disagree with the server.
+    await settle();
+    expect(result.current.intentById).toEqual({
+      [SOL_RING]: "proxy_now",
+      [SIGNET]: "buy_later",
+    });
+  });
+
+  it("keeps a buy_now choice: the loaded deferral of that card stays cleared", async () => {
+    const { result, releaseLoad } = await renderWithLoadHeld([
+      { scryfallId: SOL_RING, mode: "proxy_now" },
+      { scryfallId: SIGNET, mode: "buy_later" },
+    ]);
+
+    act(() => result.current.setIntent(SOL_RING, "buy_now"));
+    await waitFor(() => expect(sentRequests("PUT")).toHaveLength(1));
+
+    releaseLoad();
+
+    await waitFor(() =>
+      expect(result.current.intentById).toEqual({ [SIGNET]: "buy_later" })
+    );
+    await settle();
+    expect(result.current.intentById).toEqual({ [SIGNET]: "buy_later" });
+  });
+
+  it("lets the loaded value through for a choice whose save had already failed", async () => {
+    givenSavesFail(SAVE_FAILURES[1].reply);
+    const { result, releaseLoad } = await renderWithLoadHeld([
+      { scryfallId: SOL_RING, mode: "buy_later" },
+    ]);
+
+    act(() => result.current.setIntent(SOL_RING, "proxy_now"));
+    // The failed save rolled the card back before the load answered.
     await waitFor(() => expect(result.current.intentById).toEqual({}));
+
+    releaseLoad();
+
+    // The server never took proxy_now, so its saved buy_later is the truth.
+    await waitFor(() =>
+      expect(result.current.intentById).toEqual({ [SOL_RING]: "buy_later" })
+    );
   });
 });
