@@ -1,27 +1,18 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { sortCards, groupCards, loadSortPreference, saveSortPreference, DEFAULT_SORT_PREFERENCE } from "./sort";
 import type { DeckCard } from "./types";
+import { aDeckCard } from "@/test/builders/card";
 
 // ─── Fixtures ──────────────────────────────────────────────────────────────
 
 function makeCard(overrides: Partial<DeckCard>): DeckCard {
-  return {
-    id: overrides.id ?? "test-id",
-    name: overrides.name ?? "Test Card",
-    manaCost: overrides.manaCost ?? "",
-    cmc: overrides.cmc ?? 0,
-    typeLine: overrides.typeLine ?? "Instant",
-    oracleText: "",
-    colorIdentity: overrides.colorIdentity ?? [],
-    isGameChanger: false,
-    isBanned: false,
-    price: overrides.price ?? null,
-    imageUri: "",
-    artCropUri: "",
-    category: overrides.category ?? "instant",
-    quantity: overrides.quantity ?? 1,
-    zone: overrides.zone ?? "main",
-  };
+  return aDeckCard({
+    id: "test-id",
+    name: "Test Card",
+    typeLine: "Instant",
+    category: "instant",
+    ...overrides,
+  });
 }
 
 const CARDS: DeckCard[] = [

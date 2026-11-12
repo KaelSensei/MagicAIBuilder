@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, waitFor, act } from "@testing-library/react";
 
-vi.mock("next-auth/react", () => ({
+vi.mock(import("next-auth/react"), () => ({
   useSession: vi.fn(),
 }));
 
@@ -9,8 +9,14 @@ const { mockInitOnboardingDone } = vi.hoisted(() => ({
   mockInitOnboardingDone: { value: null as boolean | null },
 }));
 
-vi.mock("@/components/providers/InitProvider", () => ({
-  useInitContext: () => ({ onboardingDone: mockInitOnboardingDone.value }),
+vi.mock(import("@/components/providers/InitProvider"), () => ({
+  // "ready" takes the same branch in useOnboarding as the status this stub
+  // left undefined before it was typed.
+  useInitContext: () => ({
+    onboardingDone: mockInitOnboardingDone.value,
+    initializationStatus: "ready",
+    retryInitialization: vi.fn(),
+  }),
 }));
 
 import { useSession } from "next-auth/react";

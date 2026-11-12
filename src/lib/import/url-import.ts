@@ -105,6 +105,7 @@ export function detectSource(
 import { httpGet, parseJson } from "@/lib/http";
 import { normalizeImportedName } from "@/lib/scryfall/name-index";
 import { extractCardsFromHtml, parsePlainTextDecklist } from "./decklist-parse";
+import { fetchMoxfieldJson } from "./moxfield-client";
 
 // ─── Moxfield ─────────────────────────────────────────────────────────────────
 
@@ -192,18 +193,9 @@ function moxfieldFormatWarning(format: string | undefined): string | undefined {
 }
 
 async function importMoxfield(id: string): Promise<UrlImportResult> {
-  const res = await httpGet(
-    `https://api2.moxfield.com/v3/decks/all/${id}`,
-    {
-      headers: {
-        Accept: "application/json, text/plain, */*",
-        "Accept-Language": "en-US,en;q=0.9",
-        Origin: "https://moxfield.com",
-        Referer: "https://moxfield.com/",
-      },
-    }
+  const data = parseJson<MoxfieldDeck>(
+    await fetchMoxfieldJson(`https://api2.moxfield.com/v3/decks/all/${id}`)
   );
-  const data = parseJson<MoxfieldDeck>(await res.json());
   const cards: UrlImportCard[] = [];
   appendMoxfieldCards(cards, moxfieldEntries(data.boards?.commanders, data.commanders), "main", {
     commandZone: true,

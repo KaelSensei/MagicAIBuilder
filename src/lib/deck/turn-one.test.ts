@@ -2,26 +2,10 @@ import { describe, it, expect } from "vitest";
 
 import { buildTurnOnePlayability, chanceOfBoth } from "./turn-one";
 import type { DeckCard } from "./types";
+import { aDeckCard } from "@/test/builders/card";
 
 function makeCard(overrides: Partial<DeckCard> = {}): DeckCard {
-  return {
-    id: "card-1",
-    name: "Card",
-    manaCost: "",
-    cmc: 0,
-    typeLine: "Instant",
-    oracleText: "",
-    colorIdentity: [],
-    isGameChanger: false,
-    isBanned: false,
-    price: null,
-    imageUri: "",
-    artCropUri: "",
-    category: "other",
-    quantity: 1,
-    zone: "main",
-    ...overrides,
-  };
+  return aDeckCard({ typeLine: "Instant", ...overrides });
 }
 
 /** A basic land, so production is unambiguous. */

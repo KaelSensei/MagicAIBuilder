@@ -11,7 +11,8 @@ export interface ImportResult {
 
 const MAX_LINES = 500;
 const MAX_NAME_LENGTH = 200;
-const MAX_QUANTITY = 99;
+/** Most copies one decklist line may ask for. */
+export const MAX_QUANTITY = 99;
 const MIN_QUANTITY = 1;
 
 /** Strip HTML tags and control characters from a string */

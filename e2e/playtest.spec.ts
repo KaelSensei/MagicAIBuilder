@@ -1,5 +1,5 @@
-import { test, expect } from "@playwright/test";
-import { seedDeckWithCards, suppressOnboarding } from "./helpers";
+import { test, expect } from "./fixtures";
+import { fixtureCards, suppressOnboarding } from "./helpers";
 
 /**
  * The playtest engine, its store and the five zone components were all written
@@ -8,15 +8,24 @@ import { seedDeckWithCards, suppressOnboarding } from "./helpers";
  * end so the engine cannot silently become orphaned again.
  */
 test.describe("Playtest mode", () => {
-  test.beforeEach(async ({ page, request }) => {
+  test.beforeEach(async ({ page, seededDeck }) => {
     // A deck with cards is required: the builder's "New Deck" button creates an
-    // empty one, and playtesting that draws no opening hand at all.
-    const deckId = await seedDeckWithCards(request, 20);
+    // empty one, and playtesting that draws no opening hand at all. The fixture
+    // deletes the deck after each test.
+    const deckId = await seededDeck.create({
+      name: "Playtest Deck",
+      cards: fixtureCards(20),
+    });
 
     await suppressOnboarding(page);
     await page.goto(`/builder/${deckId}`);
 
-    await page.getByTitle("List view").nth(1).click();
+    // The deck panel's own toolbar: the search panel has a "List view" toggle
+    // too, but only while it shows results, so its position is not stable.
+    await page
+      .getByRole("toolbar", { name: "Deck view" })
+      .getByRole("button", { name: "List view" })
+      .click();
     // The builder lazy-loads the deck's cards after mount. Opening the
     // playtest before they arrive snapshots a short library, and the
     // opening hand comes up smaller than seven — the intermittent failure
@@ -84,20 +93,34 @@ test.describe("Playtest mode", () => {
     await expect(page.getByText("36", { exact: true })).toBeVisible();
   });
 
-  test("mulligans to a smaller hand and closes off once the turn advances", async ({
+  test("takes a free Commander mulligan, bottoms a chosen card on the next, and closes off once the turn advances", async ({
     page,
   }) => {
     const handHeading = page.getByText(/Hand: \d+ cards/);
+    const mulligan = page.getByRole("button", { name: /mulligan/i });
 
     await page.getByRole("button", { name: /draw opening hand/i }).click();
     await expect(handHeading).toHaveText("Hand: 7 cards");
 
-    await page.getByRole("button", { name: /mulligan/i }).click();
-    await expect(handHeading).toHaveText("Hand: 6 cards");
+    // CR 103.5c: in a multiplayer game the first mulligan is a free fresh seven.
+    await mulligan.click();
     await expect(page.getByText(/1 mulligan/)).toBeVisible();
+    await expect(handHeading).toHaveText("Hand: 7 cards");
+
+    // The second one counts: a new seven, then one card of the player's choice
+    // goes to the bottom before the game moves on.
+    await mulligan.click();
+    const choice = page.getByRole("group", { name: /choose 1 card to put on the bottom/i });
+    await expect(choice).toBeVisible();
+    await expect(page.getByRole("button", { name: /next turn/i })).toBeDisabled();
+
+    await choice.getByRole("button", { pressed: false }).first().click();
+    await page.getByRole("button", { name: "Put 1 card on the bottom" }).click();
+    await expect(handHeading).toHaveText("Hand: 6 cards");
+    await expect(page.getByText(/2 mulligans/)).toBeVisible();
 
     await page.getByRole("button", { name: /next turn/i }).click();
-    await expect(page.getByRole("button", { name: /mulligan/i })).toBeDisabled();
+    await expect(mulligan).toBeDisabled();
   });
 
   test("restart deals a fresh seven-card hand", async ({ page }) => {
@@ -105,7 +128,7 @@ test.describe("Playtest mode", () => {
 
     await page.getByRole("button", { name: /draw opening hand/i }).click();
     await page.getByRole("button", { name: /mulligan/i }).click();
-    await expect(handHeading).toHaveText("Hand: 6 cards");
+    await expect(page.getByText(/1 mulligan/)).toBeVisible();
 
     await page.getByRole("button", { name: /restart/i }).click();
 

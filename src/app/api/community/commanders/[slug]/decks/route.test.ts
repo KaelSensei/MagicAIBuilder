@@ -7,14 +7,18 @@ const { mockDeckFindMany, mockQueryRaw } = vi.hoisted(() => ({
   mockQueryRaw: vi.fn(),
 }));
 
-vi.mock("@/lib/db/prisma", () => ({
-  prisma: { deck: { findMany: mockDeckFindMany }, $queryRaw: mockQueryRaw },
-}));
+vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
+  const { stubPrisma } = await import("@/test/prisma-stub");
+  return stubPrisma(await importOriginal(), {
+    deck: { findMany: mockDeckFindMany },
+    $queryRaw: mockQueryRaw,
+  });
+});
 
 // ─── Mock NextAuth auth() ─────────────────────────────────────────────────────
 
 const { mockAuth } = vi.hoisted(() => ({ mockAuth: vi.fn() }));
-vi.mock("@/lib/auth/config", () => ({ auth: mockAuth }));
+vi.mock(import("@/lib/auth/config"), () => ({ auth: mockAuth }));
 
 // ─── Import after mocks ───────────────────────────────────────────────────────
 

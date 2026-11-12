@@ -1,12 +1,13 @@
 import { sanitizeForPrompt } from "@/lib/validation/ai";
+import type { SessionDifficulty, SessionResult } from "./session-enums";
 
 const MAX_AI_EVIDENCE_TEXT_LENGTH = 500;
 
 export interface PlaytestPromptEvidence {
-  readonly result: "win" | "loss" | "draw";
+  readonly result: SessionResult;
   readonly turns: number;
   readonly mulliganCount: number;
-  readonly difficulty?: "budget" | "mid-range" | "cedh";
+  readonly difficulty?: SessionDifficulty;
   readonly notes?: string;
   readonly proposedChange?: string;
 }

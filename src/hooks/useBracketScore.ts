@@ -3,11 +3,12 @@
 import { useMemo } from "react";
 import { scoreBracket } from "@/lib/deck/bracket";
 import { computeDeckStats } from "@/lib/deck/stats";
-import type { Deck, BracketScore } from "@/lib/deck/types";
-import type { SpellbookVariant } from "@/lib/combos/spellbook";
+import type { Deck } from "@/lib/deck/types";
+import type { BracketScore } from "@/lib/deck/analysis-types";
+import type { Combo } from "@/modules/combos";
 
 /** Returns live bracket score for the active deck, accounting for 2-card infinite combos */
-export function useBracketScore(deck: Deck | null, combos?: SpellbookVariant[]): BracketScore | null {
+export function useBracketScore(deck: Deck | null, combos?: readonly Combo[]): BracketScore | null {
   return useMemo(() => {
     if (!deck) return null;
     const stats = computeDeckStats(deck);

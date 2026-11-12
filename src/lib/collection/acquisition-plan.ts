@@ -1,9 +1,11 @@
 /**
  * Combined acquisition plan across several decks.
  *
- * Pure: it reports what is still missing and does not change ownership.
+ * Pure: it sorts stored deck rows into command-zone slots, reports what is
+ * still missing, and does not change ownership.
  */
 import type { DeckCard } from "@/lib/deck/types";
+import { isBasicLand } from "@/lib/scryfall/type-line";
 
 /** One deck's share of a printing that still has to be acquired. */
 export interface AcquisitionDeckRequirement {
@@ -38,6 +40,46 @@ export type AcquisitionPlanCard = Pick<
   "id" | "scryfallId" | "name" | "quantity" | "price" | "typeLine"
 > & { readonly zone: string };
 
+/** A stored deck row: a plan card plus the flags that place it in the command zone. */
+export type AcquisitionPlanRow = AcquisitionPlanCard & {
+  readonly isCommander: boolean;
+  readonly isPartner: boolean;
+};
+
+/** A stored deck before its rows are sorted into command-zone slots. */
+export interface AcquisitionPlanStoredDeck {
+  readonly id: string;
+  readonly name: string;
+  readonly cards: readonly AcquisitionPlanRow[];
+}
+
+/**
+ * Sorts a stored deck's rows into its commander, its second commander and its other cards.
+ *
+ * Reads the flags the way the deck loader does, so the plan counts the command zone the
+ * editor shows: the first row of each slot. A companion has neither flag and stays with
+ * the other cards, so it is still counted (CR 702.139a: it must be a card you own).
+ *
+ * @param deck - deck as read from the database
+ * @returns the deck in the shape `buildAcquisitionPlan` reads
+ */
+export function toAcquisitionPlanDeck(
+  deck: AcquisitionPlanStoredDeck
+): AcquisitionPlanDeck {
+  let commander: AcquisitionPlanCard | null = null;
+  let partner: AcquisitionPlanCard | null = null;
+  const cards: AcquisitionPlanCard[] = [];
+  for (const row of deck.cards) {
+    // CR 702.124a: a partner ability (partner, partner with, choose a Background, ...) lets a
+    // deck have two commanders (CR 903.3). The editor saves the second one with both
+    // `isCommander` and `isPartner`, so `isPartner` must be read first or it replaces the first.
+    if (row.isPartner) partner ??= row;
+    else if (row.isCommander) commander ??= row;
+    else cards.push(row);
+  }
+  return { id: deck.id, name: deck.name, cards, commander, partner };
+}
+
 interface PendingRequirement {
   name: string;
   requiredQuantity: number;
@@ -64,7 +106,7 @@ function deckPrintingNeeds(deck: AcquisitionPlanDeck): ReadonlyMap<string, DeckP
     ...deck.cards.filter((card) => card.zone === "main"),
   ];
   for (const card of cards) {
-    if (card === null || card.typeLine.toLowerCase().includes("basic land")) continue;
+    if (card === null || isBasicLand(card.typeLine)) continue;
     const scryfallId = card.scryfallId ?? card.id;
     const current = perDeck.get(scryfallId);
     perDeck.set(scryfallId, {

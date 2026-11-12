@@ -1,31 +1,25 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { NextIntlClientProvider } from "next-intl";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import type { QueryClient } from "@tanstack/react-query";
 
 import { RecordResultBar } from "./RecordResultBar";
-import playtestMessages from "@/messages/en/playtest.json";
 import { MAX_SESSION_NOTES_LENGTH } from "@/lib/playtest/session-input";
+import { renderWithProviders } from "@/test/render";
 
 let queryClient: QueryClient;
 
 function renderBar(onRecorded = vi.fn()) {
-  queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  render(
-    <QueryClientProvider client={queryClient}>
-      <NextIntlClientProvider locale="en" messages={{ playtest: playtestMessages }}>
-        <RecordResultBar
-          deckId="deck-1"
-          turns={9}
-          mulliganCount={2}
-          cardsSeen={14}
-          additionalCardsSeen={1}
-          onRecorded={onRecorded}
-        />
-      </NextIntlClientProvider>
-    </QueryClientProvider>
-  );
+  ({ queryClient } = renderWithProviders(
+    <RecordResultBar
+      deckId="deck-1"
+      turns={9}
+      mulliganCount={2}
+      cardsSeen={14}
+      additionalCardsSeen={1}
+      onRecorded={onRecorded}
+    />
+  ));
   return onRecorded;
 }
 

@@ -1,49 +1,20 @@
 /**
  * Unit tests for maybeboard actions in the deck store.
  *
- * The store makes HTTP calls via deck-api. We mock that module so tests are
- * fully synchronous / offline.
+ * The store makes HTTP calls via deck-api; the fake deck API
+ * (`src/test/fake-deck-client.ts`) answers them in memory.
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-// ── Mock deck-api BEFORE importing the store ──────────────────────────────────
-vi.mock("@/lib/db/deck-api", () => ({
-  addCard: vi.fn(async (_deckId: string, payload: Record<string, unknown>) => ({
-    ...payload,
-    id: `${String(payload.scryfallId)}-saved`,
-    deckId: "deck-1",
-    scryfallId: payload.scryfallId,
-    isCommander: false,
-    isPartner: false,
-    isMaybeboard: payload.zone === "maybeboard",
-  })),
-  removeCard: vi.fn(async () => undefined),
-  updateCardZone: vi.fn(async (_deckId: string, cardId: string, zone: string) => ({
-    id: cardId,
-    zone,
-  })),
-  updateCardMaybeboard: vi.fn(async (_deckId: string, cardId: string, isMaybeboard: boolean) => ({
-    id: cardId,
-    isMaybeboard,
-  })),
-  fetchDecks: vi.fn(async () => ({ decks: [], total: 0, page: 0, limit: 20 })),
-  createDeck: vi.fn(async () => ({ id: "deck-1", name: "Test", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), cards: [] })),
-  updateDeck: vi.fn(async () => ({})),
-  deleteDeck: vi.fn(async () => undefined),
-  updateCardCategory: vi.fn(async () => ({})),
-  removeAllCards: vi.fn(async () => undefined),
-}));
-
-// ── Mock useToast (imported inside store) ─────────────────────────────────────
-vi.mock("@/hooks/useToast", () => ({
-  useToastStore: { getState: () => ({ add: vi.fn() }) },
-}));
-
 import { useDeckStore } from "@/lib/deck/store";
-import * as deckApi from "@/lib/db/deck-api";
 import type { Deck, DeckCard } from "@/lib/deck/types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
+import { installFakeDeckClient } from "@/test/fake-deck-client";
+import { recordToasts } from "@/test/toast-recorder";
+
+const deckApi = installFakeDeckClient();
+recordToasts();
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -130,29 +101,6 @@ describe("Deck store — maybeboard actions", () => {
     });
   });
 
-  it("clears stale cards and command-zone state before a bulk text rebuild", () => {
-    const card = makeDeckCard("old-card", "Sol Ring");
-    const maybe = makeDeckCard("old-maybe", "Counterspell", { zone: "maybeboard" });
-    useDeckStore.setState({
-      decks: { "deck-1": { ...seedDeck(), commander: card, partner: card, companion: card, cards: [card, maybe], maybeboard: [maybe] } },
-      undoStack: [{ type: "ADD_CARD", deckId: "deck-1", card }],
-    });
-
-    useDeckStore.getState().resetActiveDeckForBulkEdit();
-
-    const state = useDeckStore.getState();
-    expect(state.decks["deck-1"]).toMatchObject({
-      commander: null,
-      partner: null,
-      companion: null,
-      cards: [],
-      maybeboard: [],
-      cardCount: 0,
-      pairingType: "none",
-    });
-    expect(state.undoStack).toHaveLength(0);
-  });
-
   // ── addToMaybeboard ────────────────────────────────────────────────────────
 
   describe("addToMaybeboard", () => {
@@ -203,11 +151,14 @@ describe("Deck store — maybeboard actions", () => {
       expect(deck.maybeboard).toHaveLength(1);
     });
 
-    it("allows duplicate basic lands in maybeboard", async () => {
+    it.each([
+      ["Forest", "Basic Land — Forest"],
+      ["Snow-Covered Forest", "Basic Snow Land — Forest"],
+    ])("allows duplicate %s in maybeboard", async (name, typeLine) => {
       const forest = makeScryfallCard({
         id: "forest-1",
-        name: "Forest",
-        type_line: "Basic Land — Forest",
+        name,
+        type_line: typeLine,
         cmc: 0,
         mana_cost: "",
       });

@@ -1,21 +1,10 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { renderHook, waitFor } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import React from "react";
+import { waitFor } from "@testing-library/react";
 import { useCardPrintings } from "./useCardPrintings";
 import * as scryfallClient from "@/lib/scryfall/client";
+import { renderHookWithProviders } from "@/test/render";
 
-vi.mock("@/lib/scryfall/client");
-
-function createWrapper() {
-  const client = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
-  });
-  function Wrapper({ children }: { children: React.ReactNode }) {
-    return React.createElement(QueryClientProvider, { client }, children);
-  }
-  return Wrapper;
-}
+vi.mock(import("@/lib/scryfall/client"));
 
 afterEach(() => {
   vi.clearAllMocks();
@@ -23,9 +12,7 @@ afterEach(() => {
 
 describe("useCardPrintings", () => {
   it("does not fetch when cardName is null", () => {
-    const { result } = renderHook(() => useCardPrintings(null), {
-      wrapper: createWrapper(),
-    });
+    const { result } = renderHookWithProviders(() => useCardPrintings(null));
     expect(result.current.fetchStatus).toBe("idle");
     expect(scryfallClient.searchCardPrintings).not.toHaveBeenCalled();
   });
@@ -34,9 +21,7 @@ describe("useCardPrintings", () => {
     const printings = { data: [{ id: "p1", name: "Sol Ring" }] };
     vi.mocked(scryfallClient.searchCardPrintings).mockResolvedValueOnce(printings as never);
 
-    const { result } = renderHook(() => useCardPrintings("Sol Ring"), {
-      wrapper: createWrapper(),
-    });
+    const { result } = renderHookWithProviders(() => useCardPrintings("Sol Ring"));
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data).toEqual(printings);
@@ -47,9 +32,7 @@ describe("useCardPrintings", () => {
     vi.mocked(scryfallClient.searchCardPrintings).mockImplementation(
       () => new Promise(() => {})
     );
-    const { result } = renderHook(() => useCardPrintings("Counterspell"), {
-      wrapper: createWrapper(),
-    });
+    const { result } = renderHookWithProviders(() => useCardPrintings("Counterspell"));
     expect(result.current.isPending).toBe(true);
   });
 });

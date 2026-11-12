@@ -1,30 +1,29 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { render, screen } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { NextIntlClientProvider } from "next-intl";
+import { screen } from "@testing-library/react";
 import React from "react";
 import { CardListItem } from "./CardListItem";
 import { LocalizedDeckTextProvider } from "./LocalizedDeckTextContext";
-import enCard from "@/messages/en/card.json";
-import enBuilder from "@/messages/en/builder.json";
-import enPlaytest from "@/messages/en/playtest.json";
 import { BattlefieldZone } from "@/components/playtest/BattlefieldZone";
 import * as scryfallClient from "@/lib/scryfall/client";
 import type { DeckCard } from "@/lib/deck/types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
+import { aDeckCard } from "@/test/builders/card";
+import { renderWithProviders, type TestLocale } from "@/test/render";
 
-vi.mock("@/lib/scryfall/client");
-vi.mock("./CardTooltip", () => ({
+vi.mock(import("@/lib/scryfall/client"));
+vi.mock(import("./CardTooltip"), () => ({
   CardTooltip: ({ children }: { readonly children: React.ReactNode }) => <>{children}</>,
 }));
 
 function makeDeckCard(name: string): DeckCard {
-  return {
-    id: name, name, manaCost: "", cmc: 1, typeLine: "Artifact",
-    oracleText: "", colorIdentity: [], isGameChanger: false,
-    isBanned: false, price: null, imageUri: "", artCropUri: "",
-    category: "artifact", quantity: 1, zone: "main", scryfallId: name,
-  };
+  return aDeckCard({
+    id: name,
+    scryfallId: name,
+    name,
+    cmc: 1,
+    typeLine: "Artifact",
+    category: "artifact",
+  });
 }
 
 const frSolRing: ScryfallCard = {
@@ -37,24 +36,22 @@ const frSolRing: ScryfallCard = {
   color_identity: [],
 };
 
-function renderRows(locale: string, withProvider: boolean) {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+function renderRows(locale: TestLocale, withProvider: boolean) {
   const rows = (
     <>
       <CardListItem card={makeDeckCard("Sol Ring")} />
       <CardListItem card={makeDeckCard("Counterspell")} />
     </>
   );
-  return render(
-    <NextIntlClientProvider locale={locale} messages={{ card: enCard, builder: enBuilder }}>
-      <QueryClientProvider client={client}>
-        {withProvider ? (
-          <LocalizedDeckTextProvider names={["Sol Ring", "Counterspell"]}>{rows}</LocalizedDeckTextProvider>
-        ) : (
-          rows
-        )}
-      </QueryClientProvider>
-    </NextIntlClientProvider>
+  return renderWithProviders(
+    withProvider ? (
+      <LocalizedDeckTextProvider names={["Sol Ring", "Counterspell"]}>
+        {rows}
+      </LocalizedDeckTextProvider>
+    ) : (
+      rows
+    ),
+    { locale }
   );
 }
 
@@ -74,23 +71,21 @@ describe("LocalizedDeckTextProvider", () => {
 
   it("localises a zone that maps over its cards, via useLocalizeDeckCard", async () => {
     vi.mocked(scryfallClient.fetchLocalizedPrintingsByNames).mockResolvedValueOnce([frSolRing]);
-    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-    render(
-      <NextIntlClientProvider locale="fr" messages={{ playtest: enPlaytest }}>
-        <QueryClientProvider client={client}>
-          <LocalizedDeckTextProvider names={["Sol Ring"]}>
-            <BattlefieldZone
-              battlefield={[{ ...makeDeckCard("Sol Ring"), tapped: false, counters: 0 }]}
-              onTap={vi.fn()}
-              onAddCounter={vi.fn()}
-              onCreateCopy={vi.fn()}
-              requiredTokens={[]}
-              onCreateToken={vi.fn()}
-              onRemove={vi.fn()}
-            />
-          </LocalizedDeckTextProvider>
-        </QueryClientProvider>
-      </NextIntlClientProvider>
+    renderWithProviders(
+      <LocalizedDeckTextProvider names={["Sol Ring"]}>
+        <BattlefieldZone
+          battlefield={[
+            { ...makeDeckCard("Sol Ring"), tapped: false, counters: 0 },
+          ]}
+          onTap={vi.fn()}
+          onAddCounter={vi.fn()}
+          onCreateCopy={vi.fn()}
+          requiredTokens={[]}
+          onCreateToken={vi.fn()}
+          onRemove={vi.fn()}
+        />
+      </LocalizedDeckTextProvider>,
+      { locale: "fr" }
     );
     expect(await screen.findByText("Anneau solaire")).toBeInTheDocument();
   });

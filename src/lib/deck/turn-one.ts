@@ -21,8 +21,9 @@
  */
 
 import { extractColorPips } from "../mana/parse";
-import { OPENING_HAND_SIZE } from "../playtest/engine";
 
+import { binomial } from "./binomial";
+import { OPENING_HAND_SIZE } from "./game-constants";
 import { countColorSources, PIP_COLORS, type PipColor } from "./mana-alignment";
 import type { DeckCard } from "./types";
 
@@ -47,27 +48,6 @@ export interface TurnOnePlayability {
   readonly lands: number;
   /** Cards in the library — the commander sits in the command zone, not here */
   readonly deckSize: number;
-}
-
-/**
- * Number of ways to choose `k` items from `n`.
- *
- * Multiplied and divided in alternation so the running value stays small; the
- * factorials themselves would overflow a double long before a 100-card deck.
- *
- * @param n - size of the set
- * @param k - size of the selection
- * @returns the count, or 0 when the selection cannot be made
- */
-function binomial(n: number, k: number): number {
-  if (k < 0 || n < 0 || k > n) return 0;
-
-  const smaller = Math.min(k, n - k);
-  let result = 1;
-  for (let i = 0; i < smaller; i += 1) {
-    result = (result * (n - i)) / (i + 1);
-  }
-  return result;
 }
 
 /**

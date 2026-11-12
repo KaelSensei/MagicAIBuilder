@@ -2,59 +2,43 @@
 alwaysApply: true
 ---
 
-# Clean Code Rule
+# Clean Code rule
 
-Based on Robert C. Martin (_Clean Code_) and enforced by SonarCloud. For the full reference, see
-the `clean-code` skill under `.agents/skills/clean-code/SKILL.md`.
+Based on Robert C. Martin (_Clean Code_) and Kent Beck (_Tidy First?_). The full reference is the
+`clean-code` skill; TypeScript specifics are in the `typescript-craftsmanship` skill.
 
-## Non-negotiable principles
+## Principles
 
-- **DRY** — never ship the same logic twice. The second copy must become an extraction.
-- **SRP** — one responsibility per function, component, module. If the name requires "and",
+- **Duplicated knowledge is a bug; similar-looking code is a hint.** When the same business rule
+  appears twice, move it now into the context that owns it. When code only looks alike, wait for
+  the third occurrence and check it is the same concept.
+- **One responsibility** per function, component and module. A name that needs "and" asks for a
   split.
-- **Intention-revealing names** — `getFilteredDeckCards` over `process`.
-- **Small functions** — cognitive complexity ≤ 15 (Sonar default). Max nesting depth: 3.
-- **Early returns over nested if/else.**
-- **No commented-out code.** Git has history.
-- **No magic values.** Named constants in `constants/` with a JSDoc.
+- **Names reveal intent** and come from the glossary in `CONTEXT.md`.
+- **Guard clauses** over nested `if`/`else`. Nesting depth ≤ 3.
+- **Small units.** Cognitive complexity ≤ 15 per function. Components ≤ 200 lines, other files ≤
+  300 lines, comments and blank lines excluded. A file already over its limit must not grow; leave
+  it smaller when you touch it.
+- **No magic values.** A named constant, with a comment that gives its source.
+- **No commented-out code** and no `console.log` (use `src/lib/logger.ts`).
+- **Comments carry information:** a module header, a TSDoc contract on every export, a "why" with
+  its source. Never a restatement of the code (`docs/engineering/code-documentation.md`).
 
-## DRY — how to apply
+## Errors
 
-- Run `pnpm sonar` or check the SonarCloud duplication dashboard before merging. Target:
-  `duplicated_lines_density` trending **down**, never up.
-- **Rule of three**: extract on the third real duplication, not the first. Incidental similarity
-  is not duplication.
-- Extract destinations by category:
-  - Domain / business rules → `src/lib/<domain>/*.ts` (pure, tested).
-  - Data access → `src/lib/db/*.ts`.
-  - External APIs → `src/lib/<provider>.ts` (single rate-limited wrapper).
-  - Shared UI structure → `src/components/shared/` or `class-variance-authority` variants.
-  - Shared React logic → custom hook under `src/hooks/`.
-  - Shared API error handling → a `withApiErrorHandler(handler)` wrapper.
+- Parse at the boundary with Zod; inside, trust the types.
+- Never swallow an error: log it, wrap it or rethrow it.
+- Expected failures are values (a discriminated union), mapped exhaustively at the edge.
 
-## Error handling
+## Enforcement
 
-- Fail fast at system boundaries (Zod validation on API input and external responses).
-- Inside the domain, assume validated data.
-- Never swallow errors — log, wrap, or rethrow, never ignore.
+The size and complexity limits are prose today. ESLint `max-lines`, `max-lines-per-function` and
+`complexity`, with bulk suppressions as a ratchet, are planned
+(`docs/adr/0007-architecture-enforcement-in-stages.md`). SonarCloud reports duplication and
+complexity; it is advisory (`CLAUDE.md`).
 
-## Anti-patterns to reject
+## Agent behaviour
 
-- Parameter list ≥ 4 primitives → introduce an options object.
-- `if` ladder with 5+ branches on the same discriminant → table lookup.
-- `as` type assertions, `!` non-null assertions, `any` — banned per `CLAUDE.md`.
-- `console.log` in production code — use `logger` or remove.
-- Components > 200 lines, stores > 300 lines, files > 300 lines — split.
-
-## AI behavior
-
-- Rewrite unclear code when you see it; don't paper over it with comments.
-- Refuse to accept messy-but-working code into an extraction or refactor commit.
-- When in doubt, prefer extraction into a tested pure function in `src/lib/`.
-- If Sonar flags a duplication block on files you touched, resolve it in the same PR.
-
-## Sources
-
-- _Clean Code_ — Robert C. Martin
-- _Refactoring_ — Martin Fowler
-- SonarCloud rule set (`typescript:S*`)
+- Do not explain unclear code with a comment: rename or extract it first.
+- Tidy in a separate structural commit, never mixed with a behaviour change.
+- Do not reformat code you are not otherwise changing.

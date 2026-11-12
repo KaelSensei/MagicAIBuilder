@@ -1,9 +1,8 @@
-import { fireEvent, render, screen } from "@testing-library/react";
-import { NextIntlClientProvider } from "next-intl";
+import { fireEvent, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import playtestMessages from "@/messages/en/playtest.json";
 import type { PlaytestSession } from "@/lib/playtest/analytics";
+import { renderWithIntl } from "@/test/render-with-intl";
 import { PlaytestComparisonPanel } from "./PlaytestComparisonPanel";
 
 function session(
@@ -26,14 +25,7 @@ function session(
 }
 
 function renderPanel(sessions: readonly PlaytestSession[]) {
-  return render(
-    <NextIntlClientProvider
-      locale="en"
-      messages={{ playtest: playtestMessages }}
-    >
-      <PlaytestComparisonPanel sessions={sessions} />
-    </NextIntlClientProvider>
-  );
+  return renderWithIntl(<PlaytestComparisonPanel sessions={sessions} />);
 }
 
 describe("PlaytestComparisonPanel", () => {

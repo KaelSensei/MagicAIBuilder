@@ -29,10 +29,47 @@ services:
       timeout: 5s
       retries: 20
 
-  e2e:
+  # Scryfall stand-in: answers api.scryfall.com's card endpoints from the
+  # recorded fixtures (e2e/scryfall-stand-in.ts). On 2026-11-12 Scryfall's
+  # `POST /cards/collection` stalled twice during a gate run and the app's 10 s
+  # budget fired, failing three tests on a branch that touched none of them.
+  # The suite no longer reaches Scryfall: the app's server is pointed here with
+  # SCRYFALL_API_BASE_URL, and the `scryfallStandIn` fixture of e2e/fixtures.ts
+  # forwards the browser's Scryfall requests here too. Same image as `e2e`, so
+  # it runs the repository's TypeScript with the installed `tsx`.
+  scryfall:
+    image: magicaibuilder-e2e-app
     build:
       context: .
       dockerfile: Dockerfile.playwright
+    command: pnpm exec tsx e2e/scryfall-stand-in.ts
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:8787/health').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))",
+        ]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  e2e:
+    image: magicaibuilder-e2e-app
+    build:
+      context: .
+      dockerfile: Dockerfile.playwright
+    # api.scryfall.com resolves to nowhere inside this container, so a Scryfall
+    # call that escapes the stand-in fails at once with a connection error,
+    # instead of passing while the network is up and stalling the gate when it
+    # is not. Both address families are pinned: with the IPv4 entry alone,
+    # glibc still asked DNS for the AAAA records (seen 2026-11-12), and a host
+    # with IPv6 egress would have reached live Scryfall through them. The two
+    # Scryfall data checks tagged @external cannot run here.
+    extra_hosts:
+      - "api.scryfall.com:0.0.0.0"
+      - "api.scryfall.com:::1"
     # Without these, the report and traces are written inside the container and
     # destroyed by the `down -v` in the pre-push cleanup. What stayed on the
     # host was whatever an older local run had left there, so
@@ -45,11 +82,17 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      scryfall:
+        condition: service_healthy
     environment:
       # Prisma / app
       DATABASE_URL: "postgresql://magic:magic_dev_only@db:5432/magicaibuilder"
       NEXT_PUBLIC_APP_URL: "http://localhost:3000"
       AUTH_SECRET: "playwright-test-secret"
+      # The server's Scryfall client talks to the stand-in service above
+      # (src/lib/scryfall/api-base-url.ts). Playwright reads it too, to forward
+      # the browser's Scryfall requests there.
+      SCRYFALL_API_BASE_URL: "http://scryfall:8787"
 
       # NextAuth providers are irrelevant in PLAYWRIGHT_TEST mode, but keep them defined to avoid runtime surprises
       GOOGLE_CLIENT_ID: "playwright"
@@ -57,6 +100,15 @@ services:
 
       # Ensure auth is bypassed for E2E
       PLAYWRIGHT_TEST: "1"
+      # The app is built once (`next build` below) and served with `next
+      # start`, not compiled route by route under `next dev`. On 2026-11-11 the
+      # dev server reached 3.9 GB RSS on the 7.7 GB host and restarted itself
+      # at its memory threshold. The build must be a *development* build: a
+      # production build inlines NODE_ENV="production" and so compiles out the
+      # PLAYWRIGHT_TEST bypass that every spec seeds its data through.
+      # `next.config.ts` allows that build only when both variables are set.
+      NODE_ENV: "development"
+      E2E_DEVELOPMENT_BUILD: "1"
       # Default to the FULL suite. `:-` would also swallow an explicit empty
       # value, so use `-`: setting PLAYWRIGHT_SPEC="" deliberately means "all
       # specs", while naming a file narrows the run to it.
@@ -69,23 +121,26 @@ services:
       #   @external — depends on third-party services (e.g. the live Moxfield
       #     API); a deck going private there once turned the gate red with no
       #     code change on our side.
-      #   @perf — asserts wall-clock latency against `next dev`, which compiles
-      #     routes on demand; the same endpoint measured 41ms alone and 5163ms
-      #     under full-suite contention.
+      #   @perf — asserts wall-clock latency. Under `next dev` the same
+      #     endpoint measured 41ms alone and 5163ms under full-suite contention;
+      #     the prebuilt server removes that cause, but a shared host or a CI
+      #     runner still adds noise the 1-second budget does not account for.
       # Set this to "" to run them deliberately.
       PLAYWRIGHT_GREP_INVERT: "${PLAYWRIGHT_GREP_INVERT-@external|@perf}"
-    # Two invocations cover every project while restarting next dev before
-    # authenticated flows; one long run reaches its memory restart threshold.
+    # One invocation covers every project. It used to be two, to restart
+    # `next dev` before the authenticated flows, because one long run reached
+    # the dev server's memory restart threshold; `next start` has none.
+    # `--no-lint`: lint, like the type check `next.config.ts` skips here, is
+    # gated by CI and the pre-PR gate, and this build only needs bundles.
     command: >
       sh -lc "
         pnpm exec prisma migrate deploy || exit $$?;
-        for project in chromium authenticated; do
-          if [ -n \"$${PLAYWRIGHT_GREP_INVERT}\" ]; then
-            pnpm exec playwright test $${PLAYWRIGHT_SPEC} --project \"$$project\" --grep-invert \"$${PLAYWRIGHT_GREP_INVERT}\" || exit $$?;
-          else
-            pnpm exec playwright test $${PLAYWRIGHT_SPEC} --project \"$$project\" || exit $$?;
-          fi;
-        done
+        pnpm exec next build --no-lint || exit $$?;
+        if [ -n \"$${PLAYWRIGHT_GREP_INVERT}\" ]; then
+          pnpm exec playwright test $${PLAYWRIGHT_SPEC} --project chromium --project authenticated --grep-invert \"$${PLAYWRIGHT_GREP_INVERT}\";
+        else
+          pnpm exec playwright test $${PLAYWRIGHT_SPEC} --project chromium --project authenticated;
+        fi
       "
 
 volumes:

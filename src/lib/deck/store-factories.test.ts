@@ -8,6 +8,8 @@ import {
 } from "./store-factories";
 import type { Deck } from "./types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
+import { aScryfallCard } from "@/test/builders/scryfall";
+import { emptyApiDeck } from "@/test/in-memory-deck-api";
 
 /**
  * These were only ever exercised through store actions, so a mapping bug
@@ -16,16 +18,15 @@ import type { ScryfallCard } from "@/lib/scryfall/types";
  */
 
 function scryfallCard(overrides: Partial<ScryfallCard> = {}): ScryfallCard {
-  return {
+  return aScryfallCard({
     id: "11111111-1111-4111-8111-111111111111",
     name: "Sol Ring",
     mana_cost: "{1}",
     cmc: 1,
     type_line: "Artifact",
     oracle_text: "{T}: Add {C}{C}.",
-    color_identity: [],
     ...overrides,
-  };
+  });
 }
 
 const DFC = scryfallCard({
@@ -180,6 +181,18 @@ describe("isDeckStub", () => {
   });
 });
 
+describe("apiDeckToStoreDeck version", () => {
+  it("keeps the version the server answered with the whole deck", () => {
+    const deck = apiDeckToStoreDeck({ ...emptyApiDeck("deck-1"), version: 7 });
+
+    expect(deck.version).toBe(7);
+  });
+
+  it("holds no version for a deck answered without one, such as a guest deck", () => {
+    expect(apiDeckToStoreDeck(emptyApiDeck("deck-1")).version).toBeUndefined();
+  });
+});
+
 describe("apiDeckToStoreDeck zones", () => {
   it("keeps persisted secondary cards in cards and mirrors maybeboard", () => {
     const deck = apiDeckToStoreDeck({
@@ -273,5 +286,50 @@ describe("apiDeckToStoreDeck zones", () => {
 
     expect(deck.cards.map((card) => card.zone)).toEqual(["main", "sideboard", "maybeboard"]);
     expect(deck.maybeboard.map((card) => card.id)).toEqual(["maybe-card"]);
+  });
+});
+
+describe("apiDeckToStoreDeck brackets", () => {
+  /** A stored deck with no cards and the given raw bracket columns. */
+  function storedDeck(
+    targetBracket: number,
+    manualBracket: number | null
+  ): Deck {
+    return apiDeckToStoreDeck({
+      id: "deck-brackets",
+      name: "Bracket Deck",
+      format: "commander",
+      targetBracket,
+      manualBracket,
+      budget: null,
+      description: "",
+      tags: [],
+      shareToken: null,
+      shareEnabled: false,
+      isPublic: false,
+      isAIGenerated: false,
+      commanderId: null,
+      commanderName: null,
+      partnerId: null,
+      companionId: null,
+      companion: null,
+      pairingType: "none",
+      cards: [],
+      maybeboard: [],
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-01-01T00:00:00.000Z",
+    });
+  }
+
+  it("keeps cEDH (Bracket 5) as a target and as a manual override", () => {
+    const deck = storedDeck(5, 5);
+    expect(deck.targetBracket).toBe(5);
+    expect(deck.manualBracket).toBe(5);
+  });
+
+  it("falls back to the default target and no override for values outside 1–5", () => {
+    const deck = storedDeck(6, 0);
+    expect(deck.targetBracket).toBe(3);
+    expect(deck.manualBracket).toBeNull();
   });
 });

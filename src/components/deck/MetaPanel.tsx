@@ -25,11 +25,8 @@ import { useMetaShifts } from "@/hooks/useMetaShifts";
 import { cn } from "@/components/ui/utils";
 import { MetaSourceDisclosure } from "./MetaSourceDisclosure";
 import { Link } from "@/i18n/navigation";
-import {
-  commanderToSlug,
-  type MetaCard,
-  type TournamentDeck,
-} from "@/lib/meta/fetch";
+import { commanderToSlug } from "@/lib/meta/fetch";
+import type { MetaCard, TournamentDeck } from "@/lib/meta/types";
 import { shiftMagnitude, type MetaShift } from "@/lib/meta/history";
 
 /** Movements shown in the panel; the report itself is not truncated. */

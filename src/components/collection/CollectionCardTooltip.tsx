@@ -5,6 +5,7 @@ import { useCallback, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import type { CollectionCard } from "@/lib/collection/types";
+import { normalizeScryfallImageUrl } from "@/lib/scryfall/images";
 
 const TOOLTIP_WIDTH = 223;
 const TOOLTIP_HEIGHT = 334; // image 310 + price row
@@ -53,9 +54,10 @@ export function CollectionCardTooltip({ card, children }: CollectionCardTooltipP
 
   return (
     <>
+      {/* A hover trigger only: it must not take over the children's name, which
+          `role="img"` did by making them presentational. The preview image
+          below carries the "Preview of …" name instead. */}
       <span
-        role="img"
-        aria-label={t("previewOf", { name: card.name })}
         onMouseEnter={handleMouseEnter}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
@@ -68,7 +70,13 @@ export function CollectionCardTooltip({ card, children }: CollectionCardTooltipP
             className="fixed z-9999 pointer-events-none rounded-lg overflow-hidden shadow-2xl border border-(--border)"
             style={{ left: pos.x, top: pos.y }}
           >
-            <Image src={card.imageUri} alt={card.name} width={223} height={310} unoptimized />
+            <Image
+              src={normalizeScryfallImageUrl(card.imageUri)}
+              alt={t("previewOf", { name: card.name })}
+              width={223}
+              height={310}
+              unoptimized
+            />
             {card.price != null && (
               <div className="p-2 bg-(--surface) text-xs text-(--text-secondary)">
                 <span className="text-(--accent)">

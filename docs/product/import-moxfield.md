@@ -102,45 +102,16 @@ This returns a JSON payload containing the deck and its boards:
 
 ---
 
-## Step 3 — Make requests “browser-like” (avoid 403 blocking)
+## Step 3 — Identify honestly, and stop when refused
 
-Moxfield sometimes blocks automated traffic (403). The repo uses a `fetchApi()` helper with headers that resemble a browser request.
+An earlier version of this guide made requests “browser-like” to avoid 403 blocking: a Chrome `User-Agent`, `Origin: https://moxfield.com` and `Referer: https://moxfield.com/`. **MagicAIBuilder does not do this.** Those headers present a server as Moxfield's own front end, and the proposed [I-29 source policy](specs/i29-cross-site-deck-index.md#1-source-policy-non-negotiable) (requirement 1.1) forbids headers that impersonate a source.
 
-**Practical minimum:**
+In MagicAIBuilder, `src/lib/import/moxfield-client.ts` is the only code that calls Moxfield:
 
-- `Accept`
-- `User-Agent`
-- `Origin: https://moxfield.com`
-- `Referer: https://moxfield.com/`
+- It sends `Accept: application/json` and the app's own `User-Agent` (`MagicAIBuilder/1.0 (+https://magic-ai-builder.vercel.app)`, set by `httpGet` in `src/lib/http.ts`). It sends no `Origin`, no `Referer` and no browser `User-Agent`.
+- A 403, a 429, or an HTML page where JSON was expected throws `MoxfieldRefusedError` (`src/lib/import/moxfield-refusal.ts`). The import routes answer it with `code: "moxfield_refused"`, and the import dialog tells the player to copy the list from Moxfield's Export and paste it in the **Plain Text** tab. A refusal is never retried.
 
-Example helper:
-
-```ts
-async function fetchApi<T>(url: string): Promise<T> {
-  const res = await fetch(url, {
-    headers: {
-      accept: "application/json, text/plain, */*",
-      "accept-language": "en-US,en;q=0.9",
-      "cache-control": "no-cache",
-      origin: "https://moxfield.com",
-      pragma: "no-cache",
-      referer: "https://moxfield.com/",
-      "user-agent":
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
-      // optional (may change over time)
-      "x-moxfield-version": "2026.01.12.2",
-    },
-  });
-
-  if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    // handle 403/404 separately if desired
-    throw new Error(`HTTP ${res.status}: ${text.slice(0, 200)}`);
-  }
-
-  return (await res.json()) as T;
-}
-```
+On 2026-11-09, both endpoints answered these honest requests with HTTP 403 and Cloudflare's “Attention Required!” page. Reliable access needs an agreement with Moxfield (I-29, partnership track).
 
 ---
 
@@ -167,7 +138,7 @@ export async function fetchDeckById(urlOrId: string): Promise<ScrapedDeck> {
   if (!id) throw new Error("Missing or invalid deck id/url.");
 
   const deckDetailUrl = `https://api2.moxfield.com/v3/decks/all/${encodeURIComponent(id)}`;
-  const deckDetail = await fetchApi<any>(deckDetailUrl);
+  const deckDetail: any = await fetchMoxfieldJson(deckDetailUrl); // validate before use
 
   // TODO: parse deckDetail.boards.*.cards into ScrapedCard[]
   // TODO: compute commander string if needed
@@ -207,6 +178,6 @@ If you only need “import by URL”, you can ignore this.
 ## Reliability notes
 
 - **403 Forbidden / bot protection**: can vary by IP, VPN, request burst, or changes on Moxfield.
-- **Don’t over-retry**: treat repeated 403/429 as a hard failure and back off.
+- **Don’t retry a refusal**: a 403, a 429 or a challenge page is final. Retry only transient failures such as a 5xx, and never through another route.
 - **Boards**: decide how you want to map Moxfield boards to your app’s categories.
 - **Commander detection**: Moxfield fields may not always match your expectations; validate commander rules if needed.

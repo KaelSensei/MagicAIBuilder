@@ -1,82 +1,58 @@
 ---
 alwaysApply: true
 ---
-# Version Management Rules
 
-Automatically commit and push changes after completing any feature, bug fix, or significant addition.
+# Version management
 
-## Commit Workflow
+The branch flow and the promotion rules are in `CLAUDE.md`. This rule says what an agent may do
+with git.
 
-**CRITICAL: Do this automatically without asking for user confirmation.**
+## What an agent may do
 
-After completing a task (feature, bug fix, or new addition), **immediately and automatically** execute:
+- **Commit locally** on its own branch when the task asks for a change.
+- **Push, open a PR or merge only when the owner asks for it.** Never "automatically after a
+  task", never on your own initiative.
+- **Never push to `dev`, `staging` or `main`.** Never force-push a shared branch;
+  `--force-with-lease` is allowed on your own unmerged branch only.
+- **Never enable `delete_branch_on_merge`.** It deletes `staging` or `dev` when a promotion PR
+  merges. Branch cleanup is the owner's job, with `scripts/git-prune.sh`. Agents never run that
+  script: it deletes every local and remote branch outside its protected list and removes every
+  other worktree, including other agents' work in progress.
+- **Never skip hooks** (`--no-verify`). `SKIP_E2E=1` is the documented emergency bypass of the
+  pre-push E2E gate; use it only when the owner agrees, and say so in the PR.
+- **Never use bare `git stash`.** Every worktree on this machine shares one stash stack. Use a
+  temporary commit instead.
 
-0. **Quality gate (required):**
-   - Ensure lint + tests pass
-   - Run `pnpm sonar`
-   - Verify SonarCloud open issues are **0**
+## Branches
 
-1. **Stage all changes:**
-   ```bash
-   git add -A
-   ```
+- Start every task from `origin/dev`: `git checkout -B <type>/<slug> origin/dev`, where `<type>`
+  is `feature`, `fix`, `chore`, `docs` or `refactor`.
+- If the current branch is merged or is `dev`, `staging` or `main`, create a fresh branch.
+- Feature and fix PRs target `dev`. Never target `staging` or `main` directly.
 
-2. **Commit with descriptive message using conventional commits:**
-   ```bash
-   git commit -m "type: brief description"
-   ```
+## Commits
 
-3. **Push to current branch:**
-   ```bash
-   git push origin $(git branch --show-current)
-   ```
+- Conventional Commits with a scope, for example `fix(playtest): …` or `refactor(deck): …`.
+  Types: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`, `ci`, `perf`, `style`.
+- The body says **why**: the behaviour before, the evidence, the decision.
+- A commit is **either structural or behavioural**, never both (Kent Beck):
+  - structural (`refactor:`, `style:`): no behaviour change; no assertion changes, and the
+    tests are green before and after;
+  - behavioural (`feat:`, `fix:`): driven by a Red test committed with it.
+- Stage explicit paths. Never `git add -A` or `git add .`.
+- Never commit secrets, `.env*` files (except `.env.example`), reports or build output.
 
-**Do NOT ask "Should I commit?" or "Do you want me to push?"** - just do it automatically.
+## Merging (by the owner, or by an agent the owner asked to)
 
-## Commit Message Types
+- **Feature and fix PRs into `dev`: squash merge.** The PR becomes one commit on `dev`. Because the
+  squash folds structural and behavioural commits together, a structural change larger than a
+  small tidying (about 200 changed lines, or any move across contexts) gets its own PR.
+- **Promotion PRs (`dev` → `staging`, `staging` → `main`): `gh pr merge --rebase`**, never a merge
+  commit and never a squash, so the three branches keep the same commits.
 
-- `feat:` - New feature or functionality
-- `fix:` - Bug fix
-- `docs:` - Documentation changes
-- `refactor:` - Code restructuring without changing functionality
-- `test:` - Adding or updating tests
-- `chore:` - Maintenance tasks, dependencies, config changes
-- `perf:` - Performance improvements
-- `style:` - Code style changes (formatting, no logic change)
+## Before asking for a PR
 
-## Commit Message Format
-
-```
-type: brief description
-
-- Detailed bullet point 1
-- Detailed bullet point 2
-```
-
-**Examples (MagicTheOfflining):**
-- `feat: add sideboard and considering tabs to deck detail`
-- `fix: show board (mainboard/sideboard/considering) in card search results`
-- `docs: update PLAY_STORE_DEPLOYMENT with keystore steps`
-- `test: add scraping integration tests for Moxfield decks`
-
-## Rules
-
-- **ALWAYS create a branch first** for fixes and features: `fix/description` or `feature/description` — never work directly on main/master
-- **ALWAYS commit automatically** after completing a feature, fixing a bug, or adding something new - **DO NOT ASK FOR PERMISSION**
-- **ALWAYS push immediately** after committing (unless push fails due to permissions) - **DO NOT ASK FOR PERMISSION**
-- **Never commit** to main/master directly - always use feature branches
-- **Use descriptive messages** that explain what and why
-- **Group related changes** in a single commit when they're part of the same task
-- **No confirmation prompts** - the AI assistant must execute git commands automatically as part of completing any task
-
-### Branch selection for new tasks
-
-- On **every new user request**, first check the current branch and whether it is already merged.
-- If the current branch **is merged** (or is one of the special long‑lived branches `main`, `master`, `dev`, or `develop`), **create a fresh feature/fix branch** for the new work before making changes.
-- Only continue committing to an existing feature/fix branch when it is **still open and not yet merged**.
-
-## Branch Management
-
-- Work on feature branches: `feature/description` or `fix/description`
-- Current branch: Check with `git branch --show-current`
-- Push to the current branch, never force push to shared branches
+Run the pre-PR gate in `CLAUDE.md`. SonarCloud is **advisory**: record its result in the PR; it
+does not block. The local hook `scripts/pre-pr-sonar-gate.sh` still stops `gh pr create` while
+SonarCloud reports open issues; its escape is `SONAR_GATE_OVERRIDE=1`, with the reason in the PR
+body.

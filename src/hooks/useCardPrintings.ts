@@ -2,6 +2,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { searchCardPrintings } from "@/lib/scryfall/client";
 import type { ScryfallSearchResponse } from "@/lib/scryfall/types";
+import { STALE_TIME_24H } from "@/lib/query/stale-times";
 
 /**
  * Printings of a card, in the viewer's language where any exist.
@@ -15,8 +16,6 @@ import type { ScryfallSearchResponse } from "@/lib/scryfall/types";
  * @param lang - Scryfall language code; "en" skips the localised attempt
  */
 export function useCardPrintings(cardName: string | null, lang = "en") {
-  const STALE_TIME_24H = 24 * 60 * 60 * 1000;
-
   return useQuery({
     // lang is part of the key: the same card in two languages is two results.
     queryKey: ["scryfall", "printings", cardName, lang],

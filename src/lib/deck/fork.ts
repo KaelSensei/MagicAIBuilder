@@ -7,8 +7,6 @@ export interface ForkSourceDeck {
   readonly description: string | null;
   readonly format: string;
   readonly targetBracket: number;
-  readonly manualBracket: number | null;
-  readonly budget: number | null;
   readonly commanderId: string | null;
   readonly commanderName: string | null;
   readonly partnerId: string | null;
@@ -41,7 +39,6 @@ interface ForkSourceCard {
   readonly isCommander: boolean;
   readonly isPartner: boolean;
   readonly zone: DeckZone;
-  readonly notes?: string | null;
 }
 
 interface ForkCardData {
@@ -64,7 +61,6 @@ interface ForkCardData {
   readonly isCommander: boolean;
   readonly isPartner: boolean;
   readonly zone: DeckZone;
-  readonly notes: string | null | undefined;
 }
 
 export interface ForkData {
@@ -72,8 +68,6 @@ export interface ForkData {
   readonly description: string | null;
   readonly format: string;
   readonly targetBracket: number;
-  readonly manualBracket: number | null;
-  readonly budget: number | null;
   readonly commanderId: string | null;
   readonly commanderName: string | null;
   readonly partnerId: string | null;
@@ -92,6 +86,10 @@ export interface ForkData {
 /**
  * Build a private, attributed copy of a public deck.
  *
+ * The copy carries the deck list, its commander and its zones. The source
+ * owner's budget, bracket override and card notes are not part of
+ * {@link ForkSourceDeck}, so they cannot reach the copy.
+ *
  * @param source - public deck and its complete card list
  * @param userId - account that will own the new deck
  * @returns Prisma-compatible deck creation data
@@ -102,8 +100,6 @@ export function buildForkData(source: ForkSourceDeck, userId: string): ForkData 
     description: source.description,
     format: source.format,
     targetBracket: source.targetBracket,
-    manualBracket: source.manualBracket,
-    budget: source.budget,
     commanderId: source.commanderId,
     commanderName: source.commanderName,
     partnerId: source.partnerId,
@@ -136,7 +132,6 @@ export function buildForkData(source: ForkSourceDeck, userId: string): ForkData 
       isCommander: card.isCommander,
       isPartner: card.isPartner,
       zone: card.zone,
-      notes: card.notes,
     })),
   };
 }

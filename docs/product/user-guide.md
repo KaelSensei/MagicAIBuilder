@@ -196,6 +196,13 @@ In **Grid mode**, a density picker appears (2 / 3 / 4 / 6 / 8 columns). Default 
 - Hover a card to see the **remove** button (×) and zone move shortcuts
 - Click any card (including commander) to open the **printing selector**
 
+In **List mode**, hover a row, or reach its buttons with Tab, to edit the card in place:
+
+- **−** and **+** around the count change the number of copies. They appear on cards you may run more than once: basic lands, cards whose text allows any number (Relentless Rats), Seven Dwarves (up to 7) and Nazgûl (up to 9). A card allowed once shows only its count, unless it holds extra copies (from an import, say), where **−** brings it back to one. The count never goes below one: use × to remove the card.
+- The **crown** sets the card as your commander. It appears on cards that can be a commander: a legendary creature, Vehicle or Spacecraft, or a card whose text says it can be your commander. The card leaves the list and replaces your current commander, which leaves the deck. Your partner stays only if the new commander can have one.
+- The **image** icon opens the **printing selector** for that row; the card keeps its count, zone, category and note.
+- The **note** icon (main deck only) opens a private note on the card. Ctrl+Enter (⌘+Enter on a Mac) or clicking away saves it; Esc cancels. Empty the note and save to delete it.
+
 #### Setting Your Commander
 
 1. Enable **Commander** mode in the search panel
@@ -225,14 +232,24 @@ This is **not** the same as the Partner / Background slot — it is the optional
 
 The editor shows a **short rule summary** where the app encodes it (for example Lurrus → each card’s mana value ≤ 2) and **warnings** if commander color identity or that mechanical check fails. For companions we only describe as **custom**, verify the printed **Companion —** rule yourself; **Lutri** is blocked as a companion in Commander in-app.
 
+### Deck Details
+
+The **Deck details** panel opens the right panel (the **Stats** tab on a phone). It holds the settings of the deck itself; every change is saved with the deck:
+
+- **Description** — your notes on how the deck plays. Click the pencil to write, or open the line and click the text; an empty description offers a **primer template** (game plan, mulligan guide, win conditions…). It saves when you click **Save**, press Ctrl+Enter (Cmd+Enter on a Mac) or click away; Esc drops your changes. Up to 2,000 characters.
+- **Tags** — short labels such as `casual` or `WIP`. Click **Add tag**, type a tag and press Enter; Tab takes the first suggestion. Click × on a tag to remove it.
+- **Target bracket** (Commander only) — the bracket you are building for, from 1 Exhibition to 5 cEDH. The Game Changers badge and the deck checks measure your deck against it; the bracket score below is the app's own reading of your list.
+- **Budget per card** — the most you want to pay for one card, in US dollars. Type an amount and press Enter or click away; leave the field empty for no limit. When some cards cost more, the stats show how many in a **Budget** box, as **Over budget**.
+
 ### Deck Statistics
 
 The right panel shows:
 
-- **Bracket score** (1–4) based on your deck's power level
+- **Bracket score** (1–4) based on your deck's power level, named with the official bracket names (Exhibition, Core, Upgraded, Optimized). Bracket 5 (cEDH) differs from Bracket 4 only by the cEDH metagame, so the score never reaches it; set it as your target or as a manual override
 - **Game Changers** count (cards that push bracket to 3+)
 - **⚡ Game Changer badge** — any GC forces Bracket 3 minimum; >3 forces Bracket 4
-- **∞ 2-card combo badge** — if your deck contains an infinite combo with exactly 2 cards, Bracket 4 is forced automatically (RC rule), shown with a red ∞ icon
+- **∞ 2-card combo badge** — if your deck contains an infinite combo with exactly 2 cards, Bracket 3 is the minimum: Brackets 1–2 allow no two-card combos, and Bracket 3 allows none before turn 6. Shown with a red ∞ icon
+- **Tutors** do not change the bracket: Wizards removed the tutor restriction on 2025-10-21, and the most efficient tutors are Game Changers
 - **AI suggestions** for improvement
 - **Combo detection** via Commander Spellbook
 - **Mana curve**, color distribution, category breakdown
@@ -419,19 +436,23 @@ When you have cards in your collection:
 **In Search Results:**
 
 - Cards you own show a green **In Collection (xN)** badge
-- Use the **📦 Show only collection cards** toggle in the filters to limit search results to cards you own
+- Turn on **📦 Only cards I own** in the filters to list only the cards you own. Any printing counts: a card you own in one edition is listed whatever printing the search shows, and a double-faced card counts by its front face. The filter works in name search, including when you pick a commander, partner or companion; set and colour search ignore it.
+- The filter keeps the cards you own among the most-played matches, checking up to 700 of them. When a search matches more, a note says how many were checked: narrow the search to check the rest.
+- Signed out, or with an empty collection, the results say so instead of showing an empty list.
 
-**In the Deck Editor:**
+**In the Deck Editor (List view):**
 
 - Each card in your deck shows either:
-  - **📦 Owned** (green) — you have this card in your collection
-  - **🛒 Buy** (amber) — you need to acquire this card
+  - **📦 Owned** (green) — your collection holds the copies this card needs
+  - **🛒 Buy** (amber) — you need to acquire more copies; hover the badge to see how many
+- Copies are counted per printing: owning another printing of the card does not count
+- Basic lands have no badge, since you are never asked to buy them
 
 This lets you instantly see what you need to buy to complete a deck.
 
 ### Tips
 
-- The collection filter only appears if you have at least one card in your collection
+- The **In Collection (xN)** badge counts the exact printing shown, so a card listed by **Only cards I own** may show no badge when you own a different printing
 - Foil and non-foil copies are tracked separately
 - Collection data is stored in the same PostgreSQL database as your decks
 
@@ -465,6 +486,24 @@ Click **Export** in the deck builder to copy your deck in various formats.
 | Search         | Type in the search bar |
 | Commander mode | Click the Crown button |
 | Rename deck    | Click the deck name    |
+
+Press **?** in the deck builder, or click **Shortcuts** in its toolbar, to list
+the keyboard shortcuts. Ctrl+Z (⌘Z on macOS) undoes the last deck change, except
+while you are typing in a text field such as a card note or the search bar:
+there it undoes your typing instead.
+
+### Single-key shortcuts
+
+**/** (focus the search bar), **?** (list the shortcuts), **Esc** (clear the
+search), the **↑**/**↓** arrow keys and **Enter** (add a search result) work
+without Ctrl or ⌘. They stay silent while a text field, a drop-down, a list or a
+menu has focus, and Enter still presses a focused button or opens a focused
+link. They also wait while an input method (IME) is composing text.
+
+If you use speech input or a screen reader, a stray key can move the focus or
+add a card. Turn these shortcuts off with the **Single-key shortcuts** switch in
+the shortcut list. This browser remembers the choice. Ctrl/⌘ shortcuts (undo,
+save, export, import) keep working, and Esc still closes dialogs.
 
 ---
 

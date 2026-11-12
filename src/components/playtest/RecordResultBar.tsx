@@ -1,17 +1,19 @@
 "use client";
 // Records how a playtest went — the one thing the app cannot work out itself.
-import { useCallback, useState } from "react";
+import { useCallback, useId, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useQueryClient } from "@tanstack/react-query";
 
 import {
   MAX_SESSION_NOTES_LENGTH,
   MAX_PROPOSED_CHANGE_LENGTH,
+} from "@/lib/playtest/session-input";
+import {
   SESSION_DIFFICULTIES,
   SESSION_RESULTS,
   type SessionDifficulty,
   type SessionResult,
-} from "@/lib/playtest/session-input";
+} from "@/lib/playtest/session-enums";
 import { logger } from "@/lib/logger";
 
 interface RecordResultBarProps {
@@ -22,6 +24,11 @@ interface RecordResultBarProps {
   readonly additionalCardsSeen: number;
   /** Called once the session is stored, or immediately if the player skips */
   readonly onRecorded: () => void;
+  /**
+   * Why no result can be recorded yet, shown beside the disabled result
+   * buttons. Omitted while the run's counts are settled and recordable.
+   */
+  readonly blockedReason?: string;
 }
 
 /**
@@ -39,9 +46,12 @@ export function RecordResultBar({
   cardsSeen,
   additionalCardsSeen,
   onRecorded,
+  blockedReason,
 }: RecordResultBarProps) {
   const t = useTranslations("playtest");
   const queryClient = useQueryClient();
+  const blockedReasonId = useId();
+  const isBlocked = blockedReason !== undefined;
   const [pending, setPending] = useState<SessionResult | null>(null);
   const [failed, setFailed] = useState(false);
   // Empty means "not saying", which is a legitimate answer — the column is
@@ -155,13 +165,22 @@ export function RecordResultBar({
         <button
           key={result}
           type="button"
-          disabled={pending !== null}
+          disabled={pending !== null || isBlocked}
+          aria-describedby={isBlocked ? blockedReasonId : undefined}
           onClick={() => record(result)}
           className="px-2.5 py-1 rounded text-xs font-medium bg-[var(--surface-hover)] text-[var(--text-primary)] hover:bg-[var(--surface-hover)] disabled:opacity-40 transition-colors"
         >
           {pending === result ? t("recording") : t(`result.${result}`)}
         </button>
       ))}
+      {isBlocked && (
+        <span
+          id={blockedReasonId}
+          className="text-xs text-[var(--text-secondary)]"
+        >
+          {blockedReason}
+        </span>
+      )}
       <button
         type="button"
         onClick={onRecorded}

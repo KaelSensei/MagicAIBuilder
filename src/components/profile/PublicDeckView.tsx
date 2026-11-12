@@ -16,6 +16,7 @@ import { SavePublicDeckButton } from "@/components/community/SavePublicDeckButto
 import { cardSurfaceClassName } from "@/components/ui/Card";
 import { cn } from "@/components/ui/utils";
 import { PublicDeckCards } from "./PublicDeckCards";
+import { normalizeScryfallImageUrl } from "@/lib/scryfall/images";
 
 interface PublicDeckViewProps {
   readonly deck: PublicDeck;
@@ -28,6 +29,7 @@ const BRACKET_COLORS: Record<number, string> = {
   2: "text-blue-400 border-blue-400/30 bg-blue-400/10",
   3: "text-amber-400 border-amber-400/30 bg-amber-400/10",
   4: "text-red-400 border-red-400/30 bg-red-400/10",
+  5: "text-fuchsia-400 border-fuchsia-400/30 bg-fuchsia-400/10",
 };
 
 export function PublicDeckView({ deck, isSignedIn }: PublicDeckViewProps) {
@@ -44,7 +46,8 @@ export function PublicDeckView({ deck, isSignedIn }: PublicDeckViewProps) {
   const nonCommanderCards = deck.cards.filter(
     (c) => !c.isCommander && !c.isPartner
   );
-  const authorName = deck.user?.name ?? deck.user?.username ?? "Unknown";
+  const authorName =
+    deck.user?.name ?? deck.user?.username ?? t("community.anonymous");
   const authorUsername = deck.user?.username;
   const totalCards = deck.cards.reduce((s, c) => s + c.quantity, 0);
 
@@ -107,7 +110,7 @@ export function PublicDeckView({ deck, isSignedIn }: PublicDeckViewProps) {
             <span
               className={`text-xs px-1.5 py-0.5 rounded border font-medium ${BRACKET_COLORS[deck.targetBracket] ?? ""}`}
             >
-              Bracket {deck.targetBracket}
+              {t("public.bracket", { bracket: deck.targetBracket })}
             </span>
             <span className="text-xs text-[var(--text-secondary)] capitalize">
               {deck.format}
@@ -116,7 +119,10 @@ export function PublicDeckView({ deck, isSignedIn }: PublicDeckViewProps) {
               {t("share.cardCountLabel", { count: totalCards })}
             </span>
             {deck.isAIGenerated && (
-              <span className="text-xs text-purple-400">✦ AI generated</span>
+              <span className="text-xs text-purple-400">
+                <span aria-hidden="true">✦ </span>
+                {t("public.aiGenerated")}
+              </span>
             )}
           </div>
 
@@ -148,7 +154,7 @@ export function PublicDeckView({ deck, isSignedIn }: PublicDeckViewProps) {
         </div>
         {commander?.imageUri ? (
           <Image
-            src={commander.imageUri}
+            src={normalizeScryfallImageUrl(commander.imageUri)}
             alt={commander.name}
             width={160}
             height={223}

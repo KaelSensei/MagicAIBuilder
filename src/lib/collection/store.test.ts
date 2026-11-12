@@ -36,6 +36,14 @@ function wireCard(overrides: Partial<CollectionWireCard> = {}): CollectionWireCa
   };
 }
 
+/**
+ * @param card - The row as the server saved it.
+ * @returns The body `PATCH /api/collection/[id]` answers with for an update.
+ */
+function savedRow<T>(card: T): { readonly merged: false; readonly card: T } {
+  return { merged: false, card };
+}
+
 function deferredList(): {
   readonly promise: Promise<CollectionListResponse>;
   readonly resolve: (response: CollectionListResponse) => void;
@@ -288,12 +296,14 @@ describe("Collection store — updateQuantity", () => {
     expect(useCollectionStore.getState().collectionCards["scryfall-1"]?.quantity).toBe(3);
     resolveRequest?.(
       new Response(
-        JSON.stringify({
-          ...card,
-          quantity: 3,
-          createdAt: "2024-01-01T00:00:00.000Z",
-          acquiredAt: null,
-        }),
+        JSON.stringify(
+          savedRow({
+            ...card,
+            quantity: 3,
+            createdAt: "2024-01-01T00:00:00.000Z",
+            acquiredAt: null,
+          })
+        ),
         { status: 200 }
       )
     );
@@ -320,12 +330,28 @@ describe("Collection store — updateQuantity", () => {
     expect(fetchMock).toHaveBeenCalledOnce();
 
     resolvers[0]?.(
-      new Response(JSON.stringify({ ...card, quantity: 2, createdAt: card.createdAt.toISOString() }))
+      new Response(
+        JSON.stringify(
+          savedRow({
+            ...card,
+            quantity: 2,
+            createdAt: card.createdAt.toISOString(),
+          })
+        )
+      )
     );
     await firstUpdate;
     expect(fetchMock).toHaveBeenCalledTimes(2);
     resolvers[1]?.(
-      new Response(JSON.stringify({ ...card, quantity: 3, createdAt: card.createdAt.toISOString() }))
+      new Response(
+        JSON.stringify(
+          savedRow({
+            ...card,
+            quantity: 3,
+            createdAt: card.createdAt.toISOString(),
+          })
+        )
+      )
     );
     await secondUpdate;
 
@@ -336,7 +362,13 @@ describe("Collection store — updateQuantity", () => {
     const card = makeCollectionCard({ id: "card-1", quantity: 1 });
     useCollectionStore.setState({ collectionCards: { "scryfall-1": card } });
     const updatedCard = { ...card, quantity: 3, createdAt: "2024-01-01T00:00:00.000Z", acquiredAt: null };
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => updatedCard }));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => savedRow(updatedCard),
+      })
+    );
     await useCollectionStore.getState().updateQuantity("card-1", 3);
     expect(useCollectionStore.getState().collectionCards["scryfall-1"]?.quantity).toBe(3);
   });
@@ -345,7 +377,13 @@ describe("Collection store — updateQuantity", () => {
     const foilCard = makeCollectionCard({ id: "foil-1", foil: true });
     useCollectionStore.setState({ collectionCardsFoil: { "scryfall-1": foilCard } });
     const updatedCard = { ...foilCard, quantity: 5, foil: true, createdAt: "2024-01-01T00:00:00.000Z", acquiredAt: null };
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => updatedCard }));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => savedRow(updatedCard),
+      })
+    );
     await useCollectionStore.getState().updateQuantity("foil-1", 5);
     expect(useCollectionStore.getState().collectionCardsFoil["scryfall-1"]?.quantity).toBe(5);
   });
@@ -394,7 +432,12 @@ describe("Collection store — updateCondition", () => {
     const card = makeCollectionCard({ id: "card-1", condition: "NM" });
     useCollectionStore.setState({ collectionCards: { "scryfall-1": card } });
     const updated = { ...card, condition: "LP", foil: false, createdAt: "2024-01-01T00:00:00.000Z", acquiredAt: null };
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => updated }));
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue({ ok: true, json: async () => savedRow(updated) })
+    );
     await useCollectionStore.getState().updateCondition("card-1", "LP");
     expect(useCollectionStore.getState().collectionCards["scryfall-1"]?.condition).toBe("LP");
   });
@@ -403,7 +446,12 @@ describe("Collection store — updateCondition", () => {
     const foilCard = makeCollectionCard({ id: "foil-1", foil: true });
     useCollectionStore.setState({ collectionCardsFoil: { "scryfall-1": foilCard } });
     const updated = { ...foilCard, condition: "MP", foil: true, createdAt: "2024-01-01T00:00:00.000Z", acquiredAt: null };
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => updated }));
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue({ ok: true, json: async () => savedRow(updated) })
+    );
     await useCollectionStore.getState().updateCondition("foil-1", "MP");
     expect(useCollectionStore.getState().collectionCardsFoil["scryfall-1"]?.condition).toBe("MP");
   });

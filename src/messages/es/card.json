@@ -9,6 +9,10 @@
   "moveNamedToMaybeboard": "Move {name} to Considering",
   "moveNamedToSideboard": "Move {name} to Sideboard",
   "removeNamed": "Remove {name}",
+  "setAsCommander": "Set as commander",
+  "setAsCommanderNamed": "Set {name} as commander",
+  "changePrinting": "Change printing",
+  "changePrintingNamed": "Change the printing of {name}",
   "noCardsFound": "No cards found",
   "loadingPrintings": "Loading printings…",
   "printingsAvailable": "{count, plural, one {# printing available} other {# printings available}}",
@@ -27,11 +31,11 @@
     "add": "Add note",
     "edit": "Edit note",
     "editor": "Card note editor",
-    "placeholder": "Add a private note for this card…"
-  },
-  "favorite": {
-    "add": "Add to favorites",
-    "remove": "Remove from favorites"
+    "placeholder": "Add a private note for this card…",
+    "addNamed": "Add a note to {name}",
+    "editNamed": "Edit the note on {name}",
+    "fieldNamed": "Note on {name}",
+    "hint": "Ctrl+Enter to save · Esc to cancel"
   },
   "noText": "No text",
   "addNamedToDeck": "Add {name} to deck",
@@ -47,5 +51,10 @@
     "commander": "This card is your deck's commander.",
     "companion": "This card is your deck's companion.",
     "category": "Its assigned role in this deck is {category}."
+  },
+  "quantity": {
+    "group": "Copies of {name}",
+    "add": "Add a copy of {name}",
+    "remove": "Remove a copy of {name}"
   }
 }

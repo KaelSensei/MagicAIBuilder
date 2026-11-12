@@ -1,29 +1,15 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
-import { NextIntlClientProvider } from "next-intl";
+import { screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import enLanding from "@/messages/en/landing.json";
+import { renderWithIntl } from "@/test/render-with-intl";
 
-vi.mock("@/i18n/navigation", () => ({
-  Link: ({
-    href,
-    children,
-    ...props
-  }: {
-    readonly href: string;
-    readonly children: React.ReactNode;
-  }) => React.createElement("a", { href, ...props }, children),
-}));
+vi.mock(import("@/i18n/navigation"), () => import("@/test/i18n-navigation-stub"));
 
 import { CapabilityAtlas } from "./CapabilityAtlas";
 
 describe("CapabilityAtlas", () => {
   it("presents confirmed Commander journeys with truthful destinations", () => {
-    render(
-      <NextIntlClientProvider locale="en" messages={{ landing: enLanding }}>
-        <CapabilityAtlas />
-      </NextIntlClientProvider>
-    );
+    renderWithIntl(<CapabilityAtlas />);
 
     expect(
       screen.getByRole("region", { name: "Your Commander field guide" })

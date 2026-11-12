@@ -17,6 +17,19 @@ export type DeckFormat =
   | "vintage"
   | "pauper";
 
+/**
+ * The life total each player starts the game on, by table size: a two-player game, or a
+ * multiplayer game, one that begins with more than two players (CR 800.1).
+ *
+ * The two differ only in Brawl. CR 903.12f (also 103.4d): "In a two-player Brawl game, each
+ * player's starting life total is 25. In a multiplayer Brawl game, each player's starting life
+ * total is 30." Commander is 40 at any table (CR 103.4c, 903.7); the base game is 20 (CR 103.4).
+ */
+export interface StartingLife {
+  readonly twoPlayer: number;
+  readonly multiplayer: number;
+}
+
 /** Per-format configuration */
 export interface FormatConfig {
   /** Display name (e.g., "Commander", "Standard") */
@@ -39,8 +52,16 @@ export interface FormatConfig {
   readonly maxCopiesPerCard: number;
   /** Recommended land count for deck building hints */
   readonly recommendedLands: readonly [number, number];
-  /** Life total each player starts the game on */
-  readonly startingLife: number;
+  /** Life total each player starts the game on, for each table size */
+  readonly startingLife: StartingLife;
+  /**
+   * Whether the first mulligan is free: it does not count toward the cards put
+   * on the bottom (CR 103.5c). True for Brawl and for the formats played
+   * multiplayer by default; false for the constructed duel formats. The
+   * playtest uses it as the default of the player's per-session multiplayer
+   * choice (`lib/playtest/free-mulligan.ts`).
+   */
+  readonly firstMulliganFree: boolean;
   /**
    * Whether format-specific deck statistics (curve, threat density,
    * interaction ratio) apply. False for Commander, which uses bracket scoring.
@@ -67,7 +88,8 @@ export const FORMAT_CONFIG: Readonly<Record<DeckFormat, FormatConfig>> = {
     hasColorIdentity: true,
     maxCopiesPerCard: 1,
     recommendedLands: [33, 38],
-    startingLife: 40,
+    startingLife: { twoPlayer: 40, multiplayer: 40 },
+    firstMulliganFree: true,
     hasFormatStats: false,
     avgCmcTarget: [2.8, 3.6],
     threatDensityTarget: [0.25, 0.45],
@@ -84,7 +106,8 @@ export const FORMAT_CONFIG: Readonly<Record<DeckFormat, FormatConfig>> = {
     hasColorIdentity: true,
     maxCopiesPerCard: 1,
     recommendedLands: [22, 26],
-    startingLife: 30,
+    startingLife: { twoPlayer: 25, multiplayer: 30 },
+    firstMulliganFree: true,
     hasFormatStats: true,
     avgCmcTarget: [2.5, 3.4],
     threatDensityTarget: [0.3, 0.5],
@@ -101,7 +124,8 @@ export const FORMAT_CONFIG: Readonly<Record<DeckFormat, FormatConfig>> = {
     hasColorIdentity: true,
     maxCopiesPerCard: 1,
     recommendedLands: [22, 26],
-    startingLife: 20,
+    startingLife: { twoPlayer: 20, multiplayer: 20 },
+    firstMulliganFree: true,
     hasFormatStats: true,
     avgCmcTarget: [2.2, 3.2],
     threatDensityTarget: [0.3, 0.5],
@@ -118,7 +142,8 @@ export const FORMAT_CONFIG: Readonly<Record<DeckFormat, FormatConfig>> = {
     hasColorIdentity: false,
     maxCopiesPerCard: 4,
     recommendedLands: [22, 26],
-    startingLife: 20,
+    startingLife: { twoPlayer: 20, multiplayer: 20 },
+    firstMulliganFree: false,
     hasFormatStats: true,
     avgCmcTarget: [2, 3.2],
     threatDensityTarget: [0.3, 0.55],
@@ -135,7 +160,8 @@ export const FORMAT_CONFIG: Readonly<Record<DeckFormat, FormatConfig>> = {
     hasColorIdentity: false,
     maxCopiesPerCard: 4,
     recommendedLands: [22, 26],
-    startingLife: 20,
+    startingLife: { twoPlayer: 20, multiplayer: 20 },
+    firstMulliganFree: false,
     hasFormatStats: true,
     avgCmcTarget: [1.9, 3],
     threatDensityTarget: [0.3, 0.55],
@@ -152,7 +178,8 @@ export const FORMAT_CONFIG: Readonly<Record<DeckFormat, FormatConfig>> = {
     hasColorIdentity: false,
     maxCopiesPerCard: 4,
     recommendedLands: [22, 26],
-    startingLife: 20,
+    startingLife: { twoPlayer: 20, multiplayer: 20 },
+    firstMulliganFree: false,
     hasFormatStats: true,
     avgCmcTarget: [1.7, 2.8],
     threatDensityTarget: [0.3, 0.55],
@@ -169,7 +196,8 @@ export const FORMAT_CONFIG: Readonly<Record<DeckFormat, FormatConfig>> = {
     hasColorIdentity: false,
     maxCopiesPerCard: 4,
     recommendedLands: [22, 26],
-    startingLife: 20,
+    startingLife: { twoPlayer: 20, multiplayer: 20 },
+    firstMulliganFree: false,
     hasFormatStats: true,
     avgCmcTarget: [1.4, 2.5],
     threatDensityTarget: [0.25, 0.5],
@@ -186,7 +214,8 @@ export const FORMAT_CONFIG: Readonly<Record<DeckFormat, FormatConfig>> = {
     hasColorIdentity: false,
     maxCopiesPerCard: 4,
     recommendedLands: [22, 26],
-    startingLife: 20,
+    startingLife: { twoPlayer: 20, multiplayer: 20 },
+    firstMulliganFree: false,
     hasFormatStats: true,
     avgCmcTarget: [1.3, 2.4],
     threatDensityTarget: [0.25, 0.5],
@@ -203,7 +232,8 @@ export const FORMAT_CONFIG: Readonly<Record<DeckFormat, FormatConfig>> = {
     hasColorIdentity: false,
     maxCopiesPerCard: 4,
     recommendedLands: [22, 26],
-    startingLife: 20,
+    startingLife: { twoPlayer: 20, multiplayer: 20 },
+    firstMulliganFree: false,
     hasFormatStats: true,
     avgCmcTarget: [1.6, 2.6],
     threatDensityTarget: [0.3, 0.55],
@@ -218,18 +248,30 @@ export const ALL_FORMATS = [
   "legacy", "vintage", "pauper",
 ] as const;
 
+/** ALL_FORMATS as a set of plain strings, so any string can be looked up. */
+const FORMAT_NAMES: ReadonlySet<string> = new Set(ALL_FORMATS);
+
+/**
+ * Whether a stored format string names a format this build supports.
+ * @param value - Format string from the database or a request
+ * @returns True when `value` is one of ALL_FORMATS
+ */
+export function isDeckFormat(value: string): value is DeckFormat {
+  return FORMAT_NAMES.has(value);
+}
+
 /** Format options for UI dropdowns */
 export const FORMAT_OPTIONS: readonly { readonly value: DeckFormat; readonly label: string }[] =
   ALL_FORMATS.map((f) => ({ value: f, label: FORMAT_CONFIG[f].label }));
 
 /**
  * Get format config with safe fallback to Commander for unknown strings.
+ *
+ * Only a name in `ALL_FORMATS` reads the table: an inherited object key such
+ * as "toString" or "constructor" is an unknown format, not a config.
  * @param format - Format string from DB or user input
  * @returns FormatConfig for the given format, or Commander config as fallback
  */
 export function getFormatConfig(format: string): FormatConfig {
-  if (format in FORMAT_CONFIG) {
-    return FORMAT_CONFIG[format as DeckFormat];
-  }
-  return FORMAT_CONFIG.commander;
+  return isDeckFormat(format) ? FORMAT_CONFIG[format] : FORMAT_CONFIG.commander;
 }

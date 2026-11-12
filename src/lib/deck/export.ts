@@ -223,16 +223,3 @@ export function exportEdhrec(deck: Deck): string {
 export async function copyToClipboard(text: string): Promise<void> {
   await navigator.clipboard.writeText(text);
 }
-
-/** Trigger a file download */
-export function downloadFile(content: string, filename: string, mimeType = "text/plain"): void {
-  const blob = new Blob([content], { type: mimeType });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-}

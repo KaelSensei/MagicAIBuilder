@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { copyToClipboard, downloadFile } from "./export";
+import { copyToClipboard } from "./export";
+import { downloadTextFile as downloadFile } from "@/lib/download-text-file";
 
 describe("copyToClipboard", () => {
   beforeEach(() => {

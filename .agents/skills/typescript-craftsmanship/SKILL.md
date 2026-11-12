@@ -118,6 +118,30 @@ function render(state: State) {
 }
 ```
 
+### 2b. Parse Once, at the Boundary
+
+Zod parses untrusted input once: in the route handler, the page or the
+provider adapter. The result is a domain type, and the code inside trusts it.
+`domain/` code never imports Zod and never re-validates
+(`docs/adr/0003-domain-as-readonly-data-and-pure-functions.md`).
+
+Where two kinds of ID or quantity can be mixed up, brand them so the compiler
+tells them apart. The brand is created only by the parser:
+
+```typescript
+// ❌ Any string can be passed where a deck id is expected
+function loadDeck(deckId: string, userId: string) {
+  /* ... */
+}
+
+// ✅ Swapping the two arguments no longer compiles
+const DeckId = z.string().min(1).brand<"DeckId">();
+type DeckId = z.infer<typeof DeckId>;
+function loadDeck(deckId: DeckId, userId: UserId) {
+  /* ... */
+}
+```
+
 ### 3. Immutability by Default
 
 Return `readonly` arrays and objects from functions. Use `as const` for literals.
@@ -189,9 +213,10 @@ const matches = items.filter((item) =>
 Always use parentheses when mixing `&&` and `||`. The precedence rules are
 correct but the code should express intent, not rely on language trivia.
 
+<!-- prettier-ignore -->
 ```typescript
 // ❌ Requires knowing that && binds tighter than ||
-return (isAdmin && hasPermission) || (isSuperUser && isActive);
+return isAdmin && hasPermission || isSuperUser && isActive;
 
 // ✅ Intent is immediately clear
 return (isAdmin && hasPermission) || (isSuperUser && isActive);
@@ -200,7 +225,7 @@ return (isAdmin && hasPermission) || (isSuperUser && isActive);
 ### 8. No Magic Values
 
 Every literal number or string that isn't self-evident must be a named constant
-with a JSDoc explanation:
+with a comment that explains it and, for an external limit, gives its source:
 
 ```typescript
 /** Scryfall enforces max 10 requests/second */
@@ -274,20 +299,61 @@ function rateLimited(url: string) {
 - **Store slices**: max 300 lines. Split into focused slices per domain.
 - **Utility files**: max 300 lines. Group by domain, not by type.
 
+Comments and blank lines do not count, so the limits never penalise
+documentation. A file already over its limit must not grow. ESLint enforcement
+with bulk suppressions as a ratchet is planned
+(`docs/adr/0007-architecture-enforcement-in-stages.md`).
+
 ### Naming Conventions
 
+- Names of domain concepts come from the glossary in `CONTEXT.md`
 - Files: `kebab-case.ts` for utils/lib, `PascalCase.tsx` for components
 - Types/Interfaces: `PascalCase` with domain prefix (`DeckCard`, not `Card`)
 - Constants: `SCREAMING_SNAKE_CASE` in dedicated `constants/` files
 - Hooks: `use` prefix, descriptive name (`useDeckStats`, not `useData`)
 - Event handlers: `handle` prefix (`handleAddCard`, `handleSubmit`)
 
-### Documentation
+### Documentation: contracts and reasons, not paraphrase
 
-- Every exported function MUST have JSDoc with `@param` and `@returns`
-- Every exported type/interface MUST have a one-line JSDoc description
-- Complex algorithms MUST have a comment explaining the approach and complexity
-- No `console.log` in production code. Use a logger utility or remove.
+The standard is `docs/adr/0006-comment-and-documentation-standard.md`; the
+templates are in `docs/engineering/code-documentation.md`.
+
+- Every **module** opens with a header: its purpose, its context and its main
+  collaborators, and what it is not responsible for when that is not obvious.
+- Every **export** has a TSDoc comment that states its contract: what it does,
+  the input constraints, the errors and edge cases, and why it exists. Write
+  `@param` and `@returns` only when they add something the name and the type do
+  not say.
+- Every **game rule** cites its Comprehensive Rules number
+  (`// CR 103.5c: the first multiplayer mulligan is free`). Every **external
+  limit** cites a URL and the date it was read.
+- **Complex algorithms** explain the approach and the complexity.
+- A comment that restates the code is a defect: delete it. When you change
+  code, fix every comment it made false, in the same commit.
+- No `console.log` in production code. Use `src/lib/logger.ts` or remove it.
+
+```typescript
+// ❌ Restates the signature, says nothing new
+/**
+ * Gets the cards to bottom.
+ * @param mulligans - the mulligans
+ * @returns the number of cards
+ */
+export function cardsToBottom(mulligans: number, multiplayer: boolean): number {
+  /* ... */
+}
+
+// ✅ States the contract and the source
+/**
+ * How many cards a player puts on the bottom of their library after taking
+ * `mulligans` mulligans: one per mulligan (CR 103.5, the London mulligan),
+ * except that the first mulligan of a multiplayer game is free (CR 103.5c).
+ * Returns 0 when no mulligan was taken; never negative.
+ */
+export function cardsToBottom(mulligans: number, multiplayer: boolean): number {
+  /* ... */
+}
+```
 
 ### No eslint-disable Without Justification
 
@@ -312,10 +378,12 @@ Before considering any code complete, verify:
 4. Zero `any`, zero `as`, zero `!`
 5. Zero `eslint-disable` without justification
 6. Zero `console.log`
-7. No file exceeds size limits (200/300 lines)
-8. All exported functions have JSDoc
+7. No file exceeds size limits (200/300 lines), and no oversized file grew
+8. Module header on every touched module; TSDoc contract on every export you
+   added or changed; game rules cite their CR number; no restating comment
 9. Derived state is memoized in components
 10. Error cases are explicitly handled
+11. Input parsed once at the boundary; no Zod inside `domain/`
 
 ---
 

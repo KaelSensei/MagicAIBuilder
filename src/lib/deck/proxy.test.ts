@@ -8,27 +8,21 @@ import {
 } from "./proxy";
 import type { DeckCard } from "./types";
 import type { LocalizedCardText } from "@/lib/scryfall/localized";
+import { aDeckCard } from "@/test/builders/card";
 
 function makeCard(overrides: Partial<DeckCard> = {}): DeckCard {
-  return {
+  return aDeckCard({
     id: "card1",
     name: "Sol Ring",
     manaCost: "{1}",
     cmc: 1,
     typeLine: "Artifact",
     oracleText: "Tap: Add two mana.",
-    colorIdentity: [],
-    isGameChanger: false,
-    isBanned: false,
-    price: null,
     imageUri: "https://example.com/img.jpg",
-    artCropUri: "",
     category: "ramp",
-    quantity: 1,
-    zone: "main",
     scryfallId: "abc",
     ...overrides,
-  };
+  });
 }
 
 const BASE_COMMANDER: DeckCard = makeCard({
@@ -90,6 +84,18 @@ describe("buildProxySlots", () => {
     expect(slots.filter((s) => s.name === "Island")).toHaveLength(0);
   });
 
+  it("excludes Snow-Covered basics by default", () => {
+    const snow = makeCard({
+      id: "s1",
+      name: "Snow-Covered Island",
+      typeLine: "Basic Snow Land — Island",
+      quantity: 4,
+    });
+    expect(buildProxySlots([snow], null, null, DEFAULT_PROXY_CONFIG)).toEqual(
+      []
+    );
+  });
+
   it("includes basic lands when includeLands=true", () => {
     const plains = makeCard({ id: "c2", name: "Plains", typeLine: "Basic Land — Plains", quantity: 3 });
     const slots = buildProxySlots([plains], null, null, { ...DEFAULT_PROXY_CONFIG, includeLands: true });
@@ -130,6 +136,27 @@ describe("buildProxySlots", () => {
     const slots = buildProxySlots([bear], null, null, DEFAULT_PROXY_CONFIG);
     expect(slots[0].oracleText).toBe("Trample");
     expect(slots[0].powerToughness).toBe("2/2");
+  });
+
+  it("prints cards stored with Scryfall's JPEG from the WebP grid", () => {
+    const stored = (id: string) =>
+      `https://cards.scryfall.io/normal/front/f/c/${id}.jpg?1793021181`;
+    const grid = (id: string) =>
+      `https://cards.scryfall.io/grid/front/f/c/${id}.webp?1793021181`;
+    const commanderId = "fc000000-0000-4000-8000-000000000001";
+    const cardId = "fc817e07-c1f3-469f-9cf7-0945dea7400f";
+
+    const slots = buildProxySlots(
+      [makeCard({ imageUri: stored(cardId) })],
+      { ...BASE_COMMANDER, imageUri: stored(commanderId) },
+      null,
+      DEFAULT_PROXY_CONFIG
+    );
+
+    expect(slots.map((slot) => slot.imageUri)).toEqual([
+      grid(commanderId),
+      grid(cardId),
+    ]);
   });
 });
 

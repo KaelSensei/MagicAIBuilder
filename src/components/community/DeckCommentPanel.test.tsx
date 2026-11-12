@@ -1,28 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { act, render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { NextIntlClientProvider } from "next-intl";
-import enDeck from "@/messages/en/deck.json";
-import enCommon from "@/messages/en/common.json";
+import { act, screen, fireEvent, waitFor } from "@testing-library/react";
+import { renderWithIntl, renderWithProviders } from "@/test/render";
 
-vi.mock("@/i18n/navigation", () => ({
-  Link: ({ href, children, ...rest }: { href: string; children: React.ReactNode }) => (
-    <a href={href} {...rest}>
-      {children}
-    </a>
-  ),
-  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
-  usePathname: () => "/",
-}));
+vi.mock(import("@/i18n/navigation"), () => import("@/test/i18n-navigation-stub"));
 
 import { DeckCommentPanel } from "./DeckCommentPanel";
-
-function renderWithIntl(ui: React.ReactElement) {
-  return render(
-    <NextIntlClientProvider locale="en" messages={{ deck: enDeck, common: enCommon }}>
-      {ui}
-    </NextIntlClientProvider>
-  );
-}
 
 function thread(overrides: Record<string, unknown> = {}) {
   return {
@@ -178,13 +160,15 @@ describe("DeckCommentPanel", () => {
       })
     );
 
-    const { rerender } = renderWithIntl(
+    const { rerender } = renderWithProviders(
       <DeckCommentPanel deckId="deck-older" isOwner={false} isSignedIn={false} />
     );
     rerender(
-      <NextIntlClientProvider locale="en" messages={{ deck: enDeck, common: enCommon }}>
-        <DeckCommentPanel deckId="deck-newer" isOwner={false} isSignedIn={false} />
-      </NextIntlClientProvider>
+      <DeckCommentPanel
+        deckId="deck-newer"
+        isOwner={false}
+        isSignedIn={false}
+      />
     );
 
     expect(await screen.findByText("Newer deck comment.")).toBeInTheDocument();

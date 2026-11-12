@@ -20,17 +20,67 @@ import {
   readDeckQuestion,
   type DeckQuestion,
 } from "@/lib/ai/deck-question";
+import type { AIProvider, ModelCall } from "@/lib/ai/model-reply";
+import {
+  callModelMetered,
+  chooseModelTarget,
+  replyParseFailed,
+  type ModelTarget,
+  type ReplyInterpretation,
+} from "@/lib/ai/metered-model";
+import {
+  recordPlaceholderAnswer,
+  type AiCallTicket,
+} from "@/lib/ai/usage/meter";
+import { reserveAiCallForRoute } from "@/lib/ai/usage/route-gate";
+import { readSuggestReply } from "@/lib/ai/suggest-reply-validation";
 
 export const runtime = "nodejs";
 
 const RATE_LIMIT = 10; // max AI suggestion requests
 const RATE_WINDOW = 60_000; // per 60 seconds per user
 
+/**
+ * Output-token cap for one suggestion reply.
+ *
+ * The default task asks for an analysis, exactly 8 additions (2–4 sentences
+ * of rationale and up to 3 alternatives each) and exactly 4 removals: 113
+ * string values, 37 of them free text. A reply in that shape runs to roughly
+ * 1,500–3,750 tokens depending on sentence length and layout, so the former
+ * 2,048 cut long replies off mid-JSON. 4,096 covers the top of that range.
+ * The cap is a ceiling, not a charge: only generated tokens are billed.
+ */
+const SUGGEST_MAX_OUTPUT_TOKENS = 4096;
+
+const SUGGEST_CALLS: Readonly<Record<AIProvider, ModelCall>> = {
+  anthropic: {
+    provider: "anthropic",
+    model: "claude-haiku-4-5",
+    maxTokens: SUGGEST_MAX_OUTPUT_TOKENS,
+  },
+  openai: {
+    provider: "openai",
+    model: "gpt-4o-mini",
+    maxTokens: SUGGEST_MAX_OUTPUT_TOKENS,
+  },
+};
+
+/**
+ * Where this request's suggestions come from: a metered model call holding a
+ * reserved call, or the built-in suggestions when no provider key is set.
+ */
+type SuggestionOrigin =
+  | {
+      readonly kind: "model";
+      readonly target: ModelTarget;
+      readonly ticket: AiCallTicket;
+    }
+  | { readonly kind: "placeholder" };
+
 interface BracketDimensions {
   ramp: number;
   draw: number;
   removal: number;
-  tutors: number;
   winSpeed: number;
   avgCmc: number;
 }
@@ -283,57 +333,33 @@ TASK:
 ${task}`;
 }
 
-async function callAnthropic(prompt: string): Promise<SuggestResponse> {
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": process.env.ANTHROPIC_API_KEY!,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model: "claude-haiku-4-5",
-      max_tokens: 2048,
-      messages: [{ role: "user", content: prompt }],
-    }),
-    signal: AbortSignal.timeout(45000),
-  });
-  if (!response.ok) throw new Error(`Anthropic API error: ${response.status}`);
-  const data = await response.json();
-  const text = data.content?.[0]?.text ?? "{}";
-  const parsed = JSON.parse(text);
-  return {
-    suggestions: parsed.suggestions ?? [],
-    removals: parsed.removals ?? [],
-    analysis: parsed.analysis ?? "",
-    provider: "anthropic",
-  };
-}
-
-async function callOpenAI(prompt: string): Promise<SuggestResponse> {
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-    },
-    body: JSON.stringify({
-      model: "gpt-4o-mini",
-      messages: [{ role: "user", content: prompt }],
-      response_format: { type: "json_object" },
-      max_tokens: 2048,
-    }),
-    signal: AbortSignal.timeout(45000),
-  });
-  if (!response.ok) throw new Error(`OpenAI API error: ${response.status}`);
-  const data = await response.json();
-  const text = data.choices?.[0]?.message?.content ?? "{}";
-  const parsed = JSON.parse(text);
-  return {
-    suggestions: parsed.suggestions ?? [],
-    removals: parsed.removals ?? [],
-    analysis: parsed.analysis ?? "",
-    provider: "openai",
+/**
+ * Reads a complete model reply as suggestions.
+ *
+ * @param provider - the provider that answered, shown in the panel
+ * @returns an interpreter that fails with `parseFailed` on text that is not
+ *   JSON, and with `rejectedByValidator` on JSON that is not a usable reply
+ *   (`readSuggestReply`), so that either failure gives the call back
+ */
+function interpretSuggestReply(
+  provider: AIProvider
+): (text: string) => ReplyInterpretation<SuggestResponse> {
+  return (text) => {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(text);
+    } catch (error) {
+      return replyParseFailed(error);
+    }
+    const reading = readSuggestReply(parsed);
+    if (!reading.ok) {
+      return {
+        ok: false,
+        outcome: "rejectedByValidator",
+        error: new Error(`Suggestion reply rejected: ${reading.reason}`),
+      };
+    }
+    return { ok: true, value: { ...reading.content, provider } };
   };
 }
 
@@ -568,10 +594,22 @@ export async function POST(request: Request) {
   if (body.partnerName)
     body.partnerName = sanitizeForPrompt(body.partnerName, 200);
 
-  const playtestEvidence = await loadPlaytestEvidence(
-    body.deckId,
-    auth.session.user.id
-  );
+  // A model call needs a call from this month's allowance before anything
+  // else is loaded, so a refusal is cheap and can still be an HTTP status.
+  const userId = auth.session.user.id;
+  const target = chooseModelTarget(SUGGEST_CALLS);
+  let origin: SuggestionOrigin = { kind: "placeholder" };
+  if (target) {
+    const gate = await reserveAiCallForRoute(
+      userId,
+      "suggest",
+      "POST /api/ai/suggest"
+    );
+    if (!gate.ok) return gate.response;
+    origin = { kind: "model", target, ticket: gate.ticket };
+  }
+
+  const playtestEvidence = await loadPlaytestEvidence(body.deckId, userId);
 
   const encoder = new TextEncoder();
   const stream = new ReadableStream<Uint8Array>({
@@ -579,17 +617,27 @@ export async function POST(request: Request) {
       try {
         const prompt = buildPrompt(body, playtestEvidence);
         let result: SuggestResponse;
-        if (process.env.ANTHROPIC_API_KEY) result = await callAnthropic(prompt);
-        else if (process.env.OPENAI_API_KEY) result = await callOpenAI(prompt);
-        else result = mockSuggestions(body);
+        if (origin.kind === "model") {
+          result = await callModelMetered({
+            ticket: origin.ticket,
+            target: origin.target,
+            prompt,
+            interpret: interpretSuggestReply(origin.target.call.provider),
+          });
+        } else {
+          result = mockSuggestions(body);
+          await recordPlaceholderAnswer(userId, "suggest");
+        }
         await streamResponse(
           controller,
           await enrichSuggestionEvidence(result, body)
         );
       } catch (error) {
         // Logged in full, sent generic — provider errors stay server-side.
+        // The Error itself is logged so a typed failure such as a reply cut
+        // off at the token cap keeps its name and fields in the log line.
         logger.error(
-          error instanceof Error ? error.message : String(error),
+          error instanceof Error ? error : String(error),
           "POST /api/ai/suggest"
         );
         const event: StreamEvent = {

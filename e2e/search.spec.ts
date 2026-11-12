@@ -62,4 +62,25 @@ test.describe("Card Search Flow", () => {
     await page.getByText("Hide filters").click();
     await expect(page.getByText("Show filters")).toBeVisible();
   });
+
+  test("Collection only tells a signed-out player why nothing is listed", async ({
+    page,
+  }) => {
+    // This project has no client session, so the player is signed out.
+    await openBuilder(page);
+    await page.getByText("Show filters").click();
+
+    const toggle = page.getByRole("button", { name: "Only cards I own" });
+    await toggle.click();
+
+    await expect(toggle).toHaveAttribute("aria-pressed", "true");
+    await expect(
+      page.getByText(
+        "Sign in and add cards to your collection to see only the cards you own."
+      )
+    ).toBeVisible();
+    await expect(
+      page.getByText("No cards found. Try a different search.")
+    ).toHaveCount(0);
+  });
 });

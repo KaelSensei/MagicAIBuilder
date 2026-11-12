@@ -4,7 +4,7 @@ import { renderWithIntl } from "@/test/render-with-intl";
 import type { DeckCard } from "@/lib/deck/types";
 import { CardListItem } from "./CardListItem";
 
-vi.mock("./CardTooltip", () => ({
+vi.mock(import("./CardTooltip"), () => ({
   CardTooltip: ({ children }: { readonly children: React.ReactNode }) => <>{children}</>,
 }));
 

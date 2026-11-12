@@ -5,12 +5,17 @@ import { useTranslations } from "next-intl";
 import { useSession } from "next-auth/react";
 import { Sparkles } from "lucide-react";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
+import { ButtonLink } from "@/components/ui/ButtonLink";
 
 const NAV_LINK_CLASS =
   "inline-flex items-center rounded-[var(--lumen-radius-pill)] px-3 py-2 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--accent-soft)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]";
 
-const PRIMARY_LINK_CLASS =
-  "inline-flex items-center rounded-[var(--lumen-radius-pill)] bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white shadow-[var(--lumen-shadow-sm)] transition-colors hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]";
+/**
+ * The bar's pill is px-4 py-2, which no Button size has (sm is px-3.5, md is
+ * py-2.5). px-4 over the small size keeps it as drawn; adopting `sm` outright
+ * is a visual change for its own pull request.
+ */
+const NAVBAR_PILL_PADDING = "px-4";
 
 /**
  * Landing navigation for the public Commander guide.
@@ -49,13 +54,13 @@ export function LandingNavbar() {
         </li>
         <li>
           {isLoggedIn ? (
-            <Link href="/decks" className={PRIMARY_LINK_CLASS}>
+            <ButtonLink href="/decks" className={NAVBAR_PILL_PADDING}>
               {t("navbar.myDecks")}
-            </Link>
+            </ButtonLink>
           ) : (
-            <Link href="/builder/guest" className={PRIMARY_LINK_CLASS}>
+            <ButtonLink href="/builder/guest" className={NAVBAR_PILL_PADDING}>
               {t("navbar.guestDeck")}
-            </Link>
+            </ButtonLink>
           )}
         </li>
       </ul>

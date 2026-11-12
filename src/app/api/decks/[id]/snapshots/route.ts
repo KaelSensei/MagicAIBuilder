@@ -3,11 +3,11 @@ import { prisma } from "@/lib/db/prisma";
 import { requireDeckOwner } from "@/lib/auth/helpers";
 import { logger } from "@/lib/logger";
 import { readJsonBody, readRecord } from "@/lib/api/json-body";
-
-type Params = { params: Promise<{ id: string }> };
+import { snapshotContent } from "@/lib/deck/deck-version";
+import type { RouteParams } from "@/lib/api/route-kit";
 
 // GET /api/decks/[id]/snapshots — list snapshots for a deck
-export async function GET(_req: Request, { params }: Params) {
+export async function GET(_req: Request, { params }: RouteParams<"id">) {
   const { id } = await params;
   try {
     const ownership = await requireDeckOwner(id);
@@ -34,7 +34,7 @@ export async function GET(_req: Request, { params }: Params) {
 }
 
 // POST /api/decks/[id]/snapshots — create a snapshot
-export async function POST(request: Request, { params }: Params) {
+export async function POST(request: Request, { params }: RouteParams<"id">) {
   const { id } = await params;
   try {
     const ownership = await requireDeckOwner(id);
@@ -63,18 +63,8 @@ export async function POST(request: Request, { params }: Params) {
       return NextResponse.json({ error: "Deck not found" }, { status: 404 });
     }
 
-    // Build card list snapshot
-    const commanderCard = deck.cards.find((c) => c.isCommander);
-    const partnerCard = deck.cards.find((c) => c.isPartner);
-
     const snapshot = await prisma.deckSnapshot.create({
-      data: {
-        deckId: id,
-        name,
-        cardList: deck.cards as unknown as object[],
-        commander: commanderCard?.name ?? partnerCard?.name ?? deck.commanderId ?? null,
-        cardCount: deck.cards.length,
-      },
+      data: { deckId: id, name, ...snapshotContent(deck) },
     });
 
     return NextResponse.json(snapshot, { status: 201 });

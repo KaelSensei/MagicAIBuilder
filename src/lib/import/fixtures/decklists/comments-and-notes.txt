@@ -1,0 +1,11 @@
+Commander
+1 Atraxa, Praetors' Voice
+
+Deck
+// Ramp
+1 Sol Ring // best turn one
+// Note: cast it first
+1 Arcane Signet | budget pick
+# Draw
+1 Rhystic Study
+1 Counterspell // Staple

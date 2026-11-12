@@ -1,3 +1,15 @@
+/**
+ * The Auth.js instance for the Node runtime: `auth`, `signIn`, `signOut` and
+ * the `/api/auth/*` route `handlers`.
+ *
+ * It extends `edge-config.ts`, which the middleware runs, with what the Edge
+ * runtime cannot load: the Prisma adapter and the bcryptjs password check of
+ * the credentials provider, rate-limited per email. It also holds the Google
+ * client secret.
+ *
+ * @module auth/config
+ */
+import "server-only";
 import NextAuth from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import Google from "next-auth/providers/google";
@@ -14,10 +26,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ...edgeAuthConfig,
   adapter: PrismaAdapter(prisma),
   providers: [
+    // No `allowDangerousEmailAccountLinking`: password sign-up does not verify
+    // the email, so linking by email would attach a Google identity to a row
+    // anyone could have registered first. Auth.js instead refuses with
+    // `OAuthAccountNotLinked`, which the sign-in page explains.
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      allowDangerousEmailAccountLinking: true,
       authorization: { params: { prompt: "select_account" } },
     }),
     Credentials({

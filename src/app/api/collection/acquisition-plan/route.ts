@@ -1,10 +1,14 @@
+// GET /api/collection/acquisition-plan: what the signed-in user still has to buy for their decks.
+// The route reads and authorises; `@/lib/collection/acquisition-plan` decides what each deck needs.
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAuth } from "@/lib/auth/helpers";
 import { prisma } from "@/lib/db/prisma";
-import { buildAcquisitionPlan } from "@/lib/collection/shopping-list";
+import {
+  buildAcquisitionPlan,
+  toAcquisitionPlanDeck,
+} from "@/lib/collection/acquisition-plan";
 import { logger } from "@/lib/logger";
-import type { AcquisitionPlanCard } from "@/lib/collection/shopping-list";
 
 /** Private, read-only purchase plan across the signed-in user's decks. */
 export async function GET(request: Request) {
@@ -56,22 +60,13 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Deck not found" }, { status: 404 });
     }
 
-    const planDecks = selectedDecks.map((deck) => {
-      const cards: AcquisitionPlanCard[] = [];
-      let commander: AcquisitionPlanCard | null = null;
-      let partner: AcquisitionPlanCard | null = null;
-      for (const card of deck.cards) {
-        if (card.isCommander) commander = card;
-        else if (card.isPartner) partner = card;
-        else cards.push(card);
-      }
-      return { id: deck.id, name: deck.name, cards, commander, partner };
-    });
-
     return NextResponse.json({
       deckCount: selectedDecks.length,
       decks: decks.map((deck) => ({ id: deck.id, name: deck.name })),
-      items: buildAcquisitionPlan(planDecks, quantities),
+      items: buildAcquisitionPlan(
+        selectedDecks.map(toAcquisitionPlanDeck),
+        quantities
+      ),
     });
   } catch (error) {
     logger.error(error instanceof Error ? error.message : "unknown", "GET /api/collection/acquisition-plan");

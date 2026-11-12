@@ -1,6 +1,11 @@
+/**
+ * Checks live Scryfall data, not the app: `@external`, so the blocking gate
+ * skips it. The E2E container resolves api.scryfall.com to nowhere, so this
+ * spec runs only outside the Docker stack, with `PLAYWRIGHT_GREP_INVERT=""`.
+ */
 import { test, expect } from "@playwright/test";
 
-test.describe("Scryfall printings sanity", () => {
+test.describe("Scryfall printings sanity @external", () => {
   test("Black Lotus has multiple paper printings (unique=prints)", async ({ request }) => {
     // Mirror the Scryfall search used for "all arts" expectations.
     // Reference: https://scryfall.com/search?as=grid&order=released&q=%21%22Black+Lotus%22+oracleid%3A5089ec1a-f881-4d55-af14-5d996171203b+include%3Aextras&unique=prints

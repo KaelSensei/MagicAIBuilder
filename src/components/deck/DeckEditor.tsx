@@ -191,9 +191,15 @@ export function DeckEditor({
           ))}
         </div>
 
-        {/* View mode toggle — only relevant for main zone */}
+        {/* View mode toggle — only relevant for main zone. A named toolbar: the
+            search panel has its own "List view" button, so without the name a
+            screen reader hears the same button twice (TT-11). */}
         {activeZone === "main" && (
-          <div className="flex items-center gap-0.5 ml-auto">
+          <div
+            role="toolbar"
+            aria-label={t("viewMode.toolbar")}
+            className="flex items-center gap-0.5 ml-auto"
+          >
             <p
               className={cn(
                 "text-xs font-medium mr-1",
@@ -208,6 +214,7 @@ export function DeckEditor({
             <button
               type="button"
               onClick={() => setViewMode("list")}
+              aria-pressed={viewMode === "list"}
               className={`p-1 rounded transition-colors ${
                 viewMode === "list"
                   ? "text-[var(--accent-text)]"
@@ -221,6 +228,7 @@ export function DeckEditor({
             <button
               type="button"
               onClick={() => setViewMode("grid")}
+              aria-pressed={viewMode === "grid"}
               className={`p-1 rounded transition-colors ${
                 viewMode === "grid"
                   ? "text-[var(--accent-text)]"

@@ -10,7 +10,12 @@
 import type { QualityBadge } from "@/lib/ratings/ratings";
 import type { VoteValue } from "./votes";
 
-/** The commander card as shown on a discovery row. */
+/**
+ * The commander as shown on a discovery row. Always present: a deck whose
+ * `isCommander` row is missing is named after its denormalised
+ * `commanderName`. An empty URI means no image, and the row shows the card
+ * back.
+ */
 export interface DiscoveryCommander {
   readonly name: string;
   readonly imageUri: string;

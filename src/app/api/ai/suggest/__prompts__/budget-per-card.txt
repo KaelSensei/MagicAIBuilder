@@ -1,0 +1,74 @@
+You are a Magic: The Gathering Commander expert. Analyze this deck and suggest targeted improvements.
+
+DECK INFO:
+- Commander: Krenko, Mob Boss
+- Color Identity: R
+- Total cards: 12
+- Average CMC: 1.91
+- Current Bracket: 2/5
+- Target Bracket: 1/5
+- Budget: $2.50 max per card — NEVER suggest a card above this price. If the ideal card exceeds budget, suggest a budget alternative and say why.
+- Archetype: Auto-detect from deck composition
+- Detected Themes: Spellslinger, Card draw
+
+PLAYER DECK BRIEF:
+  No additional preferences provided
+
+CATEGORY BREAKDOWN:
+  ramp: 2
+  draw: 5
+  removal: 2
+  creatures: 1
+  lands: 1
+
+BRACKET DIMENSION SCORES (1=weak, 5=strong):
+  ramp: 2/4
+  draw: 4/4
+  removal: 2/4
+  winSpeed: 2/4
+  avgCmc: 4/4
+
+GAME CHANGERS IN DECK (2):
+  Rhystic Study, Cyclonic Rift
+
+IDENTIFIED GAPS / WARNINGS:
+  - Only 1 land: Commander decks usually run 36 or more
+
+ALL CURRENT CARDS (11):
+Sol Ring, Arcane Signet, Brainstorm, Ponder, Preordain, Rhystic Study, Mystic Remora, Counterspell, Cyclonic Rift, Murmuring Mystic, Island
+
+PRIVATE USER-OWNED PLAYTEST EVIDENCE:
+  None recorded
+
+ARCHETYPE GUIDANCE (Goodstuff):
+Focus on high-value staples appropriate for the format and bracket (Sol Ring, Arcane Signet, Command Tower), strong draw engines, versatile removal, and cards that provide value regardless of the specific game state.
+
+TASK:
+1. Suggest exactly 8 cards to ADD. They should synergize with Krenko, Mob Boss, align with the archetype above, fill the gaps, match bracket 1, respect budget, and NOT already be in the deck. Include 2–4 sentences of rationale per card. For each card, include up to 3 distinct alternatives: a cheaper budget option, a different power-level option, and a different playstyle option. Never repeat a main suggestion or a card already in the deck.
+2. Suggest exactly 4 cards to REMOVE. They must be actual cards from the deck above that have low synergy with the archetype, are redundant, or push the bracket too high. Include an explanation per removal.
+
+Respond ONLY in this JSON format (no markdown):
+{
+  "analysis": "2-3 sentences on current state, strengths, and main gaps",
+  "suggestions": [
+    {
+      "name": "Exact Card Name",
+      "reason": "One sentence explaining synergy with Krenko, Mob Boss",
+      "category": "ramp|draw|removal|boardWipe|creature|land|protection|winCondition|other",
+      "priority": "high|medium|low",
+      "alternatives": [
+        {
+          "name": "Exact Alternative Card Name",
+          "reason": "Why this is a meaningful alternative",
+          "dimension": "budget|power|playstyle"
+        }
+      ]
+    }
+  ],
+  "removals": [
+    {
+      "name": "Exact Card Name From Deck",
+      "reason": "One sentence explaining why it underperforms"
+    }
+  ]
+}

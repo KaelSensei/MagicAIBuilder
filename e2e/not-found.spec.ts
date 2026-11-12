@@ -47,6 +47,21 @@ test.describe("Not found", () => {
   });
 
   /**
+   * A slug no commander name can produce (commanderToSlug only emits lowercase
+   * letters, digits and hyphens) used to render an empty listing with a
+   * canonical URL. A well-formed slug with no public deck still renders its
+   * empty state — see community-discovery.spec.ts.
+   */
+  test("a commander slug no name can produce serves it too, marked noindex", async ({
+    page,
+  }) => {
+    await page.goto("/commanders/Not_A_Slug/decks");
+
+    await expect(page.getByRole("heading", { name: "Page not found" })).toBeVisible();
+    await expect(page.locator('meta[name="robots"][content="noindex"]').first()).toBeAttached();
+  });
+
+  /**
    * A dormant locale prefix never resolves to the `[locale]` segment, so this
    * one is served by the same file with no request locale to read. It falls
    * back to English rather than throwing, and it is the only case that is

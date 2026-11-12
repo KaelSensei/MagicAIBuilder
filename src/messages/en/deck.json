@@ -1,5 +1,21 @@
 {
   "publicLoading": "Loading deck...",
+  "public": {
+    "bracket": "Bracket {bracket}",
+    "aiGenerated": "AI generated",
+    "saveDeck": "Save deck",
+    "savingDeck": "Saving deck",
+    "savedDeck": "Saved deck",
+    "saveFailed": "Unable to save deck",
+    "fork": "Fork",
+    "forking": "Forking…",
+    "forkDeck": "Fork deck",
+    "forkingDeck": "Forking deck",
+    "forkedFrom": "Forked from <link>{source}</link>",
+    "forkSource": "{name} by {author}",
+    "deckShared": "Deck shared",
+    "printGuide": "Print guide"
+  },
   "savedFolders": {
     "eyebrow": "Community library",
     "title": "Saved public decks",
@@ -75,6 +91,7 @@
     "startBuildingDescription": "Create your first Commander deck with live bracket scoring and Game Changers detection.",
     "createDeck": "Create Deck",
     "newDeck": "New Deck",
+    "newDeckName": "New Deck {index}",
     "deleteConfirm": "Delete this deck? This cannot be undone.",
     "loadFailedTitle": "Could not load your decks",
     "loadFailedDescription": "The server rejected the request, so this list may be incomplete. Your decks are not lost — try again in a moment.",
@@ -147,7 +164,8 @@
     "delete": "Delete {name}",
     "manualBracket": "Manual bracket override",
     "autoBracket": "Auto bracket",
-    "gameChanger": "Game Changer"
+    "gameChanger": "Game Changer",
+    "aiBadge": "AI"
   },
   "table": {
     "deck": "Deck",
@@ -178,10 +196,27 @@
     "validating": "Validating {count} cards with Scryfall...",
     "importSuccess": "Successfully imported {count} cards.",
     "importFailed": "Failed to import cards.",
+    "lookupFailed": "The card lookup did not answer. Nothing was imported; try again.",
     "close": "Close",
     "cancel": "Cancel",
     "import": "Import",
     "previewDecklist": "Preview decklist",
+    "moxfieldRefused": "Moxfield refused MagicAIBuilder's request, so this deck can't be fetched from here. To import it anyway, open the deck on moxfield.com, use Export to copy the list as text, then paste it in the {tab} tab.",
+    "moxfieldProfiles": {
+      "title": "Moxfield profiles",
+      "description": "Save a username to quickly import one of its public decks.",
+      "username": "Moxfield username",
+      "saveProfile": "Save profile",
+      "loadDecks": "Load decks",
+      "loading": "Loading…",
+      "retry": "Retry",
+      "loadFailed": "Could not load Moxfield decks.",
+      "savedProfiles": "Saved Moxfield profiles",
+      "removeProfile": "Remove @{profile}",
+      "deckPages": "Moxfield deck pages",
+      "range": "{first, number}–{last, number} of {total, plural, one {# deck} other {# decks}}",
+      "importDeck": "Import {name}"
+    },
     "previewZone": {
       "main": "Main",
       "sideboard": "Sideboard",
@@ -207,29 +242,17 @@
       "zones": "Main {main} · Sideboard {sideboard} · Maybeboard {maybeboard}"
     }
   },
-  "templates": {
-    "title": "Templates for {commander}",
-    "subtitle": "Start with a curated deck and customize it",
-    "close": "Close",
-    "loading": "Loading templates...",
-    "loadFailed": "Failed to load templates",
-    "empty": "No templates available for this commander yet",
-    "filterByArchetype": "Filter by archetype",
-    "all": "All",
-    "official": "Official",
-    "byAuthor": "{archetype} by {author}",
-    "use": "Use"
-  },
   "bulkEdit": {
     "title": "Bulk Edit — {name}",
     "close": "Close",
     "description": "Edit your decklist directly. One card per line: <code>1 Card Name</code>. Add a <code>Commander</code> section header to set your commander.",
     "saving": "Saving...",
-    "clearing": "Clearing existing deck...",
-    "rebuilding": "Rebuilding deck...",
-    "reloading": "Saved! Reloading deck...",
     "saved": "{count, plural, one {Saved # card successfully.} other {Saved # cards successfully.}}",
     "saveFailed": "Failed to save changes.",
+    "lookupFailed": "Nothing was saved — the card lookup did not answer. Your list is kept; try saving again.",
+    "unknownCards": "Nothing was saved — no card found for: {names}",
+    "invalidPartner": "Nothing was saved — {name} cannot be paired with this commander.",
+    "invalidCompanion": "Nothing was saved — {name} cannot be this deck’s companion.",
     "lineCount": "{count, plural, one {# line} other {# lines}}",
     "save": "Save",
     "savedButton": "Saved!"
@@ -300,6 +323,10 @@
     "title": "Export Proxy Sheets",
     "description": "Configure and print proxy cards for your deck.",
     "paper": "Paper",
+    "paperOption": {
+      "a4": "A4",
+      "letter": "Letter"
+    },
     "layout": "Layout",
     "quality": "Quality",
     "qualityOption": {
@@ -319,7 +346,8 @@
     "preload": "Preload Images",
     "print": "Print / Save PDF",
     "hintArt": "Preload images first, then print. Choose “Save as PDF” in the dialog. Desktop recommended.",
-    "hintTextOnly": "No images — opens print immediately with name, type, and rules text. Choose “Save as PDF” in the dialog."
+    "hintTextOnly": "No images — opens print immediately with name, type, and rules text. Choose “Save as PDF” in the dialog.",
+    "popupBlocked": "Pop-up blocked — allow pop-ups for this site"
   },
   "buyList": {
     "buyLater": "Later",
@@ -333,6 +361,7 @@
     "nothingPlanned": "No cards planned for now",
     "sessionOnly": "Saved in this browser for this deck. Your collection is unchanged.",
     "intentSaved": "Saved privately for this deck across your signed-in devices. Your collection is unchanged.",
+    "saveFailed": "Could not save your choice — try again",
     "deferredCount": "{count, plural, one {# card for later} other {# cards for later}}",
     "knownSubtotal": "Known subtotal",
     "priceUnavailable": "Price unavailable",
@@ -350,6 +379,13 @@
     "noData": "No bracket data yet",
     "score": "Bracket Score",
     "target": "Target",
+    "name": {
+      "1": "Exhibition",
+      "2": "Core",
+      "3": "Upgraded",
+      "4": "Optimized",
+      "5": "cEDH"
+    },
     "manualOverride": "Manual override — Bracket {bracket}",
     "ignoresGameChangers": "Ignores Game Changers rules",
     "resetToCalculated": "Reset to calculated bracket",
@@ -363,11 +399,10 @@
       "ramp": "Ramp",
       "draw": "Draw",
       "removal": "Removal",
-      "tutors": "Tutors",
       "winSpeed": "Win Speed",
       "avgCmc": "Avg CMC"
     },
-    "infiniteCombos": "{count, plural, one {# infinite 2-card combo → Bracket 4 (RC rule)} other {# infinite 2-card combos → Bracket 4 (RC rule)}}",
+    "infiniteCombos": "{count, plural, one {# infinite 2-card combo} other {# infinite 2-card combos}} → Bracket {bracket} minimum (none in Brackets 1–2, none before turn 6 in Bracket 3)",
     "gameChangers": "{count, plural, one {# Game Changer} other {# Game Changers}}",
     "gcForcesB4": " → Bracket 4 minimum (>3 GC)",
     "gcForcesB3": " → Bracket 3 minimum (GC not allowed in B1/B2)",
@@ -379,44 +414,11 @@
       "optional": "Optional deck advice"
     }
   },
-  "budget": {
-    "title": "Budget Optimization",
-    "close": "Close",
-    "closeOverlay": "Close budget optimization modal",
-    "current": "Current:",
-    "target": "Target:",
-    "saveUpTo": "Save up to {amount}",
-    "save": "Save {amount}",
-    "goalReached": "Budget goal reached!",
-    "withinBudget": "Your deck is already within budget.",
-    "apply": "Apply"
-  },
-  "shoppingList": {
-    "title": "Shopping List",
-    "close": "Close",
-    "closeOverlay": "Close shopping list modal",
-    "card": "Card",
-    "qty": "Qty",
-    "unit": "Unit",
-    "total": "Total",
-    "subtotal": "Subtotal: {amount}",
-    "unpricedNote": "{count, plural, one {# card has no known price — listed at zero in the CSV} other {# cards have no known price — listed at zero in the CSV}}",
-    "copy": "Copy",
-    "copied": "Copied!",
-    "downloadCsv": "Download CSV"
-  },
   "companion": {
     "title": "Companion",
     "zoneHint": "(sideboard)",
     "emptyHint": "Turn on <strong>Companion</strong> in search, then click a Companion card. It stays separate from the Sideboard tab.",
     "clear": "Clear"
-  },
-  "maybeboard": {
-    "notCounted": "Not counted in the 99",
-    "empty": "No cards here yet",
-    "moveToDeck": "Move to deck",
-    "deck": "Deck",
-    "remove": "Remove from this zone"
   },
   "community": {
     "upvote": "Upvote",
@@ -457,6 +459,11 @@
     "analysedAgo": "Analysed {time}",
     "addCommanderHint": "Add a commander to get suggestions",
     "retry": "Retry",
+    "limits": {
+      "buildAllowanceExhausted": "Monthly AI deck builds used up ({limit}). They reset on {date}. You can still build a deck by hand.",
+      "suggestAllowanceExhausted": "Monthly AI suggestions used up ({limit}). They reset on {date}. Everything else keeps working.",
+      "spendCeilingReached": "AI features are paused until {date}. Everything else keeps working."
+    },
     "cardsToAdd": "Cards to Add",
     "cardsToCut": "Cards to Cut",
     "ignored": "{count} ignored",
@@ -524,7 +531,14 @@
     "minCards": "Add at least 10 cards to detect combos",
     "checking": "Checking Commander Spellbook…",
     "noKnown": "No known combos detected",
-    "infinite": "Infinite combos"
+    "infinite": "Infinite combos",
+    "unavailable": "Commander Spellbook could not be reached, so combos were not checked. Try again later.",
+    "prerequisites": "Prerequisites",
+    "otherPiece": "Also needs: {piece}",
+    "manaNeeded": "Mana needed: {mana}",
+    "viewOnSpellbook": "Steps on Commander Spellbook",
+    "credit": "Combo data from <link>Commander Spellbook</link>",
+    "observedLabel": "Commander Spellbook results observed {date}"
   },
   "meta": {
     "title": "Meta Analysis",
@@ -584,10 +598,11 @@
     "no": "No",
     "deleteConfirm": "Delete?",
     "restoreTooltip": "Restore to this snapshot",
-    "deleteTooltip": "Delete snapshot"
+    "deleteTooltip": "Delete snapshot",
+    "toggleList": "Snapshot list"
   },
   "share": {
-    "title": "Share Deck",
+    "title": "Share deck",
     "editDeck": "Edit",
     "share": "Share",
     "public": "Public",
@@ -599,6 +614,7 @@
     "enableToGenerate": "Enable sharing to generate a public read-only link for this deck.",
     "copyLink": "Copy link",
     "copiedLink": "Copied!",
+    "linkLabel": "Share link",
     "readOnly": "Read-only",
     "commandZone": "Command Zone",
     "statsTitle": "Stats",
@@ -623,7 +639,7 @@
   "ratings": {
     "title": "Community Rating",
     "noRatings": "No ratings yet — be the first.",
-    "average": "{average} out of 5",
+    "average": "{average, number} out of 5",
     "voteCount": "{count, plural, =0 {no ratings} one {1 rating} other {# ratings}}",
     "starLabel": "Rate {count, plural, one {# star} other {# stars}}",
     "yourRating": "Your rating",
@@ -735,16 +751,19 @@
     "stratVoltronSub": "Buff your commander",
     "bracket1": "Bracket 1",
     "bracket1Sub": "Exhibition",
-    "bracket1Desc": "No interaction, no synergy — pure theme or storytelling",
+    "bracket1Desc": "Theme over power. No Game Changers or two-card combos unless highly thematic. Expect 9+ turns",
     "bracket2": "Bracket 2",
-    "bracket2Sub": "Casual",
-    "bracket2Desc": "Precons and light upgrades, 0–1 game changers, no infinite combos",
+    "bracket2Sub": "Core",
+    "bracket2Desc": "Unoptimized and straightforward. No Game Changers, no two-card combos. Expect 8+ turns",
     "bracket3": "Bracket 3",
-    "bracket3Sub": "Powered",
-    "bracket3Desc": "Optimised synergies, up to 3 game changers, some strong staples",
+    "bracket3Sub": "Upgraded",
+    "bracket3Desc": "Strong synergy and card quality. Up to 3 Game Changers, no two-card combos before turn 6. Expect 6+ turns",
     "bracket4": "Bracket 4",
-    "bracket4Sub": "cEDH",
-    "bracket4Desc": "Fully optimised, fast combos, any legal card",
+    "bracket4Sub": "Optimized",
+    "bracket4Desc": "Lethal, consistent and fast, but not built for the cEDH metagame. Unlimited Game Changers. Expect 4+ turns",
+    "bracket5": "Bracket 5",
+    "bracket5Sub": "cEDH",
+    "bracket5Desc": "Built for the cEDH metagame; victory over all else. Unlimited Game Changers. Games can end on any turn",
     "searchCommander": "Search for a commander…",
     "skipLetAI": "Skip — let the AI choose",
     "aiBuilding": "AI is building your deck…",
@@ -756,12 +775,26 @@
     "buildCancelled": "Build was cancelled or failed.",
     "addingCards": "Adding cards to your deck…",
     "demoDeckNotice": "Demo deck — no AI provider is configured on this deployment, so this is a placeholder list.",
+    "correctionsTitle": "Checked against card data: {count, plural, one {# correction} other {# corrections}}",
+    "correctionsIntro": "The AI's list broke Commander rules. These changes were made before the deck was saved.",
+    "correctionRemoved": "Removed {quantity, plural, =1 {{name}} other {{name} ×#}}: {reason}",
+    "correctionAdded": "Added {quantity, plural, =1 {{name}} other {{name} ×#}}: {reason}",
+    "correctionReasonUnknownCard": "no card has this name",
+    "correctionReasonOutsideColorIdentity": "outside your commander's color identity",
+    "correctionReasonBanned": "banned in Commander",
+    "correctionReasonNotLegal": "not legal in Commander",
+    "correctionReasonExtraCopies": "more copies than Commander allows",
+    "correctionReasonCommanderInList": "already in the command zone",
+    "correctionReasonOverSize": "the list had more than 100 cards",
+    "correctionReasonFillToSize": "to bring the deck to 100 cards",
+    "openDeck": "Open the deck",
     "planTitle": "Review your deck plan",
     "planSubtitle": "Confirm the gameplan and structure before the AI chooses any cards.",
     "planGameplan": "Gameplan",
     "planWinConditions": "Win conditions",
     "planRoles": "Deck roles",
-    "planConstraints": "Constraints"
+    "planConstraints": "Constraints",
+    "aiDeckName": "AI Deck — {strategy}"
   },
   "cardPackages": {
     "title": "Card packages",
@@ -817,5 +850,26 @@
     "editorHelp": "{count}/{max} · Ctrl+Enter to save · Esc to cancel",
     "save": "Save",
     "empty": "No description — click to add one"
+  },
+  "guestClaim": {
+    "title": "Save your guest deck to your account?",
+    "description": "“{name}” ({count, plural, one {# card} other {# cards}}) is still saved in this browser only.",
+    "accept": "Save to my account",
+    "decline": "Not now",
+    "saving": "Saving…",
+    "retry": "Try again",
+    "failed": "The deck could not be saved. It is still in this browser, so you can try again.",
+    "saved": "“{name}” is now in your account.",
+    "open": "Open deck",
+    "close": "Close"
+  },
+  "socialImage": {
+    "imageAlt": "Preview of the deck {deck} by {author}",
+    "byAuthor": "by {author}",
+    "cardCount": "{count, plural, one {# card} other {# cards}}",
+    "tagline": "Commander deck builder"
+  },
+  "sync": {
+    "conflictReloaded": "This deck was changed elsewhere (another tab or device). It has been reloaded; redo your last change if you still want it."
   }
 }

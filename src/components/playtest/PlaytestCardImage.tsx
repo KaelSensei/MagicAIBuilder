@@ -3,7 +3,10 @@
 import { useState } from "react";
 import Image from "next/image";
 import { cn } from "@/components/ui/utils";
-import { CARD_BACK_URL } from "@/lib/scryfall/images";
+import {
+  CARD_BACK_URL,
+  normalizeScryfallImageUrl,
+} from "@/lib/scryfall/images";
 
 interface PlaytestCardImageProps {
   readonly src: string;
@@ -23,7 +26,7 @@ export function PlaytestCardImage({
   className,
 }: PlaytestCardImageProps) {
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
-  const requestedSrc = src || CARD_BACK_URL;
+  const requestedSrc = normalizeScryfallImageUrl(src) || CARD_BACK_URL;
   const visibleSrc = failedSrc === requestedSrc ? CARD_BACK_URL : requestedSrc;
 
   return (

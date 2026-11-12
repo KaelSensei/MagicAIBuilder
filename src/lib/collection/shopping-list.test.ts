@@ -3,7 +3,6 @@ import {
   buildShoppingList,
   formatShoppingListText,
   formatShoppingListCsv,
-  computeCollectionStats,
   formatCollectionText,
   formatCollectionCsv,
   getDeckCardStatuses,
@@ -12,21 +11,35 @@ import {
   getMissingCollectionCards,
 } from "./shopping-list";
 import type { DeckCard } from "@/lib/deck/types";
+import { aDeckCard } from "@/test/builders/card";
 
 function makeCard(overrides: Partial<DeckCard> = {}): DeckCard {
-  return {
-    id: "c1", name: "Sol Ring", manaCost: "{1}", cmc: 1,
-    typeLine: "Artifact", oracleText: "", colorIdentity: [],
-    isGameChanger: false, isBanned: false, price: 1.5,
-    imageUri: "", artCropUri: "", category: "ramp",
-    quantity: 1, zone: "main", scryfallId: "abc",
+  return aDeckCard({
+    id: "c1",
+    name: "Sol Ring",
+    manaCost: "{1}",
+    cmc: 1,
+    typeLine: "Artifact",
+    price: 1.5,
+    category: "ramp",
+    scryfallId: "abc",
     ...overrides,
-  };
+  });
 }
 
 const BASIC_LAND = makeCard({
   id: "land", name: "Island", typeLine: "Basic Land — Island",
   scryfallId: "island", category: "land", price: 0.1, quantity: 4,
+});
+
+const SNOW_BASIC = makeCard({
+  id: "snow",
+  name: "Snow-Covered Island",
+  typeLine: "Basic Snow Land — Island",
+  scryfallId: "snow-island",
+  category: "land",
+  price: 0.25,
+  quantity: 4,
 });
 
 describe("summarizeDeckCollection", () => {
@@ -134,6 +147,10 @@ describe("buildShoppingList", () => {
     const cards = [BASIC_LAND];
     const list = buildShoppingList(cards, null, null, {});
     expect(list).toHaveLength(0);
+  });
+
+  it("excludes Snow-Covered basics by default", () => {
+    expect(buildShoppingList([SNOW_BASIC], null, null, {})).toEqual([]);
   });
 
   it("includes basic lands when includeBasics is true", () => {
@@ -313,6 +330,23 @@ describe("buildAcquisitionPlan", () => {
 
     expect(plan).toEqual([]);
   });
+
+  it("does not ask to acquire a Snow-Covered basic", () => {
+    const plan = buildAcquisitionPlan(
+      [
+        {
+          id: "deck-a",
+          name: "Snow",
+          cards: [SNOW_BASIC],
+          commander: null,
+          partner: null,
+        },
+      ],
+      {}
+    );
+
+    expect(plan).toEqual([]);
+  });
 });
 
 describe("getDeckCardStatuses", () => {
@@ -345,60 +379,17 @@ describe("getDeckCardStatuses", () => {
     expect(statuses[1].availableQuantity).toBe(1);
     expect(statuses[1].neededQuantity).toBe(1);
   });
-});
 
-describe("computeCollectionStats", () => {
-  it("counts owned vs total", () => {
-    const cards = [
-      makeCard({ scryfallId: "a" }),
-      makeCard({ scryfallId: "b" }),
-      makeCard({ scryfallId: "c" }),
-    ];
-    const ownedIds = new Set(["a", "c"]);
-    const stats = computeCollectionStats(cards, null, null, ownedIds);
-    expect(stats.ownedCount).toBe(2);
-    expect(stats.totalCount).toBe(3);
-    expect(stats.completionRatio).toBeCloseTo(2 / 3);
-  });
+  it("counts a Snow-Covered basic as owned without a collection entry", () => {
+    const [status] = getDeckCardStatuses([SNOW_BASIC], null, null, {});
 
-  it("includes commander in total", () => {
-    const commander = makeCard({ scryfallId: "cmd" });
-    const stats = computeCollectionStats([], commander, null, new Set(["cmd"]));
-    expect(stats.ownedCount).toBe(1);
-    expect(stats.totalCount).toBe(1);
-  });
-
-  it("calculates missing cost correctly", () => {
-    const cards = [
-      makeCard({ scryfallId: "a", price: 10 }),
-      makeCard({ scryfallId: "b", price: 20 }),
-    ];
-    const ownedIds = new Set(["a"]);
-    const stats = computeCollectionStats(cards, null, null, ownedIds);
-    expect(stats.missingCost).toBeCloseTo(20);
-  });
-
-  it("ignores null prices in missing cost", () => {
-    const cards = [makeCard({ scryfallId: "a", price: null })];
-    const stats = computeCollectionStats(cards, null, null, new Set());
-    expect(stats.missingCost).toBe(0);
-  });
-
-  it("treats basic lands as owned by default", () => {
-    const cards = [
-      BASIC_LAND,
-      makeCard({ scryfallId: "a", name: "Sol Ring" }),
-    ];
-    const stats = computeCollectionStats(cards, null, null, new Set());
-    expect(stats.ownedCount).toBe(1);
-    expect(stats.missingCount).toBe(1);
-  });
-
-  it("counts basic land as owned even with empty collection", () => {
-    const cards = [BASIC_LAND];
-    const stats = computeCollectionStats(cards, null, null, new Set());
-    expect(stats.ownedCount).toBe(1);
-    expect(stats.completionRatio).toBe(1);
+    expect(status).toEqual(
+      expect.objectContaining({
+        status: "owned",
+        ownedQuantity: 4,
+        neededQuantity: 0,
+      })
+    );
   });
 });
 

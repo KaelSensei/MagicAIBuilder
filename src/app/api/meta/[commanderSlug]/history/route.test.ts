@@ -5,19 +5,21 @@ const { mockReadHistory, mockCheckRateLimit } = vi.hoisted(() => ({
   mockCheckRateLimit: vi.fn(),
 }));
 
-vi.mock("@/lib/meta/snapshots", async () => {
+vi.mock(import("@/lib/meta/snapshots"), async () => {
   const actual = await vi.importActual<typeof import("@/lib/meta/snapshots")>(
     "@/lib/meta/snapshots"
   );
   return { ...actual, readSnapshotHistory: mockReadHistory };
 });
 
-vi.mock("@/lib/rate-limit", () => ({
+vi.mock(import("@/lib/rate-limit"), () => ({
   checkRateLimit: mockCheckRateLimit,
   getClientIp: () => "127.0.0.1",
 }));
 
-vi.mock("@/lib/logger", () => ({ logger: { error: vi.fn() } }));
+vi.mock(import("@/lib/logger"), () => ({
+  logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
+}));
 
 import { GET } from "./route";
 

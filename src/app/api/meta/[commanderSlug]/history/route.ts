@@ -19,6 +19,7 @@ import {
 } from "@/lib/meta/snapshots";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
+import { rateLimitResponse, type RouteParams } from "@/lib/api/route-kit";
 
 const RATE_LIMIT = 30;
 const RATE_WINDOW = 60_000;
@@ -27,16 +28,16 @@ const querySchema = z.object({
   days: z.coerce.number().int().min(1).max(MAX_WINDOW_DAYS).default(DEFAULT_WINDOW_DAYS),
 });
 
-type Params = { params: Promise<{ commanderSlug: string }> };
-
-export async function GET(request: Request, { params }: Params) {
+export async function GET(
+  request: Request,
+  { params }: RouteParams<"commanderSlug">
+) {
   const ip = getClientIp(request);
   const rl = checkRateLimit(`meta-history:${ip}`, RATE_LIMIT, RATE_WINDOW);
   if (!rl.allowed) {
-    const retrySec = Math.ceil(rl.retryAfterMs / 1000);
-    return NextResponse.json(
-      { error: `Too many requests. Retry in ${retrySec}s.` },
-      { status: 429, headers: { "Retry-After": String(retrySec) } }
+    return rateLimitResponse(
+      rl,
+      (seconds) => `Too many requests. Retry in ${seconds}s.`
     );
   }
 

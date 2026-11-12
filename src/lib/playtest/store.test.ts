@@ -1,53 +1,34 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { usePlaytestStore } from "./store";
+import { createPlaytestStore, usePlaytestStore } from "./store";
+import type { PlaytestDeps } from "./engine";
 import type { Deck, DeckCard } from "@/lib/deck/types";
+import { aDeckCard } from "@/test/builders/card";
+import { aDeck } from "@/test/builders/deck";
+import { seededRandom } from "@/test/seeded-random";
 
 function makeCard(id: string, name = id): DeckCard {
-  return {
+  return aDeckCard({
     id,
     scryfallId: id,
     name,
-    quantity: 1,
-    category: "creature",
-    zone: "main",
-    manaCost: "",
     cmc: 1,
     typeLine: "Creature",
-    oracleText: "",
-    colorIdentity: [],
-    isGameChanger: false,
-    isBanned: false,
-    price: null,
-    imageUri: "",
-    artCropUri: "",
-  };
+    category: "creature",
+  });
 }
 
-function makeDeck(opts: { cardCount?: number; commander?: DeckCard | null } = {}): Deck {
-  const { cardCount = 25, commander = makeCard("cmd", "Kenrith") } = opts;
-  return {
-    id: "deck-1",
+function makeDeck(
+  opts: { cardCount?: number; commander?: DeckCard | null; format?: Deck["format"] } = {}
+): Deck {
+  const { cardCount = 25, commander = makeCard("cmd", "Kenrith"), format = "commander" } = opts;
+  return aDeck({
     name: "Test",
-    format: "commander",
+    format,
     commander,
-    partner: null,
-    companion: null,
-    pairingType: "none",
-    cards: Array.from({ length: cardCount }, (_, i) => makeCard(`c${i}`, `Card ${i}`)),
-    maybeboard: [],
-    cardCount: 0,
-    targetBracket: 3,
-    manualBracket: null,
-    budget: null,
-    tags: [],
-    description: "",
-    shareToken: null,
-    shareEnabled: false,
-    isPublic: false,
-    isAIGenerated: false,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
+    cards: Array.from({ length: cardCount }, (_, i) =>
+      makeCard(`c${i}`, `Card ${i}`)
+    ),
+  });
 }
 
 describe("usePlaytestStore", () => {
@@ -55,19 +36,17 @@ describe("usePlaytestStore", () => {
     usePlaytestStore.setState({ engine: null, isActive: false, setup: null });
   });
 
-  it("startPlaytest builds engine from commander + main deck", () => {
+  it("startPlaytest deals the main deck and keeps the commander out of it", () => {
     const deck = makeDeck();
     usePlaytestStore.getState().startPlaytest(deck);
     const { engine, isActive } = usePlaytestStore.getState();
     expect(isActive).toBe(true);
     expect(engine).not.toBeNull();
     expect(engine?.hand.length).toBe(7);
-    expect(engine?.library.length).toBe(
-      deck.cards.length + 1 - 7
-    );
+    expect(engine?.library.length).toBe(deck.cards.length - 7);
   });
 
-  it("startPlaytest includes partner in library pool", () => {
+  it("startPlaytest starts the partner in the command zone beside the commander", () => {
     const deck = makeDeck({
       commander: makeCard("c1", "Lord"),
       cardCount: 20,
@@ -78,8 +57,9 @@ describe("usePlaytestStore", () => {
     };
     usePlaytestStore.getState().startPlaytest(withPartner);
     const { engine } = usePlaytestStore.getState();
-    // commander + partner + 20 main = 22 cards; opening hand 7 → library 15
-    expect(engine?.library.length).toBe(15);
+    // 20 main-deck cards; opening hand 7 → library 13
+    expect(engine?.library.length).toBe(13);
+    expect(engine?.commandZone.map((card) => card.name)).toEqual(["Lord", "Partner"]);
   });
 
   it("stopPlaytest clears state", () => {
@@ -154,7 +134,7 @@ describe("usePlaytestStore", () => {
   // dragged battlefield state (tapped/counters) back into the library.
   it("resetPlaytest restores the full original deck, not the current zones", () => {
     const deck = makeDeck({ cardCount: 30 });
-    const total = deck.cards.length + 1; // + commander
+    const total = deck.cards.length; // the commander is in the command zone
 
     usePlaytestStore.getState().startPlaytest(deck);
     const cardId = usePlaytestStore.getState().engine?.hand[0]?.id;
@@ -169,15 +149,20 @@ describe("usePlaytestStore", () => {
     expect(eng?.mulliganCount).toBe(0);
   });
 
-  it("resetPlaytest clears a mulligan taken before it", () => {
-    usePlaytestStore.getState().startPlaytest(makeDeck());
+  it("resetPlaytest clears a mulligan taken before it, even mid-choice", () => {
+    usePlaytestStore.getState().startPlaytest(makeDeck({ format: "modern", commander: null }));
     usePlaytestStore.getState().mulligan();
-    expect(usePlaytestStore.getState().engine?.hand).toHaveLength(6);
+    expect(usePlaytestStore.getState().engine?.cardsToBottom).toBe(1);
 
     usePlaytestStore.getState().resetPlaytest();
 
     expect(usePlaytestStore.getState().engine?.hand).toHaveLength(7);
     expect(usePlaytestStore.getState().engine?.mulliganCount).toBe(0);
+    expect(usePlaytestStore.getState().engine?.cardsToBottom).toBe(0);
+
+    // The reset deals under the same format rule.
+    usePlaytestStore.getState().mulligan();
+    expect(usePlaytestStore.getState().engine?.cardsToBottom).toBe(1);
   });
 
   it("mulligan is a no-op when no engine exists", () => {
@@ -185,11 +170,101 @@ describe("usePlaytestStore", () => {
     expect(usePlaytestStore.getState().engine).toBeNull();
   });
 
-  it("mulligan shrinks the opening hand when active", () => {
+  it("bottomCards is a no-op when no engine exists", () => {
+    usePlaytestStore.getState().bottomCards(["c0"]);
+    expect(usePlaytestStore.getState().engine).toBeNull();
+  });
+
+  // This used to expect six cards: in Commander the first mulligan is free
+  // (CR 103.5c), a fresh seven with nothing to bottom.
+  it("gives a Commander player a free fresh seven on the first mulligan", () => {
     usePlaytestStore.getState().startPlaytest(makeDeck());
     usePlaytestStore.getState().mulligan();
-    expect(usePlaytestStore.getState().engine?.hand).toHaveLength(6);
+    expect(usePlaytestStore.getState().engine?.hand).toHaveLength(7);
     expect(usePlaytestStore.getState().engine?.mulliganCount).toBe(1);
+    expect(usePlaytestStore.getState().engine?.cardsToBottom).toBe(0);
+  });
+
+  // CR 103.5c: only a multiplayer game (or any Brawl game) gets the free
+  // mulligan, so a one-on-one Commander game bottoms a card on the first one.
+  it("takes no free mulligan in a Commander game the player says is one-on-one", () => {
+    usePlaytestStore
+      .getState()
+      .startPlaytest(makeDeck(), { multiplayer: false });
+    usePlaytestStore.getState().mulligan();
+
+    const engine = usePlaytestStore.getState().engine;
+    expect(engine?.firstMulliganFree).toBe(false);
+    expect(engine?.cardsToBottom).toBe(1);
+  });
+
+  it("keeps the free mulligan in a one-on-one Brawl game", () => {
+    usePlaytestStore
+      .getState()
+      .startPlaytest(makeDeck({ format: "brawl" }), { multiplayer: false });
+
+    expect(usePlaytestStore.getState().engine?.firstMulliganFree).toBe(true);
+  });
+
+  // The table size decides the first-turn draw (CR 103.8a, 103.8c). No pod
+  // size is stored, so an unanswered question falls back on the format's
+  // usual table.
+  it.each([
+    { format: "commander", options: {}, multiplayer: true },
+    {
+      format: "commander",
+      options: { multiplayer: false },
+      multiplayer: false,
+    },
+    { format: "modern", options: {}, multiplayer: false },
+  ] as const)(
+    "deals a $format game with options $options as multiplayer: $multiplayer",
+    ({ format, options, multiplayer }) => {
+      usePlaytestStore.getState().startPlaytest(makeDeck({ format }), options);
+
+      expect(usePlaytestStore.getState().engine?.multiplayer).toBe(multiplayer);
+    }
+  );
+
+  // CR 903.12f: 25 life in a two-player Brawl game, 30 in a multiplayer one.
+  // Other formats start on the same total at any table (CR 103.4c: 40 in Commander).
+  it.each([
+    { format: "brawl", options: { multiplayer: false }, life: 25 },
+    { format: "brawl", options: { multiplayer: true }, life: 30 },
+    { format: "brawl", options: {}, life: 30 },
+    { format: "commander", options: { multiplayer: false }, life: 40 },
+  ] as const)(
+    "starts a $format game with options $options at $life life",
+    ({ format, options, life }) => {
+      usePlaytestStore.getState().startPlaytest(makeDeck({ format }), options);
+
+      expect(usePlaytestStore.getState().engine?.lifeTotal).toBe(life);
+    }
+  );
+
+  it("restarts under the multiplayer choice the session started with", () => {
+    usePlaytestStore
+      .getState()
+      .startPlaytest(makeDeck(), { multiplayer: false });
+
+    usePlaytestStore.getState().resetPlaytest();
+
+    expect(usePlaytestStore.getState().engine?.firstMulliganFree).toBe(false);
+    expect(usePlaytestStore.getState().engine?.multiplayer).toBe(false);
+  });
+
+  it("asks a Modern player to bottom a card after the first mulligan, then keeps six", () => {
+    usePlaytestStore.getState().startPlaytest(makeDeck({ format: "modern", commander: null }));
+    usePlaytestStore.getState().mulligan();
+
+    const pending = usePlaytestStore.getState().engine;
+    expect(pending?.hand).toHaveLength(7);
+    expect(pending?.cardsToBottom).toBe(1);
+
+    usePlaytestStore.getState().bottomCards([pending?.hand[0]?.id ?? ""]);
+
+    expect(usePlaytestStore.getState().engine?.hand).toHaveLength(6);
+    expect(usePlaytestStore.getState().engine?.cardsToBottom).toBe(0);
   });
 
   it("creates an independent battlefield copy without changing the deck setup", () => {
@@ -210,7 +285,7 @@ describe("usePlaytestStore", () => {
     usePlaytestStore.getState().resetPlaytest();
     const reset = usePlaytestStore.getState().engine;
     expect((reset?.hand.length ?? 0) + (reset?.library.length ?? 0))
-      .toBe(deck.cards.length + 1);
+      .toBe(deck.cards.length);
   });
 
   it("adds a required token to the active session only", () => {
@@ -269,5 +344,170 @@ describe("usePlaytestStore", () => {
     const modernDeck = { ...makeDeck({ commander: null }), format: "modern" as const };
     usePlaytestStore.getState().startPlaytest(modernDeck);
     expect(usePlaytestStore.getState().engine?.lifeTotal).toBe(20);
+  });
+});
+
+/** Names of the cards in a zone, in order. */
+function namesIn(cards: readonly DeckCard[] = []): readonly string[] {
+  return cards.map((card) => card.name);
+}
+
+/** A 100-card Commander deck: Kenrith, 15 Forests in one row, and 84 singletons. */
+function makeForestDeck(): Deck {
+  const singletons = makeDeck({ cardCount: 84 }).cards;
+  return {
+    ...makeDeck(),
+    cards: [{ ...makeCard("forest", "Forest"), quantity: 15 }, ...singletons],
+  };
+}
+
+describe("dealing a Commander deck", () => {
+  beforeEach(() => {
+    usePlaytestStore.setState({ engine: null, isActive: false, setup: null });
+  });
+
+  it("deals every copy into the 99 and starts the commander in the command zone", () => {
+    usePlaytestStore.getState().startPlaytest(makeForestDeck());
+    const engine = usePlaytestStore.getState().engine;
+    const dealt = [...(engine?.hand ?? []), ...(engine?.library ?? [])];
+
+    expect({
+      dealt: dealt.length,
+      forests: dealt.filter((card) => card.name === "Forest").length,
+      commanderDealt: dealt.some((card) => card.name === "Kenrith"),
+      commandZone: namesIn(engine?.commandZone),
+    }).toEqual({ dealt: 99, forests: 15, commanderDealt: false, commandZone: ["Kenrith"] });
+  });
+
+  it("deals each copy as its own card, so tapping one Forest leaves its twin alone", () => {
+    const forestsOnly = { ...makeDeck(), cards: [{ ...makeCard("forest", "Forest"), quantity: 10 }] };
+    usePlaytestStore.getState().startPlaytest(forestsOnly);
+    const [first, second] = usePlaytestStore.getState().engine?.hand ?? [];
+    if (!first || !second) throw new Error("expected two Forests in the opening hand");
+
+    const store = usePlaytestStore.getState();
+    store.moveToZone(first.id, "hand", "battlefield");
+    store.moveToZone(second.id, "hand", "battlefield");
+    store.tap(first.id);
+
+    const engine = usePlaytestStore.getState().engine;
+    expect(engine?.battlefield.map((card) => card.tapped)).toEqual([true, false]);
+    const ids = [...(engine?.hand ?? []), ...(engine?.library ?? []), ...(engine?.battlefield ?? [])]
+      .map((card) => card.id);
+    expect(new Set(ids).size).toBe(10);
+  });
+
+  it("deals only the main deck, not the sideboard or the cards being considered", () => {
+    const mainDeck = makeDeck({ cardCount: 20 });
+    const deck: Deck = {
+      ...mainDeck,
+      cards: [
+        ...mainDeck.cards,
+        { ...makeCard("sb", "Negate"), quantity: 2, zone: "sideboard" },
+        { ...makeCard("mb", "Maybe Card"), zone: "maybeboard", isMaybeboard: true },
+      ],
+    };
+    usePlaytestStore.getState().startPlaytest(deck);
+    const engine = usePlaytestStore.getState().engine;
+    const dealt = namesIn([...(engine?.hand ?? []), ...(engine?.library ?? [])]);
+
+    expect(dealt).toHaveLength(20);
+    expect(dealt).not.toContain("Negate");
+    expect(dealt).not.toContain("Maybe Card");
+  });
+
+  it("leaves formats without a command zone as they were", () => {
+    const modernDeck: Deck = { ...makeDeck({ cardCount: 59 }), format: "modern" };
+    usePlaytestStore.getState().startPlaytest(modernDeck);
+    const engine = usePlaytestStore.getState().engine;
+    const dealt = namesIn([...(engine?.hand ?? []), ...(engine?.library ?? [])]);
+
+    expect(dealt).toHaveLength(60);
+    expect(dealt).toContain("Kenrith");
+    expect(engine?.commandZone).toEqual([]);
+  });
+
+  it("restarts with the commander back in the command zone after it was cast", () => {
+    usePlaytestStore.getState().startPlaytest(makeForestDeck());
+    usePlaytestStore.getState().moveToZone("cmd", "command", "battlefield");
+    expect(usePlaytestStore.getState().engine?.commandZone).toEqual([]);
+
+    usePlaytestStore.getState().resetPlaytest();
+    const engine = usePlaytestStore.getState().engine;
+
+    expect(namesIn(engine?.commandZone)).toEqual(["Kenrith"]);
+    expect(engine?.battlefield).toEqual([]);
+    expect((engine?.hand.length ?? 0) + (engine?.library.length ?? 0)).toBe(99);
+  });
+
+  // Brawl's commander and Oathbreaker's oathbreaker both live in the commander slot.
+  it.each(["brawl", "oathbreaker"] as const)("starts the %s commander slot in the command zone", (format) => {
+    usePlaytestStore.getState().startPlaytest({ ...makeDeck({ cardCount: 59 }), format });
+    const engine = usePlaytestStore.getState().engine;
+
+    expect((engine?.hand.length ?? 0) + (engine?.library.length ?? 0)).toBe(59);
+    expect(namesIn(engine?.commandZone)).toEqual(["Kenrith"]);
+  });
+});
+
+describe("createPlaytestStore", () => {
+  const GAME_START = Date.UTC(2026, 10, 10, 20, 0, 0);
+  /** Always picks the last index, so the Fisher–Yates shuffle swaps nothing. */
+  const inDeckOrder: PlaytestDeps = {
+    random: { intBelow: (upperExclusive) => upperExclusive - 1 },
+    clock: { now: () => GAME_START },
+  };
+  const seeded = (seed: number): PlaytestDeps => ({
+    random: seededRandom(seed),
+    clock: { now: () => GAME_START },
+  });
+  const handIds = (store: ReturnType<typeof createPlaytestStore>) =>
+    store.getState().engine?.hand.map((card) => card.id);
+
+  it("deals the opening hand in the order its random source dictates", () => {
+    const store = createPlaytestStore(inDeckOrder);
+
+    store.getState().startPlaytest(makeDeck());
+
+    expect(handIds(store)).toEqual(["c0", "c1", "c2", "c3", "c4", "c5", "c6"]);
+  });
+
+  it("rolls the die its random source dictates", () => {
+    const store = createPlaytestStore(inDeckOrder);
+    store.getState().startPlaytest(makeDeck());
+
+    store.getState().rollDie(20);
+
+    expect(store.getState().engine?.diceRolls).toEqual([{ sides: 20, result: 20 }]);
+  });
+
+  it("stamps life changes with its clock", () => {
+    const store = createPlaytestStore(inDeckOrder);
+    store.getState().startPlaytest(makeDeck());
+
+    store.getState().damage(3);
+
+    expect(store.getState().engine?.lifeHistory[0]?.timestamp).toBe(GAME_START);
+  });
+
+  it("replays the same deal from the same seed, and deals on from it after a reset", () => {
+    const first = createPlaytestStore(seeded(42));
+    const second = createPlaytestStore(seeded(42));
+    first.getState().startPlaytest(makeDeck());
+    second.getState().startPlaytest(makeDeck());
+    const dealt = handIds(first);
+
+    first.getState().resetPlaytest();
+
+    expect(handIds(second)).toEqual(dealt);
+    expect(handIds(first)).not.toEqual(dealt);
+  });
+
+  it("is independent of the app's store", () => {
+    usePlaytestStore.setState({ engine: null, isActive: false, setup: null });
+
+    createPlaytestStore(inDeckOrder).getState().startPlaytest(makeDeck());
+
+    expect(usePlaytestStore.getState().engine).toBeNull();
   });
 });

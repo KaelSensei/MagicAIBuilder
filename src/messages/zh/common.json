@@ -6,7 +6,9 @@
     "rules": "Rules",
     "newDeck": "New Deck",
     "import": "Import",
-    "importedDeck": "Imported Deck — {date}"
+    "importedDeck": "Imported Deck — {date}",
+    "createFailed": "无法创建套牌 — {reason}",
+    "unknownError": "未知错误"
   },
   "theme": {
     "toggle": "切换主题",
@@ -23,9 +25,6 @@
     "wizardsTrademarks": "Wizards of the Coast, Magic: The Gathering, and their logos are trademarks of Wizards of the Coast LLC in the United States and other countries. © 1993-2026 Wizards. All Rights Reserved.",
     "notAffiliated": "MagicAIBuilder is not affiliated with, endorsed, sponsored, or specifically approved by Wizards of the Coast LLC. MagicAIBuilder may use the trademarks and other intellectual property of Wizards of the Coast LLC, which is permitted under Wizards’ Fan Site Policy. MAGIC: THE GATHERING® is a trademark of Wizards of the Coast. For more information about Wizards of the Coast or any of Wizards’ trademarks or other intellectual property, please visit their website at <link>company.wizards.com</link>.",
     "scryfallDisclaimer": "Some card prices and other card data are provided by Scryfall. Scryfall makes no guarantee about its price information and recommends you see stores for final prices and details."
-  },
-  "sidebar": {
-    "navigation": "Navigation"
   },
   "notFound": {
     "title": "Page not found",
@@ -59,7 +58,10 @@
   "pagination": {
     "label": "Pagination",
     "previous": "Previous page",
-    "next": "Next page"
+    "next": "Next page",
+    "previousShort": "Previous",
+    "nextShort": "Next",
+    "pageIndicator": "Page <value>{current}</value> / <value>{total}</value>"
   },
   "shortcuts": {
     "title": "Keyboard Shortcuts",
@@ -74,6 +76,8 @@
     "export": "Open export modal",
     "import": "Open import modal",
     "triggerLabel": "Shortcuts",
-    "inactiveHint": "Shortcuts are inactive when a text field is focused (except modifier shortcuts)"
+    "inactiveHint": "Shortcuts without Ctrl or ⌘ stay inactive while a text field, list or menu has focus",
+    "singleKeyLabel": "Single-key shortcuts",
+    "singleKeyDescription": "Shortcuts without Ctrl or ⌘: /, ?, Esc, the arrow keys and Enter. Turn them off if you use speech input or a screen reader. Ctrl/⌘ shortcuts keep working."
   }
 }

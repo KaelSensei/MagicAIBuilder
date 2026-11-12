@@ -8,10 +8,11 @@
  * "no report" as the normal state rather than a failure.
  */
 
+import "server-only";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { logger } from "@/lib/logger";
-import type { EdhrecData } from "./fetch";
+import type { EdhrecData } from "./types";
 import { toCaptureDay, type MetaSnapshotInput } from "./history";
 
 /** How far back the comparison may reach when the caller does not say. */

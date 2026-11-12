@@ -4,15 +4,25 @@ import { create } from "zustand";
 
 export type ToastType = "success" | "error" | "warning" | "info";
 
+/**
+ * The catalog keys a toast may be raised by, as `useTranslations()` without a
+ * namespace reads them. Raised by code that has no locale of its own (the deck
+ * store); the toast container translates them in the player's locale.
+ */
+export type LocalizedToastKey = "deck.sync.conflictReloaded";
+
+/** A toast's text: the words themselves, or the catalog key the container translates. */
+export type ToastMessage = string | { readonly key: LocalizedToastKey };
+
 export interface Toast {
   id: string;
   type: ToastType;
-  message: string;
+  message: ToastMessage;
 }
 
 interface ToastStore {
   toasts: Toast[];
-  add: (type: ToastType, message: string) => void;
+  add: (type: ToastType, message: ToastMessage) => void;
   remove: (id: string) => void;
 }
 

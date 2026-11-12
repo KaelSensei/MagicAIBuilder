@@ -8,9 +8,10 @@ import {
   toScryfallLang,
 } from "./localized";
 import type { ScryfallCard } from "./types";
+import { aScryfallCard } from "@/test/builders/scryfall";
 
 function makeCard(overrides: Partial<ScryfallCard> = {}): ScryfallCard {
-  return {
+  return aScryfallCard({
     id: "card-1",
     name: "Lightning Bolt",
     cmc: 1,
@@ -18,7 +19,7 @@ function makeCard(overrides: Partial<ScryfallCard> = {}): ScryfallCard {
     oracle_text: "Lightning Bolt deals 3 damage to any target.",
     color_identity: ["R"],
     ...overrides,
-  };
+  });
 }
 
 describe("toScryfallLang", () => {
@@ -219,8 +220,21 @@ describe("buildLocalizedNamesQueries", () => {
     expect(buildLocalizedNamesQueries([], "fr")).toEqual([]);
   });
 
-  it("drops names containing a double quote rather than breaking the query", () => {
-    const queries = buildLocalizedNamesQueries(['Bad "Name"', "Sol Ring"], "fr");
+  it("asks for a name that holds double quotes in single quotes", () => {
+    const queries = buildLocalizedNamesQueries(
+      ['Henzie "Toolbox" Torre', "Sol Ring"],
+      "fr"
+    );
+    expect(queries).toEqual([
+      `lang:fr unique:cards (!'Henzie "Toolbox" Torre' or !"Sol Ring")`,
+    ]);
+  });
+
+  it("drops a name holding both kinds of quote rather than breaking the query", () => {
+    const queries = buildLocalizedNamesQueries(
+      [`Bad "Name's"`, "Sol Ring"],
+      "fr"
+    );
     expect(queries).toEqual(['lang:fr unique:cards (!"Sol Ring")']);
   });
 });

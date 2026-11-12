@@ -8,11 +8,16 @@ const { requireAuth, findUnique, findMany, create, update } = vi.hoisted(() => (
   update: vi.fn(),
 }));
 
-vi.mock("@/lib/auth/helpers", () => ({ requireAuth }));
-vi.mock("@/lib/db/prisma", () => ({
-  prisma: { collectionCard: { findUnique, findMany, create, update } },
+vi.mock(import("@/lib/auth/helpers"), () => ({ requireAuth }));
+vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
+  const { stubPrisma } = await import("@/test/prisma-stub");
+  return stubPrisma(await importOriginal(), {
+    collectionCard: { findUnique, findMany, create, update },
+  });
+});
+vi.mock(import("@/lib/logger"), () => ({
+  logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
-vi.mock("@/lib/logger", () => ({ logger: { error: vi.fn() } }));
 
 import { POST } from "./route";
 

@@ -9,16 +9,17 @@ const { mockUserFindUnique, mockUserUpsert, mockUserUpdate, mockUserDelete } = v
   mockUserDelete: vi.fn(),
 }));
 
-vi.mock("@/lib/db/prisma", () => ({
-  prisma: {
+vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
+  const { stubPrisma } = await import("@/test/prisma-stub");
+  return stubPrisma(await importOriginal(), {
     user: {
       findUnique: mockUserFindUnique,
       upsert: mockUserUpsert,
       update: mockUserUpdate,
       delete: mockUserDelete,
     },
-  },
-}));
+  });
+});
 
 // ─── Mock NextAuth auth() ─────────────────────────────────────────────────────
 
@@ -26,7 +27,7 @@ const { mockAuth } = vi.hoisted(() => ({
   mockAuth: vi.fn(),
 }));
 
-vi.mock("@/lib/auth/config", () => ({
+vi.mock(import("@/lib/auth/config"), () => ({
   auth: mockAuth,
 }));
 
@@ -137,8 +138,10 @@ describe("GET /api/user/profile", () => {
     expect(mockUserFindUnique).not.toHaveBeenCalled();
   });
 
-  it("returns 401 when the session user no longer exists and has no recovery email", async () => {
-    mockAuth.mockResolvedValueOnce({ user: { id: "deleted-user" } });
+  it("returns 401 when the session user no longer exists", async () => {
+    mockAuth.mockResolvedValueOnce({
+      user: { id: "deleted-user", email: "kael@test.com" },
+    });
     mockUserFindUnique.mockResolvedValueOnce(null);
 
     const res = await GET();

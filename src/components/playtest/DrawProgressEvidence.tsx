@@ -5,7 +5,7 @@ import { BookOpen } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { PlaytestEngine } from "@/lib/playtest/engine";
 import {
-  analyzeDrawProgress,
+  analyzeEngineDrawProgress,
   type DrawProgressStatus,
 } from "@/lib/playtest/draw-progress-evidence";
 
@@ -34,20 +34,7 @@ function statusClassName(status: DrawProgressStatus): string {
  */
 export function DrawProgressEvidence({ engine }: DrawProgressEvidenceProps) {
   const t = useTranslations("playtestEvidence.drawProgress");
-  const evidence = useMemo(() => {
-    const cardsOutsideLibrary =
-      engine.hand.length +
-      engine.battlefield.length +
-      engine.graveyard.length +
-      engine.exile.length;
-
-    return analyzeDrawProgress({
-      turn: engine.turn,
-      mulliganCount: engine.mulliganCount,
-      cardsOutsideLibrary,
-      libraryCount: engine.library.length,
-    });
-  }, [engine]);
+  const evidence = useMemo(() => analyzeEngineDrawProgress(engine), [engine]);
 
   return (
     <div

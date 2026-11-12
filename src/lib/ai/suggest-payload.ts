@@ -1,4 +1,5 @@
-import type { BracketScore, Deck, DeckStats } from "@/lib/deck/types";
+import type { Deck } from "@/lib/deck/types";
+import type { BracketScore, DeckStats } from "@/lib/deck/analysis-types";
 import { detectArchetypes } from "@/lib/ai/archetypes";
 import type { AIAnalysisOptions } from "./suggestion-types";
 

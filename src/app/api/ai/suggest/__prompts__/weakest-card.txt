@@ -1,0 +1,54 @@
+You are a Magic: The Gathering Commander expert. Analyze this deck and suggest targeted improvements.
+
+DECK INFO:
+- Commander: Talrand, Sky Summoner
+- Color Identity: U
+- Total cards: 12
+- Average CMC: 1.91
+- Current Bracket: 3/5
+- Target Bracket: 3/5
+- Budget: No per-card budget limit
+- Archetype: Spellslinger
+- Detected Themes: Spellslinger, Card draw
+
+PLAYER DECK BRIEF:
+  No additional preferences provided
+
+CATEGORY BREAKDOWN:
+  ramp: 2
+  draw: 5
+  removal: 2
+  creatures: 1
+  lands: 1
+
+BRACKET DIMENSION SCORES (1=weak, 5=strong):
+  ramp: 2/4
+  draw: 4/4
+  removal: 2/4
+  winSpeed: 2/4
+  avgCmc: 4/4
+
+GAME CHANGERS IN DECK (2):
+  Rhystic Study, Cyclonic Rift
+
+IDENTIFIED GAPS / WARNINGS:
+  - Only 1 land: Commander decks usually run 36 or more
+
+ALL CURRENT CARDS (11):
+Sol Ring, Arcane Signet, Brainstorm, Ponder, Preordain, Rhystic Study, Mystic Remora, Counterspell, Cyclonic Rift, Murmuring Mystic, Island
+
+PRIVATE USER-OWNED PLAYTEST EVIDENCE:
+  None recorded
+
+ARCHETYPE GUIDANCE (Spellslinger):
+Focus on copy effects (Swarm Intelligence, Thousand-Year Storm, Reverberate), instant/sorcery payoffs (Guttersnipe, Runechanter's Pike, Aria of Flame), cantrips for velocity, and protection for the commander.
+
+TASK:
+Identify the single weakest card in the supplied deck for its stated commander, archetype, brief, target bracket and budget. Choose only a card present in ALL CURRENT CARDS and explain the concrete mismatch.
+
+Respond ONLY in this JSON format (no markdown):
+{
+  "analysis": "A concise explanation of the most important weakness in 1-2 sentences",
+  "suggestions": [],
+  "removals": [{ "name": "Exact Card Name From Deck", "reason": "Why this is the single weakest card" }]
+}

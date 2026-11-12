@@ -10,6 +10,7 @@ import { cardSurfaceClassName } from "@/components/ui/Card";
 import { cn } from "@/components/ui/utils";
 import { filterCardsByCategory } from "@/lib/deck/deck-preview";
 import { CategoryFilter, DeckCardStrip } from "@/components/deck/DeckPreviewChrome";
+import { normalizeScryfallImageUrl } from "@/lib/scryfall/images";
 
 interface PublicDeckCardsProps {
   readonly cards: readonly PublicCard[];
@@ -95,7 +96,7 @@ export function PublicDeckCards({ cards }: PublicDeckCardsProps) {
                     >
                       {card.imageUri ? (
                         <Image
-                          src={card.imageUri}
+                          src={normalizeScryfallImageUrl(card.imageUri)}
                           alt=""
                           width={28}
                           height={28}

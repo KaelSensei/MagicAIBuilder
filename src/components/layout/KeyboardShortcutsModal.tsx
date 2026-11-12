@@ -1,9 +1,12 @@
 "use client";
 // Keyboard shortcuts help modal — triggered by "?" or ⌨️ button
+import { useId } from "react";
 import { useTranslations } from "next-intl";
 import { Keyboard } from "lucide-react";
 import { useUIStore } from "@/lib/ui/store";
-import { Modal } from "@/components/ui/Modal";
+import { useShortcutPreferencesStore } from "@/lib/ui/shortcut-preferences";
+import { Modal, ModalTitle } from "@/components/ui/Modal";
+import { cn } from "@/components/ui/utils";
 
 interface ShortcutEntry {
   readonly keys: readonly string[];
@@ -39,6 +42,41 @@ function Keybadge({ label }: KeybadgeProps) {
   );
 }
 
+/**
+ * The off switch for shortcuts pressed without Ctrl or ⌘, which speech-input
+ * and screen-reader users need (WCAG 2.2 SC 2.1.4).
+ */
+function SingleKeyShortcutsSwitch() {
+  const t = useTranslations("common");
+  const descriptionId = useId();
+  const enabled = useShortcutPreferencesStore(
+    (s) => s.singleKeyShortcutsEnabled
+  );
+  const setEnabled = useShortcutPreferencesStore(
+    (s) => s.setSingleKeyShortcutsEnabled
+  );
+
+  return (
+    <div className="mx-5 mb-4 space-y-1 rounded-[var(--lumen-radius-lg)] border border-[var(--border)] p-3">
+      <label className="flex items-center justify-between gap-4 text-sm font-medium text-[var(--text-primary)]">
+        {t("shortcuts.singleKeyLabel")}
+        <input
+          type="checkbox"
+          role="switch"
+          checked={enabled}
+          onChange={(event) => setEnabled(event.target.checked)}
+          aria-describedby={descriptionId}
+          className="h-4 w-4 shrink-0 accent-[var(--accent)]"
+        />
+      </label>
+      <p id={descriptionId} className="text-xs text-[var(--text-secondary)]">
+        {t("shortcuts.singleKeyDescription")}
+      </p>
+    </div>
+  );
+}
+
+/** The shortcut list and its single-key switch, opened by `?` or the ⌨ trigger. */
 export function KeyboardShortcutsModal() {
   const t = useTranslations("common");
   const showKeyboardModal = useUIStore((s) => s.showKeyboardModal);
@@ -54,9 +92,9 @@ export function KeyboardShortcutsModal() {
       {/* Header with icon */}
       <div className="flex items-center gap-2 px-5 py-4 border-b border-[var(--border)]">
         <Keyboard className="w-4 h-4 text-[var(--accent-text)]" />
-        <h2 className="text-sm font-semibold text-[var(--text-primary)] flex-1">
+        <ModalTitle className="text-sm font-semibold text-[var(--text-primary)] flex-1">
           {t("shortcuts.title")}
-        </h2>
+        </ModalTitle>
         <button
           type="button"
           onClick={() => setShowKeyboardModal(false)}
@@ -93,6 +131,8 @@ export function KeyboardShortcutsModal() {
         ))}
       </div>
 
+      <SingleKeyShortcutsSwitch />
+
       {/* Footer hint */}
       <div className="px-5 pb-4">
         <p className="text-xs text-[var(--text-secondary)] text-center">
@@ -103,8 +143,21 @@ export function KeyboardShortcutsModal() {
   );
 }
 
-// Trigger button — renders a small ⌨ button suitable for footers / headers
-export function KeyboardShortcutsTrigger() {
+interface KeyboardShortcutsTriggerProps {
+  /** Classes merged over the footer-link look, such as a toolbar's pill style. */
+  readonly className?: string;
+  /** Classes for the visible label, such as `hidden sm:inline` in a narrow toolbar. */
+  readonly labelClassName?: string;
+}
+
+/**
+ * A small ⌨ button that opens the shortcut list. It keeps the list, and its
+ * single-key switch, reachable once `?` is turned off.
+ */
+export function KeyboardShortcutsTrigger({
+  className,
+  labelClassName,
+}: KeyboardShortcutsTriggerProps = {}) {
   const t = useTranslations("common");
   const setShowKeyboardModal = useUIStore((s) => s.setShowKeyboardModal);
   return (
@@ -112,10 +165,13 @@ export function KeyboardShortcutsTrigger() {
       type="button"
       onClick={() => setShowKeyboardModal(true)}
       title={t("shortcuts.open")}
-      className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+      className={cn(
+        "flex items-center gap-1.5 text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors",
+        className
+      )}
     >
       <Keyboard className="w-3.5 h-3.5" />
-      <span>{t("shortcuts.triggerLabel")}</span>
+      <span className={labelClassName}>{t("shortcuts.triggerLabel")}</span>
     </button>
   );
 }

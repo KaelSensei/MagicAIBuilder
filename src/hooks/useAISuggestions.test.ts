@@ -1,31 +1,21 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { useAISuggestions } from "./useAISuggestions";
-import type { Deck, DeckStats, BracketScore } from "@/lib/deck/types";
+import type { Deck } from "@/lib/deck/types";
+import type { DeckStats, BracketScore } from "@/lib/deck/analysis-types";
+import { aDeckCard } from "@/test/builders/card";
+import { aDeck } from "@/test/builders/deck";
 
 function makeDeck(): Deck {
-  return {
-    id: "deck-1",
+  return aDeck({
     name: "Test",
-    format: "commander",
-    commander: { id: "c1", name: "Atraxa", colorIdentity: ["W", "U", "B", "G"] } as never,
-    partner: null,
-    companion: null,
-    cards: [],
-    cardCount: 0,
+    commander: aDeckCard({
+      id: "c1",
+      name: "Atraxa",
+      colorIdentity: ["W", "U", "B", "G"],
+    }),
     targetBracket: 2,
-    manualBracket: null,
-    budget: null,
-    tags: [],
-    pairingType: "none",
-    isAIGenerated: false,
-    shareEnabled: false,
-    isPublic: false,
-    shareToken: null,
-    description: null,
-    createdAt: "2026-01-01",
-    updatedAt: "2026-01-01",
-  } as unknown as Deck;
+  });
 }
 
 function makeStats(): DeckStats {
@@ -47,7 +37,7 @@ function makeStats(): DeckStats {
 function makeBracketScore(): BracketScore {
   return {
     overall: 2,
-    dimensions: { ramp: 0, draw: 0, removal: 0, tutors: 0, winSpeed: 0, avgCmc: 0 },
+    dimensions: { ramp: 0, draw: 0, removal: 0, winSpeed: 0, avgCmc: 0 },
     gameChangers: 0,
     twoCardInfiniteCombos: 0,
     warnings: [],
@@ -108,6 +98,36 @@ describe("useAISuggestions", () => {
     });
 
     expect(result.current.error).toContain("500");
+    expect(result.current.isLoading).toBe(false);
+    expect(result.current.denial).toBeNull();
+    vi.unstubAllGlobals();
+  });
+
+  it("exposes why the server refused the analysis when AI is paused for the month", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        Response.json(
+          {
+            error: "AI is paused until the monthly budget resets",
+            code: "ai_spend_ceiling_reached",
+            resetsAt: "2026-12-01T00:00:00.000Z",
+          },
+          { status: 503 }
+        )
+      )
+    );
+
+    const { result } = renderHook(() => useAISuggestions());
+    await act(async () => {
+      await result.current.analyze(makeDeck(), makeStats(), null);
+    });
+
+    expect(result.current.denial).toEqual({
+      code: "ai_spend_ceiling_reached",
+      resetsAt: new Date("2026-12-01T00:00:00.000Z"),
+    });
+    expect(result.current.result).toBeNull();
     expect(result.current.isLoading).toBe(false);
     vi.unstubAllGlobals();
   });

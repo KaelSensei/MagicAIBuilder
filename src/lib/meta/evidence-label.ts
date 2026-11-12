@@ -1,18 +1,21 @@
-export type MetaEvidenceKind = "popular" | "synergy" | "tournament" | "ai";
-
-const EVIDENCE_LABELS: Record<MetaEvidenceKind, string> = {
-  popular: "popular recommendations",
-  synergy: "high-synergy recommendations",
-  tournament: "tournament observations",
-  ai: "AI suggestions",
-};
+/**
+ * The kinds of evidence behind a recommendation.
+ *
+ * Meta insights context. `RecommendationProvenance` badges a recommendation
+ * with its kind, and `MetaSourceDisclosure` picks the kind of an EDHREC or
+ * tournament source. The visible label is translated under
+ * `deck.meta.evidence.<kind>` in every locale; it is not built here.
+ *
+ * @module meta/evidence-label
+ */
 
 /**
- * Return the human-readable evidence category for a recommendation.
+ * Where a recommendation's evidence comes from. The kinds are not equally
+ * strong evidence, so the UI names the kind beside each recommendation.
  *
- * @param kind - provenance category shown beside a recommendation source
- * @returns stable evidence category label
+ * - `popular`: EDHREC recommendations (the default for an EDHREC source);
+ * - `synergy`: high-synergy recommendations; nothing produces it today;
+ * - `tournament`: MTGTop8 / MTGDecks observations;
+ * - `ai`: the AI copilot's suggestions.
  */
-export function evidenceLabel(kind: MetaEvidenceKind): string {
-  return EVIDENCE_LABELS[kind];
-}
+export type MetaEvidenceKind = "popular" | "synergy" | "tournament" | "ai";

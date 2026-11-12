@@ -1,12 +1,20 @@
-import { logger } from "@/lib/logger";
-import { parseCollectionCard } from "./parse";
-import type { CollectionCard } from "./types";
+/**
+ * Optimistic quantity edits for collection rows.
+ *
+ * The new quantity shows at once; the PATCH requests for one row run one at a
+ * time, in the order the user made them. Only the newest request's answer is
+ * applied, and only a failed newest request rolls the row back.
+ *
+ * @module collection/quantity-update
+ */
 
-/** State required by the collection quantity update workflow. */
-interface CollectionQuantityState {
-  readonly collectionCards: Readonly<Record<string, CollectionCard>>;
-  readonly collectionCardsFoil: Readonly<Record<string, CollectionCard>>;
-}
+import { logger } from "@/lib/logger";
+import {
+  applyCollectionPatchResult,
+  patchCollectionCard,
+  type CollectionMaps,
+} from "./card-patch";
+import type { CollectionCard } from "./types";
 
 type CollectionQuantityPatch = Partial<{
   readonly collectionCards: Record<string, CollectionCard>;
@@ -15,9 +23,9 @@ type CollectionQuantityPatch = Partial<{
 
 /** Dependencies supplied by the collection store. */
 interface CollectionQuantityContext {
-  readonly getState: () => CollectionQuantityState;
+  readonly getState: () => CollectionMaps;
   readonly setState: (
-    update: (state: CollectionQuantityState) => CollectionQuantityPatch
+    update: (state: CollectionMaps) => CollectionQuantityPatch
   ) => void;
   readonly setSyncing: (isSyncing: boolean) => void;
 }
@@ -36,7 +44,7 @@ const quantityUpdateQueues = new Map<string, Promise<void>>();
  * @param id - Collection row identifier.
  * @returns The card location, or null when absent.
  */
-function findCard(state: CollectionQuantityState, id: string): CollectionCardLocation {
+function findCard(state: CollectionMaps, id: string): CollectionCardLocation {
   for (const [scryfallId, card] of Object.entries(state.collectionCards)) {
     if (card.id === id) return { kind: "normal", scryfallId, card };
   }
@@ -55,7 +63,7 @@ function findCard(state: CollectionQuantityState, id: string): CollectionCardLoc
  * @returns A minimal state patch for the owning map.
  */
 function cardPatch(
-  state: CollectionQuantityState,
+  state: CollectionMaps,
   location: Exclude<CollectionCardLocation, null>,
   card: CollectionCard
 ): CollectionQuantityPatch {
@@ -73,28 +81,6 @@ function cardPatch(
       [location.scryfallId]: card,
     },
   };
-}
-
-/**
- * Removes a collection row from whichever state map contains it.
- *
- * @param state - Current collection quantity state.
- * @param id - Collection row identifier to remove.
- * @returns A state patch with the row removed.
- */
-function removeCardPatch(
-  state: CollectionQuantityState,
-  id: string
-): CollectionQuantityPatch {
-  const collectionCards = { ...state.collectionCards };
-  const collectionCardsFoil = { ...state.collectionCardsFoil };
-  for (const [key, card] of Object.entries(collectionCards)) {
-    if (card.id === id) delete collectionCards[key];
-  }
-  for (const [key, card] of Object.entries(collectionCardsFoil)) {
-    if (card.id === id) delete collectionCardsFoil[key];
-  }
-  return { collectionCards, collectionCardsFoil };
 }
 
 /**
@@ -121,31 +107,11 @@ export async function updateCollectionQuantity(
   const previousUpdate = quantityUpdateQueues.get(id) ?? Promise.resolve();
   const request = previousUpdate.then(async () => {
     try {
-      const response = await fetch(`/api/collection/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ quantity }),
-      });
-      if (!response.ok) throw new Error("Failed to update quantity");
-      const raw: unknown = await response.json();
-
+      const result = await patchCollectionCard(id, { quantity });
       if (quantityUpdateQueues.get(id) !== request) return;
-      if (
-        typeof raw === "object" &&
-        raw !== null &&
-        "deleted" in raw &&
-        raw.deleted === true
-      ) {
-        context.setState((state) => removeCardPatch(state, id));
-        return;
-      }
-
-      const updated = parseCollectionCard(raw);
-      if (!updated) throw new Error("Invalid quantity update response");
-      const updatedLocation = findCard(context.getState(), id);
-      if (updatedLocation) {
-        context.setState((state) => cardPatch(state, updatedLocation, updated));
-      }
+      context.setState((state) =>
+        applyCollectionPatchResult(state, id, result)
+      );
     } catch (error) {
       if (previousLocation && quantityUpdateQueues.get(id) === request) {
         context.setState((state) => cardPatch(state, previousLocation, previousLocation.card));

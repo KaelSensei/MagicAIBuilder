@@ -1,13 +1,13 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
-import { NextIntlClientProvider } from "next-intl";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { useState } from "react";
+import { screen, fireEvent, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { PlaytestModal } from "./PlaytestModal";
 import { usePlaytestStore } from "@/lib/playtest/store";
-import messages from "@/messages/en/playtest.json";
-import evidenceMessages from "@/messages/en/playtest-evidence.json";
-import builderMessages from "@/messages/en/builder.json";
 import type { Deck, DeckCard } from "@/lib/deck/types";
+import { aDeckCard } from "@/test/builders/card";
+import { aDeck } from "@/test/builders/deck";
+import { renderWithProviders } from "@/test/render";
 
 // next/image and framer-motion are noise here; the zones under test are DOM only.
 vi.mock("next/image", () => ({
@@ -15,70 +15,78 @@ vi.mock("next/image", () => ({
 }));
 
 function makeCard(id: string): DeckCard {
-  return {
+  return aDeckCard({
     id,
     scryfallId: id,
     name: `Card ${id}`,
-    quantity: 1,
     category: "creature",
-    zone: "main",
-    manaCost: "",
     cmc: 1,
     typeLine: "Creature",
-    oracleText: "",
-    colorIdentity: [],
-    isGameChanger: false,
-    isBanned: false,
-    price: null,
-    imageUri: "",
-    artCropUri: "",
-  };
+  });
 }
 
 function makeDeck(format: Deck["format"] = "commander"): Deck {
-  return {
-    id: "deck-1",
+  return aDeck({
     name: "Kenrith Goodstuff",
     format,
     commander: makeCard("cmd"),
-    partner: null,
-    companion: null,
-    pairingType: "none",
     cards: Array.from({ length: 40 }, (_, i) => makeCard(`c${i}`)),
-    maybeboard: [],
     cardCount: 41,
-    targetBracket: 3,
-    manualBracket: null,
-    budget: null,
-    tags: [],
-    description: "",
-    shareToken: null,
-    shareEnabled: false,
-    isPublic: false,
-    isAIGenerated: false,
     createdAt: new Date("2026-01-01"),
     updatedAt: new Date("2026-01-01"),
-  };
+  });
 }
 
+// The header bar and history panel both query, so the modal needs the kit's query client.
 function renderModal(deck = makeDeck(), onClose = vi.fn()) {
-  // The header bar and history panel both query, so the modal needs a client.
-  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  return render(
-    <QueryClientProvider client={queryClient}>
-      <NextIntlClientProvider
-        locale="en"
-        messages={{ playtest: messages, playtestEvidence: evidenceMessages, builder: builderMessages }}
-      >
-        <PlaytestModal deck={deck} onClose={onClose} />
-      </NextIntlClientProvider>
-    </QueryClientProvider>
+  return renderWithProviders(<PlaytestModal deck={deck} onClose={onClose} />);
+}
+
+/** The builder's side of the playtest: a button that opens it, as the page does. */
+function BuilderPlaytest({ onClose }: { readonly onClose: () => void }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button type="button" onClick={() => setOpen(true)}>
+        Playtest this deck
+      </button>
+      {open && (
+        <PlaytestModal
+          deck={makeDeck()}
+          onClose={() => {
+            onClose();
+            setOpen(false);
+          }}
+        />
+      )}
+    </>
   );
+}
+
+/** Opens the playtest from its builder button, with a real keyboard. */
+async function openFromBuilder() {
+  const user = userEvent.setup();
+  const onClose = vi.fn();
+  renderWithProviders(<BuilderPlaytest onClose={onClose} />);
+  const trigger = screen.getByRole("button", { name: "Playtest this deck" });
+  await user.click(trigger);
+  return { user, trigger, onClose };
 }
 
 /** Deals the opening hand, as the user does before anything else is possible. */
 function start() {
   fireEvent.click(screen.getByRole("button", { name: /draw opening hand/i }));
+}
+
+/** Settles a pending one-card bottom choice with the first card offered. */
+function bottomFirstCard() {
+  const choice = screen.getByRole("group", {
+    name: /choose 1 card to put on the bottom/i,
+  });
+  fireEvent.click(within(choice).getAllByRole("button", { pressed: false })[0]);
+  fireEvent.click(
+    screen.getByRole("button", { name: "Put 1 card on the bottom" })
+  );
 }
 
 describe("PlaytestModal", () => {
@@ -187,14 +195,133 @@ describe("PlaytestModal", () => {
   });
 
   // The pre-store modal had a mulligan; wiring the engine in must not lose it.
-  it("mulligans down to six cards and reports the count", () => {
+  // It used to go down to six: in Commander the first mulligan is free (CR 103.5c).
+  it("takes a free first mulligan in Commander: a new seven, no bottom step", () => {
     renderModal();
+    start();
+
+    fireEvent.click(screen.getByRole("button", { name: /mulligan.*free: new seven/i }));
+
+    expect(usePlaytestStore.getState().engine?.hand).toHaveLength(7);
+    expect(screen.getByText(/1 mulligan/)).toBeDefined();
+    expect(screen.queryByText(/to put on the bottom/)).toBeNull();
+    expect(
+      screen.getByRole("button", { name: /mulligan.*new seven, 1 to the bottom/i })
+    ).toBeEnabled();
+  });
+
+  describe("choosing whether the game is multiplayer", () => {
+    const multiplayer = () =>
+      screen.queryByRole("checkbox", { name: /multiplayer game/i });
+
+    it("lets a one-on-one Commander game bottom a card on the first mulligan", () => {
+      renderModal();
+      expect(multiplayer()).toBeChecked();
+
+      fireEvent.click(
+        screen.getByRole("checkbox", { name: /multiplayer game/i })
+      );
+      start();
+      fireEvent.click(
+        screen.getByRole("button", {
+          name: /mulligan.*new seven, 1 to the bottom/i,
+        })
+      );
+      bottomFirstCard();
+
+      expect(usePlaytestStore.getState().engine?.hand).toHaveLength(6);
+      expect(screen.getByText(/Hand: 6 cards/i)).toBeDefined();
+    });
+
+    // The constructed formats are duels.
+    it("does not ask for a modern deck", () => {
+      renderModal(makeDeck("modern"));
+
+      expect(multiplayer()).toBeNull();
+    });
+
+    // CR 903.12f: a two-player Brawl game starts at 25 life, a multiplayer one at 30.
+    it("asks a Brawl player and starts a one-on-one game at 25 life", () => {
+      renderModal(makeDeck("brawl"));
+      expect(multiplayer()).toBeChecked();
+
+      fireEvent.click(
+        screen.getByRole("checkbox", { name: /multiplayer game/i })
+      );
+      start();
+
+      expect(usePlaytestStore.getState().engine?.lifeTotal).toBe(25);
+      expect(screen.getByText("25")).toBeDefined();
+    });
+
+    // Bracket 1 has a figure for a hand of no lands and no cheap ramp, read
+    // against a fresh seven or, without the free mulligan, against a six.
+    it.each([
+      { table: "multiplayer", isMultiplayer: true, against: /a fresh seven/ },
+      { table: "one-on-one", isMultiplayer: false, against: /going to six/ },
+    ])(
+      "judges the first seven of a $table game against the right next hand",
+      ({ isMultiplayer, against }) => {
+        renderModal({ ...makeDeck(), targetBracket: 1 });
+
+        if (!isMultiplayer) {
+          fireEvent.click(
+            screen.getByRole("checkbox", { name: /multiplayer game/i })
+          );
+        }
+        start();
+
+        expect(screen.getByText(/^Bracket 1, first seven:/)).toHaveTextContent(
+          against
+        );
+      }
+    );
+  });
+
+  it("asks a Modern player which card to bottom, holding the game until then", () => {
+    renderModal(makeDeck("modern"));
     start();
 
     fireEvent.click(screen.getByRole("button", { name: /mulligan/i }));
 
+    const choice = screen.getByRole("group", { name: /choose 1 card to put on the bottom/i });
+    expect(screen.getByRole("button", { name: /next phase/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /mulligan/i })).toBeDisabled();
+
+    fireEvent.click(within(choice).getAllByRole("button", { pressed: false })[0]);
+    fireEvent.click(screen.getByRole("button", { name: "Put 1 card on the bottom" }));
+
     expect(usePlaytestStore.getState().engine?.hand).toHaveLength(6);
-    expect(screen.getByText(/1 mulligan/)).toBeDefined();
+    expect(screen.getByText(/Hand: 6 cards/i)).toBeDefined();
+    expect(screen.getByRole("button", { name: /next phase/i })).toBeEnabled();
+  });
+
+  // The guide's keep rules model Commander decks; other formats keep the land hint.
+  it("gives a Commander hand the guide's keep advice instead of the land-only hint", () => {
+    renderModal();
+    start();
+
+    expect(screen.getByText(/\(mana value 2 or less\)$/)).toBeDefined();
+    expect(screen.getByText(/goldfish model/)).toBeDefined();
+    expect(screen.queryByText(/^(Balanced start|Land-light|Land-heavy)/)).toBeNull();
+  });
+
+  it("keeps the land-balance hint for a Modern hand", () => {
+    renderModal(makeDeck("modern"));
+    start();
+
+    expect(screen.getByText(/lands? in opening hand/)).toBeDefined();
+    expect(screen.queryByText(/goldfish model/)).toBeNull();
+  });
+
+  it("shows what to bottom during a Commander bottom choice", () => {
+    renderModal();
+    start();
+
+    fireEvent.click(screen.getByRole("button", { name: /mulligan/i }));
+    fireEvent.click(screen.getByRole("button", { name: /mulligan/i }));
+
+    expect(screen.getByText(/^What to bottom:/)).toBeDefined();
   });
 
   it("stops offering a mulligan once a turn has passed", () => {
@@ -218,6 +345,143 @@ describe("PlaytestModal", () => {
 
     expect(usePlaytestStore.getState().engine?.hand).toHaveLength(7);
     expect(usePlaytestStore.getState().engine?.mulliganCount).toBe(0);
+  });
+
+  it("starts the commander in the command zone and casts it onto the battlefield", () => {
+    renderModal();
+    start();
+
+    expect(screen.getByRole("heading", { name: /command zone/i })).toBeDefined();
+    fireEvent.click(screen.getByRole("button", { name: "Cast Card cmd" }));
+
+    const engine = usePlaytestStore.getState().engine;
+    expect(engine?.commandZone).toEqual([]);
+    expect(engine?.battlefield.map((card) => card.id)).toEqual(["cmd"]);
+  });
+
+  describe("recording a game", () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    // During the choice the hand still holds seven cards, so a result recorded
+    // then would count the cards still to bottom as extra cards seen.
+    it("blocks recording a result until the mulligan's bottom choice is made", () => {
+      renderModal(makeDeck("modern"));
+      start();
+      const results = () =>
+        ["Win", "Loss", "Draw"].map((name) =>
+          screen.getByRole("button", { name })
+        );
+
+      fireEvent.click(screen.getByRole("button", { name: /mulligan/i }));
+
+      for (const button of results()) {
+        expect(button).toBeDisabled();
+        expect(button).toHaveAccessibleDescription(
+          "Finish your mulligan first."
+        );
+      }
+      expect(screen.getByRole("button", { name: "Skip" })).toBeEnabled();
+
+      bottomFirstCard();
+
+      for (const button of results()) expect(button).toBeEnabled();
+      expect(screen.queryByText("Finish your mulligan first.")).toBeNull();
+    });
+
+    // Casting the commander takes it from the command zone, not from the library.
+    // By turn 2 a multiplayer Commander game has seen the seven, the turn-1 draw
+    // (CR 103.8c) and the turn-2 draw: nine cards, none extra.
+    it("does not record a cast commander as a card seen", async () => {
+      const fetchSpy = vi
+        .spyOn(globalThis, "fetch")
+        .mockResolvedValue(new Response(JSON.stringify({}), { status: 201 }));
+      renderModal();
+      start();
+      fireEvent.click(screen.getByRole("button", { name: "Cast Card cmd" }));
+      fireEvent.click(screen.getByRole("button", { name: /next turn/i }));
+
+      fireEvent.click(screen.getByRole("button", { name: "Win" }));
+
+      const postedSession = () =>
+        fetchSpy.mock.calls.find(([, init]) => init?.method === "POST")?.[1]?.body;
+      await waitFor(() => expect(postedSession()).toBeDefined());
+      expect(JSON.parse(String(postedSession()))).toMatchObject({
+        cardsSeen: 9,
+        additionalCardsSeen: 0,
+      });
+    });
+  });
+
+  describe("as a modal dialog", () => {
+    it("is named after the deck and hides the builder behind it", async () => {
+      await openFromBuilder();
+
+      expect(
+        screen.getByRole("dialog", { name: "Playtest — Kenrith Goodstuff" })
+      ).toBeInTheDocument();
+      // The builder leaves the accessibility tree, so Tab and a screen
+      // reader no longer reach the page covered by the playtest.
+      expect(
+        screen.queryByRole("button", { name: "Playtest this deck" })
+      ).not.toBeInTheDocument();
+    });
+
+    it("moves focus into the playtest when it opens", async () => {
+      await openFromBuilder();
+
+      expect(
+        screen.getByRole("button", { name: "Close playtest" })
+      ).toHaveFocus();
+    });
+
+    it("keeps Tab inside the playtest", async () => {
+      const { user, trigger } = await openFromBuilder();
+      const dialog = screen.getByRole("dialog", { name: /playtest/i });
+
+      // Backwards from the first control wraps to the last one, not the builder.
+      await user.tab({ shift: true });
+
+      expect(dialog.contains(document.activeElement)).toBe(true);
+      expect(trigger).not.toHaveFocus();
+    });
+
+    it("closes on Escape and gives focus back to the builder's button", async () => {
+      const { user, trigger, onClose } = await openFromBuilder();
+
+      await user.keyboard("{Escape}");
+
+      expect(onClose).toHaveBeenCalledTimes(1);
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+      await waitFor(() => expect(trigger).toHaveFocus());
+    });
+
+    // Closing discards the game, and the action log uses Escape to cancel an edit.
+    it("leaves Escape in a text field to the field instead of closing", async () => {
+      const { user, onClose } = await openFromBuilder();
+      await user.click(
+        screen.getByRole("button", { name: /draw opening hand/i })
+      );
+      await user.type(
+        screen.getByRole("textbox", { name: /record a manual action/i }),
+        "Tapped two lands{Enter}"
+      );
+      await user.click(screen.getByRole("button", { name: "Edit" }));
+      expect(
+        screen.getByRole("textbox", { name: "Edit action" })
+      ).toHaveFocus();
+
+      await user.keyboard("{Escape}");
+
+      expect(
+        screen.queryByRole("textbox", { name: "Edit action" })
+      ).not.toBeInTheDocument();
+      expect(onClose).not.toHaveBeenCalled();
+      expect(
+        screen.getByRole("dialog", { name: /playtest/i })
+      ).toBeInTheDocument();
+    });
   });
 
   it("clears the session when closed, so it does not reappear later", () => {

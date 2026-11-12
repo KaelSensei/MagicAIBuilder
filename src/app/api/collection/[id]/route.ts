@@ -4,10 +4,11 @@ import { z } from "zod";
 import { requireAuth } from "@/lib/auth/helpers";
 import { logger } from "@/lib/logger";
 import { readJsonBody } from "@/lib/api/json-body";
+import { CARD_CONDITIONS } from "@/lib/collection/types";
 
 const patchSchema = z.object({
   quantity: z.number().int().min(0).optional(),
-  condition: z.enum(["NM", "LP", "MP", "HP", "DMG"]).nullable().optional(),
+  condition: z.enum(CARD_CONDITIONS).nullable().optional(),
   foil: z.boolean().optional(),
   price: z.number().positive().nullable().optional(),
   acquiredAt: z.iso.datetime().nullable().optional(),
@@ -32,7 +33,16 @@ function buildUpdateData(data: z.infer<typeof patchSchema>): Record<string, unkn
   return update;
 }
 
-/** Handle printing swap — may merge into an existing row */
+/**
+ * Handle printing swap — may merge into an existing row.
+ *
+ * When the user already owns the target printing (same foil), the edited row
+ * is folded into that row: its quantity is added there and the edited row is
+ * deleted, in one transaction.
+ *
+ * @returns The `{ merged: true }` response, or null when there is nothing to
+ *   merge and the caller updates the row in place.
+ */
 async function handlePrintingSwap(
   id: string,
   card: { scryfallId: string; foil: boolean; quantity: number },
@@ -53,15 +63,23 @@ async function handlePrintingSwap(
 
   if (!existing) return null;
 
-  const merged = await prisma.collectionCard.update({
-    where: { id: existing.id },
-    data: {
-      quantity: existing.quantity + (data.quantity ?? card.quantity),
-      ...buildUpdateData({ ...data, quantity: undefined, scryfallId: undefined }),
-    },
+  // The target row takes the copies and the source row goes, together: stored
+  // apart, a failed delete would count the moved copies twice (B2-08).
+  const merged = await prisma.$transaction(async (tx) => {
+    const target = await tx.collectionCard.update({
+      where: { id: existing.id },
+      data: {
+        quantity: existing.quantity + (data.quantity ?? card.quantity),
+        ...buildUpdateData({
+          ...data,
+          quantity: undefined,
+          scryfallId: undefined,
+        }),
+      },
+    });
+    await tx.collectionCard.delete({ where: { id } });
+    return target;
   });
-
-  await prisma.collectionCard.delete({ where: { id } });
   return NextResponse.json({ merged: true, mergedFromId: id, card: merged });
 }
 

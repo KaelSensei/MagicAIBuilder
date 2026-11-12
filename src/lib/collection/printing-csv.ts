@@ -1,14 +1,26 @@
+/**
+ * The player's collection as a CSV file, one row per printing.
+ *
+ * Collection context. `CollectionPageClient` downloads it as
+ * `my-collection.csv`.
+ *
+ * @module collection/printing-csv
+ */
+
+import { csvText } from "@/lib/csv";
 import type { CollectionExportCard } from "./shopping-list";
 
 export interface CollectionPrintingExportCard extends CollectionExportCard {
   readonly scryfallId: string;
 }
 
-function csvText(value: string): string {
-  return `"${value.replaceAll('"', '""')}"`;
-}
-
-/** Export collection rows with a stable printing identifier for later matching. */
+/**
+ * Export collection rows with a stable printing identifier for later matching.
+ *
+ * Names and printing IDs go through `csvText`, so a name that starts like a
+ * formula is exported as text. The condition column is written as it is: it
+ * holds one of the five condition codes (`NM` to `DMG`) or nothing.
+ */
 export function formatCollectionPrintingCsv(
   cards: readonly CollectionPrintingExportCard[]
 ): string {

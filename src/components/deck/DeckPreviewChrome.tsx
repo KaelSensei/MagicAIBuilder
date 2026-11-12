@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useCallback } from "react";
 import { previewCardImages, type DeckPreviewCard } from "@/lib/deck/deck-preview";
+import { normalizeScryfallImageUrl } from "@/lib/scryfall/images";
 import { cn } from "@/components/ui/utils";
 
 /** One category chip beside All. */
@@ -67,7 +68,7 @@ export function DeckCardStrip({
       {pictured.map((card) => (
         <li key={card.id} className="w-24 shrink-0">
           <Image
-            src={card.imageUri}
+            src={normalizeScryfallImageUrl(card.imageUri)}
             alt={card.name}
             width={96}
             height={134}

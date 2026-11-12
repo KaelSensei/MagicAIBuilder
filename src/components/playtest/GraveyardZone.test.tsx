@@ -1,16 +1,19 @@
 import { describe, it, expect, vi } from "vitest";
 import { screen, fireEvent } from "@testing-library/react";
+import { aDeckCard } from "@/test/builders/card";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { GraveyardZone } from "./GraveyardZone";
 import type { DeckCard } from "@/lib/deck/types";
 
 function makeCard(id: string, name = "Card"): DeckCard {
-  return {
-    id, name, manaCost: "", cmc: 1, typeLine: "Creature",
-    oracleText: "", colorIdentity: [], isGameChanger: false,
-    isBanned: false, price: null, imageUri: "", artCropUri: "",
-    category: "creature", quantity: 1, zone: "main", scryfallId: id,
-  };
+  return aDeckCard({
+    id,
+    name,
+    cmc: 1,
+    typeLine: "Creature",
+    category: "creature",
+    scryfallId: id,
+  });
 }
 
 describe("GraveyardZone", () => {
@@ -54,6 +57,26 @@ describe("GraveyardZone", () => {
     const restoreBtn = screen.getAllByRole("button", { name: /restore to hand/i })[0];
     fireEvent.click(restoreBtn);
     expect(onRestore).toHaveBeenCalledWith(expect.any(String), "graveyard", "hand");
+  });
+
+  // CR 903.9a: a commander in the graveyard or exile may go back to the command zone.
+  it("offers the command zone only for a commander", () => {
+    const onRestore = vi.fn();
+    renderWithIntl(
+      <GraveyardZone
+        graveyard={[makeCard("g1", "Dead Creature"), makeCard("cmd", "Kenrith")]}
+        exile={[]}
+        onRestore={onRestore}
+        commanderIds={new Set(["cmd"])}
+      />
+    );
+    fireEvent.click(screen.getByRole("button", { name: /graveyard/i }));
+
+    const returns = screen.getAllByRole("button", { name: /command zone/i });
+    expect(returns).toHaveLength(1);
+    fireEvent.click(returns[0]);
+
+    expect(onRestore).toHaveBeenCalledWith("cmd", "graveyard", "command");
   });
 
   it("shows empty graveyard message when graveyard is empty", () => {

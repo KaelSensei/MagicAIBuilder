@@ -20,6 +20,7 @@ import {
 } from "@/lib/deck/proxy";
 import type { ProxyConfig, ProxySlot } from "@/lib/deck/proxy";
 import { useLocalizedDeckIndex } from "@/hooks/useLocalizedDeckIndex";
+import { useDialogFocusReturn } from "@/hooks/useDialogFocusReturn";
 import { buildProxyPrintDocumentHtml } from "@/lib/deck/proxy-print-html";
 import { useTranslations } from "next-intl";
 import { cn } from "@/components/ui/utils";
@@ -107,6 +108,8 @@ const PROXY_RICH_TAGS = {
 
 export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
   const t = useTranslations("deck");
+  // Opened from the export dialog's button, which gets focus back on close.
+  const focusReturn = useDialogFocusReturn();
   const [config, setConfig] = useState<ProxyConfig>(DEFAULT_PROXY_CONFIG);
   const [imgState, setImgState] = useState<ImageState | null>(null);
   const [isPreparing, setIsPreparing] = useState(false);
@@ -189,7 +192,7 @@ export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
     );
     const win = window.open("", "_blank", "width=900,height=700");
     if (!win) {
-      setError("Pop-up blocked — allow pop-ups for this site");
+      setError(t("proxy.popupBlocked"));
       return;
     }
     const blob = new Blob([html], { type: "text/html;charset=utf-8" });
@@ -203,7 +206,7 @@ export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
     };
     win.addEventListener("load", onLoad, { once: true });
     win.location.assign(objectUrl);
-  }, [slots, config, deckName]);
+  }, [slots, config, deckName, t]);
 
   const imagesReady =
     !isPreparing && imgState !== null && imgState.loaded === imgState.total;
@@ -219,7 +222,10 @@ export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
     >
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/60 z-40 backdrop-blur-sm" />
-        <Dialog.Content className="fixed top-1/2 left-1/2 z-50 flex w-[460px] max-w-[92vw] -translate-x-1/2 -translate-y-1/2 flex-col gap-5 rounded-[var(--lumen-radius-xl)] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[var(--lumen-shadow-lg)]">
+        <Dialog.Content
+          {...focusReturn}
+          className="fixed top-1/2 left-1/2 z-50 flex w-[460px] max-w-[92vw] -translate-x-1/2 -translate-y-1/2 flex-col gap-5 rounded-[var(--lumen-radius-xl)] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[var(--lumen-shadow-lg)]"
+        >
           {/* Header */}
           <div className="flex items-center justify-between">
             <Dialog.Title className="text-base font-semibold text-[var(--text-primary)] flex items-center gap-2">
@@ -259,7 +265,7 @@ export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
                         : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/50"
                     )}
                   >
-                    {p === "a4" ? "A4" : "Letter"}
+                    {t(`proxy.paperOption.${p}`)}
                   </button>
                 ))}
               </div>

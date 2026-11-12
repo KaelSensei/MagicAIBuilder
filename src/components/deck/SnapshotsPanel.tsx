@@ -209,9 +209,13 @@ export function SnapshotsPanel({
           )}
         </div>
 
-        {/* Expand/collapse */}
+        {/* Expand/collapse: a disclosure button, so its name stays the same and aria-expanded
+            carries the state (WAI-ARIA APG, https://www.w3.org/WAI/ARIA/apg/patterns/disclosure/,
+            read 2026-11-12). The list itself is mounted only while open, so no aria-controls. */}
         <button
           type="button"
+          aria-expanded={isExpanded}
+          aria-label={t("snapshots.toggleList")}
           onClick={() => setIsExpanded((v) => !v)}
           className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
         >

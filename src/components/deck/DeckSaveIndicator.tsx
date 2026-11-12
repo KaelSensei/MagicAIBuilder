@@ -6,12 +6,15 @@ interface DeckSaveIndicatorProps {
   readonly label: string;
 }
 
-/** Displays non-blocking deck persistence activity without shifting the title bar. */
+/**
+ * Displays non-blocking deck persistence activity without shifting the title bar.
+ *
+ * `<output>` is the native status region: a polite live region that assistive
+ * technology announces without moving focus.
+ */
 export function DeckSaveIndicator({ saving, label }: DeckSaveIndicatorProps) {
   return (
-    <div
-      role="status"
-      aria-live="polite"
+    <output
       aria-label={saving ? label : undefined}
       className={cn(
         "flex min-w-4 items-center gap-1 text-[10px] text-[var(--text-secondary)] transition-opacity",
@@ -20,6 +23,6 @@ export function DeckSaveIndicator({ saving, label }: DeckSaveIndicatorProps) {
     >
       <LoaderCircle aria-hidden="true" className="h-3 w-3 animate-spin" />
       <span className="hidden sm:inline">{label}</span>
-    </div>
+    </output>
   );
 }

@@ -1,9 +1,10 @@
 name: CI
 
-# Feature branches target `staging`, which is then promoted to `dev` and on to
-# `main`. Scoped to `main` alone, this workflow first saw a change on the
-# promotion PR — after review, after it had already landed in the integration
-# branch. Every gate now runs on the PR that actually carries the change.
+# Feature and fix branches target `dev`, which is promoted to `staging` and
+# then to `main` (CLAUDE.md, "Branch flow"). Scoped to `main` alone, this
+# workflow first saw a change on the promotion PR — after review, after it had
+# already landed in the integration branch. Every gate now runs on the PR that
+# actually carries the change.
 on:
   push:
     branches: [main]
@@ -58,6 +59,12 @@ jobs:
 
       - name: Lint
         run: pnpm lint
+
+      # dependency-cruiser (ADR 0007, stage 3): cycles, the layer rules and the
+      # browser/server boundary, checked on the import graph. The cache folder
+      # is not restored between runs, so this is a cold run of a few seconds.
+      - name: Architecture
+        run: pnpm arch
 
       - name: Typecheck
         run: npx tsc --noEmit

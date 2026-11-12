@@ -52,22 +52,51 @@ describe("FORMAT_CONFIG", () => {
   });
 
   // The playtest engine reads this instead of hardcoding Commander's 40.
-  it("declares a starting life total for every format", () => {
+  it("declares a starting life total for every format and table size", () => {
     for (const format of ALL_FORMATS) {
-      expect(FORMAT_CONFIG[format].startingLife).toBeGreaterThan(0);
+      expect(FORMAT_CONFIG[format].startingLife.twoPlayer).toBeGreaterThan(0);
+      expect(FORMAT_CONFIG[format].startingLife.multiplayer).toBeGreaterThan(0);
     }
   });
 
-  it("uses 40 life for Commander and 20 for constructed formats", () => {
-    expect(FORMAT_CONFIG.commander.startingLife).toBe(40);
-    expect(FORMAT_CONFIG.modern.startingLife).toBe(20);
-    expect(FORMAT_CONFIG.pauper.startingLife).toBe(20);
+  // CR 103.4c, 903.7: 40 in Commander. CR 103.4: 20 in the base game.
+  it("uses 40 life for Commander and 20 for constructed formats, at any table", () => {
+    expect(FORMAT_CONFIG.commander.startingLife).toEqual({
+      twoPlayer: 40,
+      multiplayer: 40,
+    });
+    expect(FORMAT_CONFIG.modern.startingLife).toEqual({
+      twoPlayer: 20,
+      multiplayer: 20,
+    });
+    expect(FORMAT_CONFIG.pauper.startingLife).toEqual({
+      twoPlayer: 20,
+      multiplayer: 20,
+    });
   });
 
-  it("uses the format-specific totals for Brawl and Oathbreaker", () => {
-    expect(FORMAT_CONFIG.brawl.startingLife).toBe(30);
-    // Oathbreaker has a commander-style deck but starts at 20, not 40.
-    expect(FORMAT_CONFIG.oathbreaker.startingLife).toBe(20);
+  // CR 903.12f (also 103.4d): 25 in a two-player Brawl game, 30 in a multiplayer one.
+  it("gives Brawl 25 life in a two-player game and 30 in a multiplayer game", () => {
+    expect(FORMAT_CONFIG.brawl.startingLife).toEqual({
+      twoPlayer: 25,
+      multiplayer: 30,
+    });
+  });
+
+  it("starts Oathbreaker at 20, not Commander's 40", () => {
+    expect(FORMAT_CONFIG.oathbreaker.startingLife).toEqual({
+      twoPlayer: 20,
+      multiplayer: 20,
+    });
+  });
+
+  // CR 103.5c: the first mulligan is free in a multiplayer game and in any
+  // Brawl game. Oathbreaker is played multiplayer by default; the constructed
+  // formats are duels.
+  it("makes the first playtest mulligan free in the multiplayer formats only", () => {
+    const free = ALL_FORMATS.filter((format) => FORMAT_CONFIG[format].firstMulliganFree);
+
+    expect(free).toEqual(["commander", "brawl", "oathbreaker"]);
   });
 });
 
@@ -82,6 +111,15 @@ describe("getFormatConfig", () => {
     expect(cfg.label).toBe("Commander");
     expect(cfg.deckSize).toBe(100);
   });
+
+  // A stored format is a plain string; a name that `Object.prototype` answers
+  // must not read a function off the config table.
+  it.each(["toString", "constructor", "hasOwnProperty"])(
+    "falls back to Commander for the inherited object key %s",
+    (key) => {
+      expect(getFormatConfig(key)).toBe(FORMAT_CONFIG.commander);
+    }
+  );
 });
 
 describe("FORMAT_OPTIONS", () => {

@@ -6,16 +6,16 @@ import {
   scryfallCollectionLookupName,
 } from "./name-index";
 import type { ScryfallCard } from "./types";
+import { aScryfallCard } from "@/test/builders/scryfall";
 
 function makeCard(overrides: Partial<ScryfallCard>): ScryfallCard {
-  return {
+  return aScryfallCard({
     id: "id-1",
     name: "Test Card",
     cmc: 2,
     type_line: "Instant",
-    color_identity: [],
     ...overrides,
-  };
+  });
 }
 
 describe("scryfallCollectionLookupName", () => {

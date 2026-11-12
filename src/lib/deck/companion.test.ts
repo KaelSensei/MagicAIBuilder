@@ -455,6 +455,28 @@ describe("getCompanionDeckWarnings", () => {
     expect(w.some((x) => x.includes("≤ 2") || x.includes("mana value"))).toBe(true);
   });
 
+  it("counts every copy that violates Gyruda's even mana value restriction", () => {
+    const deck = baseDeck();
+    deck.commander = dcard({
+      id: "cmd",
+      name: "Kenrith",
+      colorIdentity: ["W", "U", "B", "R", "G"],
+      category: "commander",
+      cmc: 4,
+    });
+    deck.companion = dcard({
+      name: "Gyruda, Doom of Depths",
+      category: "companion",
+      colorIdentity: ["U", "B"],
+      oracleText: "",
+    });
+    deck.cards = [dcard({ name: "Odd Spell", cmc: 3, quantity: 3, typeLine: "Creature" })];
+
+    expect(getCompanionDeckWarnings(deck)).toContain(
+      "Companion needs even mana values on nonland cards; 3 card(s) have odd mana value"
+    );
+  });
+
   it("does not count maybeboard cards toward Lurrus CMC check", () => {
     const deck = baseDeck();
     deck.commander = dcard({

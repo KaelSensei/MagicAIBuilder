@@ -10,16 +10,19 @@ const { mockDeckFindFirst, mockPackageFindFirst, mockCreateMany, mockDeckUpdate,
     mockGetCardCollection: vi.fn(),
   }));
 
-vi.mock("@/lib/auth/helpers", () => ({ requireAuth: mockRequireAuth }));
-vi.mock("@/lib/scryfall/client", () => ({ getCardCollection: mockGetCardCollection }));
-vi.mock("@/lib/db/prisma", () => ({
-  prisma: {
+vi.mock(import("@/lib/auth/helpers"), () => ({ requireAuth: mockRequireAuth }));
+vi.mock(import("@/lib/scryfall/client"), () => ({ getCardCollection: mockGetCardCollection }));
+vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
+  const { stubPrisma } = await import("@/test/prisma-stub");
+  return stubPrisma(await importOriginal(), {
     deck: { findFirst: mockDeckFindFirst, update: mockDeckUpdate },
     cardPackage: { findFirst: mockPackageFindFirst },
     deckCard: { createMany: mockCreateMany },
-    $transaction: vi.fn((operations: readonly Promise<unknown>[]) => Promise.all(operations)),
-  },
-}));
+    $transaction: vi.fn((operations: readonly Promise<unknown>[]) =>
+      Promise.all(operations)
+    ),
+  });
+});
 
 import { POST } from "./route";
 
@@ -92,6 +95,14 @@ describe("POST /api/community/card-packages/[packageId]/apply", () => {
     mockGetCardCollection.mockResolvedValue({ data: [], not_found: [{ id: "ready" }] });
     const response = await POST(request(), context);
     expect(response.status).toBe(500);
+    expect(mockCreateMany).not.toHaveBeenCalled();
+  });
+
+  it("refuses a deck whose stored format this build does not support", async () => {
+    mockDeckFindFirst.mockResolvedValue({ format: "historic", cards: [] });
+    const response = await POST(request(), context);
+    expect(response.status).toBe(422);
+    expect(mockPackageFindFirst).not.toHaveBeenCalled();
     expect(mockCreateMany).not.toHaveBeenCalled();
   });
 });

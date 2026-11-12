@@ -2,7 +2,8 @@
 // Live stats panel with bracket-aware benchmarks
 import { useTranslations } from "next-intl";
 import { cn } from "@/components/ui/utils";
-import type { DeckStats, DeckCard } from "@/lib/deck/types";
+import type { BracketLevel, DeckCard } from "@/lib/deck/types";
+import type { DeckStats } from "@/lib/deck/analysis-types";
 import type { DeckFormat } from "@/lib/deck/formats";
 import { getFormatConfig } from "@/lib/deck/formats";
 import type { BenchmarkStatus, FormatStats } from "@/lib/deck/format-stats";
@@ -14,8 +15,6 @@ import { ThemeDetector } from "./ThemeDetector";
 import { DeckPriceDisplay } from "./DeckPriceDisplay";
 import { TokenLibraryPanel } from "./TokenLibraryPanel";
 import { CheckCircle2, AlertTriangle } from "lucide-react";
-
-type BracketLevel = 1 | 2 | 3 | 4;
 
 interface DeckStatsProps {
   readonly stats: DeckStats | null;
@@ -34,6 +33,10 @@ const BRACKET_TARGETS: Record<
   2: { ramp: 10, draw: 9, removal: 7, lands: 36 },
   3: { ramp: 12, draw: 11, removal: 8, lands: 35 },
   4: { ramp: 14, draw: 12, removal: 10, lands: 33 },
+  // cEDH medians (Archidekt, 2026-09-07): 21 ramp, 9 draw, 28 lands. Spot
+  // removal is undercounted there, so removal keeps Bracket 4's target.
+  // docs/product/guides/commander-deckbuilding-by-bracket.md, "What decks look like"
+  5: { ramp: 20, draw: 9, removal: 10, lands: 28 },
 };
 
 function pct(value: number, target: number) {
@@ -44,7 +47,7 @@ interface BenchmarkRowProps {
   readonly label: string;
   readonly value: number;
   readonly target: number;
-  readonly bracket: 1 | 2 | 3 | 4;
+  readonly bracket: BracketLevel;
 }
 
 function getRatioStatus(ratio: number): "ok" | "warn" | "error" {

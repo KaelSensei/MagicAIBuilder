@@ -4,12 +4,16 @@ import { signIn } from "next-auth/react";
 import { Link } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { useCallback, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { authPageHref, sanitizeCallbackUrl } from "@/lib/auth/callback-url";
 import { AuthPageShell } from "./AuthPageShell";
 import { GoogleSignInButton } from "./GoogleSignInButton";
 import { AuthDivider } from "./AuthDivider";
 
 export function SignUpForm() {
   const t = useTranslations("auth");
+  const searchParams = useSearchParams();
+  const callbackUrl = sanitizeCallbackUrl(searchParams.get("callbackUrl"));
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -40,7 +44,7 @@ export function SignUpForm() {
         email,
         password,
         redirect: false,
-        callbackUrl: "/decks",
+        callbackUrl,
       });
 
       setLoading(false);
@@ -50,16 +54,16 @@ export function SignUpForm() {
         return;
       }
 
-      globalThis.location.href = "/decks";
+      globalThis.location.href = callbackUrl;
     },
-    [name, email, password, t]
+    [name, email, password, callbackUrl, t]
   );
 
   const handleGoogle = useCallback(() => {
-    void signIn("google", { callbackUrl: "/decks" }).catch(() => {
+    void signIn("google", { callbackUrl }).catch(() => {
       setError(t("google.failed"));
     });
-  }, [t]);
+  }, [callbackUrl, t]);
 
   return (
     <AuthPageShell subtitle={t("signUp.title")} error={error}>
@@ -134,7 +138,7 @@ export function SignUpForm() {
       <p className="text-center text-sm text-[var(--text-secondary)]">
         {t("signUp.hasAccount")}{" "}
         <Link
-          href="/auth/signin"
+          href={authPageHref("/auth/signin", callbackUrl)}
           className="text-[var(--accent-text)] hover:underline"
         >
           {t("signUp.signInLink")}

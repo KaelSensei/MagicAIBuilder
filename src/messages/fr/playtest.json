@@ -4,6 +4,7 @@
   "start": {
     "prompt": "Prêt à tester ton deck ?",
     "hint": "Mélange et pioche ta main de départ de sept cartes.",
+    "multiplayer": "Partie multijoueur (plus de deux joueurs)",
     "action": "Piocher la main de départ"
   },
   "turn": "Tour {turn}",
@@ -12,7 +13,7 @@
   "libraryCount": "{count} dans la bibliothèque",
   "emptyLibrary": "Bibliothèque vide",
   "mulligan": "Mulligan",
-  "mulliganDown": "à {count}",
+  "mulliganHint": "{bottom, plural, =0 {gratuit : nouvelle main de sept} other {nouvelle main de sept, # au-dessous}}",
   "restart": "Recommencer",
   "gameOver": "Partie terminée",
   "phases": {
@@ -44,7 +45,13 @@
     "hideCards": "Cacher les cartes",
     "cardBack": "Dos de carte",
     "toBattlefield": "Vers le champ de bataille",
-    "toGraveyard": "Vers le cimetière"
+    "toGraveyard": "Vers le cimetière",
+    "bottom": {
+      "prompt": "{count, plural, one {Choisis # carte à mettre au-dessous de ta bibliothèque.} other {Choisis # cartes à mettre au-dessous de ta bibliothèque, dans l’ordre où elles y vont.}}",
+      "progress": "{chosen, plural, one {# carte choisie} other {# cartes choisies}} sur {count}",
+      "order": "Ordre au-dessous de la bibliothèque : {cards}",
+      "confirm": "{count, plural, one {Mettre # carte au-dessous} other {Mettre # cartes au-dessous}}"
+    }
   },
   "battlefield": {
     "title": "Champ de bataille ({count})",
@@ -65,7 +72,15 @@
     "exileEmpty": "L'exil est vide",
     "cardCount": "{count, plural, one {# carte} other {# cartes}}",
     "restoreToHand": "Remettre en main",
-    "play": "Jouer"
+    "play": "Jouer",
+    "toCommandZone": "Zone de commandement",
+    "returnToCommandZone": "Renvoyer {name} dans la zone de commandement"
+  },
+  "commandZone": {
+    "title": "Zone de commandement",
+    "cast": "Lancer",
+    "castCard": "Lancer {name}",
+    "empty": "Vide. Renvoyez votre commandant depuis le cimetière ou l'exil."
   },
   "dice": {
     "title": "Dés",
@@ -96,6 +111,7 @@
   "recordResult": "Comment ça s'est passé ?",
   "recording": "Enregistrement…",
   "recordFailed": "Enregistrement impossible",
+  "recordBlockedByMulligan": "Termine d’abord ton mulligan.",
   "skipRecording": "Passer",
   "result": {
     "win": "Victoire",

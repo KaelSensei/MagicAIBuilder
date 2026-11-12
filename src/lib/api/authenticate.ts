@@ -9,6 +9,7 @@
  * the API would inherit the app's CSRF surface for free.
  */
 
+import "server-only";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { logger } from "@/lib/logger";

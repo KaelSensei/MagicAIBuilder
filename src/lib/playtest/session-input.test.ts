@@ -58,9 +58,11 @@ describe("parseSessionInput", () => {
     expect(parseSessionInput({ result: "win", turns: 8, mulliganCount: -1 }).ok).toBe(false);
   });
 
-  it("rejects more mulligans than a hand has cards", () => {
-    // Londo mulligan bottoms one card per mulligan; past seven there is no hand.
-    expect(parseSessionInput({ result: "win", turns: 8, mulliganCount: 8 }).ok).toBe(false);
+  it("accepts the Commander limit and rejects anything past it", () => {
+    // Seven counted mulligans leave zero cards (CR 103.5); Commander's free
+    // first mulligan (CR 103.5c) allows an eighth. No playtest can record a ninth.
+    expect(parseSessionInput({ result: "win", turns: 8, mulliganCount: 8 }).ok).toBe(true);
+    expect(parseSessionInput({ result: "win", turns: 8, mulliganCount: 9 }).ok).toBe(false);
   });
 
   it("accepts a difficulty from the known set and rejects anything else", () => {

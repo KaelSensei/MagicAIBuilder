@@ -1,4 +1,5 @@
-import type { BuildRequest } from "@/app/api/ai/build/types";
+import type { Bracket, BuildRequest } from "@/app/api/ai/build/types";
+import { bracketBrief } from "./bracket-brief";
 
 export interface DeckPlanRole {
   readonly role: string;
@@ -119,13 +120,15 @@ const STRATEGY_PLANS: Readonly<Record<string, StrategyPlan>> = {
   },
 };
 
-const BRACKET_CONSTRAINTS: Readonly<Record<number, string>> = {
-  1: "Bracket 1: theme-first, no tutors, combos, or game changers",
-  2: "Bracket 2: at most 1 game changer and no infinite combos",
-  3: "Bracket 3: up to 3 game changers and no cEDH optimization",
-  4: "Bracket 4: optimized high-power play short of cEDH",
-  5: "Bracket 5: fully optimized cEDH play",
-};
+/**
+ * Names a bracket the way the copilot prompt states the power level.
+ *
+ * @param bracket - target bracket of the build request
+ * @returns the official bracket name and intent, e.g. "Bracket 3 (Upgraded): …"
+ */
+export function describeBracket(bracket: Bracket): string {
+  return bracketBrief(bracket).heading;
+}
 
 function rolesFor(plan: StrategyPlan): readonly DeckPlanRole[] {
   const core = CORE_ROLES.map((role) => ({
@@ -148,6 +151,7 @@ export function createDeckPlan(request: BuildRequest): DeckPlan {
   const commanderConstraint = request.commanderName
     ? `Use ${request.commanderName} as commander`
     : `Choose a commander with exactly ${colors} color identity`;
+  const bracket = bracketBrief(request.bracket);
 
   return {
     gameplan: resolved.gameplan,
@@ -159,7 +163,8 @@ export function createDeckPlan(request: BuildRequest): DeckPlan {
       request.budget === null
         ? "Favor accessible cards; no price cap"
         : `$${request.budget} maximum per card`,
-      BRACKET_CONSTRAINTS[request.bracket] ?? BRACKET_CONSTRAINTS[2],
+      bracket.heading,
+      ...bracket.rules,
     ],
   };
 }

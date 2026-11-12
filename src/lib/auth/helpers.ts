@@ -1,6 +1,19 @@
+/**
+ * Session guards for route handlers: `requireAuth` (a signed-in user whose row
+ * still exists) and `requireDeckOwner` (that user owns the deck).
+ *
+ * Each returns either its value or a ready `NextResponse` (401, 403 or 404)
+ * for the handler to return. Outside production, `PLAYWRIGHT_TEST=1` signs an
+ * anonymous caller in as a fixed test user. Bearer keys of the public API are
+ * checked in `lib/api/authenticate.ts`, never here.
+ *
+ * @module auth/helpers
+ */
+import "server-only";
 import { auth } from "@/lib/auth/config";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
+import { isUniqueViolation } from "@/lib/db/prisma-errors";
 
 /** Session with guaranteed user.id */
 export interface AuthenticatedSession {
@@ -14,58 +27,64 @@ export interface AuthenticatedSession {
   };
 }
 
-interface SessionUserCandidate {
-  id?: string;
-  name?: string | null;
-  email?: string | null;
-  image?: string | null;
-}
+/** The user columns a resolved session exposes. */
+const SESSION_USER_SELECT = {
+  id: true,
+  name: true,
+  email: true,
+  image: true,
+  createdAt: true,
+  onboardingDone: true,
+} as const;
 
-/** Prisma's error code for a unique-constraint violation. */
-const UNIQUE_VIOLATION = "P2002";
+/** The identity the Playwright bypass signs an anonymous caller in as. */
+const PLAYWRIGHT_USER = {
+  email: "playwright@test.local",
+  name: "Playwright",
+  image: null,
+} as const;
 
 /**
- * @param error - a rejected Prisma promise's reason
- * @returns whether the write lost a race to a concurrent insert
+ * Look up the user a session token names. Never creates one.
+ *
+ * The row is written at sign-in, before the token exists: on a first OAuth
+ * sign-in the Prisma adapter creates it and the JWT callback copies its id into
+ * the token; a credentials sign-in needs the row /api/auth/signup made. So a
+ * token whose row is gone belongs to a deleted account, and it is signed out.
+ * Re-creating the row from the token's email would bring the account back,
+ * empty, on every device still holding the 7-day cookie.
+ *
+ * @param userId - the id the session token carries; empty when the token has none
+ * @returns the user, or null when the token names no live row
  */
-function isUniqueViolation(error: unknown): boolean {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    (error as { code?: unknown }).code === UNIQUE_VIOLATION
-  );
+function findSessionUser(
+  userId: string
+): Promise<AuthenticatedSession["user"] | null> {
+  if (!userId) {
+    return Promise.resolve(null);
+  }
+
+  return prisma.user.findUnique({
+    where: { id: userId },
+    select: SESSION_USER_SELECT,
+  });
 }
 
-async function resolveAuthenticatedUser(
-  sessionUser: SessionUserCandidate
-): Promise<AuthenticatedSession["user"] | null> {
-  if (sessionUser.id) {
-    const userById = await prisma.user.findUnique({
-      where: { id: sessionUser.id },
-      select: { id: true, name: true, email: true, image: true, createdAt: true, onboardingDone: true },
-    });
-    if (userById) {
-      return userById;
-    }
-  }
-
-  const normalizedEmail = sessionUser.email?.trim().toLowerCase();
-  if (!normalizedEmail) {
-    return null;
-  }
-
-  const select = { id: true, name: true, email: true, image: true, createdAt: true, onboardingDone: true } as const;
-
+/**
+ * Find or create the Playwright user. The test bypass is the only caller that
+ * may create a user per request: it has no sign-in, so no adapter wrote the row.
+ *
+ * @returns the Playwright user, or null when it cannot be read back
+ */
+async function provisionPlaywrightUser(): Promise<
+  AuthenticatedSession["user"] | null
+> {
   try {
     return await prisma.user.upsert({
-      where: { email: normalizedEmail },
+      where: { email: PLAYWRIGHT_USER.email },
       update: {},
-      create: {
-        email: normalizedEmail,
-        name: sessionUser.name ?? null,
-        image: sessionUser.image ?? null,
-      },
-      select,
+      create: PLAYWRIGHT_USER,
+      select: SESSION_USER_SELECT,
     });
   } catch (error) {
     // Prisma's upsert is a read-then-write, not an atomic INSERT ... ON
@@ -76,7 +95,10 @@ async function resolveAuthenticatedUser(
       throw error;
     }
 
-    return prisma.user.findUnique({ where: { email: normalizedEmail }, select });
+    return prisma.user.findUnique({
+      where: { email: PLAYWRIGHT_USER.email },
+      select: SESSION_USER_SELECT,
+    });
   }
 }
 
@@ -95,11 +117,7 @@ export async function requireAuth(): Promise<
   const isTestBypass =
     process.env.PLAYWRIGHT_TEST === "1" && process.env.NODE_ENV !== "production";
   if (isTestBypass && !session?.user) {
-    const user = await resolveAuthenticatedUser({
-      email: "playwright@test.local",
-      name: "Playwright",
-      image: null,
-    });
+    const user = await provisionPlaywrightUser();
     if (!user) {
       return {
         error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
@@ -116,18 +134,17 @@ export async function requireAuth(): Promise<
 
   // Resolve against the database rather than trusting the JWT's id outright.
   //
-  // The id rides in a signed cookie, so it outlives the row it points at: after
-  // the database was rebuilt, sessions minted against the old one still carried
-  // ids that no longer existed. Reads quietly returned nothing (the listing
-  // showed "no decks yet") while every write died on a foreign-key violation
-  // and surfaced as a 500 — a Create Deck button that just span and gave up.
+  // The id rides in a signed cookie, so it outlives the row it points at: an
+  // account deleted while a device is still signed in, or a database rebuilt
+  // under live sessions. Trusting that id made reads quietly return nothing
+  // (the listing showed "no decks yet") while every write died on a
+  // foreign-key violation and surfaced as a 500.
   //
-  // resolveAuthenticatedUser looks the id up first and only falls back to the
-  // email upsert when it is missing, so a stale session heals itself instead of
-  // failing. The cost is one indexed primary-key lookup per authenticated
-  // request, which is worth paying to not hand out a user id that cannot be
-  // written against.
-  const user = await resolveAuthenticatedUser(session.user);
+  // A token whose row is gone is answered 401, so the caller signs in again.
+  // It is never healed by re-creating the user from the token's email: that
+  // brought deleted accounts back. The cost is one indexed primary-key lookup
+  // per authenticated request.
+  const user = await findSessionUser(session.user.id);
   if (!user) {
     return {
       error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),

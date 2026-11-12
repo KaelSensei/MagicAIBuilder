@@ -245,4 +245,4 @@ if (deck.userId !== session.user.id)
   return Response.json({ error: "Forbidden" }, { status: 403 });
 ```
 
-The only exception is `GET /api/share/[token]` which is public by design (read-only, stripped of sensitive metadata like `shareToken` and `userId`).
+The only exception is `GET /api/share/[token]` which is public by design: read-only, and limited to the fields the share page renders (`SHARED_DECK_SELECT` in `src/lib/deck/shared-deck-select.ts`), so it never returns `shareToken`, the owner, or owner-only columns such as card notes.

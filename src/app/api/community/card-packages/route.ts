@@ -4,12 +4,13 @@ import { readJsonBody } from "@/lib/api/json-body";
 import { requireAuth } from "@/lib/auth/helpers";
 import { prisma } from "@/lib/db/prisma";
 import { logger } from "@/lib/logger";
+import { COLOR_SYMBOLS } from "@/lib/mana/colors";
 
 const PackageCardSchema = z.object({
   scryfallId: z.string().trim().min(1).max(100),
   name: z.string().trim().min(1).max(200),
   quantity: z.number().int().min(1).max(99),
-  colorIdentity: z.array(z.enum(["W", "U", "B", "R", "G", "C"])).max(6),
+  colorIdentity: z.array(z.enum(COLOR_SYMBOLS)).max(6),
   isBanned: z.boolean().optional().default(false),
   isBasicLand: z.boolean().optional().default(false),
   imageUri: z.url().or(z.literal("")).optional().default(""),

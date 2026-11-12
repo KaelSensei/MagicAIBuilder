@@ -1,0 +1,80 @@
+name: E2E
+
+# The Playwright suite, on the Docker stack the local pre-push gate runs
+# (`docker-compose.e2e.yml`): Postgres on a throwaway volume, a build of the
+# app served with `next start`, and Chromium. See "E2E gate" in
+# docs/engineering/quality-gate.md.
+#
+# When it runs (owner decision OD-14, 2026-11-10, which weighed CI minutes):
+# - on PRs into `staging` and `main`, so a promotion is tested after the
+#   rebases of the PRs it carries;
+# - nightly on `dev`, which also catches what reached `dev` without a local
+#   push (a Dependabot PR, a push made with SKIP_E2E=1);
+# - on demand, on any branch.
+# PRs into `dev` do not run it: the pre-push gate already ran the same stack
+# before the push.
+on:
+  pull_request:
+    branches: [staging, main]
+  # GitHub runs scheduled workflows from the default branch (`main`) only, so
+  # this trigger starts once the workflow has been promoted there. The checkout
+  # below then tests `dev`.
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  e2e:
+    name: Playwright in Docker
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          # Empty means the triggering ref (the PR merge commit, or the branch
+          # picked for a manual run).
+          ref: ${{ github.event_name == 'schedule' && 'dev' || '' }}
+
+      # The compose file bind-mounts both folders. Created here, they belong to
+      # the runner user rather than to the container's root.
+      - name: Prepare the report folders
+        run: mkdir -p playwright-report test-results
+
+      # `--exit-code-from e2e` makes the job's verdict the Playwright exit code,
+      # as in scripts/e2e-pre-push.sh. PLAYWRIGHT_SPEC stays empty (the full
+      # suite) and PLAYWRIGHT_GREP_INVERT keeps its compose default. The
+      # compose file also sets SCRYFALL_API_BASE_URL to its `scryfall`
+      # stand-in service and resolves api.scryfall.com to nowhere, so this job
+      # needs no egress to Scryfall and nothing here overrides that.
+      - name: Run the E2E stack
+        run: >
+          docker compose -f docker-compose.e2e.yml up
+          --build
+          --abort-on-container-exit
+          --exit-code-from e2e
+
+      - name: Upload the Playwright report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          # A run that fails before Playwright starts (the image or the build)
+          # writes no report; its log is in the step above.
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Stop the stack
+        if: always()
+        run: docker compose -f docker-compose.e2e.yml down -v

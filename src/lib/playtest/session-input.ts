@@ -12,7 +12,16 @@
  * @module playtest/session-input
  */
 
-import { OPENING_HAND_SIZE } from "./engine";
+import { isRecordOrArray } from "@/lib/guards";
+import { maxMulligans } from "./engine";
+import {
+  SESSION_DIFFICULTIES,
+  SESSION_RESULTS,
+  isSessionDifficulty,
+  isSessionResult,
+  type SessionDifficulty,
+  type SessionResult,
+} from "./session-enums";
 import {
   buildTrendData,
   calculateAverageTurns,
@@ -25,13 +34,11 @@ import {
   type TrendPoint,
 } from "./analytics";
 
-/** The three outcomes the schema stores. */
-export const SESSION_RESULTS = ["win", "loss", "draw"] as const;
-export type SessionResult = (typeof SESSION_RESULTS)[number];
-
-/** Opponent strength, when the player chooses to say. */
-export const SESSION_DIFFICULTIES = ["budget", "mid-range", "cedh"] as const;
-export type SessionDifficulty = (typeof SESSION_DIFFICULTIES)[number];
+/**
+ * Most mulligans any playtest can record: down to a zero-card hand (CR 103.5),
+ * plus the free first mulligan of a multiplayer game (CR 103.5c).
+ */
+const MAX_RECORDED_MULLIGANS = maxMulligans({ firstMulliganFree: true });
 
 /** Maximum persisted length for a player-authored playtest evidence note. */
 export const MAX_SESSION_NOTES_LENGTH = 500;
@@ -67,10 +74,6 @@ export interface SessionSummary {
   readonly mulligans: Record<number, MulliganBucket>;
   readonly matchups: Record<string, MatchupStat>;
   readonly trend: readonly TrendPoint[];
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
 }
 
 function isOptionalText(value: unknown): value is string | undefined {
@@ -111,7 +114,7 @@ function fail(error: string): ParseResult {
  * @returns the validated session, or the name of the field that failed
  */
 export function parseSessionInput(payload: unknown): ParseResult {
-  if (!isRecord(payload)) return fail("body must be an object");
+  if (!isRecordOrArray(payload)) return fail("body must be an object");
 
   const {
     result,
@@ -125,7 +128,7 @@ export function parseSessionInput(payload: unknown): ParseResult {
     additionalCardsSeen,
   } = payload;
 
-  if (!SESSION_RESULTS.includes(result as SessionResult)) {
+  if (!isSessionResult(result)) {
     return fail(`result must be one of ${SESSION_RESULTS.join(", ")}`);
   }
 
@@ -135,13 +138,13 @@ export function parseSessionInput(payload: unknown): ParseResult {
   }
 
   const mulligans = mulliganCount ?? 0;
-  // The London mulligan bottoms one card per mulligan; past a full hand there
-  // is nothing left to keep, so a larger count cannot have happened.
-  if (!isWholeNumberInRange(mulligans, 0, OPENING_HAND_SIZE)) {
-    return fail(`mulliganCount must be a whole number between 0 and ${OPENING_HAND_SIZE}`);
+  // The playtest stops mulligans at a zero-card hand (CR 103.5), so a larger
+  // count cannot have come from it.
+  if (!isWholeNumberInRange(mulligans, 0, MAX_RECORDED_MULLIGANS)) {
+    return fail(`mulliganCount must be a whole number between 0 and ${MAX_RECORDED_MULLIGANS}`);
   }
 
-  if (difficulty !== undefined && !SESSION_DIFFICULTIES.includes(difficulty as SessionDifficulty)) {
+  if (difficulty !== undefined && !isSessionDifficulty(difficulty)) {
     return fail(`difficulty must be one of ${SESSION_DIFFICULTIES.join(", ")}`);
   }
 
@@ -174,10 +177,10 @@ export function parseSessionInput(payload: unknown): ParseResult {
   return {
     ok: true,
     value: {
-      result: result as SessionResult,
+      result,
       turns,
       mulliganCount: mulligans,
-      difficulty: difficulty as SessionDifficulty | undefined,
+      difficulty,
       notes: trimmed === "" ? undefined : trimmed,
       proposedChange: trimmedProposedChange === "" ? undefined : trimmedProposedChange,
       snapshotId: typeof snapshotId === "string" ? snapshotId.trim() : undefined,

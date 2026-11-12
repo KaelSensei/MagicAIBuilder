@@ -1,15 +1,27 @@
 /**
- * Playtest Store — Zustand for playtest session state
- * Isolated from main deck store to avoid pollution
+ * The playtest session the modal shows: one Zustand store around the pure engine.
+ *
+ * Context: playtest. The store deals a deck into a game (one card per physical copy,
+ * commanders in the command zone, CR 903.6), forwards each player action to its engine
+ * transition, and keeps the setup so a reset deals the same deck again. It is separate from
+ * the deck store, so a game never changes the saved deck.
+ *
+ * `createPlaytestStore` builds a store whose shuffles, die rolls and timestamps come from the
+ * ports it is given; the app uses `usePlaytestStore`, built with the production ports. Copy and
+ * token ids come from Web Crypto either way, and never reach the action log.
+ *
+ * @module playtest/store
  */
 
-import { create } from "zustand";
+import { create, type StoreApi, type UseBoundStore } from "zustand";
 import type { Deck, DeckCard } from "@/lib/deck/types";
 import { getFormatConfig } from "@/lib/deck/formats";
-import { randomAlphanumericId, randomIntBelow } from "@/lib/crypto-random";
+import { randomAlphanumericId } from "@/lib/crypto-random";
 import type { TokenLibraryEntry } from "@/lib/deck/token-library";
-import type { PlaytestEngine } from "./engine";
+import type { CardZone, PlaytestDeps, PlaytestEngine } from "./engine";
+import { isFirstMulliganFree, isMultiplayerByDefault } from "./free-mulligan";
 import {
+  defaultPlaytestDeps,
   createPlaytestState,
   applyDrawCard,
   applyNextPhase,
@@ -22,6 +34,7 @@ import {
   applyUndo,
   applyAddCounter,
   applyMulligan,
+  applyBottomCards,
   applyCreateCardCopy,
   applyCreateToken,
   applyRollDie,
@@ -33,23 +46,99 @@ import {
 
 /** The deck as dealt at the start, so a reset does not depend on live zones. */
 interface PlaytestSetup {
+  /** One entry per physical card the engine shuffles into the library. */
   readonly cards: readonly DeckCard[];
+  /** Commanders, which start in the command zone instead (CR 903.6). */
+  readonly commandZone: readonly DeckCard[];
+  /** The format's starting life total at this session's table size. */
   readonly startingLife: number;
+  /**
+   * Whether the table has more than two players: the player's answer, or the format's usual
+   * table when they gave none. Settled when the session starts, so a restart keeps it.
+   */
+  readonly multiplayer: boolean;
+  /** Settled when the session starts, so a restart keeps the player's choice. */
+  readonly firstMulliganFree: boolean;
+}
+
+/** What the player chooses before the opening hand is dealt. */
+export interface PlaytestOptions {
+  /**
+   * Whether the game has more than two players, which makes the first
+   * mulligan free (CR 103.5c), gives the starting player a draw on turn 1
+   * (CR 103.8c) and sets Brawl's life total (CR 903.12f). The app stores no
+   * pod size, so an unanswered question falls back on the format's usual
+   * table (`isMultiplayerByDefault`).
+   */
+  readonly multiplayer?: boolean;
 }
 
 /**
- * Flattens a deck into the card pool the engine shuffles.
+ * Turns a deck row into the physical cards it stands for.
+ *
+ * Zones find, tap and key cards by id, so every copy needs its own: the first
+ * keeps the row's id and each further copy gets `<row id>#<copy number>`.
+ *
+ * @param card - a deck row holding `quantity` copies
+ * @returns one single-copy card per physical copy
+ */
+function physicalCopies(card: DeckCard): readonly DeckCard[] {
+  return Array.from({ length: card.quantity }, (_, index) => ({
+    ...card,
+    id: index === 0 ? card.id : `${card.id}#${index + 1}`,
+    quantity: 1,
+  }));
+}
+
+/**
+ * Splits a deck into the library the engine shuffles and the command zone.
+ *
+ * `deck.cards` also holds the sideboard and the cards being considered; only
+ * the main deck is dealt. A format without a command zone shuffles any
+ * commander slot into the library, as it always has.
  *
  * @param deck - the deck being playtested
- * @returns commander, partner and main-deck cards in one list
+ * @param options - the player's choices for this session
+ * @returns the library cards, the commanders and the session's starting rules
  */
-function buildSetup(deck: Deck): PlaytestSetup {
-  const cards: DeckCard[] = [];
-  if (deck.commander) cards.push(deck.commander);
-  if (deck.partner) cards.push(deck.partner);
-  cards.push(...deck.cards);
+function buildSetup(deck: Deck, options: PlaytestOptions): PlaytestSetup {
+  const { hasCommander, startingLife: lifeByTable } = getFormatConfig(
+    deck.format
+  );
+  const multiplayer =
+    options.multiplayer ?? isMultiplayerByDefault(deck.format);
+  // CR 903.12f: Brawl starts at 25 in a two-player game and at 30 in a multiplayer one.
+  const startingLife = multiplayer
+    ? lifeByTable.multiplayer
+    : lifeByTable.twoPlayer;
+  const firstMulliganFree = isFirstMulliganFree(deck.format, multiplayer);
+  const rules = { startingLife, multiplayer, firstMulliganFree };
+  const commanders = [deck.commander, deck.partner].filter(
+    (card): card is DeckCard => card !== null
+  );
+  const mainDeck = deck.cards
+    .filter((card) => card.zone === "main")
+    .flatMap(physicalCopies);
 
-  return { cards, startingLife: getFormatConfig(deck.format).startingLife };
+  return hasCommander
+    ? { cards: mainDeck, commandZone: commanders, ...rules }
+    : { cards: [...commanders, ...mainDeck], commandZone: [], ...rules };
+}
+
+/**
+ * Deals a fresh game from the retained setup.
+ *
+ * @param setup - the deck and the format's starting rules
+ * @param deps - the shuffle's random source
+ * @returns a new engine with the format's life total, table size, mulligan rule and command zone
+ */
+function dealFrom(setup: PlaytestSetup, deps: PlaytestDeps): PlaytestEngine {
+  return createPlaytestState(setup.cards, {
+    lifeTotal: setup.startingLife,
+    multiplayer: setup.multiplayer,
+    firstMulliganFree: setup.firstMulliganFree,
+    commandZone: setup.commandZone,
+  }, deps);
 }
 
 interface PlaytestStore {
@@ -60,21 +149,20 @@ interface PlaytestStore {
   setup: PlaytestSetup | null;
 
   // Actions
-  startPlaytest: (deck: Deck) => void;
+  /** Deals a new session; the options hold only for this session. */
+  startPlaytest: (deck: Deck, options?: PlaytestOptions) => void;
   stopPlaytest: () => void;
   drawCard: () => void;
   mulligan: () => void;
+  /** Settles a pending mulligan by bottoming these hand cards, in order. */
+  bottomCards: (cardIds: readonly string[]) => void;
   nextPhase: () => void;
   nextTurn: () => void;
   damage: (amount: number, description?: string) => void;
   heal: (amount: number) => void;
   tap: (cardId: string) => void;
   untapAll: () => void;
-  moveToZone: (
-    cardId: string,
-    from: "hand" | "library" | "battlefield" | "graveyard" | "exile",
-    to: "hand" | "library" | "battlefield" | "graveyard" | "exile"
-  ) => void;
+  moveToZone: (cardId: string, from: CardZone, to: CardZone) => void;
   addCounter: (cardId: string, amount: number) => void;
   createCardCopy: (cardId: string) => void;
   createToken: (token: TokenLibraryEntry) => void;
@@ -87,17 +175,23 @@ interface PlaytestStore {
   resetPlaytest: () => void;
 }
 
-export const usePlaytestStore = create<PlaytestStore>((set) => ({
+/**
+ * Creates a playtest store whose games take their randomness and time from `deps`: the deal
+ * and mulligan shuffles, die rolls, and the life and undo timestamps.
+ *
+ * A test builds its own store with a seeded source to replay a session exactly; each call
+ * returns an independent store.
+ */
+export const createPlaytestStore = (
+  deps: PlaytestDeps = defaultPlaytestDeps
+): UseBoundStore<StoreApi<PlaytestStore>> => create<PlaytestStore>((set) => ({
   engine: null,
   isActive: false,
   setup: null,
 
-  startPlaytest: (deck: Deck) => {
-    const setup = buildSetup(deck);
-    const engine = createPlaytestState(setup.cards, {
-      lifeTotal: setup.startingLife,
-    });
-    set({ engine, isActive: true, setup });
+  startPlaytest: (deck: Deck, options: PlaytestOptions = {}) => {
+    const setup = buildSetup(deck, options);
+    set({ engine: dealFrom(setup, deps), isActive: true, setup });
   },
 
   stopPlaytest: () => {
@@ -107,70 +201,77 @@ export const usePlaytestStore = create<PlaytestStore>((set) => ({
   drawCard: () => {
     set((state) => {
       if (!state.engine) return state;
-      return { engine: applyDrawCard(state.engine) };
+      return { engine: applyDrawCard(state.engine, deps) };
     });
   },
 
   mulligan: () => {
     set((state) => {
       if (!state.engine) return state;
-      return { engine: applyMulligan(state.engine) };
+      return { engine: applyMulligan(state.engine, deps) };
+    });
+  },
+
+  bottomCards: (cardIds) => {
+    set((state) => {
+      if (!state.engine) return state;
+      return { engine: applyBottomCards(state.engine, cardIds, deps) };
     });
   },
 
   nextPhase: () => {
     set((state) => {
       if (!state.engine) return state;
-      return { engine: applyNextPhase(state.engine) };
+      return { engine: applyNextPhase(state.engine, deps) };
     });
   },
 
   nextTurn: () => {
     set((state) => {
       if (!state.engine) return state;
-      return { engine: applyNextTurn(state.engine) };
+      return { engine: applyNextTurn(state.engine, deps) };
     });
   },
 
   damage: (amount: number, description = "damage") => {
     set((state) => {
       if (!state.engine) return state;
-      return { engine: applyDamage(state.engine, amount, description) };
+      return { engine: applyDamage(state.engine, amount, description, deps) };
     });
   },
 
   heal: (amount: number) => {
     set((state) => {
       if (!state.engine) return state;
-      return { engine: applyHeal(state.engine, amount) };
+      return { engine: applyHeal(state.engine, amount, deps) };
     });
   },
 
   tap: (cardId: string) => {
     set((state) => {
       if (!state.engine) return state;
-      return { engine: applyTap(state.engine, cardId) };
+      return { engine: applyTap(state.engine, cardId, deps) };
     });
   },
 
   untapAll: () => {
     set((state) => {
       if (!state.engine) return state;
-      return { engine: applyUntapAll(state.engine) };
+      return { engine: applyUntapAll(state.engine, deps) };
     });
   },
 
   moveToZone: (cardId, from, to) => {
     set((state) => {
       if (!state.engine) return state;
-      return { engine: applyMoveToZone(state.engine, cardId, from, to) };
+      return { engine: applyMoveToZone(state.engine, cardId, from, to, deps) };
     });
   },
 
   addCounter: (cardId: string, amount: number) => {
     set((state) => {
       if (!state.engine) return state;
-      return { engine: applyAddCounter(state.engine, cardId, amount) };
+      return { engine: applyAddCounter(state.engine, cardId, amount, deps) };
     });
   },
 
@@ -178,7 +279,7 @@ export const usePlaytestStore = create<PlaytestStore>((set) => ({
     set((state) => {
       if (!state.engine) return state;
       const copyId = `playtest-copy-${randomAlphanumericId(16)}`;
-      return { engine: applyCreateCardCopy(state.engine, cardId, copyId) };
+      return { engine: applyCreateCardCopy(state.engine, cardId, copyId, deps) };
     });
   },
 
@@ -186,7 +287,7 @@ export const usePlaytestStore = create<PlaytestStore>((set) => ({
     set((state) => {
       if (!state.engine) return state;
       const tokenId = `playtest-token-${randomAlphanumericId(16)}`;
-      return { engine: applyCreateToken(state.engine, token, tokenId) };
+      return { engine: applyCreateToken(state.engine, token, tokenId, deps) };
     });
   },
 
@@ -194,7 +295,12 @@ export const usePlaytestStore = create<PlaytestStore>((set) => ({
     set((state) => {
       if (!state.engine) return state;
       return {
-        engine: applyRollDie(state.engine, sides, randomIntBelow(sides) + 1),
+        engine: applyRollDie(
+          state.engine,
+          sides,
+          deps.random.intBelow(sides) + 1,
+          deps
+        ),
       };
     });
   },
@@ -202,21 +308,21 @@ export const usePlaytestStore = create<PlaytestStore>((set) => ({
   addLogEntry: (description: string) => {
     set((state) =>
       state.engine
-        ? { engine: applyAddActionLogEntry(state.engine, description) }
+        ? { engine: applyAddActionLogEntry(state.engine, description, deps) }
         : state
     );
   },
 
   recordMana: (amount: number) => {
     set((state) => state.engine
-      ? { engine: applyRecordMana(state.engine, amount) }
+      ? { engine: applyRecordMana(state.engine, amount, deps) }
       : state);
   },
 
   editLogEntry: (entryId: number, description: string) => {
     set((state) =>
       state.engine
-        ? { engine: applyEditActionLogEntry(state.engine, entryId, description) }
+        ? { engine: applyEditActionLogEntry(state.engine, entryId, description, deps) }
         : state
     );
   },
@@ -224,7 +330,7 @@ export const usePlaytestStore = create<PlaytestStore>((set) => ({
   removeLogEntry: (entryId: number) => {
     set((state) =>
       state.engine
-        ? { engine: applyRemoveActionLogEntry(state.engine, entryId) }
+        ? { engine: applyRemoveActionLogEntry(state.engine, entryId, deps) }
         : state
     );
   },
@@ -246,11 +352,10 @@ export const usePlaytestStore = create<PlaytestStore>((set) => ({
       // resurrect it from the retained setup.
       if (!state.setup || !state.engine) return state;
 
-      return {
-        engine: createPlaytestState(state.setup.cards, {
-          lifeTotal: state.setup.startingLife,
-        }),
-      };
+      return { engine: dealFrom(state.setup, deps) };
     });
   },
 }));
+
+/** The app's playtest store: Web Crypto shuffles and dice, and the system clock. */
+export const usePlaytestStore = createPlaytestStore();

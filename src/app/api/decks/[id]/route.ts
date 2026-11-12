@@ -1,16 +1,26 @@
+/**
+ * GET, PATCH and DELETE of one deck the signed-in user owns. PATCH writes the
+ * deck's metadata only: the command zone (commander, partner, companion,
+ * pairing) changes through `PATCH /api/decks/[id]/command-zone`, which writes
+ * its fields and card rows in one versioned transaction, so a body that
+ * carries a command field is refused with 400.
+ */
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
-import { patchDeckSchema, PatchDeckInput } from "@/lib/validation/deck";
+import {
+  commandZoneFieldsIn,
+  commandZoneFieldsRefusal,
+  patchDeckSchema,
+  PatchDeckInput,
+} from "@/lib/validation/deck";
 import { requireAuth } from "@/lib/auth/helpers";
 import { logger } from "@/lib/logger";
 import { readJsonBody } from "@/lib/api/json-body";
-import { sharesOracleIdentity } from "@/lib/deck/commander-pairing";
-
-type Params = { params: Promise<{ id: string }> };
+import type { RouteParams } from "@/lib/api/route-kit";
 
 // GET /api/decks/[id] — get a single deck (must own it)
-export async function GET(_req: Request, { params }: Params) {
+export async function GET(_req: Request, { params }: RouteParams<"id">) {
   const { id } = await params;
   try {
     const result = await requireAuth();
@@ -43,7 +53,6 @@ function buildDeckPatchData(fields: PatchDeckInput) {
   const data: Record<string, unknown> = {};
   const keys = [
     "name", "format", "targetBracket", "manualBracket", "budget",
-    "commanderId", "commanderName", "partnerId", "companionId", "pairingType",
     "isAIGenerated", "description", "tags", "isPublic", "seekingFeedback",
     "feedbackQuestion",
   ] as const;
@@ -53,28 +62,8 @@ function buildDeckPatchData(fields: PatchDeckInput) {
   return data;
 }
 
-function hasDuplicatePairing(
-  fields: PatchDeckInput,
-  existing: { commanderId: string | null; partnerId: string | null }
-): boolean {
-  if (fields.commanderId === undefined && fields.partnerId === undefined) return false;
-  const commanderId = fields.commanderId !== undefined ? fields.commanderId : existing.commanderId;
-  const partnerId = fields.partnerId !== undefined ? fields.partnerId : existing.partnerId;
-  return Boolean(commanderId && commanderId === partnerId);
-}
-
-async function hasDuplicateOraclePairing(
-  fields: PatchDeckInput,
-  existing: { commanderId: string | null; partnerId: string | null }
-): Promise<boolean> {
-  if (fields.commanderId === undefined && fields.partnerId === undefined) return false;
-  const commanderId = fields.commanderId !== undefined ? fields.commanderId : existing.commanderId;
-  const partnerId = fields.partnerId !== undefined ? fields.partnerId : existing.partnerId;
-  return Boolean(commanderId && partnerId && await sharesOracleIdentity(commanderId, partnerId));
-}
-
 // PATCH /api/decks/[id] — update deck metadata (must own it)
-export async function PATCH(request: Request, { params }: Params) {
+export async function PATCH(request: Request, { params }: RouteParams<"id">) {
   const { id } = await params;
   try {
     const result = await requireAuth();
@@ -85,6 +74,13 @@ export async function PATCH(request: Request, { params }: Params) {
     if (!jsonBody.ok) return jsonBody.response;
 
     const raw = jsonBody.value;
+    const commandZoneFields = commandZoneFieldsIn(raw);
+    if (commandZoneFields.length > 0) {
+      return NextResponse.json(
+        { error: commandZoneFieldsRefusal(commandZoneFields) },
+        { status: 400 }
+      );
+    }
     const parsed = patchDeckSchema.safeParse(raw);
     if (!parsed.success) {
       return NextResponse.json(
@@ -100,13 +96,6 @@ export async function PATCH(request: Request, { params }: Params) {
 
     if (existing.userId !== result.session.user.id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
-
-    if (hasDuplicatePairing(parsed.data, existing)) {
-      return NextResponse.json({ error: "Commander and partner must be different cards" }, { status: 400 });
-    }
-    if (await hasDuplicateOraclePairing(parsed.data, existing)) {
-      return NextResponse.json({ error: "Commander and partner must be different cards" }, { status: 400 });
     }
 
     const updated = await prisma.deck.update({
@@ -126,7 +115,7 @@ export async function PATCH(request: Request, { params }: Params) {
 }
 
 // DELETE /api/decks/[id] — delete a deck and all its cards (must own it)
-export async function DELETE(_req: Request, { params }: Params) {
+export async function DELETE(_req: Request, { params }: RouteParams<"id">) {
   const { id } = await params;
   try {
     const result = await requireAuth();

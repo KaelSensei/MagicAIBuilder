@@ -1,254 +1,135 @@
 # MagicAIBuilder — Technical Documentation
 
+> **Start with [architecture.md](architecture.md)** for the structure: the bounded contexts, the
+> layers, where code goes, and a map from today's folders to the target modules. Decisions are in
+> [docs/adr/](../adr/README.md), domain words in [CONTEXT.md](../../CONTEXT.md). This file covers
+> the stack, local development and notes on individual features.
+
 ## Stack
 
-| Layer           | Technology                  | Version | Why                                                                        |
-| --------------- | --------------------------- | ------- | -------------------------------------------------------------------------- |
-| Framework       | Next.js App Router          | 15.x    | Server components, file-based routing, image optimization                  |
-| Language        | TypeScript                  | 5.x     | Strict typing, full project coverage                                       |
-| Styling         | Tailwind CSS                | 4.x     | Utility-first, v4 CSS-native (no config file needed)                       |
-| Components      | shadcn/ui + Radix           | latest  | Accessible primitives, dark theme ready                                    |
-| Animations      | Framer Motion               | 11.x    | Card hover zoom, stagger grids, panel transitions                          |
-| State           | Zustand                     | 5.x     | Simple, minimal boilerplate vs. Redux                                      |
-| Data Fetching   | TanStack Query              | 5.x     | Built-in caching, deduplication, retry — critical for Scryfall rate limits |
-| Drag & Drop     | dnd-kit                     | 6.x     | Actively maintained, better perf than react-beautiful-dnd                  |
-| Database        | PostgreSQL 16               | —       | Persistent deck storage via Docker Compose                                 |
-| ORM             | Prisma                      | 6.x     | Type-safe DB client, migrations, schema                                    |
-| Validation      | Zod                         | 4.x     | Runtime schema validation on API boundaries                                |
-| Icons           | Lucide React                | latest  | Consistent, tree-shakeable                                                 |
-| Bundle Analysis | @next/bundle-analyzer       | 16.x    | Visual treemap of JS bundles — run `pnpm analyze`                          |
-| 3D Engine       | Three.js + R3F + drei       | 0.183.x | Immersive landing page (spellbook scene)                                   |
-| Camera Anim     | gsap                        | 3.14.x  | Cinematic zoom on glyph click                                              |
-| Post-Processing | @react-three/postprocessing | 3.x     | Bloom + vignette effects                                                   |
-| Package Manager | pnpm                        | 10.x    | Fast, disk-efficient                                                       |
-| Testing (unit)  | Vitest                      | 3.x     | Vite-native, fast, ESM-compatible                                          |
-| Testing (E2E)   | Playwright                  | 1.51.x  | Cross-browser, reliable                                                    |
+| Layer           | Technology            | Version | Why                                                                        |
+| --------------- | --------------------- | ------- | -------------------------------------------------------------------------- |
+| Framework       | Next.js App Router    | 15.x    | Server components, file-based routing, image optimization                  |
+| Language        | TypeScript            | 5.x     | Strict typing, full project coverage                                       |
+| Styling         | Tailwind CSS          | 4.x     | Utility-first, v4 CSS-native (no config file needed)                       |
+| Components      | shadcn/ui + Radix     | latest  | Accessible primitives, dark theme ready                                    |
+| Animations      | Framer Motion         | 11.x    | Card hover zoom, stagger grids, panel transitions                          |
+| State           | Zustand               | 5.x     | Simple, minimal boilerplate vs. Redux                                      |
+| Data Fetching   | TanStack Query        | 5.x     | Built-in caching, deduplication, retry — critical for Scryfall rate limits |
+| Drag & Drop     | dnd-kit               | 6.x     | Actively maintained, better perf than react-beautiful-dnd                  |
+| Database        | PostgreSQL 16         | —       | Persistent deck storage via Docker Compose                                 |
+| ORM             | Prisma                | 6.x     | Type-safe DB client, migrations, schema                                    |
+| Validation      | Zod                   | 4.x     | Runtime schema validation on API boundaries                                |
+| Icons           | Lucide React          | latest  | Consistent, tree-shakeable                                                 |
+| Bundle Analysis | @next/bundle-analyzer | 16.x    | Visual treemap of JS bundles — run `pnpm analyze`                          |
+| Package Manager | pnpm                  | 10.x    | Fast, disk-efficient                                                       |
+| Testing (unit)  | Vitest                | 3.x     | Vite-native, fast, ESM-compatible                                          |
+| Testing (E2E)   | Playwright            | 1.51.x  | Cross-browser, reliable                                                    |
 
 ---
 
 ## Directory Architecture
 
+The tree as it is today (2026-11-10). The target layout, one module per bounded context under
+`src/modules/`, and a map from these folders to the contexts are in
+[architecture.md](architecture.md#how-to-read-the-code-base-today).
+
 ```
 src/
-  app/                          # Next.js App Router pages
-    layout.tsx                  # Root layout: fonts, dark theme, suppressHydrationWarning
-    providers.tsx               # TanStack Query client + EnrichmentProvider
-    page.tsx                    # Home: 3D spellbook (unauth) or deck list (auth)
-    builder/[deckId]/
-      page.tsx                  # 3-panel builder view (Search | DeckEditor | Stats)
-    api/
-      decks/
-        route.ts                # GET /api/decks, POST /api/decks
-        [id]/
-          route.ts              # GET/PATCH/DELETE /api/decks/[id]
-          cards/
-            route.ts            # POST /api/decks/[id]/cards
-            [cardId]/
-              route.ts          # DELETE/PATCH /api/decks/[id]/cards/[cardId]
-          snapshots/
-            route.ts            # GET/POST /api/decks/[id]/snapshots
-            [snapshotId]/
-              route.ts          # DELETE /api/decks/[id]/snapshots/[snapshotId]
-              restore/
-                route.ts        # POST /api/decks/[id]/snapshots/[snapshotId]/restore
-      cache/
-        cards/
-          route.ts              # GET/POST /api/cache/cards
-        search/
-          route.ts              # GET/POST /api/cache/search (1h TTL)
-      ai/
-        suggest/
-          route.ts              # POST /api/ai/suggest
-
-  components/
-    landing/
-      SpellbookScene.tsx        # R3F Canvas + scene composition (ssr: false)
-      Spellbook.tsx             # Procedural open book model
-      Altar.tsx                 # Stone altar base
-      GlyphSymbol.tsx           # Interactive glowing runes (Sign In/Up)
-      CameraRig.tsx             # Idle sway + gsap cinematic zoom
-      ManaParticles.tsx         # Sparkles particle system
-      PostEffects.tsx           # Bloom + vignette
-      LandingPage.tsx           # Mobile/a11y detection wrapper
-      StaticLandingPage.tsx     # 2D fallback
-    ui/
-      utils.ts                  # cn() helper (clsx + tailwind-merge)
-    card/
-      CardImage.tsx             # Image + hover zoom (Framer Motion)
-      CardTooltip.tsx           # Radix Tooltip with card detail
-      CardGrid.tsx              # Animated stagger grid
-      CardListItem.tsx          # Compact row with flags + remove
-      DraggableCard.tsx         # dnd-kit draggable wrapper
-      PrintingSelectorModal.tsx # Choose printing/art before adding to deck
-    search/
-      SearchBar.tsx             # Debounced input (400ms)
-      SearchFilters.tsx         # Color/CMC/price filters
-      SearchResults.tsx         # Loading / error / results
-      SetAutocomplete.tsx       # Set code autocomplete for set search
-    deck/
-      DeckEditor.tsx            # Collapsible category groups + droppable zones
-      DeckStats.tsx             # Stat rows with status icons
-      ManaCurve.tsx             # Animated bar chart
-      ColorDistribution.tsx     # Color distribution display
-      BracketIndicator.tsx      # Score + dimension mini bars
-      GameChangersBadge.tsx     # GC count + over-limit warning
-      BanlistAlert.tsx          # Animated banned/color identity alert
-      CombosPanel.tsx           # Commander Spellbook combo detection
-      AISuggestionsPanel.tsx    # AI-assisted deck suggestions
-      SnapshotsPanel.tsx        # Named deck snapshots — save/restore/delete + diff badge
-      ImportDialog.tsx          # Text decklist import modal
-      ExportModal.tsx           # Multi-format export (MTGO, Arena, plain text)
-    layout/
-      Header.tsx                # Logo, nav, theme toggle, actions
-      Footer.tsx                # Legal notices (WotC + Scryfall disclaimers)
-    providers/
-      EnrichmentProvider.tsx    # Background GC + banlist enrichment on load
-      ThemeSync.tsx             # Syncs CSS data-theme with Zustand theme store
-
-  lib/
-    db/
-      prisma.ts                 # PrismaClient singleton (dev hot-reload safe)
-      deck-api.ts               # HTTP client for /api/deck* routes
-    scryfall/
-      client.ts                 # Rate-limited fetch (100ms min) + DB CardCache
-      types.ts                  # ScryfallCard, response types
-      images.ts                 # Image URL helpers (normal/large/art_crop)
-      search.ts                 # Query builder (name/set/color modes)
-    deck/
-      types.ts                  # Core domain types (DeckCard, Deck, BracketScore…)
-      store.ts                  # Zustand store — DB-synced, no localStorage
-      categories.ts             # Auto-categorization engine (15 categories)
-      stats.ts                  # computeDeckStats()
-      bracket.ts                # scoreBracket() — 6-dimension engine
-      validation.ts             # validateCardForDeck() / validateDeck()
-      multiples.ts              # maxQuantity() / allowsMultiples() — Commander singleton rules
-      import.ts                 # Text decklist parser
-      export.ts                 # MTGO / Arena / plain text export
-    constants/
-      brackets.ts               # Bracket definitions + colors
-      benchmarks.ts             # EDH heuristic thresholds
-
-  hooks/
-    useCardSearch.ts            # TanStack Query search (5 min cache)
-    useCardSearchInfinite.ts    # Paginated card search
-    useCardLookup.ts            # TanStack Query single card by ID (24h)
-    useCardLookupByName.ts      # TanStack Query single card by name (24h)
-    useDeck.ts                  # Zustand + computed stats
-    useBracketScore.ts          # Memoized bracket score
-    useGameChangers.ts          # GC list + isGameChanger() helper
-    useBanlist.ts               # Banlist + isBanned() helper
-    useCombos.ts                # Commander Spellbook API combo detection
-    useTheme.ts                 # Dark/light theme preference store
-    useAISuggestions.ts         # AI analysis with Anthropic/OpenAI provider fallback
-
-  styles/
-    globals.css                 # Tailwind 4 + CSS custom properties (theme tokens)
-
-__tests__/                      # Vitest unit tests
-  lib/deck/
-    bracket.test.ts
-    validation.test.ts
-    categories.test.ts
-  lib/scryfall/
-    client.test.ts
-
-e2e/                            # Playwright E2E tests
-  search.spec.ts
-  deck-builder.spec.ts
-
+  middleware.ts                 # Edge: locale routing and the Auth.js session gate (pages only)
+  instrumentation*.ts           # Sentry, server and browser
+  app/
+    layout.tsx, sitemap.ts, robots.ts, global-error.tsx, not-found.tsx
+    [locale]/                   # every page sits under the locale segment
+      layout.tsx, providers.tsx # providers: TanStack Query, session, init, theme, toasts
+      page.tsx                  # landing for visitors, deck list for signed-in players
+      builder/[deckId]/         # the builder (a client page)
+      decks/, collection/, deck/[id]/, share/[token]/, u/[username]/,
+      commanders/[slug]/decks/, saved-decks/, settings/, moderation/, rules/, auth/
+    api/                        # 65 route handlers, by URL family:
+                                #   decks/ 15, community/ 13, user/ 7, collection/ 4,
+                                #   v1/ 4 (public API, API keys), 2 each: ai/, auth/, cache/,
+                                #   deck-folders/, import/, meta/, moderation/;
+                                #   1 each: combos/, deck/, health/, og/, proxy-card-image/,
+                                #   share/, users/
+  components/                   # React components, by screen: deck/ (72 files), card/,
+                                # search/, builder/, playtest/, collection/, community/,
+                                # profile/, moderation/, settings/, landing/, rules/,
+                                # layout/ (app shell), ui/ (primitives), providers/
+  lib/                          # rules, analysis, client stores, provider clients, server helpers
+    deck/                       # deck types, format rules, analysis, editing, the deck store
+    playtest/                   # the pure game engine, keep advice, session analytics
+    scryfall/                   # Scryfall client, shared server cache, images, localised text
+    ai/, combos/, meta/, import/, collection/, community/, ratings/, social/, rules/, seo/
+    auth/, api/                 # Auth.js configuration, API keys and scopes, request helpers
+    db/                         # prisma.ts, plus deck-api.ts and snapshot-api.ts, which are
+                                # browser HTTP clients despite the folder name
+    validation/                 # Zod schemas for request bodies
+  hooks/                        # 29 hooks, one per file
+  i18n/                         # next-intl routing and request configuration
+  messages/<locale>/            # UI strings, one JSON file per namespace, 10 locales
+  styles/globals.css            # Tailwind 4 and the theme tokens
+  test/                         # shared test helpers and in-memory fakes
+e2e/                            # Playwright specs
 prisma/
-  schema.prisma                 # Deck, DeckCard, CardCache models
-  migrations/                   # Auto-generated Prisma migrations
+  schema.prisma                 # 30 models
+  migrations/
 ```
+
+Tests sit next to the file they test (`foo.test.ts` beside `foo.ts`); there is no `__tests__/`
+folder.
 
 ---
 
 ## Key Patterns
 
-### Zustand Store Shape
+### Zustand Stores
 
-```typescript
-// lib/deck/store.ts
-interface DeckStore {
-  // State
-  decks: Record<string, Deck>; // All decks by ID (loaded from DB)
-  activeDeckId: string | null; // Currently edited deck
+| Store                                       | File                          | Holds                                                                                                                                                       |
+| ------------------------------------------- | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `useDeckStore`                              | `src/lib/deck/store.ts`       | Decks by id, the active deck, undo, view and sort preferences. Every edit is optimistic and saved through the browser HTTP client `src/lib/db/deck-api.ts`. |
+| `useCollectionStore`                        | `src/lib/collection/store.ts` | The signed-in player's collection                                                                                                                           |
+| `usePlaytestStore`                          | `src/lib/playtest/store.ts`   | The running playtest game and the deck as it was dealt                                                                                                      |
+| `useUIStore`, `useShortcutPreferencesStore` | `src/lib/ui/`                 | Modal visibility, keyboard navigation, shortcut preferences                                                                                                 |
+| `useThemeStore`                             | `src/hooks/useTheme.ts`       | Light or dark theme                                                                                                                                         |
+| `useToastStore`                             | `src/hooks/useToast.ts`       | Toast messages                                                                                                                                              |
 
-  // Deck CRUD (all synced to DB via /api/decks)
-  createDeck(name: string): Promise<string>;
-  deleteDeck(id: string): Promise<void>;
-  renameDeck(id: string, name: string): Promise<void>;
-  setActiveDeck(id: string): void;
-  loadDecks(): Promise<void>; // Hydrate from DB on mount
+**Persistence**: a signed-in player's decks live in PostgreSQL and are loaded by `loadDecks()`. A
+guest's single deck lives in `localStorage` (`src/lib/deck/guest-deck.ts`) until it is claimed into
+an account, and the deck list's sort and grouping preferences are kept in `localStorage` too.
 
-  // Card management (synced to DB via /api/decks/[id]/cards)
-  setCommander(card: ScryfallCard): Promise<void>;
-  addCard(
-    card: ScryfallCard,
-    quantity?: number,
-    zone?: "main" | "sideboard" | "maybeboard"
-  ): Promise<void>;
-  removeCard(cardId: string): Promise<void>;
-  updateCardCategory(cardId: string, category: CardCategory): Promise<void>;
-  moveCardToZone(
-    cardId: string,
-    zone: "main" | "sideboard" | "maybeboard"
-  ): Promise<void>;
-
-  // View preferences
-  deckViewMode: "grid" | "list";
-  deckGridCols: 2 | 3 | 4 | 6 | 8; // Default: 6
-  setDeckViewMode(mode: "grid" | "list"): void;
-  setDeckGridCols(cols: 2 | 3 | 4 | 6 | 8): void;
-
-  // Settings
-  setTargetBracket(bracket: 1 | 2 | 3 | 4): void;
-  setBudget(budget: number | null): void;
-
-  // Computed
-  getActiveDeck(): Deck | null;
-}
-```
-
-**Persistence**: PostgreSQL via Prisma. No localStorage. State is loaded on mount via `loadDecks()`.
-
-**Enrichment**: On `addCard` and `setCommander`, the store cross-references GC list and banlist to set `isGameChanger` and `isBanned` flags. This happens via `EnrichmentProvider` on app start.
+**Enrichment**: the builder page loads the Game Changers and banlist name sets
+(`useGameChangersSet`, `useBanlistSet`) and passes them to the store (`setGameChangerNames`,
+`setBannedNames`), which sets each card's `isGameChanger` and `isBanned` flags.
 
 ### TanStack Query Keys
 
-| Hook                           | Query Key                                   | Cache TTL |
-| ------------------------------ | ------------------------------------------- | --------- |
-| `useCardSearch(query)`         | `["scryfall", "search", query]`             | 5 min     |
-| `useCardSearchInfinite(query)` | `["scryfall", "search", "infinite", query]` | 5 min     |
-| `useCardLookup(id)`            | `["scryfall", "card", "id", id]`            | 24h       |
-| `useCardLookupByName(name)`    | `["scryfall", "card", "name", name]`        | 24h       |
-| `useGameChangers()`            | `["scryfall", "game-changers"]`             | 24h       |
-| `useBanlist()`                 | `["scryfall", "banlist"]`                   | 24h       |
-| `useCombos(commanderName)`     | `["combos", commanderName]`                 | 30 min    |
+| Hook                   | Query Key                           | Cache TTL |
+| ---------------------- | ----------------------------------- | --------- |
+| `useCardSearch(query)` | `["scryfall", "search", query]`     | 5 min     |
+| `useGameChangers()`    | `["scryfall", "game-changers"]`     | 24h       |
+| `useBanlist(format)`   | `["scryfall", "banlist", format]`   | 24h       |
+| `useCombos(deck)`      | `["combos", "spellbook", queryKey]` | 1h        |
 
 ### Scryfall Rate Limiting
 
-Scryfall allows max 10 requests/second. Strategy:
+Every request to `api.scryfall.com`, from the browser or the server, waits its turn in one queue
+per runtime: `scheduleScryfallRequest` in `src/lib/scryfall/request-queue.ts` starts one request
+at a time, at least 100 ms apart. Scryfall requires a `User-Agent` and an `Accept` header on every
+request ([API documentation](https://scryfall.com/docs/api), read 2026-11-10). The server sends
+the app's one `USER_AGENT` (`src/lib/http.ts`); the browser keeps its own, as Scryfall asks of
+on-page JavaScript. A request that has not answered after 10 seconds is aborted
+(`SCRYFALL_TIMEOUT_MS` in `src/lib/scryfall/client.ts`), so a hung request cannot hold the queue.
 
-```typescript
-// lib/scryfall/client.ts
-let lastRequestTime = 0;
+Scryfall's published hard limits are stricter for card endpoints: 2 requests per second (500 ms)
+on `/cards/search`, `/cards/named`, `/cards/random` and `/cards/collection`, 10 per minute on
+`/cards/manifest`, and 10 per second on other methods
+([rate limits](https://scryfall.com/docs/api/rate-limits), read 2026-11-10). The queue spaces a
+request to one of those endpoints from the previous request to the same endpoint
+(`ENDPOINT_SPACING_MS`: 500 ms, or 6 s for the manifest), on top of the 100 ms between any two.
 
-async function rateLimitedFetch(url: string, options?: RequestInit) {
-  const now = Date.now();
-  const elapsed = now - lastRequestTime;
-  if (elapsed < 100) {
-    await new Promise((resolve) => setTimeout(resolve, 100 - elapsed));
-  }
-  lastRequestTime = Date.now();
-  return fetch(url, {
-    ...options,
-    headers: { "User-Agent": "MagicAIBuilder/1.0", ...headers },
-  });
-}
-```
-
-TanStack Query's deduplication prevents duplicate concurrent requests. `getCardById()` checks the DB `CardCache` before hitting Scryfall (24h TTL).
+TanStack Query's deduplication prevents duplicate concurrent requests. `getCardById()` reads the
+shared server cache first (see [Scryfall API Caching](#scryfall-api-caching)).
 
 ### Search Modes (3 tabs)
 
@@ -263,27 +144,29 @@ TanStack Query's deduplication prevents duplicate concurrent requests. `getCardB
 ```
 scoreBracket(deck, stats) → BracketScore
 
-1. Compute 6 dimensions (each scored 1–4):
+1. Compute 5 dimensions (each scored 1–4):
    - ramp:     ramp count + avg CMC inverse
    - draw:     draw piece count
    - removal:  removal + boardWipes × 1.5
-   - tutors:   non-land library searches
    - winSpeed: explicit win cons + fast win combos
    - avgCmc:   lower = higher bracket
+   Tutors are not a dimension: Wizards removed the tutor restriction on
+   2025-10-21 and relies on the Game Changers list to catch efficient tutors.
 
 2. overall = round(average(dimensions))
 
-3. 2-card infinite combo override (RC rule):
-   - If any combo from Spellbook has isInfinite=true AND cards.length===2 → overall = 4
-   - Counted as `twoCardInfiniteCombos` in BracketScore
+3. Official floor (minimumBracket, src/lib/deck/bracket-floor.ts), read from
+   BRACKET_DEFINITIONS (src/lib/constants/brackets.ts):
+   - the lowest bracket whose Game Changer limit admits the deck's count
+     (B1/B2 none, B3 up to 3, B4/B5 unlimited)
+   - and whose two-card combo rule admits the deck's two-card infinites
+     (B1/B2 none, B3 none before turn 6, B4/B5 unrestricted). A list cannot
+     show how early a combo comes up, so a two-card infinite sets B3, not B4.
+   - overall = max(overall, floor)
 
-4. Game Changers override (2025 bracket rules):
-   - B1/B2 → 0 GC allowed
-   - B3    → max 3 GC
-   - count > 3 → overall = max(overall, 4)
-   - count > 0 → overall = max(overall, 3)
-
-4. Clamp overall to [1, 4]
+4. Clamp overall to [1, 4]. Brackets 4 and 5 share one rule set; only the
+   cEDH metagame separates them, so the estimate never outputs 5. Players set
+   Bracket 5 as a target or a manual override.
 
 5. Generate human-readable warnings
 ```
@@ -297,7 +180,9 @@ type CommanderPairingType =
   | "partner_with" // "Partner with [specific name]"
   | "friends_forever" // Doctor Who sets
   | "background" // "Choose a Background" + Background enchantment
-  | "doctor"; // "Doctor's companion"
+  | "doctor" // "Doctor's companion"
+  | "character_select" // "Partner—Character select"
+  | "father_son"; // "Partner—Father & son"
 ```
 
 ### dnd-kit Drag & Drop Architecture
@@ -311,15 +196,20 @@ type CommanderPairingType =
 ### AI Suggestions Pattern
 
 ```typescript
-// POST /api/ai/suggest
-// Body: { deck: Deck, stats: DeckStats, bracketScore: BracketScore }
-// Response: { suggestions: string[], reasoning: string }
+// POST /api/ai/suggest  (src/app/api/ai/suggest/route.ts)
+// Body: the deck, its stats and bracket, an optional deck brief and deck question
+// Response: application/x-ndjson stream of StreamEvent lines:
+//   { type: "analysis", content, provider } | { type: "suggestion", data }
+//   | { type: "removal", data } | { type: "done" }
 
 // Provider fallback order:
-// 1. ANTHROPIC_API_KEY → claude-sonnet-4-6
-// 2. OPENAI_API_KEY → gpt-4o
+// 1. ANTHROPIC_API_KEY → claude-haiku-4-5
+// 2. OPENAI_API_KEY → gpt-4o-mini
 // 3. Mock response (no key configured)
 ```
+
+`POST /api/ai/build` streams an AI-built deck the same way. Both cap the reply at 4,096 output
+tokens. The behaviour is specified in [I-02](../product/specs/i02-checkable-ai-copilot.md).
 
 ### Theme Toggle Pattern
 
@@ -334,67 +224,40 @@ type CommanderPairingType =
 
 ## Prisma Schema
 
-```prisma
-model Deck {
-  id          String     @id @default(cuid())
-  name        String
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  cards       DeckCard[]
-}
+`prisma/schema.prisma` holds 29 models. Grouped by the bounded context that owns them (see
+[architecture.md](architecture.md#bounded-contexts)):
 
-model DeckCard {
-  id            String   @id @default(cuid())
-  deckId        String
-  scryfallId    String
-  name          String
-  category      String
-  quantity      Int      @default(1)
-  isCommander   Boolean  @default(false)
-  isPartner     Boolean  @default(false)
-  isMaybeboard  Boolean  @default(false)  // Considered cards outside the 99
-  deck          Deck     @relation(fields: [deckId], references: [id], onDelete: Cascade)
-}
-
-model CardCache {
-  id          String   @id  // Scryfall card ID
-  data        Json         // Full ScryfallCard JSON
-  cachedAt    DateTime @default(now())
-}
-
-model DeckSnapshot {
-  id        String   @id @default(cuid())
-  deckId    String
-  name      String
-  cardList  Json     // Full DeckCard array at snapshot time
-  commander String?  // Commander name at snapshot time
-  cardCount Int
-  createdAt DateTime @default(now())
-  deck      Deck     @relation(fields: [deckId], references: [id], onDelete: Cascade)
-}
-```
+| Context       | Models                                                                                                                                       |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Deck building | `Deck`, `DeckCard`, `DeckFolder`, `DeckSnapshot`                                                                                             |
+| Playtest      | `PlaytestSession`                                                                                                                            |
+| Card catalog  | `CardCache`, `ScryfallSearchCache`                                                                                                           |
+| Meta insights | `MetaCache`, `MetaSnapshot`                                                                                                                  |
+| Collection    | `CollectionCard`, `AcquisitionIntent`                                                                                                        |
+| Community     | `DeckVote`, `DeckRating`, `DeckComment`, `DeckReport`, `SavedPublicDeck`, `PublicDeckFolder`, `CardPackage`, `CardPackageCard`, `UserFollow` |
+| Identity      | `User`, `Account`, `Session`, `VerificationToken`, `ApiKey`, `NotificationPreference`                                                        |
 
 ---
 
 ## API Routes
 
-| Method | Path                                             | Description                                |
-| ------ | ------------------------------------------------ | ------------------------------------------ |
-| GET    | `/api/decks`                                     | List all decks                             |
-| POST   | `/api/decks`                                     | Create new deck                            |
-| GET    | `/api/decks/[id]`                                | Get deck with cards                        |
-| PATCH  | `/api/decks/[id]`                                | Rename deck                                |
-| DELETE | `/api/decks/[id]`                                | Delete deck (cascade cards)                |
-| POST   | `/api/decks/[id]/cards`                          | Add card to deck                           |
-| DELETE | `/api/decks/[id]/cards/[cardId]`                 | Remove card (uses DB CUID, not scryfallId) |
-| PATCH  | `/api/decks/[id]/cards/[cardId]`                 | Update card category                       |
-| GET    | `/api/cache/cards`                               | Lookup card in DB cache                    |
-| POST   | `/api/cache/cards`                               | Store card in DB cache                     |
-| POST   | `/api/ai/suggest`                                | Get AI suggestions for deck                |
-| GET    | `/api/decks/[id]/snapshots`                      | List snapshots (newest first, no cardList) |
-| POST   | `/api/decks/[id]/snapshots`                      | Create snapshot from current deck state    |
-| DELETE | `/api/decks/[id]/snapshots/[snapshotId]`         | Delete a snapshot                          |
-| POST   | `/api/decks/[id]/snapshots/[snapshotId]/restore` | Restore deck to snapshot (transactional)   |
+There are 65 route handlers under `src/app/api/`. Each URL family belongs to one bounded context:
+
+| URL family                                                                               | Context          | Notes                                                                                                             |
+| ---------------------------------------------------------------------------------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `/api/decks/**`, `/api/deck/[id]`, `/api/deck-folders/**`                                | Deck building    | `/api/deck/[id]` is the public read of one deck; `/api/decks/[id]/legality` returns the server's legality verdict |
+| `/api/decks/[id]/playtest-sessions`                                                      | Playtest         | Recorded goldfish runs                                                                                            |
+| `/api/decks/[id]/acquisition-intent`, `/api/collection/**`                               | Collection       |                                                                                                                   |
+| `/api/ai/suggest`, `/api/ai/build`                                                       | AI copilot       | Streamed as NDJSON                                                                                                |
+| `/api/cache/cards`, `/api/cache/search`, `/api/proxy-card-image`                         | Card catalog     | Read-through Scryfall cache                                                                                       |
+| `/api/combos`                                                                            | Combos           | Commander Spellbook lookup                                                                                        |
+| `/api/meta/**`                                                                           | Meta insights    | EDHREC and MTGTop8                                                                                                |
+| `/api/import/**`                                                                         | Deck interchange | Moxfield profile and URL import                                                                                   |
+| `/api/community/**`, `/api/users/[username]`, `/api/share/[token]`, `/api/moderation/**` | Community        |                                                                                                                   |
+| `/api/auth/**`, `/api/user/**`, `/api/v1/**`                                             | Identity         | `/api/v1` is the public API, authenticated by API key                                                             |
+| `/api/og`, `/api/health`                                                                 | Site             | Open Graph images; the health check                                                                               |
+
+URLs are a public contract: they stay when the code behind them moves.
 
 ---
 
@@ -503,11 +366,12 @@ The analyzer is disabled by default and has zero impact on normal builds (`pnpm 
 
 ### Environment Variables
 
-| Variable            | Required    | Description                                                                         |
-| ------------------- | ----------- | ----------------------------------------------------------------------------------- |
-| `DATABASE_URL`      | ✅ Yes      | PostgreSQL connection string (e.g. `postgresql://user:pass@localhost:5432/magicai`) |
-| `ANTHROPIC_API_KEY` | ⚠️ Optional | Enables Claude AI suggestions (falls back to mock)                                  |
-| `OPENAI_API_KEY`    | ⚠️ Optional | Secondary AI provider fallback                                                      |
+| Variable                | Required    | Description                                                                                                                                                                                                                                                                |
+| ----------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`          | ✅ Yes      | PostgreSQL connection string (e.g. `postgresql://user:pass@localhost:5432/magicai`)                                                                                                                                                                                        |
+| `ANTHROPIC_API_KEY`     | ⚠️ Optional | Enables Claude AI suggestions (falls back to mock)                                                                                                                                                                                                                         |
+| `OPENAI_API_KEY`        | ⚠️ Optional | Secondary AI provider fallback                                                                                                                                                                                                                                             |
+| `SCRYFALL_API_BASE_URL` | ⚠️ Optional | Origin of the Scryfall API the server calls; default `https://api.scryfall.com`. Must be an absolute http(s) URL or the server refuses to start. Set only by the E2E stack, which points it at a fixture stand-in (`docs/engineering/quality-gate.md`, _E2E environment_). |
 
 See `docs/engineering/infrastructure.md` for Docker + full infra setup.
 
@@ -527,15 +391,15 @@ See `docs/engineering/infrastructure.md` for Docker + full infra setup.
 | `GET /cards/search?q=is:gamechanger`   | Game Changers list                 |
 | `GET /cards/search?q=banned:commander` | Commander banlist                  |
 
-Rate limit: 10 req/s (100ms enforced). Scryfall is free and community-supported — be respectful.
+Rate limits: see [Scryfall Rate Limiting](#scryfall-rate-limiting). Scryfall is free and community-supported — be respectful.
 
-**Known limitation**: Scryfall returns 175 cards/page. GC and banlist lists only fetch the first page. For lists > 175 cards, pagination would need to be added.
+Scryfall returns 175 cards per page; the Game Changers and banlist hooks fetch every page (`fetchAllPages`).
 
 ### Commander Spellbook
 
-| Endpoint                                  | Used For                          |
-| ----------------------------------------- | --------------------------------- |
-| `GET /api/v2/variants/?commanders={name}` | Combo detection by commander name |
+| Endpoint                                                     | Used For                                          |
+| ------------------------------------------------------------ | ------------------------------------------------- |
+| `POST https://backend.commanderspellbook.com/find-my-combos` | Combos contained in a decklist, via `/api/combos` |
 
 ---
 
@@ -556,7 +420,7 @@ All format-specific behavior is driven by `src/lib/deck/formats.ts`:
 | Validation      | Deck size (100 vs 60), singleton rule, commander requirement  |
 | Card multiples  | maxCopiesPerCard (1 for Commander, 4 for Standard)            |
 | Bracket scoring | Only computed for Commander (returns null otherwise)          |
-| Playtest        | startingLife (40 Commander, 30 Brawl, 20 elsewhere)           |
+| Playtest        | startingLife per table size (Brawl 25 or 30, Commander 40)    |
 | Deck statistics | Card-count target, and the curve / threat / interaction bands |
 
 ---
@@ -601,7 +465,7 @@ Every slice so far has turned up a defect that the hardcoded strings were hiding
 
 Two kinds recur:
 
-**The same thing under two names.** `MaybeboardPanel` labelled the zone "Maybeboard" while the tab the user clicks says "Considering" (`builder.zones.considering`) — the same zone had two names depending on where you looked. `CardListItem` had the same split in #409. Both now read the builder catalog, which is where the tab that shows the name is defined. A component reaching into another namespace is the right trade when the alternative is a second copy that drifts.
+**The same thing under two names.** `MaybeboardPanel` (an unmounted panel, deleted in P1-31) labelled the zone "Maybeboard" while the tab the user clicks says "Considering" (`builder.zones.considering`) — the same zone had two names depending on where you looked. `CardListItem` had the same split in #409. It now reads the builder catalog, which is where the tab that shows the name is defined. A component reaching into another namespace is the right trade when the alternative is a second copy that drifts.
 
 Likewise `ColorDistribution` carried its own `White` / `Blue` / … table while `stats.color.*` already held those names for the mana alignment panel. The table now keeps only what is genuinely its own — the CSS variables and fallback hex.
 
@@ -613,7 +477,7 @@ Domain jargon is deliberately **not** extracted. Archetype names (`Tokens`, `Ari
 
 Card prices come from Scryfall's **`prices.usd`** on every ingest path — `PrintingSelectorModal`, `AddToCollectionDialog`, `QuickAddCollectionButton`, `CollectionPageClient`. The currency is USD and nothing converts it.
 
-`BudgetOptimizationModal`, `PricingShoppingListModal` and the shopping-list CSV nonetheless printed a **euro sign**, so the same figure read as `$12.50` in the stats panel and `€12.50` in the budget modal, and an exported file named a currency its numbers were never in. A user setting a "€50" budget was setting $50.
+Two unmounted modals (`BudgetOptimizationModal` and `PricingShoppingListModal`, both deleted in P1-31) and the shopping-list CSV nonetheless printed a **euro sign**, so the same figure read as `$12.50` in the stats panel and `€12.50` in the budget modal, and an exported file named a currency its numbers were never in. A user setting a "€50" budget was setting $50.
 
 Amounts are now formatted, never concatenated with a symbol:
 
@@ -670,7 +534,7 @@ Ranking is score first, then rating count (more ratings means more evidence behi
 
 Both live under `/api/community` so the edge auth allowlist (`src/lib/auth/edge-config.ts`) can expose `GET` anonymously without opening the protected `/api/decks` tree. `/commanders` is on the page allowlist in both `edge-config.ts` and `middleware.ts`.
 
-> **Known limitation.** Commander identity lives on the deck's _cards_ (`isCommander`), not on the `Deck` row, so the slug cannot be matched in SQL — the route loads public decks with a commander and slugs them in memory. Fine while public decks are few; it needs a denormalised `commanderName` column on `Deck` before that stops being true.
+> **Commander slug in SQL.** `Deck.commanderName` is denormalised from the commander row (migration `20260819210000_denormalise_deck_commander`), so the route matches the slug in SQL, backed by the partial expression index `Deck_commanderSlug_v2_public_idx` (migration `20261111210000_commander_slug_transliterates_accents`). The SQL expression transliterates accents and treats whitespace as `commanderToSlug` does, under any database ctype; `src/lib/meta/commander-slug-parity.test.ts` holds the two together.
 
 An unknown slug is not a 404: it is a commander nobody has published for yet, so the page renders its empty state.
 
@@ -811,7 +675,7 @@ The playtest is a solitaire goldfish with no opponent. `turns` and `mulliganCoun
 
 `PlaytestSession` carries no unique constraint, unlike `DeckVote` and `DeckRating` which both upsert on `@@unique([userId, deckId])`. Every run is its own row — that is what makes a trend possible at all. Indexed on `deckId` and on `[deckId, createdAt]` for the chronological read.
 
-`result` and `difficulty` are plain string columns, so `parseSessionInput` is the only thing standing between a typo and a row that quietly breaks every aggregate reading it. It validates the three results, rejects a turn count below 1 (a game always has a first turn), caps `mulliganCount` at `OPENING_HAND_SIZE` (the London mulligan bottoms one card per mulligan; past a full hand there is nothing to keep), and treats whitespace-only notes as absent.
+`result` and `difficulty` are plain string columns, so `parseSessionInput` is the only thing standing between a typo and a row that quietly breaks every aggregate reading it. It validates the three results, rejects a turn count below 1 (a game always has a first turn), caps `mulliganCount` at `maxMulligans` with a free first mulligan, eight (CR 103.5 allows mulligans "until their opening hand would be zero cards", seven counted ones, and CR 103.5c adds the free one), and treats whitespace-only notes as absent.
 
 ### Route
 
@@ -857,70 +721,56 @@ Recording invalidates the `["playtest", "history", deckId]` query. Without it th
 | Export                                           | Role                                                                              |
 | ------------------------------------------------ | --------------------------------------------------------------------------------- |
 | `PlaytestEngine`                                 | Turn, phase, life + history, hand/library/battlefield/graveyard/exile, undo stack |
-| `createPlaytestState(cards, overrides)`          | Shuffles and deals; `overrides.lifeTotal` carries the format total                |
-| `applyMulligan`                                  | Reshuffles and keeps one card fewer, capped at `MAX_MULLIGANS`                    |
-| `applyNextPhase` / `applyNextTurn`               | `PHASES` order; End rolls into the next turn and untaps                           |
+| `createPlaytestState(cards, overrides)`          | Shuffles and deals; overrides carry the life total, table size and mulligan rule  |
+| `applyMulligan`                                  | Reshuffles, draws seven, sets `cardsToBottom`; capped at `maxMulligans(rule)`     |
+| `applyBottomCards`                               | Puts the chosen hand cards on the library bottom, in the order chosen             |
+| `applyNextPhase` / `applyNextTurn`               | `PHASES` order; End rolls into the next turn and untaps; see "First-turn draw"    |
 | `applyDamage` / `applyHeal`                      | Adjusts life and appends a `LifeHistoryEntry`                                     |
 | `applyTap` / `applyUntapAll` / `applyAddCounter` | Battlefield permanent state                                                       |
-| `applyMoveToZone`                                | Moves a card between any two `CardZone`s, exhaustively checked                    |
+| `applyMoveToZone`                                | Moves a card between `CardZone`s, exhaustively; only a commander enters `command` |
 | `applyUndo`                                      | Restores the previous state; `pushHistory` caps the stack at 10                   |
 
 Shuffling uses `randomIntBelow` from `src/lib/crypto-random.ts`, not `Math.random()`.
 
+**Dealing.** `buildSetup` in `store.ts` deals each main-deck row `quantity` times, so a row of fifteen Forests is fifteen cards. Zones find, tap and key cards by id, so the first copy keeps the row id and each further copy gets `<row id>#<n>`. Sideboard and maybeboard rows are not dealt. In a format with `hasCommander` (Commander, Brawl, Oathbreaker), the commander and partner start in `commandZone`, never in the library (CR 903.6). `commanderIds` records them: only those cards may return to the command zone (CR 903.9), `analyzeEngineDrawProgress` leaves them out of the cards seen, and a mulligan sends a commander in the hand to the command zone rather than the library (CR 903.9b).
+
+**First-turn draw.** The deal waits in the Draw step of turn 1 so the player can mulligan there. In a two-player game the starting player skips the turn-1 draw (CR 103.8a); in a multiplayer game nobody does (CR 103.8c). So when a multiplayer game (`PlaytestEngine.multiplayer`) leaves that step, by Next phase or by Next turn, it first draws the turn-1 card, logged as "Drew a card for turn 1" on its own line and undone with the move. `analyzeDrawProgress` counts one natural draw per turn in a multiplayer game and one per turn after the first in a two-player game. The app stores no pod size: the start screen's multiplayer question, defaulting to the format's usual table (`isMultiplayerByDefault`), decides it.
+
 **`store.ts`** — `usePlaytestStore` exposes each `apply*` as an action and holds the deck as it was dealt (`setup`), so `resetPlaytest` re-deals the original deck. Rebuilding it from the live zones instead would carry battlefield state (tapped, counters) back into the library and lose the commander/partner distinction.
 
-**Mulligan model.** London formally draws seven and bottoms N chosen cards. Goldfishing has no opponent and no choice to make, so the engine keeps `7 - N` random cards — the same distribution, without a bottoming UI that would decide nothing.
+**Mulligan model.** London mulligan (CR 103.5): every mulligan shuffles the hand back and draws seven, then the player chooses which cards to put on the bottom, one per mulligan taken. The choice is the point: the player keeps the cards that fit the hand, so it is not the same as keeping `7 − N` at random. In a multiplayer game and in any Brawl game the first mulligan does not count (CR 103.5c); `FORMAT_CONFIG.firstMulliganFree` carries that per format (Commander, Brawl and Oathbreaker free; constructed duels not). While `cardsToBottom > 0` (`isChoosingBottom`) every action except `applyBottomCards` and `applyUndo` is a no-op, and the modal disables the rest of the board. `mulliganCount` still means mulligans taken; derive hand size with `keptOpeningHandSize`, never `7 − mulliganCount`.
+
+**Opening-hand advice.** `keep-rules.ts` holds the keep tables of the [opening-hands guide](../product/guides/commander-mulligans-curves-and-play-style.md#how-picky-to-be-keep-rules-by-hand) as data: per-bracket margins for the first and free seven, plus the rules the guide states for every shell. Margins within ±2% are judgment calls. A hand is classed by lands and ramp at mana value 2 or less, using the deck's own `ramp` category. The keep rules apply to Commander only, since the guide's model simulates 99 cards plus a commander. A duel's first seven is judged against a six, like a free seven. At six cards or fewer the guide publishes no table, and the panel says so. `keep-rules.test.ts` parses the guide's table and fails if the copied data drifts.
 
 **`PlaytestModal`** subscribes with fine-grained selectors and clears the session on unmount: the store outlives the modal, so a stale game would otherwise reappear on reopen.
-
-`analytics.ts` (`calculateWinRate`, `getMulliganDistribution`, …) is written and tested but not reachable — there is no `PlaytestSession` Prisma model to feed it.
 
 ---
 
 ## Scryfall API Caching
 
-Server-side search cache via `ScryfallSearchCache` Prisma model (1h TTL):
+Shared server-side caches: `ScryfallSearchCache` (search pages, 1h TTL) and `CardCache` (cards by id, 24h TTL).
 
-- `searchCards()` checks `/api/cache/search` before hitting Scryfall
-- Cache key: `sha256(query|page)` computed server-side (browser-safe)
-- Rate limiter: serialized Promise queue with error recovery
-- Name-based lookups (`getCardByName`, `getCardByNameFuzzy`) store results in `CardCache`
+- Only the server writes them. `GET /api/cache/search` and `GET /api/cache/cards` are read-through: on a miss the server fetches Scryfall itself (`src/lib/scryfall/server-fetch.ts`, `httpGet` with the app's User-Agent), stores its own copy and returns it. There is no write route; clients never send cache bodies.
+- A 200 answer, hit or fill, carries `Cache-Control: public, s-maxage=<TTL>, stale-while-revalidate=60` (`src/app/api/cache/read-through-response.ts`), so Vercel's CDN answers a repeat lookup of the same URL with no function call and no database read. A stored row and its CDN copy each live one TTL, so a page or card can reach the browser up to two TTLs plus 60 seconds after Scryfall served it. A 400, 404, 429 or 502 carries no caching header.
+- `searchCards()` and `getCardById()` read through those routes. When the server cannot answer (400, 429, 5xx), the browser asks Scryfall directly and does not store the result.
+- Keys are namespaced (`srv1:`): `sha256(multilingual|page|query)` for searches and the Scryfall id for cards. Rows written before the server became the only writer are never read and are pruned on the next write.
+- Bounds (`src/lib/cache-limits.ts`): query 1–1000 characters of letters, digits, punctuation, symbols and spaces; page 1–100; 500 KB per page, 50 KB per card; 200 search rows and 2,000 card rows; Scryfall fills limited per client IP.
+- Rate limiter: one serialized Promise queue per runtime (`src/lib/scryfall/request-queue.ts`), shared by the browser client and the server's Scryfall requests
 
 TanStack Query `gcTime` matches `staleTime` (24h for cards/lists, 5min for search) to prevent re-fetches on component remount.
 
 ---
 
-## 3D Landing Page Architecture
+## Landing Page Architecture
 
-`src/components/landing/` — Three.js scene for unauthenticated visitors:
+`src/components/landing/` is a static marketing page for unauthenticated visitors: plain React, Tailwind and design tokens, with no WebGL.
 
 ```
-LandingPage.tsx          # Detects mobile/reduced-motion → static or 3D
-  ├── SpellbookScene.tsx # R3F Canvas (dynamic import, ssr: false)
-  │     ├── Altar.tsx    # Stone base (BoxGeometry)
-  │     ├── Spellbook.tsx# Open book (procedural planes)
-  │     ├── GlyphSymbol  # Interactive runes (raycasting + emissive)
-  │     ├── CameraRig    # Idle sway + gsap zoom on click
-  │     ├── ManaParticles# Sparkles from drei
-  │     └── PostEffects  # Bloom + Vignette
-  └── StaticLandingPage  # 2D fallback (CSS gradients + buttons)
+LandingPage.tsx            # Entry point rendered by src/app/[locale]/page.tsx
+  └── MarketingLanding.tsx # LandingNavbar, Hero (+ HeroPreview), CapabilityAtlas (+ CapabilityCard), FinalCta, LandingFooter
 ```
 
-Performance: dpr capped at 1.5, 80 particles, no shadows. Three.js never loads on authenticated pages.
-
-### SonarCloud & React Three Fiber
-
-SonarCloud's `S6747` rule ("Unknown property") does not understand R3F's extended JSX namespace. All R3F intrinsic elements (`<mesh>`, `<boxGeometry>`, `<meshStandardMaterial>`, `<pointLight>`, etc.) use props like `position`, `args`, `roughness`, `emissive`, `intensity` that map to Three.js object properties — not HTML attributes.
-
-These are **verified false positives**: TypeScript and ESLint both pass clean because `@react-three/fiber` provides proper JSX type declarations. The rule is suppressed for `src/components/landing/**` only via `sonar-project.properties`:
-
-```properties
-sonar.issue.ignore.multicriteria=r3f
-sonar.issue.ignore.multicriteria.r3f.ruleKey=typescript:S6747
-sonar.issue.ignore.multicriteria.r3f.resourceKey=src/components/landing/**
-```
-
-If R3F components are added outside `src/components/landing/`, the exclusion scope must be extended.
+The earlier 3D spellbook scene (Three.js, React Three Fiber, gsap) was removed from the page in #308. Its packages, its `public/textures/` maps and the SonarCloud `S6747` suppression that only R3F props needed were removed later. The [I-13 visual direction](../product/specs/i13-visual-direction.md) replaces the 3D landing rather than reviving it.
 
 ---
 
@@ -967,9 +817,13 @@ If R3F components are added outside `src/components/landing/`, the exclusion sco
 
 ## Deck Annotations (feat/deck-notes-description)
 
+> **Current state (2026-11-10).** The fields and the API described below exist, but
+> `DeckDescriptionEditor`, `DeckTagsEditor` and `CardNoteInline` have no importer, so their editors
+> are not reachable in the interface. Rewiring or removing them is an owner decision.
+
 ### Deck Description
 
-Field `description String? @default("")` on `Deck`. Stored in DB and synced via `PATCH /api/decks/[id]`. The `DeckDescriptionEditor` component is a collapsible textarea in the deck sidebar, collapsed by default showing the first line as a preview. Supports Ctrl+Enter to save and Esc to cancel. Max 2000 chars (server-enforced).
+Field `description String? @default("")` on `Deck`. Stored in DB and synced via `PATCH /api/decks/[id]`. The `DeckDescriptionEditor` component is a collapsible textarea in the builder's **Deck details** panel (`DeckDetailsPanel`), collapsed by default showing the first line as a preview. Supports Ctrl+Enter to save and Esc to cancel. Max 2000 chars (server-enforced).
 
 ### Card Notes
 
@@ -979,7 +833,15 @@ Field `notes String?` on `DeckCard`. Synced via `PATCH /api/decks/[id]/cards/[ca
 
 ### Deck Tags
 
-Field `tags String[] @default([])` on `Deck` (PostgreSQL array). Tags are synced via `PATCH /api/decks/[id]` with the full updated array. The `DeckTagsEditor` component shows pill-shaped tags with color coding per tag value. Predefined suggestions: `casual`, `cEDH`, `WIP`, `budget`, `tuned`, `theme`. Tab in the input autocompletes the first suggestion. The home page renders a tag filter bar when any decks have tags, and tag pills on deck cards are clickable to activate filtering.
+Field `tags String[] @default([])` on `Deck` (PostgreSQL array). Tags are synced via `PATCH /api/decks/[id]` with the full updated array (at most 20 tags of 50 characters, `patchDeckSchema`). The `DeckTagsEditor` component, in the builder's **Deck details** panel (`DeckDetailsPanel`, top of the analysis sidebar), shows pill-shaped tags with color coding per tag value. Predefined suggestions: `casual`, `cEDH`, `WIP`, `budget`, `tuned`, `theme`. Tab in the input autocompletes the first suggestion. No other screen reads the tags yet: the deck list has no tag filter.
+
+### Target Bracket
+
+Field `targetBracket Int @default(3)` on `Deck`: the official Commander Bracket (1 Exhibition to 5 cEDH, `BRACKET_LEVELS` in `src/lib/constants/brackets.ts`) the player builds for. `DeckTargetBracketPicker`, in the **Deck details** panel, sets it through `setTargetBracket`, which writes to the store's active deck. It is shown only for formats with `hasBracketScoring` (Commander). `GameChangersBadge` and the `DeckStats` benchmarks measure the deck against it; `BracketIndicator` shows it beside the bracket estimate when they differ.
+
+### Budget per Card
+
+Field `budget` on `Deck`: the most the player wants to pay for one card, in US dollars, or `null` for no limit. `PATCH /api/decks/[id]` accepts a positive number or `null`. `DeckBudgetInput`, in the **Deck details** panel, saves it through `setBudget` (on the active deck) when the player presses Enter or leaves the field with a changed amount; an empty field saves `null`, and zero, a negative amount or text is refused in the field with a message. `computeDeckStats` lists the cards priced above it as over budget, and the deck wizard and `POST /api/ai/build` treat it as a maximum per card.
 
 ---
 
@@ -1007,7 +869,7 @@ graph TB
         DEV[Developer]
         DOCKER[Docker\nPostgreSQL]
         HUSKY[Husky\npre-commit]
-        LINT[lint-staged\nnext lint + prettier]
+        LINT[lint-staged\neslint + prettier]
     end
 
     subgraph CI["⚙️ GitHub Actions CI"]
@@ -1089,7 +951,7 @@ Two different URLs are required — one for migrations, one for the running app:
 
 - GitHub Actions CI on every push and PR: lint → typecheck → test with coverage → build
 - Branch protection on `main`: `CI / Lint, Typecheck, Test, Build` is the **only required** status check
-- Pre-commit hooks via Husky + lint-staged: `next lint --fix` + `prettier --write`
+- Pre-commit hooks via Husky + lint-staged: `eslint --fix` + `prettier --write`
 - SonarCloud quality gate runs on every PR via `sonar.yml` but is **NOT a required check** in branch protection
 
 > **Do not add `SonarCloud Code Analysis` as a required branch protection check.**
@@ -1109,5 +971,3 @@ Used by UptimeRobot (configure once app is deployed).
 - `sentry.server.config.ts` — server/API route error capture
 - `sentry.edge.config.ts` — edge runtime error capture
 - Source maps uploaded automatically on Vercel deploy via `SENTRY_AUTH_TOKEN`
-  | Phase 5 | Deck Annotations — description, card notes, tags | ✅ Complete |
-  | Phase 6 | Onboarding & Tutorial (planned) | 📋 Planned |

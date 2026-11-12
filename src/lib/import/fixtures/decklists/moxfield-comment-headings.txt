@@ -1,0 +1,13 @@
+// Commander
+1 Atraxa, Praetors' Voice (2X2) 190
+
+// Deck
+1 Sol Ring (C21) 263 *F*
+1 Counterspell (MH2) 267
+1 Lightning Greaves *F*
+
+// Sideboard
+2 Negate
+
+// Considering
+1 Teferi's Protection

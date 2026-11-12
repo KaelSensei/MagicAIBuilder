@@ -1,7 +1,7 @@
 {
   "guest": {
     "title": "Guest deck.",
-    "description": "Saved in this browser only. Create an account to keep it safe and access it anywhere.",
+    "description": "Saved in this browser only. Once you have an account, you can save it there and open it anywhere.",
     "anotherTabTitle": "This guest deck is already open in another tab.",
     "anotherTabDescription": "Create an account to work across tabs without risking your changes.",
     "createAccount": "Create account",
@@ -28,6 +28,14 @@
   "dropToMove": "Drop here to move to {label}",
   "noCardsYet": "No cards yet",
   "tags": { "add": "Add tag", "placeholder": "tag name…" },
+  "details": {
+    "title": "Deck details",
+    "targetBracket": "Target bracket",
+    "targetBracketOption": "Bracket {level}: {name}",
+    "budget": "Budget per card",
+    "budgetHint": "In US dollars. Leave the field empty for no limit.",
+    "budgetInvalid": "Enter an amount above zero, or leave the field empty for no limit."
+  },
   "searchCommander": "Search for a commander above",
   "searchPartner": "Search for a {partnerLabel}",
   "zones": {
@@ -47,7 +55,8 @@
   "viewMode": {
     "listView": "List view",
     "gridView": "Grid view",
-    "cardsPerRow": "{count} cards per row"
+    "cardsPerRow": "{count} cards per row",
+    "toolbar": "Deck view"
   },
   "actions": {
     "removeCommander": "Remove commander",
@@ -70,9 +79,16 @@
     "sortByField": "Sort by {label} {hint}",
     "groupByField": "Group {label}"
   },
+  "actionLabels": {
+    "duplicate": "Duplicate",
+    "bulkEdit": "Bulk Edit",
+    "playtest": "Playtest",
+    "export": "Export"
+  },
   "badges": {
     "cmd": "CMD",
-    "comp": "COMP"
+    "comp": "COMP",
+    "ai": "AI"
   },
   "manaColors": {
     "W": "White",
@@ -99,6 +115,40 @@
         "B": "black",
         "R": "red",
         "G": "green"
+      },
+      "keep": {
+        "cheapRamp": "{count, plural, =0 {No cheap ramp} one {# cheap ramp piece} other {# cheap ramp pieces}} (mana value 2 or less)",
+        "verdict": {
+          "keep": "Keep",
+          "mulligan": "Mulligan",
+          "judgment": "Judgment call",
+          "noRule": "No computed rule"
+        },
+        "stage": {
+          "firstSeven": "first seven",
+          "freeSeven": "free seven",
+          "six": "six cards",
+          "five": "five cards",
+          "fourOrFewer": "four cards or fewer"
+        },
+        "bracketReason": "Bracket {bracket}, {stage}: {margin} against {against, select, freshSeven {a fresh seven} other {going to six}}.",
+        "judgmentNote": "Within ±2%, card quality, colors and the table decide.",
+        "everyShell": {
+          "zeroLands": "Zero lands: mulligan, in every deck the guide models.",
+          "oneLandShortOfRamp": "One land: mulligan unless it comes with two cheap ramp pieces.",
+          "oneLandTwoRamp": "One land with two cheap ramp pieces is a keep in every deck the guide models.",
+          "twoLandsNoRamp": "Two lands and no cheap ramp: mulligan the first seven, in every deck the guide models.",
+          "twoLandsOneRamp": "Two lands with one cheap ramp piece is a keep in every deck the guide models except cEDH.",
+          "twoLandsOneRampAgainstSix": "Against going to six, two lands with one cheap ramp piece is a keep in every deck the guide models.",
+          "twoLandsTwoRamp": "Two lands with two cheap ramp pieces: keep."
+        },
+        "genericNote": "Generic advice for the {stage}: no bracket figure covers this hand.",
+        "noRule": {
+          "smallerHand": "The guide publishes keep tables for seven-card hands only; at {stage}, judge the hand on its cards.",
+          "uncoveredHand": "No rule in the guide covers this hand on the {stage}; judge it on its cards."
+        },
+        "bottomTip": "What to bottom: the guide's model keeps three lands going to six (two or three going to five, depending on cheap ramp), untapped ones first, then mana rocks, ramp at mana value 2 or less, key cards and draw at mana value 3 or less.",
+        "source": "From the opening-hands guide's goldfish model: mana only, no opponents or colors."
       }
     }
   },
@@ -108,7 +158,17 @@
     "title": "Deck not found",
     "back": "Back to My Decks"
   },
+  "mobileTabs": {
+    "search": "Search",
+    "deck": "Deck",
+    "stats": "Stats"
+  },
   "searchFilterPlaceholder": "Filter by name (optional)…",
+  "filtersToggle": {
+    "show": "Show filters",
+    "hide": "Hide filters"
+  },
+  "colorSearchHint": "Select colors to browse cards",
   "searchModes": {
     "name": "Name",
     "set": "By Set",

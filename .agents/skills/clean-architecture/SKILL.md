@@ -1,160 +1,235 @@
 ---
 name: clean-architecture
 description:
-  Clean / Hexagonal Architecture adapted to this Next.js 15 App Router + Prisma + React 19
-  project. Use when designing a new feature, adding a module, debating where code should live,
-  reviewing a PR that crosses layers, or when the domain logic starts leaking into UI / routes.
+  Modular monolith by bounded context, hexagonal inside each module, adapted to this Next.js 15
+  App Router + Prisma + React 19 project. Use when designing a feature, deciding where a file goes,
+  adding a port or an adapter, moving code between contexts, or reviewing a PR that crosses layers
+  or contexts.
 ---
 
 # Clean Architecture Skill
 
-Practical layering rules for this repo. Based on Robert C. Martin's _Clean Architecture_ and
-Alistair Cockburn's _Hexagonal Architecture_, translated to the concrete directory layout we
-actually use.
+The code is organised as a modular monolith: one module per bounded context, hexagonal (ports and
+adapters) inside each module. This skill gives the rules and the examples. The decisions behind
+them are ADRs 0001 to 0004, 0007 and 0009 (see [References](#references)); the context map and the
+migration plan are in `docs/engineering/architecture.md`.
 
 ## When to use this skill
 
-- Designing a new feature (commander deck feature, AI suggestion flow, pricing integration, etc.).
-- Deciding where a new file goes (`lib/`, `components/`, `app/api/`, `server/`, `hooks/`, ...).
-- Reviewing a PR that adds Prisma calls inside a React component or Scryfall fetches inside an
-  API route that should delegate.
-- During a `/refactor` that moves code across layers.
+- Designing a feature, or deciding where a new file goes.
+- Adding a port, an adapter, a repository or a use case.
+- Moving code from `src/lib/`, `src/components/` or `src/hooks/` into `src/modules/`.
+- Reviewing a PR that imports across layers or across contexts.
 
 ## Core principle
 
-**Dependencies point inward, toward the domain.** Outer layers know about inner layers; inner
-layers do NOT know about outer ones. Concretely in this repo:
+**Dependencies point inward, toward the domain.** Inner code never knows about outer code.
 
 ```
-    UI (React components, pages)            <-- depends on hooks + lib
-         |
-    Hooks + server actions + route handlers <-- depends on lib + domain
-         |
-    Lib (pure domain + use-cases)           <-- depends on domain types only
-         |
-    Domain types (entities, value objects)  <-- depends on nothing
-         |
-    Infrastructure (Prisma, Scryfall, Auth) <-- implements ports defined by domain/lib
+ui/ and client/          React components, stores, hooks, browser API client
+      |
+src/app/** adapters      route handlers and pages: parse → call one use case → map
+      |
+application/             use cases; depend on ports, never on adapters
+      |
+domain/                  readonly types and pure functions; depend on nothing outside
+      ^
+infrastructure/          Prisma repositories, HTTP clients, anti-corruption adapters;
+                         implement the ports
 ```
 
-## Layers in this repo
+## The contexts
 
-### 1. Domain (innermost)
+| Kind       | Context          | Folder             | Covers                                                                    |
+| ---------- | ---------------- | ------------------ | ------------------------------------------------------------------------- |
+| Core       | Format rules     | `format-rules`     | Commander rules shared by server and browser: colour identity, copy limits, pairing, companion, banlist, Game Changers, brackets |
+| Core       | Deck building    | `deck-building`    | Decks, cards in decks, zones, categories, snapshots and versions, the editor, the wizard |
+| Core       | Deck analysis    | `deck-analysis`    | Stats, mana, bracket scoring, curve, feedback, probability                |
+| Core       | Playtest         | `playtest`         | Game simulation in the browser, mulligans, session records                |
+| Core       | AI copilot       | `ai-copilot`       | Suggest and build use cases, prompts, the model port, post-model validation |
+| Supporting | Card catalog     | `card-catalog`     | The Scryfall anti-corruption layer: `CatalogCard`, search, printings, images |
+| Supporting | Combos           | `combos`           | The Commander Spellbook adapter; the pilot context                        |
+| Supporting | Meta insights    | `meta-insights`    | EDHREC, MTGTop8, meta history                                             |
+| Supporting | Deck interchange | `deck-interchange` | Import and export: one adapter per site, text parsers, formats            |
+| Supporting | Collection       | `collection`       | Owned cards, quantities, shopping and acquisition plans                   |
+| Supporting | Community        | `community`        | Public decks, profiles, follows, likes, sharing, moderation               |
+| Generic    | Identity         | `identity`         | Accounts, sessions, API keys, settings                                    |
+| Generic    | Rules reference  | `rules-reference`  | Comprehensive Rules pages, Game Changers and banlist pages                |
+| Generic    | Site             | `site`             | SEO, sitemap, robots, Open Graph images, landing                          |
 
-- Lives in `src/types/`, `src/lib/<domain>/types.ts`, `src/lib/<domain>/constants.ts`.
-- Pure TypeScript. No imports from `next`, `react`, `@prisma/client`, or `@auth/*`.
-- Represents the MTG / Commander business concepts: `DeckCard`, `CommanderPairingType`,
-  `CardCategory`, `BracketScore`, etc.
+The terms of each context are defined in `CONTEXT.md`.
 
-### 2. Use cases / application logic
+## Layers inside a module
 
-- Lives in `src/lib/<domain>/*.ts` (e.g. `src/lib/deck/validate.ts`).
-- Pure functions taking domain types in and returning domain types out.
-- MUST be unit-tested (vitest) — these are the highest-value tests.
-- Must NOT import from `src/app/**`, `src/components/**`, or directly from Prisma / Scryfall
-  clients.
+`src/modules/<context>/` holds only the layers the context needs:
 
-### 3. Infrastructure adapters
+| Layer             | Holds                                                                                  | May import                                             |
+| ----------------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| `domain/`         | Readonly types and pure functions. No React, Next.js, Prisma, `fetch`, Zod or other I/O. | its own `domain/`, other contexts' `index.ts`          |
+| `application/`    | Use cases and the ports they need.                                                     | `domain/`, other contexts' entry points                |
+| `infrastructure/` | Prisma repositories, HTTP clients, anti-corruption adapters. Server-only, except a browser API client. | `domain/`, `application/` ports, other contexts' entry points, the shared kernel |
+| `client/`         | The typed browser API client, Zustand stores, hooks.                                   | `domain/`, other contexts' `index.ts` and `client.ts`  |
+| `ui/`             | React components: containers compose small presentational components.                 | `domain/`, `client/`, other contexts' `index.ts`, `client.ts` and `ui/*` by path |
+| `testing/`        | The context's test kit: in-memory fakes, builders, contract suites. Imported by tests only. | anything in the context                         |
 
-- Prisma access: `src/lib/db/<domain>.ts` — wraps Prisma queries behind domain-shaped return
-  types. Components never import `@prisma/client` directly.
-- External APIs: `src/lib/scryfall.ts`, `src/lib/moxfield.ts` — single entry point per provider,
-  with rate limiting and retries. Components never `fetch("api.scryfall.com/...")`.
-- Auth: `src/lib/auth.ts` wraps `next-auth` calls; session shape is typed in domain.
+## Entry points
 
-### 4. Interface layer
+Three files form a module's public API (`docs/adr/0002-module-entry-points-index-server-client.md`):
 
-- **Server Components** (`src/app/**/page.tsx`, `layout.tsx`): compose use cases + infrastructure
-  to produce data, render JSX. No business rules inline.
-- **Route handlers** (`src/app/api/**/route.ts`): thin — parse input with Zod → call a use case →
-  shape a `NextResponse`. No Prisma or Scryfall calls inline; delegate.
-- **Server actions**: same thinness rule as route handlers.
-- **Client Components** (`"use client"`): rendering + local interaction only. Call hooks; don't
-  reach into `lib/db/**`.
+- **`index.ts`** exports pure domain types and functions. It is safe on the server, in the browser
+  and in the Edge middleware, and never imports `application/`, `infrastructure/`, `client/` or
+  `ui/`.
+- **`server.ts`** starts with `import "server-only"`, wires the use cases to their production
+  adapters (the composition root) and exports the wired use cases.
+- **`client.ts`** exports client-safe hooks, stores and the API client. It never imports
+  `server.ts`, `application/` or `infrastructure/`.
 
-## Dependency rules (enforced by convention + Sonar)
+Rules:
 
-| From \ To            | Domain types | Use cases | DB / External | UI  |
-| -------------------- | :----------: | :-------: | :-----------: | :-: |
-| Domain types         |      ✅      |    ❌     |      ❌       | ❌  |
-| Use cases            |      ✅      |    ✅     |      ❌       | ❌  |
-| DB / External        |      ✅      |    ✅     |      ✅       | ❌  |
-| Server components    |      ✅      |    ✅     |      ✅       | ✅  |
-| Client components    |      ✅      |    ✅     |     ❌\*      | ✅  |
-| API routes / actions |      ✅      |    ✅     |      ✅       | ❌  |
+- Other contexts import only these three files, or a component by path
+  (`@/modules/deck-building/ui/DeckEditor`). Never a deep import into another context.
+- Entry files use explicit named re-exports, never `export *`.
+- UI components are never re-exported through a barrel.
 
-\* Client components reach infrastructure only through server actions, API routes, or a typed
-fetch wrapper — never via direct Prisma imports.
+## `src/app/**`: thin adapters
 
-## Hexagonal ports and adapters
+A route handler or a page does three things:
 
-When the domain needs to talk to the outside world (e.g. fetch a card, send an email, persist a
-deck), define a **port** (a TypeScript interface or function type) in the domain / use-case
-layer, and implement one or more **adapters** in infrastructure.
+1. parse its input with Zod into domain types;
+2. call one use case from a `server.ts`;
+3. map the result to a response, with an exhaustive `switch` over the result's cases.
 
-Example:
+Route handlers stay route handlers; do not convert them to Server Actions. Authentication helpers
+and the shared HTTP helpers are the only other imports a handler needs.
+
+## Shared kernel
+
+These stay where they are for now, because moving them rewrites dozens of importers and `vi.mock`
+paths for no gain: `src/components/ui/*`, `src/components/layout/*` (the app shell),
+`src/lib/logger.ts`, `src/i18n/*`, `src/lib/db/prisma.ts`, `src/lib/auth/*`. New shared code goes
+next to them. The shared test kit stays in `src/test/`.
+
+## Domain modelling
+
+From `docs/adr/0003-domain-as-readonly-data-and-pure-functions.md`:
+
+- **Readonly data and pure functions, not classes.** Values cross the Server/Client Component
+  boundary, so they must be serialisable.
+- **Make illegal states unrepresentable:** discriminated unions, exhaustive `never` guards, branded
+  IDs where two kinds of ID can be mixed up.
+- **Parse once.** Zod runs at the boundary only. `domain/` never imports Zod and never re-validates.
+- **No DI container.** Plain factory functions, React `cache()` for per-request reads, ports passed
+  explicitly.
+- **Legality is a report, not an invariant.** A deck under construction may be illegal (97 cards,
+  an off-colour card, a banned card). The server computes the report, re-validates every command
+  and never blocks an edit (`docs/adr/0009-legality-is-a-report-and-the-server-owns-rules.md`).
+  The browser keeps its current checks as feedback for the player: the copy clamp, the companion
+  check and the "already in the deck" check. A refactor never changes them; changing them is an
+  owner decision. A new browser check imports the pure `format-rules` function and never
+  re-implements the rule.
+- **Gather, decide, act.** A use case loads what it needs, calls a pure function to decide, then
+  persists or returns. The decision is testable with plain values.
+
+## Ports and adapters
+
+A use case that needs I/O declares a **port** in domain language. Adapters implement it. Name the
+port by intent or by a domain noun (`DeckRepository`, `CardCatalog`), never by vendor
+(`ScryfallPort`), and keep vendor types out of its signature.
 
 ```ts
-// src/lib/deck/ports.ts
-export interface CardLookupPort {
-  findByName(name: string): Promise<ScryfallCard | null>;
+// src/modules/deck-interchange/application/ports.ts
+/**
+ * Resolves card names from an imported list to catalog cards.
+ * Names are exact English card names; unknown names are absent from the result, never an error.
+ */
+export interface CardCatalog {
+  readonly findByNames: (
+    names: readonly string[]
+  ) => Promise<ReadonlyMap<string, CatalogCard>>;
 }
 
-// src/lib/scryfall.ts — adapter
-export const scryfallCardLookup: CardLookupPort = {
-  async findByName(name) {
-    /* ... */
-  },
-};
-
-// src/lib/deck/build-deck.ts — use case
-export async function buildDeck(
-  input: DeckInput,
-  lookup: CardLookupPort
-): Promise<Deck> {
-  /* ... only touches CardLookupPort, never Scryfall directly ... */
+// src/modules/deck-interchange/application/import-deck-list.ts (use case)
+export async function importDeckList(
+  list: ParsedDeckList,
+  deps: { readonly catalog: CardCatalog; readonly decks: DeckRepository }
+): Promise<ImportOutcome> {
+  /* touches the ports only, never Scryfall or Prisma */
 }
 ```
 
-Benefits: tests mock the port (no network), swapping providers becomes localized, the use case
-stays pure.
+- The production adapter, for example
+  `src/modules/card-catalog/infrastructure/scryfall-card-catalog.ts`, translates Scryfall JSON
+  into `CatalogCard` (an anti-corruption layer,
+  `docs/adr/0004-anti-corruption-layers-for-external-providers.md`).
+- The test double is a hand-written in-memory fake in the context's `testing/` folder.
+- One shared contract suite runs against the fake and the real adapter, so the fake cannot drift
+  from reality. The `tdd` skill shows the pattern.
 
-## Decision guide — "where does this code go?"
+## Where does this code go?
 
-1. Does it compute something from domain data with no I/O? → `src/lib/<domain>/`.
-2. Does it persist, read, or call an external service? → `src/lib/db/` or
-   `src/lib/<provider>.ts`.
-3. Does it render UI? → `src/components/` (reusable) or `src/app/**` (route-scoped).
-4. Does it manage client-side state or effects? → `src/hooks/` or a Zustand store under
-   `src/stores/`.
-5. Does it translate HTTP → domain? → `src/app/api/**/route.ts` (thin handler) + delegate to
-   `src/lib/`.
+1. A rule computed from domain data, no I/O → `domain/` of the context that owns the rule.
+2. An operation a user or a route triggers → a use case in `application/`.
+3. A database query or a provider call → an adapter in `infrastructure/`, behind a port.
+4. Client state, a hook or the browser API client → `client/`.
+5. Rendering → `ui/`, with logic pushed into a hook or the domain.
+6. HTTP or routing → a thin route handler or page in `src/app/**`.
+7. Generic code with no domain knowledge → next to the shared kernel.
+
+**Until a context has moved** to `src/modules/<context>/`, its code stays in `src/lib/<area>/`,
+`src/components/<area>/` and `src/hooks/`. Apply the same split in place (pure rules in their own
+file with no Prisma, `fetch` or React import) so the later move is mechanical. Never move a file
+in a behaviour PR.
 
 ## Anti-patterns to reject
 
-- `import { prisma } from "@/lib/prisma"` inside a React component. Move to a server action or
-  route handler; pass the result down.
-- `fetch("https://api.scryfall.com/...")` directly inside a component or route handler. Use
-  `src/lib/scryfall.ts`.
-- Business logic inside JSX (`if (deck.cards.length > 99 && deck.commander?.colorIdentity...)`
-  directly in a component). Extract to `src/lib/deck/validate.ts`.
-- Zustand stores containing domain rules. Stores are plain state + thin actions; domain rules
-  live in `src/lib/`.
-- Circular imports between layers — if it happens, one of the modules is in the wrong layer.
+- A Prisma import in a component, hook, store or `domain/` file.
+- A `fetch` to a provider outside its adapter, or a provider type (`ScryfallCard`) in a domain or
+  use-case signature.
+- A new rule re-implemented in a component or store instead of imported from the pure function
+  that owns it. (The existing browser legality checks stay as they are; see above.)
+- A route handler with business logic or inline Prisma queries in it.
+- A deep import into another context, or an `index.ts` that re-exports server code.
+- A new import cycle: one of the two modules is in the wrong layer or context. The 3 existing
+  type-only cycles are recorded in the baseline.
 
-## Workflow when refactoring across layers
+## Enforcement
 
-1. Draw (or imagine) which layer each chunk belongs to.
-2. Move the **innermost** code first (domain types, then use cases). Outer layers will follow
-   naturally.
-3. Introduce a **port** before splitting an adapter from a use case.
-4. Keep each move as a small commit; the diff should read like a chain of "extract", "move",
-   "rename", not a big rewrite.
-5. Add or move unit tests together with the code they cover.
+Enforcement lands in stages (`docs/adr/0007-architecture-enforcement-in-stages.md`):
 
-## Sources
+1. ESLint flat config (prerequisite);
+2. the `server-only` package, with a Vitest stub;
+3. dependency-cruiser: runtime cycles fail at once (there are none); the 3 existing type-only
+   cycles and the known layer and context violations start in a recorded baseline that may only
+   shrink; it also generates the Mermaid graphs;
+4. ESLint size and complexity limits, with bulk suppressions as a ratchet;
+5. Knip as an advisory report;
+6. `pnpm arch` joins the pre-PR gate in `CLAUDE.md` once it exists.
 
-- _Clean Architecture_ — Robert C. Martin
-- _Hexagonal Architecture_ — Alistair Cockburn
-- _Domain-Driven Design_ — Eric Evans (bounded contexts, ubiquitous language)
-- Next.js App Router docs — Server Components, server actions, route handlers
+Until a stage exists, review checks the rule. SonarCloud does not check layering.
+
+## Moving code into a module
+
+1. Pin the behaviour first: characterization tests for anything without a test at its public
+   surface.
+2. Move the innermost code first: domain types, then pure rules, then use cases, then adapters,
+   then UI.
+3. Introduce the port before you split an adapter from a use case.
+4. A move PR changes no logic. It rewrites every import and `vi.mock` path in the same commit.
+   Logic changes come in a separate PR.
+5. One context per series of small PRs. Temporary re-export shims are removed at the end of the
+   series, except the ones the on-hold branch `feat/ai-usage-metering-and-monthly-quota` still
+   imports: they stay until that branch is rebased and the codemod has rewritten its imports.
+
+## References
+
+- `docs/engineering/architecture.md`
+- `docs/adr/0001-modular-monolith-by-bounded-context.md`
+- `docs/adr/0002-module-entry-points-index-server-client.md`
+- `docs/adr/0003-domain-as-readonly-data-and-pure-functions.md`
+- `docs/adr/0004-anti-corruption-layers-for-external-providers.md`
+- `docs/adr/0007-architecture-enforcement-in-stages.md`
+- `docs/adr/0009-legality-is-a-report-and-the-server-owns-rules.md`
+- _Clean Architecture_, Robert C. Martin; "Screaming Architecture" (2011)
+- _Hexagonal Architecture_, Alistair Cockburn (2005)
+- _Domain-Driven Design_, Eric Evans (bounded contexts, ubiquitous language)
+- "Parse, don't validate", Alexis King (2019)

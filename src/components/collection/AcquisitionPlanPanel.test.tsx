@@ -4,10 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { AcquisitionPlanPanel } from "./AcquisitionPlanPanel";
 
-vi.mock("@/i18n/navigation", () => ({
-  Link: ({ href, children, className }: { href: string; children: string; className?: string }) =>
-    <a href={href} className={className}>{children}</a>,
-}));
+vi.mock(import("@/i18n/navigation"), () => import("@/test/i18n-navigation-stub"));
 
 const response = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {

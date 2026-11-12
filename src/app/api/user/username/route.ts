@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import { requireAuth } from "@/lib/auth/helpers";
 import { logger } from "@/lib/logger";
 import { readJsonBody } from "@/lib/api/json-body";
+import { withRequestLog } from "@/lib/api/route-kit";
 
 const usernameSchema = z.object({
   username: z
@@ -17,18 +18,13 @@ const usernameSchema = z.object({
 
 // PATCH /api/user/username — claim or update username
 export async function PATCH(request: Request) {
-  const startedAt = performance.now();
-  let status = 500;
-  try {
-    const response = await updateUsername(request);
-    status = response.status;
-    return response;
-  } finally {
-    logger.info("Username update completed", "PATCH /api/user/username", {
-      status,
-      durationMs: Math.round(performance.now() - startedAt),
-    });
-  }
+  return withRequestLog(
+    {
+      message: "Username update completed",
+      context: "PATCH /api/user/username",
+    },
+    () => updateUsername(request)
+  );
 }
 
 /**

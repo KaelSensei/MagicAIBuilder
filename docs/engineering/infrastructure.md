@@ -148,14 +148,75 @@ All CRUD operations go through Next.js App Router API routes:
 | GET    | `/api/decks`                     | List all decks               |
 | POST   | `/api/decks`                     | Create a deck                |
 | GET    | `/api/decks/[id]`                | Get one deck (with cards)    |
-| PATCH  | `/api/decks/[id]`                | Update deck metadata         |
+| PATCH  | `/api/decks/[id]`                | Update deck metadata only    |
 | DELETE | `/api/decks/[id]`                | Delete deck + cascade cards  |
 | POST   | `/api/decks/[id]/cards`          | Add a card                   |
 | DELETE | `/api/decks/[id]/cards`          | Remove all cards             |
 | DELETE | `/api/decks/[id]/cards/[cardId]` | Remove one card              |
 | PATCH  | `/api/decks/[id]/cards/[cardId]` | Update card (category, etc.) |
-| GET    | `/api/cache/cards?id=<id>`       | Lookup cached Scryfall card  |
-| POST   | `/api/cache/cards`               | Store Scryfall card in cache |
+| PATCH  | `/api/decks/[id]/command-zone`   | Change the command zone      |
+| GET    | `/api/cache/cards?id=<id>`       | Card via server-filled cache |
+
+### Deck version on card writes
+
+`Deck.version` is the deck's optimistic lock: it moves by one with every saved
+card write, in the same transaction as the card rows
+(`src/lib/deck/deck-repository.ts`). `GET /api/decks/[id]` returns it with the
+deck.
+
+The four single-card routes (`POST` and `DELETE /api/decks/[id]/cards`,
+`PATCH` and `DELETE /api/decks/[id]/cards/[cardId]`), the command-zone route
+(`PATCH /api/decks/[id]/command-zone`) and the bulk edit
+(`PATCH /api/decks/[id]/cards`) accept an optional `expectedVersion`, the
+version the client last read:
+
+| Route kind                | Where `expectedVersion` goes         | Success body                                    |
+| ------------------------- | ------------------------------------ | ----------------------------------------------- |
+| POST, PATCH on a card     | JSON body field, an integer from 0   | The card row, plus `version` (POST answers 201) |
+| DELETE                    | Query string, `?expectedVersion=<n>` | `{ "success": true, "version": <n> }`           |
+| PATCH on the command zone | JSON body field, an integer from 0   | `{ "cards": [added rows], "version": <n> }`     |
+| PATCH on the cards (bulk) | JSON body field, an integer from 0   | The deck with every `cards` row, plus `version` |
+
+The command-zone route takes the whole change in one body: `removeCardIds`
+(main-deck rows that leave, such as a promoted card's row), `clearCommandSlots`
+(slots whose rows leave, matched by role), `addCards` (the rows that enter) and
+`commandZone` (the deck fields to write; an absent key keeps the stored value).
+The repository stores all of it in one transaction, so a failed request leaves
+the deck exactly as it was. It is the command zone's only write path: the deck
+metadata route, `PATCH /api/decks/[id]`, answers 400 to a body that carries
+`commanderId`, `commanderName`, `partnerId`, `companionId` or `pairingType`,
+naming the fields and this route.
+
+DELETE takes the query string because a DELETE body has no defined meaning and
+some proxies reject one (RFC 9110 §9.3.5).
+
+| Case                                        | Status | Body                                                                                                     |
+| ------------------------------------------- | ------ | -------------------------------------------------------------------------------------------------------- |
+| No `expectedVersion`                        | 2xx    | The write is not checked; it still moves the version                                                     |
+| `expectedVersion` equals the stored version | 2xx    | The write is stored; `version` is the new one                                                            |
+| Another write landed since the client read  | 409    | `{ "error": "The deck changed since it was opened — reload it and try again" }`                          |
+| `expectedVersion` is not a whole number ≥ 0 | 400    | `{ "error": "Invalid request body" \| "Invalid request query", "details": { formErrors, fieldErrors } }` |
+| The deck was deleted after the owner check  | 404    | `{ "error": "Deck not found" }`                                                                          |
+
+The browser's half lives in the deck store (`src/lib/deck/store.ts`) and its
+write queue (`src/lib/deck/deck-write-queue.ts`). The store holds the version
+it last read, sends it with every one of these writes and adopts the version
+each answer carries. The writes to one deck go one after the other, so each
+carries the version the previous answer brought. A guest deck, a listing stub
+and a deck whose last write was refused hold no version and send none. On a
+409 the store rolls the change back, drops the writes it had queued behind,
+reloads the deck with `GET /api/decks/[id]` and shows the conflict message
+(`deck.sync.conflictReloaded`) in place of the write's failure toast. Each
+write has the reads' 15 s budget (`DECK_WRITE_TIMEOUT_MS`): one the server
+never answers fails like a network failure, so the deck's later writes go on.
+
+A 409 stores nothing. The bulk edit answers the same 409 when its change set
+names a row the deck no longer holds: the list was edited from an outdated
+copy. It moves the version once, however many rows it changes. Its pair check
+is the command-zone route's (`commandPairRefusal`). The client sends
+`expectedVersion` with the bulk edit only, and only while it holds a version
+it read with the whole deck; the other deck writes (metadata, creation,
+imports) do not move the version.
 
 ---
 

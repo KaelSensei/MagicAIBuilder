@@ -3,53 +3,21 @@
  *
  * EDHRec  → popular cards for a commander (via unofficial JSON endpoint)
  * MTGTop8 → recent tournament decks for a commander (scraping)
+ *
+ * The shapes they return are declared in `./types`, so modules that only need
+ * a type (the MTGTop8 parser, snapshots, history, the panel) do not import the
+ * fetchers.
+ *
+ * @module meta/fetch
  */
 
-export interface MetaCard {
-  readonly name: string;
-  /** Fraction of decks (0–1), e.g. 0.78 = 78% */
-  readonly inclusion: number;
-  readonly sample?: {
-    readonly decksWithCard: number;
-    readonly eligibleDecks: number;
-  };
-  readonly imageUri?: string;
-}
-
-export interface TournamentDeck {
-  readonly name: string;
-  readonly player?: string;
-  readonly event?: string;
-  /** ISO date `yyyy-mm-dd` */
-  readonly date?: string;
-  /** Finishing position as the source prints it: "1", "8", "3-4" */
-  readonly placement?: string;
-  /** The source's format label — on MTGTop8 this is mostly "Duel Commander" (1v1) */
-  readonly format?: string;
-  /** Event size, 1 (local) to 4 (major), as MTGTop8 rates it */
-  readonly eventLevel?: number;
-  readonly url: string;
-  readonly source: "mtgtop8" | "mtgdecks";
-}
-
-export interface EdhrecData {
-  readonly cards: readonly MetaCard[];
-}
-
-export interface TournamentData {
-  readonly decks: readonly TournamentDeck[];
-}
+import type { EdhrecData, MetaCard, TournamentData } from "./types";
 
 // ─── EDHRec ───────────────────────────────────────────────────────────────────
 
-/** Convert a commander name to an EDHRec slug, e.g. "Atraxa, Praetors' Voice" → "atraxa-praetors-voice" */
-export function commanderToSlug(name: string): string {
-  return name
-    .toLowerCase()
-    .replaceAll(/[^a-z0-9\s-]/g, "") // strip punctuation
-    .trim()
-    .replaceAll(/\s+/g, "-"); // spaces → hyphens
-}
+// The slug lives in `./commander-slug` so the MTGTop8 parser can share it
+// without a cycle; it stays exported here for the callers that import it.
+export { commanderToSlug, isCommanderSlug } from "./commander-slug";
 
 interface EdhrecCardView {
   name: string;
@@ -77,6 +45,7 @@ import {
   findArchetypeId,
   parseArchetypeOptions,
   parseSearchResults,
+  readCardFilterEcho,
 } from "./mtgtop8";
 
 function inclusionFromEdhrecView(view: EdhrecCardView): number {
@@ -211,10 +180,14 @@ async function loadArchetypeOptions(): Promise<ReadonlyMap<string, number>> {
  *
  * Searches MTGTop8 by commander archetype (decks *led* by the commander) and
  * falls back to a card-content search for a commander the site has not
- * classified. Failures propagate so the route can serve stale cache without
- * replacing a previously good feed.
+ * classified. The site ignores a card name it does not know and answers with
+ * the whole EDH section; its echoed form tells the two apart, and an ignored
+ * filter reads as "no recorded deck", not as 44,000 unrelated ones. Failures
+ * propagate so the route can serve stale cache without replacing a previously
+ * good feed.
  *
  * @param commanderName - display name, or the slug's words as the meta route passes them
+ * @returns the five most recent decks, or none when MTGTop8 has no deck for the commander
  */
 export async function fetchTournamentData(
   commanderName: string
@@ -229,6 +202,10 @@ export async function fetchTournamentData(
     },
     body: buildSearchBody({ archetypeId, commanderName }).toString(),
   });
-  const decks = parseSearchResults(decodeLatin1(await res.arrayBuffer()));
+  const page = decodeLatin1(await res.arrayBuffer());
+  if (archetypeId === null && readCardFilterEcho(page) === null) {
+    return { decks: [] };
+  }
+  const decks = parseSearchResults(page);
   return { decks: decks.slice(0, MAX_TOURNAMENT_DECKS) };
 }

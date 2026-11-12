@@ -4,8 +4,9 @@
  * Lazy: only fetches when commanderName is provided and the hook is triggered.
  */
 import { useCallback, useRef, useState } from "react";
+import { isNonEmptyString, isRecord } from "@/lib/guards";
 import { commanderToSlug } from "@/lib/meta/fetch";
-import type { EdhrecData, TournamentData } from "@/lib/meta/fetch";
+import type { EdhrecData, TournamentData } from "@/lib/meta/types";
 
 type MetaSource = "edhrec" | "tournament";
 
@@ -60,7 +61,7 @@ const INITIAL_STATE: MetaState = {
  * @returns whether the body is a non-array object
  */
 function isMetaApiResponse(value: unknown): value is MetaApiResponse {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
+  return isRecord(value);
 }
 
 /**
@@ -71,7 +72,7 @@ function isMetaApiResponse(value: unknown): value is MetaApiResponse {
  * @returns the message to surface, or null on success
  */
 function metaErrorMessage(payload: MetaApiResponse, status: number): string | null {
-  if (typeof payload.error === "string" && payload.error.length > 0) return payload.error;
+  if (isNonEmptyString(payload.error)) return payload.error;
   if (status < 200 || status >= 300) return `HTTP ${status}`;
   return null;
 }

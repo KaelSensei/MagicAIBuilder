@@ -4,16 +4,36 @@ const mocks = vi.hoisted(() => ({
   findMany: vi.fn(),
   requireAuth: vi.fn(),
 }));
+const db = await vi.hoisted(async () => {
+  const { createAiUsageDb } = await import("@/test/ai-usage-db");
+  return createAiUsageDb();
+});
 
-vi.mock("@/lib/db/prisma", () => ({
-  prisma: { playtestSession: { findMany: mocks.findMany } },
+vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
+  const { stubPrisma } = await import("@/test/prisma-stub");
+  return stubPrisma(await importOriginal(), {
+    ...db,
+    playtestSession: { findMany: mocks.findMany },
+  });
+});
+vi.mock(import("@/lib/auth/helpers"), () => ({
+  requireAuth: mocks.requireAuth,
 }));
-vi.mock("@/lib/auth/helpers", () => ({ requireAuth: mocks.requireAuth }));
-vi.mock("@/lib/rate-limit", () => ({
+vi.mock(import("@/lib/rate-limit"), () => ({
   checkRateLimit: () => ({ allowed: true, retryAfterMs: 0 }),
 }));
 
+import { logger } from "@/lib/logger";
+import { resetAiUsageDb } from "@/test/ai-usage-db";
 import { POST } from "./route";
+
+/** Reads every NDJSON event the route streamed. */
+async function streamedEvents(response: Response): Promise<unknown[]> {
+  return (await response.text())
+    .trim()
+    .split("\n")
+    .map((line): unknown => JSON.parse(line));
+}
 
 function suggestRequest(
   overrides: Readonly<Record<string, unknown>> = {}
@@ -45,6 +65,7 @@ function suggestRequest(
 describe("POST /api/ai/suggest", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+    resetAiUsageDb(db);
     mocks.requireAuth.mockResolvedValue({
       session: { user: { id: "user-1" } },
       error: null,
@@ -64,6 +85,7 @@ describe("POST /api/ai/suggest", () => {
 
   afterEach(() => {
     delete process.env.ANTHROPIC_API_KEY;
+    delete process.env.OPENAI_API_KEY;
     vi.unstubAllGlobals();
   });
 
@@ -176,6 +198,91 @@ describe("POST /api/ai/suggest", () => {
     );
   });
 
+  // 8 additions with 2-4 sentence rationale and 3 alternatives each, 4
+  // removals and an analysis need more than the 2,048 tokens once allowed.
+  it("gives the suggestion reply a 4,096-token output cap", async () => {
+    const providerFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ content: [{ text: "{}" }] }),
+    });
+    vi.stubGlobal("fetch", providerFetch);
+
+    await (await POST(suggestRequest())).text();
+    const providerBody = JSON.parse(
+      String(providerFetch.mock.calls[0]?.[1]?.body)
+    );
+
+    expect(providerBody.max_tokens).toBe(4096);
+  });
+
+  it("reports an Anthropic reply cut off at the token cap as a truncation, not a JSON parse error", async () => {
+    const logError = vi.spyOn(logger, "error").mockImplementation(() => {});
+    const providerFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        stop_reason: "max_tokens",
+        content: [{ type: "text", text: '{"suggestions": [' }],
+      }),
+    });
+    vi.stubGlobal("fetch", providerFetch);
+
+    const events = await streamedEvents(await POST(suggestRequest()));
+    const providerBody = JSON.parse(
+      String(providerFetch.mock.calls[0]?.[1]?.body)
+    );
+
+    expect(events).toEqual([
+      { type: "error", message: "AI suggestion failed" },
+    ]);
+    expect(logError).toHaveBeenCalledTimes(1);
+    expect(logError).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "ModelOutputTruncatedError",
+        provider: "anthropic",
+        model: providerBody.model,
+        maxTokens: providerBody.max_tokens,
+      }),
+      "POST /api/ai/suggest"
+    );
+  });
+
+  it("reports an OpenAI reply cut off at the token cap as a truncation, not a JSON parse error", async () => {
+    delete process.env.ANTHROPIC_API_KEY;
+    process.env.OPENAI_API_KEY = "test-key";
+    const logError = vi.spyOn(logger, "error").mockImplementation(() => {});
+    const providerFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        choices: [
+          {
+            finish_reason: "length",
+            message: { role: "assistant", content: '{"suggestions": [' },
+          },
+        ],
+      }),
+    });
+    vi.stubGlobal("fetch", providerFetch);
+
+    const events = await streamedEvents(await POST(suggestRequest()));
+    const providerBody = JSON.parse(
+      String(providerFetch.mock.calls[0]?.[1]?.body)
+    );
+
+    expect(events).toEqual([
+      { type: "error", message: "AI suggestion failed" },
+    ]);
+    expect(logError).toHaveBeenCalledTimes(1);
+    expect(logError).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "ModelOutputTruncatedError",
+        provider: "openai",
+        model: providerBody.model,
+        maxTokens: providerBody.max_tokens,
+      }),
+      "POST /api/ai/suggest"
+    );
+  });
+
   it("streams verified evidence for suggestions and targeted alternatives", async () => {
     const providerFetch = vi
       .fn()
@@ -270,5 +377,137 @@ describe("POST /api/ai/suggest", () => {
         }),
       })
     );
+  });
+
+  describe("monthly allowance and metering", () => {
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("answers 429 with the reset date and asks nothing of the model or Scryfall once the month's suggestions are used up", async () => {
+      vi.useFakeTimers({
+        now: new Date("2026-11-30T23:00:00.000Z"),
+        toFake: ["Date"],
+      });
+      db.usageCounter.updateMany.mockResolvedValue({ count: 0 });
+      const providerFetch = vi.fn();
+      vi.stubGlobal("fetch", providerFetch);
+
+      const response = await POST(suggestRequest());
+
+      expect(response.status).toBe(429);
+      expect(response.headers.get("Retry-After")).toBe("3600");
+      await expect(response.json()).resolves.toEqual({
+        error: "Monthly AI allowance used up",
+        code: "allowance_exhausted",
+        route: "suggest",
+        limit: 30,
+        resetsAt: "2026-12-01T00:00:00.000Z",
+      });
+      expect(providerFetch).not.toHaveBeenCalled();
+      expect(mocks.findMany).not.toHaveBeenCalled();
+    });
+
+    it("records the billed tokens of a reply cut off at the cap and gives the call back", async () => {
+      vi.spyOn(logger, "error").mockImplementation(() => {});
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: async () => ({
+            stop_reason: "max_tokens",
+            content: [{ type: "text", text: '{"suggestions": [' }],
+            usage: { input_tokens: 2_000, output_tokens: 4_096 },
+          }),
+        })
+      );
+
+      await (await POST(suggestRequest())).text();
+
+      expect(db.aiUsage.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          userId: "user-1",
+          route: "suggest",
+          model: "claude-haiku-4-5",
+          inputTokens: 2_000,
+          outputTokens: 4_096,
+          stopReason: "max_tokens",
+          outcome: "truncated",
+          costMicroUsd: 2_000 + 4_096 * 5,
+          countsAgainstAllowance: false,
+        }),
+      });
+      expect(db.usageCounter.updateMany).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ key: "ai.suggest" }),
+          data: { used: { decrement: 1 } },
+        })
+      );
+    });
+
+    it("records a complete reply that is not JSON as a parse failure and gives the call back", async () => {
+      vi.spyOn(logger, "error").mockImplementation(() => {});
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: async () => ({
+            stop_reason: "end_turn",
+            content: [{ type: "text", text: "Here are my suggestions:" }],
+            usage: { input_tokens: 2_000, output_tokens: 40 },
+          }),
+        })
+      );
+
+      const events = await streamedEvents(await POST(suggestRequest()));
+
+      expect(events).toEqual([
+        { type: "error", message: "AI suggestion failed" },
+      ]);
+      expect(db.aiUsage.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          outcome: "parseFailed",
+          countsAgainstAllowance: false,
+        }),
+      });
+      expect(db.usageCounter.updateMany).toHaveBeenLastCalledWith(
+        expect.objectContaining({ data: { used: { decrement: 1 } } })
+      );
+    });
+
+    it("reports a refusal without parsing it, and the refused call counts", async () => {
+      const logError = vi.spyOn(logger, "error").mockImplementation(() => {});
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: async () => ({
+            stop_reason: "refusal",
+            content: [{ type: "text", text: "{}" }],
+            usage: { input_tokens: 2_000, output_tokens: 3 },
+          }),
+        })
+      );
+
+      const events = await streamedEvents(await POST(suggestRequest()));
+
+      expect(events).toEqual([
+        { type: "error", message: "AI suggestion failed" },
+      ]);
+      expect(logError).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: "ModelRefusedError",
+          provider: "anthropic",
+        }),
+        "POST /api/ai/suggest"
+      );
+      expect(db.aiUsage.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          outcome: "refused",
+          countsAgainstAllowance: true,
+        }),
+      });
+      expect(db.usageCounter.updateMany).toHaveBeenCalledTimes(1);
+    });
   });
 });

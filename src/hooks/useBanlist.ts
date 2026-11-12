@@ -9,9 +9,8 @@ import {
 } from "@/lib/scryfall/localized";
 import { getFormatConfig } from "@/lib/deck/formats";
 import type { DeckFormat } from "@/lib/deck/formats";
+import { STALE_TIME_24H } from "@/lib/query/stale-times";
 import { useMemo } from "react";
-
-const STALE_TIME_24H = 24 * 60 * 60 * 1000;
 
 /** Fetches the banlist for the given format from Scryfall (all pages) */
 export function useBanlistQuery(format: DeckFormat = "commander") {

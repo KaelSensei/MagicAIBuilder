@@ -67,8 +67,8 @@ This test plan covers all automated and manual tests for the Scryfall API cachin
 1. Navigate to `/builder/[any-deck-id]` (create a test deck if needed)
 2. In the search panel, type "Sol Ring"
 3. **Expected:**
-   - Scryfall API hit (visible in Network tab: `GET https://api.scryfall.com/cards/search?...`)
-   - `POST /api/cache/search` is called after Scryfall response
+   - `GET /api/cache/search` returns `{ "hit": false, "data": {...} }`: the server fetched Scryfall itself
+   - No browser request to `api.scryfall.com/cards/search`, and no `POST` to `/api/cache/*`
    - Card results display normally
 4. **Verify:**
    - Database: Check `ScryfallSearchCache` table for entry with query hash
@@ -134,12 +134,12 @@ This test plan covers all automated and manual tests for the Scryfall API cachin
 2. Alternatively: Rapidly click between different search filters (Color, Set, etc.) on the builder page
 3. **Expected:**
    - Network tab shows no 429 (Too Many Requests) errors from Scryfall
-   - Requests are serialized: ~100ms minimum between each API call
+   - Requests are serialized: two card searches start at least 500 ms apart, any two calls at least 100 ms apart
    - All searches return valid results
 4. **Verify:**
    - Check browser console for any fetch errors
-   - Scryfall rate limit: max 10 req/s = 100ms between calls
-   - Rate limiter in `src/lib/scryfall/client.ts` enforces this
+   - Scryfall rate limits: 2 req/s (500 ms) on `/cards/search`, `/cards/named`, `/cards/random`, `/cards/collection`; 10 req/s (100 ms) on other methods ([rate limits](https://scryfall.com/docs/api/rate-limits), read 2026-11-10)
+   - The queue in `src/lib/scryfall/request-queue.ts` enforces them
 
 ### 5. Name-Based Lookup Caching
 
@@ -370,12 +370,12 @@ pnpm run build
 
   ```bash
   curl "http://localhost:3000/api/cache/search?query=&page=abc"
-  # Should return { "hit": false }
+  # Should return 400
 
   curl -X POST http://localhost:3000/api/cache/search \
     -H "Content-Type: application/json" \
-    -d '{"query": "test", "page": "not-a-number", "data": {}}'
-  # Should return 400 error
+    -d '{"query": "test", "page": 1, "data": {}}'
+  # Should return 405: the cache accepts no client writes
   ```
 
 ---
@@ -426,7 +426,7 @@ pnpm run build
   - TanStack Query gcTime: Matches staleTime (prevents premature GC)
 
 - **Rate Limiting:**
-  - Scryfall limit: 10 req/s = 100ms between requests
+  - Scryfall limits: 500 ms between two requests to a card search endpoint, 100 ms between any two requests
   - Serialized via async mutex pattern
   - Detects test environment and skips delay during tests
 

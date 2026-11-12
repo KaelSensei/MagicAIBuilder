@@ -1,5 +1,13 @@
+/**
+ * Card-package rows checked against Scryfall card data before a preview or an
+ * apply, because the stored package metadata is user input.
+ *
+ * @module community/verified-package-cards
+ */
 import type { DeckFormat } from "@/lib/deck/formats";
 import { getCardCollection } from "@/lib/scryfall/client";
+import { getListedImageUri } from "@/lib/scryfall/images";
+import { isBasicLand } from "@/lib/scryfall/type-line";
 import { forEachSequential } from "@/lib/async/sequential";
 
 export interface StoredPackageCard {
@@ -41,8 +49,11 @@ export async function verifyPackageCards(
         colorIdentity: card.color_identity,
         isBanned: legality !== "legal" && legality !== "restricted",
         isRestricted: legality === "restricted",
-        isBasicLand: /\bbasic land\b/i.test(card.type_line),
-        imageUri: card.image_uris?.normal ?? card.card_faces?.[0]?.image_uris?.normal ?? "",
+        isBasicLand: isBasicLand(card.type_line),
+        imageUri:
+          getListedImageUri(card.image_uris, "grid") ??
+          getListedImageUri(card.card_faces?.[0]?.image_uris, "grid") ??
+          "",
       });
     }
   });

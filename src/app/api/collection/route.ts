@@ -1,34 +1,28 @@
+/**
+ * `/api/collection`: the signed-in player's collection cards. GET lists them,
+ * newest first; POST adds copies of one printing, merging into the row that
+ * already holds that printing and finish.
+ *
+ * Signed-in users only (`requireAuth`); a user reads and writes only their own
+ * rows. Single rows are edited and removed by `/api/collection/[id]`.
+ *
+ * @module api/collection
+ */
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
+import { isUniqueViolation } from "@/lib/db/prisma-errors";
 import { z } from "zod";
 import { requireAuth } from "@/lib/auth/helpers";
 import { logger } from "@/lib/logger";
 import { readJsonBody } from "@/lib/api/json-body";
-
-/** Prisma's error code for a unique-constraint violation. */
-const UNIQUE_CONSTRAINT = "P2002";
-
-/**
- * True when a write lost a race to a concurrent insert of the same printing.
- *
- * @param error - rejection from a Prisma write
- * @returns whether the error is a unique-constraint violation
- */
-function isUniqueConstraintError(error: unknown): boolean {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "code" in error &&
-    error.code === UNIQUE_CONSTRAINT
-  );
-}
+import { CARD_CONDITIONS } from "@/lib/collection/types";
 
 const addCardSchema = z.object({
   scryfallId: z.string().min(1),
   name: z.string().min(1),
   quantity: z.number().int().min(1).default(1),
   foil: z.boolean().default(false),
-  condition: z.enum(["NM", "LP", "MP", "HP", "DMG"]).nullable().optional(),
+  condition: z.enum(CARD_CONDITIONS).nullable().optional(),
   acquiredAt: z.iso.datetime().nullable().optional(),
   price: z.number().positive().nullable().optional(),
   imageUri: z.string().optional().default(""),
@@ -121,7 +115,7 @@ async function saveCollectionCard(userId: string, input: AddCardInput) {
     });
     return { card, created: true };
   } catch (error) {
-    if (!isUniqueConstraintError(error)) throw error;
+    if (!isUniqueViolation(error)) throw error;
     const card = await prisma.collectionCard.update({
       where,
       data: { quantity: { increment: quantity } },

@@ -11,9 +11,12 @@
  * @module collection/parse
  */
 
-import type { CollectionCard, CardCondition } from "./types";
-
-const VALID_CONDITIONS = new Set(["NM", "LP", "MP", "HP", "DMG"]);
+import { isRecordOrArray } from "@/lib/guards";
+import {
+  CARD_CONDITIONS,
+  type CollectionCard,
+  type CardCondition,
+} from "./types";
 
 /**
  * Parses a card condition from an unknown value.
@@ -22,20 +25,7 @@ const VALID_CONDITIONS = new Set(["NM", "LP", "MP", "HP", "DMG"]);
  * @returns the condition, or null when absent or unrecognised
  */
 export function parseCondition(v: unknown): CardCondition | null {
-  if (typeof v === "string" && VALID_CONDITIONS.has(v)) return v as CardCondition;
-  return null;
-}
-
-/**
- * Type guard for plain objects.
- *
- * Note this accepts arrays, which are objects — callers that care read named
- * properties, and an array has none of them, so the field checks reject it.
- *
- * @param v - any value
- */
-export function isRecord(v: unknown): v is Record<string, unknown> {
-  return typeof v === "object" && v !== null;
+  return CARD_CONDITIONS.find((condition) => condition === v) ?? null;
 }
 
 /**
@@ -49,7 +39,7 @@ export function isRecord(v: unknown): v is Record<string, unknown> {
  * @returns the card, or null when the payload cannot be trusted
  */
 export function parseCollectionCard(v: unknown): CollectionCard | null {
-  if (!isRecord(v)) return null;
+  if (!isRecordOrArray(v)) return null;
 
   const { id, scryfallId, name, quantity, foil, createdAt, acquiredAt, price, imageUri } = v;
 

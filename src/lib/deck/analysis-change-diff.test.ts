@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { DeckStats } from "@/lib/deck/types";
+import type { DeckStats } from "@/lib/deck/analysis-types";
 import { compareDeckAnalysis } from "./analysis-change-diff";
 
 const before: DeckStats = {
@@ -19,6 +19,7 @@ const before: DeckStats = {
   overBudgetCards: [],
   bannedCards: ["Banned card"],
   colorIdentityViolations: ["Off-color card"],
+  commanderRuleIssues: [],
   flexibleLands: 4,
   formatStats: null,
   manaAlignment: null,

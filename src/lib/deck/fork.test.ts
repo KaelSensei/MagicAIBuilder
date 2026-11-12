@@ -7,8 +7,6 @@ const source: ForkSourceDeck = {
   description: "A public list",
   format: "commander",
   targetBracket: 3,
-  manualBracket: null,
-  budget: 250,
   commanderId: "card-commander",
   commanderName: "Atraxa, Praetors' Voice",
   partnerId: null,

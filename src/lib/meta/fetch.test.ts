@@ -1,6 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import * as http from "@/lib/http";
-import { commanderToSlug, fetchEdhrecData, fetchTournamentData, __resetArchetypeCache } from "./fetch";
+import {
+  commanderToSlug,
+  isCommanderSlug,
+  fetchEdhrecData,
+  fetchTournamentData,
+  __resetArchetypeCache,
+} from "./fetch";
 
 // ─── commanderToSlug ──────────────────────────────────────────────────────────
 describe("commanderToSlug", () => {
@@ -30,6 +36,47 @@ describe("commanderToSlug", () => {
 
   it("strips special chars Edgar example", () =>
     expect(commanderToSlug("Edgar, Charmed Groom")).toBe("edgar-charmed-groom"));
+
+  // EDHREC answered 200 with this commander's page for each slug below, and 403 for the
+  // slug with the accented letter dropped
+  // (https://json.edhrec.com/pages/commanders/<slug>.json, read 2026-11-11).
+  it.each([
+    ["Lim-Dûl the Necromancer", "lim-dul-the-necromancer"],
+    ["Arna Kennerüd, Skycaptain", "arna-kennerud-skycaptain"],
+    ["Ratonhnhaké\ua789ton", "ratonhnhaketon"],
+    ["Éowyn, Fearless Knight", "eowyn-fearless-knight"],
+    ["Márton Stromgald", "marton-stromgald"],
+    ["Glóin, Dwarf Emissary", "gloin-dwarf-emissary"],
+  ])(
+    "builds the slug EDHREC serves for %s, accents transliterated",
+    (name, slug) => expect(commanderToSlug(name)).toBe(slug)
+  );
+});
+
+// ─── isCommanderSlug ──────────────────────────────────────────────────────────
+// The commander page 404s on any slug this rejects, so it must accept
+// everything commanderToSlug makes from a real name.
+describe("isCommanderSlug", () => {
+  it("accepts every slug commanderToSlug makes from a name with a letter or digit", () => {
+    const names = [
+      "Atraxa, Praetors' Voice",
+      "The Ur-Dragon",
+      "  Sol Ring  ",
+      "Sliver Overlord 2",
+      "Lim-Dûl the Necromancer",
+      "Esika, Queen of Myrr // The Prismatic Bridge",
+    ];
+
+    for (const name of names) {
+      expect(isCommanderSlug(commanderToSlug(name))).toBe(true);
+    }
+  });
+
+  it("rejects what commanderToSlug never makes", () => {
+    for (const slug of ["", "-", "---", "Atraxa", "not_a_slug", "a?b", "a b"]) {
+      expect(isCommanderSlug(slug)).toBe(false);
+    }
+  });
 });
 
 // ─── fetchEdhrecData ──────────────────────────────────────────────────────────
@@ -279,6 +326,10 @@ const ROW = (id: number, name: string) => `<tr class=hover_tr>
 <td class=S11>05/05/24</td>
 </tr>`;
 
+/** The search form's card row as MTGTop8 echoes it above the results of a card search. */
+const CARD_FILTER_ECHO = (cards: string) =>
+  `<tr><td colspan=2 align=center><textarea name=cards style="width:230;height:60;">${cards}</textarea></td></tr>`;
+
 function latin1Response(html: string): Response {
   const bytes = Uint8Array.from(html, (ch) => ch.charCodeAt(0));
   return new Response(bytes, { status: 200, headers: { "Content-Type": "text/html; charset=iso-8859-1" } });
@@ -333,7 +384,11 @@ describe("fetchTournamentData", () => {
     const spy = vi
       .spyOn(http, "httpGet")
       .mockResolvedValueOnce(latin1Response(FORM_HTML))
-      .mockResolvedValueOnce(latin1Response(ROW(9, "Krenko Goblins")));
+      .mockResolvedValueOnce(
+        latin1Response(
+          CARD_FILTER_ECHO("Krenko, Mob Boss") + ROW(9, "Krenko Goblins")
+        )
+      );
 
     const result = await fetchTournamentData("Krenko, Mob Boss");
 

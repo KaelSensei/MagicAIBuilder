@@ -1,4 +1,10 @@
 "use client";
+/**
+ * One row of a deck zone in the editor's list view: quantity, name, mana
+ * value, the row's badges and its move and remove actions.
+ *
+ * @module card/CardListItem
+ */
 import { motion } from "framer-motion";
 import { useLocale, useTranslations } from "next-intl";
 import { X, AlertTriangle, Zap, Bookmark, RefreshCw, Layers, CircleHelp } from "lucide-react";
@@ -6,9 +12,14 @@ import { useState } from "react";
 import { cn } from "@/components/ui/utils";
 import type { DeckCard } from "@/lib/deck/types";
 import { CardTooltip } from "@/components/card/CardTooltip";
+import { DeckCardOwnershipBadge } from "@/components/collection/DeckCardOwnershipBadge";
 import { useLocalizedDeckName } from "@/components/card/LocalizedDeckTextContext";
 import { getCardRoleExplanation } from "@/lib/deck/card-role-explanation";
 import { formatUsdPrice } from "@/i18n/number-format";
+import {
+  CardQuantityStepper,
+  CardRowActions,
+} from "@/components/card/CardRowActions";
 interface CardListItemProps {
   readonly card: DeckCard;
   readonly onRemove?: (id: string) => void;
@@ -114,13 +125,18 @@ function CardRoleExplanation({ card }: { readonly card: DeckCard }) {
     </div>
   );
 }
+/**
+ * A deck card row. Each move or remove button appears only when its handler
+ * is passed; the ownership badge appears once the player's collection holds
+ * any card.
+ */
 export function CardListItem({
   card,
   onRemove,
   onMoveToMaybeboard,
   onMoveToSideboard,
   className,
-  showNotes: _showNotes,
+  showNotes = false,
 }: CardListItemProps) {
   const t = useTranslations("card");
   const locale = useLocale();
@@ -140,7 +156,7 @@ export function CardListItem({
     <CardTooltip card={card}>
       <motion.div
         className={cn(
-          "flex items-center gap-2 px-2 py-1.5 rounded hover:bg-[var(--surface-hover)] group transition-colors",
+          "relative flex items-center gap-2 px-2 py-1.5 rounded hover:bg-[var(--surface-hover)] group transition-colors",
           className
         )}
         layout
@@ -148,9 +164,7 @@ export function CardListItem({
         animate={{ opacity: 1, x: 0 }}
         exit={{ opacity: 0, x: -10 }}
       >
-        <span className="text-xs text-[var(--text-secondary)] w-4 text-center shrink-0">
-          {card.quantity}
-        </span>
+        <CardQuantityStepper card={card} />
         {isDfc && <DfcBadge isFlexibleLand={card.isFlexibleLand ?? false} />}
         <span className="flex-1 text-sm truncate text-[var(--text-primary)]">
           {activeName}
@@ -169,6 +183,7 @@ export function CardListItem({
             {formatUsdPrice(locale, card.price)}
           </span>
         )}
+        <DeckCardOwnershipBadge card={card} />
         {card.isGameChanger && (
           <span title={t("gameChanger")}>
             <Zap className="w-3 h-3 text-amber-400" />
@@ -187,6 +202,7 @@ export function CardListItem({
             onFlip={flip}
           />
         )}
+        <CardRowActions card={card} showNotes={showNotes} />
         {onMoveToMaybeboard && (
           <button
             type="button"
