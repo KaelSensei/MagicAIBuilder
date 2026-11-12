@@ -89,10 +89,9 @@ export function CardQuantityStepper({ card }: { readonly card: DeckCard }) {
   const canRemove = card.quantity > 1;
   const canAdd = card.quantity < limit;
   return (
-    <div
-      role="group"
+    <fieldset
       aria-label={t("group", { name: card.name })}
-      className="flex items-center shrink-0"
+      className="m-0 flex min-w-0 items-center shrink-0 border-0 p-0"
     >
       <button
         type="button"
@@ -119,7 +118,7 @@ export function CardQuantityStepper({ card }: { readonly card: DeckCard }) {
       >
         <Plus className="w-2.5 h-2.5" aria-hidden="true" />
       </button>
-    </div>
+    </fieldset>
   );
 }
 

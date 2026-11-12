@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { screen, fireEvent } from "@testing-library/react";
+import { screen, fireEvent, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createElement } from "react";
 import { renderWithIntl } from "@/test/render-with-intl";
@@ -165,6 +165,20 @@ describe("HandZone bottom choice", () => {
     expect(screen.getByText("Bottom order: Counterspell, Lightning Bolt")).toBeDefined();
     await user.click(confirm);
     expect(onConfirm).toHaveBeenCalledWith(["c2", "c1"]);
+  });
+
+  // Sonar S6819: a native fieldset carries the group role, named as before.
+  it("groups the hand under the bottom prompt in a native fieldset", () => {
+    renderChoice(2);
+
+    const choice = screen.getByRole("group", {
+      name: "Choose 2 cards to put on the bottom of your library, in the order they go.",
+    });
+    expect(choice).toBeInstanceOf(HTMLFieldSetElement);
+    expect(choice).not.toHaveAttribute("role");
+    expect(
+      within(choice).getAllByRole("button", { pressed: false })
+    ).toHaveLength(3);
   });
 
   it("stops at the number to bottom and lets a choice be taken back", async () => {

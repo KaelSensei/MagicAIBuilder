@@ -359,13 +359,14 @@ export function AISuggestionsPanel({
               )}
 
               {denial && (
-                <div
-                  role="status"
+                <output
+                  aria-live="polite"
+                  aria-atomic="true"
                   className="flex items-start gap-2 text-amber-400 text-xs p-2 bg-amber-500/10 rounded-lg"
                 >
                   <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
                   <span>{describeDenial(denial)}</span>
-                </div>
+                </output>
               )}
 
               {error && !denial && (

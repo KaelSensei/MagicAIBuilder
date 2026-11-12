@@ -218,6 +218,19 @@ describe("DeckDetailsPanel", () => {
       ).toBeInTheDocument();
     });
 
+    // Sonar S6819: a native fieldset carries the group role, named as before.
+    it("groups the brackets in a native fieldset named by its label", () => {
+      openDeck({ targetBracket: 3 });
+      renderPanel();
+      const details = screen.getByRole("region", { name: "Deck details" });
+
+      const target = within(details).getByRole("group", {
+        name: "Target bracket",
+      });
+      expect(target).toBeInstanceOf(HTMLFieldSetElement);
+      expect(target).not.toHaveAttribute("role");
+    });
+
     it("leaves the target bracket out of a format without brackets", () => {
       openDeck({ format: "modern" });
       renderPanel();

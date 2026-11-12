@@ -39,6 +39,38 @@ function getStatusTextClass(status: SaveStatus): string {
   return "text-[var(--text-secondary)]";
 }
 
+interface SaveStatusMessageProps {
+  readonly status: SaveStatus;
+  /** The line to show; the caller renders nothing while it is empty. */
+  readonly message: string;
+}
+
+/**
+ * The save's progress line. A failure is an alert, so it interrupts; progress
+ * and success are a polite status in a native `<output>` (Sonar S6819), which
+ * states the politeness and atomicity that `role="status"` implied.
+ */
+function SaveStatusMessage({ status, message }: SaveStatusMessageProps) {
+  const className = `flex items-center gap-2 text-sm shrink-0 ${getStatusTextClass(status)}`;
+  if (status === "error") {
+    return (
+      <div role="alert" className={className}>
+        <AlertCircle className="w-4 h-4 shrink-0" />
+        {message}
+      </div>
+    );
+  }
+  return (
+    <output aria-live="polite" aria-atomic="true" className={className}>
+      {status === "saving" && (
+        <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+      )}
+      {status === "done" && <CheckCircle2 className="w-4 h-4 shrink-0" />}
+      {message}
+    </output>
+  );
+}
+
 export function BulkEditModal({ deck, children }: BulkEditModalProps) {
   const t = useTranslations("deck");
   const [open, setOpen] = useState(false);
@@ -200,23 +232,7 @@ export function BulkEditModal({ deck, children }: BulkEditModalProps) {
           </div>
 
           {/* Status message */}
-          {message && (
-            <div
-              role={status === "error" ? "alert" : "status"}
-              className={`flex items-center gap-2 text-sm shrink-0 ${getStatusTextClass(status)}`}
-            >
-              {status === "saving" && (
-                <Loader2 className="w-4 h-4 animate-spin shrink-0" />
-              )}
-              {status === "done" && (
-                <CheckCircle2 className="w-4 h-4 shrink-0" />
-              )}
-              {status === "error" && (
-                <AlertCircle className="w-4 h-4 shrink-0" />
-              )}
-              {message}
-            </div>
-          )}
+          {message && <SaveStatusMessage status={status} message={message} />}
 
           {/* Actions */}
           <div className="flex items-center justify-end gap-2 shrink-0">

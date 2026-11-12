@@ -76,4 +76,22 @@ describe("AISuggestionsPanel monthly allowance", () => {
       expect(screen.getByText(message)).toBeInTheDocument();
     }
   );
+
+  // Sonar S6819: the native <output> carries the status role, and the polite,
+  // atomic announcement that role="status" implied stays explicit.
+  it("announces the refusal in a polite, native status output", () => {
+    renderRefusedPanel(
+      { code: "ai_spend_ceiling_reached", resetsAt: DECEMBER },
+      "en"
+    );
+
+    const notice = screen.getByRole("status");
+    expect(notice).toHaveTextContent(
+      "AI features are paused until December 1, 2026. Everything else keeps working."
+    );
+    expect(notice).toBeInstanceOf(HTMLOutputElement);
+    expect(notice).not.toHaveAttribute("role");
+    expect(notice).toHaveAttribute("aria-live", "polite");
+    expect(notice).toHaveAttribute("aria-atomic", "true");
+  });
 });

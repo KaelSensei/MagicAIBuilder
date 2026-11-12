@@ -400,6 +400,29 @@ describe("BulkEditModal — saving an edited decklist", () => {
     expect(storeCard("Arcane Signet")).toMatchObject({ id: "signet-row" });
   });
 
+  // Sonar S6819: the native <output> carries the status role, and the polite,
+  // atomic announcement that role="status" implied stays explicit.
+  it("reports the saved list in a polite, native status output", async () => {
+    renderModal(openStoreDeck());
+    const textarea = screen.getByRole<HTMLTextAreaElement>("textbox");
+
+    fireEvent.change(textarea, {
+      target: { value: textarea.value.replace("10 Forest", "9 Forest") },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    await waitFor(() =>
+      expect(screen.getByRole("status")).toHaveTextContent(
+        /Saved \d+ cards successfully/
+      )
+    );
+    const status = screen.getByRole("status");
+    expect(status).toBeInstanceOf(HTMLOutputElement);
+    expect(status).not.toHaveAttribute("role");
+    expect(status).toHaveAttribute("aria-live", "polite");
+    expect(status).toHaveAttribute("aria-atomic", "true");
+  });
+
   it("replaces a commander picked by hand, which the editor knows only by its printing", async () => {
     const deck = openStoreDeck();
     const commander = deck.commander;

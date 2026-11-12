@@ -1,4 +1,10 @@
-import { act, fireEvent, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithIntl } from "@/test/render-with-intl";
 import {
@@ -184,6 +190,27 @@ describe("GuestDeckClaimOffer", () => {
       ],
     });
     expect(storedGuestDeck()).toBeNull();
+  });
+
+  // Sonar S6819: the native <output> carries the status role, and the polite,
+  // atomic announcement that role="status" implied stays explicit.
+  it("confirms the saved deck in a polite, native status output with a link to open it", async () => {
+    fetchMock.mockResolvedValueOnce(created());
+    renderWithIntl(<GuestDeckClaimOffer placement="floating" />);
+
+    fireEvent.click(await screen.findByRole("button", { name: ACCEPT }));
+
+    const confirmation = await screen.findByRole("status");
+    expect(confirmation).toHaveTextContent(
+      "“Counters” is now in your account."
+    );
+    expect(
+      within(confirmation).getByRole("link", { name: "Open deck" })
+    ).toHaveAttribute("href", "/builder/deck-42");
+    expect(confirmation).toBeInstanceOf(HTMLOutputElement);
+    expect(confirmation).not.toHaveAttribute("role");
+    expect(confirmation).toHaveAttribute("aria-live", "polite");
+    expect(confirmation).toHaveAttribute("aria-atomic", "true");
   });
 
   it("drops the guest deck from the open builder too, so it is not written back", async () => {

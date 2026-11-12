@@ -106,6 +106,18 @@ describe("SearchResults with Collection only on", () => {
     ).toBeDefined();
   });
 
+  // Sonar S6819: the native <output> carries the status role, and the polite,
+  // atomic announcement that role="status" implied stays explicit.
+  it("says why nothing was searched in a polite, native status output", () => {
+    renderOwned([], { kind: "signedOut" });
+
+    const notice = screen.getByRole("status");
+    expect(notice).toBeInstanceOf(HTMLOutputElement);
+    expect(notice).not.toHaveAttribute("role");
+    expect(notice).toHaveAttribute("aria-live", "polite");
+    expect(notice).toHaveAttribute("aria-atomic", "true");
+  });
+
   it("speaks French to a French player", () => {
     renderOwned([], { kind: "emptyCollection" }, "fr");
 
