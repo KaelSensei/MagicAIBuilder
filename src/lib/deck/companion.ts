@@ -228,7 +228,7 @@ export function describeCompanionCondition(condition: CompanionCondition): strin
   }
 }
 
-/** Warnings for stats / bracket / validateDeck (not hard errors). */
+/** Warnings for stats and bracket scoring (not hard errors). */
 export function getCompanionDeckWarnings(deck: Deck): readonly string[] {
   const out: string[] = [];
   const comp = deck.companion;

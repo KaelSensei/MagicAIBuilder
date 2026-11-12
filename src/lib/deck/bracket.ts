@@ -6,7 +6,7 @@ import { parseBracketLevel } from "@/lib/constants/brackets";
 import { minimumBracket } from "./bracket-floor";
 import { getCompanionDeckWarnings } from "./companion";
 import { getFormatConfig } from "./formats";
-import { sortedUniqueNames } from "./validation";
+import { sortedUniqueNames } from "./sorted-unique-names";
 
 /**
  * The highest bracket a deck list is scored at. Brackets 4 and 5 share one rule

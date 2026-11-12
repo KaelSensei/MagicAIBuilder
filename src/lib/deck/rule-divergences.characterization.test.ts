@@ -14,8 +14,8 @@
  *
  * Already unified since the audit, so not pinned here:
  * - Game Changer limits per bracket: the badge and the bracket floor read
- *   `BRACKET_DEFINITIONS` (#1343); the add-card toast and `validateDeck`
- *   still write "3" by hand, which matches Bracket 3 today.
+ *   `BRACKET_DEFINITIONS` (#1343); the add-card toast still writes "3" by
+ *   hand, which matches Bracket 3 today.
  * - The basic-land test: every copy-limit check calls `isBasicLand` (#1349).
  * - The commander pairing rule: the store, bulk edit and the AI path call
  *   `pairCommanders` / `canPairCommanders` (#1352).
@@ -46,11 +46,6 @@ import {
 import { computeDeckStats } from "./stats";
 import { useDeckStore } from "./store";
 import type { Deck, DeckCard } from "./types";
-import {
-  checkColorIdentity,
-  validateCardForDeck,
-  validateDeck,
-} from "./validation";
 
 // ---------------------------------------------------------------------------
 // Harness
@@ -207,16 +202,6 @@ describe("Game Changer count", () => {
     expect(stats.gameChangersList).toEqual(["Rhystic Study"]);
   });
 
-  it("validateDeck currently counts copies in every zone, Considering included: 2 (pinned; no production caller, P1-32 deletes it)", () => {
-    const warnings = validateDeck(DECK).warnings.filter((warning) =>
-      warning.includes("Game Changer")
-    );
-
-    expect(warnings).toEqual([
-      "2 Game Changer(s) detected: Rhystic Study, The One Ring",
-    ]);
-  });
-
   it("useGameChangers currently counts rows in every zone, Considering included: 2 (pinned; no production caller; see B2-38)", () => {
     const { result } = renderHook(() => useGameChangers(DECK), {
       wrapper: withGameChangersList(),
@@ -250,47 +235,35 @@ describe("Game Changer count", () => {
     expect(computeDeckStats(storedDeck(DECK)).gameChangersCount).toBe(1);
   });
 
-  it("currently counts a two-copy row as 2 in computeDeckStats and validateDeck but as 1 in useGameChangers (pinned; see B2-38)", () => {
+  it("currently counts a two-copy row as 2 in computeDeckStats but as 1 in useGameChangers (pinned; see B2-38)", () => {
     const { result } = renderHook(() => useGameChangers(TWO_COPY_DECK), {
       wrapper: withGameChangersList(),
     });
 
     expect(computeDeckStats(TWO_COPY_DECK).gameChangersCount).toBe(2);
-    expect(
-      validateDeck(TWO_COPY_DECK).warnings.filter((warning) =>
-        warning.includes("Game Changer")
-      )
-    ).toEqual(["2 Game Changer(s) detected: Rhystic Study"]);
     expect(result.current.count).toBe(1);
   });
 });
 
 describe("colour identity", () => {
   // CR 903.5c: every colour in a card's identity must be in the commander's.
-  it("getColorIdentityViolations, behind the stats and the deck editor, currently checks the main deck only, while validateDeck checks every zone (pinned; FR-04 makes the scope explicit; validateDeck has no production caller)", () => {
+  it("getColorIdentityViolations, behind the stats and the deck editor, currently checks the main deck only: the off-colour Sideboard and Considering rows pass (pinned; FR-04 makes the scope explicit)", () => {
     const flagged = getColorIdentityViolations(OFF_COLOUR_DECK).map(
       (violation) => violation.cardName
-    );
-    const errors = validateDeck(OFF_COLOUR_DECK).errors.filter((error) =>
-      error.startsWith("Color identity")
     );
 
     expect(flagged).toEqual(["Lightning Bolt"]);
     expect(computeDeckStats(OFF_COLOUR_DECK).colorIdentityViolations).toEqual([
       "Lightning Bolt",
     ]);
-    expect(errors).toEqual([
-      "Color identity violations: Lightning Bolt, Path to Exile, Swords to Plowshares",
-    ]);
   });
 
-  it('currently treats an identity stored as "C" as a colour outside the commander\'s in getColorIdentityViolations, checkColorIdentity and isCardOutsideColorIdentity, but not in validateCardForDeck or the card-package preview (pinned; see B2-60, FR-04)', () => {
+  it('currently treats an identity stored as "C" as a colour outside the commander\'s in getColorIdentityViolations and isCardOutsideColorIdentity, but not in the card-package preview (pinned; see B2-60, FR-04)', () => {
     const deckWithMindStone: Deck = {
       ...OFF_COLOUR_DECK,
       cards: [MIND_STONE_STORED_AS_C],
       maybeboard: [],
     };
-    const emptyDeck: Deck = { ...OFF_COLOUR_DECK, cards: [], maybeboard: [] };
     const packagePreview = previewCardPackage(
       [
         {
@@ -314,13 +287,9 @@ describe("colour identity", () => {
         (violation) => violation.cardName
       )
     ).toEqual(["Mind Stone"]);
-    expect(checkColorIdentity(["C"], ["G", "U"])).toBe(false);
     expect(
       isCardOutsideColorIdentity(new Set(["G", "U"]), { colorIdentity: ["C"] })
     ).toBe(true);
-    expect(
-      validateCardForDeck(MIND_STONE_STORED_AS_C, emptyDeck).isColorViolation
-    ).toBe(false);
     expect(packagePreview.cards.map((card) => card.status)).toEqual(["ready"]);
   });
 });

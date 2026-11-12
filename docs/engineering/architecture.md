@@ -446,6 +446,9 @@ Folders that stay where Next.js or the tooling expects them: `src/app/` (routing
 `src/middleware.ts`, `src/instrumentation*.ts`, `src/i18n/` (loaded by `next.config.ts`),
 `src/messages/` (locale catalogs), `src/styles/`, `src/test/` (shared test helpers and fakes).
 
-Modules with no production importer (for example `src/lib/versioning/branching.ts`,
-`src/lib/recommendations/engine.ts`, `src/lib/shortcuts/shortcuts.ts`) are listed for an owner
-decision rather than mapped.
+Modules with no production importer are listed for an owner decision rather than mapped. The
+owner's decision OD-02 (2026-11-12, P1-32) deleted the first batch of library scaffolds
+(`src/lib/versioning/branching.ts`, `src/lib/recommendations/engine.ts`,
+`src/lib/shortcuts/shortcuts.ts`, `src/lib/archetypes/`, `src/lib/challenges/`,
+`src/lib/export/stats-export.ts`, `src/lib/constants/benchmarks.ts`, `src/lib/deck/analytics.ts`
+and the unused `validateDeck` engine); git history keeps them.

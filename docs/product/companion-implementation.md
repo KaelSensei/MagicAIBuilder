@@ -29,7 +29,7 @@ _Product doc (this file): `docs/product/companion-implementation.md`. Tracked as
    - Logic for detecting Companions on import
    - Synchronization with the API
 
-3. **Validation** (`src/lib/deck/validation.ts` + `src/lib/deck/color-identity.ts`)
+3. **Validation** (`src/lib/deck/color-identity.ts`; the unused `validateDeck` engine in `src/lib/deck/validation.ts` was deleted on 2026-11-12, P1-32, and `getCompanionDeckWarnings` now feeds the stats and bracket scoring directly)
    - Counts cards for the 100-card rule (Companion doesn't count)
    - Validates color identity against the Companion if present
    - `isCompanionOutsideColorIdentity(deck)` returns true when companion has colors outside commander + partner identity

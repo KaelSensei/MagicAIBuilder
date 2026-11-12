@@ -23,9 +23,12 @@ the detailed reasoning, examples, and known issues to fix.
 These are concrete bugs and code smells found in the codebase audit (March 2026).
 Fix them when touching the relevant files. Each has a severity and location.
 
-### CRITICAL: Operator Precedence Bug in detectGameChanger()
+### RESOLVED: Operator Precedence Bug in detectGameChanger()
 
-**File:** `src/lib/deck/validation.ts` (~line 164)
+**File:** `src/lib/deck/validation.ts`, deleted on 2026-11-12 (P1-32). `detectGameChanger` was an
+Oracle-text heuristic that no production code called, and the unused `validateDeck` engine went
+with it. Game Changers come from Scryfall's `is:gamechanger` search (`src/hooks/useGameChangers.ts`)
+and the stored `isGameChanger` flag. The snippet below is kept as the pattern example only.
 
 ```typescript
 // ❌ CURRENT — && binds tighter than ||, so the grouping is:
