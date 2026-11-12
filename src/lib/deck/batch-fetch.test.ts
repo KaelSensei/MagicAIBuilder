@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { fetchInBatches } from "./batch-fetch";
+import { fetchCardsByIdInBatches, fetchInBatches } from "./batch-fetch";
+import { CardLookupError } from "./card-lookup-error";
 import * as scryfallClient from "@/lib/scryfall/client";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import { aScryfallCard } from "@/test/builders/scryfall";
@@ -112,5 +113,25 @@ describe("fetchInBatches", () => {
     const result = await fetchInBatches(names);
     expect(scryfallClient.getCardCollection).toHaveBeenCalledTimes(1);
     expect(result).toHaveLength(75);
+  });
+
+  it("reports a request Scryfall never answered as a card lookup failure, keeping the cause", async () => {
+    const timeout = new DOMException("signal timed out", "TimeoutError");
+    vi.mocked(scryfallClient.getCardCollection).mockRejectedValueOnce(timeout);
+
+    const outcome = fetchInBatches([{ name: "Sol Ring" }]);
+
+    await expect(outcome).rejects.toBeInstanceOf(CardLookupError);
+    await expect(outcome).rejects.toMatchObject({ cause: timeout });
+  });
+
+  it("reports a failed lookup by printing id the same way", async () => {
+    vi.mocked(scryfallClient.getCardCollection).mockRejectedValueOnce(
+      new Error("Scryfall API error 503: Service Unavailable")
+    );
+
+    await expect(
+      fetchCardsByIdInBatches(["00000000-0000-4000-8000-000000000001"])
+    ).rejects.toBeInstanceOf(CardLookupError);
   });
 });
