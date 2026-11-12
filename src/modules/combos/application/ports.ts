@@ -19,9 +19,18 @@ import type { DeckComboQuery } from "@/modules/combos/domain/deck-query";
 /**
  * Lookups kept so that every viewer of one card list shares one source call.
  *
- * `read` answers null for a list it has never seen or whose entry has expired;
- * the adapter decides the time to live. Only successful lookups are stored, so
- * the source is asked again as soon as it recovers.
+ * An implementation guarantees:
+ * - `read` answers null for a list it has never seen or whose entry has
+ *   expired; the adapter decides the time to live (6 hours in
+ *   `infrastructure/combo-cache.ts`);
+ * - a list is found again whatever its spelling, because callers pass the
+ *   canonical form, and commanders are kept apart from main-deck cards in the
+ *   key: the same names in other roles are another list;
+ * - the use case stores successful lookups only, so a failure is never served
+ *   from the cache and the source is asked again as soon as it recovers.
+ *
+ * Pinned by `infrastructure/combo-cache.test.ts` for the adapter and by
+ * `application/lookup-deck-combos.test.ts` for the use case's use of it.
  */
 export interface ComboCache {
   read(query: DeckComboQuery): readonly Combo[] | null;
@@ -41,8 +50,12 @@ export type BudgetDecision =
  * The calls this server may make to the combo source per window
  * (`SPELLBOOK_CALLS_PER_WINDOW` in `domain/lookup-policy.ts`).
  *
- * `take` counts one call and says whether it is within budget. It is called
- * only after a cache miss, so cache hits never spend budget.
+ * `take` counts one call and says whether it is within budget. An
+ * implementation guarantees that a refused take spends nothing and reports a
+ * positive `retryAfterMs`, which the route sends as `Retry-After`. The use
+ * case calls it only after a cache miss and before the source, so cache hits
+ * never spend budget and a refused take never reaches the source
+ * (`application/lookup-deck-combos.test.ts`).
  */
 export interface ComboSourceBudget {
   take(): BudgetDecision;
@@ -62,10 +75,21 @@ export type DeckCombosFailure = Exclude<DeckCombosResult, { kind: "found" }>;
  * Where the combos a deck holds come from: Commander Spellbook in production
  * (`infrastructure/find-my-combos.ts`), a fake in tests.
  *
- * `findCombos` makes one call for the whole list and returns only the combos
- * the deck fully contains, infinite ones first. Every implementation passes
- * the contract suite in `testing/combo-source-contract.ts`; tests use the fake
- * in `testing/in-memory-combo-source.ts`.
+ * `findCombos` makes one call for the whole list. Every implementation passes
+ * the contract suite in `testing/combo-source-contract.ts`, which pins:
+ * - a list the upstream knows combos for comes back `found` with those combos
+ *   as `Combo` values: id, cards, effects, infinity and prerequisites;
+ * - only combos the deck fully contains are returned; a list without one comes
+ *   back `found` with none, which is a finding, not a failure;
+ * - each way the upstream can fail comes back as the matching
+ *   `DeckCombosFailure`, never as a thrown error;
+ * - a failure is not remembered: the next call asks the upstream again.
+ *
+ * The suite leaves open what the fake and the adapter differ on: a combo's
+ * `description` and the order of the combos (the adapter puts infinite ones
+ * first, then fewer cards). Neither puts the list in canonical form; it is
+ * sent as given, so callers pass the normalised list. The fake is
+ * `testing/in-memory-combo-source.ts`.
  */
 export interface ComboSource {
   findCombos(query: DeckComboQuery): Promise<DeckCombosResult>;

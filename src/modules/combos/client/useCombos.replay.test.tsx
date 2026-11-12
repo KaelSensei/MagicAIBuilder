@@ -11,7 +11,7 @@
  * route's use case (CMB-04) change nothing here but import paths.
  *
  * Pinned here: the ten-card minimum and the companion exclusion of
- * `useCombos.ts` (lines 13 and 15-25, which B2-43 will revisit), the list the
+ * `useCombos.ts` (`MIN_CARDS` and `toDeckComboQuery`, which B2-43 will revisit), the list the
  * browser sends against the canonical list Spellbook receives, and how each
  * failure reaches the builder.
  */
@@ -188,7 +188,7 @@ describe("useCombos, replayed end to end against the recorded Spellbook lookup",
     });
   });
 
-  describe("the ten-card minimum (useCombos.ts:13)", () => {
+  describe("the ten-card minimum (MIN_CARDS in useCombos.ts)", () => {
     it("does not look a deck of nine cards up", () => {
       const { result } = renderCombos(deck({ cards: EIGHT_MAIN_CARDS }));
 
@@ -280,7 +280,7 @@ describe("useCombos, replayed end to end against the recorded Spellbook lookup",
     });
   });
 
-  describe("the companion (useCombos.ts:15-25)", () => {
+  describe("the companion (toDeckComboQuery in useCombos.ts)", () => {
     const companion = card("Jegantha, the Wellspring");
 
     it("currently does not count the companion toward the ten cards (pinned; see B2-43)", () => {
