@@ -9,6 +9,7 @@ import {
 import type { Deck } from "./types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import { aScryfallCard } from "@/test/builders/scryfall";
+import { emptyApiDeck } from "@/test/in-memory-deck-api";
 
 /**
  * These were only ever exercised through store actions, so a mapping bug
@@ -177,6 +178,18 @@ describe("isDeckStub", () => {
 
   it("treats an empty deck as loaded, not as a stub", () => {
     expect(isDeckStub(deck({ cardCount: 0, cards: [] }))).toBe(false);
+  });
+});
+
+describe("apiDeckToStoreDeck version", () => {
+  it("keeps the version the server answered with the whole deck", () => {
+    const deck = apiDeckToStoreDeck({ ...emptyApiDeck("deck-1"), version: 7 });
+
+    expect(deck.version).toBe(7);
+  });
+
+  it("holds no version for a deck answered without one, such as a guest deck", () => {
+    expect(apiDeckToStoreDeck(emptyApiDeck("deck-1")).version).toBeUndefined();
   });
 });
 

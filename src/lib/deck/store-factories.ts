@@ -133,7 +133,8 @@ export function apiDeckToStoreDeck(d: deckApi.ApiDeck): Deck {
   const { commanderCard, partnerCard, companionCard, deckCards } = partitionApiCards(allCards);
 
   // The listing sends the server's row count; a full deck is counted from the
-  // rows it holds, once the command zone has been read out of them.
+  // rows it holds, once the command zone has been read out of them. The
+  // version is set last, since `withLoadedCardCount` forgets it.
   const deck: Deck = {
     id: d.id,
     name: d.name,
@@ -160,7 +161,9 @@ export function apiDeckToStoreDeck(d: deckApi.ApiDeck): Deck {
     createdAt: new Date(d.createdAt),
     updatedAt: new Date(d.updatedAt),
   };
-  return d._count ? deck : withLoadedCardCount(deck);
+  const held = d._count ? deck : withLoadedCardCount(deck);
+  // A whole deck just read is current: its version is the one to write with.
+  return d.version === undefined ? held : { ...held, version: d.version };
 }
 
 /**

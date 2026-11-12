@@ -459,6 +459,8 @@ export interface DeckCardChanges {
   readonly clearCommandSlots?: readonly CommandSlot[];
   /** The deck's command-zone fields, sent only when the edit changes them. */
   readonly commandZone?: CommandZonePatch;
+  /** The deck version the client last read; absent means "do not check". */
+  readonly expectedVersion?: number;
 }
 
 /**
@@ -503,12 +505,15 @@ function guestRowId(payload: AddCardPayload): string {
 
 /**
  * Applies a set of row changes to a deck atomically: either every change is
- * saved or none is.
+ * saved or none is. The guest deck keeps no version, so its answer carries
+ * none.
  *
  * @param deckId - deck to change
- * @param changes - rows to remove, resize and add, and the command zone
- * @returns the deck with all its cards, as saved
- * @throws When the server refused the change set; the deck is then unchanged
+ * @param changes - rows to remove, resize and add, the command zone, and the
+ *   deck version the client read
+ * @returns the deck with all its cards and its new `version`, as saved
+ * @throws When the server refused the change set (400, 409 for a stale copy,
+ *   500); the deck is then unchanged
  */
 export async function applyCardChanges(
   deckId: string,

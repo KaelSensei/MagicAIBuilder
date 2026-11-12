@@ -145,6 +145,16 @@ export interface Deck {
   updatedAt: Date;
   seekingFeedback?: boolean;
   feedbackQuestion?: string | null;
+  /**
+   * The deck's optimistic lock (`Deck.version` on the server), as the store
+   * last read it with the whole deck: `GET /api/decks/[id]` or the bulk
+   * edit's answer. A write sends it as `expectedVersion` and is refused with
+   * 409 when another tab wrote first. Absent for a guest deck, a listing stub,
+   * and after a row write whose answer the store does not read the version
+   * from (`withLoadedCardCount` forgets it): the server has moved on, and a
+   * version the store cannot vouch for must not be sent.
+   */
+  version?: number;
 }
 
 export type ColorMode = "or" | "and" | "exact";
