@@ -13,6 +13,7 @@ import {
   type BulkEditRejection,
 } from "@/lib/deck/bulk-edit";
 import { fetchInBatches } from "@/lib/deck/batch-fetch";
+import { CardLookupError } from "@/lib/deck/card-lookup-error";
 import { useDeckStore } from "@/lib/deck/store";
 import type { Deck } from "@/lib/deck/types";
 import { cardsFromZoneSource } from "@/lib/deck/zone-source";
@@ -106,6 +107,16 @@ export function BulkEditModal({ deck, children }: BulkEditModalProps) {
   }
 
   /**
+   * Explains a save that threw. The card lookup's failure gets the player's
+   * words: a browser's "signal timed out" or "Failed to fetch" means nothing
+   * to them, and the deck API already phrases its own refusals.
+   */
+  function failureMessage(error: unknown): string {
+    if (error instanceof CardLookupError) return t("bulkEdit.lookupFailed");
+    return error instanceof Error ? error.message : t("bulkEdit.saveFailed");
+  }
+
+  /**
    * Saves only what the edited list changes, as one atomic request. New names
    * are looked up first; the deck is untouched when the list is refused.
    *
@@ -162,9 +173,7 @@ export function BulkEditModal({ deck, children }: BulkEditModalProps) {
       }, 1200);
     } catch (err) {
       setStatus("error");
-      setMessage(
-        err instanceof Error ? err.message : t("bulkEdit.saveFailed")
-      );
+      setMessage(failureMessage(err));
     }
   };
 

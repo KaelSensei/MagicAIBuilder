@@ -3,6 +3,7 @@ import { renderWithIntl } from "@/test/render-with-intl";
 import { useState } from "react";
 import { beforeEach, expect, it, vi } from "vitest";
 import { ImportDialog } from "./ImportDialog";
+import { CardLookupError } from "@/lib/deck/card-lookup-error";
 
 const addCard = vi.hoisted(() => vi.fn());
 const fetchInBatches = vi.hoisted(() => vi.fn());
@@ -210,4 +211,26 @@ it.each([
   renderWithIntl(<ImportDialog open onOpenChange={vi.fn()} />, { locale });
 
   expect(screen.getByRole("button", { name })).toBeInTheDocument();
+});
+
+it("says the card lookup did not answer when Scryfall fails, instead of the browser's own words", async () => {
+  fetchInBatches.mockRejectedValueOnce(
+    new CardLookupError(new DOMException("signal timed out", "TimeoutError"))
+  );
+  renderWithIntl(<ImportDialog open onOpenChange={vi.fn()} />);
+
+  fireEvent.change(screen.getByPlaceholderText(/Atraxa, Praetors' Voice/), {
+    target: { value: "1 Sol Ring" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Preview decklist" }));
+
+  expect(
+    await screen.findByText(
+      "The card lookup did not answer. Nothing was imported; try again."
+    )
+  ).toBeInTheDocument();
+  expect(
+    screen.getByRole("button", { name: "Preview decklist" })
+  ).toBeEnabled();
+  expect(addCard).not.toHaveBeenCalled();
 });

@@ -12,6 +12,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { fetchInBatches } from "@/lib/deck/batch-fetch";
+import { CardLookupError } from "@/lib/deck/card-lookup-error";
 import { useDeckStore } from "@/lib/deck/store";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import type { UrlImportCard, UrlImportResult } from "@/lib/import/url-import";
@@ -148,6 +149,18 @@ export function ImportFromUrlTab({ onSuccess }: ImportFromUrlTabProps) {
     return { added, ignoredNames };
   }
 
+  /**
+   * Explains a fetch that threw: the card lookup's failure in the player's
+   * words, any other error (the route's refusal, a Moxfield refusal) as it
+   * reports itself.
+   */
+  function fetchFailureMessage(error: unknown): string {
+    if (error instanceof CardLookupError) return t("import.lookupFailed");
+    return error instanceof Error
+      ? error.message
+      : t("import.url.importFailed");
+  }
+
   const handleImport = async () => {
     if (!url.trim()) return;
     if (!activeDeckId) {
@@ -195,7 +208,7 @@ export function ImportFromUrlTab({ onSuccess }: ImportFromUrlTabProps) {
     } catch (err) {
       setStatus("error");
       setFormatWarning(null);
-      setMessage(err instanceof Error ? err.message : t("import.url.importFailed"));
+      setMessage(fetchFailureMessage(err));
     }
   };
 
