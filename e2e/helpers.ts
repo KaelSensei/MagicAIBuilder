@@ -355,6 +355,75 @@ export async function deleteDeckThroughApi(
   );
 }
 
+/** One row for `POST /api/collection`; the route upserts by printing and finish. */
+export interface CollectionCardSeed {
+  /** The printing id. The collection filters match by name, so a fixture UUID works. */
+  readonly scryfallId: string;
+  readonly name: string;
+  readonly quantity?: number;
+  readonly foil?: boolean;
+}
+
+/**
+ * Adds a card to the Playwright user's collection.
+ *
+ * @param request Playwright API context bound to the app's baseURL.
+ * @param card The row to add; quantity 1 and non-foil when omitted.
+ * @returns The id of the row the collection now holds.
+ * @throws Error when the API refuses the row or answers without an id.
+ */
+export async function addCollectionCardThroughApi(
+  request: APIRequestContext,
+  card: CollectionCardSeed
+): Promise<string> {
+  const added = await request.post("/api/collection", { data: card });
+  if (!added.ok()) {
+    throw new Error(`collection add failed: ${added.status()} ${await added.text()}`);
+  }
+  const body: unknown = await added.json();
+  if (!isRecord(body) || typeof body.id !== "string") {
+    throw new Error("collection add response did not include an id");
+  }
+  return body.id;
+}
+
+/**
+ * Deletes every collection row named in `names`, whichever finish it has.
+ *
+ * Rows are found by name because a test that adds a card through the dialog
+ * never learns the row's id. The read and the deletes are idempotent and
+ * resent on a connection reset (see {@link IDEMPOTENT_MAX_RETRIES}); a 404
+ * counts as deleted.
+ *
+ * @param request Playwright API context bound to the app's baseURL.
+ * @param names Card names to remove from the collection.
+ * @throws Error when the collection cannot be read or a delete fails.
+ */
+export async function deleteCollectionCardsThroughApi(
+  request: APIRequestContext,
+  names: ReadonlySet<string>
+): Promise<void> {
+  if (names.size === 0) return;
+  const loaded = await getThroughApi(request, "/api/collection");
+  if (!loaded.ok()) {
+    throw new Error(`collection load failed: ${loaded.status()} ${await loaded.text()}`);
+  }
+  const rows: unknown = await loaded.json();
+  if (!Array.isArray(rows)) throw new Error("collection response was not a list");
+  for (const row of rows) {
+    if (!isRecord(row) || typeof row.id !== "string" || typeof row.name !== "string") continue;
+    if (!names.has(row.name)) continue;
+    const deleted = await request.delete(`/api/collection/${row.id}`, {
+      maxRetries: IDEMPOTENT_MAX_RETRIES,
+    });
+    if (!deleted.ok() && deleted.status() !== 404) {
+      throw new Error(
+        `collection delete of ${row.name} failed: ${deleted.status()} ${await deleted.text()}`
+      );
+    }
+  }
+}
+
 /**
  * A public deck plus the profile slug of the Playwright user who owns it.
  */
