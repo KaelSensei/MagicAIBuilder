@@ -6,7 +6,9 @@
  * pull requests has an ESLint twin that fails `pnpm lint` locally:
  *
  * - `jsx-a11y/prefer-tag-over-role` (Sonar S6819): a `role` that a native
- *   element already carries, such as `<div role="dialog">`.
+ *   element already carries, such as `<div role="dialog">`;
+ * - `react/no-unstable-nested-components` (Sonar S6478): a component declared
+ *   inside another component's body, which React remounts on every render.
  *
  * The Node API ignores `eslint-suppressions.json`, so the baseline does not
  * hide anything here.
@@ -59,6 +61,24 @@ describe("native elements over ARIA roles (Sonar S6819)", () => {
   it("accepts a role with no native element, such as a switch", async () => {
     const source =
       'export function Example() {\n  return <button type="button" role="switch" aria-checked="false" />;\n}\n';
+
+    expect(await rulesReportedFor(source)).toEqual([]);
+  });
+});
+
+describe("components declared outside render (Sonar S6478)", () => {
+  it("rejects a component declared inside another component's body", async () => {
+    const source =
+      "export function Example() {\n  function Row() {\n    return <li />;\n  }\n  return (\n    <ul>\n      <Row />\n    </ul>\n  );\n}\n";
+
+    expect(await rulesReportedFor(source)).toEqual([
+      "react/no-unstable-nested-components",
+    ]);
+  });
+
+  it("accepts a component declared at module level and a plain inner callback", async () => {
+    const source =
+      "function Row() {\n  return <li />;\n}\nexport function Example() {\n  const handleClick = () => undefined;\n  return (\n    <ul onClick={handleClick}>\n      <Row />\n    </ul>\n  );\n}\n";
 
     expect(await rulesReportedFor(source)).toEqual([]);
   });

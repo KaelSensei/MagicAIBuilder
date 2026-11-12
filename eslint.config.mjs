@@ -391,6 +391,11 @@ const eslintConfig = [
       // `<button>` and `<hr>` (a separator) replace the role; roles with no
       // element, such as `switch` or `tooltip`, stay allowed.
       "jsx-a11y/prefer-tag-over-role": "error",
+      // S6478: a component declared inside another component's body gets a
+      // new identity on every render, so React unmounts and remounts its
+      // subtree and loses its state. Declare it at module level and pass what
+      // it needs as props.
+      "react/no-unstable-nested-components": "error",
     },
   },
 
