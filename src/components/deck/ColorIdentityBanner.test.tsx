@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import { ColorIdentityBanner } from "./ColorIdentityBanner";
 import enBuilder from "@/messages/en/builder.json";
@@ -112,6 +112,18 @@ describe("ColorIdentityBanner", () => {
         "Blue mana symbol",
       ]);
     });
+  });
+
+  // Without a name the banner is an anonymous box: assistive technology
+  // announces its pips and the remove button with no card to attach them to,
+  // and the E2E specs had to find it by its height class (audit TT-11).
+  it("is a group named after its card", () => {
+    renderWithIntl(
+      <ColorIdentityBanner name="Atraxa" colorIdentity={["W"]} onRemove={vi.fn()} label="CMD" />
+    );
+
+    const banner = screen.getByRole("group", { name: "Atraxa" });
+    expect(within(banner).getByRole("button", { name: "Remove Atraxa" })).toBeDefined();
   });
 
   it("renders without a label when none is given", () => {

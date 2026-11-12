@@ -11,7 +11,7 @@
  *
  * @module e2e/helpers
  */
-import type { APIRequestContext, APIResponse, Page } from "@playwright/test";
+import type { APIRequestContext, APIResponse, Locator, Page } from "@playwright/test";
 
 /** localStorage key the app uses to remember the first-run onboarding was dismissed */
 const ONBOARDING_LS_KEY = "mab-onboarding-done";
@@ -76,6 +76,62 @@ export async function openBuilder(page: Page): Promise<void> {
     .getByRole("link", { name: "Back to my decks" })
     .waitFor({ state: "visible" });
   await page.waitForLoadState("networkidle");
+}
+
+/**
+ * Waits until the builder has loaded a deck: the title bar's back link exists
+ * only on the loaded branch, never on "Loading deck…" (see {@link openBuilder}).
+ */
+export async function waitForBuilder(page: Page): Promise<void> {
+  await page.getByRole("link", { name: "Back to my decks" }).waitFor({ state: "visible" });
+}
+
+/**
+ * Switches the editor's main zone to its list view, where every card is one
+ * row with named controls. The toolbar's own name tells its "List view" button
+ * from the search panel's, which carries the same name (audit TT-11).
+ */
+export async function switchToDeckListView(page: Page): Promise<void> {
+  await page
+    .getByRole("toolbar", { name: "Deck view" })
+    .getByRole("button", { name: "List view" })
+    .click();
+}
+
+/**
+ * Opens a seeded deck in the builder and shows its main zone as a list.
+ *
+ * @param page A page that has not navigated yet: the onboarding flag must be
+ *   set before the first `goto`.
+ * @param deckId A deck the Playwright user owns.
+ */
+export async function openDeckInListView(page: Page, deckId: string): Promise<void> {
+  await suppressOnboarding(page);
+  await page.goto(`/builder/${deckId}`);
+  await waitForBuilder(page);
+  await switchToDeckListView(page);
+}
+
+/**
+ * Reloads the builder and returns to the list view, which the store does not
+ * persist across loads. Used to check that a change survived the round trip.
+ */
+export async function reloadDeckIntoListView(page: Page): Promise<void> {
+  await page.reload();
+  await waitForBuilder(page);
+  await switchToDeckListView(page);
+}
+
+/**
+ * A card's row in the editor's list view, in whichever zone is open.
+ *
+ * The row itself has no role, so it is found through the one control every
+ * zone's row carries and the search panel never does: its "Remove {name}"
+ * button. Opacity alone does not hide an element from Playwright, so the
+ * button counts as visible exactly when its row is rendered.
+ */
+export function deckCardRow(page: Page, name: string): Locator {
+  return page.getByRole("button", { name: `Remove ${name}`, exact: true });
 }
 
 /**
@@ -297,6 +353,75 @@ export async function deleteDeckThroughApi(
   throw new Error(
     `deck delete failed: ${deleted.status()} ${await deleted.text()}`
   );
+}
+
+/** One row for `POST /api/collection`; the route upserts by printing and finish. */
+export interface CollectionCardSeed {
+  /** The printing id. The collection filters match by name, so a fixture UUID works. */
+  readonly scryfallId: string;
+  readonly name: string;
+  readonly quantity?: number;
+  readonly foil?: boolean;
+}
+
+/**
+ * Adds a card to the Playwright user's collection.
+ *
+ * @param request Playwright API context bound to the app's baseURL.
+ * @param card The row to add; quantity 1 and non-foil when omitted.
+ * @returns The id of the row the collection now holds.
+ * @throws Error when the API refuses the row or answers without an id.
+ */
+export async function addCollectionCardThroughApi(
+  request: APIRequestContext,
+  card: CollectionCardSeed
+): Promise<string> {
+  const added = await request.post("/api/collection", { data: card });
+  if (!added.ok()) {
+    throw new Error(`collection add failed: ${added.status()} ${await added.text()}`);
+  }
+  const body: unknown = await added.json();
+  if (!isRecord(body) || typeof body.id !== "string") {
+    throw new Error("collection add response did not include an id");
+  }
+  return body.id;
+}
+
+/**
+ * Deletes every collection row named in `names`, whichever finish it has.
+ *
+ * Rows are found by name because a test that adds a card through the dialog
+ * never learns the row's id. The read and the deletes are idempotent and
+ * resent on a connection reset (see {@link IDEMPOTENT_MAX_RETRIES}); a 404
+ * counts as deleted.
+ *
+ * @param request Playwright API context bound to the app's baseURL.
+ * @param names Card names to remove from the collection.
+ * @throws Error when the collection cannot be read or a delete fails.
+ */
+export async function deleteCollectionCardsThroughApi(
+  request: APIRequestContext,
+  names: ReadonlySet<string>
+): Promise<void> {
+  if (names.size === 0) return;
+  const loaded = await getThroughApi(request, "/api/collection");
+  if (!loaded.ok()) {
+    throw new Error(`collection load failed: ${loaded.status()} ${await loaded.text()}`);
+  }
+  const rows: unknown = await loaded.json();
+  if (!Array.isArray(rows)) throw new Error("collection response was not a list");
+  for (const row of rows) {
+    if (!isRecord(row) || typeof row.id !== "string" || typeof row.name !== "string") continue;
+    if (!names.has(row.name)) continue;
+    const deleted = await request.delete(`/api/collection/${row.id}`, {
+      maxRetries: IDEMPOTENT_MAX_RETRIES,
+    });
+    if (!deleted.ok() && deleted.status() !== 404) {
+      throw new Error(
+        `collection delete of ${row.name} failed: ${deleted.status()} ${await deleted.text()}`
+      );
+    }
+  }
 }
 
 /**

@@ -50,7 +50,8 @@
   "viewMode": {
     "listView": "List view",
     "gridView": "Grid view",
-    "cardsPerRow": "{count} cards per row"
+    "cardsPerRow": "{count} cards per row",
+    "toolbar": "Deck view"
   },
   "actions": {
     "removeCommander": "Remove commander",

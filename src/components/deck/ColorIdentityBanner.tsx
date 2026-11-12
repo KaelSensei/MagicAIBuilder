@@ -12,7 +12,7 @@
  */
 
 import Image from "next/image";
-import { useMemo } from "react";
+import { useId, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { manaSymbolSvgUrl } from "@/lib/scryfall/constants";
 
@@ -92,6 +92,9 @@ export function ColorIdentityBanner({
   readonly label?: string;
 }) {
   const t = useTranslations("builder");
+  // The banner is a group named by the card it shows, so its pips and remove
+  // button are announced with their card rather than as loose controls (TT-11).
+  const nameId = useId();
   const displayColors = useMemo(
     () => getDisplayColorIdentity(colorIdentity),
     [colorIdentity]
@@ -99,6 +102,8 @@ export function ColorIdentityBanner({
 
   return (
     <div
+      role="group"
+      aria-labelledby={nameId}
       className="group/banner relative flex-1 h-[82px] overflow-hidden rounded-lg border border-white/10 text-white shadow-[0_18px_50px_rgba(0,0,0,0.22)]"
       style={{ backgroundImage: COLOR_IDENTITY_BANNER_BACKGROUND }}
     >
@@ -114,6 +119,7 @@ export function ColorIdentityBanner({
             </div>
           )}
           <p
+            id={nameId}
             className="max-w-[16rem] truncate text-sm font-semibold tracking-[0.01em]"
             style={{ textShadow: "0 1px 3px rgba(0,0,0,0.35)" }}
           >
@@ -147,6 +153,9 @@ export function ColorIdentityBanner({
         type="button"
         onClick={onRemove}
         className="absolute top-1 right-1 opacity-0 group-hover/banner:opacity-100 focus-visible:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg"
+        // The "×" content would be the button's name; the title alone is only a
+        // description, so the label repeats it as the name.
+        aria-label={t("actions.removeNamed", { name })}
         title={t("actions.removeNamed", { name })}
       >
         ×

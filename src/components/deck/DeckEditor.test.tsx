@@ -12,7 +12,7 @@
  * Tests named "currently … (pinned)" record odd behaviour on purpose. A `fix/` pull request that
  * changes it flips the test with its own Red.
  */
-import { screen, waitFor } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { DndContext } from "@dnd-kit/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -239,6 +239,21 @@ describe("characterization: DeckEditor commands", () => {
 
       expect(useDeckStore.getState().deckGridCols).toBe(4);
     });
+
+    // The search panel has a "List view" button too, so without a named toolbar a
+    // screen reader hears the same button twice with nothing to tell them apart,
+    // and the E2E specs had to pick the editor's by position (audit TT-11).
+    it("names the view toolbar, so its buttons can be told from the search panel's", () => {
+      renderEditor(talrandDeck());
+
+      const toolbar = screen.getByRole("toolbar", { name: "Deck view" });
+      expect(
+        within(toolbar).getByRole("button", { name: "List view" })
+      ).toHaveAttribute("aria-pressed", "false");
+      expect(
+        within(toolbar).getByRole("button", { name: "Grid view" })
+      ).toHaveAttribute("aria-pressed", "true");
+    });
   });
 
   describe("zones", () => {
@@ -413,10 +428,7 @@ describe("characterization: DeckEditor commands", () => {
       renderEditor(talrandDeck());
 
       await userEvent.click(
-        screen.getByRole("button", {
-          name: "×",
-          description: "Remove Talrand, Sky Summoner",
-        })
+        screen.getByRole("button", { name: "Remove Talrand, Sky Summoner" })
       );
 
       await waitFor(() =>
@@ -439,13 +451,18 @@ describe("characterization: DeckEditor commands", () => {
       ).toBeInTheDocument();
     });
 
-    it("currently names both commander remove buttons '×'; who they remove is only in their titles (pinned)", () => {
+    // The banner's button is named after its commander since TT-11. The row's
+    // own remove button, in MainZoneContent, still reads as its "×" content.
+    it("names the banner's remove button after its commander; currently the row's is still '×' (pinned)", () => {
       renderEditor(talrandDeck());
 
-      const removeButtons = screen.getAllByRole("button", { name: "×" });
       expect(
-        removeButtons.map((button) => button.getAttribute("title"))
-      ).toEqual(["Remove Talrand, Sky Summoner", "Remove commander"]);
+        screen.getByRole("button", { name: "Remove Talrand, Sky Summoner" })
+      ).toHaveAttribute("title", "Remove Talrand, Sky Summoner");
+      const unnamed = screen.getAllByRole("button", { name: "×" });
+      expect(unnamed.map((button) => button.getAttribute("title"))).toEqual([
+        "Remove commander",
+      ]);
     });
 
     it("removes the partner through the store from its banner", async () => {
@@ -468,10 +485,7 @@ describe("characterization: DeckEditor commands", () => {
       );
 
       await userEvent.click(
-        screen.getByRole("button", {
-          name: "×",
-          description: `Remove ${TYMNA.name}`,
-        })
+        screen.getByRole("button", { name: `Remove ${TYMNA.name}` })
       );
 
       await waitFor(() =>
