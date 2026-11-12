@@ -1,1 +1,9 @@
-pnpm exec lint-staged
+# --no-stash: lint-staged's default backup (`git stash create` + `git stash
+# store`) pushes and drops an entry on the git stash stack on every commit.
+# Our worktrees share that stack, so two concurrent commits could drop each
+# other's entry. Without the backup, a failed task leaves its modifications
+# in the index instead of reverting them. Partially staged files are still
+# protected: lint-staged 16.4.0 hides their unstaged hunks through a patch
+# file in .git/, not through the stash (README, "--no-stash" and
+# "--no-hide-partially-staged"). See docs/engineering/dx-ci-overview.md.
+pnpm exec lint-staged --no-stash

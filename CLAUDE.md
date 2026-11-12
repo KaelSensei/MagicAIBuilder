@@ -78,6 +78,8 @@ PRs follow this promotion chain:
 
 Feature and fix PRs are squash-merged into `dev`. Promotion branches are long-lived and must preserve the branch order above.
 
+**The pre-commit hook never touches the git stash.** `.husky/pre-commit` runs lint-staged with `--no-stash` because the stash stack is shared by every worktree and agents commit concurrently; keep it that way, and never use `git stash` yourself in a worktree ([dx-ci-overview.md](docs/engineering/dx-ci-overview.md#pre-commit-husky--lint-staged)).
+
 **Never enable `delete_branch_on_merge` on this repository.** It deletes the PR's _head_ branch, and on a promotion PR the head is `staging` or `dev`. Turning it on deleted `staging` outright the first time a promotion merged; it was restored from `dev`, which held the same commit, but the setting is fundamentally incompatible with promoting long-lived branches through PRs. Use `scripts/git-prune.sh` for cleanup instead — it has an explicit protected list.
 
 ### Documentation discipline
