@@ -120,6 +120,20 @@ const cardChangesSchema = z.object({
     .optional(),
 });
 
+const commandZoneChangeSchema = z.object({
+  removeCardIds: z.array(z.string()),
+  clearCommandSlots: z.array(z.enum(["commander", "partner", "companion"])),
+  addCards: z.array(addCardPayloadSchema),
+  commandZone: z.object({
+    commanderId: z.string().nullable().optional(),
+    commanderName: z.string().nullable().optional(),
+    partnerId: z.string().nullable().optional(),
+    companionId: z.string().nullable().optional(),
+    pairingType: pairingTypeSchema.optional(),
+  }),
+  expectedVersion: z.number().optional(),
+});
+
 const cardPatchSchema = z.object({
   category: z.enum(CARD_CATEGORIES).optional(),
   notes: z.string().nullable().optional(),
@@ -226,6 +240,11 @@ export function deckApiHandlers(client: DeckApiOperations): HttpHandler[] {
     http.post<DeckParams>(CARDS, ({ request, params }) =>
       answerBody(request, addCardPayloadSchema, (payload) =>
         client.addCard(params.deckId, payload)
+      )
+    ),
+    http.patch<DeckParams>(`${DECK}/command-zone`, ({ request, params }) =>
+      answerBody(request, commandZoneChangeSchema, (change) =>
+        client.changeCommandZone(params.deckId, change)
       )
     ),
     http.patch<DeckParams>(CARDS, ({ request, params }) =>

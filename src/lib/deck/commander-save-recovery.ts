@@ -1,3 +1,11 @@
+/**
+ * Rollbacks of the deck store's command-zone saves: when the one request that
+ * saves a commander or partner change fails, the zone that was on screen
+ * before it comes back, with the failure toast, unless a later choice has
+ * replaced the failed attempt on screen.
+ *
+ * @module deck/commander-save-recovery
+ */
 import { useToastStore } from "@/hooks/useToast";
 
 import { withLoadedCardCount } from "./loaded-card-count";
@@ -14,7 +22,6 @@ interface DecksState {
 /** A commander save or clear that may still need to be undone. */
 export interface FailedCommanderSave {
   readonly activeDeckId: string;
-  readonly commanderMetadataSaved: boolean;
   /** The command zone this attempt put on screen. */
   readonly attempted: CommandZone;
   /** The command zone on screen before this attempt. */
@@ -51,9 +58,9 @@ export function commandZoneOf(deck: Deck | undefined): CommandZone {
  * while that failed attempt is still the commander on screen.
  *
  * A later commander choice is left alone, and so is a partner chosen while the
- * save was pending. Once the deck record has been saved, the optimistic
- * commander matches the server and stays for the next reload, even if its card
- * row failed.
+ * save was pending. The save is one request the server stores all or nothing,
+ * so a failed attempt never left a partial record behind: the previous zone is
+ * exactly what the server still holds.
  *
  * @param setDeckState - Store update used only when a rollback is required
  * @param state - Store snapshot taken when the save failed
@@ -63,9 +70,8 @@ export function commandZoneOf(deck: Deck | undefined): CommandZone {
 export function restoreCommanderAfterFailedSave(
   setDeckState: (partial: DecksState) => void,
   state: DecksState,
-  save: FailedCommanderSave,
+  save: FailedCommanderSave
 ): void {
-  if (save.commanderMetadataSaved) return;
   const currentDeck = state.decks[save.activeDeckId];
   if (
     !currentDeck ||
@@ -88,7 +94,45 @@ export function restoreCommanderAfterFailedSave(
       }),
     },
   });
-  useToastStore
-    .getState()
-    .add("error", "Could not save commander — try again");
+  useToastStore.getState().add("error", "Could not save commander — try again");
+}
+
+/** A partner save that may still need to be undone. */
+export interface FailedPartnerSave {
+  readonly activeDeckId: string;
+  readonly attemptedPartnerId: string | null;
+  readonly previousPartner: DeckCard | null;
+  readonly previousPairingType: Deck["pairingType"];
+}
+
+/**
+ * Restores the previous partner when this attempt is still the partner on
+ * screen. A later partner choice is left alone. The save is one request the
+ * server stores all or nothing, so the previous partner is what it still holds.
+ *
+ * @param setDeckState - Store update used only when a rollback is required
+ * @param state - Store snapshot taken when the save failed
+ * @param save - The attempt that just failed
+ * @returns Nothing. Updates the store and shows an error when the partner is restored.
+ */
+export function restorePartnerAfterFailedSave(
+  setDeckState: (partial: DecksState) => void,
+  state: DecksState,
+  save: FailedPartnerSave
+): void {
+  const currentDeck = state.decks[save.activeDeckId];
+  const currentPartnerId = currentDeck?.partner?.id ?? null;
+  if (!currentDeck || currentPartnerId !== save.attemptedPartnerId) return;
+  setDeckState({
+    decks: {
+      ...state.decks,
+      [save.activeDeckId]: withLoadedCardCount({
+        ...currentDeck,
+        partner: save.previousPartner,
+        pairingType: save.previousPairingType,
+        updatedAt: new Date(),
+      }),
+    },
+  });
+  useToastStore.getState().add("error", "Could not save partner — try again");
 }

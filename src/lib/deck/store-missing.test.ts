@@ -54,6 +54,20 @@ vi.mock("@/lib/db/deck-api", () => ({
     isMaybeboard: payload.isMaybeboard ?? false,
   })),
   removeCard: vi.fn(async () => undefined),
+  changeCommandZone: vi.fn(
+    async (
+      deckId: string,
+      change: { readonly addCards: readonly Record<string, unknown>[] }
+    ) => ({
+      cards: change.addCards.map((payload) => ({
+        ...payload,
+        id: "saved-db-id",
+        deckId,
+        notes: null,
+      })),
+      version: 1,
+    })
+  ),
   updateCardCategory: vi.fn(async () => ({})),
   updateCardZone: vi.fn(async (_deckId: string, cardId: string, zone: string) => ({
     id: cardId,
@@ -246,15 +260,15 @@ describe("useDeckStore — promoteToCommander", () => {
   it("does nothing when no active deck", async () => {
     useDeckStore.setState({ activeDeckId: null });
     await useDeckStore.getState().promoteToCommander("card-1");
-    expect(deckApi.removeCard).not.toHaveBeenCalled();
+    expect(deckApi.changeCommandZone).not.toHaveBeenCalled();
   });
 
   it("does nothing when card not found", async () => {
     await useDeckStore.getState().promoteToCommander("nonexistent");
-    expect(deckApi.removeCard).not.toHaveBeenCalled();
+    expect(deckApi.changeCommandZone).not.toHaveBeenCalled();
   });
 
-  it("removes card from deck and sets it as commander", async () => {
+  it("removes card from deck and sets it as commander in one request", async () => {
     const card = makeDeckCard("card-1", "Atraxa, Praetors' Voice", {
       scryfallId: "scryfall-atraxa",
       typeLine: "Legendary Creature — Phyrexian Angel Horror",
@@ -272,6 +286,15 @@ describe("useDeckStore — promoteToCommander", () => {
     expect(state.decks["deck-1"].cards).toHaveLength(0);
     // Set as commander
     expect(state.decks["deck-1"].commander?.name).toBe("Atraxa, Praetors' Voice");
+    // The row leaves and the commander enters in the same request
+    expect(deckApi.changeCommandZone).toHaveBeenCalledWith(
+      "deck-1",
+      expect.objectContaining({
+        removeCardIds: ["card-1"],
+        commandZone: expect.objectContaining({ commanderId: "scryfall-atraxa" }),
+      })
+    );
+    expect(deckApi.removeCard).not.toHaveBeenCalled();
   });
 });
 

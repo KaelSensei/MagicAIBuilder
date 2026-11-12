@@ -324,6 +324,7 @@ interface SavePath {
 }
 
 const PATCH_DECK = `PATCH ${DECK_ROUTE}`;
+const PATCH_COMMAND_ZONE = `PATCH ${DECK_ROUTE}/command-zone`;
 const POST_CARD = `POST ${CARDS_ROUTE}`;
 const patchCard = (card: DeckCard) => `PATCH ${CARDS_ROUTE}/${card.id}`;
 const deleteCard = (card: DeckCard) => `DELETE ${CARDS_ROUTE}/${card.id}`;
@@ -387,10 +388,10 @@ const TRACKED: readonly SavePath[] = [
 /** Raise the flag, but are not counted: another write settling first clears it. */
 // prettier-ignore
 const UNTRACKED: readonly SavePath[] = [
-  { call: "setCommander", route: PATCH_DECK, run: (s) => s.setCommander(PURPHOROS) },
-  { call: "clearCommander", route: PATCH_DECK, run: (s) => s.clearCommander() },
-  { call: "setPartner", route: PATCH_DECK, run: (s) => s.setPartner(null) },
-  { call: "setCompanion", route: POST_CARD, run: (s) => s.setCompanion(LURRUS) },
+  { call: "setCommander", route: PATCH_COMMAND_ZONE, run: (s) => s.setCommander(PURPHOROS) },
+  { call: "clearCommander", route: PATCH_COMMAND_ZONE, run: (s) => s.clearCommander() },
+  { call: "setPartner", route: PATCH_COMMAND_ZONE, run: (s) => s.setPartner(null) },
+  { call: "setCompanion", route: PATCH_COMMAND_ZONE, run: (s) => s.setCompanion(LURRUS) },
   { call: "addDeckCard", route: POST_CARD, run: (s) => s.addDeckCard(ARCANE_SIGNET) },
   { call: "swapCardPrinting", route: patchCard(SOL_RING), run: (s) => s.swapCardPrinting(SOL_RING.id, SOL_RING_PRINTING) },
   { call: "updateDeckDescription", route: PATCH_DECK, run: (s) => s.updateDeckDescription(DECK_ID, "Go wide") },
@@ -537,8 +538,8 @@ describe("save failures the store does not surface", () => {
     expect(toastMessages()).toEqual([]);
   });
 
-  it("setCompanion currently shows the new companion only once its saves succeed (pinned; see B2-36)", async () => {
-    const gate = server.hold(`POST ${CARDS_ROUTE}`);
+  it("setCompanion currently shows the new companion only once its save succeeds (pinned; see B2-36)", async () => {
+    const gate = server.hold(PATCH_COMMAND_ZONE);
     const saving = useDeckStore.getState().setCompanion(LURRUS);
     await gate.arrived;
 
@@ -549,19 +550,15 @@ describe("save failures the store does not surface", () => {
     expect(deck()?.companion?.name).toBe("Lurrus of the Dream-Den");
   });
 
-  it("setCompanion currently keeps showing the replaced companion after the server deleted it, when a later save fails (pinned; see B2-36)", async () => {
+  it("setCompanion keeps showing the replaced companion, which the server still holds, when its one save fails", async () => {
     useDeckStore.setState({
       decks: { [DECK_ID]: openDeck({ companion: JEGANTHA }) },
     });
-    server.fail(`PATCH ${DECK_ROUTE}`);
+    server.fail(PATCH_COMMAND_ZONE);
 
     await useDeckStore.getState().setCompanion(LURRUS);
 
-    expect(server.routes).toEqual([
-      `DELETE ${CARDS_ROUTE}/${JEGANTHA.id}`,
-      `POST ${CARDS_ROUTE}`,
-      `PATCH ${DECK_ROUTE}`,
-    ]);
+    expect(server.routes).toEqual([PATCH_COMMAND_ZONE]);
     expect(deck()?.companion?.name).toBe("Jegantha, the Wellspring");
     expect(toastMessages()).toEqual(["Could not save companion — try again"]);
   });

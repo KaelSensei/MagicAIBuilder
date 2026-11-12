@@ -154,6 +154,10 @@ const CollectionBody = z.object({
 });
 const NamedBody = z.object({ name: z.string() }).passthrough();
 const CardBody = z.object({ name: z.string() }).passthrough();
+const CommandZoneBody = z.object({
+  addCards: z.array(CardBody),
+  commandZone: z.record(z.string(), z.unknown()),
+});
 
 /** What each endpoint received during the current test, in order. */
 let sent: string[] = [];
@@ -219,6 +223,22 @@ const handlers = [
     const patch = z.record(z.string(), z.unknown()).parse(await request.json());
     patchBodies.push(patch);
     return HttpResponse.json({ id: params.id, ...patch });
+  }),
+  // The commander goes through the one-request command-zone route: its deck
+  // fields land in `patchBodies` and its row in `cardBodies`, as before.
+  http.patch("/api/decks/:id/command-zone", async ({ request, params }) => {
+    const change = CommandZoneBody.parse(await request.json());
+    patchBodies.push(change.commandZone);
+    cardBodies.push(...change.addCards);
+    return HttpResponse.json({
+      cards: change.addCards.map((card, index) => ({
+        ...card,
+        id: `command-row-${index + 1}`,
+        deckId: params.id,
+        notes: null,
+      })),
+      version: 1,
+    });
   }),
   // A short pause per card lets overlapping requests show up in `mostCardsInFlight`.
   http.post("/api/decks/:id/cards", async ({ request, params }) => {
@@ -528,14 +548,13 @@ describe("DeckWizard flow (characterization)", () => {
       await generateDeck();
 
       await waitForDeckOpened();
-      // Six fixed requests plus one per distinct card: a 99-card deck of about
+      // Five fixed requests plus one per distinct card: a 99-card deck of about
       // sixty distinct cards costs about 65 round trips, all sequential.
       expect(sent).toEqual([
         "POST /api/ai/build",
         "POST /api/decks",
         "GET scryfall /cards/named",
-        "PATCH /api/decks/deck-ai-1",
-        "POST /api/decks/deck-ai-1/cards",
+        "PATCH /api/decks/deck-ai-1/command-zone",
         "POST scryfall /cards/collection",
         ...STREAMED_CARDS.map(() => "POST /api/decks/deck-ai-1/cards"),
       ]);
@@ -702,7 +721,7 @@ describe("DeckWizard flow (characterization)", () => {
       ).toBeInTheDocument();
       expect(
         sent.filter((line) => line === "POST /api/decks/deck-ai-1/cards")
-      ).toHaveLength(STREAMED_CARDS.length + 1);
+      ).toHaveLength(STREAMED_CARDS.length);
       expect(onComplete).not.toHaveBeenCalled();
       fireEvent.click(screen.getByRole("button", { name: "Open the deck" }));
       expect(onComplete).toHaveBeenCalledWith(DECK_ID);
@@ -861,9 +880,13 @@ describe("DeckWizard flow (characterization)", () => {
 
       await waitForDeckOpened();
       expect(storedDeckCards()).toEqual([]);
+      // Only the commander was saved, through the command-zone route.
+      expect(
+        sent.filter((line) => line.startsWith("PATCH /api/decks"))
+      ).toEqual(["PATCH /api/decks/deck-ai-1/command-zone"]);
       expect(
         sent.filter((line) => line === "POST /api/decks/deck-ai-1/cards")
-      ).toHaveLength(1);
+      ).toHaveLength(0);
       expect(logger.error).toHaveBeenCalledWith(
         "Batch import error",
         "DeckWizard",

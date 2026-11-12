@@ -10,7 +10,9 @@
  *
  * @module deck/testing/in-memory-deck-repository
  */
+import { rowFillsCommandSlot } from "@/lib/deck/bulk-edit-command-zone";
 import type {
+  CommandZoneWrite,
   DeckRepository,
   DeckWriteResult,
   DeckWriteTarget,
@@ -29,11 +31,24 @@ export interface InMemoryDeckRepository extends DeckRepository {
   readonly storedDeck: (deckId: string) => StoredDeckState | undefined;
 }
 
-/** A card change on the deck's rows: the next rows and what the write answers. */
-type CardChange<Value> = (cards: readonly StoredDeckCard[]) => {
+/**
+ * A change on a stored deck: its next rows, the deck fields it writes (none
+ * for a card write) and what the write answers.
+ */
+type DeckChange<Value> = (deck: StoredDeckState) => {
   readonly cards: readonly StoredDeckCard[];
+  readonly fields?: CommandZoneWrite["fields"];
   readonly value: Value;
 };
+
+/** An empty command zone, as a new deck records it. */
+const EMPTY_COMMAND_ZONE = {
+  commanderId: null,
+  commanderName: null,
+  partnerId: null,
+  companionId: null,
+  pairingType: "none",
+} as const;
 
 /**
  * @returns the row with this id
@@ -60,7 +75,7 @@ export function inMemoryDeckRepository(): InMemoryDeckRepository {
 
   const versionedWrite = <Value>(
     target: DeckWriteTarget,
-    change: CardChange<Value>
+    change: DeckChange<Value>
   ): DeckWriteResult<Value> => {
     const deck = decks.get(target.deckId);
     if (deck === undefined) return { kind: "not-found" };
@@ -69,9 +84,11 @@ export function inMemoryDeckRepository(): InMemoryDeckRepository {
       return { kind: "stale" };
     }
     // Runs before anything is stored: a throw leaves the deck as it was.
-    const next = change(deck.cards);
+    const next = change(deck);
     const version = deck.version + 1;
     decks.set(target.deckId, {
+      ...deck,
+      ...next.fields,
       version,
       updatedAt: new Date(),
       cards: next.cards,
@@ -83,17 +100,22 @@ export function inMemoryDeckRepository(): InMemoryDeckRepository {
     seedDeck: (cards) => {
       const deckId = `deck-${decks.size + 1}`;
       const rows = cards.map((card) => storeCard(deckId, card));
-      decks.set(deckId, { version: 0, updatedAt: SEEDED_AT, cards: rows });
+      decks.set(deckId, {
+        ...EMPTY_COMMAND_ZONE,
+        version: 0,
+        updatedAt: SEEDED_AT,
+        cards: rows,
+      });
       return { deckId, version: 0, cardIds: rows.map((row) => row.id) };
     },
     storedDeck: (deckId) => decks.get(deckId),
     addCard: async (target, card) =>
-      versionedWrite(target, (cards) => {
+      versionedWrite(target, ({ cards }) => {
         const row = storeCard(target.deckId, card);
         return { cards: [...cards, row], value: row };
       }),
     editCard: async (target, cardId, edit) =>
-      versionedWrite(target, (cards) => {
+      versionedWrite(target, ({ cards }) => {
         const current = cardOf(cards, cardId);
         const row: StoredDeckCard = { ...current, ...edit };
         return {
@@ -102,7 +124,7 @@ export function inMemoryDeckRepository(): InMemoryDeckRepository {
         };
       }),
     removeCard: async (target, cardId) =>
-      versionedWrite(target, (cards) => {
+      versionedWrite(target, ({ cards }) => {
         const removed = cardOf(cards, cardId);
         return {
           cards: cards.filter((card) => card !== removed),
@@ -110,6 +132,29 @@ export function inMemoryDeckRepository(): InMemoryDeckRepository {
         };
       }),
     removeAllCards: async (target) =>
-      versionedWrite(target, (cards) => ({ cards: [], value: cards.length })),
+      versionedWrite(target, ({ cards }) => ({
+        cards: [],
+        value: cards.length,
+      })),
+    writeCommandZone: async (target, write) =>
+      versionedWrite(target, ({ cards }) => {
+        // `cardOf` throws for a row the deck does not hold, as the adapter does.
+        const leaving = new Set(
+          write.removeCardIds.map((cardId) => cardOf(cards, cardId))
+        );
+        const kept = cards.filter(
+          (card) =>
+            !leaving.has(card) &&
+            !write.clearSlots.some((slot) => rowFillsCommandSlot(card, slot))
+        );
+        const added = write.addCards.map((card) =>
+          storeCard(target.deckId, card)
+        );
+        return {
+          cards: [...kept, ...added],
+          fields: write.fields,
+          value: added,
+        };
+      }),
   };
 }

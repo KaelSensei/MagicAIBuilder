@@ -43,6 +43,31 @@ export const COMMAND_SLOT_ROWS: Readonly<
   companion: { isCommander: false, isPartner: false, category: "companion" },
 };
 
+/**
+ * Whether a stored row fills a command-zone slot: it carries every flag
+ * `COMMAND_SLOT_ROWS` names for that slot. The server clears a slot with the
+ * same flags (`deleteMany`), so a fake and the browser agree with it.
+ *
+ * @param row - the flags of a stored row
+ * @param slot - the slot to test
+ * @returns true when the row fills the slot
+ */
+export function rowFillsCommandSlot(
+  row: {
+    readonly isCommander: boolean;
+    readonly isPartner: boolean;
+    readonly category: string;
+  },
+  slot: CommandSlot
+): boolean {
+  const role = COMMAND_SLOT_ROWS[slot];
+  return (
+    (role.isCommander === undefined || role.isCommander === row.isCommander) &&
+    (role.isPartner === undefined || role.isPartner === row.isPartner) &&
+    (role.category === undefined || role.category === row.category)
+  );
+}
+
 /** How the edited text leaves one command-zone slot. */
 export type CommandSlotEdit =
   | { readonly kind: "keep"; readonly card: DeckCard }

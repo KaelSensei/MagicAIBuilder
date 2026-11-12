@@ -1,4 +1,8 @@
-/** The deck store restores the command zone when a commander or partner save fails. */
+/**
+ * The deck store restores the command zone when a commander save fails. A
+ * commander change is one request (`changeCommandZone`) the server stores all
+ * or nothing, so a failure always means the previous zone is still saved.
+ */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { ScryfallCard } from "@/lib/scryfall/types";
@@ -10,9 +14,7 @@ import { useDeckStore } from "./store";
 
 const deckApi = installFakeDeckClient();
 const mocks = {
-  updateDeck: deckApi.updateDeck,
-  addCard: deckApi.addCard,
-  removeCard: deckApi.removeCard,
+  changeCommandZone: deckApi.changeCommandZone,
   addToast: recordToasts(),
 };
 
@@ -69,7 +71,10 @@ function scryfallCommander(overrides: Partial<ScryfallCard>): ScryfallCard {
 
 const THRASIOS = commandCard("thrasios", "Thrasios, Triton Hero");
 const TYMNA = commandCard("tymna", "Tymna the Weaver");
-const ATRAXA = scryfallCommander({ id: "atraxa", name: "Atraxa, Praetors' Voice" });
+const ATRAXA = scryfallCommander({
+  id: "atraxa",
+  name: "Atraxa, Praetors' Voice",
+});
 const PARTNER_LINE =
   "Partner (You can have two commanders if both have partner.)";
 const KRAUM = scryfallCommander({
@@ -124,8 +129,8 @@ describe("commander save recovery", () => {
     seedPartnerPair();
   });
 
-  it("restores the previous commander, partner and pairing when saving a replacement fails", async () => {
-    mocks.updateDeck.mockRejectedValueOnce(new Error("Save failed"));
+  it("restores the previous commander, partner and pairing when the one request that saves a replacement fails", async () => {
+    mocks.changeCommandZone.mockRejectedValueOnce(new Error("Save failed"));
 
     await useDeckStore.getState().setCommander(ATRAXA);
 
@@ -136,44 +141,34 @@ describe("commander save recovery", () => {
     });
     expect(mocks.addToast).toHaveBeenCalledWith(
       "error",
-      expect.stringContaining("commander"),
+      expect.stringContaining("commander")
     );
-    expect(mocks.addCard).not.toHaveBeenCalled();
-  });
-
-  it("keeps the saved commander when only its card row fails", async () => {
-    mocks.addCard.mockRejectedValueOnce(new Error("Save failed"));
-
-    await useDeckStore.getState().setCommander(ATRAXA);
-
-    expect(commandZone().commander?.id).toBe("atraxa");
-    expect(mocks.addToast).not.toHaveBeenCalledWith(
-      "error",
-      expect.stringContaining("commander"),
-    );
+    expect(mocks.changeCommandZone).toHaveBeenCalledTimes(1);
   });
 
   it("does not roll back a newer commander when an older save fails", async () => {
     const olderSave = Promise.withResolvers<void>();
-    mocks.updateDeck.mockReturnValueOnce(olderSave.promise);
+    mocks.changeCommandZone.mockReturnValueOnce(olderSave.promise);
 
     const failedAttempt = useDeckStore.getState().setCommander(ATRAXA);
-    await useDeckStore.getState().setCommander(
-      scryfallCommander({ id: "kenrith", name: "Kenrith, the Returned King" }),
-    );
+    await useDeckStore
+      .getState()
+      .setCommander(
+        scryfallCommander({ id: "kenrith", name: "Kenrith, the Returned King" })
+      );
     olderSave.reject(new Error("Save failed"));
     await failedAttempt;
 
     expect(commandZone().commander?.scryfallId).toBe("kenrith");
     expect(mocks.addToast).not.toHaveBeenCalledWith(
       "error",
-      expect.stringContaining("commander"),
+      expect.stringContaining("commander")
     );
   });
 
   it("keeps a partner chosen while the failed commander save was pending", async () => {
     const commanderSave = Promise.withResolvers<void>();
-    mocks.updateDeck.mockReturnValueOnce(commanderSave.promise);
+    mocks.changeCommandZone.mockReturnValueOnce(commanderSave.promise);
 
     const failedAttempt = useDeckStore.getState().setCommander(KRAUM);
     await useDeckStore.getState().setPartner(ISHAI);
@@ -184,12 +179,12 @@ describe("commander save recovery", () => {
     expect(commandZone().partner?.scryfallId).toBe("ishai");
     expect(mocks.addToast).toHaveBeenCalledWith(
       "error",
-      expect.stringContaining("commander"),
+      expect.stringContaining("commander")
     );
   });
 
   it("restores the previous commander when clearing it fails", async () => {
-    mocks.updateDeck.mockRejectedValueOnce(new Error("Save failed"));
+    mocks.changeCommandZone.mockRejectedValueOnce(new Error("Save failed"));
 
     await useDeckStore.getState().clearCommander();
 
@@ -200,7 +195,7 @@ describe("commander save recovery", () => {
     });
     expect(mocks.addToast).toHaveBeenCalledWith(
       "error",
-      expect.stringContaining("commander"),
+      expect.stringContaining("commander")
     );
   });
 });

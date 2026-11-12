@@ -111,6 +111,7 @@ const ROUTE_POLICIES: Readonly<
     DELETE: "deck-owner",
   },
   "decks/[id]/cards/[cardId]": { PATCH: "deck-owner", DELETE: "deck-owner" },
+  "decks/[id]/command-zone": { PATCH: "deck-owner" },
   "decks/[id]/duplicate": { POST: "deck-owner" },
   "decks/[id]/folder": { PATCH: "deck-owner" },
   "decks/[id]/fork": { POST: "session" },

@@ -38,12 +38,16 @@ import type { BulkEdit } from "./bulk-edit";
 import {
   commandZoneOf,
   restoreCommanderAfterFailedSave,
+  restorePartnerAfterFailedSave,
   type CommandZone,
 } from "./commander-save-recovery";
+import { withSavedCommandRows } from "./command-zone-rows";
 import {
-  removeReplacedCommandRows,
-  withSavedCommandRow,
-} from "./command-zone-rows";
+  commandZoneRequest,
+  savedRowsBySlot,
+  type CommandSlotEdit,
+  type CommandZoneEdit,
+} from "./command-zone-change";
 import {
   clearGuestDeck,
   createGuestDeck,
@@ -392,52 +396,6 @@ let latestDeckListRequest = 0;
 const latestRenameRequests = new Map<string, symbol>();
 const latestTagSaves = new Map<string, symbol>();
 
-/** A partner save that may still need to be undone. */
-interface FailedPartnerSave {
-  readonly activeDeckId: string;
-  readonly partnerMetadataSaved: boolean;
-  readonly attemptedPartnerId: string | null;
-  readonly previousPartner: DeckCard | null;
-  readonly previousPairingType: Deck["pairingType"];
-}
-
-/**
- * Restores the previous partner when the deck record was not saved and this
- * attempt is still the partner on screen.
- *
- * A later partner choice is left alone. Once the deck update has resolved, the
- * optimistic partner matches the saved record and stays for the next reload.
- *
- * @param setDeckState - Store update used only when a rollback is required
- * @param state - Store snapshot taken when the save failed
- * @param save - The attempt that just failed
- * @returns Nothing. Updates the store and shows an error when the partner is restored.
- */
-function restorePartnerAfterFailedSave(
-  setDeckState: (partial: Pick<DeckStore, "decks">) => void,
-  state: DeckStore,
-  save: FailedPartnerSave,
-): void {
-  if (save.partnerMetadataSaved) return;
-  const currentDeck = state.decks[save.activeDeckId];
-  const currentPartnerId = currentDeck?.partner?.id ?? null;
-  if (!currentDeck || currentPartnerId !== save.attemptedPartnerId) return;
-  setDeckState({
-    decks: {
-      ...state.decks,
-      [save.activeDeckId]: withLoadedCardCount({
-        ...currentDeck,
-        partner: save.previousPartner,
-        pairingType: save.previousPairingType,
-        updatedAt: new Date(),
-      }),
-    },
-  });
-  useToastStore
-    .getState()
-    .add("error", "Could not save partner — try again");
-}
-
 /** A tag save that may still need to be undone. */
 interface FailedTagSave {
   readonly deckId: string;
@@ -499,6 +457,188 @@ function restoreTagsAfterFailedSave(
  * @param operation - Store action name, for the error log
  * @returns Resolves once the save has settled, whether or not it succeeded.
  */
+/**
+ * Shows a command zone on the active deck, before or after its save.
+ *
+ * @param set - Store update
+ * @param deckId - Deck being changed
+ * @param zone - The commander, partner and pairing to show
+ */
+function showCommandZone(
+  set: StoreApi<DeckStore>["setState"],
+  deckId: string,
+  zone: CommandZone
+): void {
+  set((state) => ({
+    decks: {
+      ...state.decks,
+      [deckId]: withLoadedCardCount({
+        ...state.decks[deckId],
+        ...zone,
+        updatedAt: new Date(),
+      }),
+    },
+  }));
+}
+
+/**
+ * Sends one command-zone change, which the server stores in one transaction,
+ * and gives the commander and partner on screen their saved row ids. Rejects
+ * as the request does; the caller then restores the zone it put on screen.
+ *
+ * @param set - Store update
+ * @param deckId - Deck being changed
+ * @param edit - The planned change
+ * @returns The rows the server added and the deck's new version
+ */
+async function sendCommandZoneChange(
+  set: StoreApi<DeckStore>["setState"],
+  deckId: string,
+  edit: CommandZoneEdit
+): Promise<deckApi.CommandZoneSaved> {
+  const saved = await deckApi.changeCommandZone(deckId, commandZoneRequest(edit));
+  set((state) => ({
+    decks: withSavedCommandRows(state.decks, deckId, saved.cards),
+  }));
+  return saved;
+}
+
+/**
+ * A card as the commander slot holds it: one copy, addressed by its printing
+ * id until its row is saved, flagged from the store's Game Changer and banned
+ * lists.
+ *
+ * @param card - The card as the search or the deck list holds it
+ * @param lists - The store's Game Changer and banned names
+ * @returns The commander to show and to save
+ */
+function commanderCardOf(
+  card: DeckCard,
+  lists: Pick<DeckStore, "gameChangerNames" | "bannedNames">
+): DeckCard {
+  const printingId = card.scryfallId ?? card.id;
+  return {
+    ...card,
+    id: printingId,
+    scryfallId: printingId,
+    category: "commander",
+    quantity: 1,
+    zone: "main",
+    isMaybeboard: false,
+    isGameChanger: lists.gameChangerNames.has(card.name),
+    isBanned: lists.bannedNames.has(card.name),
+  };
+}
+
+/** The store's update and read, for a helper that runs a whole save. */
+interface StoreAccess {
+  readonly set: StoreApi<DeckStore>["setState"];
+  readonly get: () => DeckStore;
+}
+
+/** A commander to seat, and the deck-list card it was promoted from, if any. */
+interface CommanderSeat {
+  /** The commander, from {@link commanderCardOf}. */
+  readonly commander: DeckCard;
+  /** The deck-list card the commander was promoted from; it leaves the list with the same request. */
+  readonly promoted?: DeckCard;
+}
+
+/**
+ * Seats a commander: the pairing it keeps or opens, the zone on screen, the
+ * one request, and the rollback with its toast when the request fails.
+ *
+ * @param store - Store update and read
+ * @param deckId - Deck being changed
+ * @param seat - The commander, and the deck-list card it came from
+ */
+async function seatCommander(
+  { set, get }: StoreAccess,
+  deckId: string,
+  { commander, promoted }: CommanderSeat
+): Promise<void> {
+  const previous = commandZoneOf(get().decks[deckId]);
+  // CR 702.124: the partner stays only when the new commander can pair with it.
+  const keptPairing = previous.partner
+    ? pairCommanders(commander, previous.partner)
+    : null;
+  const pairingType = keptPairing ?? detectPairingType(commander);
+  const attempted: CommandZone = {
+    commander,
+    pairingType,
+    partner: keptPairing ? previous.partner : null,
+  };
+  const partnerLeaves = previous.partner !== null && attempted.partner === null;
+  // Where the promoted card sat, so a failed save puts it back in place.
+  const listedBefore = promoted ? uniqueDeckCards(get().decks[deckId]) : [];
+  const followingCardIds = new Set(
+    listedBefore
+      .slice(listedBefore.findIndex((card) => card.id === promoted?.id) + 1)
+      .map((card) => card.id)
+  );
+
+  if (commander.isGameChanger) {
+    useToastStore
+      .getState()
+      .add(
+        "warning",
+        `⚡ ${commander.name} is a Game Changer — your deck is automatically Bracket 3 minimum.`
+      );
+  }
+
+  // Optimistic: the promoted card leaves the list as the new zone appears.
+  set((state) => {
+    const deck = state.decks[deckId];
+    const listed = promoted
+      ? updateDeckCards(deck, (cards) => withoutCard(cards, promoted.id))
+      : deck;
+    return {
+      decks: {
+        ...state.decks,
+        [deckId]: withLoadedCardCount({ ...listed, ...attempted, updatedAt: new Date() }),
+      },
+    };
+  });
+
+  set({ isSyncing: true });
+  try {
+    const slots: CommandSlotEdit[] = [{ slot: "commander", card: commander }];
+    if (partnerLeaves) slots.push({ slot: "partner", card: null });
+    await sendCommandZoneChange(set, deckId, {
+      slots,
+      fields: {
+        commanderId: commander.scryfallId ?? commander.id,
+        // Denormalised so community discovery can match the slug in SQL
+        commanderName: commander.name,
+        pairingType,
+        // A partner the new commander cannot keep leaves the record too
+        ...(partnerLeaves ? { partnerId: null } : {}),
+      },
+      removeCardIds: promoted ? [promoted.id] : [],
+    });
+  } catch (err) {
+    logger.error("Unexpected error", "setCommander", err);
+    if (promoted) {
+      set((state) => {
+        const deck = state.decks[deckId];
+        return deck
+          ? {
+              decks: {
+                ...state.decks,
+                [deckId]: updateDeckCards(deck, (cards) =>
+                  restoreRemovedCard(cards, promoted, followingCardIds)
+                ),
+              },
+            }
+          : state;
+      });
+    }
+    restoreCommanderAfterFailedSave(set, get(), { activeDeckId: deckId, attempted, previous });
+  } finally {
+    set({ isSyncing: hasPendingSaves() });
+  }
+}
+
 async function saveDeckTags(
   set: StoreApi<DeckStore>["setState"],
   get: () => DeckStore,
@@ -555,16 +695,18 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     };
   })(),
 
-  setGameChangerNames: (names) => set((state) =>
-    setsContainSameValues(state.gameChangerNames, names)
-      ? state
-      : { gameChangerNames: names }
-  ),
-  setBannedNames: (names) => set((state) =>
-    setsContainSameValues(state.bannedNames, names)
-      ? state
-      : { bannedNames: names }
-  ),
+  setGameChangerNames: (names) =>
+    set((state) =>
+      setsContainSameValues(state.gameChangerNames, names)
+        ? state
+        : { gameChangerNames: names }
+    ),
+  setBannedNames: (names) =>
+    set((state) =>
+      setsContainSameValues(state.bannedNames, names)
+        ? state
+        : { bannedNames: names }
+    ),
   setSearchViewMode: (mode) => set({ searchViewMode: mode }),
   setDeckViewMode: (mode) => set({ deckViewMode: mode }),
   setDeckGridCols: (cols) => set({ deckGridCols: cols }),
@@ -749,13 +891,17 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       const activeDeckId = last.deckId;
       const deck = get().decks[activeDeckId];
       if (!deck) return;
-      const card = uniqueDeckCards(deck).find((candidate) => candidate.id === last.cardId);
+      const card = uniqueDeckCards(deck).find(
+        (candidate) => candidate.id === last.cardId
+      );
       if (!card) return;
       if (card.zone === last.from) return true;
       await get().moveCardToZone(last.cardId, last.from, { recordUndo: false });
       const updated = get().decks[activeDeckId];
       if (!updated) return;
-      const restored = uniqueDeckCards(updated).find((candidate) => candidate.id === last.cardId);
+      const restored = uniqueDeckCards(updated).find(
+        (candidate) => candidate.id === last.cardId
+      );
       if (restored?.zone !== last.from) {
         set((state) => ({ undoStack: [...state.undoStack, last] }));
         return;
@@ -854,7 +1000,9 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         removeCardIds: edit.removedCardIds,
         quantityChanges: edit.quantityChanges,
         addCards: [
-          ...commandCards.map(({ card, slot }) => commandCardPayload(flagged(card), slot)),
+          ...commandCards.map(({ card, slot }) =>
+            commandCardPayload(flagged(card), slot)
+          ),
           ...additions.map(({ card, quantity, zone }) =>
             addCardPayload({ ...flagged(card), quantity, zone })
           ),
@@ -866,7 +1014,9 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       set((state) => ({
         decks: { ...state.decks, [activeDeckId]: apiDeckToStoreDeck(apiDeck) },
         // Earlier entries name rows the edit may have removed or re-added.
-        undoStack: state.undoStack.filter((action) => action.deckId !== activeDeckId),
+        undoStack: state.undoStack.filter(
+          (action) => action.deckId !== activeDeckId
+        ),
       }));
     } finally {
       set({ isSyncing: hasPendingSaves() });
@@ -906,7 +1056,8 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         loadError: err instanceof Error ? err.message : "Failed to load decks",
       });
     } finally {
-      if (requestId === latestDeckListRequest) set({ isSyncing: hasPendingSaves() });
+      if (requestId === latestDeckListRequest)
+        set({ isSyncing: hasPendingSaves() });
     }
   },
 
@@ -1009,7 +1160,8 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         if (
           latestRenameRequests.get(id) !== request ||
           currentDeck?.name !== name
-        ) return state;
+        )
+          return state;
         return {
           decks: {
             ...state.decks,
@@ -1056,7 +1208,8 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       const fullDeck = apiDeckToStoreDeck(apiDeck);
       set((state) => ({
         decks: { ...state.decks, [id]: fullDeck },
-        deckOpenError: state.deckOpenError?.deckId === id ? null : state.deckOpenError,
+        deckOpenError:
+          state.deckOpenError?.deckId === id ? null : state.deckOpenError,
       }));
     } catch (err) {
       logger.error("Unexpected error", "setActiveDeck.lazyLoad", err);
@@ -1127,104 +1280,10 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
   },
 
   setCommander: async (card: ScryfallCard) => {
-    const { activeDeckId, decks, gameChangerNames, bannedNames } = get();
-    if (!activeDeckId) return;
-    const previous = commandZoneOf(decks[activeDeckId]);
-    let commanderMetadataSaved = false;
-    const deckCard = makeDeckCard(card);
-    deckCard.scryfallId = card.id;
-    deckCard.category = "commander";
-    deckCard.isGameChanger = gameChangerNames.has(card.name);
-    deckCard.isBanned = bannedNames.has(card.name);
-
-    if (deckCard.isGameChanger) {
-      useToastStore
-        .getState()
-        .add(
-          "warning",
-          `⚡ ${card.name} is a Game Changer — your deck is automatically Bracket 3 minimum.`
-        );
-    }
-
-    // CR 702.124: the partner stays only when the new commander can pair with it.
-    const keptPairing = previous.partner
-      ? pairCommanders(deckCard, previous.partner)
-      : null;
-    const pairingType = keptPairing ?? detectPairingType(deckCard);
-    const attempted: CommandZone = {
-      commander: deckCard,
-      pairingType,
-      partner: keptPairing ? previous.partner : null,
-    };
-
-    // Optimistic update — also update pairingType and clear partner if new commander doesn't support it
-    set((state) => ({
-      decks: {
-        ...state.decks,
-        [activeDeckId]: withLoadedCardCount({
-          ...state.decks[activeDeckId],
-          ...attempted,
-          updatedAt: new Date(),
-        }),
-      },
-    }));
-
-    set({ isSyncing: true });
-    try {
-      await deckApi.updateDeck(activeDeckId, {
-        commanderId: card.id,
-        // Denormalised so community discovery can match the slug in SQL
-        commanderName: deckCard.name,
-        pairingType,
-        // A partner the new commander cannot keep leaves the record too
-        ...(previous.partner && !attempted.partner ? { partnerId: null } : {}),
-      });
-      commanderMetadataSaved = true;
-      // Persist the commander card record
-      const saved = await deckApi.addCard(activeDeckId, {
-        scryfallId: card.id,
-        name: deckCard.name,
-        manaCost: deckCard.manaCost,
-        cmc: deckCard.cmc,
-        typeLine: deckCard.typeLine,
-        oracleText: deckCard.oracleText,
-        power: deckCard.power ?? null,
-        toughness: deckCard.toughness ?? null,
-        colorIdentity: deckCard.colorIdentity,
-        isGameChanger: deckCard.isGameChanger,
-        isBanned: deckCard.isBanned,
-        price: deckCard.price,
-        imageUri: deckCard.imageUri,
-        artCropUri: deckCard.artCropUri,
-        category: "commander",
-        quantity: 1,
-        isCommander: true,
-        isPartner: false,
-      });
-      set((state) => ({
-        decks: withSavedCommandRow(state.decks, {
-          deckId: activeDeckId,
-          slot: "commander",
-          placedId: deckCard.id,
-          rowId: saved.id,
-        }),
-      }));
-      await removeReplacedCommandRows(
-        activeDeckId,
-        [previous.commander, previous.partner],
-        [attempted.commander, attempted.partner]
-      );
-    } catch (err) {
-      logger.error("Unexpected error", "setCommander", err);
-      restoreCommanderAfterFailedSave(set, get(), {
-        activeDeckId,
-        commanderMetadataSaved,
-        attempted,
-        previous,
-      });
-    } finally {
-      set({ isSyncing: hasPendingSaves() });
-    }
+    const state = get();
+    if (!state.activeDeckId) return;
+    const commander = commanderCardOf(makeDeckCard(card), state);
+    await seatCommander({ set, get }, state.activeDeckId, { commander });
   },
 
   clearCommander: async () => {
@@ -1237,34 +1296,25 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       partner: null,
       pairingType: "none",
     };
-    set((state) => ({
-      decks: {
-        ...state.decks,
-        [activeDeckId]: withLoadedCardCount({
-          ...state.decks[activeDeckId],
-          ...attempted,
-          updatedAt: new Date(),
-        }),
-      },
-    }));
+    showCommandZone(set, activeDeckId, attempted);
     set({ isSyncing: true });
     try {
-      await deckApi.updateDeck(activeDeckId, {
-        commanderId: null,
-        commanderName: null,
-        partnerId: null,
-        pairingType: "none",
+      await sendCommandZoneChange(set, activeDeckId, {
+        slots: [
+          { slot: "commander", card: null },
+          { slot: "partner", card: null },
+        ],
+        fields: {
+          commanderId: null,
+          commanderName: null,
+          partnerId: null,
+          pairingType: "none",
+        },
       });
-      await removeReplacedCommandRows(
-        activeDeckId,
-        [previous.commander, previous.partner],
-        []
-      );
     } catch (err) {
       logger.error("Unexpected error", "clearCommander", err);
       restoreCommanderAfterFailedSave(set, get(), {
         activeDeckId,
-        commanderMetadataSaved: false,
         attempted,
         previous,
       });
@@ -1279,12 +1329,9 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     const commander = decks[activeDeckId]?.commander ?? null;
     const previousPartner = decks[activeDeckId]?.partner ?? null;
     const previousPairingType = decks[activeDeckId]?.pairingType ?? "none";
-    let partnerMetadataSaved = false;
-    const deckCard = card ? makeDeckCard(card) : null;
-    if (card && deckCard) {
-      deckCard.scryfallId = card.id;
-      deckCard.category = "commander";
-    }
+    const deckCard: DeckCard | null = card
+      ? { ...makeDeckCard(card), scryfallId: card.id, category: "commander" }
+      : null;
 
     // CR 702.124: a second commander joins only through a partner ability
     // that both cards allow.
@@ -1307,66 +1354,24 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         ? partnerPairingType
         : previousPairingType);
 
-    // Optimistic update
-    set((state) => ({
-      decks: {
-        ...state.decks,
-        [activeDeckId]: withLoadedCardCount({
-          ...state.decks[activeDeckId],
-          partner: deckCard,
-          pairingType: effectivePairingType,
-          updatedAt: new Date(),
-        }),
-      },
-    }));
-
+    showCommandZone(set, activeDeckId, {
+      commander,
+      partner: deckCard,
+      pairingType: effectivePairingType,
+    });
     set({ isSyncing: true });
     try {
-      await deckApi.updateDeck(activeDeckId, {
-        partnerId: card?.id ?? null,
-        pairingType: effectivePairingType,
+      await sendCommandZoneChange(set, activeDeckId, {
+        slots: [{ slot: "partner", card: deckCard }],
+        fields: {
+          partnerId: card?.id ?? null,
+          pairingType: effectivePairingType,
+        },
       });
-      partnerMetadataSaved = true;
-      if (card && deckCard) {
-        const saved = await deckApi.addCard(activeDeckId, {
-          scryfallId: card.id,
-          name: deckCard.name,
-          manaCost: deckCard.manaCost,
-          cmc: deckCard.cmc,
-          typeLine: deckCard.typeLine,
-          oracleText: deckCard.oracleText,
-          power: deckCard.power ?? null,
-          toughness: deckCard.toughness ?? null,
-          colorIdentity: deckCard.colorIdentity,
-          isGameChanger: deckCard.isGameChanger,
-          isBanned: deckCard.isBanned,
-          price: deckCard.price,
-          imageUri: deckCard.imageUri,
-          artCropUri: deckCard.artCropUri,
-          category: "commander",
-          quantity: 1,
-          isCommander: true,
-          isPartner: true,
-        });
-        set((state) => ({
-          decks: withSavedCommandRow(state.decks, {
-            deckId: activeDeckId,
-            slot: "partner",
-            placedId: deckCard.id,
-            rowId: saved.id,
-          }),
-        }));
-      }
-      await removeReplacedCommandRows(
-        activeDeckId,
-        [previousPartner],
-        [deckCard]
-      );
     } catch (err) {
       logger.error("Unexpected error", "setPartner", err);
       restorePartnerAfterFailedSave(set, get(), {
         activeDeckId,
-        partnerMetadataSaved,
         attemptedPartnerId: deckCard?.id ?? null,
         previousPartner,
         previousPairingType,
@@ -1382,14 +1387,14 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     const deck = decks[activeDeckId];
     if (!deck) return;
 
-    const prev = deck.companion;
-
     if (card === null) {
-      if (!prev) return;
+      if (!deck.companion) return;
       set({ isSyncing: true });
       try {
-        await deckApi.removeCard(activeDeckId, prev.id);
-        await deckApi.updateDeck(activeDeckId, { companionId: null });
+        await sendCommandZoneChange(set, activeDeckId, {
+          slots: [{ slot: "companion", card: null }],
+          fields: { companionId: null },
+        });
         set((state) => ({
           decks: {
             ...state.decks,
@@ -1432,35 +1437,16 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       return;
     }
 
-    const deckCard = makeDeckCard(card);
-    deckCard.category = "companion" as import("./types").CardCategory;
+    const deckCard: DeckCard = { ...makeDeckCard(card), category: "companion" };
 
+    // The companion appears once saved (B2-36 covers making it optimistic).
     set({ isSyncing: true });
     try {
-      if (prev) {
-        await deckApi.removeCard(activeDeckId, prev.id);
-      }
-      const created = await deckApi.addCard(activeDeckId, {
-        scryfallId: card.id,
-        name: deckCard.name,
-        manaCost: deckCard.manaCost,
-        cmc: deckCard.cmc,
-        typeLine: deckCard.typeLine,
-        oracleText: deckCard.oracleText,
-        power: deckCard.power ?? null,
-        toughness: deckCard.toughness ?? null,
-        colorIdentity: deckCard.colorIdentity,
-        isGameChanger: deckCard.isGameChanger,
-        isBanned: deckCard.isBanned,
-        price: deckCard.price,
-        imageUri: deckCard.imageUri,
-        artCropUri: deckCard.artCropUri,
-        category: "companion" as import("./types").CardCategory,
-        quantity: 1,
-        isCommander: false,
-        isPartner: false,
+      const saved = await sendCommandZoneChange(set, activeDeckId, {
+        slots: [{ slot: "companion", card: deckCard }],
+        fields: { companionId: card.id },
       });
-      await deckApi.updateDeck(activeDeckId, { companionId: card.id });
+      const row = savedRowsBySlot(saved.cards).companion;
       set((state) => ({
         decks: {
           ...state.decks,
@@ -1468,8 +1454,8 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
             ...state.decks[activeDeckId],
             companion: {
               ...deckCard,
-              id: created.id,
-              scryfallId: created.scryfallId,
+              id: row?.id ?? deckCard.id,
+              scryfallId: row?.scryfallId ?? card.id,
             },
             updatedAt: new Date(),
           }),
@@ -1579,7 +1565,9 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
           [activeDeckId]: {
             ...state.decks[activeDeckId],
             ...updateDeckCards(state.decks[activeDeckId], (cards) =>
-              cards.map((c) => (c.id === deckCard.id ? { ...c, id: saved.id } : c))
+              cards.map((c) =>
+                c.id === deckCard.id ? { ...c, id: saved.id } : c
+              )
             ),
           },
         },
@@ -1599,12 +1587,15 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         set((state) => ({
           decks: {
             ...state.decks,
-            [activeDeckId]: updateDeckCards(state.decks[activeDeckId], (cards) =>
-              withoutCard(cards, deckCard.id)
+            [activeDeckId]: updateDeckCards(
+              state.decks[activeDeckId],
+              (cards) => withoutCard(cards, deckCard.id)
             ),
           },
         }));
-        useToastStore.getState().add("error", "Could not add card. Please retry.");
+        useToastStore
+          .getState()
+          .add("error", "Could not add card. Please retry.");
       }
     } finally {
       pendingCardAdditionsAndRemovals -= 1;
@@ -1679,7 +1670,9 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
           [activeDeckId]: {
             ...state.decks[activeDeckId],
             ...updateDeckCards(state.decks[activeDeckId], (cards) =>
-              cards.map((c) => (c.id === enriched.id ? { ...c, id: saved.id } : c))
+              cards.map((c) =>
+                c.id === enriched.id ? { ...c, id: saved.id } : c
+              )
             ),
           },
         },
@@ -1806,7 +1799,12 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
               decks: {
                 ...state.decks,
                 [activeDeckId]: updateDeckCards(currentDeck, (cards) =>
-                  restoreCardCategory(cards, cardId, category, pending.confirmedCategory)
+                  restoreCardCategory(
+                    cards,
+                    cardId,
+                    category,
+                    pending.confirmedCategory
+                  )
                 ),
               },
             };
@@ -1914,63 +1912,16 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
   },
 
   promoteToCommander: async (cardId) => {
-    const { activeDeckId, decks } = get();
+    const state = get();
+    const { activeDeckId } = state;
     if (!activeDeckId) return;
-    const deck = decks[activeDeckId];
-    if (!deck) return;
-    const card = deck.cards.find((c) => c.id === cardId);
+    const card = state.decks[activeDeckId]?.cards.find((c) => c.id === cardId);
     if (!card) return;
-
-    // Build a minimal ScryfallCard from the DeckCard to reuse setCommander
-    const scryfallCard = {
-      id: card.scryfallId ?? card.id,
-      name: card.name,
-      mana_cost: card.manaCost,
-      cmc: card.cmc,
-      type_line: card.typeLine,
-      oracle_text: card.oracleText,
-      color_identity: card.colorIdentity,
-      image_uris: card.imageUri
-        ? { grid: card.imageUri, art: card.artCropUri ?? card.imageUri }
-        : undefined,
-      prices: {},
-      legalities: {},
-      set: "",
-      set_name: "",
-      collector_number: "",
-      rarity: "rare" as const,
-      object: "card" as const,
-      lang: "en",
-      released_at: "",
-      uri: "",
-      scryfall_uri: "",
-      layout: "normal",
-      highres_image: false,
-      image_status: "lowres" as const,
-      keywords: [],
-      games: [],
-      reserved: false,
-      foil: false,
-      nonfoil: true,
-      oversized: false,
-      promo: false,
-      reprint: false,
-      variation: false,
-      set_id: "",
-      set_type: "",
-      border_color: "black" as const,
-      frame: "2015",
-      full_art: false,
-      textless: false,
-      booster: false,
-      story_spotlight: false,
-    };
-
-    // Remove from deck first, then set as commander
-    await get().removeCard(cardId);
-    await get().setCommander(
-      scryfallCard as import("@/lib/scryfall/types").ScryfallCard
-    );
+    // The card leaves the deck list and takes the commander slot in one request.
+    await seatCommander({ set, get }, activeDeckId, {
+      commander: commanderCardOf(card, state),
+      promoted: card,
+    });
   },
 
   swapCardPrinting: async (cardId, printing) => {
@@ -2112,7 +2063,9 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     const deck = get().decks[activeDeckId];
     if (!deck) return;
     const stored = deck.cards.find((card) => card.id === cardId);
-    const mirror = stored ? undefined : deck.maybeboard.find((card) => card.id === cardId);
+    const mirror = stored
+      ? undefined
+      : deck.maybeboard.find((card) => card.id === cardId);
     if (!stored && !mirror) return;
     const currentZone = stored?.zone ?? "maybeboard";
     const persistedZone = stored?.zone ?? mirror?.zone ?? "main";
@@ -2146,7 +2099,13 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
           set((state) => ({
             undoStack: [
               ...state.undoStack,
-              { type: "MOVE_ZONE", deckId: activeDeckId, cardId, from: persistedZone, to: zone },
+              {
+                type: "MOVE_ZONE",
+                deckId: activeDeckId,
+                cardId,
+                from: persistedZone,
+                to: zone,
+              },
             ],
           }));
         }
@@ -2160,8 +2119,9 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         ) {
           set((state) => {
             const currentDeck = state.decks[activeDeckId];
-            const latestCard =
-              currentDeck ? uniqueDeckCards(currentDeck).find((card) => card.id === cardId) : undefined;
+            const latestCard = currentDeck
+              ? uniqueDeckCards(currentDeck).find((card) => card.id === cardId)
+              : undefined;
             if (latestCard?.zone !== zone) return state;
             return {
               decks: {
@@ -2243,7 +2203,8 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
                 decks: {
                   ...state.decks,
                   [activeDeckId]: updateDeckCards(currentDeck, (cards) =>
-                    restoreRemovedCard(cards, removedCard, followingCardIds)),
+                    restoreRemovedCard(cards, removedCard, followingCardIds)
+                  ),
                 },
               };
             });
@@ -2413,9 +2374,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     const exists =
       !isBasicLand(card.type_line ?? "") &&
       uniqueDeckCards(deck).find(
-        (c) =>
-          c.name === card.name &&
-          c.zone === "maybeboard"
+        (c) => c.name === card.name && c.zone === "maybeboard"
       );
     if (exists) return;
 
@@ -2476,8 +2435,9 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
           decks: {
             ...state.decks,
             [activeDeckId]: updateDeckCards(currentDeck, (cards) =>
-              cards.filter((current) =>
-                current.id !== deckCard.id || current.zone !== "maybeboard"
+              cards.filter(
+                (current) =>
+                  current.id !== deckCard.id || current.zone !== "maybeboard"
               )
             ),
           },
@@ -2531,7 +2491,8 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     if (!card) return;
 
     const alreadyInDeck = cards.some(
-      (candidate) => candidate.name === card.name && candidate.zone !== "maybeboard"
+      (candidate) =>
+        candidate.name === card.name && candidate.zone !== "maybeboard"
     );
     if (alreadyInDeck) return;
 
