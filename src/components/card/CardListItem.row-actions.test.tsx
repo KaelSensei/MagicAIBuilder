@@ -17,6 +17,7 @@ import {
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { renderWithIntl } from "@/test/render-with-intl";
+import type { DeckFormat } from "@/lib/deck/formats";
 import { createGuestDeck } from "@/lib/deck/guest-deck";
 import { useDeckStore } from "@/lib/deck/store";
 import type { DeckCard } from "@/lib/deck/types";
@@ -75,12 +76,18 @@ function deckRow(overrides: Partial<DeckCard> = {}): DeckCard {
 
 /** Opens a saved deck holding these rows, so the store saves through the API. */
 function openSavedDeck(...cards: DeckCard[]): void {
+  openSavedDeckOf("commander", ...cards);
+}
+
+/** Opens a saved deck of `format` holding these rows. */
+function openSavedDeckOf(format: DeckFormat, ...cards: DeckCard[]): void {
   useDeckStore.setState({
     decks: {
       [DECK_ID]: {
         ...createGuestDeck(),
         id: DECK_ID,
         name: "Saved Deck",
+        format,
         cards,
       },
     },
@@ -309,6 +316,39 @@ describe("quantity stepper on a deck row", () => {
     expect(
       screen.getByRole("button", { name: "Remove a copy of Seven Dwarves" })
     ).toBeEnabled();
+  });
+
+  // CR 100.2a: a constructed deck holds up to four cards of one name.
+  it("offers a fourth copy of a card in a Modern deck and stops at four (CR 100.2a)", async () => {
+    const user = userEvent.setup();
+    const bolt = (quantity: number): DeckCard =>
+      deckRow({
+        id: "row-bolt",
+        name: "Lightning Bolt",
+        manaCost: "{R}",
+        cmc: 1,
+        typeLine: "Instant",
+        oracleText: "Lightning Bolt deals 3 damage to any target.",
+        colorIdentity: ["R"],
+        quantity,
+      });
+    openSavedDeckOf("modern", bolt(3));
+    renderWithIntl(<CardListItem card={bolt(3)} />);
+
+    await user.click(
+      screen.getByRole("button", { name: "Add a copy of Lightning Bolt" })
+    );
+
+    await waitFor(() =>
+      expect(requests.map((request) => request.body)).toEqual([{ quantity: 4 }])
+    );
+    expect(storedRow("row-bolt")?.quantity).toBe(4);
+    renderWithIntl(<CardListItem card={bolt(4)} />);
+    expect(
+      screen
+        .getAllByRole("button", { name: "Add a copy of Lightning Bolt" })
+        .at(-1)
+    ).toBeDisabled();
   });
 
   it("offers no stepper on a singleton card at one copy (CR 903.5b)", () => {

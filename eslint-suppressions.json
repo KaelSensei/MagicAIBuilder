@@ -1599,11 +1599,6 @@
       "count": 1
     }
   },
-  "src/lib/deck/formats.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    }
-  },
   "src/lib/deck/guest-deck.ts": {
     "@typescript-eslint/consistent-type-assertions": {
       "count": 1

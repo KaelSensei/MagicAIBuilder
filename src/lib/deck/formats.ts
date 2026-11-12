@@ -266,12 +266,12 @@ export const FORMAT_OPTIONS: readonly { readonly value: DeckFormat; readonly lab
 
 /**
  * Get format config with safe fallback to Commander for unknown strings.
+ *
+ * Only a name in `ALL_FORMATS` reads the table: an inherited object key such
+ * as "toString" or "constructor" is an unknown format, not a config.
  * @param format - Format string from DB or user input
  * @returns FormatConfig for the given format, or Commander config as fallback
  */
 export function getFormatConfig(format: string): FormatConfig {
-  if (format in FORMAT_CONFIG) {
-    return FORMAT_CONFIG[format as DeckFormat];
-  }
-  return FORMAT_CONFIG.commander;
+  return isDeckFormat(format) ? FORMAT_CONFIG[format] : FORMAT_CONFIG.commander;
 }
