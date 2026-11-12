@@ -257,16 +257,10 @@ describe("patchDeckSchema", () => {
     expect(result.success).toBe(false);
   });
 
-  it("accepts valid pairingType values", () => {
-    const validTypes = ["none", "partner", "partner_with", "friends_forever", "background", "doctor"];
-    for (const pt of validTypes) {
-      expect(patchDeckSchema.safeParse({ pairingType: pt }).success).toBe(true);
-    }
-  });
-
-  it("rejects invalid pairingType", () => {
-    const result = patchDeckSchema.safeParse({ pairingType: "unknown" });
-    expect(result.success).toBe(false);
+  it("drops pairingType: the command-zone route owns it", () => {
+    const result = patchDeckSchema.safeParse({ pairingType: "partner" });
+    expect(result.success).toBe(true);
+    expect(result.data).toEqual({});
   });
 
   it("rejects name longer than 200 chars", () => {

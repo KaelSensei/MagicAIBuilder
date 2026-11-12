@@ -12,7 +12,8 @@
  * version.
  *
  * A pair the rules refuse (the same card twice, CR 903.5b; no shared partner
- * ability, CR 702.124) answers 400, as `PATCH /api/decks/[id]` does.
+ * ability, CR 702.124) answers 400. This is the only route that checks a pair:
+ * `PATCH /api/decks/[id]` refuses the command fields outright.
  */
 import { NextResponse } from "next/server";
 import { z } from "zod";

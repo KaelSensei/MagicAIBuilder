@@ -19,7 +19,8 @@ This applies to every partner ability of CR 702.124:
 
 `pairCommanders(a, b)` in `src/lib/deck/pairing.ts` decides whether two cards can share
 the command zone and which pairing they use. The deck store (`setCommander`, `setPartner`),
-the bulk editor, the AI build check and `PATCH /api/decks/[id]` all call it.
+the bulk editor, the AI build check and `PATCH /api/decks/[id]/command-zone` all call it.
+The deck metadata route, `PATCH /api/decks/[id]`, refuses the command fields outright.
 
 - Abilities are read from each card’s **Oracle text**, line by line
   (`src/lib/deck/partner-abilities.ts`). Scryfall’s keyword list is not used: it tags

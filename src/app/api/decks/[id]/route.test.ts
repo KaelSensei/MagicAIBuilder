@@ -1,4 +1,4 @@
-/** Ownership and command-zone checks of GET, PATCH and DELETE on one deck. */
+/** Ownership and body checks of GET, PATCH and DELETE on one deck. */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { mockFindUnique, mockUpdate, mockDelete, mockUserFindUnique, mockUserUpsert } =
@@ -25,16 +25,7 @@ vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
 const { mockAuth } = vi.hoisted(() => ({ mockAuth: vi.fn() }));
 vi.mock(import("@/lib/auth/config"), () => ({ auth: mockAuth }));
 
-const { mockGetCardCollection } = vi.hoisted(() => ({ mockGetCardCollection: vi.fn() }));
-vi.mock(import("@/lib/scryfall/client"), () => ({ getCardCollection: mockGetCardCollection }));
-
 import { DELETE, GET, PATCH } from "./route";
-import type { PairingCard } from "@/lib/deck/partner-abilities";
-import {
-  CLARA_OSWALD,
-  SEFRIS,
-  TENTH_DOCTOR,
-} from "@/lib/deck/fixtures/partner-cards";
 
 const OWNER = "user-1";
 const INTRUDER = "user-2";
@@ -58,17 +49,6 @@ function signedInAs(id: string): void {
 
 function params(id = "deck-1") {
   return { params: Promise.resolve({ id }) };
-}
-
-/** The collection entry Scryfall returns for a fixture card's printing. */
-function printingOf(id: string, card: PairingCard) {
-  return {
-    id,
-    oracle_id: `${id}-oracle`,
-    name: card.name,
-    type_line: card.typeLine,
-    oracle_text: card.oracleText,
-  };
 }
 
 function patchRequest(body: unknown): Request {
@@ -143,103 +123,7 @@ describe("GET /api/decks/[id]", () => {
 });
 
 describe("PATCH /api/decks/[id]", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    mockGetCardCollection.mockResolvedValue({ data: [], not_found: [] });
-  });
-
-  it("rejects assigning the commander as its own partner", async () => {
-    signedInAs(OWNER);
-    mockFindUnique.mockResolvedValueOnce({ id: "deck-1", userId: OWNER, commanderId: "card-1", partnerId: null });
-    mockUpdate.mockResolvedValueOnce({ id: "deck-1", commanderId: "card-1", partnerId: "card-1", cards: [] });
-
-    const response = await PATCH(patchRequest({ partnerId: "card-1" }), params());
-
-    expect(response.status).toBe(400);
-    expect(mockUpdate).not.toHaveBeenCalled();
-  });
-
-  it("rejects assigning the partner as its own commander", async () => {
-    signedInAs(OWNER);
-    mockFindUnique.mockResolvedValueOnce({ id: "deck-1", userId: OWNER, commanderId: "card-1", partnerId: "card-2" });
-
-    const response = await PATCH(patchRequest({ commanderId: "card-2" }), params());
-
-    expect(response.status).toBe(400);
-    expect(mockUpdate).not.toHaveBeenCalled();
-  });
-
-  it("rejects a partner printing with the commander's Oracle identity", async () => {
-    signedInAs(OWNER);
-    mockFindUnique.mockResolvedValueOnce({ id: "deck-1", userId: OWNER, commanderId: "printing-1", partnerId: null });
-    mockGetCardCollection.mockResolvedValueOnce({
-      data: [
-        { id: "printing-1", oracle_id: "oracle-1" },
-        { id: "printing-2", oracle_id: "oracle-1" },
-      ],
-      not_found: [],
-    });
-
-    const response = await PATCH(patchRequest({ partnerId: "printing-2" }), params());
-
-    expect(response.status).toBe(400);
-    expect(mockUpdate).not.toHaveBeenCalled();
-  });
-
-  it("rejects a partner no partner ability allows beside the commander (CR 702.124m)", async () => {
-    signedInAs(OWNER);
-    mockFindUnique.mockResolvedValueOnce({
-      id: "deck-1",
-      userId: OWNER,
-      commanderId: "clara",
-      partnerId: null,
-    });
-    mockGetCardCollection.mockResolvedValueOnce({
-      data: [printingOf("clara", CLARA_OSWALD), printingOf("sefris", SEFRIS)],
-      not_found: [],
-    });
-
-    const response = await PATCH(
-      patchRequest({ partnerId: "sefris" }),
-      params()
-    );
-
-    expect(response.status).toBe(400);
-    await expect(response.json()).resolves.toMatchObject({
-      error: "Commander and partner cannot share the command zone",
-    });
-    expect(mockUpdate).not.toHaveBeenCalled();
-  });
-
-  it("saves a partner a partner ability allows (CR 702.124m)", async () => {
-    signedInAs(OWNER);
-    mockFindUnique.mockResolvedValueOnce({
-      id: "deck-1",
-      userId: OWNER,
-      commanderId: "clara",
-      partnerId: null,
-    });
-    mockGetCardCollection.mockResolvedValueOnce({
-      data: [
-        printingOf("clara", CLARA_OSWALD),
-        printingOf("tenth", TENTH_DOCTOR),
-      ],
-      not_found: [],
-    });
-    mockUpdate.mockResolvedValueOnce({ id: "deck-1", cards: [] });
-
-    const response = await PATCH(
-      patchRequest({ partnerId: "tenth", pairingType: "doctor" }),
-      params()
-    );
-
-    expect(response.status).toBe(200);
-    expect(mockUpdate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: { partnerId: "tenth", pairingType: "doctor" },
-      })
-    );
-  });
+  beforeEach(() => vi.clearAllMocks());
 
   it("still renames a legacy deck with an existing duplicate pair", async () => {
     signedInAs(OWNER);
@@ -307,6 +191,73 @@ describe("PATCH /api/decks/[id]", () => {
     const response = await PATCH(patchRequest({ name: "Renamed" }), params());
 
     expect(response.status).toBe(404);
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * The command zone changes only through `PATCH /api/decks/[id]/command-zone`,
+ * which writes the deck fields and the card rows in one versioned transaction
+ * (#1444). A body that still carries a command field here is a stale client:
+ * it gets an explicit 400 that names the fields and the route to use, rather
+ * than a silent strip it could mistake for a save.
+ */
+describe("PATCH /api/decks/[id] — the command zone is not its business", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("answers 400 and writes nothing when the body carries commanderId", async () => {
+    signedInAs(OWNER);
+
+    const response = await PATCH(patchRequest({ commanderId: "card-1" }), params());
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({
+      error:
+        "commanderId is not accepted here: change the command zone through PATCH /api/decks/[id]/command-zone",
+    });
+    expect(mockFindUnique).not.toHaveBeenCalled();
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["commanderName", "Atraxa, Praetors' Voice"],
+    ["partnerId", "card-2"],
+    ["companionId", "card-3"],
+    ["pairingType", "partner"],
+  ])("answers 400 and writes nothing when the body carries %s", async (field, value) => {
+    signedInAs(OWNER);
+
+    const response = await PATCH(patchRequest({ [field]: value }), params());
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      error: expect.stringContaining(`${field} is not accepted here`),
+    });
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it("refuses clearing a slot with null the same way", async () => {
+    signedInAs(OWNER);
+
+    const response = await PATCH(patchRequest({ commanderId: null }), params());
+
+    expect(response.status).toBe(400);
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it("names every command field the body carries, and saves none of the others either", async () => {
+    signedInAs(OWNER);
+
+    const response = await PATCH(
+      patchRequest({ name: "Renamed", commanderId: "card-1", partnerId: "card-2" }),
+      params()
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({
+      error:
+        "commanderId, partnerId are not accepted here: change the command zone through PATCH /api/decks/[id]/command-zone",
+    });
     expect(mockUpdate).not.toHaveBeenCalled();
   });
 });

@@ -148,7 +148,7 @@ All CRUD operations go through Next.js App Router API routes:
 | GET    | `/api/decks`                     | List all decks               |
 | POST   | `/api/decks`                     | Create a deck                |
 | GET    | `/api/decks/[id]`                | Get one deck (with cards)    |
-| PATCH  | `/api/decks/[id]`                | Update deck metadata         |
+| PATCH  | `/api/decks/[id]`                | Update deck metadata only    |
 | DELETE | `/api/decks/[id]`                | Delete deck + cascade cards  |
 | POST   | `/api/decks/[id]/cards`          | Add a card                   |
 | DELETE | `/api/decks/[id]/cards`          | Remove all cards             |
@@ -180,7 +180,10 @@ The command-zone route takes the whole change in one body: `removeCardIds`
 (slots whose rows leave, matched by role), `addCards` (the rows that enter) and
 `commandZone` (the deck fields to write; an absent key keeps the stored value).
 The repository stores all of it in one transaction, so a failed request leaves
-the deck exactly as it was.
+the deck exactly as it was. It is the command zone's only write path: the deck
+metadata route, `PATCH /api/decks/[id]`, answers 400 to a body that carries
+`commanderId`, `commanderName`, `partnerId`, `companionId` or `pairingType`,
+naming the fields and this route.
 
 DELETE takes the query string because a DELETE body has no defined meaning and
 some proxies reject one (RFC 9110 §9.3.5).
