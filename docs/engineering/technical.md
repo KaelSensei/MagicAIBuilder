@@ -536,7 +536,7 @@ Ranking is score first, then rating count (more ratings means more evidence behi
 
 Both live under `/api/community` so the edge auth allowlist (`src/lib/auth/edge-config.ts`) can expose `GET` anonymously without opening the protected `/api/decks` tree. `/commanders` is on the page allowlist in both `edge-config.ts` and `middleware.ts`.
 
-> **Commander slug in SQL.** `Deck.commanderName` is denormalised from the commander row (migration `20260819210000_denormalise_deck_commander`), so the route matches the slug in SQL, backed by the partial expression index `Deck_commanderSlug_public_idx` that the migration creates.
+> **Commander slug in SQL.** `Deck.commanderName` is denormalised from the commander row (migration `20260819210000_denormalise_deck_commander`), so the route matches the slug in SQL, backed by the partial expression index `Deck_commanderSlug_v2_public_idx` (migration `20261111210000_commander_slug_transliterates_accents`). The SQL expression transliterates accents and treats whitespace as `commanderToSlug` does, under any database ctype; `src/lib/meta/commander-slug-parity.test.ts` holds the two together.
 
 An unknown slug is not a 404: it is a commander nobody has published for yet, so the page renders its empty state.
 

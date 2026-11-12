@@ -36,6 +36,21 @@ describe("commanderToSlug", () => {
 
   it("strips special chars Edgar example", () =>
     expect(commanderToSlug("Edgar, Charmed Groom")).toBe("edgar-charmed-groom"));
+
+  // EDHREC answered 200 with this commander's page for each slug below, and 403 for the
+  // slug with the accented letter dropped
+  // (https://json.edhrec.com/pages/commanders/<slug>.json, read 2026-11-11).
+  it.each([
+    ["Lim-Dûl the Necromancer", "lim-dul-the-necromancer"],
+    ["Arna Kennerüd, Skycaptain", "arna-kennerud-skycaptain"],
+    ["Ratonhnhaké\ua789ton", "ratonhnhaketon"],
+    ["Éowyn, Fearless Knight", "eowyn-fearless-knight"],
+    ["Márton Stromgald", "marton-stromgald"],
+    ["Glóin, Dwarf Emissary", "gloin-dwarf-emissary"],
+  ])(
+    "builds the slug EDHREC serves for %s, accents transliterated",
+    (name, slug) => expect(commanderToSlug(name)).toBe(slug)
+  );
 });
 
 // ─── isCommanderSlug ──────────────────────────────────────────────────────────

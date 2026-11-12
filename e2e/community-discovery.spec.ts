@@ -95,6 +95,30 @@ test.describe("Commander deck discovery — anonymous viewer", () => {
     expect(body.decks.map((d) => d.id)).toContain(deckId);
   });
 
+  test("finds a public deck by the slug EDHREC uses for an accented commander", async ({
+    request,
+    seededDeck,
+  }) => {
+    // The SQL slug transliterates "û" to "u" as commanderToSlug does, so the
+    // page the sitemap and the builder link to lists the deck.
+    const deckId = await seedCommanderDeck(
+      request,
+      seededDeck,
+      "Accented Discovery Fixture",
+      "Lim-Dûl the Necromancer"
+    );
+
+    const response = await request.get(
+      "/api/community/commanders/lim-dul-the-necromancer/decks"
+    );
+
+    expect(response.status()).toBe(200);
+    const body = (await response.json()) as {
+      decks: readonly { id: string }[];
+    };
+    expect(body.decks.map((d) => d.id)).toContain(deckId);
+  });
+
   test("voting requires a session", async ({ request }) => {
     const response = await request.post("/api/community/decks/any-deck/vote", {
       data: { value: 1 },
