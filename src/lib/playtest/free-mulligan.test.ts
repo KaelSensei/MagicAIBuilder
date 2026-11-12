@@ -7,9 +7,12 @@ import {
 } from "./free-mulligan";
 
 describe("free first mulligan (CR 103.5c)", () => {
-  it("asks whether the game is multiplayer for Commander and Oathbreaker only", () => {
+  // The answer also sets the first-turn draw (CR 103.8) and Brawl's life total
+  // (CR 903.12f), so Brawl is asked too; the constructed formats are duels.
+  it("asks whether the game is multiplayer for Commander, Brawl and Oathbreaker", () => {
     expect(ALL_FORMATS.filter(offersMultiplayerChoice)).toEqual([
       "commander",
+      "brawl",
       "oathbreaker",
     ]);
   });

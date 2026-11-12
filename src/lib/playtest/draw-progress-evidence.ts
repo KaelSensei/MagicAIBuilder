@@ -1,3 +1,11 @@
+/**
+ * Draw evidence for a goldfish run: how many cards the player has seen, measured against the
+ * kept opening hand plus one natural draw per turn.
+ *
+ * Context: playtest. The playtest modal shows it, and a recorded session stores its counts.
+ *
+ * @module playtest/draw-progress-evidence
+ */
 import { keptOpeningHandSize, type PlaytestEngine } from "./engine";
 
 /** Draw-progression verdict for the current goldfish run. */
@@ -6,6 +14,8 @@ export type DrawProgressStatus = "natural" | "drawing-extra" | "library-empty";
 /** Inputs available from the in-memory playtest engine. */
 export interface DrawProgressInput {
   readonly turn: number;
+  /** Whether the game began with more than two players, which decides the turn-1 draw. */
+  readonly multiplayer: boolean;
   /** Mulligans taken for the opening hand. */
   readonly mulliganCount: number;
   /** Whether the format's first mulligan is free (CR 103.5c). */
@@ -22,15 +32,22 @@ export interface DrawProgressEvidence {
 }
 
 /**
- * Compares cards seen with an opening hand plus one natural draw per later turn.
+ * Compares cards seen with the kept opening hand plus the natural draws so far.
  *
- * @param input - current turn and zone counts from the playtest engine
+ * A multiplayer game draws on every turn, turn 1 included (CR 103.8c). A two-player game
+ * draws on every turn after the first, since the starting player skips the turn-1 draw
+ * (CR 103.8a). The playtest always plays the starting player.
+ *
+ * @param input - current turn, table size and zone counts from the playtest engine
  * @returns cards seen, extra cards seen, and the strongest relevant verdict
  */
 export function analyzeDrawProgress(
   input: DrawProgressInput
 ): DrawProgressEvidence {
-  const naturalDraws = Math.max(0, input.turn - 1);
+  const naturalDraws = Math.max(
+    0,
+    input.multiplayer ? input.turn : input.turn - 1
+  );
   const naturalCardsSeen = keptOpeningHandSize(input) + naturalDraws;
   const additionalCardsSeen = Math.max(
     0,
@@ -88,6 +105,7 @@ export function analyzeEngineDrawProgress(
 ): DrawProgressEvidence {
   return analyzeDrawProgress({
     turn: engine.turn,
+    multiplayer: engine.multiplayer,
     mulliganCount: engine.mulliganCount,
     firstMulliganFree: engine.firstMulliganFree,
     cardsOutsideLibrary: Math.max(

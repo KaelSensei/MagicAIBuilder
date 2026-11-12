@@ -422,7 +422,7 @@ All format-specific behavior is driven by `src/lib/deck/formats.ts`:
 | Validation      | Deck size (100 vs 60), singleton rule, commander requirement  |
 | Card multiples  | maxCopiesPerCard (1 for Commander, 4 for Standard)            |
 | Bracket scoring | Only computed for Commander (returns null otherwise)          |
-| Playtest        | startingLife (40 Commander, 30 Brawl, 20 elsewhere)           |
+| Playtest        | startingLife per table size (Brawl 25 or 30, Commander 40)    |
 | Deck statistics | Card-count target, and the curve / threat / interaction bands |
 
 ---
@@ -677,7 +677,7 @@ The playtest is a solitaire goldfish with no opponent. `turns` and `mulliganCoun
 
 `PlaytestSession` carries no unique constraint, unlike `DeckVote` and `DeckRating` which both upsert on `@@unique([userId, deckId])`. Every run is its own row — that is what makes a trend possible at all. Indexed on `deckId` and on `[deckId, createdAt]` for the chronological read.
 
-`result` and `difficulty` are plain string columns, so `parseSessionInput` is the only thing standing between a typo and a row that quietly breaks every aggregate reading it. It validates the three results, rejects a turn count below 1 (a game always has a first turn), caps `mulliganCount` at `OPENING_HAND_SIZE` (the London mulligan bottoms one card per mulligan; past a full hand there is nothing to keep), and treats whitespace-only notes as absent.
+`result` and `difficulty` are plain string columns, so `parseSessionInput` is the only thing standing between a typo and a row that quietly breaks every aggregate reading it. It validates the three results, rejects a turn count below 1 (a game always has a first turn), caps `mulliganCount` at `maxMulligans` with a free first mulligan, eight (CR 103.5 allows mulligans "until their opening hand would be zero cards", seven counted ones, and CR 103.5c adds the free one), and treats whitespace-only notes as absent.
 
 ### Route
 
@@ -723,10 +723,10 @@ Recording invalidates the `["playtest", "history", deckId]` query. Without it th
 | Export                                           | Role                                                                              |
 | ------------------------------------------------ | --------------------------------------------------------------------------------- |
 | `PlaytestEngine`                                 | Turn, phase, life + history, hand/library/battlefield/graveyard/exile, undo stack |
-| `createPlaytestState(cards, overrides)`          | Shuffles and deals; overrides carry the format's life total and mulligan rule     |
+| `createPlaytestState(cards, overrides)`          | Shuffles and deals; overrides carry the life total, table size and mulligan rule  |
 | `applyMulligan`                                  | Reshuffles, draws seven, sets `cardsToBottom`; capped at `maxMulligans(rule)`     |
 | `applyBottomCards`                               | Puts the chosen hand cards on the library bottom, in the order chosen             |
-| `applyNextPhase` / `applyNextTurn`               | `PHASES` order; End rolls into the next turn and untaps                           |
+| `applyNextPhase` / `applyNextTurn`               | `PHASES` order; End rolls into the next turn and untaps; see "First-turn draw"    |
 | `applyDamage` / `applyHeal`                      | Adjusts life and appends a `LifeHistoryEntry`                                     |
 | `applyTap` / `applyUntapAll` / `applyAddCounter` | Battlefield permanent state                                                       |
 | `applyMoveToZone`                                | Moves a card between `CardZone`s, exhaustively; only a commander enters `command` |
@@ -735,6 +735,8 @@ Recording invalidates the `["playtest", "history", deckId]` query. Without it th
 Shuffling uses `randomIntBelow` from `src/lib/crypto-random.ts`, not `Math.random()`.
 
 **Dealing.** `buildSetup` in `store.ts` deals each main-deck row `quantity` times, so a row of fifteen Forests is fifteen cards. Zones find, tap and key cards by id, so the first copy keeps the row id and each further copy gets `<row id>#<n>`. Sideboard and maybeboard rows are not dealt. In a format with `hasCommander` (Commander, Brawl, Oathbreaker), the commander and partner start in `commandZone`, never in the library (CR 903.6). `commanderIds` records them: only those cards may return to the command zone (CR 903.9), `analyzeEngineDrawProgress` leaves them out of the cards seen, and a mulligan sends a commander in the hand to the command zone rather than the library (CR 903.9b).
+
+**First-turn draw.** The deal waits in the Draw step of turn 1 so the player can mulligan there. In a two-player game the starting player skips the turn-1 draw (CR 103.8a); in a multiplayer game nobody does (CR 103.8c). So when a multiplayer game (`PlaytestEngine.multiplayer`) leaves that step, by Next phase or by Next turn, it first draws the turn-1 card, logged as "Drew a card for turn 1" on its own line and undone with the move. `analyzeDrawProgress` counts one natural draw per turn in a multiplayer game and one per turn after the first in a two-player game. The app stores no pod size: the start screen's multiplayer question, defaulting to the format's usual table (`isMultiplayerByDefault`), decides it.
 
 **`store.ts`** — `usePlaytestStore` exposes each `apply*` as an action and holds the deck as it was dealt (`setup`), so `resetPlaytest` re-deals the original deck. Rebuilding it from the live zones instead would carry battlefield state (tapped, counters) back into the library and lose the commander/partner distinction.
 

@@ -53,8 +53,10 @@ function PlaytestStartScreen({
   readonly onStart: (options: PlaytestOptions) => void;
 }) {
   const t = useTranslations("playtest");
-  // Commander and Oathbreaker are usually multiplayer, but a one-on-one game
-  // gets no free first mulligan (CR 103.5c). The answer lasts one session.
+  // Commander, Brawl and Oathbreaker are usually multiplayer. A one-on-one game
+  // skips the turn-1 draw (CR 103.8a), gets no free first mulligan outside
+  // Brawl (CR 103.5c) and starts Brawl at 25 life (CR 903.12f). The answer
+  // lasts one session.
   const [multiplayer, setMultiplayer] = useState(() =>
     isMultiplayerByDefault(format)
   );

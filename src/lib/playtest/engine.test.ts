@@ -151,8 +151,9 @@ describe("applyNextTurn", () => {
     expect(next.phase).toBe("Draw");
   });
 
+  // From turn 2 on, so no turn-1 draw is owed (see "first-turn draw" below).
   it("draws a card on new turn", () => {
-    const state = makeState();
+    const state = makeState({ turn: 2 });
     const next = applyNextTurn(state);
     expect(next.hand).toHaveLength(state.hand.length + 1);
   });
@@ -167,6 +168,91 @@ describe("applyNextTurn", () => {
     const state = { ...makeState(), battlefield: tapped };
     const next = applyNextTurn(state);
     expect(next.battlefield[0].tapped).toBe(false);
+  });
+});
+
+// ─── First-turn draw ──────────────────────────────────────────────────────────
+// CR 103.8a: in a two-player game the starting player skips the draw step of
+// their first turn. CR 103.8c: in other multiplayer games no player skips it.
+// The deal waits in the Draw step of turn 1 for the mulligans, so the draw is
+// taken when the game leaves that step.
+describe("first-turn draw", () => {
+  const ids = (cards: readonly DeckCard[]) => cards.map((card) => card.id);
+
+  it("skips the turn-1 draw in a two-player game (CR 103.8a)", () => {
+    const duel = makeState({ multiplayer: false });
+
+    const main = applyNextPhase(duel);
+
+    expect(main.phase).toBe("Main1");
+    expect(ids(main.hand)).toEqual(ids(duel.hand));
+    expect(main.actionLog.map((entry) => entry.description)).toEqual([
+      "Advanced to Main1",
+    ]);
+  });
+
+  it("logs the multiplayer turn-1 draw as a draw of turn 1, before the step change", () => {
+    const main = applyNextPhase(makeState({ multiplayer: true }));
+
+    expect(main.actionLog).toEqual([
+      {
+        id: 1,
+        turn: 1,
+        phase: "Draw",
+        description: "Drew a card for turn 1",
+        kind: "draw",
+      },
+      { id: 2, turn: 1, phase: "Draw", description: "Advanced to Main1" },
+    ]);
+    expect(main.nextActionId).toBe(3);
+  });
+
+  it("draws for turn 1 and turn 2 when a multiplayer game starts turn 2 from the Draw step of turn 1", () => {
+    const deal = makeState({ multiplayer: true });
+
+    const turnTwo = applyNextTurn(deal);
+
+    expect(ids(turnTwo.hand)).toEqual(
+      ids([...deal.hand, deal.library[0], deal.library[1]])
+    );
+    expect(turnTwo.actionLog).toEqual([
+      {
+        id: 1,
+        turn: 1,
+        phase: "Draw",
+        description: "Drew a card for turn 1",
+        kind: "draw",
+      },
+      {
+        id: 2,
+        turn: 2,
+        phase: "Draw",
+        description: "Started turn 2 and drew a card",
+        kind: "draw",
+      },
+    ]);
+    // One move, one undo: back to the deal, with the turn-1 draw still owed.
+    expect(applyUndo(turnTwo)).toBe(deal);
+  });
+
+  it("takes the turn-1 draw once: a game already past that step draws one card on its next turn", () => {
+    const deal = makeState({ multiplayer: true });
+
+    const turnTwo = applyNextTurn(applyNextPhase(deal));
+
+    expect(turnTwo.hand).toHaveLength(9);
+    expect(turnTwo.library).toHaveLength(deal.library.length - 2);
+  });
+
+  it("only advances when a multiplayer game leaves turn 1 with an empty library", () => {
+    const empty = makeState({ multiplayer: true, library: [] });
+
+    const main = applyNextPhase(empty);
+
+    expect(ids(main.hand)).toEqual(ids(empty.hand));
+    expect(main.actionLog.map((entry) => entry.description)).toEqual([
+      "Advanced to Main1",
+    ]);
   });
 });
 
@@ -599,19 +685,37 @@ describe("applyMulligan in a duel format", () => {
   });
 });
 
-// The playtest keeps a hand of at least one card; the free mulligan does not
-// count toward that limit either (CR 103.5c), so multiplayer goes one further.
+// CR 103.5: "A player can take mulligans until their opening hand would be zero
+// cards, after which they may not take further mulligans." The free mulligan
+// does not count toward that limit either (CR 103.5c), so multiplayer goes one
+// further.
 describe("mulligan limit", () => {
   it.each([
-    ["a duel", duelState, 6],
-    ["a multiplayer game", multiplayerState, 7],
-  ])("stops %s at a one-card hand", (_, setUp, limit) => {
+    ["a duel", duelState, 7],
+    ["a multiplayer game", multiplayerState, 8],
+  ])("lets %s mulligan down to a zero-card hand", (_, setUp, limit) => {
     let state = setUp();
     for (let i = 0; i < limit + 3; i++) state = bottomFirstCards(applyMulligan(state));
 
     expect(maxMulligans(state)).toBe(limit);
     expect(state.mulliganCount).toBe(limit);
-    expect(state.hand).toHaveLength(1);
+    expect(state.hand).toHaveLength(0);
+  });
+
+  it("asks the last mulligan to bottom the whole new seven", () => {
+    let oneCard = duelState();
+    for (let i = 0; i < 6; i++) oneCard = bottomFirstCards(applyMulligan(oneCard));
+    expect(oneCard.hand).toHaveLength(1);
+
+    const last = applyMulligan(oneCard);
+
+    expect(last.hand).toHaveLength(7);
+    expect(last.cardsToBottom).toBe(7);
+    const kept = bottomFirstCards(last);
+    // All seven went to the bottom: the whole hundred-card deck is in the library.
+    expect(kept.hand).toEqual([]);
+    expect(kept.library).toHaveLength(100);
+    expect(applyMulligan(kept)).toBe(kept);
   });
 });
 

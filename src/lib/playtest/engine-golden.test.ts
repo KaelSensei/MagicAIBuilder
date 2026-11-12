@@ -310,7 +310,10 @@ function playGoldenGame(deps?: PlaytestDeps): string {
 }
 
 /** Approved 2026-11-10 by checking each checkpoint by hand: 30 cards conserved, seven dealt per
- * mulligan, one bottomed after the counted one, one draw per turn, the copy removed on leaving play. */
+ * mulligan, one bottomed after the counted one, one draw per turn, the copy removed on leaving play.
+ * Re-approved 2026-11-11 for B2-49: the game is multiplayer (the deal's default, and its free
+ * mulligan needs one, CR 103.5c), so leaving the Draw step of turn 1 draws Smothering Tithe
+ * (CR 103.8c). Every later draw and the tutor take the next card down; 30 cards still conserved. */
 const GOLDEN_TRANSCRIPT = `deal
   turn 1, Draw · life 40 · mulligans 0 · to bottom 0
   hand: Swamp, Counterspell, Arcane Signet, Wood Elves, Avenger of Zendikar, Llanowar Elves, Birds of Paradise
@@ -340,8 +343,8 @@ play Birds of Paradise
 tap Birds of Paradise
 record 1 mana
   turn 1, Main1 · life 40 · mulligans 2 · to bottom 0
-  hand: Island, Swords to Plowshares, Command Tower, Swamp, Cultivate
-  library (24): top Smothering Tithe, Plains, Eternal Witness · bottom Counterspell, Heroic Intervention
+  hand: Island, Swords to Plowshares, Command Tower, Swamp, Cultivate, Smothering Tithe
+  library (23): top Plains, Eternal Witness, Beast Within · bottom Counterspell, Heroic Intervention
   battlefield: Birds of Paradise (tapped)
   graveyard: — · exile: — · command: Kenrith, the Returned King
 next turn
@@ -353,12 +356,12 @@ roll a d20 (14)
 take 7 combat damage
 gain 2 life
   turn 2, Draw · life 35 · mulligans 2 · to bottom 0
-  hand: Swords to Plowshares, Command Tower, Swamp, Cultivate, Smothering Tithe
-  library (23): top Plains, Eternal Witness, Beast Within · bottom Counterspell, Heroic Intervention
+  hand: Swords to Plowshares, Command Tower, Swamp, Cultivate, Smothering Tithe, Plains
+  library (22): top Eternal Witness, Beast Within, Farseek · bottom Counterspell, Heroic Intervention
   battlefield: Birds of Paradise, Island, 1/1 Soldier token (+2), Birds of Paradise
   graveyard: — · exile: — · command: Kenrith, the Returned King
 next turn
-tutor Eternal Witness to hand
+tutor Beast Within to hand
 cast the commander
 the copy dies
 the commander dies
@@ -370,8 +373,8 @@ edit the note
 next phase ×4
 next phase (End wraps)
   turn 4, Untap · life 35 · mulligans 2 · to bottom 0
-  hand: Swords to Plowshares, Command Tower, Swamp, Cultivate, Smothering Tithe, Plains, Eternal Witness
-  library (21): top Beast Within, Farseek, Craterhoof Behemoth · bottom Counterspell, Heroic Intervention
+  hand: Swords to Plowshares, Command Tower, Swamp, Cultivate, Smothering Tithe, Plains, Eternal Witness, Beast Within
+  library (20): top Farseek, Craterhoof Behemoth, Lightning Bolt · bottom Counterspell, Heroic Intervention
   battlefield: Island, 1/1 Soldier token (+2)
   graveyard: — · exile: Birds of Paradise · command: Kenrith, the Returned King
 
@@ -382,10 +385,11 @@ life history
 Kenrith goldfish — playtest log
 
 Turn 1
-Evidence: 0 draws, 1 mana, 0 additional cards seen
+Evidence: 1 draws, 1 mana, 1 additional cards seen
 - Draw: Free mulligan: drew a new seven
 - Draw: Mulligan: drew a new seven, 1 card to put on the bottom
 - Draw: Put Heroic Intervention on the bottom of the library
+- Draw: Drew a card for turn 1
 - Draw: Advanced to Main1
 - Main1: Moved Birds of Paradise from hand to battlefield
 - Main1: Tapped Birds of Paradise
@@ -406,7 +410,7 @@ Evidence: 1 draws, 0 mana, 1 additional cards seen
 Turn 3
 Evidence: 1 draws, 0 mana, 2 additional cards seen
 - Draw: Started turn 3 and drew a card
-- Draw: Moved Eternal Witness from library to hand
+- Draw: Moved Beast Within from library to hand
 - Draw: Cast Kenrith, the Returned King from the command zone
 - Draw: Removed Birds of Paradise from the battlefield
 - Draw: Moved Kenrith, the Returned King from battlefield to graveyard

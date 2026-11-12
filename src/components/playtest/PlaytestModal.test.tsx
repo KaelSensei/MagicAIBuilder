@@ -287,15 +287,26 @@ describe("PlaytestModal", () => {
       expect(screen.getByText(/Hand: 6 cards/i)).toBeDefined();
     });
 
-    // Every Brawl game has the free mulligan; the constructed formats are duels.
-    it.each(["brawl", "modern"] as const)(
-      "does not ask for a %s deck",
-      (format) => {
-        renderModal(makeDeck(format));
+    // The constructed formats are duels.
+    it("does not ask for a modern deck", () => {
+      renderModal(makeDeck("modern"));
 
-        expect(multiplayer()).toBeNull();
-      }
-    );
+      expect(multiplayer()).toBeNull();
+    });
+
+    // CR 903.12f: a two-player Brawl game starts at 25 life, a multiplayer one at 30.
+    it("asks a Brawl player and starts a one-on-one game at 25 life", () => {
+      renderModal(makeDeck("brawl"));
+      expect(multiplayer()).toBeChecked();
+
+      fireEvent.click(
+        screen.getByRole("checkbox", { name: /multiplayer game/i })
+      );
+      start();
+
+      expect(usePlaytestStore.getState().engine?.lifeTotal).toBe(25);
+      expect(screen.getByText("25")).toBeDefined();
+    });
 
     // Bracket 1 has a figure for a hand of no lands and no cheap ramp, read
     // against a fresh seven or, without the free mulligan, against a six.
@@ -434,6 +445,8 @@ describe("PlaytestModal", () => {
     });
 
     // Casting the commander takes it from the command zone, not from the library.
+    // By turn 2 a multiplayer Commander game has seen the seven, the turn-1 draw
+    // (CR 103.8c) and the turn-2 draw: nine cards, none extra.
     it("does not record a cast commander as a card seen", async () => {
       const fetchSpy = vi
         .spyOn(globalThis, "fetch")
@@ -449,7 +462,7 @@ describe("PlaytestModal", () => {
         fetchSpy.mock.calls.find(([, init]) => init?.method === "POST")?.[1]?.body;
       await waitFor(() => expect(postedSession()).toBeDefined());
       expect(JSON.parse(String(postedSession()))).toMatchObject({
-        cardsSeen: 8,
+        cardsSeen: 9,
         additionalCardsSeen: 0,
       });
     });

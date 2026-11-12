@@ -110,7 +110,7 @@ Inside a function, comment only knowledge the code cannot express:
 | A rejected alternative          | `// Not Math.random(): the shuffle must not be predictable; see crypto-random.ts.`                                        |
 | A cross-file dependency         | `// If you change this list, change the SQL twin in the migration too.`                                                   |
 | A performance reason            | `// One pass over the rows: the store calls this on every keystroke.`                                                     |
-| A product deviation from a rule | `// Product choice: the playtest stops at a one-card hand; CR 103.5 allows zero.`                                         |
+| A product deviation from a rule | `// Product choice: the playtest always plays the starting player; CR 103.1 lets players choose.`                         |
 
 ## Citing the Comprehensive Rules
 
@@ -173,13 +173,16 @@ from and when.
 
 ```ts
 /**
- * Whether a playtest game's first mulligan is free.
+ * Whether a playtest game's first mulligan is free, and whether the player is
+ * asked how many players the game has.
  *
  * CR 103.5c: "In a multiplayer game and in any Brawl game, the first mulligan
  * a player takes doesn't count toward the number of cards that player will put
  * on the bottom of their library or the number of mulligans that player may
  * take." The format alone does not decide it: Commander and Oathbreaker are
  * usually played multiplayer, but a one-on-one game gets no free mulligan.
+ * The same answer decides the first-turn draw (CR 103.8a, 103.8c) and Brawl's
+ * starting life total (CR 903.12f).
  *
  * @module playtest/free-mulligan
  */
@@ -187,15 +190,17 @@ from and when.
 
 ```ts
 /**
- * Whether the player is asked if the game is multiplayer. Brawl needs no
- * answer, since every Brawl game has the free mulligan; the constructed
+ * Whether the player is asked if the game is multiplayer: for the formats
+ * usually, but not always, played multiplayer. Brawl is asked too: its free
+ * mulligan holds at any table, but a two-player game starts at 25 life instead
+ * of 30 (CR 903.12f) and skips the turn-1 draw (CR 103.8a). The constructed
  * formats are duels.
  *
  * @param format - the deck's format
  * @returns true for the formats usually, but not always, played multiplayer
  */
 export function offersMultiplayerChoice(format: DeckFormat): boolean {
-  return format !== "brawl" && isMultiplayerByDefault(format);
+  return isMultiplayerByDefault(format);
 }
 ```
 
@@ -203,8 +208,8 @@ Why it works:
 
 - The header states the module's single question, quotes the rule it implements with its number,
   and names the trap a reader would fall into ("the format alone does not decide it").
-- The function comment explains **why** Brawl is excluded, which the code (`format !== "brawl"`)
-  cannot say.
+- The function comment explains **why** Brawl is asked even though its free mulligan never
+  depends on the answer, which the code (`isMultiplayerByDefault(format)`) cannot say.
 - The `@returns` line adds a nuance ("usually, but not always") that the name lacks. The
   `@param format - the deck's format` line adds nothing and could go.
 

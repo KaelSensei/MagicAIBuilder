@@ -50,7 +50,13 @@ interface PlaytestSetup {
   readonly cards: readonly DeckCard[];
   /** Commanders, which start in the command zone instead (CR 903.6). */
   readonly commandZone: readonly DeckCard[];
+  /** The format's starting life total at this session's table size. */
   readonly startingLife: number;
+  /**
+   * Whether the table has more than two players: the player's answer, or the format's usual
+   * table when they gave none. Settled when the session starts, so a restart keeps it.
+   */
+  readonly multiplayer: boolean;
   /** Settled when the session starts, so a restart keeps the player's choice. */
   readonly firstMulliganFree: boolean;
 }
@@ -59,7 +65,10 @@ interface PlaytestSetup {
 export interface PlaytestOptions {
   /**
    * Whether the game has more than two players, which makes the first
-   * mulligan free (CR 103.5c). Defaults to the format's usual table.
+   * mulligan free (CR 103.5c), gives the starting player a draw on turn 1
+   * (CR 103.8c) and sets Brawl's life total (CR 903.12f). The app stores no
+   * pod size, so an unanswered question falls back on the format's usual
+   * table (`isMultiplayerByDefault`).
    */
   readonly multiplayer?: boolean;
 }
@@ -93,11 +102,17 @@ function physicalCopies(card: DeckCard): readonly DeckCard[] {
  * @returns the library cards, the commanders and the session's starting rules
  */
 function buildSetup(deck: Deck, options: PlaytestOptions): PlaytestSetup {
-  const { hasCommander, startingLife } = getFormatConfig(deck.format);
-  const firstMulliganFree = isFirstMulliganFree(
-    deck.format,
-    options.multiplayer ?? isMultiplayerByDefault(deck.format)
+  const { hasCommander, startingLife: lifeByTable } = getFormatConfig(
+    deck.format
   );
+  const multiplayer =
+    options.multiplayer ?? isMultiplayerByDefault(deck.format);
+  // CR 903.12f: Brawl starts at 25 in a two-player game and at 30 in a multiplayer one.
+  const startingLife = multiplayer
+    ? lifeByTable.multiplayer
+    : lifeByTable.twoPlayer;
+  const firstMulliganFree = isFirstMulliganFree(deck.format, multiplayer);
+  const rules = { startingLife, multiplayer, firstMulliganFree };
   const commanders = [deck.commander, deck.partner].filter(
     (card): card is DeckCard => card !== null
   );
@@ -106,8 +121,8 @@ function buildSetup(deck: Deck, options: PlaytestOptions): PlaytestSetup {
     .flatMap(physicalCopies);
 
   return hasCommander
-    ? { cards: mainDeck, commandZone: commanders, startingLife, firstMulliganFree }
-    : { cards: [...commanders, ...mainDeck], commandZone: [], startingLife, firstMulliganFree };
+    ? { cards: mainDeck, commandZone: commanders, ...rules }
+    : { cards: [...commanders, ...mainDeck], commandZone: [], ...rules };
 }
 
 /**
@@ -115,11 +130,12 @@ function buildSetup(deck: Deck, options: PlaytestOptions): PlaytestSetup {
  *
  * @param setup - the deck and the format's starting rules
  * @param deps - the shuffle's random source
- * @returns a new engine with the format's life total, mulligan rule and command zone
+ * @returns a new engine with the format's life total, table size, mulligan rule and command zone
  */
 function dealFrom(setup: PlaytestSetup, deps: PlaytestDeps): PlaytestEngine {
   return createPlaytestState(setup.cards, {
     lifeTotal: setup.startingLife,
+    multiplayer: setup.multiplayer,
     firstMulliganFree: setup.firstMulliganFree,
     commandZone: setup.commandZone,
   }, deps);

@@ -55,6 +55,7 @@ describe("analyzeDrawProgress", () => {
     expect(
       analyzeDrawProgress({
         turn: 4,
+        multiplayer: false,
         mulliganCount: 0,
         firstMulliganFree: true,
         cardsOutsideLibrary: 10,
@@ -67,6 +68,7 @@ describe("analyzeDrawProgress", () => {
     expect(
       analyzeDrawProgress({
         turn: 4,
+        multiplayer: false,
         mulliganCount: 1,
         firstMulliganFree: false,
         cardsOutsideLibrary: 12,
@@ -85,6 +87,7 @@ describe("analyzeDrawProgress", () => {
     expect(
       analyzeDrawProgress({
         turn: 4,
+        multiplayer: false,
         mulliganCount: 1,
         firstMulliganFree: true,
         cardsOutsideLibrary: 10,
@@ -93,10 +96,38 @@ describe("analyzeDrawProgress", () => {
     ).toEqual({ cardsSeen: 10, additionalCardsSeen: 0, status: "natural" });
   });
 
+  // CR 103.8a: the starting player of a two-player game skips the turn-1 draw,
+  // so turn 4 allows three natural draws. CR 103.8c: in a multiplayer game
+  // nobody skips it, so turn 4 allows four.
+  it.each([
+    {
+      table: "two-player",
+      multiplayer: false,
+      extra: 1,
+      status: "drawing-extra",
+    },
+    { table: "multiplayer", multiplayer: true, extra: 0, status: "natural" },
+  ] as const)(
+    "counts the turn-1 draw of a $table game as $status",
+    ({ multiplayer, extra, status }) => {
+      expect(
+        analyzeDrawProgress({
+          turn: 4,
+          multiplayer,
+          mulliganCount: 0,
+          firstMulliganFree: true,
+          cardsOutsideLibrary: 11,
+          libraryCount: 88,
+        })
+      ).toEqual({ cardsSeen: 11, additionalCardsSeen: extra, status });
+    }
+  );
+
   it("prioritizes an empty-library warning", () => {
     expect(
       analyzeDrawProgress({
         turn: 10,
+        multiplayer: false,
         mulliganCount: 0,
         firstMulliganFree: true,
         cardsOutsideLibrary: 99,

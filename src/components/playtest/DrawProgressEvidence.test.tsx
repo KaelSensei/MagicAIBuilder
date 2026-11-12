@@ -31,6 +31,8 @@ function engine(overrides: Partial<PlaytestEngine>): PlaytestEngine {
   return {
     turn: 4,
     phase: "Draw",
+    // A two-player table: one natural draw per turn after the first (CR 103.8a).
+    multiplayer: false,
     mulliganCount: 0,
     firstMulliganFree: true,
     cardsToBottom: 0,
@@ -89,6 +91,7 @@ describe("DrawProgressEvidence", () => {
   it("treats a free Commander mulligan as a kept seven", () => {
     renderEvidence(
       engine({
+        multiplayer: true,
         mulliganCount: 1,
         firstMulliganFree: true,
         hand: Array.from({ length: 10 }, (_, index) => card(index)),
