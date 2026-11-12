@@ -82,10 +82,51 @@ type SuggestionOrigin =
     }
   | { readonly kind: "placeholder" };
 
-/** A parsed suggestion request whose deck question has been read. */
+/**
+ * A suggestion request as the prompt quotes it: its deck question has been
+ * read, and every client text is on one bounded line.
+ */
 type SuggestRequest = Omit<SuggestBody, "question"> & {
   question?: DeckQuestion;
 };
+
+/** The longest card name the prompt quotes; a longer one is cut. */
+const PROMPT_CARD_NAME_LENGTH = 200;
+
+/**
+ * Puts every client text of a parsed request on one bounded line before the
+ * prompt quotes it: card, commander, partner and Game Changer names are cut
+ * at {@link PROMPT_CARD_NAME_LENGTH}; warnings and themes keep the length
+ * `suggestSchema` already allowed.
+ *
+ * @param body - a body that passed `suggestSchema`
+ * @param question - its deck question, read against the raw card names
+ * @returns a new request; `body` is left as it was
+ */
+function promptSafeRequest(
+  body: SuggestBody,
+  question: DeckQuestion | undefined
+): SuggestRequest {
+  const cardName = (name: string): string =>
+    sanitizeForPrompt(name, PROMPT_CARD_NAME_LENGTH);
+  return {
+    ...body,
+    commanderName: body.commanderName && cardName(body.commanderName),
+    partnerName: body.partnerName && cardName(body.partnerName),
+    cardNames: body.cardNames.map(cardName),
+    gameChangersList: body.gameChangersList?.map(cardName),
+    bracketWarnings: body.bracketWarnings?.map((warning) =>
+      sanitizeForPrompt(warning, MAX_BRACKET_WARNING_LENGTH)
+    ),
+    detectedThemes: body.detectedThemes?.map((theme) =>
+      sanitizeForPrompt(theme, MAX_THEME_NAME_LENGTH)
+    ),
+    question:
+      question?.type === "why-card"
+        ? { type: "why-card", cardName: cardName(question.cardName) }
+        : question,
+  };
+}
 
 export interface CardSuggestion {
   name: string;
@@ -554,30 +595,7 @@ export async function POST(request: Request) {
       { status: 400 }
     );
   }
-  const body: SuggestRequest = { ...parsed.data, question };
-  body.cardNames = body.cardNames.map((name) => sanitizeForPrompt(name, 200));
-  body.question =
-    question?.type === "why-card"
-      ? {
-          type: "why-card",
-          cardName: sanitizeForPrompt(question.cardName, 200),
-        }
-      : question;
-
-  // Sanitize user-provided strings before injecting into prompts (prompt injection prevention)
-  if (body.commanderName)
-    body.commanderName = sanitizeForPrompt(body.commanderName, 200);
-  if (body.partnerName)
-    body.partnerName = sanitizeForPrompt(body.partnerName, 200);
-  body.gameChangersList = body.gameChangersList?.map((name) =>
-    sanitizeForPrompt(name, 200)
-  );
-  body.bracketWarnings = body.bracketWarnings?.map((warning) =>
-    sanitizeForPrompt(warning, MAX_BRACKET_WARNING_LENGTH)
-  );
-  body.detectedThemes = body.detectedThemes?.map((theme) =>
-    sanitizeForPrompt(theme, MAX_THEME_NAME_LENGTH)
-  );
+  const body = promptSafeRequest(parsed.data, question);
 
   // A model call needs a call from this month's allowance before anything
   // else is loaded, so a refusal is cheap and can still be an HTTP status.
