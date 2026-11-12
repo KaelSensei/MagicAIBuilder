@@ -9,10 +9,13 @@ import { makeLookupDeckCombos } from "@/modules/combos/application/lookup-deck-c
 import type {
   BudgetDecision,
   ComboCache,
-  ComboSource,
   ComboSourceBudget,
-  DeckCombosResult,
+  DeckCombosFailure,
 } from "@/modules/combos/application/ports";
+import {
+  inMemoryComboSource,
+  type InMemoryComboSource,
+} from "@/modules/combos/testing/in-memory-combo-source";
 
 const COMBO: Combo = {
   id: "742-1295",
@@ -68,26 +71,24 @@ function fakeBudget(calls: number): FakeBudget {
   };
 }
 
-interface FakeSource extends ComboSource {
-  readonly queries: DeckComboQuery[];
+/** A source that knows `DECK` holds `combos`; the use case asks it for the canonical list. */
+function sourceKnowing(combos: readonly Combo[]): InMemoryComboSource {
+  const source = inMemoryComboSource();
+  source.knows(normalizeDeckComboQuery(DECK), combos);
+  return source;
 }
 
-/** A source that answers every query with `result` and records what it was asked. */
-function fakeSource(result: DeckCombosResult): FakeSource {
-  const queries: DeckComboQuery[] = [];
-  return {
-    queries,
-    findCombos: async (query) => {
-      queries.push(query);
-      return result;
-    },
-  };
+/** A source whose every call fails this way. */
+function sourceFailing(failure: DeckCombosFailure): InMemoryComboSource {
+  const source = inMemoryComboSource();
+  source.fails(failure);
+  return source;
 }
 
 interface Fakes {
   readonly cache: FakeCache;
   readonly budget: FakeBudget;
-  readonly source: FakeSource;
+  readonly source: InMemoryComboSource;
 }
 
 /** The lookup over fakes: a warm source, one call of budget, an empty cache unless overridden. */
@@ -95,7 +96,7 @@ function ports(overrides: Partial<Fakes> = {}) {
   const all: Fakes = {
     cache: fakeCache(),
     budget: fakeBudget(1),
-    source: fakeSource({ kind: "found", combos: [COMBO] }),
+    source: sourceKnowing([COMBO]),
     ...overrides,
   };
   return { ...all, lookup: makeLookupDeckCombos(all) };
@@ -165,8 +166,8 @@ describe("lookupDeckCombos", () => {
   });
 
   it("passes a source failure on as it is and does not cache it", async () => {
-    const failure = { kind: "failed", status: 500 } as const;
-    const { lookup, cache } = ports({ source: fakeSource(failure) });
+    const failure: DeckCombosFailure = { kind: "failed", status: 500 };
+    const { lookup, cache } = ports({ source: sourceFailing(failure) });
 
     const result = await lookup(DECK);
 
@@ -177,7 +178,7 @@ describe("lookupDeckCombos", () => {
   it("asks the source again after a timeout, since nothing was cached", async () => {
     const { lookup, source } = ports({
       budget: fakeBudget(2),
-      source: fakeSource({ kind: "timeout" }),
+      source: sourceFailing({ kind: "timeout" }),
     });
 
     await lookup(DECK);
