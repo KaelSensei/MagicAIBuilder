@@ -4,7 +4,7 @@ import { useState, useCallback, useRef } from "react";
 import { useFormatter, useTranslations } from "next-intl";
 import { Plus, Search, Loader2, Check } from "lucide-react";
 import { useCollectionStore } from "@/lib/collection/store";
-import type { CardCondition } from "@/lib/collection/types";
+import { CARD_CONDITIONS, type CardCondition } from "@/lib/collection/types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import { searchCards } from "@/lib/scryfall/client";
 import { getCardImageUri } from "@/lib/scryfall/images";
@@ -12,8 +12,6 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Modal, ModalTitle } from "@/components/ui/Modal";
 import { cn } from "@/components/ui/utils";
-
-const CONDITIONS: readonly CardCondition[] = ["NM", "LP", "MP", "HP", "DMG"];
 
 export function AddToCollectionDialog() {
   const t = useTranslations("collection.dialog");
@@ -191,7 +189,7 @@ export function AddToCollectionDialog() {
                 {t("condition")}
               </span>
               <div className="flex gap-1">
-                {CONDITIONS.map((c) => (
+                {CARD_CONDITIONS.map((c) => (
                   <button
                     type="button"
                     key={c}

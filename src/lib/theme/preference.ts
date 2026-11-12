@@ -6,6 +6,8 @@
  * explicit light or dark choice already stored by an older build.
  */
 
+import { isRecord } from "@/lib/guards";
+
 /** Painted appearance. */
 export const THEME_MODES = ["light", "dark"] as const;
 
@@ -78,16 +80,6 @@ export function resolveTheme(
       return _exhaustive;
     }
   }
-}
-
-/**
- * Checks whether a value is a plain object record.
- *
- * @param value - candidate payload
- * @returns true for non-null, non-array objects
- */
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 /**

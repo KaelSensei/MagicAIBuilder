@@ -17,6 +17,8 @@
 
 import { API_SCOPES } from "./keys";
 import { pairingTypeSchema } from "@/lib/validation/deck";
+import { VALID_ZONES } from "@/lib/validation/card";
+import { CARD_CONDITIONS } from "@/lib/collection/types";
 
 /** Bumped when the response shape of an existing endpoint changes incompatibly. */
 export const API_VERSION = "1.0.0";
@@ -137,7 +139,7 @@ export function buildOpenApiDocument(serverUrl: string) {
             quantity: { type: "integer", minimum: 1 },
             isCommander: { type: "boolean" },
             isPartner: { type: "boolean" },
-            zone: { type: "string", enum: ["main", "sideboard", "maybeboard"] },
+            zone: { type: "string", enum: [...VALID_ZONES] },
             price: { type: ["number", "null"] },
           },
         },
@@ -155,7 +157,7 @@ export function buildOpenApiDocument(serverUrl: string) {
             },
             condition: {
               type: ["string", "null"],
-              enum: ["NM", "LP", "MP", "HP", "DMG", null],
+              enum: [...CARD_CONDITIONS, null],
             },
             acquiredAt: { type: ["string", "null"], format: "date-time" },
             price: { type: ["number", "null"] },

@@ -1,4 +1,5 @@
 import type { DeckZone } from "@/lib/deck/types";
+import { isNonEmptyString, isRecord } from "@/lib/guards";
 
 const DECK_ZONES: readonly DeckZone[] = ["main", "sideboard", "maybeboard"];
 
@@ -85,20 +86,12 @@ function restoredDeckCard(deckId: string, entry: unknown): RestoredDeckCard {
 }
 
 /**
- * @param value - Candidate object.
- * @returns Whether `value` is a non-null, non-array object.
- */
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-/**
  * @param value - Candidate string.
  * @param field - Field name included in the error when the value is unusable.
  * @returns The string when it is non-empty.
  */
 function readRequiredString(value: unknown, field: string): string {
-  if (typeof value === "string" && value.length > 0) return value;
+  if (isNonEmptyString(value)) return value;
   throw new Error(`Snapshot card is missing ${field}`);
 }
 

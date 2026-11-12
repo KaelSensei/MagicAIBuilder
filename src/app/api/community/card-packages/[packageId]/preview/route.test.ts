@@ -83,4 +83,11 @@ describe("POST /api/community/card-packages/[packageId]/preview", () => {
       cards: [{ name: "Red Spell", status: "blocked", issues: [{ kind: "colorIdentity" }] }],
     });
   });
+
+  it("refuses a deck whose stored format this build does not support", async () => {
+    mockDeckFindFirst.mockResolvedValue({ format: "historic", cards: [] });
+    const response = await POST(makeRequest(), context);
+    expect(response.status).toBe(422);
+    expect(mockPackageFindFirst).not.toHaveBeenCalled();
+  });
 });

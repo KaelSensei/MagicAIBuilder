@@ -6,6 +6,7 @@ import { z } from "zod";
 import { SCRYFALL_ID_PATTERN } from "@/lib/scryfall/scryfall-id";
 import { deckCardIdSchema, pairingTypeSchema } from "./deck";
 import { CARD_CATEGORIES } from "@/lib/deck/types";
+import { COLOR_SYMBOLS } from "@/lib/mana/colors";
 
 /**
  * The categories a card write accepts: the deck domain's `CARD_CATEGORIES`, under the name the
@@ -44,7 +45,7 @@ export const addCardSchema = z.object({
     .nullable()
     .default(null)
     .transform((v) => (v ? v.replaceAll(/<[^>]{0,200}>/g, "").trim() : null)),
-  colorIdentity: z.array(z.enum(["W", "U", "B", "R", "G", "C"])).optional().default([]),
+  colorIdentity: z.array(z.enum(COLOR_SYMBOLS)).optional().default([]),
   isGameChanger: z.boolean().optional().default(false),
   isBanned: z.boolean().optional().default(false),
   price: z.number().min(0).max(100000).nullable().optional().default(null),

@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { ChevronDown, ChevronRight, Download, RefreshCw } from "lucide-react";
 import { z } from "zod";
 import { formatAcquisitionCsv } from "@/lib/collection/acquisition-csv";
+import { downloadTextFile } from "@/lib/download-text-file";
 import { Link } from "@/i18n/navigation";
 import { formatUsdPrice } from "@/i18n/number-format";
 import { cardSurfaceClassName } from "@/components/ui/Card";
@@ -100,12 +101,7 @@ export function AcquisitionPlanPanel() {
         quantity: deck.quantity,
       })),
     })));
-    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8;" }));
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "acquisition-plan.csv";
-    link.click();
-    URL.revokeObjectURL(url);
+    downloadTextFile(csv, "acquisition-plan.csv", "text/csv;charset=utf-8;");
   };
 
   return (

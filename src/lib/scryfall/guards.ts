@@ -4,11 +4,8 @@
  * the browser uses them. They check the fields every reader relies on, not the
  * whole card.
  */
+import { isRecord } from "@/lib/guards";
 import type { ScryfallCard, ScryfallSearchResponse } from "./types";
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
 
 /**
  * @param value - a parsed JSON body

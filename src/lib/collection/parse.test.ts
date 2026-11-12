@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { indexCollectionCards, isRecord, parseCondition, parseCollectionCard } from "./parse";
+import { isRecordOrArray as isRecord } from "@/lib/guards";
+import { indexCollectionCards, parseCondition, parseCollectionCard } from "./parse";
 
 /**
  * A rejection here is silent — the caller drops the row. So the risk is not a
