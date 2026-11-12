@@ -678,6 +678,26 @@ describe("characterization: builder page shell", () => {
         screen.getByRole("switch", { name: "Make deck public" })
       ).not.toBeChecked();
     });
+
+    // The share popover was dropped from this row by 7ce381b4 without a word (OD-01 mounts it again).
+    it("offers the share link popover among the deck actions of a saved deck", async () => {
+      await openSavedDeck();
+
+      await userEvent.click(screen.getByRole("button", { name: "Share" }));
+
+      expect(
+        screen.getByRole("dialog", { name: "Share deck" })
+      ).toBeInTheDocument();
+    });
+
+    it("offers no share link on the browser-only guest deck", async () => {
+      renderBuilder(GUEST_DECK_ID, null);
+      await screen.findByRole("heading", { level: 1, name: "Guest Deck" });
+
+      expect(
+        screen.queryByRole("button", { name: "Share" })
+      ).not.toBeInTheDocument();
+    });
   });
 
   describe("panel toggles", () => {
