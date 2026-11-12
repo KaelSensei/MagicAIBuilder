@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { patchDeckSchema, deckCardIdSchema } from "./deck";
+import {
+  COMMAND_ZONE_FIELDS,
+  commandZoneFieldsIn,
+  commandZoneFieldsRefusal,
+  deckCardIdSchema,
+  patchDeckSchema,
+} from "./deck";
 
 describe("patchDeckSchema", () => {
   it("accepts empty object", () => {
@@ -40,20 +46,6 @@ describe("patchDeckSchema", () => {
   it("accepts manualBracket as null", () => {
     const result = patchDeckSchema.safeParse({ manualBracket: null });
     expect(result.success).toBe(true);
-  });
-
-  it("accepts valid pairingType", () => {
-    const result = patchDeckSchema.safeParse({ pairingType: "partner" });
-    expect(result.success).toBe(true);
-  });
-
-  it("accepts Father & son pairing updates", () => {
-    expect(patchDeckSchema.safeParse({ pairingType: "father_son" }).success).toBe(true);
-  });
-
-  it("rejects invalid pairingType", () => {
-    const result = patchDeckSchema.safeParse({ pairingType: "alliance" });
-    expect(result.success).toBe(false);
   });
 
   it("accepts description as null", () => {
@@ -114,26 +106,53 @@ describe("patchDeckSchema", () => {
     expect(result.success).toBe(false);
   });
 
-  it("accepts all pairing types", () => {
-    const types = ["none", "partner", "partner_with", "friends_forever", "background", "doctor"] as const;
-    for (const pairingType of types) {
-      const result = patchDeckSchema.safeParse({ pairingType });
-      expect(result.success).toBe(true);
-    }
+  it("knows no command-zone field: the command-zone route owns them", () => {
+    const result = patchDeckSchema.safeParse({
+      name: "Renamed",
+      commanderId: "card-1",
+      pairingType: "partner",
+    });
+    expect(result.success).toBe(true);
+    expect(result.data).toEqual({ name: "Renamed" });
   });
 });
 
-describe("patchDeckSchema commander and partner ids", () => {
-  it.each(["commanderId", "partnerId"])("rejects a whitespace-only %s", (field) => {
-    expect(patchDeckSchema.safeParse({ [field]: " \t " }).success).toBe(false);
+describe("commandZoneFieldsIn", () => {
+  it("finds nothing in a metadata-only body", () => {
+    expect(commandZoneFieldsIn({ name: "Renamed", tags: ["budget"] })).toEqual([]);
   });
 
-  it.each(["commanderId", "partnerId"])("still accepts null to clear %s", (field) => {
-    expect(patchDeckSchema.safeParse({ [field]: null }).success).toBe(true);
+  it("finds nothing in a body that is not an object", () => {
+    expect(commandZoneFieldsIn(null)).toEqual([]);
+    expect(commandZoneFieldsIn("commanderId")).toEqual([]);
   });
 
-  it("accepts a real card id", () => {
-    expect(patchDeckSchema.safeParse({ commanderId: "card-1", partnerId: "card-2" }).success).toBe(true);
+  it.each(COMMAND_ZONE_FIELDS)("finds %s when the body carries it", (field) => {
+    expect(commandZoneFieldsIn({ [field]: "x" })).toEqual([field]);
+  });
+
+  it("counts a slot cleared with null: it would still change the zone", () => {
+    expect(commandZoneFieldsIn({ commanderId: null })).toEqual(["commanderId"]);
+  });
+
+  it("lists several fields in the order of COMMAND_ZONE_FIELDS", () => {
+    expect(
+      commandZoneFieldsIn({ pairingType: "partner", name: "x", commanderId: "a", partnerId: "b" })
+    ).toEqual(["commanderId", "partnerId", "pairingType"]);
+  });
+});
+
+describe("commandZoneFieldsRefusal", () => {
+  it("names one field and the route to use", () => {
+    expect(commandZoneFieldsRefusal(["commanderId"])).toBe(
+      "commanderId is not accepted here: change the command zone through PATCH /api/decks/[id]/command-zone"
+    );
+  });
+
+  it("names every field when several come together", () => {
+    expect(commandZoneFieldsRefusal(["commanderId", "partnerId"])).toBe(
+      "commanderId, partnerId are not accepted here: change the command zone through PATCH /api/decks/[id]/command-zone"
+    );
   });
 });
 

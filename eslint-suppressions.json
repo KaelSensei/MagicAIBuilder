@@ -293,11 +293,6 @@
       "count": 1
     }
   },
-  "src/app/api/decks/[id]/route.test.ts": {
-    "no-restricted-syntax": {
-      "count": 1
-    }
-  },
   "src/app/api/decks/[id]/snapshots/[snapshotId]/restore/route.test.ts": {
     "no-restricted-syntax": {
       "count": 1

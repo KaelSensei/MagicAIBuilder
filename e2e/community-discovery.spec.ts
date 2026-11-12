@@ -15,10 +15,20 @@ async function seedCommanderDeck(
 ): Promise<string> {
   const id = await seededDeck.create({ name });
 
-  const patched = await request.patch(`/api/decks/${id}`, {
-    data: { commanderName, isPublic: true },
+  // The command zone has one write path; the deck PATCH refuses commanderName.
+  const seated = await request.patch(`/api/decks/${id}/command-zone`, {
+    data: {
+      removeCardIds: [],
+      clearCommandSlots: [],
+      addCards: [],
+      commandZone: { commanderName },
+    },
   });
-  expect(patched.ok(), await patched.text()).toBe(true);
+  expect(seated.ok(), await seated.text()).toBe(true);
+  const published = await request.patch(`/api/decks/${id}`, {
+    data: { isPublic: true },
+  });
+  expect(published.ok(), await published.text()).toBe(true);
   return id;
 }
 

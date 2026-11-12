@@ -25,7 +25,10 @@ vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
 import { PATCH } from "./route";
 
 const ATRAXA_PRINTING = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+/** Another printing of Atraxa: a different id, the same Oracle card. */
+const ATRAXA_REPRINT = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
 const TYMNA_PRINTING = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
+const THRASIOS_PRINTING = "dddddddd-dddd-4ddd-8ddd-dddddddddddd";
 const SIGNET = deckCard("Arcane Signet", { category: "ramp" });
 
 /** What Scryfall's collection endpoint knows of the two printings the pair check may look up. */
@@ -40,10 +43,26 @@ const SCRYFALL_COLLECTION = {
       keywords: [],
     },
     {
+      id: ATRAXA_REPRINT,
+      oracle_id: "atraxa-oracle",
+      name: "Atraxa, Praetors' Voice",
+      type_line: "Legendary Creature — Phyrexian Angel Horror",
+      oracle_text: "Flying, vigilance, deathtouch, lifelink",
+      keywords: [],
+    },
+    {
       id: TYMNA_PRINTING,
       oracle_id: "tymna-oracle",
       name: "Tymna the Weaver",
       type_line: "Legendary Creature — Human Cleric",
+      oracle_text: "Partner",
+      keywords: ["Partner"],
+    },
+    {
+      id: THRASIOS_PRINTING,
+      oracle_id: "thrasios-oracle",
+      name: "Thrasios, Triton Hero",
+      type_line: "Legendary Creature — Merfolk Wizard",
       oracle_text: "Partner",
       keywords: ["Partner"],
     },
@@ -169,6 +188,68 @@ describe("PATCH /api/decks/[id]/command-zone — the body", () => {
     });
     expect(cardLookups).toBe(0);
     expectNothingStored();
+  });
+
+  it("stores a commanderName alone when no row changes, as the e2e seeds do", async () => {
+    const response = await changeCommandZone({
+      removeCardIds: [],
+      clearCommandSlots: [],
+      addCards: [],
+      commandZone: { commanderName: "Atraxa, Praetors' Voice" },
+    });
+
+    expect(response.status).toBe(200);
+    expect(cardLookups).toBe(0);
+    expect(deckCardsDb.deck()).toMatchObject({
+      commanderName: "Atraxa, Praetors' Voice",
+      commanderId: null,
+    });
+    expect(deckCardsDb.cards()).toEqual([SIGNET]);
+  });
+
+  it("refuses a partner printing that reprints the stored commander (CR 903.5b)", async () => {
+    deckCardsDb.reset([SIGNET], {
+      ...CARDS_DECK,
+      commanderId: ATRAXA_PRINTING,
+      commanderName: "Atraxa, Praetors' Voice",
+    });
+
+    const response = await changeCommandZone({
+      removeCardIds: [],
+      clearCommandSlots: ["partner"],
+      addCards: [],
+      commandZone: { partnerId: ATRAXA_REPRINT, pairingType: "partner" },
+    });
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({
+      error: "Commander and partner must be different cards",
+    });
+    expect(cardLookups).toBe(1);
+    expect(deckCardsDb.deck().partnerId).toBeNull();
+  });
+
+  it("saves a partner the stored commander can pair with (CR 702.124)", async () => {
+    deckCardsDb.reset([SIGNET], {
+      ...CARDS_DECK,
+      commanderId: TYMNA_PRINTING,
+      commanderName: "Tymna the Weaver",
+    });
+
+    const response = await changeCommandZone({
+      removeCardIds: [],
+      clearCommandSlots: ["partner"],
+      addCards: [],
+      commandZone: { partnerId: THRASIOS_PRINTING, pairingType: "partner" },
+    });
+
+    expect(response.status).toBe(200);
+    expect(cardLookups).toBe(1);
+    expect(deckCardsDb.deck()).toMatchObject({
+      commanderId: TYMNA_PRINTING,
+      partnerId: THRASIOS_PRINTING,
+      pairingType: "partner",
+    });
   });
 
   it("refuses a partner the stored commander cannot pair with (CR 702.124)", async () => {
