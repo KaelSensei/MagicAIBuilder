@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { loadComprehensiveRules, parseComprehensiveRules } from "./comprehensive";
+import { parseComprehensiveRules } from "./comprehensive-rules";
 
 const NBSP = "\u00A0";
 
@@ -117,33 +117,5 @@ describe("parseComprehensiveRules", () => {
     const terms = parsed.glossary.map((g) => g.term);
     expect(terms).not.toContain("Credits");
     expect(terms).not.toContain("Original game design: Richard Garfield");
-  });
-});
-
-describe("loadComprehensiveRules (real file)", () => {
-  const rules = loadComprehensiveRules();
-
-  it("reads the effective date of the bundled file", () => {
-    expect(rules.effectiveDate).toEqual(new Date(Date.UTC(2026, 7, 7)));
-  });
-
-  it("parses all 9 sections", () => {
-    expect(rules.sections).toHaveLength(9);
-    expect(rules.sections[8].title).toBe("Casual Variants");
-  });
-
-  it("finds chapter 903 (Commander)", () => {
-    const chapters = rules.sections.flatMap((s) => s.chapters);
-    const commander = chapters.find((c) => c.number === "903");
-    expect(commander?.title).toBe("Commander");
-    expect(commander?.paragraphs.length).toBeGreaterThan(10);
-  });
-
-  it("parses a large glossary", () => {
-    expect(rules.glossary.length).toBeGreaterThan(500);
-  });
-
-  it("returns the same cached instance on repeated calls", () => {
-    expect(loadComprehensiveRules()).toBe(rules);
   });
 });

@@ -17,7 +17,7 @@ a different word, the entry says so.
   candidate for a rename (a structural change) or a `fix/` pull request (a behaviour change).
 
 **Rule sources.** CR numbers cite the Comprehensive Rules edition the app ships, effective
-2026-08-07 (`src/lib/rules/data/MagicCompRules-20260807.txt`). Every number cited here was checked
+2026-08-07 (`src/modules/rules-reference/infrastructure/data/MagicCompRules-20260807.txt`). Every number cited here was checked
 against that file on 2026-11-10. The older copy in `docs/rules/` (effective 2026-02-27) is not the
 reference.
 Bracket and Game Changer facts come from
@@ -294,15 +294,16 @@ Accounts and access. Context folder: `identity`. Today: `lib/auth/`, `lib/api/`.
 
 ## Rules reference and site
 
-Context folders: `rules-reference` (today `lib/rules/`, `components/rules/`) and `site` (today
+Context folders: `rules-reference` (`src/modules/rules-reference/`, moved; its pages stay in
+`app/[locale]/rules/`) and `site` (today
 `lib/seo/`, `components/landing/`).
 
-| Term                              | Meaning                                                                                                                                                       | Source                                                        | Code today                                                                      |
-| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| **Comprehensive Rules**           | The official, numbered rules of Magic, with a glossary and an effective date.                                                                                 | [Wizards of the Coast](https://magic.wizards.com/en/rules)    | `lib/rules/comprehensive.ts`, data `lib/rules/data/MagicCompRules-20260807.txt` |
-| **Served locale, dormant locale** | English and French are routed; eight other catalogs are kept at key parity but answer 404.                                                                    | Product                                                       | `SUPPORTED_LOCALES`, `DORMANT_LOCALES` in `i18n/routing.ts`                     |
-| **Indexable profile**             | A profile with at least one public deck; only those appear in the sitemap.                                                                                    | [I-34 spec](docs/product/specs/i34-commander-data-reports.md) | `lib/seo/index-policy.ts`                                                       |
-| **Site URL, app base URL**        | The public address used for canonical links and the sitemap, against the address of the running instance used for internal requests. They must not be merged. | Product                                                       | `lib/seo/alternates.ts`, `resolveAppBaseUrl` in `lib/api/viewer-request.ts`     |
+| Term                              | Meaning                                                                                                                                                       | Source                                                        | Code today                                                                                                                                                                |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Comprehensive Rules**           | The official, numbered rules of Magic, with a glossary and an effective date.                                                                                 | [Wizards of the Coast](https://magic.wizards.com/en/rules)    | `modules/rules-reference/domain/comprehensive-rules.ts` (parser, search), `infrastructure/rules-file.ts` (loader), data `infrastructure/data/MagicCompRules-20260807.txt` |
+| **Served locale, dormant locale** | English and French are routed; eight other catalogs are kept at key parity but answer 404.                                                                    | Product                                                       | `SUPPORTED_LOCALES`, `DORMANT_LOCALES` in `i18n/routing.ts`                                                                                                               |
+| **Indexable profile**             | A profile with at least one public deck; only those appear in the sitemap.                                                                                    | [I-34 spec](docs/product/specs/i34-commander-data-reports.md) | `lib/seo/index-policy.ts`                                                                                                                                                 |
+| **Site URL, app base URL**        | The public address used for canonical links and the sitemap, against the address of the running instance used for internal requests. They must not be merged. | Product                                                       | `lib/seo/alternates.ts`, `resolveAppBaseUrl` in `lib/api/viewer-request.ts`                                                                                               |
 
 ## Engineering terms
 

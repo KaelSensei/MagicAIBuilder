@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { parseComprehensiveRules, searchComprehensiveRules } from "./comprehensive";
+import { parseComprehensiveRules, searchComprehensiveRules } from "./comprehensive-rules";
 
 const RULES = parseComprehensiveRules(`Magic: The Gathering Comprehensive Rules
 These rules are effective as of January 1, 2026.

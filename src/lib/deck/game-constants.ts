@@ -9,7 +9,7 @@
  * `FORMAT_CONFIG` (`formats.ts`).
  *
  * Rule numbers cite the Comprehensive Rules edition the app ships,
- * `src/lib/rules/data/MagicCompRules-20260807.txt`.
+ * `src/modules/rules-reference/infrastructure/data/MagicCompRules-20260807.txt`.
  *
  * @module deck/game-constants
  */
