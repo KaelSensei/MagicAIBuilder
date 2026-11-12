@@ -6,9 +6,10 @@
  * write, the compare-and-swap on `expectedVersion`, nothing stored on `stale`
  * or `not-found`, all or nothing when the card write fails, card ids scoped
  * to their deck, one winner among concurrent writers that read the same
- * version, and a command-zone change whose rows and deck fields are stored
- * together or not at all. Callers: `in-memory-deck-repository.test.ts` and
- * `deck-repository.prisma.test.ts`.
+ * version, a command-zone change whose rows and deck fields are stored
+ * together or not at all, and a bulk edit that is stored whole or not at all
+ * and is `stale` when it names a row the deck no longer holds. Callers:
+ * `in-memory-deck-repository.test.ts` and `deck-repository.prisma.test.ts`.
  *
  * @module deck/testing/deck-repository-contract
  */
@@ -484,6 +485,106 @@ export function describeDeckRepositoryContract(
       expect(after.version).toBe(deck.version);
       expect(after.updatedAt).toEqual(SEEDED_AT);
     });
+  });
+
+  describe("applyBulkEdit", () => {
+    it("stores the removed, resized, added and command-zone changes together and moves the version by one", async () => {
+      const deck = await harness.seedDeck([SIGNET, FOREST, ATRAXA_COMMANDER]);
+      const [signetId, forestId] = deck.cardIds;
+
+      const result = await harness.repository.applyBulkEdit(
+        { deckId: deck.deckId, expectedVersion: deck.version },
+        {
+          removeCardIds: [signetId],
+          quantityChanges: [{ cardId: forestId, quantity: 12 }],
+          clearSlots: ["commander"],
+          addCards: [SOL_RING, KENRITH_COMMANDER],
+          fields: KENRITH_FIELDS,
+        }
+      );
+
+      expect(result).toMatchObject({
+        kind: "saved",
+        version: deck.version + 1,
+      });
+      if (result.kind !== "saved") throw new Error("the edit was not saved");
+      expect(namesOf(result.value)).toEqual([
+        "Forest",
+        "Kenrith, the Returned King",
+        "Sol Ring",
+      ]);
+      const after = await stored(deck.deckId);
+      expect(namesOf(after.cards)).toEqual(namesOf(result.value));
+      expect(after.cards.find((card) => card.id === forestId)).toMatchObject({
+        quantity: 12,
+      });
+      expect(after).toMatchObject({ ...KENRITH_FIELDS, partnerId: null });
+      expect(after.version).toBe(deck.version + 1);
+      expect(after.updatedAt.getTime()).toBeGreaterThan(SEEDED_AT.getTime());
+    });
+
+    it("stores nothing and answers stale when the expected version is outdated", async () => {
+      const deck = await harness.seedDeck([SIGNET, FOREST]);
+      const [signetId, forestId] = deck.cardIds;
+
+      const result = await harness.repository.applyBulkEdit(
+        { deckId: deck.deckId, expectedVersion: deck.version + 1 },
+        {
+          removeCardIds: [signetId],
+          quantityChanges: [{ cardId: forestId, quantity: 12 }],
+          clearSlots: [],
+          addCards: [SOL_RING],
+          fields: {},
+        }
+      );
+
+      expect(result).toEqual({ kind: "stale" });
+      const after = await stored(deck.deckId);
+      expect(namesOf(after.cards)).toEqual(["Arcane Signet", "Forest"]);
+      expect(after.cards.find((card) => card.id === forestId)).toMatchObject({
+        quantity: 10,
+      });
+      expect(after.version).toBe(deck.version);
+      expect(after.updatedAt).toEqual(SEEDED_AT);
+    });
+
+    it.each([
+      ["removes", { removeCardIds: ["no-such-row"], quantityChanges: [] }],
+      [
+        "resizes",
+        {
+          removeCardIds: [],
+          quantityChanges: [{ cardId: "no-such-row", quantity: 2 }],
+        },
+      ],
+    ])(
+      "answers stale and stores nothing when the edit %s a row the deck does not hold",
+      async (_verb, rows) => {
+        // The edit was planned on a copy the deck has moved away from: the row
+        // left with another write. That is a stale copy, not a broken store.
+        const deck = await harness.seedDeck([SIGNET, ATRAXA_COMMANDER]);
+
+        const result = await harness.repository.applyBulkEdit(
+          { deckId: deck.deckId },
+          {
+            ...rows,
+            clearSlots: ["commander"],
+            addCards: [KENRITH_COMMANDER],
+            fields: KENRITH_FIELDS,
+          }
+        );
+
+        expect(result).toEqual({ kind: "stale" });
+        const after = await stored(deck.deckId);
+        expect(namesOf(after.cards)).toEqual([
+          "Arcane Signet",
+          "Atraxa, Praetors' Voice",
+        ]);
+        expect(after.commanderId).toBeNull();
+        expect(after.version).toBe(deck.version);
+        expect(after.updatedAt).toEqual(SEEDED_AT);
+      }
+    );
   });
 
   it("answers not-found for a deck that does not exist and stores nothing", async () => {

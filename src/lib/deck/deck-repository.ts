@@ -13,11 +13,12 @@
  * (docs/architecture/target-structure.md, step 5).
  *
  * Callers: the single-card handlers of `/api/decks/[id]/cards` and
- * `/api/decks/[id]/cards/[cardId]`, and the command-zone handler
+ * `/api/decks/[id]/cards/[cardId]`, the command-zone handler
  * `PATCH /api/decks/[id]/command-zone`, whose row changes and deck fields
- * used to be three browser requests that could each fail on their own. Not
- * yet the bulk edit (`PATCH /api/decks/[id]/cards`) nor the other deck
- * writes; until they move here, they do not move the version.
+ * used to be three browser requests that could each fail on their own, and
+ * the bulk edit `PATCH /api/decks/[id]/cards`, which used to keep its own
+ * transaction outside the version. The other deck writes (the metadata
+ * PATCH, deck creation, imports) do not move the version.
  * Port and contract: `deck-repository-port.ts`,
  * `testing/deck-repository-contract.ts`.
  *
@@ -29,8 +30,11 @@ import type { Prisma, PrismaClient } from "@prisma/client";
 import { forEachSequential } from "@/lib/async/sequential";
 import { prisma } from "@/lib/db/prisma";
 import { COMMAND_SLOT_ROWS } from "@/lib/deck/bulk-edit-command-zone";
+import type { CommandSlot } from "@/lib/deck/bulk-edit-command-zone";
 import type {
+  BulkEditWrite,
   CommandZoneWrite,
+  DeckCardResize,
   DeckRepository,
   DeckWriteResult,
   DeckWriteTarget,
@@ -39,6 +43,18 @@ import type {
 } from "@/lib/deck/deck-repository-port";
 
 type Transaction = Prisma.TransactionClient;
+
+/**
+ * A row the write names is not in this deck. Prisma's `deleteMany` and
+ * `updateMany` report a count, not an error, so the adapter checks the count
+ * and throws this inside the transaction: nothing already written stays.
+ */
+class MissingRowError extends Error {
+  constructor(what: string) {
+    super(`A card to ${what} is not in this deck`);
+    this.name = "MissingRowError";
+  }
+}
 
 /** Whether this write may proceed, and the version it gives the deck. */
 type VersionClaim =
@@ -100,14 +116,71 @@ function newRow(deckId: string, card: NewDeckCard) {
   return { ...card, colorIdentity: [...card.colorIdentity], deckId };
 }
 
+/** Removes the rows named by id. @throws MissingRowError when one is not in this deck */
+async function removeRows(
+  tx: Transaction,
+  deckId: string,
+  cardIds: readonly string[]
+): Promise<void> {
+  if (cardIds.length === 0) return;
+  const removed = await tx.deckCard.deleteMany({
+    where: { deckId, id: { in: [...cardIds] } },
+  });
+  if (removed.count !== new Set(cardIds).size) {
+    throw new MissingRowError("remove");
+  }
+}
+
+/**
+ * Removes the rows that fill each slot, by role: the browser knows a
+ * hand-picked commander only by its printing, and earlier picks can have left
+ * more than one row.
+ */
+function clearSlots(
+  tx: Transaction,
+  deckId: string,
+  slots: readonly CommandSlot[]
+): Promise<void> {
+  return forEachSequential(slots, (slot) =>
+    tx.deckCard.deleteMany({ where: { deckId, ...COMMAND_SLOT_ROWS[slot] } })
+  );
+}
+
+/** Sets each row's copies. @throws MissingRowError when a row is not in this deck */
+function resizeRows(
+  tx: Transaction,
+  deckId: string,
+  changes: readonly DeckCardResize[]
+): Promise<void> {
+  return forEachSequential(changes, async ({ cardId, quantity }) => {
+    const resized = await tx.deckCard.updateMany({
+      where: { id: cardId, deckId },
+      data: { quantity },
+    });
+    if (resized.count !== 1) throw new MissingRowError("resize");
+  });
+}
+
+/** Adds the rows one by one, so the stored rows come back in the order given. */
+async function addRows(
+  tx: Transaction,
+  deckId: string,
+  cards: readonly NewDeckCard[]
+): Promise<readonly StoredDeckCard[]> {
+  const added: StoredDeckCard[] = [];
+  await forEachSequential(cards, async (card) => {
+    added.push(await tx.deckCard.create({ data: newRow(deckId, card) }));
+  });
+  return added;
+}
+
 /**
  * Writes a command-zone change inside the transaction that claimed the
  * version: the deck fields first, then the rows that leave, then the rows
  * that enter. A throw at any step rolls the whole change back.
  *
  * @returns the added rows, in the order they were given
- * @throws when the deck holds no row for one of `removeCardIds`: Prisma's
- *   `deleteMany` reports a count, not an error, so the count is checked here
+ * @throws MissingRowError when the deck holds no row for one of `removeCardIds`
  */
 async function writeCommandZone(
   tx: Transaction,
@@ -115,22 +188,43 @@ async function writeCommandZone(
   write: CommandZoneWrite
 ): Promise<readonly StoredDeckCard[]> {
   await tx.deck.update({ where: { id: deckId }, data: write.fields });
-  if (write.removeCardIds.length > 0) {
-    const removed = await tx.deckCard.deleteMany({
-      where: { deckId, id: { in: [...write.removeCardIds] } },
-    });
-    if (removed.count !== new Set(write.removeCardIds).size) {
-      throw new Error("A card to remove is not in this deck");
-    }
+  await removeRows(tx, deckId, write.removeCardIds);
+  await clearSlots(tx, deckId, write.clearSlots);
+  return addRows(tx, deckId, write.addCards);
+}
+
+/**
+ * Applies a bulk edit inside the transaction that claimed the version: the
+ * command-zone part as `writeCommandZone` stores it, then the resized rows.
+ * Resizing after the slots are cleared keeps a resized row that a cleared
+ * slot took away a stale copy, as the bulk edit always treated it.
+ *
+ * @returns every row the deck holds after the edit
+ * @throws MissingRowError when the deck holds no row for one of
+ *   `removeCardIds` or `quantityChanges`
+ */
+async function applyBulkEdit(
+  tx: Transaction,
+  deckId: string,
+  edit: BulkEditWrite
+): Promise<readonly StoredDeckCard[]> {
+  await writeCommandZone(tx, deckId, edit);
+  await resizeRows(tx, deckId, edit.quantityChanges);
+  return tx.deckCard.findMany({ where: { deckId } });
+}
+
+/**
+ * The bulk edit's answer to a row it names that the deck does not hold:
+ * `stale`, since the edit was planned on an outdated copy (see the port).
+ * Prisma has rolled the transaction back by the time the rejection arrives.
+ */
+function missingRowIsStale(
+  error: unknown
+): Promise<{ readonly kind: "stale" }> {
+  if (error instanceof MissingRowError) {
+    return Promise.resolve({ kind: "stale" });
   }
-  await forEachSequential(write.clearSlots, (slot) =>
-    tx.deckCard.deleteMany({ where: { deckId, ...COMMAND_SLOT_ROWS[slot] } })
-  );
-  const added: StoredDeckCard[] = [];
-  await forEachSequential(write.addCards, async (card) => {
-    added.push(await tx.deckCard.create({ data: newRow(deckId, card) }));
-  });
-  return added;
+  return Promise.reject(error);
 }
 
 /**
@@ -172,6 +266,10 @@ export function prismaDeckRepository(client: PrismaClient): DeckRepository {
       versionedWrite(client, target, (tx) =>
         writeCommandZone(tx, target.deckId, write)
       ),
+    applyBulkEdit: (target, edit) =>
+      versionedWrite(client, target, (tx) =>
+        applyBulkEdit(tx, target.deckId, edit)
+      ).catch(missingRowIsStale),
   };
 }
 
