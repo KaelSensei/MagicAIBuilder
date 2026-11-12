@@ -11,6 +11,7 @@ import type { CommandSlot } from "./bulk-edit-command-zone";
 import type * as deckApi from "@/lib/db/deck-api";
 import { parseBracketLevel } from "@/lib/constants/brackets";
 import { rebuildCardFaces } from "./store-card-faces";
+import { countLoadedCards, withLoadedCardCount } from "./loaded-card-count";
 
 export { buildCardFaces, makeDeckCard } from "./store-card-faces";
 
@@ -131,10 +132,9 @@ export function apiDeckToStoreDeck(d: deckApi.ApiDeck): Deck {
   const allCards = d.cards ?? [];
   const { commanderCard, partnerCard, companionCard, deckCards } = partitionApiCards(allCards);
 
-  // cardCount: use _count from listing endpoint, or derive from full card list
-  const cardCount = d._count?.cards ?? allCards.length;
-
-  return {
+  // The listing sends the server's row count; a full deck is counted from the
+  // rows it holds, once the command zone has been read out of them.
+  const deck: Deck = {
     id: d.id,
     name: d.name,
     folderId: d.folderId ?? null,
@@ -153,33 +153,30 @@ export function apiDeckToStoreDeck(d: deckApi.ApiDeck): Deck {
     companion: companionCard ? apiCardToDeckCard(companionCard) : null,
     pairingType: d.pairingType ?? "none",
     cards: deckCards.map(apiCardToDeckCard),
-    cardCount,
+    cardCount: d._count?.cards ?? 0,
     maybeboard: deckCards
       .filter((card) => (card.zone ?? "main") === "maybeboard")
       .map(apiCardToDeckCard),
     createdAt: new Date(d.createdAt),
     updatedAt: new Date(d.updatedAt),
   };
+  return d._count ? deck : withLoadedCardCount(deck);
 }
 
 /**
  * Whether a deck in the store is still the lightweight listing version.
  *
  * `GET /api/decks` returns only commander / partner / companion plus a total
- * count, so a stub reports fewer loaded cards than `cardCount`. The full deck
- * comes from `GET /api/decks/[id]`.
+ * count, so a stub holds fewer rows than `cardCount`. The full deck comes from
+ * `GET /api/decks/[id]`, and every edit of a loaded deck keeps `cardCount`
+ * equal to its rows (`withLoadedCardCount`), so a loaded deck never reads as a
+ * stub again.
  *
  * @param deck - a deck held in the store
  * @returns true when its main-deck cards have not been loaded yet
  */
 export function isDeckStub(deck: Deck): boolean {
-  const loaded =
-    deck.cards.length +
-    (deck.commander ? 1 : 0) +
-    (deck.partner ? 1 : 0) +
-    (deck.companion ? 1 : 0);
-
-  return loaded < deck.cardCount;
+  return countLoadedCards(deck) < deck.cardCount;
 }
 
 /**

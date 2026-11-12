@@ -1,5 +1,6 @@
 import { useToastStore } from "@/hooks/useToast";
 
+import { withLoadedCardCount } from "./loaded-card-count";
 import type { Deck, DeckCard } from "./types";
 
 /** The commander, partner and pairing shown together in the command zone. */
@@ -78,13 +79,13 @@ export function restoreCommanderAfterFailedSave(
   setDeckState({
     decks: {
       ...state.decks,
-      [save.activeDeckId]: {
+      [save.activeDeckId]: withLoadedCardCount({
         ...currentDeck,
         commander: save.previous.commander,
         partner,
         pairingType: save.previous.pairingType,
         updatedAt: new Date(),
-      },
+      }),
     },
   });
   useToastStore
