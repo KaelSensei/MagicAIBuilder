@@ -25,11 +25,9 @@ describe("the combos entry points", () => {
     ]);
   });
 
-  it("server.ts publishes the cache and the single Spellbook call", async () => {
+  it("server.ts publishes the wired combo lookup and nothing else", async () => {
     expect(exportNames(await import("@/modules/combos/server"))).toEqual([
-      "readCachedCombos",
-      "requestDeckCombos",
-      "storeCachedCombos",
+      "lookupDeckCombos",
     ]);
   });
 
