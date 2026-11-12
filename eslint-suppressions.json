@@ -1223,9 +1223,6 @@
     }
   },
   "src/modules/rules-reference/ui/GameChangersPageClient.tsx": {
-    "complexity": {
-      "count": 1
-    },
     "max-lines": {
       "count": 1
     },
