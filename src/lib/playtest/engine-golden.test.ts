@@ -21,6 +21,7 @@
  */
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { DeckCard } from "@/lib/deck/types";
+import { aDeckCard } from "@/test/builders/card";
 import {
   mulberry32,
   replayWebCrypto,
@@ -87,24 +88,14 @@ const LIBRARY_NAMES = [
 ];
 
 function makeCard(id: string, name: string): DeckCard {
-  return {
+  return aDeckCard({
     id,
     name,
-    manaCost: "",
     cmc: 1,
     typeLine: "Creature",
-    oracleText: "",
-    colorIdentity: [],
-    isGameChanger: false,
-    isBanned: false,
-    price: null,
-    imageUri: "",
-    artCropUri: "",
     category: "creature",
-    quantity: 1,
-    zone: "main",
     scryfallId: id,
-  };
+  });
 }
 
 const LIBRARY = LIBRARY_NAMES.map((name, index) =>

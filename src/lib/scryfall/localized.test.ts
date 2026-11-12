@@ -8,9 +8,10 @@ import {
   toScryfallLang,
 } from "./localized";
 import type { ScryfallCard } from "./types";
+import { aScryfallCard } from "@/test/builders/scryfall";
 
 function makeCard(overrides: Partial<ScryfallCard> = {}): ScryfallCard {
-  return {
+  return aScryfallCard({
     id: "card-1",
     name: "Lightning Bolt",
     cmc: 1,
@@ -18,7 +19,7 @@ function makeCard(overrides: Partial<ScryfallCard> = {}): ScryfallCard {
     oracle_text: "Lightning Bolt deals 3 damage to any target.",
     color_identity: ["R"],
     ...overrides,
-  };
+  });
 }
 
 describe("toScryfallLang", () => {

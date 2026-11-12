@@ -2,11 +2,12 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { fetchInBatches } from "./batch-fetch";
 import * as scryfallClient from "@/lib/scryfall/client";
 import type { ScryfallCard } from "@/lib/scryfall/types";
+import { aScryfallCard } from "@/test/builders/scryfall";
 
 vi.mock(import("@/lib/scryfall/client"));
 
 function makeCard(name: string): ScryfallCard {
-  return { id: name, name } as unknown as ScryfallCard;
+  return aScryfallCard({ id: name, name });
 }
 
 describe("fetchInBatches", () => {

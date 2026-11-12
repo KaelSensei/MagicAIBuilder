@@ -1,17 +1,17 @@
 import { describe, it, expect } from "vitest";
 import { categorizeCard, categorizeDfcCard, isMdfcWithLandBack, CATEGORY_LABELS } from "@/lib/deck/categories";
 import type { ScryfallCard } from "@/lib/scryfall/types";
+import { aScryfallCard } from "@/test/builders/scryfall";
 
 function makeCard(overrides: Partial<ScryfallCard>): ScryfallCard {
-  return {
+  return aScryfallCard({
     id: "test-id",
     name: "Test Card",
     layout: "normal",
     cmc: 2,
     type_line: "Instant",
-    color_identity: [],
     ...overrides,
-  };
+  });
 }
 
 describe("categorizeCard", () => {

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { createElement } from "react";
 import { screen, fireEvent } from "@testing-library/react";
+import { aDeckCard } from "@/test/builders/card";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { CommandZone } from "./CommandZone";
 import type { DeckCard } from "@/lib/deck/types";
@@ -11,12 +12,15 @@ vi.mock("next/image", () => ({
 }));
 
 function makeCard(id: string, name: string): DeckCard {
-  return {
-    id, name, manaCost: "", cmc: 4, typeLine: "Legendary Creature",
-    oracleText: "", colorIdentity: [], isGameChanger: false,
-    isBanned: false, price: null, imageUri: `https://cards.test/${id}.jpg`, artCropUri: "",
-    category: "commander", quantity: 1, zone: "main", scryfallId: id,
-  };
+  return aDeckCard({
+    id,
+    name,
+    cmc: 4,
+    typeLine: "Legendary Creature",
+    imageUri: `https://cards.test/${id}.jpg`,
+    category: "commander",
+    scryfallId: id,
+  });
 }
 
 describe("CommandZone", () => {

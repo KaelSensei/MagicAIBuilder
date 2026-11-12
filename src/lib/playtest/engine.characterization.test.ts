@@ -13,6 +13,7 @@
  */
 import { describe, expect, it } from "vitest";
 import type { DeckCard } from "@/lib/deck/types";
+import { aDeckCard } from "@/test/builders/card";
 import { analyzeEngineDrawProgress } from "./draw-progress-evidence";
 import {
   applyAddActionLogEntry,
@@ -43,24 +44,14 @@ import type {
 } from "./engine";
 
 function makeCard(id: string, name = `Card ${id}`): DeckCard {
-  return {
+  return aDeckCard({
     id,
     name,
-    manaCost: "",
     cmc: 1,
     typeLine: "Creature",
-    oracleText: "",
-    colorIdentity: [],
-    isGameChanger: false,
-    isBanned: false,
-    price: null,
-    imageUri: "",
-    artCropUri: "",
     category: "creature",
-    quantity: 1,
-    zone: "main",
     scryfallId: id,
-  };
+  });
 }
 
 function onBattlefield(
