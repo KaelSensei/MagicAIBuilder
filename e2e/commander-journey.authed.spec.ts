@@ -15,9 +15,11 @@
  * Every browser search answers from the three cards below, and their images
  * answer from an inline SVG, so the browser never reaches the network. The
  * server still asks Scryfall itself when it checks a commander-partner pair
- * (`commandPairProblem`, `duplicatesOtherCommandSlot`). Scryfall answers
- * `not_found` for the ids below and the server lets the pair through: the
- * partner test is the one place that depends on the server's network.
+ * (`commandPairProblem`, `duplicatesOtherCommandSlot`). In the E2E stack that
+ * request reaches the Scryfall stand-in (`scryfall-stand-in.ts`), which
+ * answers `not_found` for the ids below as live Scryfall does, and the server
+ * lets the pair through. On 2026-11-12 the live call stalled past the app's
+ * 10 s budget and failed the partner test; the stand-in exists for that.
  *
  * Every control is found by role and accessible name (audit TT-11): a search
  * toggle by its label, a search result by its "Add {name} to deck" button, a

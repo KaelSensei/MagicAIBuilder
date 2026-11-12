@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures";
 import { openBuilder } from "./helpers";
 
 const GENERATED_QUERY = 't:instant o:"draw a card" legal:commander';
@@ -77,7 +77,9 @@ test.describe("Verifiable natural-language search", () => {
     await page.route("https://api.scryfall.com/cards/search**", async (route) => {
       const query = new URL(route.request().url()).searchParams.get("q") ?? "";
       if (isEditorBackgroundSearch(query)) {
-        await route.continue();
+        // Not this stub's business: the next route, the `scryfallStandIn`
+        // fixture's, answers it. `continue()` would send it to the network.
+        await route.fallback();
         return;
       }
       scryfallQueries.push(query);

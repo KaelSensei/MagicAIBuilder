@@ -3,8 +3,10 @@
  * and adds a real one is saved as one change; a list naming a card Scryfall
  * does not know is refused whole, and the deck is untouched.
  *
- * The added card is looked up on Scryfall, so this spec needs the network,
- * as the search specs do. Every control is found by role and accessible name.
+ * The browser looks the added card up on Scryfall's collection endpoint. In
+ * the E2E stack the Scryfall stand-in answers (`scryfall-stand-in.ts`): Sol
+ * Ring is a recorded card and the misspelt name is not, so the spec needs no
+ * network. Every control is found by role and accessible name.
  *
  * @module e2e/deck-bulk-edit
  */
