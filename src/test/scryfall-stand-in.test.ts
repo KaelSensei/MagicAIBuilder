@@ -94,6 +94,53 @@ describe("the stand-in's card search", () => {
   });
 });
 
+describe("the stand-in's query parsing", () => {
+  it("narrows nothing on a quoted filter value, so a Partner query with spaces still names no card", async () => {
+    const response = await search({ q: 'is:commander o:"Partner with" grizzly' });
+    expect(await names(response)).toEqual(["Grizzly Bears"]);
+    expect(
+      (await search({ q: 'is:commander o:"Doctor\'s companion"' })).status
+    ).toBe(404);
+  });
+
+  it("narrows nothing on a comparison term such as cmc>=3", async () => {
+    expect(await names(await search({ q: "cmc>=3 pow!=2 grizzly" }))).toEqual([
+      "Grizzly Bears",
+    ]);
+  });
+
+  it("matches a name: term with a quoted or bare value, and a bare exact term", async () => {
+    expect(await names(await search({ q: 'name:"Grizzly Bears"' }))).toEqual([
+      "Grizzly Bears",
+    ]);
+    expect(await names(await search({ q: "name:grizzly" }))).toEqual([
+      "Grizzly Bears",
+    ]);
+    expect(await names(await search({ q: "!Counterspell" }))).toEqual([
+      "Counterspell",
+    ]);
+  });
+
+  it("drops OR and parentheses rather than treating them as words", async () => {
+    expect(await names(await search({ q: "(grizzly OR bears)" }))).toEqual([
+      "Grizzly Bears",
+    ]);
+  });
+
+  it("answers the localized exact-name search the client sends", async () => {
+    const response = await search({
+      q: 'lang:fr unique:cards (!"Llanowar Elves")',
+      include_multilingual: "true",
+    });
+    const body = (await response.json()) as {
+      data: { name: string; lang: string }[];
+    };
+    expect(body.data.map((card) => [card.name, card.lang])).toEqual([
+      ["Llanowar Elves", "fr"],
+    ]);
+  });
+});
+
 describe("the stand-in's collection endpoint", () => {
   it("finds cards by name, resolves a front-face name to the whole card and reports the rest as not found", async () => {
     const response = await postCollection([
