@@ -44,7 +44,7 @@ Verified on `dev` (commit `49983a9`) on 2026-11-09:
 - **`/api/v1` is owner-scoped.** Hashed Bearer keys carry `decks:read` or `collection:read`, limited to 120 requests per minute per key by an in-memory, per-instance limiter (`src/lib/rate-limit.ts`). `/api/v1/openapi` is public. There are no API terms and no license or attribution field. `src/app/api/v1/decks/route.ts` explains the missing public listing: such an API "is a scraping endpoint with a login on it".
 - **An undocumented public JSON route exists.** `GET /api/deck/[id]` serves a public deck to anyone, with no key and no rate limit (the middleware matcher skips `/api`). It returns every `Deck` and `DeckCard` column except `shareToken`, including `folderId`, `budget`, sideboard and maybeboard rows, and per-card `notes`.
 - **Caching, visibility and moderation.** Anonymous public-deck reads revalidate every 60 seconds (`src/lib/api/viewer-request.ts`). The sitemap lists only `isPublic` decks and claimed profiles. A moderation decision only marks a report `reviewed` or `dismissed`; none hides a deck.
-- **Badge inputs and playtest.** `validateDeck` (`src/lib/deck/validation.ts`) and `src/lib/deck/bracket.ts` are deterministic. `DeckCard.price` is a Scryfall USD figure with no stored date. `PlaytestModal.tsx` is a modal with no popout and no hand-hidden view.
+- **Badge inputs and playtest.** `scoreBracket` (`src/lib/deck/bracket.ts`) and `getColorIdentityViolations` (`src/lib/deck/color-identity.ts`) are deterministic; the unused `validateDeck` engine was deleted on 2026-11-12 (P1-32). `DeckCard.price` is a Scryfall USD figure with no stored date. `PlaytestModal.tsx` is a modal with no popout and no hand-hidden view.
 
 ## Functional requirements
 

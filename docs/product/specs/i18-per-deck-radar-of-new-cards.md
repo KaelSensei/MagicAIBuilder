@@ -26,7 +26,7 @@ The spoiler-season market is large and **entirely set-centric**. Nothing found o
 
 - `src/lib/scryfall/client.ts` — can query a set; results cached 1 h, cards 24 h.
 - `src/lib/deck/bracket.ts` and colour-identity/legality validation — the filter for "legal in this deck" already exists.
-- `src/lib/recommendations/` and the EDHREC integration (I-09) — source-and-freshness labelling already exists and must be reused.
+- The EDHREC integration (I-09) — source-and-freshness labelling already exists and must be reused. The unused `src/lib/recommendations/` scaffold was deleted on 2026-11-12 (P1-32).
 - **Missing:** any set-release awareness, and any per-deck compute budget.
 
 ## Functional requirements

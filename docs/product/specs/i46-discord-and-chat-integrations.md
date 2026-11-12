@@ -60,7 +60,7 @@ Verified on `dev` on 2026-11-09 (commit `61792c1`):
 - **The default image is an SVG.** `src/app/[locale]/layout.tsx` declares `/og-image.svg` at 1200×630, which Discord ignores [1]; home, profile and commander pages unfurl without an image.
 - **Images in progress.** `src/app/api/og/route.tsx` draws free text for any caller and is unused (I-36). `/og/deck/{id}` is I-36 slice 2; the branch `feat/deck-og-image-from-stored-data` held no commit of its own on 2026-11-09.
 - **Routing.** English pages are unprefixed (`localePrefix: "as-needed"`, `src/i18n/routing.ts`) and pass through the next-intl middleware (`src/middleware.ts`); whether locale detection ever redirects a crawler is untested. `robots.ts` disallows `/api/` and `/share/`.
-- **Deterministic engines exist.** `validateDeck` (`src/lib/deck/validation.ts`), `scoreBracket(deck, stats, combos)` (`src/lib/deck/bracket.ts`), the Commander Spellbook client with a one-hour in-memory cache (`src/lib/combos/spellbook.ts`), and a local card-name index (`src/lib/scryfall/name-index.ts`).
+- **Deterministic engines exist.** `scoreBracket(deck, stats, combos)` (`src/lib/deck/bracket.ts`), `getColorIdentityViolations` (`src/lib/deck/color-identity.ts`; the unused `validateDeck` engine was deleted on 2026-11-12 (P1-32)), the Commander Spellbook client with a one-hour in-memory cache (`src/lib/combos/spellbook.ts`), and a local card-name index (`src/lib/scryfall/name-index.ts`).
 - **Limits.** `/api/v1` allows 120 requests a minute per key (`src/lib/api/authenticate.ts`) through an in-memory, per-instance limiter (`src/lib/rate-limit.ts`).
 
 ## Functional requirements
