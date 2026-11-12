@@ -224,20 +224,18 @@ tokens. The behaviour is specified in [I-02](../product/specs/i02-checkable-ai-c
 
 ## Prisma Schema
 
-`prisma/schema.prisma` holds 30 models. Grouped by the bounded context that owns them (see
+`prisma/schema.prisma` holds 29 models. Grouped by the bounded context that owns them (see
 [architecture.md](architecture.md#bounded-contexts)):
 
 | Context       | Models                                                                                                                                       |
 | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| Deck building | `Deck`, `DeckCard`, `DeckFolder`, `DeckSnapshot`, `DeckTemplate`                                                                             |
+| Deck building | `Deck`, `DeckCard`, `DeckFolder`, `DeckSnapshot`                                                                                             |
 | Playtest      | `PlaytestSession`                                                                                                                            |
 | Card catalog  | `CardCache`, `ScryfallSearchCache`                                                                                                           |
 | Meta insights | `MetaCache`, `MetaSnapshot`                                                                                                                  |
-| Collection    | `CollectionCard`, `AcquisitionIntent`, `CardFavorite`, `FavoriteList`, `CardInFavoriteList`                                                  |
+| Collection    | `CollectionCard`, `AcquisitionIntent`                                                                                                        |
 | Community     | `DeckVote`, `DeckRating`, `DeckComment`, `DeckReport`, `SavedPublicDeck`, `PublicDeckFolder`, `CardPackage`, `CardPackageCard`, `UserFollow` |
 | Identity      | `User`, `Account`, `Session`, `VerificationToken`, `ApiKey`, `NotificationPreference`                                                        |
-
-`CardFavorite`, `FavoriteList`, `CardInFavoriteList` and `DeckTemplate` are never queried.
 
 ---
 

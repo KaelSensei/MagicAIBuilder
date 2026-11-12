@@ -23,8 +23,6 @@ model User {
   decks             Deck[]
   deckFolders       DeckFolder[]
   collection        CollectionCard[]
-  favorites         CardFavorite[]
-  favoriteLists     FavoriteList[]
   ratings           DeckRating[]
   votes             DeckVote[]
   playtests         PlaytestSession[]
@@ -414,63 +412,6 @@ model CollectionCard {
   @@unique([scryfallId, foil, userId])
   @@index([scryfallId])
   @@index([userId])
-}
-
-// Deck templates for reusable archetypes
-model DeckTemplate {
-  id            String   @id @default(cuid())
-  name          String
-  commanderName String
-  archetype     String // Combo, Control, Voltron, etc.
-  deckList      Json // Array of DeckCard objects (99 cards)
-  author        String
-  upvotes       Int      @default(0)
-  source        String   @default("community") // "official" or "community"
-  userId        String? // Creator (if community)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  @@index([commanderName])
-  @@index([upvotes])
-}
-
-// Card favorites & wishlists
-model CardFavorite {
-  id         String   @id @default(cuid())
-  scryfallId String
-  name       String
-  typeLine   String
-  cmc        Float    @default(0)
-  price      Float?
-  imageUri   String   @default("")
-  userId     String
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  addedAt    DateTime @default(now())
-
-  @@unique([scryfallId, userId])
-  @@index([userId])
-}
-
-model FavoriteList {
-  id        String               @id @default(cuid())
-  name      String
-  userId    String
-  user      User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
-  cards     CardInFavoriteList[]
-  createdAt DateTime             @default(now())
-  updatedAt DateTime             @updatedAt
-
-  @@index([userId])
-}
-
-model CardInFavoriteList {
-  id         String       @id @default(cuid())
-  listId     String
-  list       FavoriteList @relation(fields: [listId], references: [id], onDelete: Cascade)
-  scryfallId String
-  order      Int          @default(0)
-
-  @@unique([listId, scryfallId])
 }
 
 // ─── Community ──────────────────────────────────────────────────────
