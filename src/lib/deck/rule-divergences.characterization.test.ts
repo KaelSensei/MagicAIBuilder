@@ -22,9 +22,8 @@
  *
  * @module deck/rule-divergences.characterization.test
  */
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import type { QueryClient } from "@tanstack/react-query";
 import { renderHook } from "@testing-library/react";
-import { createElement, type ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useDeckPrice } from "@/hooks/useDeckPrice";
 import { useGameChangers } from "@/hooks/useGameChangers";
@@ -35,6 +34,7 @@ import {
   isOpeningHandLand,
 } from "@/lib/playtest/opening-hand-evidence";
 import type { ScryfallCard } from "@/lib/scryfall/types";
+import { aTestQueryClient, renderHookWithProviders } from "@/test/render";
 import {
   getColorIdentityViolations,
   isCardOutsideColorIdentity,
@@ -52,16 +52,10 @@ import type { Deck, DeckCard } from "./types";
 // ---------------------------------------------------------------------------
 
 /** A query cache that already holds an empty Game Changers list, so the hook fetches nothing. */
-function withGameChangersList(): (props: {
-  readonly children: ReactNode;
-}) => ReactNode {
-  const client = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
-  });
+function withGameChangersList(): QueryClient {
+  const client = aTestQueryClient();
   client.setQueryData(["scryfall", "game-changers"], []);
-  return function GameChangersListProvider({ children }) {
-    return createElement(QueryClientProvider, { client }, children);
-  };
+  return client;
 }
 
 /** Stands in for the deck API: every write succeeds, a new row gets an id. */
@@ -203,8 +197,8 @@ describe("Game Changer count", () => {
   });
 
   it("useGameChangers currently counts rows in every zone, Considering included: 2 (pinned; no production caller; see B2-38)", () => {
-    const { result } = renderHook(() => useGameChangers(DECK), {
-      wrapper: withGameChangersList(),
+    const { result } = renderHookWithProviders(() => useGameChangers(DECK), {
+      queryClient: withGameChangersList(),
     });
 
     expect(result.current.count).toBe(2);
@@ -236,9 +230,10 @@ describe("Game Changer count", () => {
   });
 
   it("currently counts a two-copy row as 2 in computeDeckStats but as 1 in useGameChangers (pinned; see B2-38)", () => {
-    const { result } = renderHook(() => useGameChangers(TWO_COPY_DECK), {
-      wrapper: withGameChangersList(),
-    });
+    const { result } = renderHookWithProviders(
+      () => useGameChangers(TWO_COPY_DECK),
+      { queryClient: withGameChangersList() }
+    );
 
     expect(computeDeckStats(TWO_COPY_DECK).gameChangersCount).toBe(2);
     expect(result.current.count).toBe(1);

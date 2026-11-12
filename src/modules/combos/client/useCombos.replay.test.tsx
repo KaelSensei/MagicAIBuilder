@@ -15,10 +15,8 @@
  * browser sends against the canonical list Spellbook receives, and how each
  * failure reaches the builder.
  */
-import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { renderHook, waitFor } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { waitFor } from "@testing-library/react";
 import { delay, http, HttpResponse, type JsonBodyType } from "msw";
 import { useCombos } from "@/modules/combos/client/useCombos";
 import { COMBO_FETCH_TIMEOUT_MS } from "@/modules/combos/client/api";
@@ -31,7 +29,10 @@ import {
   FIND_MY_COMBOS_RECORDED_REQUEST,
 } from "@/modules/combos/infrastructure/fixtures/find-my-combos-v1";
 import type { Deck, DeckCard, DeckZone } from "@/lib/deck/types";
+import { aDeckCard } from "@/test/builders/card";
+import { aDeck } from "@/test/builders/deck";
 import { setupMsw } from "@/test/msw";
+import { renderHookWithProviders } from "@/test/render";
 
 /** The browser calls the route by path; MSW resolves it against jsdom's origin. */
 const API_COMBOS = "/api/combos";
@@ -50,23 +51,7 @@ let spellbookBodies: unknown[] = [];
 let routePost: (request: Request) => Promise<Response>;
 
 function card(name: string, zone: DeckZone = "main", quantity = 1): DeckCard {
-  return {
-    id: `${zone}-${name}`,
-    name,
-    manaCost: "",
-    cmc: 0,
-    typeLine: "",
-    oracleText: "",
-    colorIdentity: [],
-    isGameChanger: false,
-    isBanned: false,
-    price: null,
-    imageUri: "",
-    artCropUri: "",
-    category: "other",
-    quantity,
-    zone,
-  };
+  return aDeckCard({ id: `${zone}-${name}`, name, quantity, zone });
 }
 
 interface DeckShape {
@@ -77,7 +62,7 @@ interface DeckShape {
 
 /** A Commander deck led by the recorded commander, Kenrith. */
 function deck({ cards, partner, companion }: DeckShape): Deck {
-  return {
+  return aDeck({
     id: "replayed-deck",
     name: "Replayed deck",
     commander: card(RECORDED_COMMANDER),
@@ -86,20 +71,8 @@ function deck({ cards, partner, companion }: DeckShape): Deck {
     pairingType: partner ? "partner" : "none",
     cards: [...cards],
     maybeboard: cards.filter((entry) => entry.zone === "maybeboard"),
-    format: "commander",
     cardCount: cards.length,
-    targetBracket: 2,
-    manualBracket: null,
-    budget: null,
-    description: "",
-    tags: [],
-    shareToken: null,
-    shareEnabled: false,
-    isPublic: false,
-    isAIGenerated: false,
-    createdAt: new Date("2026-11-11T00:00:00Z"),
-    updatedAt: new Date("2026-11-11T00:00:00Z"),
-  };
+  });
 }
 
 /** The recorded deck: Kenrith and nine main-deck cards, ten in all. */
@@ -149,13 +122,7 @@ function neverAnswers(url: string, timeoutMs: number) {
 }
 
 function renderCombos(subject: Deck) {
-  const client = new QueryClient();
-  function Wrapper({ children }: { readonly children: ReactNode }) {
-    return (
-      <QueryClientProvider client={client}>{children}</QueryClientProvider>
-    );
-  }
-  return renderHook(() => useCombos(subject), { wrapper: Wrapper });
+  return renderHookWithProviders(() => useCombos(subject));
 }
 
 describe("useCombos, replayed end to end against the recorded Spellbook lookup", () => {
