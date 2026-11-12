@@ -248,13 +248,16 @@ export const ALL_FORMATS = [
   "legacy", "vintage", "pauper",
 ] as const;
 
+/** ALL_FORMATS as a set of plain strings, so any string can be looked up. */
+const FORMAT_NAMES: ReadonlySet<string> = new Set(ALL_FORMATS);
+
 /**
  * Whether a stored format string names a format this build supports.
  * @param value - Format string from the database or a request
  * @returns True when `value` is one of ALL_FORMATS
  */
 export function isDeckFormat(value: string): value is DeckFormat {
-  return ALL_FORMATS.some((format) => format === value);
+  return FORMAT_NAMES.has(value);
 }
 
 /** Format options for UI dropdowns */

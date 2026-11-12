@@ -3,6 +3,7 @@
  * image route. Kept apart from the data loader so the page does not import
  * Prisma to build a URL.
  */
+import { compareCodeUnits } from "@/lib/text/code-unit-order";
 
 /** Open Graph's recommended size, which X's large summary card also uses. */
 export const DECK_IMAGE_SIZE = { width: 1200, height: 630 } as const;
@@ -39,12 +40,18 @@ export interface DeckImageSource {
  * @returns a short, stable token
  */
 export function deckImageVersion(deck: DeckImageSource): string {
+  // Code-unit order, not `localeCompare`: the token must not change with the
+  // locale or ICU data of the server that builds the page.
   const commanders = deck.cards
     .filter((card) => card.isCommander || card.isPartner)
-    .map((card) => [card.name, card.isPartner, [...card.colorIdentity].sort()]);
+    .map((card) => [
+      card.name,
+      card.isPartner,
+      card.colorIdentity.toSorted(compareCodeUnits),
+    ]);
   const cardCount = deck.cards.reduce((sum, card) => sum + card.quantity, 0);
-  const displayName = deck.user?.name?.trim();
-  const author = displayName ? displayName : (deck.user?.username ?? null);
+  // `||`, not `??`: a display name that is blank once trimmed falls back too.
+  const author = deck.user?.name?.trim() || (deck.user?.username ?? null);
 
   return fnv1a(JSON.stringify([deck.name, commanders, cardCount, author]));
 }

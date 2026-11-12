@@ -54,8 +54,12 @@ const COLORS: ReadonlySet<string> = new Set<string>(PIP_COLORS);
  */
 const PREGAME_COLOR_CHOICE = /choose a color before the game begins/i;
 
-/** A mana symbol with a color in it: `{W}`, `{U/B}`, `{2/R}`, `{G/P}` (CR 903.4). */
-const COLORED_MANA_SYMBOL = /\{[^}WUBRG]*[WUBRG]/;
+/**
+ * A mana symbol with a color in it: `{W}`, `{U/B}`, `{2/R}`, `{G/P}` (CR 903.4).
+ * The scan also stops at the next `{`, so every character is read once and a
+ * run of unclosed braces stays linear; `test` finds the same symbols.
+ */
+const COLORED_MANA_SYMBOL = /\{[^{}WUBRG]*[WUBRG]/;
 
 /**
  * The commander-identity mana ability, optionally followed by a rider that

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { PRICE_TABLE_VERSION, priceModelUsage } from "./prices";
+import { PRICE_TABLE_VERSION, highestRates, priceModelUsage } from "./prices";
 
 const NO_TOKENS = {
   inputTokens: 0,
@@ -73,5 +73,25 @@ describe("priceModelUsage", () => {
 
   it("costs nothing when no token was billed", () => {
     expect(priceModelUsage("claude-haiku-4-5", NO_TOKENS).costMicroUsd).toBe(0);
+  });
+});
+
+describe("highestRates", () => {
+  it("takes the highest rate of each kind of token, whichever set it comes from", () => {
+    expect(
+      highestRates([
+        { input: 1, cacheWrite: 1.25, cacheRead: 0.1, output: 5 },
+        { input: 4, cacheWrite: 5, cacheRead: 0.05, output: 2.5 },
+      ])
+    ).toEqual({ input: 4, cacheWrite: 5, cacheRead: 0.1, output: 5 });
+  });
+
+  it("answers zero rates for no rate set at all instead of throwing", () => {
+    expect(highestRates([])).toEqual({
+      input: 0,
+      cacheWrite: 0,
+      cacheRead: 0,
+      output: 0,
+    });
   });
 });

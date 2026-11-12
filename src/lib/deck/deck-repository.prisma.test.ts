@@ -19,12 +19,13 @@
  * URL for that one command.)
  */
 import { PrismaClient } from "@prisma/client";
-import { afterAll, beforeAll, describe } from "vitest";
+import { afterAll, beforeAll, describe, it } from "vitest";
 
 import { forEachSequential } from "@/lib/async/sequential";
 import { prismaDeckRepository } from "./deck-repository";
 import {
   describeDeckRepositoryContract,
+  expectSeedsAsTheContractAssumes,
   SEEDED_AT,
   type DeckRepositoryHarness,
 } from "./testing/deck-repository-contract";
@@ -105,6 +106,10 @@ describe.skipIf(databaseUrl === undefined)(
     afterAll(async () => {
       await client.deck.deleteMany({ where: { id: { in: seeded } } });
       await client.$disconnect();
+    });
+
+    it("seeds a deck the way the contract cases assume", async () => {
+      await expectSeedsAsTheContractAssumes(prismaHarness(client, seeded));
     });
 
     describeDeckRepositoryContract(() => prismaHarness(client, seeded));

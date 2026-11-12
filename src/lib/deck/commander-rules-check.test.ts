@@ -344,3 +344,86 @@ describe("getCommanderRuleIssues: commander color identity mana", () => {
     ]);
   });
 });
+
+/**
+ * A wall-clock ceiling far above what a linear scan of the text below needs
+ * (well under a millisecond) and far below what a quadratic one does (about a
+ * second for 30,000 characters).
+ */
+const LINEAR_TIME_BUDGET_MS = 100;
+
+/**
+ * Commanders saved without their color identity, so only their mana symbols
+ * show a color. Names, costs and Oracle texts are copied from Scryfall's card
+ * data, read on 2026-11-11.
+ */
+describe("getCommanderRuleIssues: mana symbols of a commander saved without its identity (CR 903.4)", () => {
+  it.each([
+    {
+      label: "a hybrid symbol (Rhys the Redeemed, CR 107.4e)",
+      commander: makeCard({
+        id: "rhys",
+        name: "Rhys the Redeemed",
+        manaCost: "{G/W}",
+        typeLine: "Legendary Creature — Elf Warrior",
+        category: "commander",
+        oracleText:
+          "{2}{G/W}, {T}: Create a 1/1 green and white Elf Warrior creature token.\n{4}{G/W}{G/W}, {T}: For each creature token you control, create a token that's a copy of that creature.",
+      }),
+    },
+    {
+      label: "a monocolored hybrid symbol (Reaper King, CR 107.4e)",
+      commander: makeCard({
+        id: "reaper-king",
+        name: "Reaper King",
+        manaCost: "{2/W}{2/U}{2/B}{2/R}{2/G}",
+        typeLine: "Legendary Artifact Creature — Scarecrow",
+        category: "commander",
+        oracleText:
+          "({2/W} can be paid with any two mana or with {W}. This card's mana value is 10.)\nOther Scarecrow creatures you control get +1/+1.\nWhenever another Scarecrow you control enters, destroy target permanent.",
+      }),
+    },
+    {
+      label: "a Phyrexian symbol (K'rrik, Son of Yawgmoth, CR 107.4f)",
+      commander: makeCard({
+        id: "krrik",
+        name: "K'rrik, Son of Yawgmoth",
+        manaCost: "{4}{B/P}{B/P}{B/P}",
+        typeLine: "Legendary Creature — Phyrexian Horror Minion",
+        category: "commander",
+        oracleText:
+          "({B/P} can be paid with either {B} or 2 life.)\nLifelink\nFor each {B} in a cost, you may pay 2 life rather than pay that mana.\nWhenever you cast a black spell, put a +1/+1 counter on K'rrik.",
+      }),
+    },
+  ])("does not flag Arcane Signet under $label", ({ commander }) => {
+    expect(flaggedNames(ARCANE_SIGNET, { commander })).toEqual([]);
+  });
+
+  it("flags Arcane Signet under a commander whose only symbols are generic and colorless (Kozilek, CR 107.4c)", () => {
+    const kozilek = makeCard({
+      id: "kozilek",
+      name: "Kozilek, the Great Distortion",
+      manaCost: "{8}{C}{C}",
+      typeLine: "Legendary Creature — Eldrazi",
+      category: "commander",
+      oracleText:
+        "When you cast this spell, if you have fewer than seven cards in hand, draw cards equal to the difference.\nMenace\nDiscard a card with mana value X: Counter target spell with mana value X.",
+    });
+
+    expect(flaggedNames(ARCANE_SIGNET, { commander: kozilek })).toEqual([
+      "Arcane Signet",
+    ]);
+  });
+
+  it("reads a long run of opening braces in linear time", () => {
+    // Every `{` used to start a scan that ran over all the braces after it.
+    const commander = makeCard({ ...KARN, oracleText: "{".repeat(30_000) });
+
+    const started = performance.now();
+    const flagged = flaggedNames(ARCANE_SIGNET, { commander });
+    const elapsedMs = performance.now() - started;
+
+    expect(flagged).toEqual(["Arcane Signet"]);
+    expect(elapsedMs).toBeLessThan(LINEAR_TIME_BUDGET_MS);
+  });
+});
