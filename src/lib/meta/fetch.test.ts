@@ -326,6 +326,10 @@ const ROW = (id: number, name: string) => `<tr class=hover_tr>
 <td class=S11>05/05/24</td>
 </tr>`;
 
+/** The search form's card row as MTGTop8 echoes it above the results of a card search. */
+const CARD_FILTER_ECHO = (cards: string) =>
+  `<tr><td colspan=2 align=center><textarea name=cards style="width:230;height:60;">${cards}</textarea></td></tr>`;
+
 function latin1Response(html: string): Response {
   const bytes = Uint8Array.from(html, (ch) => ch.charCodeAt(0));
   return new Response(bytes, { status: 200, headers: { "Content-Type": "text/html; charset=iso-8859-1" } });
@@ -380,7 +384,11 @@ describe("fetchTournamentData", () => {
     const spy = vi
       .spyOn(http, "httpGet")
       .mockResolvedValueOnce(latin1Response(FORM_HTML))
-      .mockResolvedValueOnce(latin1Response(ROW(9, "Krenko Goblins")));
+      .mockResolvedValueOnce(
+        latin1Response(
+          CARD_FILTER_ECHO("Krenko, Mob Boss") + ROW(9, "Krenko Goblins")
+        )
+      );
 
     const result = await fetchTournamentData("Krenko, Mob Boss");
 

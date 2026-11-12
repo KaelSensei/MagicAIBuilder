@@ -7,7 +7,10 @@
  * the commander; the `cards=` field instead returns every deck that merely
  * *contains* the card, which for a popular commander is mostly other
  * people's 99. The id is therefore preferred, with `cards=` as the fallback
- * for a commander MTGTop8 has not given an archetype yet.
+ * for a commander MTGTop8 has not given an archetype yet. The site ignores a
+ * `cards=` name it does not know and answers with every EDH deck; the form it
+ * echoes above the results says whether the filter was applied — see
+ * `readCardFilterEcho`.
  *
  * Result rows carry the context the meta panel wants to show: player, event,
  * date, placement, and the event's size as one to four stars. MTGTop8's "EDH"
@@ -162,6 +165,34 @@ export function parseSearchResults(html: string): TournamentDeck[] {
     throw new Error("Invalid MTGTop8 response: no recognizable results");
   }
   return decks;
+}
+
+const CARD_FILTER_ECHO_RE = /<textarea name=cards\b[^>]*>([^<]*)<\/textarea>/;
+
+/**
+ * Reads the card filter MTGTop8 applied, as echoed in the search form it
+ * prints above the results of POST /search.
+ *
+ * The site drops a `cards=` value it does not know: it prints "No match for
+ * …", leaves the `cards` textarea empty and answers with the whole EDH section
+ * ("44269 decks matching" on 2026-11-12). A card it knows is echoed back in the
+ * textarea and the rows are the decks that contain it. On a card search the
+ * echo is therefore what tells "no deck for this card" from "every deck". Both
+ * pages are recorded in `fixtures/mtgtop8-card-search-v1.ts`.
+ *
+ * @param html - the search response body, already decoded
+ * @returns the echoed filter as the site prints it, trimmed (the site appends a
+ *   carriage return), or null when MTGTop8 applied no card filter
+ * @throws when the page has no `cards` field: a changed form is rejected rather
+ *   than read as an ignored filter, as {@link parseSearchResults} rejects
+ *   changed rows
+ */
+export function readCardFilterEcho(html: string): string | null {
+  const echo = CARD_FILTER_ECHO_RE.exec(html);
+  if (!echo)
+    throw new Error("Invalid MTGTop8 response: card filter echo missing");
+  const cards = echo[1].trim();
+  return cards === "" ? null : cards;
 }
 
 export interface SearchBodyInput {

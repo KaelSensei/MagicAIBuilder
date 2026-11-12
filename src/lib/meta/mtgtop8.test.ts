@@ -6,12 +6,18 @@ import {
   parseArchetypeOptions,
   parseSearchResults,
   parseTop8Date,
+  readCardFilterEcho,
 } from "./mtgtop8";
 import {
   RECORDED_ARCHETYPE_IDS,
   RECORDED_SEARCH_FORM,
   searchFormLatin1Bytes,
 } from "./fixtures/mtgtop8-search-form-v1";
+import {
+  RECORDED_KNOWN_CARD_NAME,
+  RECORDED_KNOWN_CARD_PAGE,
+  RECORDED_UNKNOWN_CARD_PAGE,
+} from "./fixtures/mtgtop8-card-search-v1";
 
 // Trimmed from a live GET https://www.mtgtop8.com/search (2026-08-20)
 const SEARCH_FORM_HTML = `
@@ -214,5 +220,30 @@ describe("findArchetypeId — accented commander names (recorded form, 2026-11-1
       decodeLatin1(searchFormLatin1Bytes())
     );
     expect(findArchetypeId(fromWire, "eomer marshal of rohan")).toBe(2229);
+  });
+});
+
+describe("readCardFilterEcho", () => {
+  it("reads the card MTGTop8 echoes when it applied the card filter, without the site's trailing carriage return", () => {
+    expect(readCardFilterEcho(RECORDED_KNOWN_CARD_PAGE)).toBe(
+      RECORDED_KNOWN_CARD_NAME
+    );
+  });
+
+  it("answers null when MTGTop8 ignored the card filter: the page says 'No match for' and echoes nothing", () => {
+    expect(RECORDED_UNKNOWN_CARD_PAGE).toContain(
+      "No match for Zzyzx Nonexistent Commander Qq"
+    );
+    expect(readCardFilterEcho(RECORDED_UNKNOWN_CARD_PAGE)).toBeNull();
+  });
+
+  it("rejects a page without the card field rather than reading it as an ignored filter", () => {
+    const withoutCardField = RECORDED_KNOWN_CARD_PAGE.replace(
+      "name=cards",
+      "name=card_list"
+    );
+    expect(() => readCardFilterEcho(withoutCardField)).toThrow(
+      "Invalid MTGTop8 response: card filter echo missing"
+    );
   });
 });
