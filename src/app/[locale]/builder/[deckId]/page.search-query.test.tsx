@@ -21,14 +21,10 @@
  */
 import { isInaccessible, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { http, HttpResponse } from "msw";
 import type { Session } from "next-auth";
-import { SessionProvider } from "next-auth/react";
-import { NextIntlClientProvider, useLocale, useMessages } from "next-intl";
 import { AppRouterContext } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import { PathParamsContext } from "next/dist/shared/lib/hooks-client-context.shared-runtime";
-import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useCollectionStore } from "@/lib/collection/store";
 import type { ApiDeck, ApiDeckCard } from "@/lib/db/deck-api";
@@ -39,9 +35,8 @@ import {
   type ScryfallSearchResponse,
 } from "@/lib/scryfall/types";
 import { useUIStore } from "@/lib/ui/store";
-import auth from "@/messages/en/auth.json";
 import { setupMsw } from "@/test/msw";
-import { renderWithIntl } from "@/test/render-with-intl";
+import { renderWithProviders } from "@/test/render";
 import BuilderPage from "./page";
 
 // eslint-disable-next-line no-restricted-syntax -- the one seam left; the header says why and what removes it
@@ -134,20 +129,6 @@ const OWNED_OPT = {
 };
 
 /**
- * `renderWithIntl` loads the namespaces most components read, but not `auth`, which the header's
- * user menu reads.
- */
-function WithAuthMessages({ children }: { readonly children: ReactNode }) {
-  const locale = useLocale();
-  const messages = useMessages();
-  return (
-    <NextIntlClientProvider locale={locale} messages={{ ...messages, auth }}>
-      {children}
-    </NextIntlClientProvider>
-  );
-}
-
-/**
  * The accessible name of one of this page's buttons, as `getByRole` computes it: `aria-label`,
  * else the text outside `aria-hidden` children, else `title`. None of them uses `aria-labelledby`
  * or nested labelled content, so this is the whole algorithm for them.
@@ -203,21 +184,13 @@ async function openBuilderWithFilters() {
     replace: vi.fn(),
     prefetch: vi.fn(),
   };
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
-  });
-  renderWithIntl(
+  renderWithProviders(
     <AppRouterContext.Provider value={router}>
       <PathParamsContext.Provider value={{ locale: "en", deckId: DECK_ID }}>
-        <SessionProvider session={PLAYER}>
-          <QueryClientProvider client={queryClient}>
-            <WithAuthMessages>
-              <BuilderPage />
-            </WithAuthMessages>
-          </QueryClientProvider>
-        </SessionProvider>
+        <BuilderPage />
       </PathParamsContext.Provider>
-    </AppRouterContext.Provider>
+    </AppRouterContext.Provider>,
+    { session: PLAYER }
   );
   const user = userEvent.setup();
   await screen.findByRole("heading", { level: 1, name: "Talrand Spells" });

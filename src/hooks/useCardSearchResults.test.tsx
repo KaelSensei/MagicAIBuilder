@@ -1,7 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { renderHook, waitFor } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import type { ReactNode } from "react";
+import { waitFor } from "@testing-library/react";
 import { useCardSearchResults } from "./useCardSearchResults";
 import { useCollectionStore } from "@/lib/collection/store";
 import { __resetRateLimiter } from "@/lib/scryfall/client";
@@ -9,6 +7,7 @@ import type {
   ScryfallCard,
   ScryfallSearchResponse,
 } from "@/lib/scryfall/types";
+import { renderHookWithProviders } from "@/test/render";
 
 // Sociable: the real collection store and the real Scryfall client run; only HTTP is replaced,
 // by an in-memory copy of the shared search cache the browser reads (`/api/cache/search`).
@@ -83,13 +82,6 @@ function own(
   );
 }
 
-function wrapper({ children }: { readonly children: ReactNode }) {
-  const client = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
-  });
-  return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
-}
-
 beforeEach(() => {
   __resetRateLimiter();
   useCollectionStore.setState({
@@ -118,13 +110,11 @@ describe("useCardSearchResults with Collection only off", () => {
     ]);
     own({ scryfallId: "sol-ring-c21", name: "Sol Ring" });
 
-    const { result } = renderHook(
-      () =>
-        useCardSearchResults(QUERY, {
-          collectionOnly: false,
-          sessionStatus: "authenticated",
-        }),
-      { wrapper }
+    const { result } = renderHookWithProviders(() =>
+      useCardSearchResults(QUERY, {
+        collectionOnly: false,
+        sessionStatus: "authenticated",
+      })
     );
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -158,13 +148,11 @@ describe("useCardSearchResults with Collection only on", () => {
       }
     );
 
-    const { result } = renderHook(
-      () =>
-        useCardSearchResults(QUERY, {
-          collectionOnly: true,
-          sessionStatus: "authenticated",
-        }),
-      { wrapper }
+    const { result } = renderHookWithProviders(() =>
+      useCardSearchResults(QUERY, {
+        collectionOnly: true,
+        sessionStatus: "authenticated",
+      })
     );
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -191,13 +179,11 @@ describe("useCardSearchResults with Collection only on", () => {
       { scryfallId: "command-tower-c21", name: "Command Tower" }
     );
 
-    const { result } = renderHook(
-      () =>
-        useCardSearchResults(QUERY, {
-          collectionOnly: true,
-          sessionStatus: "authenticated",
-        }),
-      { wrapper }
+    const { result } = renderHookWithProviders(() =>
+      useCardSearchResults(QUERY, {
+        collectionOnly: true,
+        sessionStatus: "authenticated",
+      })
     );
 
     await waitFor(
@@ -224,13 +210,11 @@ describe("useCardSearchResults with Collection only on and nothing to filter by"
       page([card("sol-ring-cmm", "Sol Ring")], 1, false),
     ]);
 
-    const { result } = renderHook(
-      () =>
-        useCardSearchResults(QUERY, {
-          collectionOnly: true,
-          sessionStatus: "unauthenticated",
-        }),
-      { wrapper }
+    const { result } = renderHookWithProviders(() =>
+      useCardSearchResults(QUERY, {
+        collectionOnly: true,
+        sessionStatus: "unauthenticated",
+      })
     );
 
     await waitFor(() =>
@@ -247,13 +231,11 @@ describe("useCardSearchResults with Collection only on and nothing to filter by"
     ]);
     own({ scryfallId: "sol-ring-c21", name: "Sol Ring", quantity: 0 });
 
-    const { result } = renderHook(
-      () =>
-        useCardSearchResults(QUERY, {
-          collectionOnly: true,
-          sessionStatus: "authenticated",
-        }),
-      { wrapper }
+    const { result } = renderHookWithProviders(() =>
+      useCardSearchResults(QUERY, {
+        collectionOnly: true,
+        sessionStatus: "authenticated",
+      })
     );
 
     await waitFor(() =>
@@ -268,22 +250,18 @@ describe("useCardSearchResults with Collection only on and nothing to filter by"
       page([card("sol-ring-cmm", "Sol Ring")], 1, false),
     ]);
 
-    const session = renderHook(
-      () =>
-        useCardSearchResults(QUERY, {
-          collectionOnly: true,
-          sessionStatus: "loading",
-        }),
-      { wrapper }
+    const session = renderHookWithProviders(() =>
+      useCardSearchResults(QUERY, {
+        collectionOnly: true,
+        sessionStatus: "loading",
+      })
     );
     useCollectionStore.setState({ isLoading: true });
-    const collection = renderHook(
-      () =>
-        useCardSearchResults(QUERY, {
-          collectionOnly: true,
-          sessionStatus: "authenticated",
-        }),
-      { wrapper }
+    const collection = renderHookWithProviders(() =>
+      useCardSearchResults(QUERY, {
+        collectionOnly: true,
+        sessionStatus: "authenticated",
+      })
     );
 
     for (const { result } of [session, collection]) {
@@ -296,13 +274,11 @@ describe("useCardSearchResults with Collection only on and nothing to filter by"
   it("says the collection could not be loaded rather than calling it empty", () => {
     useCollectionStore.setState({ loadError: true });
 
-    const { result } = renderHook(
-      () =>
-        useCardSearchResults(QUERY, {
-          collectionOnly: true,
-          sessionStatus: "authenticated",
-        }),
-      { wrapper }
+    const { result } = renderHookWithProviders(() =>
+      useCardSearchResults(QUERY, {
+        collectionOnly: true,
+        sessionStatus: "authenticated",
+      })
     );
 
     expect(result.current.collectionOnly).toEqual({
