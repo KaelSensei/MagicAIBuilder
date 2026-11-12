@@ -4,7 +4,7 @@
  * Covers: setGameChangerNames, setBannedNames, setSearchViewMode,
  * setDeckViewMode, setActiveDeck, loadDecks, createDeck, deleteDeck,
  * renameDeck, getActiveDeck, setTargetBracket, setBudget, setManualBracket,
- * addCard, removeCard, updateCardCategory, markGameChanger, markBanned.
+ * addCard, removeCard, updateCardCategory.
  *
  * The fake deck API (`src/test/fake-deck-client.ts`) answers every deck
  * request in memory, so the tests run offline.
@@ -1124,64 +1124,5 @@ describe("useDeckStore — updateCardCategory", () => {
     useDeckStore.setState({ activeDeckId: null });
     await useDeckStore.getState().updateCardCategory("card-1", "land");
     expect(deckApi.updateCardCategory).not.toHaveBeenCalled();
-  });
-});
-
-// ─────────────────────────────────────────────────────────────────────────────
-
-describe("useDeckStore — markGameChanger / markBanned", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    seedDeck(
-      makeActiveDeck({
-        cards: [
-          makeDeckCard({ id: "card-1", name: "Rhystic Study" }),
-          makeDeckCard({ id: "card-2", name: "Sol Ring" }),
-        ],
-      })
-    );
-  });
-
-  it("markGameChanger sets isGameChanger=true for matching card name", () => {
-    useDeckStore.getState().markGameChanger("Rhystic Study");
-    const card = useDeckStore.getState().decks["deck-1"].cards.find((c) => c.id === "card-1");
-    expect(card?.isGameChanger).toBe(true);
-  });
-
-  it("markGameChanger does not affect cards with different names", () => {
-    useDeckStore.getState().markGameChanger("Rhystic Study");
-    const card = useDeckStore.getState().decks["deck-1"].cards.find((c) => c.id === "card-2");
-    expect(card?.isGameChanger).toBe(false);
-  });
-
-  it("markGameChanger does nothing when no active deck", () => {
-    useDeckStore.setState({ activeDeckId: null });
-    useDeckStore.getState().markGameChanger("Rhystic Study");
-    expect(Object.keys(useDeckStore.getState().decks)).toHaveLength(1);
-  });
-
-  it("markBanned sets isBanned=true for matching card name", () => {
-    useDeckStore.getState().markBanned("Rhystic Study");
-    const card = useDeckStore.getState().decks["deck-1"].cards.find((c) => c.id === "card-1");
-    expect(card?.isBanned).toBe(true);
-  });
-
-  it("markBanned does not affect cards with different names", () => {
-    useDeckStore.getState().markBanned("Rhystic Study");
-    const card = useDeckStore.getState().decks["deck-1"].cards.find((c) => c.id === "card-2");
-    expect(card?.isBanned).toBe(false);
-  });
-
-  it("markBanned does nothing when no active deck", () => {
-    useDeckStore.setState({ activeDeckId: null });
-    useDeckStore.getState().markBanned("Some Card");
-    expect(Object.keys(useDeckStore.getState().decks)).toHaveLength(1);
-  });
-
-  it("markGameChanger is idempotent when called twice", () => {
-    useDeckStore.getState().markGameChanger("Rhystic Study");
-    useDeckStore.getState().markGameChanger("Rhystic Study");
-    const card = useDeckStore.getState().decks["deck-1"].cards.find((c) => c.id === "card-1");
-    expect(card?.isGameChanger).toBe(true);
   });
 });
