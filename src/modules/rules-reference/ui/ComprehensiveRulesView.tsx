@@ -1,16 +1,19 @@
 /**
- * ComprehensiveRulesView — server-rendered browser for the MTG Comprehensive
+ * ComprehensiveRulesView: the server-rendered browser for the Comprehensive
  * Rules. One chapter (or the glossary) is rendered at a time, selected via the
  * `?chapter=` query param; navigation is plain locale-aware links.
+ *
+ * The view receives the parsed rules from the page, which loads them through
+ * the context's `server.ts`; `ui/` never reads the file itself (ADR 0002).
  */
 import { getFormatter, getTranslations } from "next-intl/server";
 import { BookOpen, Shield } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import {
-  loadComprehensiveRules,
   searchComprehensiveRules,
+  type ComprehensiveRules,
   type RulesChapter,
-} from "@/modules/rules-reference/infrastructure/comprehensive";
+} from "@/modules/rules-reference";
 import { cn } from "@/components/ui/utils";
 
 const GLOSSARY_KEY = "glossary";
@@ -25,8 +28,11 @@ const EFFECTIVE_DATE_FORMAT = {
 } as const satisfies Intl.DateTimeFormatOptions;
 
 interface ComprehensiveRulesViewProps {
+  /** The parsed rules edition to show, loaded by the page. */
+  readonly rules: ComprehensiveRules;
   /** Raw `?chapter=` value: a chapter number like "903", or "glossary". */
   readonly requestedChapter?: string;
+  /** Raw `?q=` value; blank means no search. */
   readonly requestedQuery?: string;
 }
 
@@ -57,12 +63,12 @@ function ChapterArticle({ chapter }: { readonly chapter: RulesChapter }) {
 }
 
 export async function ComprehensiveRulesView({
+  rules,
   requestedChapter,
   requestedQuery = "",
 }: ComprehensiveRulesViewProps) {
   const t = await getTranslations("rules");
   const format = await getFormatter();
-  const rules = loadComprehensiveRules();
 
   const allChapters = rules.sections.flatMap((s) => s.chapters);
   const showGlossary = requestedChapter === GLOSSARY_KEY;

@@ -110,5 +110,17 @@
   {
     "from": "src/components/rules/Pagination.test.tsx",
     "to": "src/modules/rules-reference/ui/Pagination.test.tsx"
+  },
+  {
+    "from": "src/modules/rules-reference/infrastructure/comprehensive.ts",
+    "to": "src/modules/rules-reference/domain/comprehensive-rules.ts"
+  },
+  {
+    "from": "src/modules/rules-reference/infrastructure/comprehensive.test.ts",
+    "to": "src/modules/rules-reference/domain/comprehensive-rules.test.ts"
+  },
+  {
+    "from": "src/modules/rules-reference/infrastructure/comprehensive-search.test.ts",
+    "to": "src/modules/rules-reference/domain/comprehensive-rules-search.test.ts"
   }
 ]

@@ -1,16 +1,16 @@
 /**
- * Parser for the official Magic: The Gathering Comprehensive Rules text file.
+ * Parser and search for the official Magic: The Gathering Comprehensive Rules
+ * text, as pure functions over the file's content.
  *
- * The source document (`data/MagicCompRules-*.txt`) is structured as:
- * title → effective date → table of contents (ends with "Credits") →
- * body (sections 1–9, chapters 100–905) → glossary → credits.
+ * The source document (`infrastructure/data/MagicCompRules-*.txt`) is
+ * structured as: title, effective date, table of contents (ends with
+ * "Credits"), body (sections 1-9, chapters 100-905), glossary, credits.
  *
- * Parsing happens server-side only; the ~1 MB file is read once per process
- * and the parsed result is cached at module level.
+ * Nothing here touches the file system: `infrastructure/rules-file.ts` reads
+ * the bundled file once per server process and hands its text to
+ * `parseComprehensiveRules`, so the parser and the search run anywhere,
+ * including in tests with a few lines of fixture text.
  */
-import "server-only";
-import { readFileSync } from "node:fs";
-import path from "node:path";
 import { parseRulesEffectiveDate } from "@/modules/rules-reference/domain/effective-date";
 
 export interface RuleParagraph {
@@ -182,29 +182,6 @@ export function parseComprehensiveRules(raw: string): ComprehensiveRules {
   };
 }
 
-const RULES_FILE = path.join(
-  process.cwd(),
-  "src",
-  "modules",
-  "rules-reference",
-  "infrastructure",
-  "data",
-  "MagicCompRules-20260807.txt"
-);
-
-let cachedRules: ComprehensiveRules | null = null;
-
-/**
- * Reads and parses the bundled Comprehensive Rules file.
- * The parsed document is cached for the lifetime of the server process.
- *
- * @returns The parsed Comprehensive Rules document.
- */
-export function loadComprehensiveRules(): ComprehensiveRules {
-  cachedRules ??= parseComprehensiveRules(readFileSync(RULES_FILE, "utf8"));
-  return cachedRules;
-}
-
 export interface RulesSearchResult {
   readonly kind: "rule" | "glossary";
   readonly chapter: string | null;
@@ -212,7 +189,7 @@ export interface RulesSearchResult {
   readonly text: string;
 }
 
-/** Search the locally parsed rules corpus; no network access is performed. */
+/** Every rule paragraph with its chapter, in document order. */
 function* searchableRuleParagraphs(rules: ComprehensiveRules) {
   for (const section of rules.sections) {
     for (const chapter of section.chapters) {
@@ -223,6 +200,17 @@ function* searchableRuleParagraphs(rules: ComprehensiveRules) {
   }
 }
 
+/**
+ * Finds the rule paragraphs, then the glossary entries, whose text contains
+ * the query, case-insensitively, in document order.
+ *
+ * A blank query or a non-positive limit yields no result. The search is
+ * a plain substring match over the parsed corpus: no network, no index.
+ *
+ * @param rules - The parsed document to search.
+ * @param query - Free text; surrounding whitespace is ignored.
+ * @param limit - The most results to return, rules before glossary entries.
+ */
 export function searchComprehensiveRules(
   rules: ComprehensiveRules,
   query: string,
