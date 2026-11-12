@@ -187,9 +187,10 @@ The strategy follows [ADR 0005](../../../docs/adr/0005-testing-strategy-fakes-co
 - Two ten-card thresholds: `client/useCombos.ts` counts commander, partner and main-deck names;
   the builder page gates the panel on `deck.cards.length`, which counts every zone. A deck of ten
   rows with some in the maybeboard shows "No known combos detected" while no lookup ran. B2-43
-  unifies them (OD-07: one threshold, names in main deck and command zone).
-- The companion is not sent and not counted toward the ten cards (`client/useCombos.ts`); OD-07
-  decided to include it, B2-43 does it.
+  would unify them (open owner decision OD-07, recommended: one threshold, names in main deck and
+  command zone).
+- The companion is not sent and not counted toward the ten cards (`client/useCombos.ts`); including it
+  is open owner decision OD-07 (recommended); B2-43 would do it.
 - `isTwoCardInfiniteCombo` counts named cards only: Hullbreaker Horror + Sol Ring counts as two
   cards though Spellbook lists a third generic piece. Roadmap I-77 reviews the reading.
 - Infinity is a keyword heuristic over Spellbook's effect names (`spellbook-variant.ts`): "Each

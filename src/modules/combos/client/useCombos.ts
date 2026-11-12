@@ -33,8 +33,8 @@ import { STALE_TIME_1H } from "@/lib/query/stale-times";
  *
  * The builder page gates the panel on its own count, `deck.cards.length`,
  * which includes every zone; the two disagree for a ten-row deck with cards in
- * the maybeboard (pinned in `useCombos.replay.test.tsx`; B2-43 keeps one
- * threshold, OD-07).
+ * the maybeboard (pinned in `useCombos.replay.test.tsx`; B2-43 would keep one
+ * threshold if the owner settles OD-07 that way, as recommended).
  */
 const MIN_CARDS = 10;
 
@@ -44,9 +44,9 @@ const MIN_CARDS = 10;
  * player is only considering is not one the deck holds.
  *
  * The companion is left out too. It begins the game outside it and can be put
- * into the hand once (CR 702.139a), so it can take part in a combo; OD-07
- * decided to include it, and B2-43 does. Until then this is pinned current
- * behaviour (`useCombos.replay.test.tsx`, "the companion").
+ * into the hand once (CR 702.139a), so it can take part in a combo; including it
+ * is open owner decision OD-07 (recommended), which B2-43 would carry out.
+ * Until then this is pinned current behaviour (`useCombos.replay.test.tsx`, "the companion").
  */
 function toDeckComboQuery(deck: Deck | null): DeckComboQuery {
   if (!deck) return { commanders: [], main: [] };
