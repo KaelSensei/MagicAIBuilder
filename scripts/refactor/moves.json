@@ -62,5 +62,65 @@
   {
     "from": "src/components/deck/CombosPanel.test.tsx",
     "to": "src/modules/combos/ui/CombosPanel.test.tsx"
+  },
+  {
+    "from": "src/lib/rules/comprehensive.ts",
+    "to": "src/modules/rules-reference/infrastructure/comprehensive.ts"
+  },
+  {
+    "from": "src/lib/rules/comprehensive.test.ts",
+    "to": "src/modules/rules-reference/infrastructure/comprehensive.test.ts"
+  },
+  {
+    "from": "src/lib/rules/comprehensive-search.test.ts",
+    "to": "src/modules/rules-reference/infrastructure/comprehensive-search.test.ts"
+  },
+  {
+    "from": "src/lib/rules/data",
+    "to": "src/modules/rules-reference/infrastructure/data"
+  },
+  {
+    "from": "src/lib/rules/effective-date.ts",
+    "to": "src/modules/rules-reference/domain/effective-date.ts"
+  },
+  {
+    "from": "src/lib/rules/effective-date.test.ts",
+    "to": "src/modules/rules-reference/domain/effective-date.test.ts"
+  },
+  {
+    "from": "src/components/rules/ComprehensiveRulesView.tsx",
+    "to": "src/modules/rules-reference/ui/ComprehensiveRulesView.tsx"
+  },
+  {
+    "from": "src/components/rules/ComprehensiveRulesView.test.tsx",
+    "to": "src/modules/rules-reference/ui/ComprehensiveRulesView.test.tsx"
+  },
+  {
+    "from": "src/components/rules/GameChangersPageClient.tsx",
+    "to": "src/modules/rules-reference/ui/GameChangersPageClient.tsx"
+  },
+  {
+    "from": "src/components/rules/GameChangersPageClient.test.tsx",
+    "to": "src/modules/rules-reference/ui/GameChangersPageClient.test.tsx"
+  },
+  {
+    "from": "src/components/rules/Pagination.tsx",
+    "to": "src/modules/rules-reference/ui/Pagination.tsx"
+  },
+  {
+    "from": "src/components/rules/Pagination.test.tsx",
+    "to": "src/modules/rules-reference/ui/Pagination.test.tsx"
+  },
+  {
+    "from": "src/modules/rules-reference/infrastructure/comprehensive.ts",
+    "to": "src/modules/rules-reference/domain/comprehensive-rules.ts"
+  },
+  {
+    "from": "src/modules/rules-reference/infrastructure/comprehensive.test.ts",
+    "to": "src/modules/rules-reference/domain/comprehensive-rules.test.ts"
+  },
+  {
+    "from": "src/modules/rules-reference/infrastructure/comprehensive-search.test.ts",
+    "to": "src/modules/rules-reference/domain/comprehensive-rules-search.test.ts"
   }
 ]

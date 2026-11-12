@@ -1,6 +1,7 @@
 import { Header } from "@/components/layout/Header";
-import { ComprehensiveRulesView } from "@/components/rules/ComprehensiveRulesView";
 import { fixedPageMetadata } from "@/lib/seo/page-metadata";
+import { loadComprehensiveRules } from "@/modules/rules-reference/server";
+import { ComprehensiveRulesView } from "@/modules/rules-reference/ui/ComprehensiveRulesView";
 
 export const generateMetadata = fixedPageMetadata("rules.comprehensive");
 
@@ -12,11 +13,16 @@ export default async function ComprehensiveRulesPage({
   searchParams,
 }: ComprehensiveRulesPageProps) {
   const { chapter, q } = await searchParams;
+  const rules = loadComprehensiveRules();
 
   return (
     <div className="flex flex-col min-h-screen bg-[var(--background)] text-[var(--text-primary)]">
       <Header />
-      <ComprehensiveRulesView requestedChapter={chapter} requestedQuery={q} />
+      <ComprehensiveRulesView
+        rules={rules}
+        requestedChapter={chapter}
+        requestedQuery={q}
+      />
     </div>
   );
 }

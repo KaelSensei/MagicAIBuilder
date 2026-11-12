@@ -32,7 +32,8 @@ The state of the code base on `dev` at `872f08ff` (2026-11-10):
   agent rule files describe another project. There was no ADR folder, no glossary and no
   per-context documentation.
 - **Two Comprehensive Rules editions ship with the repository:** the edition the app serves,
-  `src/lib/rules/data/MagicCompRules-20260807.txt` (effective 2026-08-07), and an older copy,
+  `src/modules/rules-reference/infrastructure/data/MagicCompRules-20260807.txt` (effective 2026-08-07), and an
+  older copy,
   `docs/rules/magic-comp-rules-20260227.txt` (effective 2026-02-27).
 
 What should a comment carry, where does each kind of documentation live, and how is it kept true?
@@ -68,7 +69,8 @@ noise, and its parts can be checked.
    cases, and why. `@param` and `@returns` are written only when they add something the name and
    the type do not say.
 3. **Game rules cite their Comprehensive Rules number,** for example `CR 903.5b`, from the edition
-   the app ships: `src/lib/rules/data/MagicCompRules-20260807.txt` (effective 2026-08-07). The
+   the app ships: `src/modules/rules-reference/infrastructure/data/MagicCompRules-20260807.txt` (effective
+   2026-08-07). The
    number is checked against that file. When the app ships a new edition, the citations are
    re-checked against it.
 4. **External limits cite their source:** a URL and the date it was read.

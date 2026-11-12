@@ -28,8 +28,9 @@ resolve it silently.
   word that means different things in two contexts (a "card" in the catalog, in a deck, in a
   playtest) gets a qualified name.
 - **The Comprehensive Rules are the authority on game rules.** Cite the rule number in a comment
-  (`// CR 903.5b: …`) and check it in `src/lib/rules/data/MagicCompRules-20260807.txt`, the
-  edition the app ships (effective 2026-08-07).
+  (`// CR 903.5b: …`) and check it in
+  `src/modules/rules-reference/infrastructure/data/MagicCompRules-20260807.txt`, the edition the app
+  ships (effective 2026-08-07).
 - **The server never blocks an edit for legality.** Legality is a report on the deck. The server
   computes it and re-validates every command
   (`docs/adr/0009-legality-is-a-report-and-the-server-owns-rules.md`). The browser keeps its

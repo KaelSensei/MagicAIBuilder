@@ -8,7 +8,7 @@ function card(
   return { id: fields.name, cmc: 0, color_identity: [], ...fields };
 }
 
-/** CR 903.3 and 903.3a, comprehensive rules of 2026-08-07 (`src/lib/rules/data`). */
+/** CR 903.3 and 903.3a, comprehensive rules of 2026-08-07 (`src/modules/rules-reference/infrastructure/data`). */
 const ELIGIBILITY_CASES: readonly {
   readonly label: string;
   readonly card: ScryfallCard;
