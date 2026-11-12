@@ -20,7 +20,12 @@ test.describe("Playtest mode", () => {
     await suppressOnboarding(page);
     await page.goto(`/builder/${deckId}`);
 
-    await page.getByTitle("List view").nth(1).click();
+    // The deck panel's own toolbar: the search panel has a "List view" toggle
+    // too, but only while it shows results, so its position is not stable.
+    await page
+      .getByRole("toolbar", { name: "Deck view" })
+      .getByRole("button", { name: "List view" })
+      .click();
     // The builder lazy-loads the deck's cards after mount. Opening the
     // playtest before they arrive snapshots a short library, and the
     // opening hand comes up smaller than seven — the intermittent failure
