@@ -7,8 +7,12 @@
  * Sociable: the store, the real deck client and the in-memory deck API run;
  * the fake answers and steps versions as the routes do (#1400).
  */
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { ApiDeck, ApiDeckCard } from "@/lib/db/deck-api";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  DECK_WRITE_TIMEOUT_MS,
+  type ApiDeck,
+  type ApiDeckCard,
+} from "@/lib/db/deck-api";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import { GUEST_DECK_ID } from "@/lib/deck/guest-deck";
 import {
@@ -343,6 +347,38 @@ describe("deck store — a write the server refuses as stale", () => {
     expect(api.fetchDeck).toHaveBeenCalledTimes(1);
     expect(heldCardIds()).toEqual([ISLAND.id, SOL_RING.id]);
     expect(toasts.mock.calls).toEqual([["warning", CONFLICT_TOAST]]);
+  });
+});
+
+describe("deck store — a write the server never answers", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  // jsdom's AbortSignal.timeout runs on the faked timers (see the Scryfall
+  // client's timeout test), so the budget can be spent without waiting for it.
+  it("gives up after the write budget: the change rolls back with the failure toast and the next write is sent", async () => {
+    vi.useFakeTimers();
+    api.removeCard.mockReturnValueOnce(new Promise(() => undefined));
+
+    const first = store().removeCard(SOL_RING.id);
+    const second = store().removeCard(SIGNET.id);
+    await vi.advanceTimersByTimeAsync(DECK_WRITE_TIMEOUT_MS - 1);
+    expect(api.removeCard).toHaveBeenCalledTimes(1);
+
+    await vi.advanceTimersByTimeAsync(1);
+    await vi.waitFor(() => expect(api.removeCard).toHaveBeenCalledTimes(2));
+    await Promise.all([first, second]);
+
+    // Sol Ring is back, Arcane Signet is gone, and the version is still the
+    // one read: the first write saved nothing, the second carried it.
+    expect(heldCardIds()).toEqual([ISLAND.id, SOL_RING.id]);
+    expect(sentVersion(api.removeCard.mock.calls[1] ?? [])).toBe(READ_VERSION);
+    expect(heldDeck()?.version).toBe(READ_VERSION + 1);
+    expect(toasts.mock.calls).toEqual([
+      ["error", "Could not remove card. Please retry."],
+    ]);
+    expect(store().isSyncing).toBe(false);
   });
 });
 

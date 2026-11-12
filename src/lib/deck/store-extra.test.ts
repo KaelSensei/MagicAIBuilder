@@ -12,6 +12,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const toastAdd = vi.hoisted(() => vi.fn());
 
 vi.mock(import("@/lib/db/deck-api"), () => ({
+  // The store's own PATCHes read the write budget from the client module.
+  DECK_WRITE_TIMEOUT_MS: 15_000 as const,
   fetchDecks: vi
     .fn()
     .mockResolvedValue({ decks: [], total: 0, page: 0, limit: 20 }),

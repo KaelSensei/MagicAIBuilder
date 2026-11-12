@@ -206,7 +206,9 @@ carries the version the previous answer brought. A guest deck, a listing stub
 and a deck whose last write was refused hold no version and send none. On a
 409 the store rolls the change back, drops the writes it had queued behind,
 reloads the deck with `GET /api/decks/[id]` and shows the conflict message
-(`deck.sync.conflictReloaded`) in place of the write's failure toast.
+(`deck.sync.conflictReloaded`) in place of the write's failure toast. Each
+write has the reads' 15 s budget (`DECK_WRITE_TIMEOUT_MS`): one the server
+never answers fails like a network failure, so the deck's later writes go on.
 
 A 409 stores nothing. The bulk edit answers the same 409 when its change set
 names a row the deck no longer holds: the list was edited from an outdated

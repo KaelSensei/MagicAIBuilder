@@ -178,6 +178,16 @@ async function handleApiError(res: Response, context: string): Promise<never> {
 }
 
 /**
+ * How long one versioned deck write may run, in milliseconds, before it is
+ * aborted and rejects with a `TimeoutError`, which the store treats as any
+ * other network failure. The same budget as the deck reads above: a loaded
+ * host answers a card write in well under a second, and the writes of one
+ * deck go one after the other (`deck-write-queue.ts`), so a write that never
+ * answers must not hold the deck's later writes for longer than a read would.
+ */
+export const DECK_WRITE_TIMEOUT_MS = 15_000;
+
+/**
  * The query string of a card DELETE: `?expectedVersion=<n>`, or nothing
  * (RFC 9110 §9.3.5: no body on DELETE). The server refuses the write with 409
  * when the deck has moved on; without a version the write is not checked.
@@ -426,6 +436,7 @@ export async function addCard(
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ ...payload, expectedVersion }),
+    signal: AbortSignal.timeout(DECK_WRITE_TIMEOUT_MS),
   });
   if (!res.ok) await handleApiError(res, "addCard");
   return res.json();
@@ -447,7 +458,7 @@ export async function removeCard(
   if (isGuestDeckId(target.deckId)) return {};
   const res = await fetch(
     `/api/decks/${target.deckId}/cards/${cardId}${deleteQuery(target)}`,
-    { method: "DELETE" }
+    { method: "DELETE", signal: AbortSignal.timeout(DECK_WRITE_TIMEOUT_MS) }
   );
   if (!res.ok) await handleApiError(res, "removeCard");
   // The row is gone whatever the body says; only its version is read.
@@ -472,6 +483,7 @@ async function patchCard(
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ ...columns, expectedVersion }),
+    signal: AbortSignal.timeout(DECK_WRITE_TIMEOUT_MS),
   });
   if (!res.ok) {
     await handleApiError(res, `patchCard:${Object.keys(columns).join(",")}`);
@@ -605,6 +617,7 @@ export async function applyCardChanges(
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(changes),
+    signal: AbortSignal.timeout(DECK_WRITE_TIMEOUT_MS),
   });
   if (!res.ok) await handleApiError(res, "applyCardChanges");
   return res.json();
@@ -658,6 +671,7 @@ export async function changeCommandZone(
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(change),
+    signal: AbortSignal.timeout(DECK_WRITE_TIMEOUT_MS),
   });
   if (!res.ok) await handleApiError(res, "changeCommandZone");
   return res.json();

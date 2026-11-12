@@ -361,6 +361,7 @@ async function patchCardRow(
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ ...columns, expectedVersion }),
+    signal: AbortSignal.timeout(deckApi.DECK_WRITE_TIMEOUT_MS),
   });
   if (!response.ok) {
     const context = `patchCardRow:${Object.keys(columns).join(",")}`;
