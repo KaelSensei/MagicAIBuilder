@@ -15,8 +15,8 @@ import {
   within,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { renderWithIntl } from "@/test/render-with-intl";
+import { aDeckCard } from "@/test/builders/card";
+import { renderWithIntl, renderWithProviders } from "@/test/render";
 import type { DeckFormat } from "@/lib/deck/formats";
 import { createGuestDeck } from "@/lib/deck/guest-deck";
 import { useDeckStore } from "@/lib/deck/store";
@@ -58,7 +58,7 @@ async function deckApi(
 }
 
 function deckRow(overrides: Partial<DeckCard> = {}): DeckCard {
-  return {
+  return aDeckCard({
     id: "row-counterspell",
     scryfallId: "4f616706-ec97-4923-bb1e-11a69fbaa1f8",
     name: "Counterspell",
@@ -67,17 +67,10 @@ function deckRow(overrides: Partial<DeckCard> = {}): DeckCard {
     typeLine: "Instant",
     oracleText: "Counter target spell.",
     colorIdentity: ["U"],
-    isGameChanger: false,
-    isBanned: false,
-    price: null,
-    imageUri: "",
-    artCropUri: "",
     category: "instant",
-    quantity: 1,
     notes: null,
-    zone: "main",
     ...overrides,
-  };
+  });
 }
 
 /** Opens a saved deck holding these rows, so the store saves through the API. */
@@ -554,15 +547,7 @@ describe("change printing on a deck row", () => {
   }
 
   function renderRow(locale: "en" | "fr" = "en") {
-    const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false } },
-    });
-    return renderWithIntl(
-      <QueryClientProvider client={queryClient}>
-        <CardListItem card={solRing} />
-      </QueryClientProvider>,
-      { locale }
-    );
+    return renderWithProviders(<CardListItem card={solRing} />, { locale });
   }
 
   beforeEach(() => {
