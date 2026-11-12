@@ -46,12 +46,12 @@ src/
       builder/[deckId]/         # the builder (a client page)
       decks/, collection/, deck/[id]/, share/[token]/, u/[username]/,
       commanders/[slug]/decks/, saved-decks/, settings/, moderation/, rules/, auth/
-    api/                        # 67 route handlers, by URL family:
+    api/                        # 65 route handlers, by URL family:
                                 #   decks/ 15, community/ 13, user/ 7, collection/ 4,
                                 #   v1/ 4 (public API, API keys), 2 each: ai/, auth/, cache/,
-                                #   deck-folders/, favorites/, import/, meta/, moderation/;
+                                #   deck-folders/, import/, meta/, moderation/;
                                 #   1 each: combos/, deck/, health/, og/, proxy-card-image/,
-                                #   share/, templates/, users/
+                                #   share/, users/
   components/                   # React components, by screen: deck/ (72 files), card/,
                                 # search/, builder/, playtest/, collection/, community/,
                                 # profile/, moderation/, settings/, landing/, rules/,
@@ -243,11 +243,11 @@ tokens. The behaviour is specified in [I-02](../product/specs/i02-checkable-ai-c
 
 ## API Routes
 
-There are 67 route handlers under `src/app/api/`. Each URL family belongs to one bounded context:
+There are 65 route handlers under `src/app/api/`. Each URL family belongs to one bounded context:
 
 | URL family                                                                               | Context          | Notes                                                                                                             |
 | ---------------------------------------------------------------------------------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `/api/decks/**`, `/api/deck/[id]`, `/api/deck-folders/**`, `/api/templates`              | Deck building    | `/api/deck/[id]` is the public read of one deck; `/api/decks/[id]/legality` returns the server's legality verdict |
+| `/api/decks/**`, `/api/deck/[id]`, `/api/deck-folders/**`                                | Deck building    | `/api/deck/[id]` is the public read of one deck; `/api/decks/[id]/legality` returns the server's legality verdict |
 | `/api/decks/[id]/playtest-sessions`                                                      | Playtest         | Recorded goldfish runs                                                                                            |
 | `/api/decks/[id]/acquisition-intent`, `/api/collection/**`                               | Collection       |                                                                                                                   |
 | `/api/ai/suggest`, `/api/ai/build`                                                       | AI copilot       | Streamed as NDJSON                                                                                                |
@@ -258,7 +258,6 @@ There are 67 route handlers under `src/app/api/`. Each URL family belongs to one
 | `/api/community/**`, `/api/users/[username]`, `/api/share/[token]`, `/api/moderation/**` | Community        |                                                                                                                   |
 | `/api/auth/**`, `/api/user/**`, `/api/v1/**`                                             | Identity         | `/api/v1` is the public API, authenticated by API key                                                             |
 | `/api/og`, `/api/health`                                                                 | Site             | Open Graph images; the health check                                                                               |
-| `/api/favorites/**`                                                                      | Collection       | A stub: persistence is deferred                                                                                   |
 
 URLs are a public contract: they stay when the code behind them moves.
 

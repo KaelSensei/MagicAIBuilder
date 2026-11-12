@@ -121,10 +121,6 @@ const ROUTE_POLICIES: Readonly<
   "decks/[id]/snapshots/[snapshotId]": { DELETE: "deck-owner" },
   "decks/[id]/snapshots/[snapshotId]/restore": { POST: "deck-owner" },
   "decks/folders": { PATCH: "session" },
-  // An unauthenticated stub with no persistence and no caller (audit "server"
-  // M11); deleting it is an owner decision.
-  favorites: { GET: "public", POST: "public" },
-  "favorites/[scryfallId]": { DELETE: "public" },
   health: { GET: "public" },
   "import/moxfield-user": { POST: "public" },
   "import/url": { POST: "public" },
@@ -136,7 +132,6 @@ const ROUTE_POLICIES: Readonly<
   // GET answers anyone so the builder can hide the control; POST is signed-in.
   "search/translate": { GET: "optional-viewer", POST: "session" },
   "share/[token]": { GET: "share-token" },
-  templates: { GET: "public", POST: "session" },
   "user/api-keys": { GET: "session", POST: "session" },
   "user/api-keys/[id]": { DELETE: "session" },
   "user/init": { GET: "session" },

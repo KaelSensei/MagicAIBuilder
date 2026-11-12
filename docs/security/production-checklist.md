@@ -19,11 +19,11 @@ place or tracked in **Follow-ups** below. Companion to the fuller
 
 ## Authorization & permissions
 
-| #   | Item                           | Status | Evidence                                                                                                                                                                                                                       |
-| --- | ------------------------------ | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 7   | RLS enabled                    | N/A    | Prisma with a single application role; authorization lives in the app layer, not in Postgres policies                                                                                                                          |
-| 8   | Rights verified server-side    | ✅     | `requireAuth` / `requireDeckOwner` (`src/lib/auth/helpers.ts`) on every mutating deck route; comments, votes, ratings and collection check the author. `/api/favorites` is unauthenticated but is a no-op that touches no data |
-| 9   | Public keys on the client only | ✅     | No `"use client"` file reads `process.env`; only `NEXT_PUBLIC_*` values cross to the browser                                                                                                                                   |
+| #   | Item                           | Status | Evidence                                                                                                                                              |
+| --- | ------------------------------ | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 7   | RLS enabled                    | N/A    | Prisma with a single application role; authorization lives in the app layer, not in Postgres policies                                                 |
+| 8   | Rights verified server-side    | ✅     | `requireAuth` / `requireDeckOwner` (`src/lib/auth/helpers.ts`) on every mutating deck route; comments, votes, ratings and collection check the author |
+| 9   | Public keys on the client only | ✅     | No `"use client"` file reads `process.env`; only `NEXT_PUBLIC_*` values cross to the browser                                                          |
 
 ## Network & transport
 

@@ -38,10 +38,6 @@
     "fieldNamed": "Note on {name}",
     "hint": "Ctrl+Enter to save · Esc to cancel"
   },
-  "favorite": {
-    "add": "Add to favorites",
-    "remove": "Remove from favorites"
-  },
   "addNamedToDeck": "Add {name} to deck",
   "addToZone": "Add {name} to",
   "chooseZone": "Choose zone",

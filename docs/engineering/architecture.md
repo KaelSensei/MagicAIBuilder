@@ -394,8 +394,8 @@ Rules for every series:
   This small, known conflict is accepted.
 - **Pending branches.** A file that a pending branch edits is not touched until that branch merges.
 - **Dead code.** Only code with no importer and no product intent is deleted. Orphaned features
-  (tested store actions with no reachable UI, favourites, the "Collection only" toggle) are listed
-  for the owner, not deleted.
+  (tested store actions with no reachable UI, the "Collection only" toggle) are listed for the
+  owner, not deleted; the favourites and templates stubs were deleted once the owner decided (OD-02).
 - **Each series ends** with the context's `README.md`, its `docs/functional/<context>.md`, its
   comments brought to the standard, and its dependency-cruiser rules at `error`.
 
