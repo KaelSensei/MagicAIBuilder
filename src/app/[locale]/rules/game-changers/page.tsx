@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { Header } from "@/components/layout/Header";
-import { GameChangersPageClient } from "@/components/rules/GameChangersPageClient";
+import { GameChangersPageClient } from "@/modules/rules-reference/ui/GameChangersPageClient";
 import { fixedPageMetadata } from "@/lib/seo/page-metadata";
 
 export const generateMetadata = fixedPageMetadata("rules.gameChangers");

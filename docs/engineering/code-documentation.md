@@ -120,10 +120,11 @@ Every game rule in the code cites the Comprehensive Rules (CR) number it impleme
 - **Check the number** against the text in the repository before you commit it:
 
   ```bash
-  grep -E "^903\.5b " src/lib/rules/data/MagicCompRules-20260807.txt
+  grep -E "^903\.5b " src/modules/rules-reference/infrastructure/data/MagicCompRules-20260807.txt
   ```
 
-  The reference is the edition the app ships: `src/lib/rules/data/MagicCompRules-20260807.txt`,
+  The reference is the edition the app ships:
+  `src/modules/rules-reference/infrastructure/data/MagicCompRules-20260807.txt`,
   effective 2026-08-07. Do not check against the older copy in `docs/rules/` (effective
   2026-02-27). When the app ships a new edition, the citations are re-checked against it.
 
@@ -282,7 +283,7 @@ Each kind of knowledge has one home. When you are about to write something down,
 | How to use the product                        | [docs/product/user-guide.md](../product/user-guide.md)                                                                          | Written for players                                                                                  |
 | What a feature should become                  | `docs/product/specs/`                                                                                                           | One spec per roadmap initiative                                                                      |
 | How to play and build well, with sources      | `docs/product/guides/`                                                                                                          | Player guides that the code cites as sources                                                         |
-| Official reference data                       | `docs/references/`, `src/lib/rules/data/`                                                                                       | Game Changers, banlists; the Comprehensive Rules edition the app ships                               |
+| Official reference data                       | `docs/references/`, `src/modules/rules-reference/infrastructure/data/`                                                          | Game Changers, banlists; the Comprehensive Rules edition the app ships                               |
 | How to run, test and deploy                   | [technical.md](technical.md), [infrastructure.md](infrastructure.md)                                                            | Stack, local setup, environment                                                                      |
 | How to work                                   | [tdd-with-ai.md](tdd-with-ai.md), [definition-of-done.md](definition-of-done.md), [quality-gate.md](quality-gate.md), this file | Method, gates, standards                                                                             |
 | What a module or function guarantees          | The code: module header and TSDoc                                                                                               | This standard                                                                                        |
