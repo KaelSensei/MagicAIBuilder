@@ -51,7 +51,8 @@ templates in `docs/engineering/code-documentation.md`.
 - **TSDoc contract on every export:** what it does, input constraints, errors and edge cases, and
   why. Add `@param` and `@returns` only when they say more than the name and the type.
 - **Game rules cite their Comprehensive Rules number:** `// CR 903.5b: basic lands are exempt from
-  the singleton rule`. Check the number in `src/lib/rules/data/MagicCompRules-20260807.txt`.
+  the singleton rule`. Check the number in
+  `src/modules/rules-reference/infrastructure/data/MagicCompRules-20260807.txt`.
 - **External limits cite their source:** a URL and the date it was read
   (`// Scryfall asks for 50–100 ms between requests: https://scryfall.com/docs/api, read YYYY-MM-DD`).
 - **Decisions cite their ADR or PR:** `// ADR 0009: the server re-validates; this is a preview`.

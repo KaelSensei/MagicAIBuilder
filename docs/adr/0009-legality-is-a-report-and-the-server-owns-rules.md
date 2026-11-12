@@ -148,4 +148,4 @@ The rules:
 - Vaughn Vernon, [Effective Aggregate Design](https://www.dddcommunity.org/wp-content/uploads/files/pdf_articles/Vernon_2011_1.pdf),
   2011 (model true invariants in consistency boundaries).
 - Comprehensive Rules 903.3 to 903.5 (deck construction), in the edition the app ships,
-  `src/lib/rules/data/MagicCompRules-20260807.txt` (effective 2026-08-07).
+  `src/modules/rules-reference/infrastructure/data/MagicCompRules-20260807.txt` (effective 2026-08-07).
