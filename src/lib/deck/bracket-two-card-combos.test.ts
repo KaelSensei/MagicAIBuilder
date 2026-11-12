@@ -203,7 +203,7 @@ describe("scoreBracket: the two-card combo floor, fed from the recorded Spellboo
 
   /**
    * Which lines count is a keyword match on the names of Spellbook's results
-   * (`isInfiniteCombo` in `find-my-combos.ts`). Every name below is a real
+   * (`readsAsInfinite` in `spellbook-variant.ts`). Every name below is a real
    * Spellbook feature, read from https://backend.commanderspellbook.com/features/
    * on 2026-11-11.
    */

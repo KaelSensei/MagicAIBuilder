@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { DeckComboQuery } from "@/modules/combos/domain/deck-query";
-import type { SpellbookVariant } from "@/modules/combos/client/api";
+import type { Combo } from "@/modules/combos/domain/combo";
 
 type CacheModule = typeof import("@/modules/combos/infrastructure/combo-cache");
 
-const COMBO: SpellbookVariant = {
+const COMBO: Combo = {
   id: "742-1295",
   cards: ["Demonic Consultation", "Thassa's Oracle"],
   effects: ["Win the game"],

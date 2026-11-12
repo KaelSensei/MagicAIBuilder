@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { scoreBracket } from "@/lib/deck/bracket";
-import type { SpellbookVariant } from "@/modules/combos/client";
+import type { Combo } from "@/modules/combos";
 import type { Deck, DeckCard } from "@/lib/deck/types";
 import type { DeckStats } from "@/lib/deck/analysis-types";
 
@@ -60,7 +60,7 @@ function makeStats(overrides: Partial<DeckStats> = {}): DeckStats {
 }
 
 /** A Commander Spellbook variant: an infinite combo of exactly two cards. */
-function twoCardInfinite(first: string, second: string): SpellbookVariant {
+function twoCardInfinite(first: string, second: string): Combo {
   return {
     id: `${first}+${second}`,
     cards: [first, second],
@@ -295,7 +295,7 @@ describe("scoreBracket", () => {
     const combos = [
       { id: "c2", cards: ["A", "B", "C"], isInfinite: true, effects: ["Infinite mana"], description: "", prerequisites: { otherPieces: [], conditions: [], manaNeeded: "" } },
     ];
-    const result = assertBracket(scoreBracket(deck, stats, combos as import("@/modules/combos/client").SpellbookVariant[]));
+    const result = assertBracket(scoreBracket(deck, stats, combos as import("@/modules/combos").Combo[]));
     expect(result.twoCardInfiniteCombos).toBe(0);
     expect(result.overall).toBeLessThanOrEqual(3); // may still be low bracket
   });
@@ -306,7 +306,7 @@ describe("scoreBracket", () => {
     const combos = [
       { id: "c3", cards: ["A", "B"], isInfinite: false, effects: ["Draw cards"], description: "", prerequisites: { otherPieces: [], conditions: [], manaNeeded: "" } },
     ];
-    const result = assertBracket(scoreBracket(deck, stats, combos as import("@/modules/combos/client").SpellbookVariant[]));
+    const result = assertBracket(scoreBracket(deck, stats, combos as import("@/modules/combos").Combo[]));
     expect(result.twoCardInfiniteCombos).toBe(0);
   });
 

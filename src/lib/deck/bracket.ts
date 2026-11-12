@@ -1,7 +1,7 @@
 // Bracket scoring engine
 import type { Deck, BracketLevel } from "./types";
 import type { DeckStats, BracketScore } from "./analysis-types";
-import type { SpellbookVariant } from "@/modules/combos/client";
+import { isTwoCardInfiniteCombo, type Combo } from "@/modules/combos";
 import { parseBracketLevel } from "@/lib/constants/brackets";
 import { minimumBracket } from "./bracket-floor";
 import { getCompanionDeckWarnings } from "./companion";
@@ -90,8 +90,8 @@ function scoreCmc(avgCmc: number): number {
   return 1;
 }
 
-function countTwoCardInfiniteCombos(combos: SpellbookVariant[]): number {
-  return combos.filter((c) => c.isInfinite && c.cards.length === 2).length;
+function countTwoCardInfiniteCombos(combos: readonly Combo[]): number {
+  return combos.filter(isTwoCardInfiniteCombo).length;
 }
 
 function warningCardNames(names: readonly string[]): string {
@@ -193,7 +193,7 @@ function generateWarnings(
 }
 
 /** Score a deck and return its bracket with dimension breakdown */
-export function scoreBracket(deck: Deck, stats: DeckStats, combos: SpellbookVariant[] = []): BracketScore | null {
+export function scoreBracket(deck: Deck, stats: DeckStats, combos: readonly Combo[] = []): BracketScore | null {
   // Bracket scoring only applies to Commander
   if (!getFormatConfig(deck.format).hasBracketScoring) return null;
 

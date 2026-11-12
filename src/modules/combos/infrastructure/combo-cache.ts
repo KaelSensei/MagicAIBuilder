@@ -5,7 +5,7 @@ import {
   deckComboQueryKey,
   type DeckComboQuery,
 } from "@/modules/combos/domain/deck-query";
-import type { SpellbookVariant } from "@/modules/combos/client/api";
+import type { Combo } from "@/modules/combos/domain/combo";
 
 /**
  * How long a lookup is reused. Spellbook adds combos over days, not minutes,
@@ -18,7 +18,7 @@ export const COMBO_CACHE_TTL_MS = 6 * 60 * 60 * 1000;
 export const COMBO_CACHE_MAX_ENTRIES = 500;
 
 interface CacheEntry {
-  readonly combos: readonly SpellbookVariant[];
+  readonly combos: readonly Combo[];
   readonly storedAt: number;
 }
 
@@ -39,7 +39,7 @@ function cacheKey(query: DeckComboQuery): string {
 export function readCachedCombos(
   query: DeckComboQuery,
   now: number = Date.now()
-): readonly SpellbookVariant[] | null {
+): readonly Combo[] | null {
   const key = cacheKey(query);
   const entry = entries.get(key);
   if (!entry) return null;
@@ -60,7 +60,7 @@ export function readCachedCombos(
  */
 export function storeCachedCombos(
   query: DeckComboQuery,
-  combos: readonly SpellbookVariant[],
+  combos: readonly Combo[],
   now: number = Date.now()
 ): void {
   const key = cacheKey(query);

@@ -750,17 +750,6 @@
       "count": 1
     }
   },
-  "src/modules/combos/ui/CombosPanel.tsx": {
-    "complexity": {
-      "count": 1
-    },
-    "max-lines": {
-      "count": 1
-    },
-    "max-lines-per-function": {
-      "count": 1
-    }
-  },
   "src/components/deck/DeckComparisonPanel.test.tsx": {
     "no-restricted-syntax": {
       "count": 1
@@ -1372,11 +1361,6 @@
       "count": 1
     }
   },
-  "src/modules/combos/client/useCombos.test.ts": {
-    "no-restricted-syntax": {
-      "count": 1
-    }
-  },
   "src/hooks/useGameChangers.test.ts": {
     "no-restricted-syntax": {
       "count": 1
@@ -1840,6 +1824,19 @@
   },
   "src/middleware.test.ts": {
     "vitest/prefer-import-in-mock": {
+      "count": 1
+    }
+  },
+  "src/modules/combos/client/useCombos.test.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "src/modules/combos/ui/CombosPanel.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
       "count": 1
     }
   }
