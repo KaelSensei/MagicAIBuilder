@@ -29,6 +29,25 @@ describe("resolveScryfallApiBaseUrl", () => {
     );
   });
 
+  it("drops every trailing slash, however many", () => {
+    expect(resolveScryfallApiBaseUrl("https://mirror.example.test///")).toBe(
+      "https://mirror.example.test"
+    );
+    expect(resolveScryfallApiBaseUrl("http://scryfall:8787/api///")).toBe(
+      "http://scryfall:8787/api"
+    );
+  });
+
+  it("resolves a path of many slashes in linear time, so a hostile value cannot stall startup", () => {
+    // A backtracking `/\/+$/` takes seconds here; a scan over the string takes microseconds.
+    const hostile = `http://scryfall:8787/${"/".repeat(50_000)}x`;
+    const started = performance.now();
+    const resolved = resolveScryfallApiBaseUrl(hostile);
+    const elapsedMs = performance.now() - started;
+    expect(resolved).toBe(hostile);
+    expect(elapsedMs).toBeLessThan(250);
+  });
+
   it.each([
     "scryfall:8787",
     "ftp://scryfall",
