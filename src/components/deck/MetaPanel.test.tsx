@@ -3,7 +3,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { renderWithIntl } from "@/test/render-with-intl";
 import React from "react";
 import { MetaPanel, TournamentDeckRow } from "./MetaPanel";
-import type { TournamentDeck } from "@/lib/meta/fetch";
+import type { TournamentDeck } from "@/lib/meta/types";
 
 const metaAnalysisMocks = vi.hoisted(() => ({
   fetchSource: vi.fn(),

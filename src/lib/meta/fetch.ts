@@ -3,42 +3,15 @@
  *
  * EDHRec  → popular cards for a commander (via unofficial JSON endpoint)
  * MTGTop8 → recent tournament decks for a commander (scraping)
+ *
+ * The shapes they return are declared in `./types`, so modules that only need
+ * a type (the MTGTop8 parser, snapshots, history, the panel) do not import the
+ * fetchers.
+ *
+ * @module meta/fetch
  */
 
-export interface MetaCard {
-  readonly name: string;
-  /** Fraction of decks (0–1), e.g. 0.78 = 78% */
-  readonly inclusion: number;
-  readonly sample?: {
-    readonly decksWithCard: number;
-    readonly eligibleDecks: number;
-  };
-  readonly imageUri?: string;
-}
-
-export interface TournamentDeck {
-  readonly name: string;
-  readonly player?: string;
-  readonly event?: string;
-  /** ISO date `yyyy-mm-dd` */
-  readonly date?: string;
-  /** Finishing position as the source prints it: "1", "8", "3-4" */
-  readonly placement?: string;
-  /** The source's format label — on MTGTop8 this is mostly "Duel Commander" (1v1) */
-  readonly format?: string;
-  /** Event size, 1 (local) to 4 (major), as MTGTop8 rates it */
-  readonly eventLevel?: number;
-  readonly url: string;
-  readonly source: "mtgtop8" | "mtgdecks";
-}
-
-export interface EdhrecData {
-  readonly cards: readonly MetaCard[];
-}
-
-export interface TournamentData {
-  readonly decks: readonly TournamentDeck[];
-}
+import type { EdhrecData, MetaCard, TournamentData } from "./types";
 
 // ─── EDHRec ───────────────────────────────────────────────────────────────────
 

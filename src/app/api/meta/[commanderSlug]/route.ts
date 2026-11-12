@@ -5,7 +5,7 @@ import { requireModerator } from "@/lib/auth/require-moderator";
 import { fetchEdhrecData, fetchTournamentData } from "@/lib/meta/fetch";
 import { recordEdhrecSnapshot } from "@/lib/meta/snapshots";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
-import type { EdhrecData, TournamentData } from "@/lib/meta/fetch";
+import type { EdhrecData, TournamentData } from "@/lib/meta/types";
 import { logger } from "@/lib/logger";
 import { toJsonPayload } from "@/lib/db/json-payload";
 import { rateLimitResponse, type RouteParams } from "@/lib/api/route-kit";
