@@ -10,7 +10,7 @@ import {
   type RenderOptions,
   type RenderResult,
 } from "@testing-library/react";
-import { NextIntlClientProvider } from "next-intl";
+import { NextIntlClientProvider, type AbstractIntlMessages } from "next-intl";
 import { testMessages, type TestLocale } from "@/test/intl-catalogs";
 
 export type { TestLocale } from "@/test/intl-catalogs";
@@ -18,6 +18,12 @@ export type { TestLocale } from "@/test/intl-catalogs";
 interface RenderWithIntlOptions extends Omit<RenderOptions, "wrapper"> {
   /** Locale to render under. Defaults to `en`. */
   readonly locale?: TestLocale;
+  /**
+   * Catalogs to use instead of the locale's real ones. Only for a test that
+   * proves a text comes from the catalog: it starts from `testMessages(locale)`,
+   * rewords one entry and checks the component shows the new words.
+   */
+  readonly messages?: AbstractIntlMessages;
 }
 
 /**
@@ -42,21 +48,23 @@ interface RenderWithIntlOptions extends Omit<RenderOptions, "wrapper"> {
  * new element bare and `useTranslations` threw.
  *
  * @param ui - element under test
- * @param options - forwarded to Testing Library's `render`, plus `locale`
+ * @param options - forwarded to Testing Library's `render`, plus `locale` and,
+ *   for a test of catalog wording only, `messages`
  * @returns the usual render result
  */
 export function renderWithIntl(
   ui: ReactElement,
   options?: RenderWithIntlOptions
 ): RenderResult {
-  const { locale = "en", ...renderOptions } = options ?? {};
+  const { locale = "en", messages, ...renderOptions } = options ?? {};
+  const catalogs = messages ?? testMessages(locale);
 
   function IntlProvider({ children }: { readonly children: ReactNode }) {
     return (
       <NextIntlClientProvider
         locale={locale}
         timeZone="UTC"
-        messages={testMessages(locale)}
+        messages={catalogs}
       >
         {children}
       </NextIntlClientProvider>

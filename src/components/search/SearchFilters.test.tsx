@@ -10,9 +10,8 @@
  * starting from the page's defaults. Tests named "currently … (pinned)" record odd behaviour on
  * purpose; a `fix/` pull request that changes it flips the test with its own Red.
  */
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { NextIntlClientProvider } from "next-intl";
 import { useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SearchFilters } from "./SearchFilters";
@@ -118,11 +117,9 @@ describe("SearchFilters", () => {
         filters: { ...search.filters, priceUsd: "Price, in dollars" },
       },
     };
-    render(
-      <NextIntlClientProvider locale="en" timeZone="UTC" messages={messages}>
-        <SearchFilters filters={FILTERS} onChange={vi.fn()} />
-      </NextIntlClientProvider>
-    );
+    renderWithIntl(<SearchFilters filters={FILTERS} onChange={vi.fn()} />, {
+      messages,
+    });
 
     expect(screen.getByText("Price, in dollars")).toBeDefined();
     expect(screen.queryByText(/\(USD\)/)).toBeNull();
