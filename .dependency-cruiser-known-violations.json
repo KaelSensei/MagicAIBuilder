@@ -109,23 +109,6 @@
   },
   {
     "type": "dependency",
-    "from": "src/lib/deck/commander-save-recovery.ts",
-    "to": "src/hooks/useToast.ts",
-    "unresolvedTo": "@/hooks/useToast",
-    "dependencyTypes": [
-      "aliased",
-      "aliased-tsconfig",
-      "aliased-tsconfig-paths",
-      "local",
-      "import"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "lib-not-outer-layers"
-    }
-  },
-  {
-    "type": "dependency",
     "from": "src/lib/deck/store.ts",
     "to": "src/hooks/useToast.ts",
     "unresolvedTo": "@/hooks/useToast",

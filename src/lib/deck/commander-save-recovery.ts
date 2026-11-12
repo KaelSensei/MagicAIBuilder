@@ -1,13 +1,13 @@
 /**
  * Rollbacks of the deck store's command-zone saves: when the one request that
  * saves a commander or partner change fails, the zone that was on screen
- * before it comes back, with the failure toast, unless a later choice has
- * replaced the failed attempt on screen.
+ * before it comes back, unless a later choice has replaced the failed attempt
+ * on screen. Each rollback says whether it restored anything, so the store
+ * tells the player only then, and in the words the failure calls for: the
+ * failure toast, or the conflict message of a stale write.
  *
  * @module deck/commander-save-recovery
  */
-import { useToastStore } from "@/hooks/useToast";
-
 import { withLoadedCardCount } from "./loaded-card-count";
 import type { Deck, DeckCard } from "./types";
 
@@ -65,19 +65,19 @@ export function commandZoneOf(deck: Deck | undefined): CommandZone {
  * @param setDeckState - Store update used only when a rollback is required
  * @param state - Store snapshot taken when the save failed
  * @param save - The attempt that just failed
- * @returns Nothing. Updates the store and shows an error when the commander is restored.
+ * @returns Whether the previous commander was put back on screen.
  */
 export function restoreCommanderAfterFailedSave(
   setDeckState: (partial: DecksState) => void,
   state: DecksState,
   save: FailedCommanderSave
-): void {
+): boolean {
   const currentDeck = state.decks[save.activeDeckId];
   if (
     !currentDeck ||
     !isSameSlot(currentDeck.commander, save.attempted.commander)
   ) {
-    return;
+    return false;
   }
   const partner = isSameSlot(currentDeck.partner, save.attempted.partner)
     ? save.previous.partner
@@ -94,7 +94,7 @@ export function restoreCommanderAfterFailedSave(
       }),
     },
   });
-  useToastStore.getState().add("error", "Could not save commander — try again");
+  return true;
 }
 
 /** A partner save that may still need to be undone. */
@@ -113,16 +113,17 @@ export interface FailedPartnerSave {
  * @param setDeckState - Store update used only when a rollback is required
  * @param state - Store snapshot taken when the save failed
  * @param save - The attempt that just failed
- * @returns Nothing. Updates the store and shows an error when the partner is restored.
+ * @returns Whether the previous partner was put back on screen.
  */
 export function restorePartnerAfterFailedSave(
   setDeckState: (partial: DecksState) => void,
   state: DecksState,
   save: FailedPartnerSave
-): void {
+): boolean {
   const currentDeck = state.decks[save.activeDeckId];
   const currentPartnerId = currentDeck?.partner?.id ?? null;
-  if (!currentDeck || currentPartnerId !== save.attemptedPartnerId) return;
+  if (!currentDeck || currentPartnerId !== save.attemptedPartnerId)
+    return false;
   setDeckState({
     decks: {
       ...state.decks,
@@ -134,5 +135,5 @@ export function restorePartnerAfterFailedSave(
       }),
     },
   });
-  useToastStore.getState().add("error", "Could not save partner — try again");
+  return true;
 }

@@ -114,7 +114,7 @@ describe("adding a card from the search results (addCard)", () => {
     expect(copiesOf("Lightning Bolt")).toBe(4);
     expect(deckApi.updateCardQuantity).toHaveBeenCalledTimes(3);
     expect(deckApi.updateCardQuantity).toHaveBeenLastCalledWith(
-      DECK_ID,
+      { deckId: DECK_ID },
       "row-Lightning Bolt",
       4
     );

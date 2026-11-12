@@ -18,6 +18,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type * as StoreModule from "@/lib/deck/store";
 import type { DeckAction, DeckStore } from "@/lib/deck/store";
 import type * as ToastModule from "@/hooks/useToast";
+import type { ToastMessage } from "@/hooks/useToast";
 import type { Deck, DeckCard } from "@/lib/deck/types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 
@@ -299,14 +300,19 @@ function deck(): Deck | undefined {
   return useDeckStore.getState().decks[DECK_ID];
 }
 
-function toastMessages(): string[] {
+function toastMessages(): ToastMessage[] {
   return useToastStore.getState().toasts.map((toast) => toast.message);
 }
 
-/** A tracked write on its own card: settling it recomputes `isSyncing` from the shared count. */
+/**
+ * A tracked write of the deck's metadata: settling it recomputes `isSyncing`
+ * from the shared count. It is not a row write on purpose: the deck's row
+ * writes queue one behind the other (`deck-write-queue.ts`), so a row write
+ * could not settle while another one is held.
+ */
 const PROBE = {
-  route: `PATCH ${CARDS_ROUTE}/${PROBE_CARD.id}`,
-  run: () => useDeckStore.getState().updateCardCategory(PROBE_CARD.id, "draw"),
+  route: `PATCH ${DECK_ROUTE}`,
+  run: () => useDeckStore.getState().setBudget(150),
 };
 
 // ---------------------------------------------------------------------------

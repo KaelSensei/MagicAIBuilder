@@ -1525,11 +1525,6 @@
       "count": 1
     }
   },
-  "src/lib/deck/commander-save-recovery.ts": {
-    "no-restricted-imports": {
-      "count": 1
-    }
-  },
   "src/lib/deck/companion.ts": {
     "@typescript-eslint/max-params": {
       "count": 1
@@ -1664,13 +1659,13 @@
       "count": 3
     },
     "complexity": {
-      "count": 3
+      "count": 2
     },
     "max-lines": {
       "count": 1
     },
     "max-lines-per-function": {
-      "count": 6
+      "count": 4
     },
     "no-restricted-imports": {
       "count": 1
