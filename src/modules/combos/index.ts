@@ -1,7 +1,8 @@
 /**
  * Combos context: the pure entry point (ADR 0002).
  *
- * The card list one combo lookup is for (its bounds, its validation and its
+ * The `Combo` a deck holds and the two-card policy bracket scoring applies to
+ * it, the card list one combo lookup is for (its bounds, its validation and its
  * canonical form) and the rate limits of a lookup. Everything here is data or
  * a pure function from `domain/`, so it is safe on the server, in the browser
  * and in the Edge middleware. The server-side lookup is in `server.ts`, the
@@ -10,6 +11,11 @@
  *
  * @module combos
  */
+export {
+  isTwoCardInfiniteCombo,
+  type Combo,
+  type ComboPrerequisites,
+} from "@/modules/combos/domain/combo";
 export {
   MAX_MAIN_CARDS,
   MAX_QUERY_BODY_BYTES,

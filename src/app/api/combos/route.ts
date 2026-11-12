@@ -8,8 +8,8 @@ import {
   SPELLBOOK_CALLS_PER_WINDOW,
   deckComboQuerySchema,
   normalizeDeckComboQuery,
+  type Combo,
 } from "@/modules/combos";
-import type { SpellbookVariant } from "@/modules/combos/client";
 import {
   readCachedCombos,
   requestDeckCombos,
@@ -38,7 +38,7 @@ function declaresOversizeBody(request: Request): boolean {
   );
 }
 
-function combosResponse(combos: readonly SpellbookVariant[]): NextResponse {
+function combosResponse(combos: readonly Combo[]): NextResponse {
   return NextResponse.json({ combos });
 }
 

@@ -1,10 +1,10 @@
 import { screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import type { SpellbookVariant } from "@/modules/combos/client/api";
+import type { Combo } from "@/modules/combos/domain/combo";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { CombosPanel } from "./CombosPanel";
 
-const SCEPTER: SpellbookVariant = {
+const SCEPTER: Combo = {
   id: "4821-5261",
   cards: ["Dramatic Reversal", "Isochron Scepter"],
   effects: ["Infinite storm count"],
@@ -20,7 +20,7 @@ const SCEPTER: SpellbookVariant = {
   },
 };
 
-const HULLBREAKER: SpellbookVariant = {
+const HULLBREAKER: Combo = {
   id: "513-5034--46",
   cards: ["Hullbreaker Horror", "Sol Ring"],
   effects: ["Infinite colorless mana"],

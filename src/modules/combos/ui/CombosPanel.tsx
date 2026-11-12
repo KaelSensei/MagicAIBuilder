@@ -3,10 +3,7 @@
 import type { ReactNode } from "react";
 import { useFormatter, useTranslations } from "next-intl";
 import { cn } from "@/components/ui/utils";
-import type {
-  ComboPrerequisites,
-  SpellbookVariant,
-} from "@/modules/combos/client/api";
+import type { Combo, ComboPrerequisites } from "@/modules/combos/domain/combo";
 import { Zap, Loader2 } from "lucide-react";
 
 const SPELLBOOK_URL = "https://commanderspellbook.com/";
@@ -36,7 +33,7 @@ function spellbookCreditLink(label: string) {
 }
 
 interface CombosPanelProps {
-  readonly combos?: readonly SpellbookVariant[];
+  readonly combos?: readonly Combo[];
   readonly isLoading?: boolean;
   readonly isEnabled?: boolean; // False when deck < 10 cards
   /** True when the lookup failed, so the panel must not claim the deck has no combos. */
@@ -84,7 +81,7 @@ function PrerequisiteList({
   );
 }
 
-function ComboCard({ combo }: { readonly combo: SpellbookVariant }) {
+function ComboCard({ combo }: { readonly combo: Combo }) {
   const t = useTranslations("deck");
 
   return (

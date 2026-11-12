@@ -2,12 +2,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   COMBO_FETCH_TIMEOUT_MS,
   fetchCombosForDeck,
-  type SpellbookVariant,
 } from "@/modules/combos/client/api";
+import type { Combo } from "@/modules/combos/domain/combo";
 
 const mockFetch = vi.fn();
 
-const THORACLE: SpellbookVariant = {
+const THORACLE: Combo = {
   id: "742-1295",
   cards: ["Demonic Consultation", "Thassa's Oracle"],
   effects: ["Exile your library", "Win the game"],
