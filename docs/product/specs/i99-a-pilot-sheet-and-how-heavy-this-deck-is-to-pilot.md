@@ -79,7 +79,7 @@ Verified on `dev` at `db3d45fb` (#1404) on 2026-11-12:
 
 ### 2. Timing classes, definitions version 1
 
-2.1 A timing class answers "when does this card ask something of me?". Six groups: your turn, combat, other players' turns, events, standing effects, costs to pay. Counts are Commander-legal cards whose Oracle text contains the phrase (**computed**, 2026-11-12).
+2.1 A timing class answers "when does this card ask something of me?". Fifteen classes in six groups: your turn, combat, other players' turns, events, standing effects, costs to pay; the optional mark is a flag on a match (2.3), shown as the last row. Counts are Commander-legal cards whose Oracle text contains the phrase (**computed**, 2026-11-12).
 
 | Group         | Class                   | Clause examples                                                                                              |  Legal cards (computed) | CR  | Certainty |
 | ------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------ | ----------------------: | --- | --------- |
@@ -98,7 +98,7 @@ Verified on `dev` at `db3d45fb` (#1404) on 2026-11-12:
 | Events        | When you gain life      | "whenever you gain life"                                                                                     |                      96 | 603 | exact     |
 | Standing      | Replacement effects     | "instead" in a sentence with "would"                                                                         | 1,009 mention "instead" | 614 | heuristic |
 | Costs         | Costs to pay            | cumulative upkeep (86), echo (50), "at the beginning of your upkeep, sacrifice" (114), "unless you pay" (94) |                     344 | 702 | exact     |
-| Any           | Optional triggers       | "you may" inside a sentence that starts with "whenever", "when" or "at the beginning of"                     | 1,839 hold both phrases | 603 | heuristic |
+| Flag          | Optional triggers       | "you may" inside a sentence that starts with "whenever", "when" or "at the beginning of"                     | 1,839 hold both phrases | 603 | heuristic |
 
 2.2 Each definition holds an id, a version, its group, its timing (the step it fires in, or `event` or `standing`), its certainty, English and French names and one-line definitions, its clauses in [I-65 slice 1](i65-how-this-deck-wins.md#delivery-slices)'s format, and its CR rule as numbered in the Comprehensive Rules the product serves (effective 2026-08-07, `src/lib/rules/data/MagicCompRules-20260807.txt`), linked through I-47 slice 2's anchors once they exist.
 2.3 A card may match several classes; it is listed once per class. "Optional" is a flag on a match, not a class of its own on the sheet: the card appears in its timing block with the optional mark ◇.
@@ -508,7 +508,7 @@ Wizards made game length part of the brackets: Exhibition games "are likely to g
 
 ### Scope
 
-- [ ] Sixteen timing classes as versioned data in I-65's clause format, each with its step, its CR rule and its certainty; `classifyPilotCard` with reminder text stripped and optional triggers flagged; card fixtures (slice 1).
+- [ ] Fifteen timing classes and the optional-trigger flag as versioned data in I-65's clause format, each with its step, its CR rule and its certainty; `classifyPilotCard` with reminder text stripped and optional triggers flagged; card fixtures (slice 1).
 - [ ] Fourteen turn-length drivers with counts per 99 cards, reading I-78's extra-turn class; `countDrivers`; fixtures (slice 2).
 - [ ] The pilot load: thresholds as versioned data, the two-or-more-high band rule, every factor shown with its thresholds, `renderPilotLine` in English and French; the verdict-word test with "slow", "boring", "lent" and "ennuyeux" banned (slice 3).
 - [ ] The builder panel "Piloting this deck" and the owner's deck page (slice 4); the pilot sheet on screen and on one printed page with its version footer, I-19's pieces when present, no image (slice 5).
