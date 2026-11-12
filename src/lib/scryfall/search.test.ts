@@ -200,6 +200,32 @@ describe("buildSearchQuery", () => {
   it("ignores whitespace-only subtype", () => {
     expect(buildSearchQuery("", { subtype: "   " })).not.toContain("t:");
   });
+  it("sends a single-word subtype unquoted, so existing cache keys do not change", () => {
+    expect(buildSearchQuery("", { subtype: " Elf " })).toBe(
+      "t:Elf legal:commander"
+    );
+  });
+  it("quotes a multi-word subtype so Scryfall reads it as one type, not a type plus a name word", () => {
+    expect(buildSearchQuery("", { subtype: "Time Lord" })).toContain(
+      't:"Time Lord"'
+    );
+  });
+  it("trims a multi-word subtype before quoting it", () => {
+    expect(buildSearchQuery("", { subtype: "  Time Lord  " })).toBe(
+      't:"Time Lord" legal:commander'
+    );
+  });
+  it("strips double quotes from a subtype so the value cannot break out of its quotes", () => {
+    expect(buildSearchQuery("", { subtype: 'Time" Lord' })).toContain(
+      't:"Time Lord"'
+    );
+    expect(buildSearchQuery("", { subtype: '"Elf"' })).toBe(
+      "t:Elf legal:commander"
+    );
+  });
+  it("ignores a subtype made only of quotes and spaces", () => {
+    expect(buildSearchQuery("", { subtype: ' " ' })).not.toContain("t:");
+  });
 
   // Keyword
   it("keyword → keyword:<value> (Scryfall keyword syntax)", () => {
@@ -210,6 +236,16 @@ describe("buildSearchQuery", () => {
   });
   it("ignores empty keyword", () => {
     expect(buildSearchQuery("", { keyword: "" })).not.toContain("keyword:");
+  });
+  it("quotes a multi-word keyword so Scryfall reads it as one ability", () => {
+    expect(buildSearchQuery("", { keyword: "First strike" })).toContain(
+      'keyword:"First strike"'
+    );
+  });
+  it("strips double quotes from a keyword", () => {
+    expect(buildSearchQuery("", { keyword: 'Double "team"' })).toContain(
+      'keyword:"Double team"'
+    );
   });
 
   // Power / Toughness

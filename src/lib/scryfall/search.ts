@@ -119,6 +119,29 @@ function buildPowerToughnessParts(filters: Partial<SearchFilters>): string[] {
   return parts;
 }
 
+// ─── Free-text term helpers ───────────────────────────────────────────────────
+
+/**
+ * Normalises a value the player typed for a `field:value` term, such as the
+ * subtype or keyword inputs of the advanced search.
+ *
+ * Scryfall reads an unquoted space as the end of the term, so `t:Time Lord`
+ * means type "Time" plus the name word "Lord". Its syntax guide says to put
+ * `"` around text with spaces or punctuation and documents no escape for a
+ * literal `"` inside the quotes, so the quote character is stripped rather
+ * than escaped (https://scryfall.com/docs/syntax, checked 2026-11-12).
+ *
+ * @param value - the raw input, which may carry surrounding spaces or quotes
+ * @returns the trimmed value, quoted when it contains whitespace; `null`
+ *   when nothing is left to search for. A single word is returned unchanged
+ *   so existing queries and their cache keys stay the same.
+ */
+function freeTextTerm(value: string): string | null {
+  const bare = value.replace(/"/g, "").trim();
+  if (bare === "") return null;
+  return /\s/.test(bare) ? `"${bare}"` : bare;
+}
+
 // ─── Main query builder ───────────────────────────────────────────────────────
 
 /**
@@ -131,8 +154,8 @@ function buildPowerToughnessParts(filters: Partial<SearchFilters>): string[] {
  *  - types                → (type:X OR type:Y)
  *  - cmcMode + values     → cmc>=N / cmc<=N / cmc=N  (see buildCmcParts)
  *  - priceMin/priceMax    → usd>=N / usd<=N
- *  - subtype              → t:<subtype>
- *  - keyword              → keyword:<keyword>
+ *  - subtype              → t:<subtype>, quoted when multi-word (see freeTextTerm)
+ *  - keyword              → keyword:<keyword>, quoted when multi-word
  *  - powerMin/powerMax    → pow>=N / pow<=N
  *  - toughnessMin/Max     → tou>=N / tou<=N
  *  - interactionType      → oracle-text fragments (see buildInteractionQuery)
@@ -169,8 +192,10 @@ export function buildSearchQuery(
 
   parts.push(...buildCmcParts(filters), ...buildPriceParts(filters));
 
-  if (filters.subtype?.trim()) parts.push(`t:${filters.subtype.trim()}`);
-  if (filters.keyword?.trim()) parts.push(`keyword:${filters.keyword.trim()}`);
+  const subtype = freeTextTerm(filters.subtype ?? "");
+  if (subtype !== null) parts.push(`t:${subtype}`);
+  const keyword = freeTextTerm(filters.keyword ?? "");
+  if (keyword !== null) parts.push(`keyword:${keyword}`);
 
   parts.push(...buildPowerToughnessParts(filters));
 

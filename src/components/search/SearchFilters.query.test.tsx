@@ -280,16 +280,14 @@ describe("characterization: the Scryfall query of the name search filters", () =
       query: "t:Elf legal:commander",
     },
     {
-      choice:
-        "currently the placeholder's own example 'Elf, Dragon', sent unquoted, so Scryfall reads 'Dragon' as a name word (pinned)",
-      steps: [fill("e.g. Elf, Dragon", "Elf, Dragon")],
-      query: "t:Elf, Dragon legal:commander",
+      choice: "the multi-word subtype 'Time Lord', quoted as one type",
+      steps: [fill("e.g. Elf, Dragon", "Time Lord")],
+      query: 't:"Time Lord" legal:commander',
     },
     {
-      choice:
-        "currently the keyword 'first strike', sent unquoted, so Scryfall reads 'strike' as a name word (pinned)",
+      choice: "the keyword 'first strike', quoted as one ability",
       steps: [fill("e.g. Flying, Trample", "first strike")],
-      query: "keyword:first strike legal:commander",
+      query: 'keyword:"first strike" legal:commander',
     },
     {
       choice: "the Removal role",
