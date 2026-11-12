@@ -13,7 +13,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { waitFor } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
-import { useMsw } from "@/test/msw";
+import { setupMsw } from "@/test/msw";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { useCollectionStore } from "@/lib/collection/store";
 import { Providers } from "./providers";
@@ -48,7 +48,7 @@ const BOOTSTRAP_PAYLOAD = {
 };
 
 describe("Providers", () => {
-  useMsw(
+  setupMsw(
     http.get("/api/auth/session", () => HttpResponse.json(SIGNED_IN_SESSION)),
     http.get("/api/user/init", () => HttpResponse.json(BOOTSTRAP_PAYLOAD))
   );

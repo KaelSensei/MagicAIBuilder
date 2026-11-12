@@ -33,7 +33,7 @@ import {
   type SentModelRequest,
 } from "@/test/ai-route-msw";
 import { resetAiUsageDb } from "@/test/ai-usage-db";
-import { useMsw } from "@/test/msw";
+import { setupMsw } from "@/test/msw";
 import { z } from "zod";
 
 const ANTHROPIC_MESSAGES_URL = "https://api.anthropic.com/v1/messages";
@@ -134,7 +134,7 @@ async function readAsPanel(body: string) {
 }
 
 describe("POST /api/ai/suggest event stream", () => {
-  const server = useMsw(
+  const server = setupMsw(
     anthropicAnswers(SUGGEST_REPLY_TEXT_V1),
     modelProviderServes(OPENAI_CHAT_URL, sent, () =>
       HttpResponse.json(openAIChatCompletion(SUGGEST_REPLY_TEXT_V1))

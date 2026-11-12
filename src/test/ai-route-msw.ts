@@ -62,7 +62,7 @@ export interface SentModelRequest {
  * @param url - the provider endpoint, from the calling suite
  * @param sent - the suite's log; the suite empties it between tests
  * @param answer - the provider's response to every request
- * @returns the handler, for `useMsw` or `server.use`
+ * @returns the handler, for `setupMsw` or `server.use`
  */
 export function modelProviderServes(
   url: string,
@@ -92,7 +92,7 @@ export function modelProviderServes(
  *
  * @param cards - the card data Scryfall "holds" for the test
  * @param asked - when given, receives the names of each request, in order
- * @returns the handler, for `useMsw` or `server.use`
+ * @returns the handler, for `setupMsw` or `server.use`
  */
 export function scryfallCollectionServes(
   cards: readonly ScryfallCard[],
@@ -177,6 +177,11 @@ export async function readNdjsonOnFakeClock(response: Response): Promise<{
   })();
 
   const deadline = performance.now() + 5_000;
+  // The two awaits stay sequential, in a loop (SonarCloud S9382 notwithstanding):
+  // each turn first yields a macrotask so the route's pending I/O and `pump`
+  // can run, then fires the next fake timer. Running them in parallel, or
+  // advancing every timer at once, would fire a pacing timer before the chunk
+  // it paces was read, and the recorded arrival times would be wrong.
   while (!finished) {
     if (performance.now() > deadline) {
       throw new Error("The stream did not end within five real seconds.");

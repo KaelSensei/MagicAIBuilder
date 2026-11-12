@@ -40,7 +40,7 @@ import {
 } from "@/lib/scryfall/types";
 import { useUIStore } from "@/lib/ui/store";
 import auth from "@/messages/en/auth.json";
-import { useMsw } from "@/test/msw";
+import { setupMsw } from "@/test/msw";
 import { renderWithIntl } from "@/test/render-with-intl";
 import BuilderPage from "./page";
 
@@ -283,7 +283,7 @@ afterEach(() => {
 });
 
 describe("characterization: the builder's name search with a plain-language query", () => {
-  useMsw(
+  setupMsw(
     http.get("/api/decks/:id", () => HttpResponse.json(DECK)),
     http.get("/api/decks", () =>
       HttpResponse.json({

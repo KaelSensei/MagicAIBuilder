@@ -43,7 +43,7 @@ import {
   type ScryfallCard,
   type ScryfallSearchResponse,
 } from "@/lib/scryfall/types";
-import { useMsw } from "@/test/msw";
+import { setupMsw } from "@/test/msw";
 import { renderWithIntl } from "@/test/render-with-intl";
 
 /** The filters the builder page starts from (`DEFAULT_FILTERS`, builder page.tsx:250-269). */
@@ -177,7 +177,7 @@ beforeEach(() => {
 });
 
 describe("characterization: the Scryfall query of the name search filters", () => {
-  useMsw(
+  setupMsw(
     http.get("/api/cache/search", ({ request }) => {
       searched.push(new URL(request.url).searchParams.get("query") ?? "");
       return HttpResponse.json({ hit: true, data: cachedPage });

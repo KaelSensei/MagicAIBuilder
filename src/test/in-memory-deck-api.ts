@@ -24,21 +24,36 @@
  *
  * `reset` drops every held deck and puts every operation back to its default.
  *
+ * Every default answer settles through `prismaQuery`: the real client is
+ * `fetch`-backed, so a refusal rejects the returned promise and the call
+ * itself never throws. `fake-failures.test.ts` pins that contract.
+ *
  * @module test/in-memory-deck-api
  */
 
 import { vi, type Mock } from "vitest";
 import type {
+  addCard,
   AddCardPayload,
   ApiDeck,
   ApiDeckCard,
   ApiDeckListResponse,
+  applyCardChanges,
+  createDeck,
   DeckCardChanges,
+  deleteDeck,
+  duplicateDeck,
+  fetchDeck,
+  removeCard,
+  updateCardCategory,
+  updateCardNotes,
+  updateCardZone,
+  updateDeck,
 } from "@/lib/db/deck-api";
-import type * as DeckClient from "@/lib/db/deck-api";
 import { COMMAND_SLOT_ROWS } from "@/lib/deck/bulk-edit-command-zone";
 import type { CardCategory } from "@/lib/deck/types";
 import { VALID_CATEGORIES } from "@/lib/validation/card";
+import { prismaQuery } from "@/test/prisma-query";
 
 /**
  * A refusal from the deck API: the fake answers `status`, and the body
@@ -83,16 +98,16 @@ type Answering<Client extends (...args: never[]) => Promise<unknown>> = Answers<
 >;
 
 type FetchDecks = Answers<[page: number, limit: number], ApiDeckListResponse>;
-type FetchDeck = Answering<typeof DeckClient.fetchDeck>;
-type CreateDeck = Answering<typeof DeckClient.createDeck>;
-type UpdateDeck = Answering<typeof DeckClient.updateDeck>;
-type DeleteDeck = Answering<typeof DeckClient.deleteDeck>;
-type DuplicateDeck = Answering<typeof DeckClient.duplicateDeck>;
-type AddCard = Answering<typeof DeckClient.addCard>;
-type RemoveCard = Answering<typeof DeckClient.removeCard>;
-type UpdateCardCategory = Answering<typeof DeckClient.updateCardCategory>;
-type UpdateCardNotes = Answering<typeof DeckClient.updateCardNotes>;
-type UpdateCardZone = Answering<typeof DeckClient.updateCardZone>;
+type FetchDeck = Answering<typeof fetchDeck>;
+type CreateDeck = Answering<typeof createDeck>;
+type UpdateDeck = Answering<typeof updateDeck>;
+type DeleteDeck = Answering<typeof deleteDeck>;
+type DuplicateDeck = Answering<typeof duplicateDeck>;
+type AddCard = Answering<typeof addCard>;
+type RemoveCard = Answering<typeof removeCard>;
+type UpdateCardCategory = Answering<typeof updateCardCategory>;
+type UpdateCardNotes = Answering<typeof updateCardNotes>;
+type UpdateCardZone = Answering<typeof updateCardZone>;
 type UpdateCardQuantity = Answers<
   [deckId: string, cardId: string, quantity: number],
   ApiDeckCard
@@ -101,7 +116,7 @@ type UpdateCardPrinting = Answers<
   [deckId: string, cardId: string, printing: CardPrinting],
   ApiDeckCard
 >;
-type ApplyCardChanges = Answering<typeof DeckClient.applyCardChanges>;
+type ApplyCardChanges = Answering<typeof applyCardChanges>;
 
 /** The deck client's operations, as spies whose default answers are in-memory. */
 export interface DeckApiOperations {
@@ -238,7 +253,10 @@ function withoutCommandSlots(
 export function createInMemoryDeckApi(): InMemoryDeckApi {
   const decks = new Map<string, ApiDeck>();
   let lastId = 0;
-  const nextId = (prefix: string): string => `${prefix}-${(lastId += 1)}`;
+  const nextId = (prefix: string): string => {
+    lastId += 1;
+    return `${prefix}-${lastId}`;
+  };
 
   const held = (deckId: string): ApiDeck | undefined => decks.get(deckId);
   const readable = (deckId: string): ApiDeck => {
@@ -266,98 +284,116 @@ export function createInMemoryDeckApi(): InMemoryDeckApi {
   };
 
   const operations: DeckApiOperations = {
-    fetchDecks: vi.fn<FetchDecks>(async (page: number, limit: number) => {
-      const listing = [...decks.values()].map(listed);
-      return {
-        decks: structuredClone(listing),
-        total: listing.length,
-        page,
-        limit,
-      };
-    }),
-    fetchDeck: vi.fn<FetchDeck>(async (deckId: string) =>
-      structuredClone(readable(deckId))
+    fetchDecks: vi.fn<FetchDecks>((page: number, limit: number) =>
+      prismaQuery(() => {
+        const listing = [...decks.values()].map(listed);
+        return {
+          decks: structuredClone(listing),
+          total: listing.length,
+          page,
+          limit,
+        };
+      })
     ),
-    createDeck: vi.fn<CreateDeck>(async (name, opts) => {
-      const deck = Object.assign(emptyApiDeck(nextId("deck"), name), opts);
-      decks.set(deck.id, deck);
-      return structuredClone(deck);
-    }),
-    updateDeck: vi.fn<UpdateDeck>(async (deckId, patch) => {
-      const deck = held(deckId);
-      if (!deck) return Object.assign(emptyApiDeck(deckId), patch);
-      Object.assign(deck, patch);
-      return structuredClone(deck);
-    }),
-    deleteDeck: vi.fn<DeleteDeck>(async (deckId: string) => {
-      decks.delete(deckId);
-    }),
-    duplicateDeck: vi.fn<DuplicateDeck>(async (deckId: string) => {
-      const source = readable(deckId);
-      const copyId = nextId("deck");
-      const copy: ApiDeck = {
-        ...structuredClone(source),
-        id: copyId,
-        name: `${source.name} (Copy)`,
-        cards: source.cards.map((row) => ({
-          ...structuredClone(row),
-          id: nextId("row"),
-          deckId: copyId,
-        })),
-      };
-      decks.set(copyId, copy);
-      return structuredClone(copy);
-    }),
-    addCard: vi.fn<AddCard>(async (deckId, payload) => {
-      const row = rowFromPayload(deckId, nextId("row"), payload);
-      held(deckId)?.cards.push(row);
-      return structuredClone(row);
-    }),
-    removeCard: vi.fn<RemoveCard>(async (deckId: string, cardId: string) => {
-      const deck = held(deckId);
-      if (!deck) return;
-      const index = deck.cards.findIndex((row) => row.id === cardId);
-      if (index === -1) throw new DeckApiRefusal(404, "Card not found");
-      deck.cards.splice(index, 1);
-    }),
-    updateCardCategory: vi.fn<UpdateCardCategory>(
-      async (deckId, cardId, category) => patchRow(deckId, cardId, { category })
+    fetchDeck: vi.fn<FetchDeck>((deckId: string) =>
+      prismaQuery(() => structuredClone(readable(deckId)))
     ),
-    updateCardNotes: vi.fn<UpdateCardNotes>(async (deckId, cardId, notes) =>
-      patchRow(deckId, cardId, { notes })
+    createDeck: vi.fn<CreateDeck>((name, opts) =>
+      prismaQuery(() => {
+        const deck = Object.assign(emptyApiDeck(nextId("deck"), name), opts);
+        decks.set(deck.id, deck);
+        return structuredClone(deck);
+      })
     ),
-    updateCardZone: vi.fn<UpdateCardZone>(async (deckId, cardId, zone) =>
-      patchRow(deckId, cardId, { zone })
+    updateDeck: vi.fn<UpdateDeck>((deckId, patch) =>
+      prismaQuery(() => {
+        const deck = held(deckId);
+        if (!deck) return Object.assign(emptyApiDeck(deckId), patch);
+        Object.assign(deck, patch);
+        return structuredClone(deck);
+      })
+    ),
+    deleteDeck: vi.fn<DeleteDeck>((deckId: string) =>
+      prismaQuery(() => {
+        decks.delete(deckId);
+      })
+    ),
+    duplicateDeck: vi.fn<DuplicateDeck>((deckId: string) =>
+      prismaQuery(() => {
+        const source = readable(deckId);
+        const copyId = nextId("deck");
+        const copy: ApiDeck = {
+          ...structuredClone(source),
+          id: copyId,
+          name: `${source.name} (Copy)`,
+          cards: source.cards.map((row) => ({
+            ...structuredClone(row),
+            id: nextId("row"),
+            deckId: copyId,
+          })),
+        };
+        decks.set(copyId, copy);
+        return structuredClone(copy);
+      })
+    ),
+    addCard: vi.fn<AddCard>((deckId, payload) =>
+      prismaQuery(() => {
+        const row = rowFromPayload(deckId, nextId("row"), payload);
+        held(deckId)?.cards.push(row);
+        return structuredClone(row);
+      })
+    ),
+    removeCard: vi.fn<RemoveCard>((deckId: string, cardId: string) =>
+      prismaQuery(() => {
+        const deck = held(deckId);
+        if (!deck) return;
+        const index = deck.cards.findIndex((row) => row.id === cardId);
+        if (index === -1) throw new DeckApiRefusal(404, "Card not found");
+        deck.cards.splice(index, 1);
+      })
+    ),
+    updateCardCategory: vi.fn<UpdateCardCategory>((deckId, cardId, category) =>
+      prismaQuery(() => patchRow(deckId, cardId, { category }))
+    ),
+    updateCardNotes: vi.fn<UpdateCardNotes>((deckId, cardId, notes) =>
+      prismaQuery(() => patchRow(deckId, cardId, { notes }))
+    ),
+    updateCardZone: vi.fn<UpdateCardZone>((deckId, cardId, zone) =>
+      prismaQuery(() => patchRow(deckId, cardId, { zone }))
     ),
     updateCardQuantity: vi.fn<UpdateCardQuantity>(
-      async (deckId: string, cardId: string, quantity: number) =>
-        patchRow(deckId, cardId, { quantity })
+      (deckId: string, cardId: string, quantity: number) =>
+        prismaQuery(() => patchRow(deckId, cardId, { quantity }))
     ),
     updateCardPrinting: vi.fn<UpdateCardPrinting>(
-      async (deckId: string, cardId: string, printing: CardPrinting) =>
-        patchRow(deckId, cardId, printing)
+      (deckId: string, cardId: string, printing: CardPrinting) =>
+        prismaQuery(() => patchRow(deckId, cardId, printing))
     ),
-    applyCardChanges: vi.fn<ApplyCardChanges>(async (deckId, changes) => {
-      const deck = structuredClone(held(deckId) ?? emptyApiDeck(deckId));
-      const removed = new Set(changes.removeCardIds);
-      const rows = withoutCommandSlots(
-        deck.cards.filter((row) => !removed.has(row.id)),
-        changes.clearCommandSlots
-      ).map((row) => {
-        const change = changes.quantityChanges.find((c) => c.cardId === row.id);
-        return change ? { ...row, quantity: change.quantity } : row;
-      });
-      const added = changes.addCards.map((payload) =>
-        rowFromPayload(deckId, nextId("row"), payload)
-      );
-      const saved: ApiDeck = {
-        ...deck,
-        ...changes.commandZone,
-        cards: [...rows, ...added],
-      };
-      if (held(deckId)) decks.set(deckId, saved);
-      return structuredClone(saved);
-    }),
+    applyCardChanges: vi.fn<ApplyCardChanges>((deckId, changes) =>
+      prismaQuery(() => {
+        const deck = structuredClone(held(deckId) ?? emptyApiDeck(deckId));
+        const removed = new Set(changes.removeCardIds);
+        const rows = withoutCommandSlots(
+          deck.cards.filter((row) => !removed.has(row.id)),
+          changes.clearCommandSlots
+        ).map((row) => {
+          const change = changes.quantityChanges.find(
+            (c) => c.cardId === row.id
+          );
+          return change ? { ...row, quantity: change.quantity } : row;
+        });
+        const added = changes.addCards.map((payload) =>
+          rowFromPayload(deckId, nextId("row"), payload)
+        );
+        const saved: ApiDeck = {
+          ...deck,
+          ...changes.commandZone,
+          cards: [...rows, ...added],
+        };
+        if (held(deckId)) decks.set(deckId, saved);
+        return structuredClone(saved);
+      })
+    ),
   };
 
   return {

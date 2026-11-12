@@ -25,7 +25,7 @@ import {
   type SentModelRequest,
 } from "@/test/ai-route-msw";
 import { resetAiUsageDb } from "@/test/ai-usage-db";
-import { useMsw } from "@/test/msw";
+import { setupMsw } from "@/test/msw";
 
 const ANTHROPIC_MESSAGES_URL = "https://api.anthropic.com/v1/messages";
 
@@ -164,7 +164,7 @@ function hundredCardNames(): string[] {
 }
 
 describe("POST /api/ai/suggest prompt", () => {
-  const server = useMsw(
+  const server = setupMsw(
     modelProviderServes(ANTHROPIC_MESSAGES_URL, sent, () =>
       HttpResponse.json(EMPTY_ANALYSIS)
     )

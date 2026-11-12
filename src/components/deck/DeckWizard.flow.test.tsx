@@ -49,7 +49,7 @@ import type {
   ScryfallCard,
   ScryfallCollectionResponse,
 } from "@/lib/scryfall/types";
-import { useMsw } from "@/test/msw";
+import { setupMsw } from "@/test/msw";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { DeckWizard } from "./DeckWizard";
 
@@ -341,7 +341,7 @@ function cardBody(name: string): z.infer<typeof CardBody> | undefined {
 }
 
 describe("DeckWizard flow (characterization)", () => {
-  const server = useMsw(...handlers);
+  const server = setupMsw(...handlers);
   server.events.on("request:start", ({ request }) => {
     sent.push(describeRequest(request));
   });
