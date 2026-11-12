@@ -199,17 +199,20 @@ describe("addCard", () => {
       isPartner: false,
     };
     mockFetch(saved);
-    const result = await addCard("deck-1", {
-      scryfallId: "sf-1",
-      name: "Sol Ring",
-    });
+    const result = await addCard(
+      { deckId: "deck-1" },
+      {
+        scryfallId: "sf-1",
+        name: "Sol Ring",
+      }
+    );
     expect(result.id).toBe("db-card-1");
   });
 
   it("throws on failure", async () => {
     mockFetch(null, false, 400);
     await expect(
-      addCard("deck-1", { scryfallId: "sf-1", name: "X" })
+      addCard({ deckId: "deck-1" }, { scryfallId: "sf-1", name: "X" })
     ).rejects.toThrow("HTTP 400");
   });
 });
@@ -220,7 +223,7 @@ describe("removeCard", () => {
       "fetch",
       vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) })
     );
-    await removeCard("deck-1", "card-1");
+    await removeCard({ deckId: "deck-1" }, "card-1");
     const call = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0];
     expect(call[0]).toContain("/api/decks/deck-1/cards/card-1");
     expect(call[1].method).toBe("DELETE");
@@ -230,7 +233,7 @@ describe("removeCard", () => {
 describe("updateCardCategory", () => {
   it("patches card category", async () => {
     mockFetch({ id: "card-1", category: "land" });
-    await updateCardCategory("deck-1", "card-1", "land");
+    await updateCardCategory({ deckId: "deck-1" }, "card-1", "land");
     const body = JSON.parse(
       (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0][1].body
     );
@@ -241,7 +244,7 @@ describe("updateCardCategory", () => {
 describe("updateCardNotes", () => {
   it("patches card notes", async () => {
     mockFetch({ id: "card-1", notes: "Good card" });
-    await updateCardNotes("deck-1", "card-1", "Good card");
+    await updateCardNotes({ deckId: "deck-1" }, "card-1", "Good card");
     const body = JSON.parse(
       (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0][1].body
     );
@@ -250,7 +253,7 @@ describe("updateCardNotes", () => {
 
   it("accepts null notes to clear", async () => {
     mockFetch({ id: "card-1", notes: null });
-    await updateCardNotes("deck-1", "card-1", null);
+    await updateCardNotes({ deckId: "deck-1" }, "card-1", null);
     const body = JSON.parse(
       (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0][1].body
     );
@@ -261,7 +264,11 @@ describe("updateCardNotes", () => {
 describe("updateCardZone", () => {
   it("patches card zone to maybeboard", async () => {
     mockFetch({ id: "card-1", zone: "maybeboard" });
-    const result = await updateCardZone("deck-1", "card-1", "maybeboard");
+    const result = await updateCardZone(
+      { deckId: "deck-1" },
+      "card-1",
+      "maybeboard"
+    );
     expect(result.zone).toBe("maybeboard");
     const body = JSON.parse(
       (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0][1].body
@@ -271,14 +278,14 @@ describe("updateCardZone", () => {
 
   it("patches card zone to main", async () => {
     mockFetch({ id: "card-1", zone: "main" });
-    const result = await updateCardZone("deck-1", "card-1", "main");
+    const result = await updateCardZone({ deckId: "deck-1" }, "card-1", "main");
     expect(result.zone).toBe("main");
   });
 
   it("throws on error", async () => {
     mockFetch(null, false, 500);
     await expect(
-      updateCardZone("deck-1", "card-1", "maybeboard")
+      updateCardZone({ deckId: "deck-1" }, "card-1", "maybeboard")
     ).rejects.toThrow("HTTP 500");
   });
 });

@@ -110,10 +110,10 @@ vi.mock("@/lib/db/deck-api", () => ({
       return serverDeck();
     }
   ),
-  addCard: vi.fn(async (deckId: string, payload: AddCardPayload) =>
+  addCard: vi.fn(async ({ deckId }: { deckId: string }, payload: AddCardPayload) =>
     insertRow(deckId, payload)
   ),
-  removeCard: vi.fn(async (_deckId: string, cardId: string) => {
+  removeCard: vi.fn(async (_target: unknown, cardId: string) => {
     server.rows = server.rows.filter((row) => row.id !== cardId);
   }),
   applyCardChanges: vi.fn(async (deckId: string, changes: DeckCardChanges) => {

@@ -198,6 +198,18 @@ some proxies reject one (RFC 9110 §9.3.5).
 | `expectedVersion` is not a whole number ≥ 0 | 400    | `{ "error": "Invalid request body" \| "Invalid request query", "details": { formErrors, fieldErrors } }` |
 | The deck was deleted after the owner check  | 404    | `{ "error": "Deck not found" }`                                                                          |
 
+The browser's half lives in the deck store (`src/lib/deck/store.ts`) and its
+write queue (`src/lib/deck/deck-write-queue.ts`). The store holds the version
+it last read, sends it with every one of these writes and adopts the version
+each answer carries. The writes to one deck go one after the other, so each
+carries the version the previous answer brought. A guest deck, a listing stub
+and a deck whose last write was refused hold no version and send none. On a
+409 the store rolls the change back, drops the writes it had queued behind,
+reloads the deck with `GET /api/decks/[id]` and shows the conflict message
+(`deck.sync.conflictReloaded`) in place of the write's failure toast. Each
+write has the reads' 15 s budget (`DECK_WRITE_TIMEOUT_MS`): one the server
+never answers fails like a network failure, so the deck's later writes go on.
+
 A 409 stores nothing. The bulk edit answers the same 409 when its change set
 names a row the deck no longer holds: the list was edited from an outdated
 copy. It moves the version once, however many rows it changes. Its pair check

@@ -14,10 +14,14 @@
  */
 
 import { vi, type Mock } from "vitest";
-import { useToastStore, type ToastType } from "@/hooks/useToast";
+import {
+  useToastStore,
+  type ToastMessage,
+  type ToastType,
+} from "@/hooks/useToast";
 
 /** The toast store's `add` action. */
-export type AddToast = (type: ToastType, message: string) => void;
+export type AddToast = (type: ToastType, message: ToastMessage) => void;
 
 /**
  * Replaces the toast store's `add` action with a spy, for the rest of the test

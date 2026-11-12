@@ -151,13 +151,14 @@ describe("commander save recovery", () => {
     mocks.changeCommandZone.mockReturnValueOnce(olderSave.promise);
 
     const failedAttempt = useDeckStore.getState().setCommander(ATRAXA);
-    await useDeckStore
+    // One deck, one write at a time: the newer choice is sent once the older save settles.
+    const newerAttempt = useDeckStore
       .getState()
       .setCommander(
         scryfallCommander({ id: "kenrith", name: "Kenrith, the Returned King" })
       );
     olderSave.reject(new Error("Save failed"));
-    await failedAttempt;
+    await Promise.all([failedAttempt, newerAttempt]);
 
     expect(commandZone().commander?.scryfallId).toBe("kenrith");
     expect(mocks.addToast).not.toHaveBeenCalledWith(
@@ -171,9 +172,9 @@ describe("commander save recovery", () => {
     mocks.changeCommandZone.mockReturnValueOnce(commanderSave.promise);
 
     const failedAttempt = useDeckStore.getState().setCommander(KRAUM);
-    await useDeckStore.getState().setPartner(ISHAI);
+    const partnerChoice = useDeckStore.getState().setPartner(ISHAI);
     commanderSave.reject(new Error("Save failed"));
-    await failedAttempt;
+    await Promise.all([failedAttempt, partnerChoice]);
 
     expect(commandZone().commander).toEqual(THRASIOS);
     expect(commandZone().partner?.scryfallId).toBe("ishai");

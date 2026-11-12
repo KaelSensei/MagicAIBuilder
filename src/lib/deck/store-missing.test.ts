@@ -13,6 +13,8 @@ vi.mock(import("@/lib/scryfall/types"), () => ({
 }));
 
 vi.mock("@/lib/db/deck-api", () => ({
+  // The store's own PATCHes read the write budget from the client module.
+  DECK_WRITE_TIMEOUT_MS: 15_000 as const,
   fetchDecks: vi.fn(async () => ({ decks: [], total: 0, page: 0, limit: 20 })),
   fetchDeck: vi.fn(async () => ({
     id: "deck-1",

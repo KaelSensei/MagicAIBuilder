@@ -27,6 +27,9 @@ const TOAST_STYLES: Record<
 
 export function ToastContainer() {
   const t = useTranslations("common");
+  // A toast raised by a catalog key (`LocalizedToastKey`) is translated here,
+  // the one place with a locale; the keys span namespaces, hence no prefix.
+  const translate = useTranslations();
   const { toasts, remove } = useToastStore();
 
   return (
@@ -50,7 +53,9 @@ export function ToastContainer() {
             >
               {style.icon}
               <span className="flex-1 text-sm leading-tight text-[var(--text-primary)]">
-                {toast.message}
+                {typeof toast.message === "string"
+                  ? toast.message
+                  : translate(toast.message.key)}
               </span>
               <button
                 type="button"

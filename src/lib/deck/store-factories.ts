@@ -133,8 +133,7 @@ export function apiDeckToStoreDeck(d: deckApi.ApiDeck): Deck {
   const { commanderCard, partnerCard, companionCard, deckCards } = partitionApiCards(allCards);
 
   // The listing sends the server's row count; a full deck is counted from the
-  // rows it holds, once the command zone has been read out of them. The
-  // version is set last, since `withLoadedCardCount` forgets it.
+  // rows it holds, once the command zone has been read out of them.
   const deck: Deck = {
     id: d.id,
     name: d.name,

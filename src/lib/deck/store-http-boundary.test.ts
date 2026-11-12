@@ -19,7 +19,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { http, HttpResponse, type HttpResponseResolver } from "msw";
 import type { ApiDeck } from "@/lib/db/deck-api";
-import { useToastStore } from "@/hooks/useToast";
+import { useToastStore, type ToastMessage } from "@/hooks/useToast";
 import { useDeckStore } from "@/lib/deck/store";
 import { createEmptyDeck } from "@/lib/deck/store-factories";
 import {
@@ -238,7 +238,7 @@ function card(deckId: string, cardId: string): DeckCard | undefined {
     .decks[deckId]?.cards.find((row) => row.id === cardId);
 }
 
-function toasts(): { readonly type: string; readonly message: string }[] {
+function toasts(): { readonly type: string; readonly message: ToastMessage }[] {
   return useToastStore
     .getState()
     .toasts.map(({ type, message }) => ({ type, message }));

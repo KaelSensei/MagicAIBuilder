@@ -282,7 +282,7 @@ describe("useDeckStore — updateCardNotes", () => {
   it("calls the API with deckId, cardId, and notes", async () => {
     (deckApi.updateCardNotes as Mock).mockResolvedValue({});
     await useDeckStore.getState().updateCardNotes("card-1", "Counter all the things");
-    expect(deckApi.updateCardNotes).toHaveBeenCalledWith("deck-1", "card-1", "Counter all the things");
+    expect(deckApi.updateCardNotes).toHaveBeenCalledWith({ deckId: "deck-1" }, "card-1", "Counter all the things");
   });
 
   it("clears notes when null is passed", async () => {
@@ -291,7 +291,7 @@ describe("useDeckStore — updateCardNotes", () => {
     await useDeckStore.getState().updateCardNotes("card-1", null);
     const card = useDeckStore.getState().decks["deck-1"].cards.find((c) => c.id === "card-1");
     expect(card?.notes).toBeNull();
-    expect(deckApi.updateCardNotes).toHaveBeenCalledWith("deck-1", "card-1", null);
+    expect(deckApi.updateCardNotes).toHaveBeenCalledWith({ deckId: "deck-1" }, "card-1", null);
   });
 
   it("does not affect other cards in the deck", async () => {

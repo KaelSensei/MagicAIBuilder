@@ -36,9 +36,9 @@ describe("a deck the fake holds", () => {
   it("keeps the rows the client adds and changes", async () => {
     seededDeck();
 
-    const row = await deckClient.addCard("deck-1", SOL_RING);
-    await deckClient.updateCardNotes("deck-1", row.id, "Turn one");
-    await deckClient.updateCardZone("deck-1", row.id, "sideboard");
+    const row = await deckClient.addCard({ deckId: "deck-1" }, SOL_RING);
+    await deckClient.updateCardNotes({ deckId: "deck-1" }, row.id, "Turn one");
+    await deckClient.updateCardZone({ deckId: "deck-1" }, row.id, "sideboard");
 
     expect(fake.savedDeck("deck-1")?.cards).toEqual([
       expect.objectContaining({
@@ -53,25 +53,34 @@ describe("a deck the fake holds", () => {
   it("refuses to remove a row it does not hold, as the route does", async () => {
     seededDeck();
 
-    await expect(deckClient.removeCard("deck-1", "row-gone")).rejects.toThrow(
-      "[removeCard] HTTP 404: Card not found"
-    );
+    await expect(
+      deckClient.removeCard({ deckId: "deck-1" }, "row-gone")
+    ).rejects.toThrow("[removeCard] HTTP 404: Card not found");
   });
 
   it("applies a bulk change: removals, cleared slots, quantities, additions and the command zone", async () => {
     fake.seedDeck({
       ...emptyApiDeck("deck-1"),
       cards: [
-        { ...(await deckClient.addCard("deck-1", SOL_RING)), id: "keep" },
         {
-          ...(await deckClient.addCard("deck-1", {
-            scryfallId: "scry-krenko",
-            name: "Krenko, Mob Boss",
-            isCommander: true,
-          })),
+          ...(await deckClient.addCard({ deckId: "deck-1" }, SOL_RING)),
+          id: "keep",
+        },
+        {
+          ...(await deckClient.addCard(
+            { deckId: "deck-1" },
+            {
+              scryfallId: "scry-krenko",
+              name: "Krenko, Mob Boss",
+              isCommander: true,
+            }
+          )),
           id: "commander",
         },
-        { ...(await deckClient.addCard("deck-1", SOL_RING)), id: "drop" },
+        {
+          ...(await deckClient.addCard({ deckId: "deck-1" }, SOL_RING)),
+          id: "drop",
+        },
       ],
     });
 
@@ -101,7 +110,7 @@ describe("a deck the fake holds", () => {
   it("is listed without its rows, with a row count", async () => {
     fake.seedDeck({
       ...emptyApiDeck("deck-1"),
-      cards: [await deckClient.addCard("deck-1", SOL_RING)],
+      cards: [await deckClient.addCard({ deckId: "deck-1" }, SOL_RING)],
     });
 
     const listing = await deckClient.fetchDecks();
@@ -124,8 +133,8 @@ describe("a deck the fake holds", () => {
 describe("a deck the fake does not hold", () => {
   it("accepts every write and keeps nothing", async () => {
     await deckClient.updateDeck("deck-9", { name: "Renamed" });
-    await deckClient.addCard("deck-9", SOL_RING);
-    await deckClient.removeCard("deck-9", "row-1");
+    await deckClient.addCard({ deckId: "deck-9" }, SOL_RING);
+    await deckClient.removeCard({ deckId: "deck-9" }, "row-1");
 
     expect(fake.savedDeck("deck-9")).toBeUndefined();
   });
@@ -146,9 +155,13 @@ describe("the single-row PATCH", () => {
     });
 
   it("reaches one operation per field the client writes", async () => {
-    await deckClient.updateCardCategory("deck-1", "row-1", "ramp");
-    await deckClient.updateCardNotes("deck-1", "row-1", null);
-    await deckClient.updateCardZone("deck-1", "row-1", "maybeboard");
+    await deckClient.updateCardCategory({ deckId: "deck-1" }, "row-1", "ramp");
+    await deckClient.updateCardNotes({ deckId: "deck-1" }, "row-1", null);
+    await deckClient.updateCardZone(
+      { deckId: "deck-1" },
+      "row-1",
+      "maybeboard"
+    );
     await send({ quantity: 3 });
     await send({
       scryfallId: "scry-sol-ring-ltc",
@@ -157,22 +170,34 @@ describe("the single-row PATCH", () => {
     });
 
     expect(fake.updateCardCategory).toHaveBeenCalledWith(
-      "deck-1",
+      { deckId: "deck-1" },
       "row-1",
       "ramp"
     );
-    expect(fake.updateCardNotes).toHaveBeenCalledWith("deck-1", "row-1", null);
+    expect(fake.updateCardNotes).toHaveBeenCalledWith(
+      { deckId: "deck-1" },
+      "row-1",
+      null
+    );
     expect(fake.updateCardZone).toHaveBeenCalledWith(
-      "deck-1",
+      { deckId: "deck-1" },
       "row-1",
       "maybeboard"
     );
-    expect(fake.updateCardQuantity).toHaveBeenCalledWith("deck-1", "row-1", 3);
-    expect(fake.updateCardPrinting).toHaveBeenCalledWith("deck-1", "row-1", {
-      scryfallId: "scry-sol-ring-ltc",
-      imageUri: "grid",
-      artCropUri: "art",
-    });
+    expect(fake.updateCardQuantity).toHaveBeenCalledWith(
+      { deckId: "deck-1" },
+      "row-1",
+      3
+    );
+    expect(fake.updateCardPrinting).toHaveBeenCalledWith(
+      { deckId: "deck-1" },
+      "row-1",
+      {
+        scryfallId: "scry-sol-ring-ltc",
+        imageUri: "grid",
+        artCropUri: "art",
+      }
+    );
   });
 
   it("answers 400 to a body it cannot decode", async () => {

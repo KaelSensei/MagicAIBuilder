@@ -27,7 +27,7 @@ import { renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useDeckPrice } from "@/hooks/useDeckPrice";
 import { useGameChangers } from "@/hooks/useGameChangers";
-import { useToastStore } from "@/hooks/useToast";
+import { useToastStore, type ToastMessage } from "@/hooks/useToast";
 import { previewCardPackage } from "@/lib/community/card-package-preview";
 import {
   analyzeOpeningHandLands,
@@ -89,7 +89,7 @@ function storedDeck(deck: Deck): Deck {
   return stored;
 }
 
-function warningToasts(): readonly string[] {
+function warningToasts(): readonly ToastMessage[] {
   return useToastStore
     .getState()
     .toasts.filter((toast) => toast.type === "warning")

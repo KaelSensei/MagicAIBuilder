@@ -36,6 +36,7 @@ import { ALL_FORMATS } from "@/lib/deck/formats";
 import { CARD_CATEGORIES } from "@/lib/deck/types";
 import { VALID_ZONES } from "@/lib/validation/card";
 import { pairingTypeSchema } from "@/lib/validation/deck";
+import type { DeckWriteTarget } from "@/lib/db/deck-api";
 import {
   createInMemoryDeckApi,
   DeckApiRefusal,
@@ -76,6 +77,31 @@ const addCardPayloadSchema = z.looseObject({
   isPartner: z.boolean().optional(),
   zone: z.enum(VALID_ZONES).optional(),
 });
+
+/** The deck version a row write carries beside its own fields, as the routes read it. */
+const expectedVersionField = { expectedVersion: z.number().optional() };
+const addCardBodySchema = addCardPayloadSchema.extend(expectedVersionField);
+
+/**
+ * The target of a row operation, as the deck client names it: the deck and
+ * the version the request carried. A call without one matches
+ * `toHaveBeenCalledWith({ deckId }, …)`, since an undefined field is no field.
+ */
+function target(
+  deckId: string,
+  expectedVersion: number | undefined
+): DeckWriteTarget {
+  return { deckId, expectedVersion };
+}
+
+/**
+ * The `?expectedVersion=` of a card DELETE, as the route parses it
+ * (`cardDeleteQuerySchema`): plain digits only.
+ */
+function queryVersion(request: Request): number | undefined {
+  const raw = new URL(request.url).searchParams.get("expectedVersion");
+  return raw !== null && /^\d{1,10}$/.test(raw) ? Number(raw) : undefined;
+}
 
 const deckFieldsSchema = z.looseObject({
   format: z.enum(ALL_FORMATS).optional(),
@@ -158,6 +184,7 @@ const cardPatchSchema = z.object({
   scryfallId: z.string().optional(),
   imageUri: z.string().optional(),
   artCropUri: z.string().optional(),
+  ...expectedVersionField,
 });
 
 /** Answers with what the operation returned, or with its refusal or failure. */
@@ -192,18 +219,19 @@ async function answerBody<T>(
 function patchCard(
   client: DeckApiOperations,
   [deckId, cardId]: readonly [string, string],
-  patch: z.infer<typeof cardPatchSchema>
+  { expectedVersion, ...patch }: z.infer<typeof cardPatchSchema>
 ): unknown {
+  const deck = target(deckId, expectedVersion);
   if (patch.category !== undefined)
-    return client.updateCardCategory(deckId, cardId, patch.category);
+    return client.updateCardCategory(deck, cardId, patch.category);
   if (patch.notes !== undefined)
-    return client.updateCardNotes(deckId, cardId, patch.notes);
+    return client.updateCardNotes(deck, cardId, patch.notes);
   if (patch.zone !== undefined)
-    return client.updateCardZone(deckId, cardId, patch.zone);
+    return client.updateCardZone(deck, cardId, patch.zone);
   if (patch.quantity !== undefined)
-    return client.updateCardQuantity(deckId, cardId, patch.quantity);
+    return client.updateCardQuantity(deck, cardId, patch.quantity);
   if (patch.scryfallId !== undefined)
-    return client.updateCardPrinting(deckId, cardId, {
+    return client.updateCardPrinting(deck, cardId, {
       scryfallId: patch.scryfallId,
       imageUri: patch.imageUri,
       artCropUri: patch.artCropUri,
@@ -254,8 +282,11 @@ export function deckApiHandlers(client: DeckApiOperations): HttpHandler[] {
       answer(() => client.duplicateDeck(params.deckId))
     ),
     http.post<DeckParams>(CARDS, ({ request, params }) =>
-      answerBody(request, addCardPayloadSchema, (payload) =>
-        client.addCard(params.deckId, payload)
+      answerBody(
+        request,
+        addCardBodySchema,
+        ({ expectedVersion, ...payload }) =>
+          client.addCard(target(params.deckId, expectedVersion), payload)
       )
     ),
     http.patch<DeckParams>(`${DECK}/command-zone`, ({ request, params }) =>
@@ -273,8 +304,13 @@ export function deckApiHandlers(client: DeckApiOperations): HttpHandler[] {
         patchCard(client, [params.deckId, params.cardId], patch)
       )
     ),
-    http.delete<CardParams>(CARD, ({ params }) =>
-      answer(() => client.removeCard(params.deckId, params.cardId))
+    http.delete<CardParams>(CARD, ({ request, params }) =>
+      answer(() =>
+        client.removeCard(
+          target(params.deckId, queryVersion(request)),
+          params.cardId
+        )
+      )
     ),
   ];
 }

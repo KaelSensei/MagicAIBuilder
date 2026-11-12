@@ -1,4 +1,20 @@
-// HTTP client for the deck API routes
+/**
+ * HTTP client for the deck API routes, as the deck store calls them.
+ *
+ * Row writes take part in the deck's optimistic lock (#1400): each names the
+ * deck and the version the browser read ({@link DeckWriteTarget}, as the
+ * server's repository port does) and answers the deck's new version
+ * ({@link VersionedAnswer}). A guest deck answers locally, writes nothing and
+ * carries no version.
+ *
+ * @module db/deck-api
+ */
+import {
+  DeckApiError,
+  readAnsweredVersion,
+  type VersionedAnswer,
+} from "@/lib/db/deck-api-answer";
+import type { DeckWriteTarget } from "@/lib/deck/deck-repository-port";
 import type {
   Deck,
   DeckCard,
@@ -129,11 +145,15 @@ function getGuestApiCard(cardId: string): ApiDeckCard {
   );
 }
 
+export type { VersionedAnswer } from "@/lib/db/deck-api-answer";
+export type { DeckWriteTarget } from "@/lib/deck/deck-repository-port";
+
 /** Longest server-supplied message we will forward to the UI. */
 const MAX_API_ERROR_LENGTH = 200;
 
 /**
- * Throws with the server's own `error` string when it sent one.
+ * Throws a {@link DeckApiError} with the server's own `error` string when it
+ * sent one.
  *
  * A bare "HTTP 500" told the user nothing and told us nothing either; the deck
  * routes already return a short, fixed reason, so surface it. Only the `error`
@@ -154,8 +174,26 @@ async function handleApiError(res: Response, context: string): Promise<never> {
   } catch {
     // Non-JSON error body (a proxy timeout page, say) — the status is all we have.
   }
-  const suffix = detail ? `: ${detail}` : "";
-  throw new Error(`[${context}] HTTP ${res.status}${suffix}`);
+  throw new DeckApiError(context, res.status, detail);
+}
+
+/**
+ * How long one versioned deck write may run, in milliseconds, before it is
+ * aborted and rejects with a `TimeoutError`, which the store treats as any
+ * other network failure. The same budget as the deck reads above: a loaded
+ * host answers a card write in well under a second, and the writes of one
+ * deck go one after the other (`deck-write-queue.ts`), so a write that never
+ * answers must not hold the deck's later writes for longer than a read would.
+ */
+export const DECK_WRITE_TIMEOUT_MS = 15_000;
+
+/**
+ * The query string of a card DELETE: `?expectedVersion=<n>`, or nothing
+ * (RFC 9110 §9.3.5: no body on DELETE). The server refuses the write with 409
+ * when the deck has moved on; without a version the write is not checked.
+ */
+function deleteQuery({ expectedVersion }: DeckWriteTarget): string {
+  return expectedVersion === undefined ? "" : `?expectedVersion=${expectedVersion}`;
 }
 
 // ─── Deck CRUD ────────────────────────────────────────────────────────────────
@@ -380,74 +418,129 @@ function guestRowFromPayload(deckId: string, id: string, payload: AddCardPayload
   };
 }
 
+/**
+ * Adds a row through `POST /api/decks/[id]/cards`.
+ *
+ * @param target - the deck, and the version this browser read when it can
+ *   vouch for one; a guest deck answers locally and writes nothing
+ * @param payload - the card as a row
+ * @returns the saved row and the deck's new version
+ * @throws DeckApiError when the server refuses (409 for a stale version) or fails the write
+ */
 export async function addCard(
-  deckId: string,
+  { deckId, expectedVersion }: DeckWriteTarget,
   payload: AddCardPayload
-): Promise<ApiDeckCard> {
+): Promise<ApiDeckCard & VersionedAnswer> {
   if (isGuestDeckId(deckId)) return guestRowFromPayload(deckId, payload.scryfallId, payload);
   const res = await fetch(`/api/decks/${deckId}/cards`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+    body: JSON.stringify({ ...payload, expectedVersion }),
+    signal: AbortSignal.timeout(DECK_WRITE_TIMEOUT_MS),
   });
   if (!res.ok) await handleApiError(res, "addCard");
   return res.json();
 }
 
+/**
+ * Removes a row through `DELETE /api/decks/[id]/cards/[cardId]`.
+ *
+ * @param target - the deck, and the version this browser read, sent as
+ *   `?expectedVersion=`; a guest deck answers locally and writes nothing
+ * @param cardId - the row
+ * @returns the deck's new version
+ * @throws DeckApiError when the server refuses (409 for a stale version) or fails the write
+ */
 export async function removeCard(
-  deckId: string,
+  target: DeckWriteTarget,
   cardId: string
-): Promise<void> {
-  if (isGuestDeckId(deckId)) return;
-  const res = await fetch(`/api/decks/${deckId}/cards/${cardId}`, {
-    method: "DELETE",
-  });
+): Promise<VersionedAnswer> {
+  if (isGuestDeckId(target.deckId)) return {};
+  const res = await fetch(
+    `/api/decks/${target.deckId}/cards/${cardId}${deleteQuery(target)}`,
+    { method: "DELETE", signal: AbortSignal.timeout(DECK_WRITE_TIMEOUT_MS) }
+  );
   if (!res.ok) await handleApiError(res, "removeCard");
+  // The row is gone whatever the body says; only its version is read.
+  return readAnsweredVersion(res);
 }
 
-export async function updateCardCategory(
-  deckId: string,
+/**
+ * Writes some columns of one row through `PATCH /api/decks/[id]/cards/[cardId]`,
+ * with the deck version this browser read beside them. A failure names the
+ * columns it carried, for the log: `[patchCard:notes] HTTP 500`.
+ *
+ * @returns the row as saved, and the deck's new version
+ * @throws DeckApiError when the server refuses (409 for a stale version) or fails the write
+ */
+async function patchCard(
+  { deckId, expectedVersion }: DeckWriteTarget,
+  cardId: string,
+  columns: Record<string, unknown>
+): Promise<ApiDeckCard & VersionedAnswer> {
+  if (isGuestDeckId(deckId)) return getGuestApiCard(cardId);
+  const res = await fetch(`/api/decks/${deckId}/cards/${cardId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ...columns, expectedVersion }),
+    signal: AbortSignal.timeout(DECK_WRITE_TIMEOUT_MS),
+  });
+  if (!res.ok) {
+    await handleApiError(res, `patchCard:${Object.keys(columns).join(",")}`);
+  }
+  return res.json();
+}
+
+/** Writes a row's category. See {@link patchCard}. */
+export function updateCardCategory(
+  target: DeckWriteTarget,
   cardId: string,
   category: CardCategory
-): Promise<ApiDeckCard> {
-  if (isGuestDeckId(deckId)) return getGuestApiCard(cardId);
-  const res = await fetch(`/api/decks/${deckId}/cards/${cardId}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ category }),
-  });
-  if (!res.ok) await handleApiError(res, "updateCardCategory");
-  return res.json();
+): Promise<ApiDeckCard & VersionedAnswer> {
+  return patchCard(target, cardId, { category });
 }
 
-export async function updateCardNotes(
-  deckId: string,
+/** Writes a row's notes; `null` clears them. See {@link patchCard}. */
+export function updateCardNotes(
+  target: DeckWriteTarget,
   cardId: string,
   notes: string | null
-): Promise<ApiDeckCard> {
-  if (isGuestDeckId(deckId)) return getGuestApiCard(cardId);
-  const res = await fetch(`/api/decks/${deckId}/cards/${cardId}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ notes }),
-  });
-  if (!res.ok) await handleApiError(res, "updateCardNotes");
-  return res.json();
+): Promise<ApiDeckCard & VersionedAnswer> {
+  return patchCard(target, cardId, { notes });
 }
 
-export async function updateCardZone(
-  deckId: string,
+/** Moves a row to a zone. See {@link patchCard}. */
+export function updateCardZone(
+  target: DeckWriteTarget,
   cardId: string,
   zone: "main" | "sideboard" | "maybeboard"
-): Promise<ApiDeckCard> {
-  if (isGuestDeckId(deckId)) return getGuestApiCard(cardId);
-  const res = await fetch(`/api/decks/${deckId}/cards/${cardId}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ zone }),
-  });
-  if (!res.ok) await handleApiError(res, "updateCardZone");
-  return res.json();
+): Promise<ApiDeckCard & VersionedAnswer> {
+  return patchCard(target, cardId, { zone });
+}
+
+/** Writes a row's quantity. See {@link patchCard}. */
+export function updateCardQuantity(
+  target: DeckWriteTarget,
+  cardId: string,
+  quantity: number
+): Promise<ApiDeckCard & VersionedAnswer> {
+  return patchCard(target, cardId, { quantity });
+}
+
+/** The printing fields a printing swap writes on one row. */
+export interface CardPrinting {
+  readonly scryfallId: string;
+  readonly imageUri?: string;
+  readonly artCropUri?: string;
+}
+
+/** Swaps a row's printing. See {@link patchCard}. */
+export function updateCardPrinting(
+  target: DeckWriteTarget,
+  cardId: string,
+  printing: CardPrinting
+): Promise<ApiDeckCard & VersionedAnswer> {
+  return patchCard(target, cardId, { ...printing });
 }
 
 /** Row changes the server applies to a deck in one transaction. */
@@ -524,6 +617,7 @@ export async function applyCardChanges(
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(changes),
+    signal: AbortSignal.timeout(DECK_WRITE_TIMEOUT_MS),
   });
   if (!res.ok) await handleApiError(res, "applyCardChanges");
   return res.json();
@@ -548,15 +642,14 @@ export interface CommandZoneChangeRequest {
 }
 
 /** What a saved command-zone change answers: the rows it added, in the order sent, and the deck's new version. */
-export interface CommandZoneSaved {
+export interface CommandZoneSaved extends VersionedAnswer {
   readonly cards: ApiDeckCard[];
-  readonly version: number;
 }
 
 /**
  * Changes the command zone atomically: either every row and field of the
  * change is saved or none is. The guest deck keeps no version, so its answer
- * carries version 0 and rows whose id is their printing id, as `addCard` does.
+ * carries none, and rows whose id is their printing id, as `addCard` does.
  *
  * @param deckId - deck to change
  * @param change - rows to remove and add, and the deck fields to write
@@ -572,13 +665,13 @@ export async function changeCommandZone(
       cards: change.addCards.map((payload) =>
         guestRowFromPayload(deckId, payload.scryfallId, payload)
       ),
-      version: 0,
     };
   }
   const res = await fetch(`/api/decks/${deckId}/command-zone`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(change),
+    signal: AbortSignal.timeout(DECK_WRITE_TIMEOUT_MS),
   });
   if (!res.ok) await handleApiError(res, "changeCommandZone");
   return res.json();

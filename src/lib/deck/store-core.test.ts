@@ -200,42 +200,36 @@ describe("addCard quantity save completion", () => {
 });
 
 describe("addCard and removeCard sync overlap", () => {
-  it.each(["addition", "removal"])("stays syncing when %s finishes first", async (first) => {
+  // The two writes go to one deck, so the second waits for the first's answer
+  // and carries the version it brings (`deck-write-queue.ts`). The removal is
+  // sent first: the addition looks for an owned printing before it is queued.
+  it("stays syncing while the addition waits for the removal, and until both settle", async () => {
     vi.clearAllMocks();
     seedDeck(makeActiveDeck({ cards: [makeDeckCard()] }));
     const pendingAddition = Promise.withResolvers<Awaited<ReturnType<typeof deckApi.addCard>>>();
-    const pendingRemoval = Promise.withResolvers<void>();
+    const pendingRemoval = Promise.withResolvers<Awaited<ReturnType<typeof deckApi.removeCard>>>();
     vi.mocked(deckApi.addCard).mockReturnValueOnce(pendingAddition.promise);
     vi.mocked(deckApi.removeCard).mockReturnValueOnce(pendingRemoval.promise);
 
     const addition = useDeckStore.getState().addCard(makeScryfallCard());
     const removal = useDeckStore.getState().removeCard("card-1");
+    await vi.waitFor(() => expect(deckApi.removeCard).toHaveBeenCalledOnce());
+    expect(useDeckStore.getState().isSyncing).toBe(true);
+    expect(deckApi.addCard).not.toHaveBeenCalled();
+
+    pendingRemoval.resolve({});
+    await removal;
     await vi.waitFor(() => expect(deckApi.addCard).toHaveBeenCalledOnce());
     expect(useDeckStore.getState().isSyncing).toBe(true);
 
-    const finishAddition = async () => {
-      pendingAddition.resolve({
-        ...makeDeckCard({ id: "saved-db-id", name: "Lightning Bolt" }),
-        deckId: "deck-1",
-        scryfallId: "scryfall-id-1",
-        isCommander: false,
-        isPartner: false,
-      });
-      await addition;
-    };
-    const finishRemoval = async () => {
-      pendingRemoval.resolve();
-      await removal;
-    };
-    if (first === "addition") {
-      await finishAddition();
-      expect(useDeckStore.getState().isSyncing).toBe(true);
-      await finishRemoval();
-    } else {
-      await finishRemoval();
-      expect(useDeckStore.getState().isSyncing).toBe(true);
-      await finishAddition();
-    }
+    pendingAddition.resolve({
+      ...makeDeckCard({ id: "saved-db-id", name: "Lightning Bolt" }),
+      deckId: "deck-1",
+      scryfallId: "scryfall-id-1",
+      isCommander: false,
+      isPartner: false,
+    });
+    await addition;
     expect(useDeckStore.getState().isSyncing).toBe(false);
   });
 });
@@ -273,13 +267,16 @@ describe("useDeckStore — bulkRemoveCards recovery", () => {
 
   it("keeps syncing until all overlapping bulk removals finish", async () => {
     seedDeck(makeActiveDeck({ cards: [makeDeckCard({ id: "first" }), makeDeckCard({ id: "second" })] }));
-    const pending = Promise.withResolvers<void>();
+    const pending = Promise.withResolvers<Awaited<ReturnType<typeof deckApi.removeCard>>>();
     vi.mocked(deckApi.removeCard).mockReturnValueOnce(pending.promise);
     const firstBatch = useDeckStore.getState().bulkRemoveCards(["first"]);
-    await useDeckStore.getState().bulkRemoveCards(["second"]);
+    // The second batch waits for the first's answer: one deck, one write at a time.
+    const secondBatch = useDeckStore.getState().bulkRemoveCards(["second"]);
+    await vi.waitFor(() => expect(deckApi.removeCard).toHaveBeenCalledOnce());
     expect(useDeckStore.getState().isSyncing).toBe(true);
-    pending.resolve();
-    await firstBatch;
+    pending.resolve({});
+    await Promise.all([firstBatch, secondBatch]);
+    expect(deckApi.removeCard).toHaveBeenCalledTimes(2);
     expect(useDeckStore.getState().isSyncing).toBe(false);
   });
 
@@ -296,14 +293,14 @@ describe("useDeckStore — bulkRemoveCards recovery", () => {
   it("does not send removal requests for cards absent from the active deck", async () => {
     seedDeck(makeActiveDeck({ cards: [makeDeckCard()] }));
     await useDeckStore.getState().bulkRemoveCards(["missing", "card-1"]);
-    expect(deckApi.removeCard).toHaveBeenCalledExactlyOnceWith("deck-1", "card-1");
+    expect(deckApi.removeCard).toHaveBeenCalledExactlyOnceWith({ deckId: "deck-1" }, "card-1");
     expect(useDeckStore.getState().decks["deck-1"].cards).toEqual([]);
   });
 
   it("sends only one removal request for a repeated card identifier", async () => {
     seedDeck(makeActiveDeck({ cards: [makeDeckCard()] }));
     await useDeckStore.getState().bulkRemoveCards(["card-1", "card-1"]);
-    expect(deckApi.removeCard).toHaveBeenCalledExactlyOnceWith("deck-1", "card-1");
+    expect(deckApi.removeCard).toHaveBeenCalledExactlyOnceWith({ deckId: "deck-1" }, "card-1");
     expect(useDeckStore.getState().decks["deck-1"].cards).toEqual([]);
   });
 
@@ -317,16 +314,19 @@ describe("useDeckStore — bulkRemoveCards recovery", () => {
     expect(toastAdd).toHaveBeenCalledExactlyOnceWith("error", "Could not remove card. Please retry.");
   });
 
-  it("preserves original order when rejected removals finish in reverse order", async () => {
-    const first = Promise.withResolvers<void>();
-    const second = Promise.withResolvers<void>();
+  it("preserves original order when the removals are rejected one after the other", async () => {
+    // One deck, one write at a time: the second removal is sent once the
+    // first has settled, so the rows come back in the order they left.
+    const first = Promise.withResolvers<Awaited<ReturnType<typeof deckApi.removeCard>>>();
+    const second = Promise.withResolvers<Awaited<ReturnType<typeof deckApi.removeCard>>>();
     const cards = ["first", "second", "removed", "last"].map((id) => makeDeckCard({ id }));
     seedDeck(makeActiveDeck({ cards }));
     vi.mocked(deckApi.removeCard).mockReturnValueOnce(first.promise).mockReturnValueOnce(second.promise);
     const removal = useDeckStore.getState().bulkRemoveCards(["first", "second", "removed"]);
-    second.reject(new Error("offline"));
-    await Promise.resolve();
+    await vi.waitFor(() => expect(deckApi.removeCard).toHaveBeenCalledOnce());
     first.reject(new Error("offline"));
+    await vi.waitFor(() => expect(deckApi.removeCard).toHaveBeenCalledTimes(2));
+    second.reject(new Error("offline"));
     await removal;
     expect(useDeckStore.getState().decks["deck-1"].cards.map((card) => card.id)).toEqual([
       "first", "second", "last",
@@ -953,7 +953,7 @@ describe("useDeckStore — addCard", () => {
 
     expect(scryfallClient.getCardById).toHaveBeenCalledWith("owned-printing");
     expect(deckApi.addCard).toHaveBeenCalledWith(
-      "deck-1",
+      { deckId: "deck-1" },
       expect.objectContaining({ scryfallId: "owned-printing" })
     );
     expect(collectionState.collectionCards["owned-printing"]?.quantity).toBe(1);
@@ -973,7 +973,7 @@ describe("useDeckStore — addCard", () => {
 
     expect(scryfallClient.getCardById).toHaveBeenCalledWith("owned-printing");
     expect(deckApi.addCard).toHaveBeenCalledWith(
-      "deck-1",
+      { deckId: "deck-1" },
       expect.objectContaining({ scryfallId: "owned-printing" })
     );
     expect(collectionState.collectionCards["owned-printing"]?.quantity).toBe(1);
@@ -1032,7 +1032,7 @@ describe("useDeckStore — addCard", () => {
     const card = makeScryfallCard();
     await useDeckStore.getState().addCard(card);
     expect(deckApi.addCard).toHaveBeenCalledWith(
-      "deck-1",
+      { deckId: "deck-1" },
       expect.objectContaining({
         name: "Lightning Bolt",
         isCommander: false,
@@ -1057,7 +1057,7 @@ describe("useDeckStore — removeCard", () => {
 
   it("calls the API with deck id and card id", async () => {
     await useDeckStore.getState().removeCard("card-1");
-    expect(deckApi.removeCard).toHaveBeenCalledWith("deck-1", "card-1");
+    expect(deckApi.removeCard).toHaveBeenCalledWith({ deckId: "deck-1" }, "card-1");
   });
 
   it("adds removed card to undo stack", async () => {
@@ -1104,7 +1104,7 @@ describe("useDeckStore — updateCardCategory", () => {
   it("calls the API with deck id, card id, and new category", async () => {
     const category: CardCategory = "draw";
     await useDeckStore.getState().updateCardCategory("card-1", category);
-    expect(deckApi.updateCardCategory).toHaveBeenCalledWith("deck-1", "card-1", "draw");
+    expect(deckApi.updateCardCategory).toHaveBeenCalledWith({ deckId: "deck-1" }, "card-1", "draw");
   });
 
   it("does not affect other cards", async () => {

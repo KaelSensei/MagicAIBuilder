@@ -19,10 +19,15 @@
  *   skips the route's stale-row check. The command-zone change
  *   (`changeCommandZone`) applies all of it or, for a row it does not hold,
  *   none of it and answers 500 as the route does.
+ * - A held deck is versioned as the routes version it (#1400): every row
+ *   write checks the `expectedVersion` it carries against the deck's
+ *   `version` (0 when the seed gave none), answers 409 with the routes' text
+ *   when they differ, and otherwise steps the version and answers it.
  * - A deck it does not hold accepts every write and keeps nothing, as the
  *   per-file `vi.mock` factories this kit replaced did: most store tests open a
- *   deck by setting the store's state, not through the API. Reading such a
- *   deck answers 404.
+ *   deck by setting the store's state, not through the API. Its answers carry
+ *   no version, so a test that sets the store's state sees none appear.
+ *   Reading such a deck answers 404.
  *
  * `reset` drops every held deck and puts every operation back to its default.
  *
@@ -44,12 +49,15 @@ import type {
   changeCommandZone,
   createDeck,
   DeckCardChanges,
+  DeckWriteTarget,
   deleteDeck,
   duplicateDeck,
   fetchDeck,
   removeCard,
   updateCardCategory,
   updateCardNotes,
+  updateCardPrinting,
+  updateCardQuantity,
   updateCardZone,
   updateDeck,
 } from "@/lib/db/deck-api";
@@ -76,11 +84,19 @@ export class DeckApiRefusal extends Error {
   }
 }
 
-/** The printing fields the store's printing swap writes on one row. */
-export interface CardPrinting {
-  readonly scryfallId: string;
-  readonly imageUri?: string;
-  readonly artCropUri?: string;
+export type { CardPrinting } from "@/lib/db/deck-api";
+
+/**
+ * The `error` of the routes' 409 for a write made from an outdated copy
+ * (`STALE_DECK_ERROR` in `src/lib/api/versioned-deck-write.ts`, which this
+ * browser-side kit does not import: that module is a Next.js route helper).
+ */
+export const STALE_DECK_MESSAGE =
+  "The deck changed since it was opened — reload it and try again";
+
+/** The deck's new version beside a write's answer; absent when the fake does not hold the deck. */
+interface VersionedAnswer {
+  readonly version?: number;
 }
 
 /**
@@ -110,14 +126,8 @@ type RemoveCard = Answering<typeof removeCard>;
 type UpdateCardCategory = Answering<typeof updateCardCategory>;
 type UpdateCardNotes = Answering<typeof updateCardNotes>;
 type UpdateCardZone = Answering<typeof updateCardZone>;
-type UpdateCardQuantity = Answers<
-  [deckId: string, cardId: string, quantity: number],
-  ApiDeckCard
->;
-type UpdateCardPrinting = Answers<
-  [deckId: string, cardId: string, printing: CardPrinting],
-  ApiDeckCard
->;
+type UpdateCardQuantity = Answering<typeof updateCardQuantity>;
+type UpdateCardPrinting = Answering<typeof updateCardPrinting>;
 type ApplyCardChanges = Answering<typeof applyCardChanges>;
 type ChangeCommandZone = Answering<typeof changeCommandZone>;
 
@@ -258,23 +268,55 @@ export function createInMemoryDeckApi(): InMemoryDeckApi {
     if (!deck) throw new DeckApiRefusal(404, "Deck not found");
     return deck;
   };
-  /** Applies `change` to a held row; a deck the fake does not hold keeps nothing. */
+  /**
+   * Claims the next version of a held deck, as the repository does before a
+   * row write: refused when the writer's `expectedVersion` is not the deck's.
+   *
+   * @returns the deck's new version, or undefined for a deck the fake does not hold
+   */
+  const claimVersion = ({
+    deckId,
+    expectedVersion,
+  }: DeckWriteTarget): number | undefined => {
+    const deck = held(deckId);
+    if (!deck) return undefined;
+    const current = deck.version ?? 0;
+    if (expectedVersion !== undefined && expectedVersion !== current) {
+      throw new DeckApiRefusal(409, STALE_DECK_MESSAGE);
+    }
+    deck.version = current + 1;
+    return deck.version;
+  };
+  /** The answer with the deck's new version beside it, when there is one. */
+  const withVersion = <Value extends object>(
+    value: Value,
+    version: number | undefined
+  ): Value & VersionedAnswer =>
+    version === undefined ? value : { ...value, version };
+  /**
+   * Applies `change` to a held row once the version is claimed; a deck the
+   * fake does not hold keeps nothing.
+   */
   const patchRow = (
-    deckId: string,
+    target: DeckWriteTarget,
     cardId: string,
     change: Partial<ApiDeckCard>
-  ): ApiDeckCard => {
-    const deck = held(deckId);
+  ): ApiDeckCard & VersionedAnswer => {
+    const deck = held(target.deckId);
     if (!deck) {
       return {
-        ...rowFromPayload(deckId, cardId, { scryfallId: cardId, name: "" }),
+        ...rowFromPayload(target.deckId, cardId, {
+          scryfallId: cardId,
+          name: "",
+        }),
         ...change,
       };
     }
     const row = deck.cards.find((candidate) => candidate.id === cardId);
     if (!row) throw new DeckApiRefusal(404, "Card not found");
+    const version = claimVersion(target);
     Object.assign(row, change);
-    return structuredClone(row);
+    return withVersion(structuredClone(row), version);
   };
 
   /**
@@ -287,8 +329,7 @@ export function createInMemoryDeckApi(): InMemoryDeckApi {
         rowFromPayload(deckId, nextId("row"), payload)
       );
       const deck = held(deckId);
-      // The fake keeps no version: every answer says 0.
-      if (!deck) return { cards: structuredClone(rows), version: 0 };
+      if (!deck) return { cards: structuredClone(rows) };
       const leaving = new Set(change.removeCardIds);
       const holdsEveryLeavingRow = change.removeCardIds.every((cardId) =>
         deck.cards.some((row) => row.id === cardId)
@@ -296,6 +337,7 @@ export function createInMemoryDeckApi(): InMemoryDeckApi {
       if (!holdsEveryLeavingRow) {
         throw new DeckApiRefusal(500, "Failed to save the command zone");
       }
+      const version = claimVersion({ deckId, ...change });
       const kept = withoutCommandSlots(
         deck.cards.filter((row) => !leaving.has(row.id)),
         change.clearCommandSlots
@@ -303,9 +345,10 @@ export function createInMemoryDeckApi(): InMemoryDeckApi {
       decks.set(deckId, {
         ...deck,
         ...change.commandZone,
+        version,
         cards: [...kept, ...rows],
       });
-      return { cards: structuredClone(rows), version: 0 };
+      return { cards: structuredClone(rows), version };
     });
 
   const operations: DeckApiOperations = {
@@ -361,41 +404,43 @@ export function createInMemoryDeckApi(): InMemoryDeckApi {
         return structuredClone(copy);
       })
     ),
-    addCard: vi.fn<AddCard>((deckId, payload) =>
+    addCard: vi.fn<AddCard>((target, payload) =>
       prismaQuery(() => {
-        const row = rowFromPayload(deckId, nextId("row"), payload);
-        held(deckId)?.cards.push(row);
-        return structuredClone(row);
+        const version = claimVersion(target);
+        const row = rowFromPayload(target.deckId, nextId("row"), payload);
+        held(target.deckId)?.cards.push(row);
+        return withVersion(structuredClone(row), version);
       })
     ),
-    removeCard: vi.fn<RemoveCard>((deckId: string, cardId: string) =>
+    removeCard: vi.fn<RemoveCard>((target, cardId) =>
       prismaQuery(() => {
-        const deck = held(deckId);
+        const deck = held(target.deckId);
         if (!deck) return;
         const index = deck.cards.findIndex((row) => row.id === cardId);
         if (index === -1) throw new DeckApiRefusal(404, "Card not found");
+        const version = claimVersion(target);
         deck.cards.splice(index, 1);
+        return { version };
       })
     ),
-    updateCardCategory: vi.fn<UpdateCardCategory>((deckId, cardId, category) =>
-      prismaQuery(() => patchRow(deckId, cardId, { category }))
+    updateCardCategory: vi.fn<UpdateCardCategory>((target, cardId, category) =>
+      prismaQuery(() => patchRow(target, cardId, { category }))
     ),
-    updateCardNotes: vi.fn<UpdateCardNotes>((deckId, cardId, notes) =>
-      prismaQuery(() => patchRow(deckId, cardId, { notes }))
+    updateCardNotes: vi.fn<UpdateCardNotes>((target, cardId, notes) =>
+      prismaQuery(() => patchRow(target, cardId, { notes }))
     ),
-    updateCardZone: vi.fn<UpdateCardZone>((deckId, cardId, zone) =>
-      prismaQuery(() => patchRow(deckId, cardId, { zone }))
+    updateCardZone: vi.fn<UpdateCardZone>((target, cardId, zone) =>
+      prismaQuery(() => patchRow(target, cardId, { zone }))
     ),
-    updateCardQuantity: vi.fn<UpdateCardQuantity>(
-      (deckId: string, cardId: string, quantity: number) =>
-        prismaQuery(() => patchRow(deckId, cardId, { quantity }))
+    updateCardQuantity: vi.fn<UpdateCardQuantity>((target, cardId, quantity) =>
+      prismaQuery(() => patchRow(target, cardId, { quantity }))
     ),
-    updateCardPrinting: vi.fn<UpdateCardPrinting>(
-      (deckId: string, cardId: string, printing: CardPrinting) =>
-        prismaQuery(() => patchRow(deckId, cardId, printing))
+    updateCardPrinting: vi.fn<UpdateCardPrinting>((target, cardId, printing) =>
+      prismaQuery(() => patchRow(target, cardId, { ...printing }))
     ),
     applyCardChanges: vi.fn<ApplyCardChanges>((deckId, changes) =>
       prismaQuery(() => {
+        const version = claimVersion({ deckId, ...changes });
         const deck = structuredClone(held(deckId) ?? emptyApiDeck(deckId));
         const removed = new Set(changes.removeCardIds);
         const rows = withoutCommandSlots(
@@ -410,11 +455,10 @@ export function createInMemoryDeckApi(): InMemoryDeckApi {
         const added = changes.addCards.map((payload) =>
           rowFromPayload(deckId, nextId("row"), payload)
         );
-        const saved: ApiDeck = {
-          ...deck,
-          ...changes.commandZone,
-          cards: [...rows, ...added],
-        };
+        const saved: ApiDeck = withVersion(
+          { ...deck, ...changes.commandZone, cards: [...rows, ...added] },
+          version
+        );
         if (held(deckId)) decks.set(deckId, saved);
         return structuredClone(saved);
       })

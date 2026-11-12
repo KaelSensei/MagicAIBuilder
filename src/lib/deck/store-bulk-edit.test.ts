@@ -245,10 +245,14 @@ describe("deck store — the deck version a bulk edit carries", () => {
     expect(useDeckStore.getState().decks["deck-1"]?.version).toBe(8);
   });
 
-  it("sends no version once a card was added by hand, whose answer the store does not read the version from", async () => {
-    // Otherwise the bulk edit would carry a version the server has already
-    // moved past, and be refused for a change this very tab made.
-    api.addCard.mockResolvedValue(apiRow("sol-ring-row", "Sol Ring"));
+  it("sends the version a card added by hand was answered with, not the one the deck was read at", async () => {
+    // The hand-made add moved the server's version past the one read; the
+    // bulk edit carries the one the add answered, or it would be refused for
+    // a change this very tab made.
+    api.addCard.mockResolvedValue({
+      ...apiRow("sol-ring-row", "Sol Ring"),
+      version: 8,
+    });
     api.applyCardChanges.mockResolvedValue(apiDeck([]));
     await useDeckStore.getState().addCard(scryfallCard("Sol Ring"));
 
@@ -261,7 +265,7 @@ describe("deck store — the deck version a bulk edit carries", () => {
 
     const [, changes] = api.applyCardChanges.mock.calls[0] ?? [];
     expect(changes).toBeDefined();
-    expect(changes?.expectedVersion).toBeUndefined();
+    expect(changes?.expectedVersion).toBe(8);
   });
 });
 
@@ -316,9 +320,8 @@ describe("deck store — undo after a bulk edit", () => {
     api.applyCardChanges.mockResolvedValue(
       apiDeck([apiRow("signet-row", "Arcane Signet")])
     );
-    api.addCard.mockImplementation(
-      async (_deckId: string, payload: { name: string }) =>
-        apiRow("thought-vessel-row", payload.name)
+    api.addCard.mockImplementation(async (_target, payload) =>
+      apiRow("thought-vessel-row", payload.name)
     );
     api.removeCard.mockResolvedValue(undefined);
     await useDeckStore.getState().applyBulkEdit({
@@ -331,7 +334,10 @@ describe("deck store — undo after a bulk edit", () => {
 
     await useDeckStore.getState().undo();
 
-    expect(api.removeCard).toHaveBeenCalledWith("deck-1", "thought-vessel-row");
+    expect(api.removeCard).toHaveBeenCalledWith(
+      { deckId: "deck-1" },
+      "thought-vessel-row"
+    );
     expect(deckCards().map((card) => card.name)).toEqual(["Arcane Signet"]);
   });
 });

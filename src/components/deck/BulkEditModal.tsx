@@ -14,6 +14,7 @@ import {
 } from "@/lib/deck/bulk-edit";
 import { fetchInBatches } from "@/lib/deck/batch-fetch";
 import { CardLookupError } from "@/lib/deck/card-lookup-error";
+import { isStaleDeckRefusal } from "@/lib/db/deck-api-answer";
 import { useDeckStore } from "@/lib/deck/store";
 import type { Deck } from "@/lib/deck/types";
 import { cardsFromZoneSource } from "@/lib/deck/zone-source";
@@ -173,6 +174,12 @@ export function BulkEditModal({ deck, children }: BulkEditModalProps) {
       }, 1200);
     } catch (err) {
       setStatus("error");
+      // A stale copy: the store has reloaded the deck behind the dialog, so
+      // saving again plans the list on the deck as it now is.
+      if (isStaleDeckRefusal(err)) {
+        setMessage(t("sync.conflictReloaded"));
+        return;
+      }
       setMessage(failureMessage(err));
     }
   };
