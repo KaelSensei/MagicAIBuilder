@@ -6,7 +6,8 @@
  *
  * - `commanderToSlug` (`src/lib/meta/fetch.ts`) builds the slug in JavaScript. The sitemap
  *   (`src/app/sitemap.ts`) lists `/commanders/<slug>/decks` from it, and the EDHREC lookup uses it.
- * - The commander deck route (`src/app/api/community/commanders/[slug]/decks/route.ts`) matches
+ * - The commander decks lookup (`src/lib/community/commander-decks-lookup.ts`, behind
+ *   `GET /api/community/commanders/[slug]/decks` and the commander decks page) matches
  *   the slug in SQL against `Deck.commanderName`, with the expression the partial index
  *   `Deck_commanderSlug_v2_public_idx` covers (migration
  *   `20261111210000_commander_slug_transliterates_accents`).
@@ -20,7 +21,7 @@
  * under the `C` collation, and whitespace is an explicit class (see the whitespace test below).
  * The same evaluation, run once over every code point U+0001 to U+10FFFF (surrogates excluded,
  * each as `<c>A<c>b<c>`), found no name on which the expression and `commanderToSlug` differ.
- * The first tests check that the route and the index still ship exactly the recorded
+ * The first tests check that the lookup and the index still ship exactly the recorded
  * expression, so the recording cannot go stale silently.
  *
  * COM-02 moves `commanderToSlug` into the community domain; this table protects that move.
@@ -200,20 +201,20 @@ function codePointsOf(bracketBody: string): ReadonlySet<number> {
 }
 
 describe("the SQL twin of commanderToSlug", () => {
-  it("is the recorded expression in the commander deck route", () => {
-    // The route's query is a JavaScript template literal, so it doubles each backslash to
+  it("is the recorded expression in the commander decks lookup", () => {
+    // The lookup's query is a JavaScript template literal, so it doubles each backslash to
     // send one to PostgreSQL.
-    const asWrittenInTheRoute = squash(RECORDED_SQL_EXPRESSION).replaceAll(
+    const asWrittenInTheLookup = squash(RECORDED_SQL_EXPRESSION).replaceAll(
       "\\",
       "\\\\"
     );
 
-    expect(
-      sourceOf("src/app/api/community/commanders/[slug]/decks/route.ts")
-    ).toContain(`${asWrittenInTheRoute} = \${slug}`);
+    expect(sourceOf("src/lib/community/commander-decks-lookup.ts")).toContain(
+      `${asWrittenInTheLookup} = \${slug}`
+    );
   });
 
-  it("is the recorded expression in the index the route's query relies on", () => {
+  it("is the recorded expression in the index the lookup's query relies on", () => {
     expect(
       sourceOf(
         "prisma/migrations/20261111210000_commander_slug_transliterates_accents/migration.sql"
@@ -256,7 +257,7 @@ describe("commanderToSlug against the recorded SQL slugs", () => {
         { slug: commanderToSlug(name), updatedAt },
       ]);
 
-      // The route compares the stored name's SQL slug with the URL's slug. A slug the
+      // The lookup compares the stored name's SQL slug with the URL's slug. A slug the
       // commander page rejects stays out of the sitemap altogether.
       expect(pages).toEqual(
         isCommanderSlug(sql) ? [{ slug: sql, updatedAt }] : []

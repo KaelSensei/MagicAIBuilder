@@ -1,57 +1,72 @@
 import type { Metadata } from "next";
-import { alternatesFor } from "@/lib/seo/alternates";
-import { metadataTranslations } from "@/lib/seo/page-metadata";
-import { headers } from "next/headers";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 import { Header } from "@/components/layout/Header";
 import { CommanderDecksView } from "@/components/community/CommanderDecksView";
-import {
-  buildViewerScopedRequestInit,
-  resolveAppBaseUrl,
-} from "@/lib/api/viewer-request";
 import { auth } from "@/lib/auth/config";
+import { findCommanderDecksForViewer } from "@/lib/community/commander-decks-lookup";
 import type { CommanderDecksResponse } from "@/lib/community/discovery-types";
+import { logger } from "@/lib/logger";
 import { isCommanderSlug } from "@/lib/meta/fetch";
+import { alternatesFor } from "@/lib/seo/alternates";
+import { metadataTranslations } from "@/lib/seo/page-metadata";
 
 interface Params {
   readonly params: Promise<{ locale: string; slug: string }>;
 }
 
-/** Thrown when the discovery API cannot answer; the route error boundary offers a retry. */
+/** Thrown when the listing cannot be read; the route error boundary offers a retry. */
 const COMMANDER_DECKS_UNAVAILABLE = "COMMANDER_DECKS_UNAVAILABLE";
 
-/**
- * Vote state in the response is viewer-relative, so an authenticated request
- * must forward its cookie and bypass the cache — otherwise one viewer's votes
- * would be served to everyone.
- *
- * A failed request throws rather than reading as "no decks". "No decks" is
- * rendered as a noindex empty listing, and a commander whose decks merely
- * failed to load would otherwise drop out of the index as an empty one.
- */
-async function fetchCommanderDecks(
-  slug: string
-): Promise<CommanderDecksResponse> {
-  const cookieHeader = (await headers()).get("cookie");
-  const res = await fetch(
-    `${resolveAppBaseUrl()}/api/community/commanders/${encodeURIComponent(slug)}/decks`,
-    buildViewerScopedRequestInit(cookieHeader)
-  ).catch(() => null);
-
-  if (!res?.ok) throw new Error(COMMANDER_DECKS_UNAVAILABLE);
-  return (await res.json()) as CommanderDecksResponse;
+/** The listing as this request's viewer may see it, and who that viewer is. */
+interface CommanderDecksForViewer {
+  readonly listing: CommanderDecksResponse;
+  readonly viewerId: string | null;
 }
+
+/**
+ * The listing as this request's viewer may see it, read in-process once per
+ * request: `generateMetadata` and the page share the result. A signed-out
+ * visitor is served from the data cache; a signed-in viewer reads fresh, so
+ * their `viewerVote` is never served to anyone else.
+ *
+ * A database failure is logged and thrown as
+ * {@link COMMANDER_DECKS_UNAVAILABLE} rather than read as "no decks". "No
+ * decks" is rendered as a noindex empty listing, and a commander whose decks
+ * merely failed to load would otherwise drop out of the index as an empty one.
+ */
+const fetchCommanderDecksForViewer = cache(
+  async (slug: string): Promise<CommanderDecksForViewer> => {
+    const session = await auth();
+    const viewerId = session?.user?.id ?? null;
+
+    try {
+      const listing = await findCommanderDecksForViewer(slug, viewerId);
+      return { listing, viewerId };
+    } catch (error) {
+      logger.error(
+        error instanceof Error ? error : String(error),
+        "/commanders/[slug]/decks",
+        { slug }
+      );
+      throw new Error(COMMANDER_DECKS_UNAVAILABLE);
+    }
+  }
+);
 
 /**
  * The commander's name as its decks spell it, or, for a commander nobody has
  * published a deck for yet, as read back from the slug.
  *
- * @param data The discovery API's answer.
+ * @param listing The discovery read's answer.
  * @param slug The route's commander slug.
  * @returns A display name for the page heading and title.
  */
-function commanderNameFor(data: CommanderDecksResponse, slug: string): string {
-  return data.commanderName ?? slug.replaceAll("-", " ");
+function commanderNameFor(
+  listing: CommanderDecksResponse,
+  slug: string
+): string {
+  return listing.commanderName ?? slug.replaceAll("-", " ");
 }
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
@@ -61,15 +76,15 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     return { title: t("notFound") };
   }
 
-  let data: CommanderDecksResponse;
+  let listing: CommanderDecksResponse;
   try {
-    data = await fetchCommanderDecks(slug);
+    ({ listing } = await fetchCommanderDecksForViewer(slug));
   } catch {
     return { title: t("unavailable") };
   }
 
-  const commander = commanderNameFor(data, slug);
-  const listing = {
+  const commander = commanderNameFor(listing, slug);
+  const page = {
     title: t("title", { commander }),
     description: t("description", { commander }),
   };
@@ -77,10 +92,10 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   // An empty listing stays reachable — the builder links to it for any
   // commander being built — but it has nothing to index, and indexing it
   // would make every typo'd slug a page. No canonical, and noindex.
-  if (data.decks.length === 0) return { ...listing, robots: { index: false } };
+  if (listing.decks.length === 0) return { ...page, robots: { index: false } };
 
   return {
-    ...listing,
+    ...page,
     alternates: alternatesFor(locale, `/commanders/${slug}/decks`),
   };
 }
@@ -91,15 +106,15 @@ export default async function CommanderDecksPage({ params }: Params) {
   // empty one. A real commander with no public deck yet renders below.
   if (!isCommanderSlug(slug)) notFound();
 
-  const [data, session] = await Promise.all([fetchCommanderDecks(slug), auth()]);
+  const { listing, viewerId } = await fetchCommanderDecksForViewer(slug);
 
   return (
     <div className="flex flex-col min-h-screen bg-[var(--background)] text-[var(--text-primary)]">
       <Header />
       <CommanderDecksView
-        commanderName={commanderNameFor(data, slug)}
-        decks={data.decks}
-        canVote={session?.user?.id != null}
+        commanderName={commanderNameFor(listing, slug)}
+        decks={listing.decks}
+        canVote={viewerId !== null}
       />
     </div>
   );

@@ -21,11 +21,6 @@
       "count": 2
     },
     "vitest/prefer-import-in-mock": {
-      "count": 2
-    }
-  },
-  "src/app/[locale]/commanders/[slug]/decks/page.tsx": {
-    "@typescript-eslint/consistent-type-assertions": {
       "count": 1
     }
   },
@@ -100,7 +95,7 @@
       "count": 2
     },
     "vitest/prefer-import-in-mock": {
-      "count": 2
+      "count": 1
     }
   },
   "src/app/api/ai/allowance/route.test.ts": {
@@ -216,11 +211,6 @@
   "src/app/api/community/card-packages/route.test.ts": {
     "no-restricted-syntax": {
       "count": 1
-    }
-  },
-  "src/app/api/community/commanders/[slug]/decks/route.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 2
     }
   },
   "src/app/api/community/deck-folders/[folderId]/route.test.ts": {
@@ -398,11 +388,6 @@
   },
   "src/app/api/user/username/route.test.ts": {
     "no-restricted-syntax": {
-      "count": 1
-    }
-  },
-  "src/app/api/users/[username]/route.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
       "count": 1
     }
   },
