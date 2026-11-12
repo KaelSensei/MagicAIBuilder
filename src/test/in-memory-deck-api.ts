@@ -53,7 +53,7 @@ import type {
   updateCardZone,
   updateDeck,
 } from "@/lib/db/deck-api";
-import { COMMAND_SLOT_ROWS } from "@/lib/deck/bulk-edit-command-zone";
+import { rowFillsCommandSlot } from "@/lib/deck/bulk-edit-command-zone";
 import { CARD_CATEGORIES, type CardCategory } from "@/lib/deck/types";
 import { prismaQuery } from "@/test/prisma-query";
 
@@ -228,24 +228,14 @@ function listed(deck: ApiDeck): ApiDeck {
   return { ...deck, cards: [], _count: { cards: deck.cards.length } };
 }
 
-/**
- * Removes the rows that fill `slots`: a row fills a slot when it carries every
- * flag `COMMAND_SLOT_ROWS` names for it, as the bulk-edit route deletes them.
- */
+/** Removes the rows that fill `slots`, by role, as the routes delete them. */
 function withoutCommandSlots(
   rows: readonly ApiDeckCard[],
   slots: DeckCardChanges["clearCommandSlots"]
 ): ApiDeckCard[] {
-  const roles = (slots ?? []).map((slot) => COMMAND_SLOT_ROWS[slot]);
-  const fillsSlot = (row: ApiDeckCard): boolean =>
-    roles.some(
-      (role) =>
-        (role.isCommander === undefined ||
-          role.isCommander === row.isCommander) &&
-        (role.isPartner === undefined || role.isPartner === row.isPartner) &&
-        (role.category === undefined || role.category === row.category)
-    );
-  return rows.filter((row) => !fillsSlot(row));
+  return rows.filter(
+    (row) => !(slots ?? []).some((slot) => rowFillsCommandSlot(row, slot))
+  );
 }
 
 /**

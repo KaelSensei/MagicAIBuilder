@@ -1,9 +1,7 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
-import {
-  removeReplacedCommandRows,
-  withSavedCommandRow,
-} from "./command-zone-rows";
+import { withSavedCommandRow, withSavedCommandRows } from "./command-zone-rows";
+import type { ApiDeckCard } from "@/lib/db/deck-api";
 import { createEmptyDeck } from "./store-factories";
 import type { Deck, DeckCard } from "./types";
 
@@ -36,6 +34,29 @@ function commandCard(id: string, name: string): DeckCard {
 
 const THRASIOS = commandCard("thrasios", "Thrasios, Triton Hero");
 const TYMNA = commandCard("tymna", "Tymna the Weaver");
+
+/**
+ * Build a row as the command-zone route answers it.
+ * @param id - Row id
+ * @param scryfallId - Printing the row was placed with
+ * @param flags - Role flags; a main-deck row by default
+ * @returns The saved row
+ */
+function savedRow(
+  id: string,
+  scryfallId: string,
+  flags: Partial<ApiDeckCard> = {}
+): ApiDeckCard {
+  return {
+    ...commandCard(id, "Saved"),
+    deckId: "deck-1",
+    scryfallId,
+    notes: null,
+    isCommander: false,
+    isPartner: false,
+    ...flags,
+  };
+}
 
 /**
  * Hold one deck led by a Partner pair.
@@ -111,74 +132,27 @@ describe("withSavedCommandRow", () => {
   });
 });
 
-/** The card-row delete route `deckApi.removeCard` calls for one row. */
-function deleteRoute(rowId: string): string {
-  return `/api/decks/deck-1/cards/${rowId}`;
-}
+describe("withSavedCommandRows", () => {
+  it("gives the commander and partner their saved row ids, matched by role and printing", () => {
+    const placed: Readonly<Record<string, Deck>> = {
+      "deck-1": {
+        ...createEmptyDeck("deck-1", "Partners"),
+        commander: { ...THRASIOS, id: "thrasios-printing" },
+        partner: { ...TYMNA, id: "tymna-printing" },
+        pairingType: "partner",
+      },
+    };
 
-/**
- * The deletes go through the real deck API client; only `fetch`, the HTTP
- * boundary, is replaced.
- */
-describe("removeReplacedCommandRows", () => {
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
-
-  it("sends the deletes of both replaced rows before either answers", async () => {
-    let answer: () => void = () => {};
-    const answered = new Promise<void>((resolve) => {
-      answer = resolve;
-    });
-    const fetchStub = vi.fn<typeof fetch>(async () => {
-      await answered;
-      return new Response(null, { status: 200 });
-    });
-    vi.stubGlobal("fetch", fetchStub);
-
-    const removal = removeReplacedCommandRows("deck-1", [THRASIOS, TYMNA], []);
-    const sentBeforeAnyAnswer = fetchStub.mock.calls.map(([input]) => input);
-    answer();
-    await removal;
-
-    expect(sentBeforeAnyAnswer).toEqual([
-      deleteRoute("thrasios"),
-      deleteRoute("tymna"),
+    const decks = withSavedCommandRows(placed, "deck-1", [
+      savedRow("row-1", "thrasios-printing", { isCommander: true }),
+      savedRow("row-2", "tymna-printing", {
+        isCommander: true,
+        isPartner: true,
+      }),
+      savedRow("row-3", "lurrus-printing", { category: "companion" }),
     ]);
-  });
 
-  it("keeps the row of a card still on screen", async () => {
-    const fetchStub = vi.fn<typeof fetch>(
-      async () => new Response(null, { status: 200 })
-    );
-    vi.stubGlobal("fetch", fetchStub);
-
-    await removeReplacedCommandRows(
-      "deck-1",
-      [THRASIOS, TYMNA],
-      [THRASIOS, null]
-    );
-
-    expect(fetchStub.mock.calls.map(([input]) => input)).toEqual([
-      deleteRoute("tymna"),
-    ]);
-  });
-
-  it("still deletes the other row when one delete fails, and never rejects", async () => {
-    const fetchStub = vi.fn<typeof fetch>(
-      async (input) =>
-        new Response(null, {
-          status: input === deleteRoute("thrasios") ? 500 : 200,
-        })
-    );
-    vi.stubGlobal("fetch", fetchStub);
-
-    await expect(
-      removeReplacedCommandRows("deck-1", [THRASIOS, TYMNA], [])
-    ).resolves.toBeUndefined();
-    expect(fetchStub.mock.calls.map(([input]) => input)).toEqual([
-      deleteRoute("thrasios"),
-      deleteRoute("tymna"),
-    ]);
+    expect(decks["deck-1"]?.commander?.id).toBe("row-1");
+    expect(decks["deck-1"]?.partner?.id).toBe("row-2");
   });
 });

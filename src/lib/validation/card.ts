@@ -122,6 +122,9 @@ export const MAX_BULK_CARD_CHANGES = 500;
 /** A deck row id as the database generates it. */
 const deckCardRowIdSchema = z.string().min(1).max(64);
 
+/** The three command-zone slots, as the routes name them. */
+export const commandSlotSchema = z.enum(["commander", "partner", "companion"]);
+
 // Schema for PATCH /api/decks/[id]/cards — one bulk edit, applied atomically
 export const deckCardChangesSchema = z.object({
   removeCardIds: z.array(deckCardRowIdSchema).max(MAX_BULK_CARD_CHANGES),
@@ -135,7 +138,7 @@ export const deckCardChangesSchema = z.object({
     .max(MAX_BULK_CARD_CHANGES),
   addCards: z.array(addCardSchema).max(MAX_BULK_CARD_CHANGES),
   /** Command-zone slots whose rows are removed, whichever rows hold them. */
-  clearCommandSlots: z.array(z.enum(["commander", "partner", "companion"])).max(3).optional().default([]),
+  clearCommandSlots: z.array(commandSlotSchema).max(3).optional().default([]),
   /** The deck's command-zone fields, present only when the edit changes them. */
   commandZone: z
     .object({
@@ -149,9 +152,6 @@ export const deckCardChangesSchema = z.object({
 });
 
 export type DeckCardChangesInput = z.infer<typeof deckCardChangesSchema>;
-
-/** The three command-zone slots, as the routes name them. */
-export const commandSlotSchema = z.enum(["commander", "partner", "companion"]);
 
 /**
  * Most rows one command-zone change may remove by id or add: one per slot.

@@ -38,6 +38,7 @@ import type { BulkEdit } from "./bulk-edit";
 import {
   commandZoneOf,
   restoreCommanderAfterFailedSave,
+  restorePartnerAfterFailedSave,
   type CommandZone,
 } from "./commander-save-recovery";
 import { withSavedCommandRows } from "./command-zone-rows";
@@ -394,48 +395,6 @@ export interface DeckStore {
 let latestDeckListRequest = 0;
 const latestRenameRequests = new Map<string, symbol>();
 const latestTagSaves = new Map<string, symbol>();
-
-/** A partner save that may still need to be undone. */
-interface FailedPartnerSave {
-  readonly activeDeckId: string;
-  readonly attemptedPartnerId: string | null;
-  readonly previousPartner: DeckCard | null;
-  readonly previousPairingType: Deck["pairingType"];
-}
-
-/**
- * Restores the previous partner when this attempt is still the partner on
- * screen. A later partner choice is left alone. The save is one request the
- * server stores all or nothing, so the previous partner is what it still holds.
- *
- * @param setDeckState - Store update used only when a rollback is required
- * @param state - Store snapshot taken when the save failed
- * @param save - The attempt that just failed
- * @returns Nothing. Updates the store and shows an error when the partner is restored.
- */
-function restorePartnerAfterFailedSave(
-  setDeckState: (partial: Pick<DeckStore, "decks">) => void,
-  state: DeckStore,
-  save: FailedPartnerSave,
-): void {
-  const currentDeck = state.decks[save.activeDeckId];
-  const currentPartnerId = currentDeck?.partner?.id ?? null;
-  if (!currentDeck || currentPartnerId !== save.attemptedPartnerId) return;
-  setDeckState({
-    decks: {
-      ...state.decks,
-      [save.activeDeckId]: withLoadedCardCount({
-        ...currentDeck,
-        partner: save.previousPartner,
-        pairingType: save.previousPairingType,
-        updatedAt: new Date(),
-      }),
-    },
-  });
-  useToastStore
-    .getState()
-    .add("error", "Could not save partner — try again");
-}
 
 /** A tag save that may still need to be undone. */
 interface FailedTagSave {
