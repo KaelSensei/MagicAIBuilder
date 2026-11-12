@@ -15,7 +15,6 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { DndContext } from "@dnd-kit/core";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { http, HttpResponse, type JsonBodyType } from "msw";
 import { useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -25,7 +24,7 @@ import { useDeckStore } from "@/lib/deck/store";
 import { EMPTY_SEARCH_RESPONSE } from "@/lib/scryfall/types";
 import type { Deck, DeckCard, DeckZone } from "@/lib/deck/types";
 import { setupMsw } from "@/test/msw";
-import { renderWithIntl, type TestLocale } from "@/test/render-with-intl";
+import { renderWithProviders, type TestLocale } from "@/test/render";
 import { DeckEditor } from "./DeckEditor";
 
 const DECK_ID = "deck-1";
@@ -164,15 +163,13 @@ function renderEditor(deck: Deck, locale: TestLocale = "en") {
   });
   const onRemoveCard = vi.fn<(id: string) => void>();
   const onActiveZoneChange = vi.fn<(zone: DeckZone) => void>();
-  renderWithIntl(
-    <QueryClientProvider client={new QueryClient()}>
-      <DndContext>
-        <EditorOnStoreDeck
-          onRemoveCard={onRemoveCard}
-          onActiveZoneChange={onActiveZoneChange}
-        />
-      </DndContext>
-    </QueryClientProvider>,
+  renderWithProviders(
+    <DndContext>
+      <EditorOnStoreDeck
+        onRemoveCard={onRemoveCard}
+        onActiveZoneChange={onActiveZoneChange}
+      />
+    </DndContext>,
     { locale }
   );
   return { onRemoveCard, onActiveZoneChange };

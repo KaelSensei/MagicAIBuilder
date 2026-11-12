@@ -1,11 +1,10 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fireEvent, screen } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 import { DORMANT_LOCALES } from "@/i18n/routing";
-import { renderWithIntl, type TestLocale } from "@/test/render-with-intl";
+import { renderWithProviders, type TestLocale } from "@/test/render";
 import { DeckWizard } from "./DeckWizard";
 
 /**
@@ -41,11 +40,8 @@ const STEP_LABELS: Readonly<Record<TestLocale, StepLabels>> = {
 };
 
 function renderWizard(locale: TestLocale) {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  renderWithIntl(
-    <QueryClientProvider client={client}>
-      <DeckWizard open onClose={vi.fn()} onComplete={vi.fn()} />
-    </QueryClientProvider>,
+  renderWithProviders(
+    <DeckWizard open onClose={vi.fn()} onComplete={vi.fn()} />,
     { locale }
   );
 }

@@ -1,18 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { NextIntlClientProvider } from "next-intl";
-import enProfile from "@/messages/en/profile.json";
-import frProfile from "@/messages/fr/profile.json";
+import { renderWithIntl } from "@/test/render-with-intl";
 import { FollowButton } from "./FollowButton";
-
-function renderWithIntl(ui: React.ReactElement) {
-  return render(
-    <NextIntlClientProvider locale="en" messages={{ profile: enProfile }}>
-      {ui}
-    </NextIntlClientProvider>
-  );
-}
 
 const defaultProps = {
   username: "kael",
@@ -121,11 +111,7 @@ describe("FollowButton", () => {
 // The French profile catalog repeated the English follow strings verbatim.
 describe("FollowButton in French", () => {
   function renderFrench(ui: React.ReactElement) {
-    return render(
-      <NextIntlClientProvider locale="fr" messages={{ profile: frProfile }}>
-        {ui}
-      </NextIntlClientProvider>
-    );
+    return renderWithIntl(ui, { locale: "fr" });
   }
 
   it("prompts an anonymous viewer to sign in", () => {

@@ -1,8 +1,9 @@
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { beforeEach, describe, expect, it } from "vitest";
-import { renderWithIntl } from "@/test/render-with-intl";
+import { aDeckCard } from "@/test/builders/card";
+import { aDeck } from "@/test/builders/deck";
+import { renderWithProviders } from "@/test/render";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { useUIStore } from "@/lib/ui/store";
 import type { Deck, DeckCard } from "@/lib/deck/types";
@@ -12,50 +13,26 @@ import { ExportModal } from "./ExportModal";
 const NO_RESULTS: ScryfallCard[] = [];
 const ignoreCard = (): void => undefined;
 
+/** A creature row named after its id, so the exported text tells the rows apart. */
 function makeCard(id: string): DeckCard {
-  return {
+  return aDeckCard({
     id,
     scryfallId: id,
     name: `Card ${id}`,
-    quantity: 1,
     category: "creature",
-    zone: "main",
-    manaCost: "",
     cmc: 1,
     typeLine: "Creature",
-    oracleText: "",
-    colorIdentity: [],
-    isGameChanger: false,
-    isBanned: false,
-    price: null,
-    imageUri: "",
-    artCropUri: "",
-  };
+  });
 }
 
-const DECK: Deck = {
-  id: "deck-1",
+const DECK: Deck = aDeck({
   name: "Kenrith Goodstuff",
-  format: "commander",
   commander: makeCard("cmd"),
-  partner: null,
-  companion: null,
-  pairingType: "none",
   cards: [makeCard("c1"), makeCard("c2")],
-  maybeboard: [],
   cardCount: 3,
-  targetBracket: 3,
-  manualBracket: null,
-  budget: null,
-  tags: [],
-  description: "",
-  shareToken: null,
-  shareEnabled: false,
-  isPublic: false,
-  isAIGenerated: false,
   createdAt: new Date("2026-01-01"),
   updatedAt: new Date("2026-01-01"),
-};
+});
 
 /**
  * The builder's wiring around the export dialog: the UI store opens it, and
@@ -80,14 +57,7 @@ function BuilderExport() {
 /** Renders the builder's export wiring and opens Export from its button. */
 async function openExport() {
   const user = userEvent.setup();
-  const client = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
-  });
-  renderWithIntl(
-    <QueryClientProvider client={client}>
-      <BuilderExport />
-    </QueryClientProvider>
-  );
+  renderWithProviders(<BuilderExport />);
   const exportTrigger = screen.getByRole("button", { name: "Export" });
   await user.click(exportTrigger);
   return { user, exportTrigger };

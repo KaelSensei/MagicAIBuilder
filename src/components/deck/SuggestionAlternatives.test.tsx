@@ -1,27 +1,24 @@
-import { fireEvent, render, screen } from "@testing-library/react";
-import { NextIntlClientProvider } from "next-intl";
+import { fireEvent, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import deckMessages from "@/messages/en/deck.json";
+import { renderWithIntl } from "@/test/render-with-intl";
 import { SuggestionAlternatives } from "./SuggestionAlternatives";
 
 describe("SuggestionAlternatives", () => {
   it("labels the tradeoff and lets the player choose an alternative", () => {
     const onAdd = vi.fn();
-    render(
-      <NextIntlClientProvider locale="en" messages={{ deck: deckMessages }}>
-        <SuggestionAlternatives
-          alternatives={[
-            {
-              name: "Fellwar Stone",
-              reason: "A cheaper mana rock.",
-              dimension: "budget",
-            },
-          ]}
-          addedCards={new Set()}
-          onAdd={onAdd}
-        />
-      </NextIntlClientProvider>
+    renderWithIntl(
+      <SuggestionAlternatives
+        alternatives={[
+          {
+            name: "Fellwar Stone",
+            reason: "A cheaper mana rock.",
+            dimension: "budget",
+          },
+        ]}
+        addedCards={new Set()}
+        onAdd={onAdd}
+      />
     );
 
     expect(screen.getByText("1 alternative")).toBeInTheDocument();
@@ -32,31 +29,29 @@ describe("SuggestionAlternatives", () => {
 
   it("disables alternatives with a verified legality failure", () => {
     const onAdd = vi.fn();
-    render(
-      <NextIntlClientProvider locale="en" messages={{ deck: deckMessages }}>
-        <SuggestionAlternatives
-          alternatives={[
-            {
-              name: "Off-color Stone",
-              reason: "Wrong color.",
-              dimension: "power",
-              evidence: {
-                role: "ramp",
-                synergy: "Wrong color",
-                manaValue: 2,
-                curveImpact: "Below average",
-                colorIdentity: ["R"],
-                colorCompatible: false,
-                commanderLegal: true,
-                priceUsd: 1,
-                verified: true,
-              },
+    renderWithIntl(
+      <SuggestionAlternatives
+        alternatives={[
+          {
+            name: "Off-color Stone",
+            reason: "Wrong color.",
+            dimension: "power",
+            evidence: {
+              role: "ramp",
+              synergy: "Wrong color",
+              manaValue: 2,
+              curveImpact: "Below average",
+              colorIdentity: ["R"],
+              colorCompatible: false,
+              commanderLegal: true,
+              priceUsd: 1,
+              verified: true,
             },
-          ]}
-          addedCards={new Set()}
-          onAdd={onAdd}
-        />
-      </NextIntlClientProvider>
+          },
+        ]}
+        addedCards={new Set()}
+        onAdd={onAdd}
+      />
     );
 
     const button = screen.getByRole("button", {

@@ -1,7 +1,6 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { expect, it, vi } from "vitest";
-import { renderWithIntl } from "@/test/render-with-intl";
+import { renderWithProviders } from "@/test/render";
 import { DeckWizard } from "./DeckWizard";
 
 const store = vi.hoisted(() => ({
@@ -36,13 +35,8 @@ vi.mock("@/hooks/useAIDeckBuild", () => ({
 
 /** Walks the French wizard to its last step with the Control strategy. */
 async function openFrenchPlanStep() {
-  const client = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
-  });
-  renderWithIntl(
-    <QueryClientProvider client={client}>
-      <DeckWizard open onClose={vi.fn()} onComplete={vi.fn()} />
-    </QueryClientProvider>,
+  renderWithProviders(
+    <DeckWizard open onClose={vi.fn()} onComplete={vi.fn()} />,
     { locale: "fr" }
   );
   const next = () =>

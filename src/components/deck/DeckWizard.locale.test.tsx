@@ -1,15 +1,11 @@
 import { fireEvent, screen } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { expect, it, vi } from "vitest";
-import { renderWithIntl } from "@/test/render-with-intl";
+import { renderWithProviders } from "@/test/render";
 import { DeckWizard } from "./DeckWizard";
 
 function renderFrenchWizard() {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  renderWithIntl(
-    <QueryClientProvider client={client}>
-      <DeckWizard open onClose={vi.fn()} onComplete={vi.fn()} />
-    </QueryClientProvider>,
+  renderWithProviders(
+    <DeckWizard open onClose={vi.fn()} onComplete={vi.fn()} />,
     { locale: "fr" }
   );
 }

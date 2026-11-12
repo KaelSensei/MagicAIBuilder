@@ -1,68 +1,40 @@
 import { describe, expect, it, vi } from "vitest";
-import React from "react";
-import { render, screen } from "@testing-library/react";
-import { NextIntlClientProvider } from "next-intl";
+import { screen } from "@testing-library/react";
 import type { Deck, DeckCard } from "@/lib/deck/types";
-import enDeck from "@/messages/en/deck.json";
-import enBuilder from "@/messages/en/builder.json";
-import frDeck from "@/messages/fr/deck.json";
-import frBuilder from "@/messages/fr/builder.json";
+import { aDeckCard } from "@/test/builders/card";
+import { aDeck } from "@/test/builders/deck";
+import { renderWithIntl } from "@/test/render-with-intl";
 
 vi.mock(import("@/i18n/navigation"), () => import("@/test/i18n-navigation-stub"));
 
 import { getDeckPresentationManaColors, HomeDeckCard } from "./HomeDeckCard";
 
+/** A legendary creature for the command zone, with the colour identity under test. */
 function makeCard(
   id: string,
   name: string,
   colorIdentity: readonly string[]
 ): DeckCard {
-  return {
+  return aDeckCard({
     id,
     name,
-    manaCost: "",
-    cmc: 0,
     typeLine: "Legendary Creature",
-    oracleText: "",
     colorIdentity: [...colorIdentity],
-    isGameChanger: false,
-    isBanned: false,
-    price: null,
-    imageUri: "",
-    artCropUri: "",
     category: "commander",
-    quantity: 1,
-    zone: "main",
-  };
+  });
 }
 
+/** A deck led by these commanders, with fixed dates so the card's text never depends on the clock. */
 function makeDeck(options?: {
   readonly commander?: DeckCard | null;
   readonly partner?: DeckCard | null;
 }): Deck {
-  return {
-    id: "deck-1",
-    name: "Test Deck",
+  return aDeck({
     commander: options?.commander ?? null,
     partner: options?.partner ?? null,
-    companion: null,
-    pairingType: "none",
-    cards: [],
-    maybeboard: [],
-    format: "commander",
-    cardCount: 0,
-    targetBracket: 3,
-    manualBracket: null,
-    budget: null,
-    description: "",
-    tags: [],
-    shareToken: null,
-    shareEnabled: false,
-    isPublic: false,
-    isAIGenerated: false,
     createdAt: new Date("2026-01-01T00:00:00Z"),
     updatedAt: new Date("2026-01-02T00:00:00Z"),
-  };
+  });
 }
 
 describe("getDeckPresentationManaColors", () => {
@@ -102,16 +74,14 @@ describe("HomeDeckCard", () => {
       commander: makeCard("cmd", "Atraxa", ["W", "U", "B", "G"]),
     });
 
-    render(
-      <NextIntlClientProvider locale="en" messages={{ deck: enDeck, builder: enBuilder }} timeZone="UTC">
-        <HomeDeckCard
-          deck={deck}
-          onDelete={vi.fn()}
-          onDuplicate={vi.fn()}
-          deletingId={null}
-          duplicatingId={null}
-        />
-      </NextIntlClientProvider>
+    renderWithIntl(
+      <HomeDeckCard
+        deck={deck}
+        onDelete={vi.fn()}
+        onDuplicate={vi.fn()}
+        deletingId={null}
+        duplicatingId={null}
+      />
     );
 
     expect(screen.getByTestId("deck-identity")).toHaveTextContent("Test Deck");
@@ -121,10 +91,15 @@ describe("HomeDeckCard", () => {
   it("uses French accessible labels for its mana symbols", () => {
     const deck = makeDeck({ commander: makeCard("cmd", "Atraxa", ["G"]) });
 
-    render(
-      <NextIntlClientProvider locale="fr" messages={{ deck: frDeck, builder: frBuilder }} timeZone="UTC">
-        <HomeDeckCard deck={deck} onDelete={vi.fn()} onDuplicate={vi.fn()} deletingId={null} duplicatingId={null} />
-      </NextIntlClientProvider>
+    renderWithIntl(
+      <HomeDeckCard
+        deck={deck}
+        onDelete={vi.fn()}
+        onDuplicate={vi.fn()}
+        deletingId={null}
+        duplicatingId={null}
+      />,
+      { locale: "fr" }
     );
 
     expect(screen.getByRole("img", { name: "Symbole de mana Vert" })).toBeDefined();
@@ -134,20 +109,15 @@ describe("HomeDeckCard", () => {
   it("marks an AI-generated deck in French", () => {
     const deck: Deck = { ...makeDeck(), isAIGenerated: true };
 
-    render(
-      <NextIntlClientProvider
-        locale="fr"
-        messages={{ deck: frDeck, builder: frBuilder }}
-        timeZone="UTC"
-      >
-        <HomeDeckCard
-          deck={deck}
-          onDelete={vi.fn()}
-          onDuplicate={vi.fn()}
-          deletingId={null}
-          duplicatingId={null}
-        />
-      </NextIntlClientProvider>
+    renderWithIntl(
+      <HomeDeckCard
+        deck={deck}
+        onDelete={vi.fn()}
+        onDuplicate={vi.fn()}
+        deletingId={null}
+        duplicatingId={null}
+      />,
+      { locale: "fr" }
     );
 
     expect(screen.getByText("IA")).toBeInTheDocument();
@@ -165,20 +135,14 @@ describe("HomeDeckCard commander art", () => {
         "https://cards.scryfall.io/art_crop/front/d/0/d0d33d52-3d28-4635-b985-51e126289259.jpg?1599707796",
     };
 
-    render(
-      <NextIntlClientProvider
-        locale="en"
-        messages={{ deck: enDeck, builder: enBuilder }}
-        timeZone="UTC"
-      >
-        <HomeDeckCard
-          deck={makeDeck({ commander })}
-          onDelete={vi.fn()}
-          onDuplicate={vi.fn()}
-          deletingId={null}
-          duplicatingId={null}
-        />
-      </NextIntlClientProvider>
+    renderWithIntl(
+      <HomeDeckCard
+        deck={makeDeck({ commander })}
+        onDelete={vi.fn()}
+        onDuplicate={vi.fn()}
+        deletingId={null}
+        duplicatingId={null}
+      />
     );
 
     expect(screen.getByTestId("deck-card").style.backgroundImage).toContain(

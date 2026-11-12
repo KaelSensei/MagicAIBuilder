@@ -3,10 +3,9 @@
  *
  * The real deck API client and store run here; no request may leave the page.
  */
-import { fireEvent, render, screen } from "@testing-library/react";
-import { NextIntlClientProvider } from "next-intl";
+import { fireEvent, screen } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import deckMessages from "@/messages/en/deck.json";
+import { renderWithIntl } from "@/test/render-with-intl";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import type { DeckCard } from "@/lib/deck/types";
 
@@ -101,12 +100,10 @@ afterEach(() => {
 it("applies a bulk edit to the guest deck in this browser", async () => {
   const deck = useDeckStore.getState().decks[GUEST_DECK_ID];
   if (!deck) throw new Error("guest deck missing");
-  render(
-    <NextIntlClientProvider locale="en" messages={{ deck: deckMessages }}>
-      <BulkEditModal deck={deck}>
-        <button type="button">Open bulk edit</button>
-      </BulkEditModal>
-    </NextIntlClientProvider>
+  renderWithIntl(
+    <BulkEditModal deck={deck}>
+      <button type="button">Open bulk edit</button>
+    </BulkEditModal>
   );
   fireEvent.click(screen.getByRole("button", { name: "Open bulk edit" }));
   const textarea = screen.getByRole<HTMLTextAreaElement>("textbox");
@@ -150,12 +147,10 @@ it("swaps the guest deck's commander without touching its other cards", async ()
     }),
   };
   useDeckStore.setState({ decks: { [GUEST_DECK_ID]: deck } });
-  render(
-    <NextIntlClientProvider locale="en" messages={{ deck: deckMessages }}>
-      <BulkEditModal deck={deck}>
-        <button type="button">Open bulk edit</button>
-      </BulkEditModal>
-    </NextIntlClientProvider>
+  renderWithIntl(
+    <BulkEditModal deck={deck}>
+      <button type="button">Open bulk edit</button>
+    </BulkEditModal>
   );
   fireEvent.click(screen.getByRole("button", { name: "Open bulk edit" }));
   const textarea = screen.getByRole<HTMLTextAreaElement>("textbox");

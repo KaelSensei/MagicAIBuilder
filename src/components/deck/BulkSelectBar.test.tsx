@@ -1,17 +1,8 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { NextIntlClientProvider } from "next-intl";
-import enDeck from "@/messages/en/deck.json";
+import { renderWithIntl } from "@/test/render-with-intl";
 import { BulkSelectBar } from "./BulkSelectBar";
-
-function renderWithIntl(ui: React.ReactElement) {
-  return render(
-    <NextIntlClientProvider locale="en" messages={{ deck: enDeck }}>
-      {ui}
-    </NextIntlClientProvider>
-  );
-}
 
 const defaultProps = {
   selectedCount: 0,

@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
-import { NextIntlClientProvider } from "next-intl";
-import deckMessages from "@/messages/en/deck.json";
+import { screen } from "@testing-library/react";
+import { renderWithIntl } from "@/test/render-with-intl";
 import { MetaTrendsView } from "./MetaTrendsView";
 
 const metaShifts = vi.hoisted(() => ({
@@ -28,11 +27,7 @@ vi.mock("@/hooks/useMetaShifts", () => ({
 
 describe("MetaTrendsView", () => {
   it("discloses EDHREC's top-20 limit and marks unobserved endpoints as bounds", () => {
-    render(
-      <NextIntlClientProvider locale="en" messages={{ deck: deckMessages }} timeZone="UTC">
-        <MetaTrendsView commanderName="Atraxa, Praetors' Voice" />
-      </NextIntlClientProvider>
-    );
+    renderWithIntl(<MetaTrendsView commanderName="Atraxa, Praetors' Voice" />);
 
     expect(screen.getByText("EDHREC top 20")).toBeInTheDocument();
     expect(screen.getByText("Oct 1, 2026 – Nov 1, 2026")).toBeInTheDocument();

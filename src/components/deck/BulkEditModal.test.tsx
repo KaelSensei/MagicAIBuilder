@@ -4,10 +4,9 @@
  * The deck API is replaced by an in-memory server so the test can observe the
  * rows that end up persisted; the deck store and the modal are the real ones.
  */
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { NextIntlClientProvider } from "next-intl";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import deckMessages from "@/messages/en/deck.json";
+import { renderWithIntl } from "@/test/render-with-intl";
 import type {
   AddCardPayload,
   ApiDeck,
@@ -216,12 +215,10 @@ function openStoreDeck(): Deck {
 }
 
 function renderModal(deck: Deck): void {
-  render(
-    <NextIntlClientProvider locale="en" messages={{ deck: deckMessages }}>
-      <BulkEditModal deck={deck}>
-        <button type="button">Open bulk edit</button>
-      </BulkEditModal>
-    </NextIntlClientProvider>
+  renderWithIntl(
+    <BulkEditModal deck={deck}>
+      <button type="button">Open bulk edit</button>
+    </BulkEditModal>
   );
   fireEvent.click(screen.getByRole("button", { name: "Open bulk edit" }));
 }
