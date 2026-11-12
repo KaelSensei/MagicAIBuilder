@@ -1,16 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen, within } from "@testing-library/react";
-import { NextIntlClientProvider } from "next-intl";
+import { fireEvent, screen, within } from "@testing-library/react";
+import { renderWithIntl } from "@/test/render-with-intl";
 import { ColorIdentityBanner } from "./ColorIdentityBanner";
-import enBuilder from "@/messages/en/builder.json";
-
-function renderWithIntl(ui: React.ReactElement) {
-  return render(
-    <NextIntlClientProvider locale="en" messages={{ builder: enBuilder }}>
-      {ui}
-    </NextIntlClientProvider>
-  );
-}
 
 describe("ColorIdentityBanner", () => {
   it("renders one mana symbol per identity color", () => {

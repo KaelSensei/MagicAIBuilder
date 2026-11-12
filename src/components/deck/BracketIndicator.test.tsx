@@ -1,13 +1,11 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen, within } from "@testing-library/react";
-import { NextIntlClientProvider } from "next-intl";
+import { fireEvent, screen, within } from "@testing-library/react";
 import { z } from "zod";
 import { DORMANT_LOCALES } from "@/i18n/routing";
-import enDeck from "@/messages/en/deck.json";
 import type { BracketScore } from "@/lib/deck/analysis-types";
-import { renderWithIntl as renderInLocale } from "@/test/render-with-intl";
+import { renderWithIntl, renderWithProviders } from "@/test/render";
 import { BracketIndicator } from "./BracketIndicator";
 
 const score: BracketScore = {
@@ -17,14 +15,6 @@ const score: BracketScore = {
   twoCardInfiniteCombos: 0,
   warnings: ["Color identity violations: Lightning Bolt"],
 };
-
-function renderWithIntl(ui: React.ReactElement) {
-  return render(
-    <NextIntlClientProvider locale="en" messages={{ deck: enDeck }}>
-      {ui}
-    </NextIntlClientProvider>
-  );
-}
 
 describe("BracketIndicator warnings", () => {
   it("dismisses the warning list and restores it on request", () => {
@@ -40,15 +30,15 @@ describe("BracketIndicator warnings", () => {
   });
 
   it("shows changed warnings after the current list was dismissed", () => {
-    const { rerender } = renderWithIntl(<BracketIndicator score={score} />);
+    const { rerender } = renderWithProviders(
+      <BracketIndicator score={score} />
+    );
     fireEvent.click(screen.getByRole("button", { name: /dismiss deck warnings/i }));
 
     rerender(
-      <NextIntlClientProvider locale="en" messages={{ deck: enDeck }}>
-        <BracketIndicator
-          score={{ ...score, warnings: ["Deck has only 90/100 cards"] }}
-        />
-      </NextIntlClientProvider>
+      <BracketIndicator
+        score={{ ...score, warnings: ["Deck has only 90/100 cards"] }}
+      />
     );
 
     expect(screen.getByText(/deck has only 90\/100 cards/i)).toBeDefined();
@@ -93,13 +83,13 @@ describe("BracketIndicator official brackets", () => {
   ] as const)(
     "names Bracket $overall with its official name, $name",
     ({ overall, name }) => {
-      renderInLocale(<BracketIndicator score={{ ...score, overall }} />);
+      renderWithIntl(<BracketIndicator score={{ ...score, overall }} />);
       expect(within(bracketHeader()).getByText(name)).toBeInTheDocument();
     }
   );
 
   it("names the brackets with the official French names", () => {
-    renderInLocale(<BracketIndicator score={score} targetBracket={3} />, {
+    renderWithIntl(<BracketIndicator score={score} targetBracket={3} />, {
       locale: "fr",
     });
     expect(screen.getByText("Basique")).toBeInTheDocument();
@@ -108,7 +98,7 @@ describe("BracketIndicator official brackets", () => {
 
   it("offers all five brackets, cEDH included, as a manual override", () => {
     const onManualBracketChange = vi.fn();
-    renderInLocale(
+    renderWithIntl(
       <BracketIndicator
         score={score}
         onManualBracketChange={onManualBracketChange}
@@ -123,13 +113,13 @@ describe("BracketIndicator official brackets", () => {
   });
 
   it("shows a cEDH manual override as Bracket 5", () => {
-    renderInLocale(<BracketIndicator score={score} manualBracket={5} />);
+    renderWithIntl(<BracketIndicator score={score} manualBracket={5} />);
     expect(within(bracketHeader()).getByText("5")).toBeInTheDocument();
     expect(within(bracketHeader()).getByText("cEDH")).toBeInTheDocument();
   });
 
   it("explains a two-card combo with the official rule, not a Rules Committee rule", () => {
-    renderInLocale(
+    renderWithIntl(
       <BracketIndicator
         score={{ ...score, overall: 3, twoCardInfiniteCombos: 1 }}
       />
@@ -143,7 +133,7 @@ describe("BracketIndicator official brackets", () => {
   });
 
   it("explains a two-card combo in French", () => {
-    renderInLocale(
+    renderWithIntl(
       <BracketIndicator
         score={{ ...score, overall: 3, twoCardInfiniteCombos: 2 }}
       />,

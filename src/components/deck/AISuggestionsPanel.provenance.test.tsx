@@ -1,56 +1,65 @@
-import { render, screen } from "@testing-library/react";
-import { NextIntlClientProvider } from "next-intl";
+import { screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import enDeckMessages from "@/messages/en/deck.json";
-import frDeckMessages from "@/messages/fr/deck.json";
+import { renderWithIntl, type TestLocale } from "@/test/render-with-intl";
 import { AISuggestionsPanel } from "./AISuggestionsPanel";
 
 describe("AISuggestionsPanel provenance", () => {
-  it.each([
-    ["en", enDeckMessages, "AI suggestions"],
-    ["fr", frDeckMessages, "suggestions IA"],
-  ])("labels generated suggestions in %s", (locale, deck, label) => {
-    render(
-      <NextIntlClientProvider locale={locale} messages={{ deck }}>
-        <AISuggestionsPanel
-          result={{
-            suggestions: [{ name: "Sol Ring", reason: "Helps ramp.", category: "ramp", priority: "high" }],
-            removals: [],
-            analysis: "",
-            provider: "mock",
-          }}
-          isLoading={false}
-          error={null}
-          onAnalyze={vi.fn()}
-          onAddCard={vi.fn()}
-          onRemoveCard={vi.fn()}
-        />
-      </NextIntlClientProvider>
+  it.each<[TestLocale, string]>([
+    ["en", "AI suggestions"],
+    ["fr", "suggestions IA"],
+  ])("labels generated suggestions in %s", (locale, label) => {
+    renderWithIntl(
+      <AISuggestionsPanel
+        result={{
+          suggestions: [
+            {
+              name: "Sol Ring",
+              reason: "Helps ramp.",
+              category: "ramp",
+              priority: "high",
+            },
+          ],
+          removals: [],
+          analysis: "",
+          provider: "mock",
+        }}
+        isLoading={false}
+        error={null}
+        onAnalyze={vi.fn()}
+        onAddCard={vi.fn()}
+        onRemoveCard={vi.fn()}
+      />,
+      { locale }
     );
 
     expect(screen.getByText(label)).toBeInTheDocument();
   });
 
   it("discloses the provider, exact observation time and analyzed deck snapshot", () => {
-    render(
-      <NextIntlClientProvider locale="en" messages={{ deck: enDeckMessages }}>
-        <AISuggestionsPanel
-          result={{
-            suggestions: [{ name: "Sol Ring", reason: "Helps ramp.", category: "ramp", priority: "high" }],
-            removals: [],
-            analysis: "",
-            provider: "openai",
-          }}
-          isLoading={false}
-          error={null}
-          onAnalyze={vi.fn()}
-          onAddCard={vi.fn()}
-          onRemoveCard={vi.fn()}
-          analysedAt={new Date("2026-11-02T10:30:00.000Z")}
-          currentCardNames={["Sol Ring", "Arcane Signet"]}
-        />
-      </NextIntlClientProvider>
+    renderWithIntl(
+      <AISuggestionsPanel
+        result={{
+          suggestions: [
+            {
+              name: "Sol Ring",
+              reason: "Helps ramp.",
+              category: "ramp",
+              priority: "high",
+            },
+          ],
+          removals: [],
+          analysis: "",
+          provider: "openai",
+        }}
+        isLoading={false}
+        error={null}
+        onAnalyze={vi.fn()}
+        onAddCard={vi.fn()}
+        onRemoveCard={vi.fn()}
+        analysedAt={new Date("2026-11-02T10:30:00.000Z")}
+        currentCardNames={["Sol Ring", "Arcane Signet"]}
+      />
     );
 
     expect(screen.getByText("Source: OpenAI")).toBeInTheDocument();

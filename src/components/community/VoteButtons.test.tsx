@@ -1,20 +1,17 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { NextIntlClientProvider } from "next-intl";
+import { screen, fireEvent, waitFor } from "@testing-library/react";
+import { renderWithIntl } from "@/test/render-with-intl";
 import { VoteButtons } from "./VoteButtons";
-import messages from "@/messages/en/deck.json";
 
 function renderButtons(props: Partial<Parameters<typeof VoteButtons>[0]> = {}) {
-  return render(
-    <NextIntlClientProvider locale="en" messages={{ deck: messages }}>
-      <VoteButtons
-        deckId="deck-1"
-        score={3}
-        viewerVote={null}
-        canVote
-        {...props}
-      />
-    </NextIntlClientProvider>
+  return renderWithIntl(
+    <VoteButtons
+      deckId="deck-1"
+      score={3}
+      viewerVote={null}
+      canVote
+      {...props}
+    />
   );
 }
 

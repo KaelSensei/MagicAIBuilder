@@ -1,8 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen, within } from "@testing-library/react";
-import { NextIntlClientProvider } from "next-intl";
+import { screen, within } from "@testing-library/react";
+import { renderWithIntl } from "@/test/render-with-intl";
 import { DeckStats } from "./DeckStats";
-import messages from "@/messages/en/deck.json";
 import type { DeckStats as DeckStatsData } from "@/lib/deck/analysis-types";
 import type { DeckFormat } from "@/lib/deck/formats";
 import type { FormatStats } from "@/lib/deck/format-stats";
@@ -78,10 +77,8 @@ function makeStats(overrides: Partial<DeckStatsData> = {}): DeckStatsData {
 }
 
 function renderStats(stats: DeckStatsData | null, format: DeckFormat = "commander") {
-  return render(
-    <NextIntlClientProvider locale="en" messages={{ deck: messages }}>
-      <DeckStats stats={stats} format={format} targetBracket={3} />
-    </NextIntlClientProvider>
+  return renderWithIntl(
+    <DeckStats stats={stats} format={format} targetBracket={3} />
   );
 }
 

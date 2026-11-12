@@ -16,9 +16,7 @@
  * and name the row that will flip them. The split of this file (DB-44, DB-46) must keep them
  * green unchanged.
  */
-import type { ReactElement } from "react";
 import { fireEvent, screen, waitFor } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MotionGlobalConfig } from "framer-motion";
 import { delay, http, HttpResponse } from "msw";
 import {
@@ -50,7 +48,7 @@ import type {
   ScryfallCollectionResponse,
 } from "@/lib/scryfall/types";
 import { setupMsw } from "@/test/msw";
-import { renderWithIntl } from "@/test/render-with-intl";
+import { renderWithProviders } from "@/test/render";
 import { DeckWizard } from "./DeckWizard";
 
 const SCRYFALL = "https://api.scryfall.com";
@@ -264,15 +262,9 @@ const onComplete = vi.fn<(deckId: string) => void>();
 const onClose = vi.fn<() => void>();
 
 function renderWizard(): void {
-  const client = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
-  });
-  const ui: ReactElement = (
-    <QueryClientProvider client={client}>
-      <DeckWizard open onClose={onClose} onComplete={onComplete} />
-    </QueryClientProvider>
+  renderWithProviders(
+    <DeckWizard open onClose={onClose} onComplete={onComplete} />
   );
-  renderWithIntl(ui);
 }
 
 const HEADINGS = {

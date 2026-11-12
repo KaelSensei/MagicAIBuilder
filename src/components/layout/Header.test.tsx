@@ -1,11 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import React from "react";
-import { NextIntlClientProvider } from "next-intl";
-import enCommon from "@/messages/en/common.json";
-import frCommon from "@/messages/fr/common.json";
 import { useToastStore } from "@/hooks/useToast";
+import { renderWithIntl } from "@/test/render-with-intl";
 
 let createDeckImpl: (name: string) => Promise<string> = async (_name: string) =>
   "deck-0";
@@ -64,16 +62,6 @@ vi.mock("@/lib/deck/store", () => ({
     }),
 }));
 
-function renderWithIntl(ui: React.ReactElement, locale = "en") {
-  const messages = locale === "fr" ? frCommon : enCommon;
-
-  return render(
-    <NextIntlClientProvider locale={locale} timeZone="UTC" messages={{ common: messages }}>
-      {ui}
-    </NextIntlClientProvider>
-  );
-}
-
 describe("Header", () => {
   it("groups desktop destinations in a named primary navigation landmark", async () => {
     const { Header } = await import("./Header");
@@ -108,7 +96,7 @@ describe("Header", () => {
 
     const { Header } = await import("./Header");
 
-    renderWithIntl(React.createElement(Header), "fr");
+    renderWithIntl(React.createElement(Header), { locale: "fr" });
     await userEvent.click(
       await screen.findByRole("button", { name: /importer/i })
     );
@@ -123,7 +111,7 @@ describe("Header", () => {
 
     const { Header } = await import("./Header");
 
-    renderWithIntl(React.createElement(Header), "fr");
+    renderWithIntl(React.createElement(Header), { locale: "fr" });
     await userEvent.click(
       await screen.findByRole("button", { name: "Nouveau deck" })
     );

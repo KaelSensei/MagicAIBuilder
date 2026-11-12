@@ -1,28 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
-import { NextIntlClientProvider } from "next-intl";
+import { fireEvent, screen } from "@testing-library/react";
 import type { CommanderRuleIssue } from "@/lib/deck/commander-rules-check";
-import enCommanderRules from "@/messages/en/commander-rules.json";
-import enDeck from "@/messages/en/deck.json";
-import frCommanderRules from "@/messages/fr/commander-rules.json";
-import frDeck from "@/messages/fr/deck.json";
+import { renderWithIntl } from "@/test/render-with-intl";
 import { BanlistAlert } from "./BanlistAlert";
-
-const MESSAGES = {
-  en: { deck: enDeck, commanderRules: enCommanderRules },
-  fr: { deck: frDeck, commanderRules: frCommanderRules },
-} as const;
-
-function renderWithIntl(
-  ui: React.ReactElement,
-  locale: keyof typeof MESSAGES = "en"
-) {
-  return render(
-    <NextIntlClientProvider locale={locale} messages={MESSAGES[locale]}>
-      {ui}
-    </NextIntlClientProvider>
-  );
-}
 
 const SIGNET_ISSUE: CommanderRuleIssue = {
   cardId: "signet",
@@ -114,7 +94,7 @@ describe("BanlistAlert", () => {
         colorViolations={[]}
         rulesIssues={[SIGNET_ISSUE]}
       />,
-      "fr"
+      { locale: "fr" }
     );
 
     expect(screen.getByText("1 carte inopérante")).toBeDefined();

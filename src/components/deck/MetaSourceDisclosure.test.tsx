@@ -1,9 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { render, screen } from "@testing-library/react";
-import { NextIntlClientProvider } from "next-intl";
+import { screen } from "@testing-library/react";
 
+import { renderWithIntl } from "@/test/render-with-intl";
 import { MetaSourceDisclosure } from "./MetaSourceDisclosure";
-import deckMessages from "@/messages/en/deck.json";
 
 function renderDisclosure(
   source: "edhrec" | "tournament",
@@ -11,19 +10,13 @@ function renderDisclosure(
   stale = false,
   health?: { readonly status: "available" | "unavailable"; readonly attempts: number }
 ) {
-  render(
-    <NextIntlClientProvider
-      locale="en"
-      messages={{ deck: deckMessages }}
-      timeZone="UTC"
-    >
-      <MetaSourceDisclosure
-        source={source}
-        observedAt={observedAt}
-        stale={stale}
-        health={health}
-      />
-    </NextIntlClientProvider>
+  renderWithIntl(
+    <MetaSourceDisclosure
+      source={source}
+      observedAt={observedAt}
+      stale={stale}
+      health={health}
+    />
   );
 }
 
