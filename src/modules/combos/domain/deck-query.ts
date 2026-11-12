@@ -1,4 +1,15 @@
-// The card list one combo lookup is for: its bounds, its validation and its canonical form.
+/**
+ * The card list one combo lookup is for: its bounds, its validation and its
+ * canonical form.
+ *
+ * Domain of the combos context, shared by the route (validation), the use case
+ * (canonical form) and the browser hook (query key). The canonical form is
+ * what makes two spellings of one deck share a cache entry and a Spellbook
+ * call. Pure data and functions only (ADR 0003); the Zod schema here is a
+ * known gap, the target keeps parsing at the route (see the README).
+ *
+ * @module combos/domain/deck-query
+ */
 import { z } from "zod";
 
 /** Commander plus partner or background; Spellbook itself accepts up to 12. */

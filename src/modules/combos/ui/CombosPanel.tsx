@@ -1,5 +1,16 @@
 "use client";
-// Commander Spellbook combo detection panel
+/**
+ * The combo panel of the deck builder: the combos the deck holds, infinite
+ * ones marked, each with what it still needs and a link to Commander
+ * Spellbook.
+ *
+ * The UI of the combos context. It renders what `useCombos` returns and is
+ * imported by path from the builder page (ADR 0002). It holds no lookup logic:
+ * the page tells it whether the lookup is enabled, loading or unavailable, and
+ * the panel's one rule is to never read an unavailable lookup as "no combos".
+ *
+ * @module combos/ui/CombosPanel
+ */
 import type { ReactNode } from "react";
 import { useFormatter, useTranslations } from "next-intl";
 import { cn } from "@/components/ui/utils";
@@ -33,12 +44,15 @@ function spellbookCreditLink(label: string) {
 }
 
 interface CombosPanelProps {
+  /** The combos the lookup found, in the order the server sent them (infinite first). */
   readonly combos?: readonly Combo[];
   readonly isLoading?: boolean;
-  readonly isEnabled?: boolean; // False when deck < 10 cards
+  /** False while the deck is under the ten-card minimum; the panel then asks for cards. */
+  readonly isEnabled?: boolean;
   /** True when the lookup failed, so the panel must not claim the deck has no combos. */
   readonly isUnavailable?: boolean;
   readonly className?: string;
+  /** When the shown result was fetched; the credit line is shown only with it. */
   readonly observedAt?: Date;
 }
 
@@ -137,6 +151,15 @@ function ComboCard({ combo }: { readonly combo: Combo }) {
   );
 }
 
+/**
+ * The builder's combo panel.
+ *
+ * Shows one of: a request for ten cards, a loading line, the unavailable
+ * notice, "no known combos", or the combo list headed "Infinite combos" when
+ * one is infinite. The Spellbook credit with its observation date appears
+ * only on a settled result, so the panel never credits data it is not showing.
+ * All text comes from the `deck.combos` messages.
+ */
 export function CombosPanel({
   combos,
   isLoading,
