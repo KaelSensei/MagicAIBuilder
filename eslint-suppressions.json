@@ -1764,11 +1764,6 @@
       "count": 1
     }
   },
-  "src/lib/deck/validation.ts": {
-    "@typescript-eslint/max-params": {
-      "count": 1
-    }
-  },
   "src/lib/http.ts": {
     "@typescript-eslint/consistent-type-assertions": {
       "count": 1
@@ -1836,11 +1831,6 @@
       "count": 1
     }
   },
-  "src/lib/recommendations/engine.ts": {
-    "@typescript-eslint/max-params": {
-      "count": 1
-    }
-  },
   "src/lib/scryfall/client.shared-cache.test.ts": {
     "no-restricted-syntax": {
       "count": 1
@@ -1876,11 +1866,6 @@
   },
   "src/lib/seo/sitemap.ts": {
     "@typescript-eslint/max-params": {
-      "count": 1
-    }
-  },
-  "src/lib/shortcuts/shortcuts.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
       "count": 1
     }
   },
