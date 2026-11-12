@@ -165,15 +165,17 @@ card write, in the same transaction as the card rows
 deck.
 
 The four single-card routes (`POST` and `DELETE /api/decks/[id]/cards`,
-`PATCH` and `DELETE /api/decks/[id]/cards/[cardId]`) and the command-zone
-route (`PATCH /api/decks/[id]/command-zone`) accept an optional
-`expectedVersion`, the version the client last read:
+`PATCH` and `DELETE /api/decks/[id]/cards/[cardId]`), the command-zone route
+(`PATCH /api/decks/[id]/command-zone`) and the bulk edit
+(`PATCH /api/decks/[id]/cards`) accept an optional `expectedVersion`, the
+version the client last read:
 
 | Route kind                | Where `expectedVersion` goes         | Success body                                    |
 | ------------------------- | ------------------------------------ | ----------------------------------------------- |
 | POST, PATCH on a card     | JSON body field, an integer from 0   | The card row, plus `version` (POST answers 201) |
 | DELETE                    | Query string, `?expectedVersion=<n>` | `{ "success": true, "version": <n> }`           |
 | PATCH on the command zone | JSON body field, an integer from 0   | `{ "cards": [added rows], "version": <n> }`     |
+| PATCH on the cards (bulk) | JSON body field, an integer from 0   | The deck with every `cards` row, plus `version` |
 
 The command-zone route takes the whole change in one body: `removeCardIds`
 (main-deck rows that leave, such as a promoted card's row), `clearCommandSlots`
@@ -196,9 +198,13 @@ some proxies reject one (RFC 9110 §9.3.5).
 | `expectedVersion` is not a whole number ≥ 0 | 400    | `{ "error": "Invalid request body" \| "Invalid request query", "details": { formErrors, fieldErrors } }` |
 | The deck was deleted after the owner check  | 404    | `{ "error": "Deck not found" }`                                                                          |
 
-A 409 stores nothing. Its body is the one the bulk edit (`PATCH
-/api/decks/[id]/cards`) already answers for a stale change set. The bulk edit
-and the other deck writes do not move the version yet.
+A 409 stores nothing. The bulk edit answers the same 409 when its change set
+names a row the deck no longer holds: the list was edited from an outdated
+copy. It moves the version once, however many rows it changes. Its pair check
+is the command-zone route's (`commandPairRefusal`). The client sends
+`expectedVersion` with the bulk edit only, and only while it holds a version
+it read with the whole deck; the other deck writes (metadata, creation,
+imports) do not move the version.
 
 ---
 

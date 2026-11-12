@@ -12,6 +12,7 @@
  */
 import { rowFillsCommandSlot } from "@/lib/deck/bulk-edit-command-zone";
 import type {
+  BulkEditWrite,
   CommandZoneWrite,
   DeckRepository,
   DeckWriteResult,
@@ -50,17 +51,61 @@ const EMPTY_COMMAND_ZONE = {
   pairingType: "none",
 } as const;
 
+/** The deck holds no row with this id; thrown inside a change, so nothing is stored. */
+class MissingRowError extends Error {
+  constructor(cardId: string) {
+    super(`No card ${cardId} in this deck`);
+    this.name = "MissingRowError";
+  }
+}
+
 /**
  * @returns the row with this id
- * @throws when the deck holds no such row, as Prisma's P2025 does
+ * @throws MissingRowError when the deck holds no such row, as Prisma's P2025 does
  */
 function cardOf(
   cards: readonly StoredDeckCard[],
   cardId: string
 ): StoredDeckCard {
   const card = cards.find((row) => row.id === cardId);
-  if (card === undefined) throw new Error(`No card ${cardId} in this deck`);
+  if (card === undefined) throw new MissingRowError(cardId);
   return card;
+}
+
+/**
+ * The rows a bulk edit leaves: the named and the cleared rows gone, the
+ * resized rows at their new count, the new rows last.
+ *
+ * @throws MissingRowError for a removed or resized row the deck does not hold
+ */
+function bulkEditedRows(
+  cards: readonly StoredDeckCard[],
+  edit: BulkEditWrite,
+  added: readonly StoredDeckCard[]
+): readonly StoredDeckCard[] {
+  const leaving = new Set(edit.removeCardIds.map((id) => cardOf(cards, id)));
+  const copies = new Map(
+    edit.quantityChanges.map(({ cardId, quantity }) => [
+      cardOf(cards, cardId),
+      quantity,
+    ])
+  );
+  const kept = cards.filter(
+    (card) =>
+      !leaving.has(card) &&
+      !edit.clearSlots.some((slot) => rowFillsCommandSlot(card, slot))
+  );
+  // A resized row that a cleared slot took away is a stale copy too.
+  for (const resized of copies.keys()) {
+    if (!kept.includes(resized)) throw new MissingRowError(resized.id);
+  }
+  return [
+    ...kept.map((card) => {
+      const quantity = copies.get(card);
+      return quantity === undefined ? card : { ...card, quantity };
+    }),
+    ...added,
+  ];
 }
 
 /** @returns an empty fake repository */
@@ -156,5 +201,20 @@ export function inMemoryDeckRepository(): InMemoryDeckRepository {
           value: added,
         };
       }),
+    applyBulkEdit: async (target, edit) => {
+      try {
+        return versionedWrite(target, ({ cards }) => {
+          const added = edit.addCards.map((card) =>
+            storeCard(target.deckId, card)
+          );
+          const rows = bulkEditedRows(cards, edit, added);
+          return { cards: rows, fields: edit.fields, value: rows };
+        });
+      } catch (error) {
+        // The change ran before anything was stored, so the deck is as it was.
+        if (error instanceof MissingRowError) return { kind: "stale" };
+        throw error;
+      }
+    },
   };
 }

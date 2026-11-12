@@ -115,6 +115,22 @@ export interface CommandZoneWrite {
   readonly fields: CommandZoneFields;
 }
 
+/** One row's new number of copies. */
+export interface DeckCardResize {
+  readonly cardId: string;
+  readonly quantity: number;
+}
+
+/**
+ * One bulk edit: the player rewrote the deck as text, and the editor turned
+ * the text into rows that leave, rows whose copies change, rows that enter
+ * and the command zone the text names. Stored together or not at all.
+ * `fields` is empty when the text leaves the command zone as it was.
+ */
+export interface BulkEditWrite extends CommandZoneWrite {
+  readonly quantityChanges: readonly DeckCardResize[];
+}
+
 /** A write that was stored: what it produced, and the deck's version after it. */
 export interface SavedDeckWrite<Value> {
   readonly kind: "saved";
@@ -132,6 +148,7 @@ export interface SavedDeckWrite<Value> {
  *
  * A failure of the store itself (lost connection, a card id the deck does not
  * hold) is not an outcome: the method rejects, and nothing is stored either.
+ * `applyBulkEdit` is the exception for a missing row, see there.
  */
 export type DeckWriteResult<Value> =
   | SavedDeckWrite<Value>
@@ -182,5 +199,21 @@ export interface DeckRepository {
   readonly writeCommandZone: (
     target: DeckWriteTarget,
     write: CommandZoneWrite
+  ) => Promise<DeckWriteResult<readonly StoredDeckCard[]>>;
+  /**
+   * Applies a bulk edit: removes `removeCardIds` and the rows of
+   * `clearSlots`, resizes `quantityChanges`, adds `addCards` and writes
+   * `fields`, all in one unit of work. `value` is every row the deck holds
+   * afterwards.
+   *
+   * Answers `stale`, and stores nothing, when the deck holds no row for one
+   * of `removeCardIds` or `quantityChanges`: the edit was planned on a copy
+   * of the deck that another write has moved away from, which is what
+   * `expectedVersion` guards against too. This is why it does not reject as
+   * the single-row methods do.
+   */
+  readonly applyBulkEdit: (
+    target: DeckWriteTarget,
+    edit: BulkEditWrite
   ) => Promise<DeckWriteResult<readonly StoredDeckCard[]>>;
 }

@@ -34,13 +34,19 @@ export function countLoadedCards(deck: CardRows): number {
 }
 
 /**
- * The deck with its `cardCount` set to the rows it holds. Call it on every
- * write that changes the rows of a loaded deck, whatever the slot: the card
- * list and the command zone alike.
+ * The deck with its `cardCount` set to the rows it holds, and its `version`
+ * forgotten. Call it on every write that changes the rows of a loaded deck,
+ * whatever the slot: the card list and the command zone alike.
+ *
+ * Why the version goes: every row write moves `Deck.version` on the server,
+ * and the store reads the new one back only from a whole-deck answer. A
+ * version kept past a row write would be sent as `expectedVersion` and
+ * refused for a change this very tab made. `apiDeckToStoreDeck` sets the
+ * version after this call, since a whole deck just read is current.
  *
  * @param deck - a deck whose rows were just changed
  * @returns the same deck with the count in step with its rows
  */
 export function withLoadedCardCount<D extends Deck>(deck: D): D {
-  return { ...deck, cardCount: countLoadedCards(deck) };
+  return { ...deck, cardCount: countLoadedCards(deck), version: undefined };
 }

@@ -997,6 +997,8 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         }))
       );
       const apiDeck = await deckApi.applyCardChanges(activeDeckId, {
+        // The version this tab read, when it still vouches for it (`Deck.version`).
+        expectedVersion: get().decks[activeDeckId]?.version,
         removeCardIds: edit.removedCardIds,
         quantityChanges: edit.quantityChanges,
         addCards: [

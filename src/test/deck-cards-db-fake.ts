@@ -161,6 +161,8 @@ function createDeckCardsDb() {
         Promise.resolve(
           tables.cards.find((card) => matches(card, where)) ?? null
         ),
+      findMany: ({ where }: { readonly where: Filter }) =>
+        Promise.resolve(tables.cards.filter((card) => matches(card, where))),
       create: ({ data }: { readonly data: Partial<FakeDeckCard> }) =>
         prismaQuery(() => {
           throwIfCardWriteFails();
@@ -189,6 +191,22 @@ function createDeckCardsDb() {
             card === current ? next : card
           );
           return next;
+        }),
+      /** Changes every matching row; the count says how many, as in Prisma. */
+      updateMany: ({
+        where,
+        data,
+      }: {
+        readonly where: Filter;
+        readonly data: Partial<FakeDeckCard>;
+      }) =>
+        prismaQuery(() => {
+          throwIfCardWriteFails();
+          const changed = tables.cards.filter((card) => matches(card, where));
+          tables.cards = tables.cards.map((card) =>
+            changed.includes(card) ? { ...card, ...data } : card
+          );
+          return { count: changed.length };
         }),
       delete: ({ where }: { readonly where: Filter }) =>
         prismaQuery(() => {
@@ -262,9 +280,9 @@ function createDeckCardsDb() {
       failDeckTouch = true;
     },
     /**
-     * Makes the next card write (`deckCard.create`, `update`, `delete` or
-     * `deleteMany`) throw, as a constraint violation or a lost connection
-     * would.
+     * Makes the next card write (`deckCard.create`, `update`, `updateMany`,
+     * `delete` or `deleteMany`) throw, as a constraint violation or a lost
+     * connection would.
      */
     failNextCardWrite(): void {
       failCardWrite = true;

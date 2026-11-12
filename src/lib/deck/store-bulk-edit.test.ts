@@ -213,6 +213,58 @@ describe("deck store — cards a bulk edit adds", () => {
   });
 });
 
+describe("deck store — the deck version a bulk edit carries", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    collection.collectionCards.clear();
+    useDeckStore.setState({
+      decks: { "deck-1": apiDeckToStoreDeck({ ...apiDeck([]), version: 7 }) },
+      activeDeckId: "deck-1",
+      gameChangerNames: new Set(),
+      bannedNames: new Set(),
+      undoStack: [],
+    });
+  });
+
+  it("sends the version the deck was read at and adopts the one the server answers", async () => {
+    api.applyCardChanges.mockResolvedValue({ ...apiDeck([]), version: 8 });
+
+    await useDeckStore.getState().applyBulkEdit({
+      removedCardIds: [],
+      quantityChanges: [],
+      additions: [
+        { card: scryfallCard("Sol Ring"), quantity: 1, zone: "main" },
+      ],
+      commandZone: null,
+    });
+
+    expect(api.applyCardChanges).toHaveBeenCalledWith(
+      "deck-1",
+      expect.objectContaining({ expectedVersion: 7 })
+    );
+    expect(useDeckStore.getState().decks["deck-1"]?.version).toBe(8);
+  });
+
+  it("sends no version once a card was added by hand, whose answer the store does not read the version from", async () => {
+    // Otherwise the bulk edit would carry a version the server has already
+    // moved past, and be refused for a change this very tab made.
+    api.addCard.mockResolvedValue(apiRow("sol-ring-row", "Sol Ring"));
+    api.applyCardChanges.mockResolvedValue(apiDeck([]));
+    await useDeckStore.getState().addCard(scryfallCard("Sol Ring"));
+
+    await useDeckStore.getState().applyBulkEdit({
+      removedCardIds: ["sol-ring-row"],
+      quantityChanges: [],
+      additions: [],
+      commandZone: null,
+    });
+
+    const [, changes] = api.applyCardChanges.mock.calls[0] ?? [];
+    expect(changes).toBeDefined();
+    expect(changes?.expectedVersion).toBeUndefined();
+  });
+});
+
 describe("deck store — undo after a bulk edit", () => {
   beforeEach(() => {
     vi.clearAllMocks();

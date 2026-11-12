@@ -133,6 +133,7 @@ const cardChangesSchema = z.object({
       pairingType: pairingTypeSchema,
     })
     .optional(),
+  expectedVersion: z.number().optional(),
 });
 
 const commandZoneChangeSchema = z.object({

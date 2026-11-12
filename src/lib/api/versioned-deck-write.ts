@@ -34,12 +34,17 @@ export function staleDeckResponse(): NextResponse {
  * Answers a versioned deck write.
  *
  * @param onSaved - Builds the success answer; it should carry
- *   `saved.version`, which the client sends back as `expectedVersion`.
+ *   `saved.version`, which the client sends back as `expectedVersion`. It may
+ *   be async when the answer needs a read after the write, as the bulk edit's
+ *   does; the route then returns the promise.
  */
-export function deckWriteResponse<Value>(
+export function deckWriteResponse<
+  Value,
+  Answer extends NextResponse | Promise<NextResponse>,
+>(
   result: DeckWriteResult<Value>,
-  onSaved: (saved: SavedDeckWrite<Value>) => NextResponse
-): NextResponse {
+  onSaved: (saved: SavedDeckWrite<Value>) => Answer
+): Answer | NextResponse {
   switch (result.kind) {
     case "saved":
       return onSaved(result);
