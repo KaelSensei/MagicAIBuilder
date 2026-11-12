@@ -218,11 +218,6 @@
       "count": 1
     }
   },
-  "src/app/api/community/commanders/[slug]/decks/route.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 2
-    }
-  },
   "src/app/api/community/deck-folders/[folderId]/route.test.ts": {
     "no-restricted-syntax": {
       "count": 1
@@ -398,11 +393,6 @@
   },
   "src/app/api/user/username/route.test.ts": {
     "no-restricted-syntax": {
-      "count": 1
-    }
-  },
-  "src/app/api/users/[username]/route.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
       "count": 1
     }
   },
