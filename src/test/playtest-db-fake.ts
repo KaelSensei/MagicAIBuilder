@@ -4,6 +4,7 @@
  * Supports equality `where`, `orderBy` on `createdAt` and `take`; `select`
  * and `include` are ignored, and a deck comes back with its cards.
  */
+import { prismaQuery } from "@/test/prisma-query";
 
 /** One `DeckCard` row, with the columns a snapshot copies. */
 export type FakeDeckCard = {
@@ -154,9 +155,16 @@ function find<T extends Row & { readonly createdAt: Date }>(
   return args.take === undefined ? found : found.slice(0, args.take);
 }
 
-/** @returns A copy of `value` as a JSON column would store it. */
+/**
+ * @returns A copy of `value`, as a JSON column stores it, so a later change
+ *   to the caller's array cannot reach the stored row. A structured clone is
+ *   enough: both routes that create a snapshot store `toJsonPayload` output
+ *   (through `snapshotContent` in `lib/deck/deck-version.ts`), which holds
+ *   JSON values only, so no `Date` or `undefined` is left for a JSON round
+ *   trip to convert.
+ */
 function asStoredJson(value: unknown): unknown {
-  return JSON.parse(JSON.stringify(value));
+  return structuredClone(value);
 }
 
 /** @returns `value` when it is a string, otherwise `fallback`. */
@@ -195,65 +203,71 @@ function createPlaytestDb() {
   const nextCreatedAt = (): Date =>
     new Date(Date.UTC(2026, 10, 9, 12, 0, 0, ++sequence));
 
+  /**
+   * Prisma-shaped delegates. Reads resolve directly; writes go through
+   * {@link prismaQuery}, so a write that throws rejects as Prisma's would.
+   */
   const tables = {
     user: {
-      findUnique: async ({
-        where,
-      }: {
-        readonly where: { readonly id?: string };
-      }) => ({
-        id: where.id ?? deck.userId,
-        name: null,
-        email: null,
-        image: null,
-      }),
+      findUnique: ({ where }: { readonly where: { readonly id?: string } }) =>
+        Promise.resolve({
+          id: where.id ?? deck.userId,
+          name: null,
+          email: null,
+          image: null,
+        }),
     },
     deck: {
-      findUnique: async ({ where }: FindArgs) =>
-        matches(deck, where) ? { ...deck, cards: [...cards] } : null,
+      findUnique: ({ where }: FindArgs) =>
+        Promise.resolve(
+          matches(deck, where) ? { ...deck, cards: [...cards] } : null
+        ),
     },
     deckCard: {
-      findMany: async ({ where }: FindArgs) =>
-        cards.filter((card) => matches(card, where)),
+      findMany: ({ where }: FindArgs) =>
+        Promise.resolve(cards.filter((card) => matches(card, where))),
     },
     deckSnapshot: {
-      findFirst: async (args: FindArgs) => find(snapshots, args)[0] ?? null,
-      findMany: async (args: FindArgs) => find(snapshots, args),
-      create: async ({ data }: CreateArgs) => {
-        const snapshot: FakeSnapshot = {
-          id: `snapshot-${snapshots.length + 1}`,
-          deckId: text(data.deckId, ""),
-          name: text(data.name, ""),
-          cardList: asStoredJson(data.cardList),
-          commander: nullableText(data.commander),
-          cardCount: count(data.cardCount, 0),
-          createdAt: nextCreatedAt(),
-        };
-        snapshots.push(snapshot);
-        return snapshot;
-      },
+      findFirst: (args: FindArgs) =>
+        Promise.resolve(find(snapshots, args)[0] ?? null),
+      findMany: (args: FindArgs) => Promise.resolve(find(snapshots, args)),
+      create: ({ data }: CreateArgs) =>
+        prismaQuery(() => {
+          const snapshot: FakeSnapshot = {
+            id: `snapshot-${snapshots.length + 1}`,
+            deckId: text(data.deckId, ""),
+            name: text(data.name, ""),
+            cardList: asStoredJson(data.cardList),
+            commander: nullableText(data.commander),
+            cardCount: count(data.cardCount, 0),
+            createdAt: nextCreatedAt(),
+          };
+          snapshots.push(snapshot);
+          return snapshot;
+        }),
     },
     playtestSession: {
-      findMany: async (args: FindArgs) => find(sessions, args),
-      create: async ({ data }: CreateArgs) => {
-        const session: FakeSession = {
-          id: `session-${sessions.length + 1}`,
-          deckId: text(data.deckId, ""),
-          userId: text(data.userId, ""),
-          result: text(data.result, ""),
-          turns: count(data.turns, 0),
-          mulliganCount: count(data.mulliganCount, 0),
-          difficulty: nullableText(data.difficulty),
-          notes: nullableText(data.notes),
-          proposedChange: nullableText(data.proposedChange),
-          snapshotId: nullableText(data.snapshotId),
-          cardsSeen: nullableCount(data.cardsSeen),
-          additionalCardsSeen: nullableCount(data.additionalCardsSeen),
-          createdAt: nextCreatedAt(),
-        };
-        sessions.push(session);
-        return session;
-      },
+      findMany: (args: FindArgs) => Promise.resolve(find(sessions, args)),
+      create: ({ data }: CreateArgs) =>
+        prismaQuery(() => {
+          const session: FakeSession = {
+            id: `session-${sessions.length + 1}`,
+            deckId: text(data.deckId, ""),
+            userId: text(data.userId, ""),
+            result: text(data.result, ""),
+            turns: count(data.turns, 0),
+            mulliganCount: count(data.mulliganCount, 0),
+            difficulty: nullableText(data.difficulty),
+            notes: nullableText(data.notes),
+            proposedChange: nullableText(data.proposedChange),
+            snapshotId: nullableText(data.snapshotId),
+            cardsSeen: nullableCount(data.cardsSeen),
+            additionalCardsSeen: nullableCount(data.additionalCardsSeen),
+            createdAt: nextCreatedAt(),
+          };
+          sessions.push(session);
+          return session;
+        }),
     },
   };
 

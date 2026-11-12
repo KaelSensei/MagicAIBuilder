@@ -19,6 +19,7 @@ import {
   FAKE_DECK,
   type FakeDeckCard,
 } from "@/test/playtest-db-fake";
+import { prismaQuery } from "@/test/prisma-query";
 
 /** The `Deck` columns the card routes read or write. */
 export type FakeCardsDeck = {
@@ -97,83 +98,92 @@ function createDeckCardsDb() {
     throw new Error("card write failed");
   };
 
-  /** Prisma-shaped delegates that read and write one copy of the tables. */
+  /**
+   * Prisma-shaped delegates that read and write one copy of the tables. A
+   * write that can fail goes through {@link prismaQuery}, so the failure
+   * rejects the returned promise as Prisma's would.
+   */
   const delegatesOver = (tables: Tables) => ({
     deck: {
-      findUnique: async ({
-        where,
-      }: {
-        readonly where: { readonly id: string };
-      }) => (tables.deck.id === where.id ? tables.deck : null),
-      update: async ({
+      findUnique: ({ where }: { readonly where: { readonly id: string } }) =>
+        Promise.resolve(tables.deck.id === where.id ? tables.deck : null),
+      update: ({
         where,
         data,
       }: {
         readonly where: { readonly id: string };
         readonly data: Partial<FakeCardsDeck>;
-      }) => {
-        throwIfDeckTouchFails();
-        if (tables.deck.id !== where.id)
-          throw new Error("Record to update not found.");
-        tables.deck = { ...tables.deck, ...data };
-        return tables.deck;
-      },
+      }) =>
+        prismaQuery(() => {
+          throwIfDeckTouchFails();
+          if (tables.deck.id !== where.id)
+            throw new Error("Record to update not found.");
+          tables.deck = { ...tables.deck, ...data };
+          return tables.deck;
+        }),
       /** The compare-and-swap of the deck version: 1 when the filter matched. */
-      updateMany: async ({ where, data }: VersionClaim) => {
-        throwIfDeckTouchFails();
-        if (!matches(tables.deck, where)) return { count: 0 };
-        tables.deck = {
-          ...tables.deck,
-          version: tables.deck.version + data.version.increment,
-          updatedAt: data.updatedAt,
-        };
-        return { count: 1 };
-      },
+      updateMany: ({ where, data }: VersionClaim) =>
+        prismaQuery(() => {
+          throwIfDeckTouchFails();
+          if (!matches(tables.deck, where)) return { count: 0 };
+          tables.deck = {
+            ...tables.deck,
+            version: tables.deck.version + data.version.increment,
+            updatedAt: data.updatedAt,
+          };
+          return { count: 1 };
+        }),
     },
     deckCard: {
-      findFirst: async ({ where }: { readonly where: Filter }) =>
-        tables.cards.find((card) => matches(card, where)) ?? null,
-      create: async ({ data }: { readonly data: Partial<FakeDeckCard> }) => {
-        throwIfCardWriteFails();
-        createdCount += 1;
-        const card: FakeDeckCard = {
-          ...deckCard(`created ${createdCount}`),
-          ...data,
-          id: `card-created-${createdCount}`,
-        };
-        tables.cards = [...tables.cards, card];
-        return card;
-      },
-      update: async ({
+      findFirst: ({ where }: { readonly where: Filter }) =>
+        Promise.resolve(
+          tables.cards.find((card) => matches(card, where)) ?? null
+        ),
+      create: ({ data }: { readonly data: Partial<FakeDeckCard> }) =>
+        prismaQuery(() => {
+          throwIfCardWriteFails();
+          createdCount += 1;
+          const card: FakeDeckCard = {
+            ...deckCard(`created ${createdCount}`),
+            ...data,
+            id: `card-created-${createdCount}`,
+          };
+          tables.cards = [...tables.cards, card];
+          return card;
+        }),
+      update: ({
         where,
         data,
       }: {
         readonly where: Filter;
         readonly data: Partial<FakeDeckCard>;
-      }) => {
-        throwIfCardWriteFails();
-        const current = tables.cards.find((card) => matches(card, where));
-        if (!current) throw new Error("Record to update not found.");
-        const next: FakeDeckCard = { ...current, ...data };
-        tables.cards = tables.cards.map((card) =>
-          card === current ? next : card
-        );
-        return next;
-      },
-      delete: async ({ where }: { readonly where: Filter }) => {
-        throwIfCardWriteFails();
-        const current = tables.cards.find((card) => matches(card, where));
-        if (!current) throw new Error("Record to delete does not exist.");
-        tables.cards = tables.cards.filter((card) => card !== current);
-        return current;
-      },
-      deleteMany: async ({ where }: { readonly where: Filter }) => {
-        throwIfCardWriteFails();
-        const kept = tables.cards.filter((card) => !matches(card, where));
-        const count = tables.cards.length - kept.length;
-        tables.cards = kept;
-        return { count };
-      },
+      }) =>
+        prismaQuery(() => {
+          throwIfCardWriteFails();
+          const current = tables.cards.find((card) => matches(card, where));
+          if (!current) throw new Error("Record to update not found.");
+          const next: FakeDeckCard = { ...current, ...data };
+          tables.cards = tables.cards.map((card) =>
+            card === current ? next : card
+          );
+          return next;
+        }),
+      delete: ({ where }: { readonly where: Filter }) =>
+        prismaQuery(() => {
+          throwIfCardWriteFails();
+          const current = tables.cards.find((card) => matches(card, where));
+          if (!current) throw new Error("Record to delete does not exist.");
+          tables.cards = tables.cards.filter((card) => card !== current);
+          return current;
+        }),
+      deleteMany: ({ where }: { readonly where: Filter }) =>
+        prismaQuery(() => {
+          throwIfCardWriteFails();
+          const kept = tables.cards.filter((card) => !matches(card, where));
+          const count = tables.cards.length - kept.length;
+          tables.cards = kept;
+          return { count };
+        }),
     },
   });
 
@@ -182,16 +192,13 @@ function createDeckCardsDb() {
   const prisma = {
     ...outside,
     user: {
-      findUnique: async ({
-        where,
-      }: {
-        readonly where: { readonly id: string };
-      }) => ({
-        id: where.id,
-        name: null,
-        email: null,
-        image: null,
-      }),
+      findUnique: ({ where }: { readonly where: { readonly id: string } }) =>
+        Promise.resolve({
+          id: where.id,
+          name: null,
+          email: null,
+          image: null,
+        }),
     },
     /** Runs `run` on a draft and stores the draft only if `run` resolves. */
     $transaction: async <Result>(

@@ -38,19 +38,20 @@ interface GetTranslationsOptions {
 /**
  * Translator for one locale and namespace, read from the real catalogs.
  *
+ * It returns a promise, as next-intl's async `getTranslations` does, so a
+ * page that awaits it or chains on it runs the same code under test. Nothing
+ * here needs awaiting, hence no `async` (SonarCloud S7503).
+ *
  * @param options The locale the page is served in and the namespace to read.
- * @returns The same translator `next-intl/server` returns on the server.
- * @throws When the locale has no catalog here, so a test cannot pass by
- *   silently reading another locale.
+ * @returns The same translator `next-intl/server` returns on the server. The
+ *   promise rejects when the locale has no catalog here, so a test cannot
+ *   pass by silently reading another locale.
  */
-export async function getTranslations({
-  locale,
-  namespace,
-}: GetTranslationsOptions) {
+export function getTranslations({ locale, namespace }: GetTranslationsOptions) {
   const messages = CATALOGS.get(locale);
   if (messages === undefined) {
-    throw new Error(`No test catalog for locale "${locale}"`);
+    return Promise.reject(new Error(`No test catalog for locale "${locale}"`));
   }
 
-  return createTranslator({ locale, messages, namespace });
+  return Promise.resolve(createTranslator({ locale, messages, namespace }));
 }
