@@ -14,8 +14,12 @@
  *
  * Tests named "currently … (pinned)" record odd behaviour on purpose; a `fix/` pull request that
  * changes it flips the test with its own Red.
+ *
+ * Each test renders the whole page, so it runs for seconds against Vitest's budget of 5 s. The
+ * helpers below keep it well under: `button` matches a name before it checks accessibility, and a
+ * "no search was sent" claim is proven by the order of the requests, never by a timed wait.
  */
-import { screen, waitFor } from "@testing-library/react";
+import { isInaccessible, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { http, HttpResponse } from "msw";
@@ -119,6 +123,16 @@ function card(id: string, name: string): ScryfallCard {
   return { id, name, cmc: 1, type_line: "Instant", color_identity: ["U"] };
 }
 
+/** Two copies of Opt in the player's collection, in a printing other than the one searched. */
+const OWNED_OPT = {
+  id: "row-1",
+  scryfallId: "opt-eld",
+  name: "Opt",
+  quantity: 2,
+  foil: false,
+  createdAt: "2026-11-01T00:00:00.000Z",
+};
+
 /**
  * `renderWithIntl` loads the namespaces most components read, but not `auth`, which the header's
  * user menu reads.
@@ -131,6 +145,52 @@ function WithAuthMessages({ children }: { readonly children: ReactNode }) {
       {children}
     </NextIntlClientProvider>
   );
+}
+
+/**
+ * The accessible name of one of this page's buttons, as `getByRole` computes it: `aria-label`,
+ * else the text outside `aria-hidden` children, else `title`. None of them uses `aria-labelledby`
+ * or nested labelled content, so this is the whole algorithm for them.
+ */
+function buttonName(candidate: HTMLElement): string {
+  const label = candidate.getAttribute("aria-label");
+  if (label !== null) return label;
+  const text = Array.from(candidate.childNodes)
+    .filter(
+      (node) =>
+        !(
+          node instanceof Element && node.getAttribute("aria-hidden") === "true"
+        )
+    )
+    .map((node) => node.textContent ?? "")
+    .join("")
+    .replace(/\s+/g, " ")
+    .trim();
+  return text.length > 0 ? text : candidate.title;
+}
+
+/**
+ * The accessible button named `name`.
+ *
+ * `screen.getByRole("button", { name })` classifies every one of the page's 780 elements by role,
+ * then checks accessibility and computes the name of all 110 buttons, on each call: about 190 ms,
+ * against 50 ms for the click and re-render it serves, and the page has no landmark to scope it
+ * to. Six to eight such calls per test, plus coverage instrumentation and a shared CPU, timed one
+ * test out on CI (PR #1413, run 43139765594). Reading the buttons' names directly and running the
+ * accessibility check `getByRole` applies on the match alone takes a few milliseconds and gives
+ * the same guarantee.
+ */
+function button(name: string): HTMLElement {
+  const matches = Array.from(document.querySelectorAll("button")).filter(
+    (candidate) => buttonName(candidate) === name && !isInaccessible(candidate)
+  );
+  expect(matches, `one accessible button named "${name}"`).toHaveLength(1);
+  return matches[0];
+}
+
+/** `button`, once the controls that hold it have rendered. */
+function findButton(name: string): Promise<HTMLElement> {
+  return waitFor(() => button(name));
 }
 
 /** Opens the saved deck at `/en/builder/deck-1`, shows the filters and waits for the first search. */
@@ -161,27 +221,23 @@ async function openBuilderWithFilters() {
   );
   const user = userEvent.setup();
   await screen.findByRole("heading", { level: 1, name: "Talrand Spells" });
-  await user.click(screen.getByRole("button", { name: "Show filters" }));
+  await user.click(button("Show filters"));
   await lastSearchIs("legal:commander");
   return user;
 }
 
 /** Describes a card, shows the query the route writes, and runs it unedited. */
 async function runPlainLanguageQuery(user: ReturnType<typeof userEvent.setup>) {
-  await user.click(
-    await screen.findByRole("button", {
-      name: "Describe a card in plain language",
-    })
-  );
+  await user.click(await findButton("Describe a card in plain language"));
   await user.type(
     screen.getByRole("textbox", { name: "Card description" }),
     "a cheap instant that draws a card"
   );
-  await user.click(screen.getByRole("button", { name: "Show Scryfall query" }));
+  await user.click(button("Show Scryfall query"));
   expect(
     await screen.findByRole("textbox", { name: "Scryfall query" })
   ).toHaveValue(TRANSLATED);
-  await user.click(screen.getByRole("button", { name: "Search this query" }));
+  await user.click(button("Search this query"));
 }
 
 async function lastSearchIs(query: string): Promise<void> {
@@ -189,15 +245,21 @@ async function lastSearchIs(query: string): Promise<void> {
 }
 
 /**
- * Waits long enough for a search the last action caused to reach the cache (a changed query is
- * sent on the next render), and checks that none did.
+ * Waits for the last of `queries` and checks that the searches sent since `sent` are exactly
+ * `queries`, in order.
+ *
+ * This is how a test proves that an action sent no search. A search an action causes leaves in
+ * the render that action commits, and the cache handler records it as soon as it leaves; a later
+ * action's search comes after both. So when the queries since `sent` hold only the later action's
+ * search, the earlier action sent none. A timed wait for "nothing arrived" proved less (a slow
+ * machine could still be sending) and cost 300 ms a test.
  */
-async function expectNoSearchAfter(sent: number): Promise<void> {
-  await expect(
-    waitFor(() => expect(searched.length).toBeGreaterThan(sent), {
-      timeout: 300,
-    })
-  ).rejects.toThrow();
+async function searchesSince(
+  sent: number,
+  queries: readonly [string, ...string[]]
+): Promise<void> {
+  await lastSearchIs(queries[queries.length - 1]);
+  expect(searched.slice(sent)).toEqual(queries);
 }
 
 beforeEach(() => {
@@ -258,7 +320,7 @@ describe("characterization: the builder's name search with a plain-language quer
 
   it("runs the confirmed query exactly as shown, without the filters chosen before it", async () => {
     const user = await openBuilderWithFilters();
-    await user.click(screen.getByRole("button", { name: "White" }));
+    await user.click(button("White"));
     await lastSearchIs("id<=W legal:commander");
 
     await runPlainLanguageQuery(user);
@@ -267,16 +329,22 @@ describe("characterization: the builder's name search with a plain-language quer
     expect(screen.getByText(`Query: ${TRANSLATED}`)).toBeDefined();
   });
 
-  it("currently ignores the filters changed while a confirmed query runs: no new search is sent (pinned)", async () => {
+  it("currently ignores the filters changed while a confirmed query runs: the next search is still that query (pinned)", async () => {
+    // Owning a card makes "Only cards I own" search again (the test below), which shows which
+    // query the panel still runs after the filter clicks.
+    useCollectionStore.getState().hydrateCollection([OWNED_OPT]);
     const user = await openBuilderWithFilters();
     await runPlainLanguageQuery(user);
     await lastSearchIs(TRANSLATED);
     const sent = searched.length;
 
-    await user.click(screen.getByRole("button", { name: "🏔 Land" }));
-    await user.click(screen.getByRole("button", { name: "Green" }));
+    await user.click(button("🏔 Land"));
+    await user.click(button("Green"));
+    expect(screen.getByText(`Query: ${TRANSLATED}`)).toBeDefined();
 
-    await expectNoSearchAfter(sent);
+    await user.click(button("Only cards I own"));
+
+    await searchesSince(sent, [TRANSLATED]);
     expect(screen.getByText(`Query: ${TRANSLATED}`)).toBeDefined();
   });
 
@@ -287,21 +355,12 @@ describe("characterization: the builder's name search with a plain-language quer
       has_more: false,
       data: [card("brainstorm-cmm", "Brainstorm"), card("opt-dmu", "Opt")],
     };
-    useCollectionStore.getState().hydrateCollection([
-      {
-        id: "row-1",
-        scryfallId: "opt-eld",
-        name: "Opt",
-        quantity: 2,
-        foil: false,
-        createdAt: "2026-11-01T00:00:00.000Z",
-      },
-    ]);
+    useCollectionStore.getState().hydrateCollection([OWNED_OPT]);
     const user = await openBuilderWithFilters();
     await runPlainLanguageQuery(user);
     expect(await screen.findByText("Brainstorm")).toBeDefined();
 
-    await user.click(screen.getByRole("button", { name: "Only cards I own" }));
+    await user.click(button("Only cards I own"));
 
     expect(await screen.findByText("1 card you own")).toBeDefined();
     expect(screen.queryByText("Brainstorm")).toBeNull();
@@ -310,21 +369,19 @@ describe("characterization: the builder's name search with a plain-language quer
 
   it("currently keeps running the confirmed query after Back to syntax search, until a name is typed (pinned)", async () => {
     const user = await openBuilderWithFilters();
-    await user.click(screen.getByRole("button", { name: "White" }));
+    await user.click(button("White"));
     await runPlainLanguageQuery(user);
     await lastSearchIs(TRANSLATED);
 
-    await user.click(
-      screen.getByRole("button", { name: "Back to syntax search" })
-    );
+    await user.click(button("Back to syntax search"));
     expect(screen.getByText(`Query: ${TRANSLATED}`)).toBeDefined();
     const sent = searched.length;
-    await user.click(screen.getByRole("button", { name: "Black" }));
-    await expectNoSearchAfter(sent);
+    await user.click(button("Black"));
+    expect(screen.getByText(`Query: ${TRANSLATED}`)).toBeDefined();
 
     await user.type(screen.getByPlaceholderText("Search cards…"), "brain");
 
-    await lastSearchIs("name:/brain/ id<=WB legal:commander");
+    await searchesSince(sent, ["name:/brain/ id<=WB legal:commander"]);
     expect(screen.queryByText(/^Query: /)).toBeNull();
   });
 });
