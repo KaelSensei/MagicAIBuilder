@@ -48,7 +48,7 @@ The `staging` checkpoint includes QA sign-off for the critical desktop and respo
 
 ## CI / GitHub Actions
 
-Three workflows run on every push to `main` and every PR targeting `dev`, `staging` or `main`. A fourth, `e2e.yml`, runs the Playwright suite on PRs targeting `staging` or `main`, nightly on `dev` and on demand. Every push also runs the suite locally first (see [Local DX](#local-dx) and [quality-gate.md](quality-gate.md#e2e-gate)).
+Three workflows run on every push to `main` and every PR targeting `dev`, `staging` or `main`. A fourth, `e2e.yml`, runs the Playwright suite on PRs targeting `staging` or `main`, nightly on `dev` and on demand. Every push also runs the suite locally first (see [Local DX](#local-dx) and [quality-gate.md](quality-gate.md#e2e-gate)). A fifth, `mutation.yml`, runs StrykerJS on the domain folders nightly and on the PRs that change them; it is advisory.
 
 ### `ci.yml` — Main pipeline (required on `main`)
 
@@ -95,6 +95,18 @@ docker compose -f docker-compose.e2e.yml up --build --exit-code-from e2e
   (Postgres → prisma migrate deploy → next build → Playwright against next start)
 → upload playwright-report/ and test-results/ as an artifact
 → docker compose down -v
+```
+
+### `mutation.yml` — Mutation testing (advisory)
+
+Runs nightly on `dev` (02:41 UTC), on PRs that change `src/modules/*/domain/**`, `stryker.config.mjs` or the workflow itself, and on demand. The job has `continue-on-error: true` and Stryker's `thresholds.break` is `null`: the score never blocks, and the job is not a required check. Details and the baseline: [quality-gate.md](quality-gate.md#mutation-testing-advisory).
+
+```
+pnpm install --frozen-lockfile
+→ restore reports/mutation/stryker-incremental.json from the Actions cache
+→ pnpm mutation                              (stryker run; stryker.config.mjs; writes reports/mutation/)
+→ node scripts/mutation-summary.mjs          (the score, appended to the step summary)
+→ upload reports/mutation/ as an artifact; save the incremental file to the cache
 ```
 
 ---

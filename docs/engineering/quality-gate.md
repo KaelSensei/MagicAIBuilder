@@ -18,11 +18,12 @@ Branch protection, read with `gh api` on 2026-11-10: `main` requires the check `
 
 ## What is reported but does not block
 
-| Report                                     | Where                                       | Status                                                                                       |
-| ------------------------------------------ | ------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| SonarCloud analysis                        | `sonar.yml` (job `continue-on-error: true`) | **Advisory** while the repository integration is repaired (`CLAUDE.md`). Record it in the PR |
-| `pnpm audit --prod --audit-level=moderate` | `ci.yml` (step `continue-on-error: true`)   | Report only                                                                                  |
-| Lighthouse CI (`lighthouserc.yml`)         | `lighthouse.yml`                            | Fails its own workflow below a category threshold; not a required check                      |
+| Report                                     | Where                                                                    | Status                                                                                                                                                             |
+| ------------------------------------------ | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| SonarCloud analysis                        | `sonar.yml` (job `continue-on-error: true`)                              | **Advisory** while the repository integration is repaired (`CLAUDE.md`). Record it in the PR                                                                       |
+| `pnpm audit --prod --audit-level=moderate` | `ci.yml` (step `continue-on-error: true`)                                | Report only                                                                                                                                                        |
+| Lighthouse CI (`lighthouserc.yml`)         | `lighthouse.yml`                                                         | Fails its own workflow below a category threshold; not a required check                                                                                            |
+| Mutation testing (`stryker.config.mjs`)    | `mutation.yml` (job `continue-on-error: true`, `thresholds.break: null`) | **Advisory**: nightly on `dev`, and on a PR that changes a `domain/` folder; never a required check. See [Mutation testing (advisory)](#mutation-testing-advisory) |
 
 **One local hook still treats Sonar as blocking.** `.claude/settings.json` runs `scripts/pre-pr-sonar-gate.sh` before every `gh pr create`, and the script refuses while SonarCloud reports any open issue. Until it is changed to warn, use its escape `SONAR_GATE_OVERRIDE=1` and give the reason in the PR body.
 
@@ -54,6 +55,27 @@ Two figures, with two scopes. They must not be compared. The decision and its re
 The Vitest figure is the repository's coverage. By folder, from the same run: `src/lib` about 98% of lines, `src/hooks` about 95%, `src/components` about 75% (32 of 201 files at 0%), `src/app` about 71% (17 of 108 files at 0%). The comment in `vitest.config.ts` keeps this breakdown, and ADR 0010 says how it was derived.
 
 **Floors per layer.** `pnpm test:coverage` fails when `src/modules/*/domain/**` falls under 90% of lines or branches, or `src/modules/*/application/**` under 80%. A floor is checked on all the files its glob matches, across contexts. No file matches yet, so nothing can fail today; a floor binds from the first file a context moves into that layer. The other layers, and the folders that have not moved, have no floor. `pnpm test` and the pre-push hook do not check floors. To check one context locally, narrow the run: `pnpm test:coverage --coverage.include='src/modules/<context>/**' src/modules/<context>`.
+
+## Mutation testing (advisory)
+
+StrykerJS mutates the pure domain layer, `src/modules/*/domain/**/*.ts` with tests excluded, and runs the Vitest tests that import each mutated file (`vitest.related` and `coverageAnalysis: perTest` in `stryker.config.mjs`). A mutant that no longer compiles is reported as an error, not as a survivor (`@stryker-mutator/typescript-checker`). The glob covers every bounded context, so a module that gains a `domain/` folder joins the run without a config change. [ADR 0005](../adr/0005-testing-strategy-fakes-contracts-and-characterization.md) §8 planned the run; owner decision OD-14 (2026-11-10) approved it as advisory.
+
+**It never blocks.** `thresholds.break` is `null`, so Stryker exits 0 whatever the score. The job in `.github/workflows/mutation.yml` has `continue-on-error: true`, and it is not, and must not become, a required check. `high: 80` and `low: 60` only colour the report. A survivor is a finding to fix or to explain in the PR, like a Sonar regression.
+
+**When it runs.**
+
+- nightly at 02:41 UTC on `dev` (GitHub starts schedules from `main`, the default branch, so the trigger is live once the workflow has been promoted there);
+- on a pull request into `dev`, `staging` or `main` that changes `src/modules/*/domain/**`, `stryker.config.mjs` or the workflow itself;
+- on demand (`workflow_dispatch`);
+- locally with `pnpm mutation`; `pnpm mutation --force` ignores the incremental file.
+
+**Where the report is.** `reports/mutation/` (git-ignored): `mutation.html`, `mutation.json` and `stryker-incremental.json`. CI uploads the folder as the `mutation-report` artifact (14 days) and writes the score to the job's step summary through `scripts/mutation-summary.mjs`. The incremental file travels between runs as an Actions cache (`mutation-incremental-*`), so a later run re-tests only the mutants whose source or tests changed: the second local run below took 56 seconds and re-tested nothing.
+
+**Baseline.** Measured 2026-11-12 on `dev` at `fadd27b4` plus this configuration, on the 4-core VPS with `concurrency: 2`. `lookup-policy.ts` holds numeric constants only and yields no mutant.
+
+| Scope                                         | Mutants | Killed | Survived | No coverage | Compile errors | Score | Duration                                           |
+| --------------------------------------------- | ------- | ------ | -------- | ----------- | -------------- | ----- | -------------------------------------------------- |
+| `combos/domain` (`combo.ts`, `deck-query.ts`) | 37      | 27     | 0        | 0           | 10             | 100%  | 4 min 27 s, of which the dry run 181 tests in 34 s |
 
 ## Pre-PR checklist
 
@@ -99,19 +121,19 @@ Never grow the file to get a change through; a pull request that adds an entry s
 
 A gate marked `planned` does not exist yet. The gates land in stages ([ADR 0007](../adr/0007-architecture-enforcement-in-stages.md)), each in its own PR, which updates this table, `CLAUDE.md` and the agent rules. Until a gate exists, review checks its rule by hand.
 
-| Stage | Gate                                                                                                                                                                                                                                               | Will block                                      | Status  |
-| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- | ------- |
-| 1     | ESLint 9 flat config replaces `next lint` and `.eslintrc.json` (`next lint` is deprecated, and removed in Next 16). A prerequisite for stages 3–4. Done in #1351                                                                                   | as today                                        | done    |
-| 2     | The `server-only` package, with a Vitest stub. Done in #1356                                                                                                                                                                                       | a build that pulls server code into the browser | done    |
-| 3     | dependency-cruiser (`pnpm arch`). Runtime cycles fail at once (there are none); the 3 existing type-only cycles and the known layer and context violations start in a recorded baseline that may only shrink. It also generates the Mermaid graphs | a cycle or a new violation                      | done    |
-| 4     | ESLint `max-lines`, `max-lines-per-function` and `complexity`, with bulk suppressions as a ratchet                                                                                                                                                 | a new file over a limit, or a file that grows   | done    |
-| 5     | Knip: unused files, dependencies and exports                                                                                                                                                                                                       | nothing: an advisory report                     | planned |
-| 6     | `pnpm arch` joins the pre-PR gate in `CLAUDE.md`                                                                                                                                                                                                   | as stage 3                                      | done    |
-| —     | `eslint-plugin-jsdoc`: `require-jsdoc` on exports, then `informative-docs`, starting in `src/modules/**` ([ADR 0006](../adr/0006-comment-and-documentation-standard.md))                                                                           | a missing or restating doc comment              | planned |
-| —     | A lint rule for the typed `vi.mock(import("…"))` form and against new `vi.mock` of internal modules ([ADR 0005](../adr/0005-testing-strategy-fakes-contracts-and-characterization.md)). Done; see [Lint ratchet](#lint-ratchet)                    | a string-path or internal mock                  | done    |
-| —     | Coverage floors per layer in `src/modules/`: `domain/` at 90% and `application/` at 80% of lines and branches ([ADR 0010](../adr/0010-coverage-scope-by-layer.md)). Done; see [Coverage](#coverage)                                                | coverage under a floor, once a file matches it  | done    |
-| —     | StrykerJS mutation testing on `domain/` folders: nightly, then incremental on changed files ([ADR 0005](../adr/0005-testing-strategy-fakes-contracts-and-characterization.md))                                                                     | nothing at first: advisory                      | planned |
-| —     | Docs drift tests: glossary terms exist in code, the ADR index is complete, the dependency graph is generated ([ADR 0006](../adr/0006-comment-and-documentation-standard.md))                                                                       | a stale glossary, index or graph                | planned |
+| Stage | Gate                                                                                                                                                                                                                                                | Will block                                      | Status  |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- | ------- |
+| 1     | ESLint 9 flat config replaces `next lint` and `.eslintrc.json` (`next lint` is deprecated, and removed in Next 16). A prerequisite for stages 3–4. Done in #1351                                                                                    | as today                                        | done    |
+| 2     | The `server-only` package, with a Vitest stub. Done in #1356                                                                                                                                                                                        | a build that pulls server code into the browser | done    |
+| 3     | dependency-cruiser (`pnpm arch`). Runtime cycles fail at once (there are none); the 3 existing type-only cycles and the known layer and context violations start in a recorded baseline that may only shrink. It also generates the Mermaid graphs  | a cycle or a new violation                      | done    |
+| 4     | ESLint `max-lines`, `max-lines-per-function` and `complexity`, with bulk suppressions as a ratchet                                                                                                                                                  | a new file over a limit, or a file that grows   | done    |
+| 5     | Knip: unused files, dependencies and exports                                                                                                                                                                                                        | nothing: an advisory report                     | planned |
+| 6     | `pnpm arch` joins the pre-PR gate in `CLAUDE.md`                                                                                                                                                                                                    | as stage 3                                      | done    |
+| —     | `eslint-plugin-jsdoc`: `require-jsdoc` on exports, then `informative-docs`, starting in `src/modules/**` ([ADR 0006](../adr/0006-comment-and-documentation-standard.md))                                                                            | a missing or restating doc comment              | planned |
+| —     | A lint rule for the typed `vi.mock(import("…"))` form and against new `vi.mock` of internal modules ([ADR 0005](../adr/0005-testing-strategy-fakes-contracts-and-characterization.md)). Done; see [Lint ratchet](#lint-ratchet)                     | a string-path or internal mock                  | done    |
+| —     | Coverage floors per layer in `src/modules/`: `domain/` at 90% and `application/` at 80% of lines and branches ([ADR 0010](../adr/0010-coverage-scope-by-layer.md)). Done; see [Coverage](#coverage)                                                 | coverage under a floor, once a file matches it  | done    |
+| —     | StrykerJS mutation testing on `domain/` folders: nightly, then incremental on changed files ([ADR 0005](../adr/0005-testing-strategy-fakes-contracts-and-characterization.md)). Done; see [Mutation testing (advisory)](#mutation-testing-advisory) | nothing: advisory                               | done    |
+| —     | Docs drift tests: glossary terms exist in code, the ADR index is complete, the dependency graph is generated ([ADR 0006](../adr/0006-comment-and-documentation-standard.md))                                                                        | a stale glossary, index or graph                | planned |
 
 ## Promotion gate
 
