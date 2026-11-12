@@ -1,14 +1,26 @@
 "use client";
 /**
- * InitProvider — single bootstrap fetch on authentication.
- * Calls GET /api/user/init which returns onboarding status + collection
- * in one request with parallel DB queries. Replaces separate
- * CollectionProvider + useOnboarding fetch.
+ * The sign-in bootstrap: one GET /api/user/init answers the onboarding status
+ * and the player's collection, and `useInitContext` reports the request's
+ * progress to the pages that wait on it.
+ *
+ * Identity context, browser side. The provider owns the request lifecycle
+ * only. What the app does with the payload (hydrating the collection store)
+ * is composed by `app/[locale]/providers.tsx` through `onInitialized`, so
+ * this module depends on no store (master plan P1-38).
+ *
+ * @module providers/InitProvider
  */
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { useSession } from "next-auth/react";
-import { useCollectionStore } from "@/lib/collection/store";
-import { fetchUserInit } from "@/lib/auth/user-init";
+import { fetchUserInit, type UserInitData } from "@/lib/auth/user-init";
 
 interface InitContextValue {
   /** null = not yet loaded, boolean = resolved */
@@ -30,13 +42,31 @@ export function useInitContext(): InitContextValue {
   return useContext(InitContext);
 }
 
-export function InitProvider({ children }: { readonly children: React.ReactNode }) {
+interface InitProviderProps {
+  readonly children: React.ReactNode;
+  /**
+   * Receives every successful bootstrap payload, retries included, before
+   * the context turns ready. Keep its identity stable (`useCallback`): the
+   * request restarts when it changes, as it does when the session changes.
+   */
+  readonly onInitialized: (data: UserInitData) => void;
+}
+
+/**
+ * Runs the bootstrap request for the signed-in user and publishes its state.
+ *
+ * Signed out, the context stays idle with an unknown onboarding status. A
+ * failed or timed-out request turns the status to error and leaves the
+ * payload callback silent; `retryInitialization` sends the request again.
+ */
+export function InitProvider({
+  children,
+  onInitialized,
+}: Readonly<InitProviderProps>) {
   const { data: session, status } = useSession();
-  const hydrateCollection = useCollectionStore((s) => s.hydrateCollection);
   const [onboardingDone, setOnboardingDone] = useState<boolean | null>(null);
-  const [initializationStatus, setInitializationStatus] = useState<
-    InitContextValue["initializationStatus"]
-  >("idle");
+  const [initializationStatus, setInitializationStatus] =
+    useState<InitContextValue["initializationStatus"]>("idle");
   const [attempt, setAttempt] = useState(0);
   const retryInitialization = useCallback(() => {
     setAttempt((current) => current + 1);
@@ -57,7 +87,7 @@ export function InitProvider({ children }: { readonly children: React.ReactNode 
     fetchUserInit(userId)
       .then((data) => {
         if (!isCurrent) return;
-        hydrateCollection(data.collection);
+        onInitialized(data);
         setOnboardingDone(data.onboardingDone);
         setInitializationStatus("ready");
       })
@@ -69,12 +99,14 @@ export function InitProvider({ children }: { readonly children: React.ReactNode 
     return () => {
       isCurrent = false;
     };
-  }, [attempt, hydrateCollection, session?.user?.id, status]);
+  }, [attempt, onInitialized, session?.user?.id, status]);
 
   const contextValue = useMemo(
     () => ({ onboardingDone, initializationStatus, retryInitialization }),
     [initializationStatus, onboardingDone, retryInitialization]
   );
 
-  return <InitContext.Provider value={contextValue}>{children}</InitContext.Provider>;
+  return (
+    <InitContext.Provider value={contextValue}>{children}</InitContext.Provider>
+  );
 }

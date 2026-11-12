@@ -24,7 +24,7 @@ export interface CollectionStore {
   getTotalOwned: (scryfallId: string) => number;
 
   // Actions
-  /** Hydrate from pre-fetched data (used by InitProvider to avoid a second fetch) */
+  /** Hydrate from the sign-in bootstrap payload, which the app providers hand over so no page fetches the collection a second time. */
   hydrateCollection: (rawCards: readonly unknown[]) => void;
   loadCollection: () => Promise<void>;
   addToCollection: (input: AddToCollectionInput) => Promise<void>;
