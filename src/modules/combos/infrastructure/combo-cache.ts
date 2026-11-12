@@ -1,6 +1,16 @@
-// Server-side cache of combo lookups, keyed by a hash of the canonical card list.
+/**
+ * The server-side cache of combo lookups, keyed by a hash of the canonical
+ * card list: the `ComboCache` port over one per-instance `Map`.
+ *
+ * An adapter of the combos context. `readCachedCombos` and `storeCachedCombos`
+ * take the clock as a parameter so tests can age an entry; `comboCache` is the
+ * same pair on the real clock, as `server.ts` wires it into the lookup.
+ *
+ * @module combos/infrastructure/combo-cache
+ */
 import "server-only";
 import { createHash } from "node:crypto";
+import type { ComboCache } from "@/modules/combos/application/ports";
 import {
   deckComboQueryKey,
   type DeckComboQuery,
@@ -71,3 +81,9 @@ export function storeCachedCombos(
     if (!oldest.done) entries.delete(oldest.value);
   }
 }
+
+/** The cache `server.ts` wires into the lookup: the functions above on the real clock. */
+export const comboCache: ComboCache = {
+  read: (query) => readCachedCombos(query),
+  store: (query, combos) => storeCachedCombos(query, combos),
+};

@@ -2,17 +2,21 @@
  * The server side of combo detection: one Commander Spellbook `find-my-combos`
  * call per deck, answered as the combos the deck holds.
  *
- * The adapter of the combos context (ADR 0004). It sends the canonical card
- * list, validates the answer against `spellbookVariantSchema` and maps each
- * included variant to a `Combo` with `toCombo`; failures come back as a
- * `DeckCombosResult`, never as exceptions. `POST /api/combos` calls it through
- * `server.ts`, behind the cache in `combo-cache.ts`.
+ * The `ComboSource` adapter of the combos context (ADR 0004). It sends the
+ * canonical card list, validates the answer against `spellbookVariantSchema`
+ * and maps each included variant to a `Combo` with `toCombo`; failures come
+ * back as a `DeckCombosResult`, never as exceptions. `lookupDeckCombos` calls
+ * it, behind the cache and the budget, as `server.ts` wires them.
  *
  * @module combos/infrastructure/find-my-combos
  */
 import "server-only";
 import { z } from "zod";
 import { USER_AGENT } from "@/lib/http";
+import type {
+  ComboSource,
+  DeckCombosResult,
+} from "@/modules/combos/application/ports";
 import type { Combo } from "@/modules/combos/domain/combo";
 import type { DeckComboQuery } from "@/modules/combos/domain/deck-query";
 import {
@@ -56,13 +60,6 @@ export function parseFindMyCombos(payload: unknown): Combo[] | null {
   return parsed.data.results.included.map(toCombo).toSorted(byInfiniteThenSize);
 }
 
-/** What one Spellbook call came to. */
-export type DeckCombosResult =
-  | { readonly kind: "found"; readonly combos: readonly Combo[] }
-  | { readonly kind: "timeout" }
-  | { readonly kind: "unexpected-body" }
-  | { readonly kind: "failed"; readonly status: number | null };
-
 function toDeckRequest(query: DeckComboQuery) {
   return {
     commanders: query.commanders.map((card) => ({ card })),
@@ -105,3 +102,8 @@ export async function requestDeckCombos(
       : { kind: "failed", status: null };
   }
 }
+
+/** Commander Spellbook as the lookup's `ComboSource`, as `server.ts` wires it. */
+export const spellbookComboSource: ComboSource = {
+  findCombos: requestDeckCombos,
+};

@@ -19,11 +19,11 @@ import {
   FIND_MY_COMBOS_RECORDED,
   FIND_MY_COMBOS_RECORDED_REQUEST,
 } from "@/modules/combos/infrastructure/fixtures/find-my-combos-v1";
+import type { DeckCombosResult } from "@/modules/combos/application/ports";
 import {
   SPELLBOOK_FIND_MY_COMBOS_URL,
   SPELLBOOK_TIMEOUT_MS,
   requestDeckCombos,
-  type DeckCombosResult,
 } from "@/modules/combos/infrastructure/find-my-combos";
 import { USER_AGENT } from "@/lib/http";
 import { setupMsw } from "@/test/msw";

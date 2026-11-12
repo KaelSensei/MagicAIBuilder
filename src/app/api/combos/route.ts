@@ -1,3 +1,14 @@
+/**
+ * `POST /api/combos`: the HTTP face of the combo lookup.
+ *
+ * The route parses and validates the body, enforces the per-client rate limit
+ * and the body size, calls `lookupDeckCombos` from the combos context and maps
+ * its result to a status code, a body and a log line. The lookup itself (the
+ * canonical form, the cache, the Spellbook budget and the Spellbook call) lives
+ * in `@/modules/combos/server`. Any visitor may call it; there is no session.
+ *
+ * @module app/api/combos/route
+ */
 import { NextResponse } from "next/server";
 import { readJsonBody } from "@/lib/api/json-body";
 import { rateLimitResponse, retryAfterHeaders } from "@/lib/api/route-kit";
@@ -5,16 +16,13 @@ import {
   COMBO_LOOKUPS_PER_CLIENT,
   COMBO_LOOKUP_WINDOW_MS,
   MAX_QUERY_BODY_BYTES,
-  SPELLBOOK_CALLS_PER_WINDOW,
   deckComboQuerySchema,
-  normalizeDeckComboQuery,
   type Combo,
 } from "@/modules/combos";
 import {
-  readCachedCombos,
-  requestDeckCombos,
-  storeCachedCombos,
-  type DeckCombosResult,
+  lookupDeckCombos,
+  type DeckCombosFailure,
+  type LookupDeckCombosResult,
 } from "@/modules/combos/server";
 import { logger } from "@/lib/logger";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
@@ -42,10 +50,8 @@ function combosResponse(combos: readonly Combo[]): NextResponse {
   return NextResponse.json({ combos });
 }
 
-function upstreamFailureResponse(
-  result: Exclude<DeckCombosResult, { kind: "found" }>
-): NextResponse {
-  switch (result.kind) {
+function upstreamFailureResponse(failure: DeckCombosFailure): NextResponse {
+  switch (failure.kind) {
     case "timeout":
       logger.warn("Commander Spellbook timed out", "POST /api/combos");
       return NextResponse.json(UNAVAILABLE, { status: 504 });
@@ -57,9 +63,27 @@ function upstreamFailureResponse(
       return NextResponse.json(UNAVAILABLE, { status: 502 });
     case "failed":
       logger.warn("Commander Spellbook lookup failed", "POST /api/combos", {
-        status: result.status,
+        status: failure.status,
       });
       return NextResponse.json(UNAVAILABLE, { status: 502 });
+    default: {
+      const unhandled: never = failure;
+      return unhandled;
+    }
+  }
+}
+
+function lookupResponse(result: LookupDeckCombosResult): NextResponse {
+  switch (result.status) {
+    case "ok":
+      return combosResponse(result.combos);
+    case "budget-exhausted":
+      return NextResponse.json(UNAVAILABLE, {
+        status: 503,
+        headers: retryAfterHeaders(result),
+      });
+    case "upstream-failed":
+      return upstreamFailureResponse(result.failure);
     default: {
       const unhandled: never = result;
       return unhandled;
@@ -100,29 +124,5 @@ export async function POST(request: Request): Promise<NextResponse> {
     );
   }
 
-  const query = normalizeDeckComboQuery(parsed.data);
-  if (query.commanders.length + query.main.length === 0) {
-    return combosResponse([]);
-  }
-
-  const cached = readCachedCombos(query);
-  if (cached) return combosResponse(cached);
-
-  // Not under "combos:", so no client address can share this bucket.
-  const budget = checkRateLimit(
-    "spellbook-upstream",
-    SPELLBOOK_CALLS_PER_WINDOW,
-    COMBO_LOOKUP_WINDOW_MS
-  );
-  if (!budget.allowed) {
-    return NextResponse.json(UNAVAILABLE, {
-      status: 503,
-      headers: retryAfterHeaders(budget),
-    });
-  }
-
-  const result = await requestDeckCombos(query);
-  if (result.kind !== "found") return upstreamFailureResponse(result);
-  storeCachedCombos(query, result.combos);
-  return combosResponse(result.combos);
+  return lookupResponse(await lookupDeckCombos(parsed.data));
 }
