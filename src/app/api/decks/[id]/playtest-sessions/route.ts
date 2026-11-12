@@ -20,13 +20,21 @@
  * under the saved version.
  */
 
-import type { Prisma } from "@prisma/client";
+import type {
+  Prisma,
+  PlaytestSession as StoredPlaytestSession,
+} from "@prisma/client";
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/db/prisma";
 import { requireAuth } from "@/lib/auth/helpers";
 import { logRouteFailure, type RouteParams } from "@/lib/api/route-kit";
+import { logger } from "@/lib/logger";
 import type { PlaytestSession } from "@/lib/playtest/analytics";
+import {
+  isSessionDifficulty,
+  isSessionResult,
+} from "@/lib/playtest/session-enums";
 import { parseSessionInput, summarizeSessions } from "@/lib/playtest/session-input";
 import { readJsonBody } from "@/lib/api/json-body";
 import { compareSessionGroups } from "@/lib/playtest/comparison";
@@ -63,6 +71,46 @@ async function findOwnedDeck(deckId: string, userId: string) {
 }
 
 /**
+ * Narrows one stored row to the session the aggregates read.
+ *
+ * `result` and `difficulty` are plain strings in Postgres, written only
+ * through `parseSessionInput`, so a value outside the known sets means a row
+ * edited behind the API. A row whose result no aggregate can count is skipped
+ * and logged rather than inflating the totals; a difficulty nobody knows is
+ * read as not recorded.
+ *
+ * @param row - the row as Prisma returns it
+ * @returns the session, or null when its result is not one the app records
+ */
+function toPlaytestSession(row: StoredPlaytestSession): PlaytestSession | null {
+  if (!isSessionResult(row.result)) {
+    logger.warn(
+      "Skipping a playtest session with an unknown result",
+      "GET /api/decks/:id/playtest-sessions",
+      { sessionId: row.id, result: row.result }
+    );
+    return null;
+  }
+  return {
+    id: row.id,
+    deckId: row.deckId,
+    userId: row.userId,
+    result: row.result,
+    turns: row.turns,
+    mulliganCount: row.mulliganCount,
+    difficulty: isSessionDifficulty(row.difficulty)
+      ? row.difficulty
+      : undefined,
+    notes: row.notes ?? undefined,
+    proposedChange: row.proposedChange ?? undefined,
+    snapshotId: row.snapshotId ?? undefined,
+    cardsSeen: row.cardsSeen ?? undefined,
+    additionalCardsSeen: row.additionalCardsSeen ?? undefined,
+    createdAt: row.createdAt,
+  };
+}
+
+/**
  * Loads the caller's sessions for a deck, newest first.
  *
  * @param deckId Deck identifier.
@@ -76,22 +124,10 @@ async function loadSessions(deckId: string, userId: string): Promise<PlaytestSes
     take: MAX_SESSIONS,
   });
 
-  // The column is a plain string; analytics expects the narrowed union.
-  return rows.map((row) => ({
-    id: row.id,
-    deckId: row.deckId,
-    userId: row.userId,
-    result: row.result as PlaytestSession["result"],
-    turns: row.turns,
-    mulliganCount: row.mulliganCount,
-    difficulty: (row.difficulty ?? undefined) as PlaytestSession["difficulty"],
-    notes: row.notes ?? undefined,
-    proposedChange: row.proposedChange ?? undefined,
-    snapshotId: row.snapshotId ?? undefined,
-    cardsSeen: row.cardsSeen ?? undefined,
-    additionalCardsSeen: row.additionalCardsSeen ?? undefined,
-    createdAt: row.createdAt,
-  }));
+  return rows.flatMap((row) => {
+    const session = toPlaytestSession(row);
+    return session === null ? [] : [session];
+  });
 }
 
 /**

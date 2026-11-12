@@ -293,11 +293,6 @@
       "count": 1
     }
   },
-  "src/app/api/decks/[id]/playtest-sessions/route.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 2
-    }
-  },
   "src/app/api/decks/[id]/route.test.ts": {
     "no-restricted-syntax": {
       "count": 1
@@ -1140,9 +1135,6 @@
     }
   },
   "src/components/playtest/PlaytestHistoryPanel.tsx": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    },
     "max-lines-per-function": {
       "count": 1
     }
@@ -1747,9 +1739,6 @@
     }
   },
   "src/lib/playtest/session-input.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 4
-    },
     "complexity": {
       "count": 1
     }
@@ -1757,11 +1746,6 @@
   "src/lib/playtest/store.ts": {
     "max-lines-per-function": {
       "count": 2
-    }
-  },
-  "src/lib/playtest/summary-view.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
     }
   },
   "src/lib/ratings/ratings.ts": {

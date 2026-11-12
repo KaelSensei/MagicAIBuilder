@@ -15,6 +15,14 @@
 import { isRecordOrArray } from "@/lib/guards";
 import { maxMulligans } from "./engine";
 import {
+  SESSION_DIFFICULTIES,
+  SESSION_RESULTS,
+  isSessionDifficulty,
+  isSessionResult,
+  type SessionDifficulty,
+  type SessionResult,
+} from "./session-enums";
+import {
   buildTrendData,
   calculateAverageTurns,
   calculateWinRate,
@@ -25,14 +33,6 @@ import {
   type PlaytestSession,
   type TrendPoint,
 } from "./analytics";
-
-/** The three outcomes the schema stores. */
-export const SESSION_RESULTS = ["win", "loss", "draw"] as const;
-export type SessionResult = (typeof SESSION_RESULTS)[number];
-
-/** Opponent strength, when the player chooses to say. */
-export const SESSION_DIFFICULTIES = ["budget", "mid-range", "cedh"] as const;
-export type SessionDifficulty = (typeof SESSION_DIFFICULTIES)[number];
 
 /**
  * Most mulligans any playtest can record: down to a zero-card hand (CR 103.5),
@@ -128,7 +128,7 @@ export function parseSessionInput(payload: unknown): ParseResult {
     additionalCardsSeen,
   } = payload;
 
-  if (!SESSION_RESULTS.includes(result as SessionResult)) {
+  if (!isSessionResult(result)) {
     return fail(`result must be one of ${SESSION_RESULTS.join(", ")}`);
   }
 
@@ -144,7 +144,7 @@ export function parseSessionInput(payload: unknown): ParseResult {
     return fail(`mulliganCount must be a whole number between 0 and ${MAX_RECORDED_MULLIGANS}`);
   }
 
-  if (difficulty !== undefined && !SESSION_DIFFICULTIES.includes(difficulty as SessionDifficulty)) {
+  if (difficulty !== undefined && !isSessionDifficulty(difficulty)) {
     return fail(`difficulty must be one of ${SESSION_DIFFICULTIES.join(", ")}`);
   }
 
@@ -177,10 +177,10 @@ export function parseSessionInput(payload: unknown): ParseResult {
   return {
     ok: true,
     value: {
-      result: result as SessionResult,
+      result,
       turns,
       mulliganCount: mulligans,
-      difficulty: difficulty as SessionDifficulty | undefined,
+      difficulty,
       notes: trimmed === "" ? undefined : trimmed,
       proposedChange: trimmedProposedChange === "" ? undefined : trimmedProposedChange,
       snapshotId: typeof snapshotId === "string" ? snapshotId.trim() : undefined,

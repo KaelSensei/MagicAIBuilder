@@ -9,7 +9,7 @@
  */
 
 import type { MatchupStat, MulliganBucket, TrendPoint } from "./analytics";
-import { SESSION_DIFFICULTIES } from "./session-input";
+import { SESSION_DIFFICULTIES, isSessionDifficulty } from "./session-enums";
 
 /** Which way the win rate is moving, or that there is not enough play to say. */
 export type TrendDirection = "improving" | "steady" | "declining" | "insufficient";
@@ -125,10 +125,10 @@ export interface MatchupRow {
  * @returns one row per difficulty played, weakest opponent first
  */
 export function matchupRows(matchups: Record<string, MatchupStat>): readonly MatchupRow[] {
-  const rank = (difficulty: string): number => {
-    const index = SESSION_DIFFICULTIES.indexOf(difficulty as never);
-    return index === -1 ? SESSION_DIFFICULTIES.length : index;
-  };
+  const rank = (difficulty: string): number =>
+    isSessionDifficulty(difficulty)
+      ? SESSION_DIFFICULTIES.indexOf(difficulty)
+      : SESSION_DIFFICULTIES.length;
 
   return Object.entries(matchups)
     .map(([difficulty, stat]) => ({

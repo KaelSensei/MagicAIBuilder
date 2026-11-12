@@ -11,7 +11,7 @@ import {
   trendDirection,
   type TrendDirection,
 } from "@/lib/playtest/summary-view";
-import { SESSION_DIFFICULTIES } from "@/lib/playtest/session-input";
+import { isSessionDifficulty } from "@/lib/playtest/session-enums";
 import { PlaytestComparisonPanel } from "./PlaytestComparisonPanel";
 
 interface PlaytestHistoryPanelProps {
@@ -71,9 +71,7 @@ export function PlaytestHistoryPanel({ deckId }: PlaytestHistoryPanelProps) {
 
   /** Known difficulties get a translated label; anything else shows as stored. */
   const difficultyLabel = (value: string): string =>
-    (SESSION_DIFFICULTIES as readonly string[]).includes(value)
-      ? t(`difficulty.${value}`)
-      : value;
+    isSessionDifficulty(value) ? t(`difficulty.${value}`) : value;
 
   return (
     <div className="w-full max-w-md rounded-lg border border-[var(--border)] bg-[var(--surface-hover)] p-4">
