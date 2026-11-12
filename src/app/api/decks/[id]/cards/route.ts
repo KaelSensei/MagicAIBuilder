@@ -2,33 +2,33 @@
  * `/api/decks/[id]/cards`: the owner adds one card (POST), applies a bulk
  * edit (PATCH) or removes every card (DELETE).
  *
- * POST and DELETE go through the deck repository, which writes the card rows
- * and steps the deck's `version` in one transaction. They accept an optional
- * `expectedVersion` (POST: in the JSON body; DELETE: `?expectedVersion=`) and
- * answer 409 when another write landed since the client read the deck; their
- * success bodies carry the deck's new `version`. The bulk edit keeps its own
- * transaction and does not step the version yet.
+ * All three go through the deck repository, which writes the card rows and
+ * steps the deck's `version` in one transaction. They accept an optional
+ * `expectedVersion` (POST and PATCH: in the JSON body; DELETE:
+ * `?expectedVersion=`) and answer 409 when another write landed since the
+ * client read the deck; their success bodies carry the deck's new `version`.
+ * The bulk edit also answers 409 when it names a row the deck no longer
+ * holds: the list was edited from an outdated copy.
  */
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import {
   addCardRequestSchema,
   deckCardChangesSchema,
-  type DeckCardChangesInput,
 } from "@/lib/validation/card";
-import { forEachSequential } from "@/lib/async/sequential";
 import { requireDeckOwner } from "@/lib/auth/helpers";
 import { logger } from "@/lib/logger";
 import { readJsonBody } from "@/lib/api/json-body";
 import {
   deckWriteResponse,
   readExpectedVersionQuery,
-  staleDeckResponse,
 } from "@/lib/api/versioned-deck-write";
-import { duplicatesOtherCommandSlot } from "@/lib/deck/commander-pairing";
-import { COMMAND_SLOT_ROWS } from "@/lib/deck/bulk-edit-command-zone";
+import {
+  commandPairRefusal,
+  duplicatesOtherCommandSlot,
+  type CommandSlotIds,
+} from "@/lib/deck/commander-pairing";
 import { deckRepository } from "@/lib/deck/deck-repository";
 
 type Params = { params: Promise<{ id: string }> };
@@ -98,56 +98,11 @@ export async function POST(request: Request, { params }: Params) {
 }
 
 /**
- * The change set names a row this deck does not hold — it was edited from a
- * stale copy. Thrown inside the transaction so nothing already written stays.
+ * The stored slots `commandPairRefusal` would fall back on. A bulk edit
+ * names every slot in `commandZone` (the schema makes each key required), so
+ * no stored slot is ever read and the deck needs no extra lookup.
  */
-class StaleDeckCardsError extends Error {
-  constructor() {
-    super("The deck changed since it was opened");
-    this.name = "StaleDeckCardsError";
-  }
-}
-
-/**
- * Writes one bulk edit's row changes inside a transaction.
- *
- * @param tx - the transaction every write goes through
- * @param deckId - deck being edited
- * @param changes - validated row changes
- * @returns the deck with all its cards, as saved
- * @throws StaleDeckCardsError when a removed or resized row is not in this deck
- */
-async function applyDeckCardChanges(
-  tx: Prisma.TransactionClient,
-  deckId: string,
-  changes: DeckCardChangesInput
-) {
-  if (changes.removeCardIds.length > 0) {
-    const removed = await tx.deckCard.deleteMany({
-      where: { deckId, id: { in: [...changes.removeCardIds] } },
-    });
-    if (removed.count !== new Set(changes.removeCardIds).size) throw new StaleDeckCardsError();
-  }
-  // A slot is cleared by role: the editor may know a hand-picked commander only
-  // by its printing id, and earlier picks can have left more than one row.
-  await forEachSequential(changes.clearCommandSlots, (slot) =>
-    tx.deckCard.deleteMany({ where: { deckId, ...COMMAND_SLOT_ROWS[slot] } })
-  );
-  await forEachSequential(changes.quantityChanges, async ({ cardId, quantity }) => {
-    const resized = await tx.deckCard.updateMany({ where: { id: cardId, deckId }, data: { quantity } });
-    if (resized.count !== 1) throw new StaleDeckCardsError();
-  });
-  if (changes.addCards.length > 0) {
-    await tx.deckCard.createMany({
-      data: changes.addCards.map((card) => ({ ...card, deckId })),
-    });
-  }
-  return tx.deck.update({
-    where: { id: deckId },
-    data: { ...changes.commandZone, updatedAt: new Date() },
-    include: { cards: true },
-  });
-}
+const NO_STORED_SLOTS: CommandSlotIds = { commanderId: null, partnerId: null };
 
 // PATCH /api/decks/[id]/cards — apply a bulk edit: every row change or none
 export async function PATCH(request: Request, { params }: Params) {
@@ -167,23 +122,40 @@ export async function PATCH(request: Request, { params }: Params) {
       );
     }
 
-    const commandZone = parsed.data.commandZone;
-    if (
-      commandZone?.partnerId &&
-      (await duplicatesOtherCommandSlot(commandZone.partnerId, commandZone.commanderId))
-    ) {
-      return NextResponse.json(
-        { error: "Commander and partner must be different cards" },
-        { status: 400 }
-      );
-    }
+    const {
+      expectedVersion,
+      commandZone,
+      removeCardIds,
+      quantityChanges,
+      addCards,
+      clearCommandSlots,
+    } = parsed.data;
 
-    const deck = await prisma.$transaction((tx) =>
-      applyDeckCardChanges(tx, deckId, parsed.data)
+    // The same pair rules as PATCH …/command-zone (CR 903.5b, CR 702.124); an
+    // edit that leaves the command zone alone is not judged.
+    const refusal = commandZone
+      ? await commandPairRefusal(commandZone, NO_STORED_SLOTS)
+      : null;
+    if (refusal) return NextResponse.json({ error: refusal }, { status: 400 });
+
+    const result = await deckRepository.applyBulkEdit(
+      { deckId, expectedVersion },
+      {
+        removeCardIds,
+        quantityChanges,
+        addCards,
+        clearSlots: clearCommandSlots,
+        fields: commandZone ?? {},
+      }
     );
-    return NextResponse.json(deck);
+    return deckWriteResponse(result, async ({ value, version }) => {
+      // The body is the deck as GET answers it. The rows and the version come
+      // from the write's transaction, so they agree; the deck's other columns
+      // are not versioned and are read after it.
+      const deck = await prisma.deck.findUnique({ where: { id: deckId } });
+      return NextResponse.json({ ...deck, cards: value, version });
+    });
   } catch (error) {
-    if (error instanceof StaleDeckCardsError) return staleDeckResponse();
     logger.error(error instanceof Error ? error.message : "unknown", "PATCH /api/decks/:id/cards", { deckId: String(deckId).slice(0, 50) });
     return NextResponse.json(
       { error: "Failed to save deck changes" },

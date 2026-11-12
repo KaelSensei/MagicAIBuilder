@@ -265,7 +265,7 @@
   },
   "src/app/api/decks/[id]/cards/route.patch.test.ts": {
     "no-restricted-syntax": {
-      "count": 2
+      "count": 1
     }
   },
   "src/app/api/decks/[id]/cards/route.test.ts": {

@@ -125,7 +125,10 @@ const deckCardRowIdSchema = z.string().min(1).max(64);
 /** The three command-zone slots, as the routes name them. */
 export const commandSlotSchema = z.enum(["commander", "partner", "companion"]);
 
-// Schema for PATCH /api/decks/[id]/cards — one bulk edit, applied atomically
+/**
+ * Body of PATCH /api/decks/[id]/cards: one bulk edit, applied atomically, and
+ * the deck version the writer read (`expectedVersion`, optional).
+ */
 export const deckCardChangesSchema = z.object({
   removeCardIds: z.array(deckCardRowIdSchema).max(MAX_BULK_CARD_CHANGES),
   quantityChanges: z
@@ -149,6 +152,7 @@ export const deckCardChangesSchema = z.object({
       pairingType: pairingTypeSchema,
     })
     .optional(),
+  ...expectedVersionField,
 });
 
 export type DeckCardChangesInput = z.infer<typeof deckCardChangesSchema>;
