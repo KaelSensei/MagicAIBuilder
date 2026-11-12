@@ -96,7 +96,9 @@ describe("the stand-in's card search", () => {
 
 describe("the stand-in's query parsing", () => {
   it("narrows nothing on a quoted filter value, so a Partner query with spaces still names no card", async () => {
-    const response = await search({ q: 'is:commander o:"Partner with" grizzly' });
+    const response = await search({
+      q: 'is:commander o:"Partner with" grizzly',
+    });
     expect(await names(response)).toEqual(["Grizzly Bears"]);
     expect(
       (await search({ q: 'is:commander o:"Doctor\'s companion"' })).status
