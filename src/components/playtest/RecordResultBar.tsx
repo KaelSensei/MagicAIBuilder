@@ -7,11 +7,13 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   MAX_SESSION_NOTES_LENGTH,
   MAX_PROPOSED_CHANGE_LENGTH,
+} from "@/lib/playtest/session-input";
+import {
   SESSION_DIFFICULTIES,
   SESSION_RESULTS,
   type SessionDifficulty,
   type SessionResult,
-} from "@/lib/playtest/session-input";
+} from "@/lib/playtest/session-enums";
 import { logger } from "@/lib/logger";
 
 interface RecordResultBarProps {

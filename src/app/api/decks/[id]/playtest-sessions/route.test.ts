@@ -142,6 +142,37 @@ describe("GET /api/decks/[id]/playtest-sessions", () => {
     expect(body.summary.winRate).toBe(50);
   });
 
+  it("skips a stored row whose result is not one the app records", async () => {
+    // The column is a plain string. A row edited behind the API cannot be
+    // counted by any aggregate, so it must not inflate the total either.
+    signedInAs("owner-1");
+    mockDeckFindUnique.mockResolvedValue(OWNED_DECK);
+    mockSessionFindMany.mockResolvedValue([
+      row(),
+      row({ id: "s2", result: "victory" }),
+    ]);
+
+    const body = await (await GET(new Request("http://localhost"), params())).json();
+
+    expect(body.sessions.map((session: { id: string }) => session.id)).toEqual(["s1"]);
+    expect(body.summary.total).toBe(1);
+  });
+
+  it("reads a stored difficulty nobody knows as not recorded", async () => {
+    signedInAs("owner-1");
+    mockDeckFindUnique.mockResolvedValue(OWNED_DECK);
+    mockSessionFindMany.mockResolvedValue([
+      row({ difficulty: "cedh" }),
+      row({ id: "s2", difficulty: "competitive" }),
+    ]);
+
+    const body = await (await GET(new Request("http://localhost"), params())).json();
+
+    expect(body.sessions[0].difficulty).toBe("cedh");
+    expect(body.sessions[1].difficulty).toBeUndefined();
+    expect(Object.keys(body.summary.matchups)).toEqual(["cedh"]);
+  });
+
   it("scopes the query to the caller, not just the deck", async () => {
     // Two players practising the same deck must not see each other's runs.
     signedInAs("owner-1");
