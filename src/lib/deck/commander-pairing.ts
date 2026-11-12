@@ -1,5 +1,6 @@
 /**
- * Server checks of a deck's two command slots against Scryfall card data.
+ * Server checks of a deck's two command slots against Scryfall card data, and
+ * the refusal text the deck write routes answer when the pair cannot be saved.
  *
  * @module deck/commander-pairing
  */
@@ -75,4 +76,42 @@ export async function commandPairProblem(
   return canPairCommanders(pairingCardOf(commander), pairingCardOf(partner))
     ? null
     : "unpairable";
+}
+
+/** The printing each command slot holds; `null` for an empty slot. */
+export interface CommandSlotIds {
+  readonly commanderId: string | null;
+  readonly partnerId: string | null;
+}
+
+/** The `error` a deck write answers for each pair problem. */
+export const PAIR_PROBLEM_MESSAGES: Readonly<
+  Record<CommandPairProblem, string>
+> = {
+  sameCard: "Commander and partner must be different cards",
+  unpairable: "Commander and partner cannot share the command zone",
+};
+
+/**
+ * Why the command slots a write leaves cannot be saved together, as the deck
+ * write routes answer it. A slot the write does not name keeps its stored
+ * printing; a pair with an empty slot is always fine.
+ *
+ * @param next - The slot printings the write names; an absent key keeps the stored one.
+ * @param existing - The slot printings the deck holds now.
+ * @returns The 400 `error` text, or null when the pair can be saved.
+ */
+export async function commandPairRefusal(
+  next: Partial<CommandSlotIds>,
+  existing: CommandSlotIds
+): Promise<string | null> {
+  const commanderId =
+    next.commanderId === undefined ? existing.commanderId : next.commanderId;
+  const partnerId =
+    next.partnerId === undefined ? existing.partnerId : next.partnerId;
+  if (!commanderId || !partnerId) return null;
+  // CR 903.5b: the same printing in both slots needs no card lookup to refuse.
+  if (commanderId === partnerId) return PAIR_PROBLEM_MESSAGES.sameCard;
+  const problem = await commandPairProblem(commanderId, partnerId);
+  return problem ? PAIR_PROBLEM_MESSAGES[problem] : null;
 }

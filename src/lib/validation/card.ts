@@ -1,6 +1,7 @@
 /**
- * Zod schemas for the deck card routes: add, patch and delete one card, and the bulk edit, with
- * the deck version the writer read. Card categories come from the deck domain's tuple.
+ * Zod schemas for the deck card routes: add, patch and delete one card, the bulk edit and the
+ * command-zone change, with the deck version the writer read. Card categories come from the deck
+ * domain's tuple.
  */
 import { z } from "zod";
 import { SCRYFALL_ID_PATTERN } from "@/lib/scryfall/scryfall-id";
@@ -148,3 +149,35 @@ export const deckCardChangesSchema = z.object({
 });
 
 export type DeckCardChangesInput = z.infer<typeof deckCardChangesSchema>;
+
+/** The three command-zone slots, as the routes name them. */
+export const commandSlotSchema = z.enum(["commander", "partner", "companion"]);
+
+/**
+ * Most rows one command-zone change may remove by id or add: one per slot.
+ * A change clears whole slots by role, so it never needs more.
+ */
+export const MAX_COMMAND_ZONE_ROWS = 3;
+
+/**
+ * Body of PATCH /api/decks/[id]/command-zone: one command-zone change, applied atomically.
+ * Every `commandZone` key is optional and the route writes exactly the keys present; `null`
+ * empties a slot.
+ */
+export const commandZoneChangeSchema = z.object({
+  /** Main-deck rows that leave with the change, such as a promoted card's row. */
+  removeCardIds: z.array(deckCardRowIdSchema).max(MAX_COMMAND_ZONE_ROWS),
+  /** Slots whose rows are removed, whichever rows hold them. */
+  clearCommandSlots: z.array(commandSlotSchema).max(MAX_COMMAND_ZONE_ROWS),
+  addCards: z.array(addCardSchema).max(MAX_COMMAND_ZONE_ROWS),
+  commandZone: z.object({
+    commanderId: deckCardIdSchema.nullable().optional(),
+    commanderName: z.string().max(200).nullable().optional(),
+    partnerId: deckCardIdSchema.nullable().optional(),
+    companionId: deckCardIdSchema.nullable().optional(),
+    pairingType: pairingTypeSchema.optional(),
+  }),
+  ...expectedVersionField,
+});
+
+export type CommandZoneChangeInput = z.infer<typeof commandZoneChangeSchema>;

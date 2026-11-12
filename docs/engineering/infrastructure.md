@@ -154,6 +154,7 @@ All CRUD operations go through Next.js App Router API routes:
 | DELETE | `/api/decks/[id]/cards`          | Remove all cards             |
 | DELETE | `/api/decks/[id]/cards/[cardId]` | Remove one card              |
 | PATCH  | `/api/decks/[id]/cards/[cardId]` | Update card (category, etc.) |
+| PATCH  | `/api/decks/[id]/command-zone`   | Change the command zone      |
 | GET    | `/api/cache/cards?id=<id>`       | Card via server-filled cache |
 
 ### Deck version on card writes
@@ -164,13 +165,22 @@ card write, in the same transaction as the card rows
 deck.
 
 The four single-card routes (`POST` and `DELETE /api/decks/[id]/cards`,
-`PATCH` and `DELETE /api/decks/[id]/cards/[cardId]`) accept an optional
+`PATCH` and `DELETE /api/decks/[id]/cards/[cardId]`) and the command-zone
+route (`PATCH /api/decks/[id]/command-zone`) accept an optional
 `expectedVersion`, the version the client last read:
 
-| Route kind  | Where `expectedVersion` goes         | Success body                                    |
-| ----------- | ------------------------------------ | ----------------------------------------------- |
-| POST, PATCH | JSON body field, an integer from 0   | The card row, plus `version` (POST answers 201) |
-| DELETE      | Query string, `?expectedVersion=<n>` | `{ "success": true, "version": <n> }`           |
+| Route kind                | Where `expectedVersion` goes         | Success body                                    |
+| ------------------------- | ------------------------------------ | ----------------------------------------------- |
+| POST, PATCH on a card     | JSON body field, an integer from 0   | The card row, plus `version` (POST answers 201) |
+| DELETE                    | Query string, `?expectedVersion=<n>` | `{ "success": true, "version": <n> }`           |
+| PATCH on the command zone | JSON body field, an integer from 0   | `{ "cards": [added rows], "version": <n> }`     |
+
+The command-zone route takes the whole change in one body: `removeCardIds`
+(main-deck rows that leave, such as a promoted card's row), `clearCommandSlots`
+(slots whose rows leave, matched by role), `addCards` (the rows that enter) and
+`commandZone` (the deck fields to write; an absent key keeps the stored value).
+The repository stores all of it in one transaction, so a failed request leaves
+the deck exactly as it was.
 
 DELETE takes the query string because a DELETE body has no defined meaning and
 some proxies reject one (RFC 9110 §9.3.5).

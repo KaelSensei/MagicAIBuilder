@@ -1,6 +1,7 @@
 /**
  * In-memory `Deck` and `DeckCard` tables with the commit rule of a Prisma
- * interactive transaction, for the card routes under `/api/decks/[id]/cards`.
+ * interactive transaction, for the card routes under `/api/decks/[id]/cards`
+ * and the command-zone route `/api/decks/[id]/command-zone`.
  *
  * Why: those routes must change a card, the deck's `updatedAt` and its
  * `version` together or not at all (B2-09, and the optimistic lock of
@@ -12,7 +13,8 @@
  *
  * Rows reuse the deck-card shape of {@link deckCard} from the playtest fake.
  * `select` and `include` are ignored: a lookup returns the whole row. A
- * `where` value of `undefined` filters nothing, as in Prisma.
+ * `where` value of `undefined` filters nothing, and `{ in: [...] }` matches
+ * any listed value, as in Prisma.
  */
 import {
   deckCard,
@@ -21,26 +23,32 @@ import {
 } from "@/test/playtest-db-fake";
 import { prismaQuery } from "@/test/prisma-query";
 
-/** The `Deck` columns the card routes read or write. */
+/** The `Deck` columns the card and command-zone routes read or write. */
 export type FakeCardsDeck = {
   readonly id: string;
   readonly userId: string;
   readonly commanderId: string | null;
+  readonly commanderName: string | null;
   readonly partnerId: string | null;
+  readonly companionId: string | null;
+  readonly pairingType: string;
   readonly updatedAt: Date;
   /** The optimistic-lock counter: how many card writes the deck has saved. */
   readonly version: number;
 };
 
 /**
- * The deck every reset starts from: owned by `FAKE_DECK.userId`, last edited
- * 2026-11-01, after seven saved writes.
+ * The deck every reset starts from: owned by `FAKE_DECK.userId`, with an
+ * empty command zone, last edited 2026-11-01, after seven saved writes.
  */
 export const CARDS_DECK: FakeCardsDeck = {
   id: FAKE_DECK.id,
   userId: FAKE_DECK.userId,
   commanderId: null,
+  commanderName: null,
   partnerId: null,
+  companionId: null,
+  pairingType: "none",
   updatedAt: new Date("2026-11-01T10:00:00.000Z"),
   version: 7,
 };
@@ -53,15 +61,29 @@ interface Tables {
   cards: readonly FakeDeckCard[];
 }
 
+/** Prisma's `{ in: [...] }` list filter on one column. */
+function isInFilter(
+  value: unknown
+): value is { readonly in: readonly unknown[] } {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "in" in value &&
+    Array.isArray(value.in)
+  );
+}
+
 /**
  * @param row - Stored row.
- * @param where - Equality filter on top-level columns.
+ * @param where - Filter on top-level columns: a value to equal, or `{ in: [...] }`.
  * @returns Whether the row holds every value of the filter.
  */
 function matches(row: Filter, where: Filter): boolean {
-  return Object.entries(where).every(
-    ([key, value]) => value === undefined || row[key] === value
-  );
+  return Object.entries(where).every(([key, value]) => {
+    if (value === undefined) return true;
+    if (isInFilter(value)) return value.in.includes(row[key]);
+    return row[key] === value;
+  });
 }
 
 /** The `where` and `data` of the version claim (`deck.updateMany`). */
@@ -215,12 +237,17 @@ function createDeckCardsDb() {
   return {
     prisma,
     /**
-     * Stores {@link CARDS_DECK} with `cards` and clears any planned failure.
+     * Stores `deck` ({@link CARDS_DECK} by default) with `cards` and clears
+     * any planned failure.
      *
      * @param cards - The deck's card rows.
+     * @param deck - The deck row, for a test that starts from a filled command zone.
      */
-    reset(cards: readonly FakeDeckCard[]): void {
-      stored.deck = CARDS_DECK;
+    reset(
+      cards: readonly FakeDeckCard[],
+      deck: FakeCardsDeck = CARDS_DECK
+    ): void {
+      stored.deck = deck;
       stored.cards = cards;
       failDeckTouch = false;
       failCardWrite = false;

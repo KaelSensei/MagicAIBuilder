@@ -13,9 +13,11 @@
  * (docs/architecture/target-structure.md, step 5).
  *
  * Callers: the single-card handlers of `/api/decks/[id]/cards` and
- * `/api/decks/[id]/cards/[cardId]`. Not yet the bulk edit
- * (`PATCH /api/decks/[id]/cards`) nor the other deck writes; until they move
- * here, they do not move the version.
+ * `/api/decks/[id]/cards/[cardId]`, and the command-zone handler
+ * `PATCH /api/decks/[id]/command-zone`, whose row changes and deck fields
+ * used to be three browser requests that could each fail on their own. Not
+ * yet the bulk edit (`PATCH /api/decks/[id]/cards`) nor the other deck
+ * writes; until they move here, they do not move the version.
  * Port and contract: `deck-repository-port.ts`,
  * `testing/deck-repository-contract.ts`.
  *
@@ -24,11 +26,16 @@
 import "server-only";
 import type { Prisma, PrismaClient } from "@prisma/client";
 
+import { forEachSequential } from "@/lib/async/sequential";
 import { prisma } from "@/lib/db/prisma";
+import { COMMAND_SLOT_ROWS } from "@/lib/deck/bulk-edit-command-zone";
 import type {
+  CommandZoneWrite,
   DeckRepository,
   DeckWriteResult,
   DeckWriteTarget,
+  NewDeckCard,
+  StoredDeckCard,
 } from "@/lib/deck/deck-repository-port";
 
 type Transaction = Prisma.TransactionClient;
@@ -88,6 +95,44 @@ function versionedWrite<Value>(
   });
 }
 
+/** The `create` data of a new row: the port's readonly array made mutable for Prisma. */
+function newRow(deckId: string, card: NewDeckCard) {
+  return { ...card, colorIdentity: [...card.colorIdentity], deckId };
+}
+
+/**
+ * Writes a command-zone change inside the transaction that claimed the
+ * version: the deck fields first, then the rows that leave, then the rows
+ * that enter. A throw at any step rolls the whole change back.
+ *
+ * @returns the added rows, in the order they were given
+ * @throws when the deck holds no row for one of `removeCardIds`: Prisma's
+ *   `deleteMany` reports a count, not an error, so the count is checked here
+ */
+async function writeCommandZone(
+  tx: Transaction,
+  deckId: string,
+  write: CommandZoneWrite
+): Promise<readonly StoredDeckCard[]> {
+  await tx.deck.update({ where: { id: deckId }, data: write.fields });
+  if (write.removeCardIds.length > 0) {
+    const removed = await tx.deckCard.deleteMany({
+      where: { deckId, id: { in: [...write.removeCardIds] } },
+    });
+    if (removed.count !== new Set(write.removeCardIds).size) {
+      throw new Error("A card to remove is not in this deck");
+    }
+  }
+  await forEachSequential(write.clearSlots, (slot) =>
+    tx.deckCard.deleteMany({ where: { deckId, ...COMMAND_SLOT_ROWS[slot] } })
+  );
+  const added: StoredDeckCard[] = [];
+  await forEachSequential(write.addCards, async (card) => {
+    added.push(await tx.deckCard.create({ data: newRow(deckId, card) }));
+  });
+  return added;
+}
+
 /**
  * Builds the repository on a Prisma client.
  *
@@ -103,13 +148,7 @@ export function prismaDeckRepository(client: PrismaClient): DeckRepository {
   return {
     addCard: (target, card) =>
       versionedWrite(client, target, (tx) =>
-        tx.deckCard.create({
-          data: {
-            ...card,
-            colorIdentity: [...card.colorIdentity],
-            deckId: target.deckId,
-          },
-        })
+        tx.deckCard.create({ data: newRow(target.deckId, card) })
       ),
     editCard: (target, cardId, edit) =>
       versionedWrite(client, target, (tx) =>
@@ -129,6 +168,10 @@ export function prismaDeckRepository(client: PrismaClient): DeckRepository {
         });
         return removed.count;
       }),
+    writeCommandZone: (target, write) =>
+      versionedWrite(client, target, (tx) =>
+        writeCommandZone(tx, target.deckId, write)
+      ),
   };
 }
 

@@ -20,6 +20,8 @@
  *
  * @module deck/deck-repository-port
  */
+import type { CommandSlot } from "@/lib/deck/bulk-edit-command-zone";
+import type { CommanderPairingType } from "@/lib/deck/types";
 
 /**
  * The deck a write targets, and the version its writer last read.
@@ -83,6 +85,36 @@ export type DeckCardEdit = Partial<
   >
 >;
 
+/**
+ * The deck fields that record the command zone. An absent key keeps the
+ * stored value; `null` empties a slot. `commanderName` is denormalised so
+ * community discovery can match the commander slug in SQL.
+ */
+export interface CommandZoneFields {
+  readonly commanderId?: string | null;
+  readonly commanderName?: string | null;
+  readonly partnerId?: string | null;
+  readonly companionId?: string | null;
+  readonly pairingType?: CommanderPairingType;
+}
+
+/**
+ * One change of the command zone: the rows that leave, the rows that enter
+ * and the fields that record the result, stored together or not at all.
+ *
+ * Slots are cleared by role (`isCommander`, `isPartner`, the `companion`
+ * category) rather than by row id: the browser knows a hand-picked commander
+ * only by its printing, and earlier picks can have left more than one row.
+ * `removeCardIds` names main-deck rows that leave with the change, such as
+ * the row of a card promoted to commander.
+ */
+export interface CommandZoneWrite {
+  readonly removeCardIds: readonly string[];
+  readonly clearSlots: readonly CommandSlot[];
+  readonly addCards: readonly NewDeckCard[];
+  readonly fields: CommandZoneFields;
+}
+
 /** A write that was stored: what it produced, and the deck's version after it. */
 export interface SavedDeckWrite<Value> {
   readonly kind: "saved";
@@ -141,4 +173,14 @@ export interface DeckRepository {
   readonly removeAllCards: (
     target: DeckWriteTarget
   ) => Promise<DeckWriteResult<number>>;
+  /**
+   * Changes the command zone: removes `removeCardIds` and the rows of
+   * `clearSlots`, adds `addCards` and writes `fields`, all in one unit of
+   * work. `value` is the added rows, in the order they were given.
+   * Rejects when the deck holds no row for one of `removeCardIds`.
+   */
+  readonly writeCommandZone: (
+    target: DeckWriteTarget,
+    write: CommandZoneWrite
+  ) => Promise<DeckWriteResult<readonly StoredDeckCard[]>>;
 }

@@ -5,8 +5,9 @@
  * It pins what every `DeckRepository` must do: one version step per saved
  * write, the compare-and-swap on `expectedVersion`, nothing stored on `stale`
  * or `not-found`, all or nothing when the card write fails, card ids scoped
- * to their deck, and one winner among concurrent writers that read the same
- * version. Callers: `in-memory-deck-repository.test.ts` and
+ * to their deck, one winner among concurrent writers that read the same
+ * version, and a command-zone change whose rows and deck fields are stored
+ * together or not at all. Callers: `in-memory-deck-repository.test.ts` and
  * `deck-repository.prisma.test.ts`.
  *
  * @module deck/testing/deck-repository-contract
@@ -34,14 +35,20 @@ export interface StoredDeckState {
   readonly version: number;
   readonly updatedAt: Date;
   readonly cards: readonly StoredDeckCard[];
+  readonly commanderId: string | null;
+  readonly commanderName: string | null;
+  readonly partnerId: string | null;
+  readonly companionId: string | null;
+  /** Stored as a plain string; `PAIRING_TYPES` lists the values. */
+  readonly pairingType: string;
 }
 
 /** One adapter under test, with the seeding and inspection the suite needs. */
 export interface DeckRepositoryHarness {
   readonly repository: DeckRepository;
   /**
-   * Stores a new deck at version 0 with `updatedAt` = {@link SEEDED_AT}
-   * and these cards.
+   * Stores a new deck at version 0 with `updatedAt` = {@link SEEDED_AT},
+   * an empty command zone (`pairingType` "none") and these cards.
    */
   readonly seedDeck: (cards: readonly NewDeckCard[]) => Promise<SeededDeck>;
   /** @returns the stored deck, or `undefined` when no deck has this id. */
@@ -92,6 +99,23 @@ function namesOf(cards: readonly StoredDeckCard[]): readonly string[] {
 }
 
 const SIGNET = newDeckCard("Arcane Signet", { category: "ramp" });
+const ATRAXA_IN_DECK = newDeckCard("Atraxa, Praetors' Voice", {
+  category: "creature",
+});
+const ATRAXA_COMMANDER = newDeckCard("Atraxa, Praetors' Voice", {
+  category: "commander",
+  isCommander: true,
+});
+const KENRITH_COMMANDER = newDeckCard("Kenrith, the Returned King", {
+  category: "commander",
+  isCommander: true,
+});
+/** The fields a lone commander records (CR 903.3: one commander, no pairing). */
+const KENRITH_FIELDS = {
+  commanderId: KENRITH_COMMANDER.scryfallId,
+  commanderName: KENRITH_COMMANDER.name,
+  pairingType: "none",
+} as const;
 const FOREST = newDeckCard("Forest", { quantity: 10, category: "land" });
 const SOL_RING = newDeckCard("Sol Ring", { category: "ramp" });
 const ISLAND = newDeckCard("Island", { category: "land" });
@@ -354,6 +378,111 @@ export function describeDeckRepositoryContract(
 
       expect(result).toEqual({ kind: "stale" });
       expect((await stored(deck.deckId)).cards).toHaveLength(2);
+    });
+  });
+
+  describe("writeCommandZone", () => {
+    it("replaces the commander: the old row leaves by role, the new row enters and the deck records it, in one version step", async () => {
+      const deck = await harness.seedDeck([ATRAXA_COMMANDER, SIGNET]);
+
+      const result = await harness.repository.writeCommandZone(
+        { deckId: deck.deckId, expectedVersion: deck.version },
+        {
+          removeCardIds: [],
+          clearSlots: ["commander"],
+          addCards: [KENRITH_COMMANDER],
+          fields: KENRITH_FIELDS,
+        }
+      );
+
+      expect(result).toMatchObject({
+        kind: "saved",
+        version: deck.version + 1,
+        value: [{ name: KENRITH_COMMANDER.name, isCommander: true }],
+      });
+      const after = await stored(deck.deckId);
+      expect(namesOf(after.cards)).toEqual([
+        "Arcane Signet",
+        "Kenrith, the Returned King",
+      ]);
+      expect(after).toMatchObject({ ...KENRITH_FIELDS, partnerId: null });
+      expect(after.version).toBe(deck.version + 1);
+      expect(after.updatedAt.getTime()).toBeGreaterThan(SEEDED_AT.getTime());
+    });
+
+    it("promotes a deck card: its main-deck row leaves and its commander row enters in one write", async () => {
+      const deck = await harness.seedDeck([SIGNET, ATRAXA_IN_DECK]);
+      const [, atraxaRowId] = deck.cardIds;
+
+      const result = await harness.repository.writeCommandZone(
+        { deckId: deck.deckId },
+        {
+          removeCardIds: [atraxaRowId],
+          clearSlots: ["commander"],
+          addCards: [ATRAXA_COMMANDER],
+          fields: {
+            commanderId: ATRAXA_COMMANDER.scryfallId,
+            commanderName: ATRAXA_COMMANDER.name,
+            pairingType: "none",
+          },
+        }
+      );
+
+      expect(result).toMatchObject({
+        kind: "saved",
+        version: deck.version + 1,
+      });
+      const after = await stored(deck.deckId);
+      expect(after.cards).toHaveLength(2);
+      expect(
+        after.cards.filter((card) => card.name === ATRAXA_COMMANDER.name)
+      ).toMatchObject([{ isCommander: true, category: "commander" }]);
+      expect(after.commanderId).toBe(ATRAXA_COMMANDER.scryfallId);
+    });
+
+    it("stores nothing and answers stale when the expected version is outdated", async () => {
+      const deck = await harness.seedDeck([ATRAXA_COMMANDER]);
+
+      const result = await harness.repository.writeCommandZone(
+        { deckId: deck.deckId, expectedVersion: deck.version + 1 },
+        {
+          removeCardIds: [],
+          clearSlots: ["commander"],
+          addCards: [KENRITH_COMMANDER],
+          fields: KENRITH_FIELDS,
+        }
+      );
+
+      expect(result).toEqual({ kind: "stale" });
+      const after = await stored(deck.deckId);
+      expect(namesOf(after.cards)).toEqual(["Atraxa, Praetors' Voice"]);
+      expect(after.commanderId).toBeNull();
+      expect(after.version).toBe(deck.version);
+    });
+
+    it("rejects a removed card id the deck does not hold and keeps the rows, the fields and the version", async () => {
+      const deck = await harness.seedDeck([ATRAXA_COMMANDER, SIGNET]);
+
+      await expect(
+        harness.repository.writeCommandZone(
+          { deckId: deck.deckId },
+          {
+            removeCardIds: ["no-such-row"],
+            clearSlots: ["commander"],
+            addCards: [KENRITH_COMMANDER],
+            fields: KENRITH_FIELDS,
+          }
+        )
+      ).rejects.toThrow();
+
+      const after = await stored(deck.deckId);
+      expect(namesOf(after.cards)).toEqual([
+        "Arcane Signet",
+        "Atraxa, Praetors' Voice",
+      ]);
+      expect(after.commanderId).toBeNull();
+      expect(after.version).toBe(deck.version);
+      expect(after.updatedAt).toEqual(SEEDED_AT);
     });
   });
 
