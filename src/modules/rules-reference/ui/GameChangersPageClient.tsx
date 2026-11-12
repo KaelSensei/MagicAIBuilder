@@ -1,109 +1,47 @@
 "use client";
 /**
- * GameChangersPageClient — full paginated list of Game Changers + Commander banlist.
+ * The Game Changers and Commander banlist page: two Scryfall lists behind tabs,
+ * searched and paged in the browser, with a zoom and a printing selector.
  *
- * - Client-side pagination (data fetched via TanStack Query / Scryfall)
- * - Page size: 25 (configurable via PAGE_SIZE constant)
- * - URL reflects current page: ?page=N, and a ?page=N link opens page N once the list is known
- * - Scroll to top on page change, not on the first load
- * - Card grid with normal-sized images, click-to-zoom, printing selector
+ * Rules reference context, `ui/`. The page composes `CardTile`, the
+ * `usePagedFilteredList` hook (search, page slice and the `?page=N` URL sync)
+ * and `Pagination`; it keeps the tab state and the two modals. `CardZoomModal`
+ * and the tab bar move out in RR-05.
+ *
+ * @module rules-reference/ui/GameChangersPageClient
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import {
-  type ReadonlyURLSearchParams,
-  useRouter,
-  useSearchParams,
-} from "next/navigation";
 import { BookOpen, Loader2, Search, Shield, Zap, X } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { useLocalizedGameChangersList } from "@/hooks/useGameChangers";
 import { resolveLocalizedText } from "@/lib/scryfall/localized";
 import { useLocalizedBanlistQuery } from "@/hooks/useBanlist";
+import { usePagedFilteredList } from "@/modules/rules-reference/client/usePagedFilteredList";
+import { CardTile } from "@/modules/rules-reference/ui/CardTile";
+import {
+  getCardGridImageUri,
+  getListedCardImageUri,
+} from "@/modules/rules-reference/ui/card-image";
 import { Pagination } from "@/modules/rules-reference/ui/Pagination";
 import { PrintingSelectorModal } from "@/components/card/PrintingSelectorModal";
 import { cn } from "@/components/ui/utils";
-import { getListedImageUri } from "@/lib/scryfall/images";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
+/** Cards per page. */
 const PAGE_SIZE = 25;
 
 type Tab = "game-changers" | "banlist";
 
 /**
- * The page a `?page=N` link names, or `null` when the URL has no page or an unusable one
- * (`?page=0`, `?page=abc`, `?page=1.5`).
+ * Whether a card answers the typed search: by its oracle name or by the displayed (printed) one,
+ * since a viewer reading a French list types the French name they see on screen.
+ * `query` is already trimmed and lower-cased.
  */
-function pageNamedByUrl(searchParams: ReadonlyURLSearchParams): number | null {
-  const page = Number(searchParams.get("page"));
-  return Number.isInteger(page) && page > 0 ? page : null;
-}
-
-// ---------------------------------------------------------------------------
-// Card component — grid tile with normal-sized image
-// ---------------------------------------------------------------------------
-interface CardTileProps {
-  readonly card: ScryfallCard;
-  readonly badge: React.ReactNode;
-  readonly onClickZoom: (card: ScryfallCard) => void;
-}
-
-function getCardNormalImage(card: ScryfallCard): string {
-  return (
-    getListedImageUri(card.image_uris, "grid") ??
-    getListedImageUri(card.card_faces?.[0]?.image_uris, "grid") ??
-    getListedImageUri(card.image_uris, "thumb") ??
-    getListedImageUri(card.card_faces?.[0]?.image_uris, "thumb") ??
-    ""
-  );
-}
-
-function CardTile({ card, badge, onClickZoom }: CardTileProps) {
-  const t = useTranslations("rules");
-  const imageUri = getCardNormalImage(card);
-  const text = resolveLocalizedText(card);
-
-  return (
-    <button
-      type="button"
-      className="group rounded-xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden hover:border-[var(--accent)]/50 transition-colors cursor-pointer text-left w-full"
-      onClick={() => onClickZoom(card)}
-      aria-label={t("zoom.viewCard", { name: text.name })}
-    >
-      {/* Card image — aspect ratio ~63:88 */}
-      <div className="relative aspect-[63/88] bg-[var(--background)] overflow-hidden">
-        {imageUri ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={imageUri}
-            alt={text.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            loading="lazy"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-[var(--text-secondary)] text-xs">
-            {t("zoom.noImage")}
-          </div>
-        )}
-      </div>
-
-      {/* Info bar */}
-      <div className="p-2 flex items-center gap-2">
-        <div className="flex-1 min-w-0">
-          <p className="text-xs font-medium text-[var(--text-primary)] truncate">
-            {text.name}
-          </p>
-          <p className="text-[10px] text-[var(--text-secondary)] truncate">
-            {text.typeLine}
-          </p>
-        </div>
-        {badge}
-      </div>
-    </button>
-  );
+function cardMatchesSearch(card: ScryfallCard, query: string): boolean {
+  if (card.name.toLowerCase().includes(query)) return true;
+  const printed = card.printed_name ?? card.card_faces?.[0]?.printed_name;
+  return printed?.toLowerCase().includes(query) ?? false;
 }
 
 // ---------------------------------------------------------------------------
@@ -150,9 +88,7 @@ function CardZoomModal({
   }, [onClose, goPrev, goNext]);
 
   const largeUri =
-    getListedImageUri(card.image_uris, "display") ??
-    getListedImageUri(card.card_faces?.[0]?.image_uris, "display") ??
-    getCardNormalImage(card);
+    getListedCardImageUri(card, "display") ?? getCardGridImageUri(card);
 
   return (
     <dialog
@@ -243,18 +179,10 @@ function CardZoomModal({
 // ---------------------------------------------------------------------------
 export function GameChangersPageClient() {
   const t = useTranslations("rules");
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const topRef = useRef<HTMLDivElement>(null);
 
   const [activeTab, setActiveTab] = useState<Tab>("game-changers");
-  const [search, setSearch] = useState("");
   const [zoomedCard, setZoomedCard] = useState<ScryfallCard | null>(null);
   const [printingsCard, setPrintingsCard] = useState<ScryfallCard | null>(null);
-
-  // A link may name a page; it is shown as soon as the list confirms it exists.
-  const linkedPage = pageNamedByUrl(searchParams);
-  const [currentPage, setCurrentPage] = useState(linkedPage ?? 1);
 
   // Scryfall queries
   const {
@@ -275,51 +203,27 @@ export function GameChangersPageClient() {
     return raw ?? [];
   }, [activeTab, gameChangers, banlist]);
 
-  // Filtered dataset (search)
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return activeData;
-    // Match the oracle name and the displayed (printed) one: a viewer reading
-    // a French list will type the French name they see on screen.
-    return activeData.filter((c) => {
-      if (c.name.toLowerCase().includes(q)) return true;
-      const printed = c.printed_name ?? c.card_faces?.[0]?.printed_name;
-      return printed?.toLowerCase().includes(q) ?? false;
-    });
-  }, [activeData, search]);
-
-  // Pagination
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const safePage = Math.min(currentPage, totalPages);
-  const pageSlice = useMemo(() => {
-    const start = (safePage - 1) * PAGE_SIZE;
-    return filtered.slice(start, start + PAGE_SIZE);
-  }, [filtered, safePage]);
-
   const isLoading = activeTab === "game-changers" ? gcLoading : blLoading;
   const isError = activeTab === "game-changers" ? gcError : blError;
 
-  // The URL mirrors the page so the visitor can share or reload it.
-  const writePageToUrl = useCallback(
-    (page: number) => {
-      const params = new URLSearchParams(searchParams.toString());
-      params.set("page", String(page));
-      router.replace(`?${params.toString()}`, { scroll: false });
-    },
-    [router, searchParams]
-  );
+  const {
+    search,
+    changeSearch,
+    filtered,
+    pageSlice,
+    currentPage,
+    totalPages,
+    goToPage,
+    topRef,
+  } = usePagedFilteredList({
+    items: activeData,
+    matches: cardMatchesSearch,
+    pageSize: PAGE_SIZE,
+    isLoading,
+    isError,
+  });
 
-  // Pager navigation: show the page, write it to the URL, bring the title back into view.
-  const goToPage = useCallback(
-    (page: number) => {
-      setCurrentPage(page);
-      writePageToUrl(page);
-      topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    },
-    [writePageToUrl]
-  );
-
-  // Another list or another search starts over from page 1.
+  // Another list starts over from page 1.
   const selectTab = useCallback(
     (tab: Tab) => {
       if (tab === activeTab) return;
@@ -328,29 +232,6 @@ export function GameChangersPageClient() {
     },
     [activeTab, goToPage]
   );
-
-  const changeSearch = useCallback(
-    (value: string) => {
-      setSearch(value);
-      goToPage(1);
-    },
-    [goToPage]
-  );
-
-  // A link may name a page the list does not have, or no page at all: the visitor then lands on
-  // page 1 and the URL says so (RR-01 pins this). The page count is known only once Scryfall has
-  // answered, so the check waits for the list and runs once. A link to a page the list has is left
-  // alone: no reset, no URL write and no scroll, so the visitor sees the page they were sent to.
-  const deepLinkChecked = useRef(false);
-  useEffect(() => {
-    if (deepLinkChecked.current || isLoading) return;
-    deepLinkChecked.current = true;
-    if (isError) return;
-    const landingPage = currentPage > totalPages ? 1 : currentPage;
-    if (landingPage === linkedPage) return;
-    setCurrentPage(landingPage);
-    writePageToUrl(landingPage);
-  }, [isLoading, isError, currentPage, totalPages, linkedPage, writePageToUrl]);
 
   const handleZoomClick = useCallback((card: ScryfallCard) => {
     setZoomedCard(card);
@@ -504,7 +385,7 @@ export function GameChangersPageClient() {
 
           {/* Pagination */}
           <Pagination
-            currentPage={safePage}
+            currentPage={currentPage}
             totalPages={totalPages}
             onPageChange={goToPage}
             className="mt-2"
