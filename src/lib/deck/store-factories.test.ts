@@ -8,6 +8,7 @@ import {
 } from "./store-factories";
 import type { Deck } from "./types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
+import { aScryfallCard } from "@/test/builders/scryfall";
 
 /**
  * These were only ever exercised through store actions, so a mapping bug
@@ -16,16 +17,15 @@ import type { ScryfallCard } from "@/lib/scryfall/types";
  */
 
 function scryfallCard(overrides: Partial<ScryfallCard> = {}): ScryfallCard {
-  return {
+  return aScryfallCard({
     id: "11111111-1111-4111-8111-111111111111",
     name: "Sol Ring",
     mana_cost: "{1}",
     cmc: 1,
     type_line: "Artifact",
     oracle_text: "{T}: Add {C}{C}.",
-    color_identity: [],
     ...overrides,
-  };
+  });
 }
 
 const DFC = scryfallCard({

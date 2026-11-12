@@ -26,7 +26,7 @@ import {
   type DeckCombosResult,
 } from "@/modules/combos/infrastructure/find-my-combos";
 import { USER_AGENT } from "@/lib/http";
-import { useMsw } from "@/test/msw";
+import { setupMsw } from "@/test/msw";
 
 /** The recorded deck as the adapter takes it: plain card names. */
 const RECORDED_QUERY = {
@@ -83,7 +83,7 @@ function foundCombos(result: DeckCombosResult) {
 describe("requestDeckCombos (recorded Spellbook exchange)", () => {
   // Spellbook serves the recording unless a test says otherwise; any other
   // outgoing request fails the test.
-  const server = useMsw(spellbookAnswers(FIND_MY_COMBOS_RECORDED));
+  const server = setupMsw(spellbookAnswers(FIND_MY_COMBOS_RECORDED));
 
   beforeEach(() => {
     spellbookRequests = [];

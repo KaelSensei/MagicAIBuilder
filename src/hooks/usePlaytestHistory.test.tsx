@@ -1,17 +1,10 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { renderHook, waitFor } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import type { ReactNode } from "react";
+import { waitFor } from "@testing-library/react";
+import { renderHookWithProviders } from "@/test/render";
 import { usePlaytestHistory } from "./usePlaytestHistory";
 
 function renderHistory(deckId: string | null) {
-  const client = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
-  });
-  const wrapper = ({ children }: { children: ReactNode }) => (
-    <QueryClientProvider client={client}>{children}</QueryClientProvider>
-  );
-  return renderHook(() => usePlaytestHistory(deckId), { wrapper });
+  return renderHookWithProviders(() => usePlaytestHistory(deckId));
 }
 
 describe("usePlaytestHistory", () => {

@@ -1,26 +1,19 @@
 import { describe, it, expect } from "vitest";
 import { detectThemes } from "@/lib/deck/themes";
 import type { DeckCard } from "@/lib/deck/types";
+import { aDeckCard } from "@/test/builders/card";
 
 function makeCard(overrides: Partial<DeckCard> = {}): DeckCard {
-  return {
+  return aDeckCard({
     id: crypto.randomUUID(),
     name: "Test Card",
     manaCost: "{2}",
     cmc: 2,
     typeLine: "Creature — Human Wizard",
-    oracleText: "",
     colorIdentity: ["U"],
-    isGameChanger: false,
-    isBanned: false,
-    price: null,
-    imageUri: "",
-    artCropUri: "",
     category: "creature",
-    quantity: 1,
-    zone: "main" as const,
     ...overrides,
-  };
+  });
 }
 
 describe("detectThemes", () => {

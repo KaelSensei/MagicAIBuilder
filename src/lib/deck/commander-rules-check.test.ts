@@ -4,29 +4,14 @@ import {
   COMMANDER_RULE_CITATIONS,
   getCommanderRuleIssues,
 } from "./commander-rules-check";
+import { aDeckCard } from "@/test/builders/card";
+import { aDeck } from "@/test/builders/deck";
 
 // Oracle text below is copied from Scryfall (2026-11-09). Each card keeps its
 // real wording, so a pattern that drifts from Oracle fails here first.
 
 function makeCard(overrides: Partial<DeckCard>): DeckCard {
-  return {
-    id: "card",
-    name: "Card",
-    manaCost: "",
-    cmc: 0,
-    typeLine: "",
-    oracleText: "",
-    colorIdentity: [],
-    isGameChanger: false,
-    isBanned: false,
-    price: null,
-    imageUri: "",
-    artCropUri: "",
-    category: "other",
-    quantity: 1,
-    zone: "main",
-    ...overrides,
-  };
+  return aDeckCard({ id: "card", ...overrides });
 }
 
 const ARCANE_SIGNET = makeCard({
@@ -88,30 +73,13 @@ const SELVALA = makeCard({
 });
 
 function makeDeck(overrides: Partial<Deck>): Deck {
-  return {
+  return aDeck({
     id: "deck",
     name: "Deck",
-    format: "commander",
     commander: KARN,
-    partner: null,
-    companion: null,
-    pairingType: "none",
-    cards: [],
-    maybeboard: [],
-    cardCount: 0,
     targetBracket: 2,
-    manualBracket: null,
-    budget: null,
-    tags: [],
-    description: "",
-    shareEnabled: false,
-    isPublic: false,
-    isAIGenerated: false,
-    shareToken: null,
-    createdAt: new Date(0),
-    updatedAt: new Date(0),
     ...overrides,
-  };
+  });
 }
 
 /** Names the rules check flags for one card in a deck led by `deck`'s commanders. */

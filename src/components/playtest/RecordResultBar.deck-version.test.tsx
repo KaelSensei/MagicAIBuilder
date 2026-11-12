@@ -1,11 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { NextIntlClientProvider } from "next-intl";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-import playtestMessages from "@/messages/en/playtest.json";
 import { deckCard, FAKE_DECK, playtestDb } from "@/test/playtest-db-fake";
+import { renderWithProviders } from "@/test/render";
 import { GET, POST } from "@/app/api/decks/[id]/playtest-sessions/route";
 import { RecordResultBar } from "./RecordResultBar";
 import { PlaytestHistoryPanel } from "./PlaytestHistoryPanel";
@@ -59,26 +57,18 @@ function routeFetchToHandlers(): void {
  */
 function renderBar({ withHistory = false } = {}) {
   const onRecorded = vi.fn();
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
-  });
-  render(
-    <QueryClientProvider client={queryClient}>
-      <NextIntlClientProvider
-        locale="en"
-        messages={{ playtest: playtestMessages }}
-      >
-        <RecordResultBar
-          deckId={FAKE_DECK.id}
-          turns={7}
-          mulliganCount={1}
-          cardsSeen={14}
-          additionalCardsSeen={0}
-          onRecorded={onRecorded}
-        />
-        {withHistory && <PlaytestHistoryPanel deckId={FAKE_DECK.id} />}
-      </NextIntlClientProvider>
-    </QueryClientProvider>
+  renderWithProviders(
+    <>
+      <RecordResultBar
+        deckId={FAKE_DECK.id}
+        turns={7}
+        mulliganCount={1}
+        cardsSeen={14}
+        additionalCardsSeen={0}
+        onRecorded={onRecorded}
+      />
+      {withHistory && <PlaytestHistoryPanel deckId={FAKE_DECK.id} />}
+    </>
   );
   return onRecorded;
 }

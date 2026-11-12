@@ -1,9 +1,7 @@
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { NextIntlClientProvider } from "next-intl";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
+import { renderWithIntl } from "@/test/render-with-intl";
 import { useState } from "react";
 import { beforeEach, expect, it, vi } from "vitest";
-import deckMessages from "@/messages/en/deck.json";
-import frenchDeckMessages from "@/messages/fr/deck.json";
 import { ImportDialog } from "./ImportDialog";
 
 const addCard = vi.hoisted(() => vi.fn());
@@ -30,11 +28,7 @@ beforeEach(() => {
 
 it("previews a pasted list before adding cards", async () => {
   fetchInBatches.mockResolvedValueOnce([]);
-  render(
-    <NextIntlClientProvider locale="en" messages={{ deck: deckMessages }}>
-      <ImportDialog open onOpenChange={vi.fn()} />
-    </NextIntlClientProvider>
-  );
+  renderWithIntl(<ImportDialog open onOpenChange={vi.fn()} />);
 
   fireEvent.change(screen.getByPlaceholderText(/Atraxa, Praetors' Voice/), {
     target: { value: "Commander\n1 Atraxa, Praetors' Voice\n\nDeck\n2 Sol Ring\n\nSideboard\n1 Negate" },
@@ -50,11 +44,7 @@ it("previews a pasted list before adding cards", async () => {
 
 it("shows both commanders in a pasted-list preview", async () => {
   fetchInBatches.mockResolvedValueOnce([]);
-  render(
-    <NextIntlClientProvider locale="en" messages={{ deck: deckMessages }}>
-      <ImportDialog open onOpenChange={vi.fn()} />
-    </NextIntlClientProvider>
-  );
+  renderWithIntl(<ImportDialog open onOpenChange={vi.fn()} />);
 
   fireEvent.change(screen.getByPlaceholderText(/Atraxa, Praetors' Voice/), {
     target: { value: "Commander\n1 Jaheira, Friend of the Forest\n1 Clan Crafter" },
@@ -67,11 +57,7 @@ it("shows both commanders in a pasted-list preview", async () => {
 
 it("labels each preview row with its destination zone", async () => {
   fetchInBatches.mockResolvedValueOnce([]);
-  render(
-    <NextIntlClientProvider locale="en" messages={{ deck: deckMessages }}>
-      <ImportDialog open onOpenChange={vi.fn()} />
-    </NextIntlClientProvider>
-  );
+  renderWithIntl(<ImportDialog open onOpenChange={vi.fn()} />);
 
   fireEvent.change(screen.getByPlaceholderText(/Atraxa, Praetors' Voice/), {
     target: { value: "Deck\n1 Sol Ring\nSideboard\n1 Negate\nConsidering\n1 Arcane Signet" },
@@ -87,10 +73,9 @@ it("labels each preview row with its destination zone", async () => {
 
 it("labels a secondary-zone preview row in French", async () => {
   fetchInBatches.mockResolvedValueOnce([]);
-  render(
-    <NextIntlClientProvider locale="fr" messages={{ deck: frenchDeckMessages }}>
-      <ImportDialog open onOpenChange={vi.fn()} />
-    </NextIntlClientProvider>
+  renderWithIntl(
+    <ImportDialog open onOpenChange={vi.fn()} />,
+    { locale: "fr" }
   );
 
   fireEvent.change(screen.getByPlaceholderText(/Atraxa, Praetors' Voice/), {
@@ -104,11 +89,7 @@ it("labels a secondary-zone preview row in French", async () => {
 
 it("discards a stale preview when the pasted list changes", async () => {
   fetchInBatches.mockResolvedValueOnce([]);
-  render(
-    <NextIntlClientProvider locale="en" messages={{ deck: deckMessages }}>
-      <ImportDialog open onOpenChange={vi.fn()} />
-    </NextIntlClientProvider>
-  );
+  renderWithIntl(<ImportDialog open onOpenChange={vi.fn()} />);
 
   const input = screen.getByPlaceholderText(/Atraxa, Praetors' Voice/);
   fireEvent.change(input, { target: { value: "1 Sol Ring" } });
@@ -123,11 +104,7 @@ it("discards a stale preview when the pasted list changes", async () => {
 
 it("reuses preview validation when the player confirms the import", async () => {
   fetchInBatches.mockResolvedValueOnce([{ name: "Sol Ring" }]);
-  render(
-    <NextIntlClientProvider locale="en" messages={{ deck: deckMessages }}>
-      <ImportDialog open onOpenChange={vi.fn()} />
-    </NextIntlClientProvider>
-  );
+  renderWithIntl(<ImportDialog open onOpenChange={vi.fn()} />);
 
   fireEvent.change(screen.getByPlaceholderText(/Atraxa, Praetors' Voice/), {
     target: { value: "1 Sol Ring" },
@@ -144,11 +121,7 @@ it("reuses preview validation when the player confirms the import", async () => 
 
 it("shows unresolved names before confirmation without changing the deck", async () => {
   fetchInBatches.mockResolvedValueOnce([{ name: "Sol Ring" }]);
-  render(
-    <NextIntlClientProvider locale="en" messages={{ deck: deckMessages }}>
-      <ImportDialog open onOpenChange={vi.fn()} />
-    </NextIntlClientProvider>
-  );
+  renderWithIntl(<ImportDialog open onOpenChange={vi.fn()} />);
 
   fireEvent.change(screen.getByPlaceholderText(/Atraxa, Praetors' Voice/), {
     target: { value: "1 Sol Ring\n1 Definitely Not A Card" },
@@ -162,11 +135,7 @@ it("shows unresolved names before confirmation without changing the deck", async
 
 it("does not confirm a pasted list when no card resolves", async () => {
   fetchInBatches.mockResolvedValueOnce([]);
-  render(
-    <NextIntlClientProvider locale="en" messages={{ deck: deckMessages }}>
-      <ImportDialog open onOpenChange={vi.fn()} />
-    </NextIntlClientProvider>
-  );
+  renderWithIntl(<ImportDialog open onOpenChange={vi.fn()} />);
 
   fireEvent.change(screen.getByPlaceholderText(/Atraxa, Praetors' Voice/), {
     target: { value: "1 Definitely Not A Card" },
@@ -180,11 +149,7 @@ it("does not confirm a pasted list when no card resolves", async () => {
 
 it("shows duplicate card decisions before confirming a pasted list", async () => {
   fetchInBatches.mockResolvedValueOnce([{ name: "Sol Ring" }]);
-  render(
-    <NextIntlClientProvider locale="en" messages={{ deck: deckMessages }}>
-      <ImportDialog open onOpenChange={vi.fn()} />
-    </NextIntlClientProvider>
-  );
+  renderWithIntl(<ImportDialog open onOpenChange={vi.fn()} />);
 
   fireEvent.change(screen.getByPlaceholderText(/Atraxa, Praetors' Voice/), {
     target: { value: "1 Sol Ring\n1 sol ring" },
@@ -197,11 +162,7 @@ it("shows duplicate card decisions before confirming a pasted list", async () =>
 
 it("flags a commander repeated in the pasted main deck", async () => {
   fetchInBatches.mockResolvedValueOnce([{ name: "Atraxa, Praetors' Voice" }]);
-  render(
-    <NextIntlClientProvider locale="en" messages={{ deck: deckMessages }}>
-      <ImportDialog open onOpenChange={vi.fn()} />
-    </NextIntlClientProvider>
-  );
+  renderWithIntl(<ImportDialog open onOpenChange={vi.fn()} />);
 
   fireEvent.change(screen.getByPlaceholderText(/Atraxa, Praetors' Voice/), {
     target: { value: "Commander\n1 Atraxa, Praetors' Voice\nDeck\n1 Atraxa, Praetors' Voice" },
@@ -220,14 +181,14 @@ it("ignores a validation result that arrives after the dialog closes", async () 
   function DialogHarness() {
     const [open, setOpen] = useState(true);
     return (
-      <NextIntlClientProvider locale="en" messages={{ deck: deckMessages }}>
+      <>
         <button type="button" onClick={() => setOpen(true)}>Open import</button>
         <ImportDialog open={open} onOpenChange={setOpen} />
-      </NextIntlClientProvider>
+      </>
     );
   }
 
-  render(<DialogHarness />);
+  renderWithIntl(<DialogHarness />);
   fireEvent.change(screen.getByPlaceholderText(/Atraxa, Praetors' Voice/), {
     target: { value: "1 Sol Ring" },
   });
@@ -243,14 +204,10 @@ it("ignores a validation result that arrives after the dialog closes", async () 
 });
 
 it.each([
-  ["en", deckMessages, "Close"],
-  ["fr", frenchDeckMessages, "Fermer"],
-] as const)("names the header close button in %s", (locale, messages, name) => {
-  render(
-    <NextIntlClientProvider locale={locale} messages={{ deck: messages }}>
-      <ImportDialog open onOpenChange={vi.fn()} />
-    </NextIntlClientProvider>
-  );
+  ["en", "Close"],
+  ["fr", "Fermer"],
+] as const)("names the header close button in %s", (locale, name) => {
+  renderWithIntl(<ImportDialog open onOpenChange={vi.fn()} />, { locale });
 
   expect(screen.getByRole("button", { name })).toBeInTheDocument();
 });

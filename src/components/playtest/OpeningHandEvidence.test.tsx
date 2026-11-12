@@ -1,9 +1,7 @@
-import { render, screen } from "@testing-library/react";
-import { NextIntlClientProvider } from "next-intl";
+import { screen } from "@testing-library/react";
+import { renderWithIntl } from "@/test/render-with-intl";
 import { describe, expect, it } from "vitest";
 import type { DeckCard } from "@/lib/deck/types";
-import builderMessages from "@/messages/en/builder.json";
-import frBuilderMessages from "@/messages/fr/builder.json";
 import { OpeningHandEvidence } from "./OpeningHandEvidence";
 
 function card(typeLine: string, id: string, manaCost = "", cmc = 0): DeckCard {
@@ -37,11 +35,7 @@ function renderEvidence(landCount: number) {
     ),
   ];
 
-  return render(
-    <NextIntlClientProvider locale="en" messages={{ builder: builderMessages }}>
-      <OpeningHandEvidence hand={hand} />
-    </NextIntlClientProvider>
-  );
+  return renderWithIntl(<OpeningHandEvidence hand={hand} />);
 }
 
 describe("OpeningHandEvidence", () => {
@@ -70,11 +64,7 @@ describe("OpeningHandEvidence", () => {
       card("Creature", "spell-3", "{6}", 6),
     ];
 
-    render(
-      <NextIntlClientProvider locale="en" messages={{ builder: builderMessages }}>
-        <OpeningHandEvidence hand={hand} />
-      </NextIntlClientProvider>
-    );
+    renderWithIntl(<OpeningHandEvidence hand={hand} />);
 
     expect(screen.getByText(/missing blue mana/i)).toBeDefined();
     expect(screen.getByText(/dead opening hand/i)).toBeDefined();
@@ -94,13 +84,9 @@ describe("OpeningHandEvidence with the Commander keep rules", () => {
     bracket: number | null = 2,
     locale: "en" | "fr" = "en"
   ) {
-    return render(
-      <NextIntlClientProvider
-        locale={locale}
-        messages={{ builder: locale === "en" ? builderMessages : frBuilderMessages }}
-      >
-        <OpeningHandEvidence hand={hand} keepRules={{ mulligan, bracket }} />
-      </NextIntlClientProvider>
+    return renderWithIntl(
+      <OpeningHandEvidence hand={hand} keepRules={{ mulligan, bracket }} />,
+      { locale }
     );
   }
 

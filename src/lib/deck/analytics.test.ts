@@ -8,27 +8,27 @@ import {
   BUDGET_TIERS,
 } from "./analytics";
 import type { Deck, DeckCard } from "@/lib/deck/types";
+import { aDeckCard } from "@/test/builders/card";
+import { aDeck } from "@/test/builders/deck";
 
 function makeCard(id: string, price: number | null = 5): DeckCard {
-  return {
-    id, name: "Card", manaCost: "", cmc: 1, typeLine: "Creature",
-    oracleText: "", colorIdentity: [], isGameChanger: false, isBanned: false,
-    price, imageUri: "", artCropUri: "", category: "creature",
-    quantity: 1, zone: "main", scryfallId: id,
-  };
+  return aDeckCard({
+    id,
+    scryfallId: id,
+    cmc: 1,
+    typeLine: "Creature",
+    category: "creature",
+    price,
+  });
 }
 
 function makeDeck(overrides: Partial<Deck> = {}): Deck {
-  return {
-    id: `deck-${Math.random()}`, name: "Test Deck", description: "",
-    commander: makeCard("cmd"), partner: null, companion: null,
-    pairingType: "none", cards: Array.from({ length: 99 }, (_, i) => makeCard(`c${i}`, 2)),
-    maybeboard: [], format: "commander", cardCount: 0, targetBracket: 3, manualBracket: null,
-    budget: null, tags: [], shareToken: null, shareEnabled: false,
-    isPublic: false, isAIGenerated: false,
-    createdAt: new Date(), updatedAt: new Date(),
+  return aDeck({
+    id: `deck-${Math.random()}`,
+    commander: makeCard("cmd"),
+    cards: Array.from({ length: 99 }, (_, i) => makeCard(`c${i}`, 2)),
     ...overrides,
-  };
+  });
 }
 
 // ─── Aggregate deck stats ────────────────────────────────────────────────
