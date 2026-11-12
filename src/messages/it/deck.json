@@ -729,6 +729,7 @@
     "nothingPlanned": "Nessuna carta da comprare ora",
     "sessionOnly": "Salvato in questo browser per questo mazzo. La collezione non cambia.",
     "intentSaved": "Salvato privatamente per questo mazzo sui dispositivi connessi. La collezione non cambia.",
+    "saveFailed": "Could not save your choice — try again",
     "deferredCount": "{count} carte per più tardi",
     "knownSubtotal": "Subtotale noto",
     "priceUnavailable": "Prezzo non disponibile",

@@ -1,6 +1,8 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useToastStore } from "@/hooks/useToast";
 import {
   applyAcquisitionChoice,
   readAcquisitionIntents,
@@ -37,6 +39,9 @@ function overlayChoices(
  * successful choice on a different card. For the same reason the load, when it
  * answers, keeps every choice made while it was in flight.
  *
+ * The rollback comes with the app's error toast, so a click never looks ignored.
+ * A failure a later choice has superseded is silent: that choice stands.
+ *
  * @param deckId - deck whose intents are loaded and updated
  * @returns the current modes and a setter for one printing
  */
@@ -44,6 +49,8 @@ export function useAcquisitionIntent(deckId: string): {
   readonly intentById: Readonly<Record<string, AcquisitionMode>>;
   readonly setIntent: (scryfallId: string, mode: AcquisitionChoice) => void;
 } {
+  const t = useTranslations("deck.buyList");
+  const addToast = useToastStore((state) => state.add);
   const [intentById, setIntentById] = useState<
     Readonly<Record<string, AcquisitionMode>>
   >({});
@@ -110,6 +117,7 @@ export function useAcquisitionIntent(deckId: string): {
             previous ?? "buy_now"
           )
         );
+        addToast("error", t("saveFailed"));
       };
 
       void fetch(
@@ -125,7 +133,7 @@ export function useAcquisitionIntent(deckId: string): {
         })
         .catch(() => revert());
     },
-    [deckId, replaceIntents]
+    [addToast, deckId, replaceIntents, t]
   );
 
   return { intentById, setIntent };

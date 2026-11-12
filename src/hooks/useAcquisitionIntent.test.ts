@@ -492,13 +492,57 @@ describe("useAcquisitionIntent: when a save fails", () => {
     expect(result.current.intentById).toEqual({ [SOL_RING]: "buy_later" });
   });
 
-  it("currently raises no toast when a save fails: the row silently flips back (pinned; COL-06)", async () => {
-    const { result } = await renderLoaded({});
+  for (const { outcome, reply } of SAVE_FAILURES) {
+    it(`tells the player the choice was not saved, in an error toast, after ${outcome}`, async () => {
+      const { result } = await renderLoaded({});
+      givenSavesFail(reply);
+
+      act(() => result.current.setIntent(SOL_RING, "proxy_now"));
+
+      await waitFor(() => expect(result.current.intentById).toEqual({}));
+      expect(toasts).toHaveBeenCalledTimes(1);
+      expect(toasts).toHaveBeenCalledWith(
+        "error",
+        "Could not save your choice — try again"
+      );
+    });
+  }
+
+  it("says it in the player's language", async () => {
     givenSavesFail(SAVE_FAILURES[1].reply);
+    const { result } = renderHookWithProviders(
+      () => useAcquisitionIntent(currentDeckId),
+      { locale: "fr" }
+    );
+    await waitFor(() => expect(sentRequests("GET")).toHaveLength(1));
 
     act(() => result.current.setIntent(SOL_RING, "proxy_now"));
 
-    await waitFor(() => expect(result.current.intentById).toEqual({}));
+    await waitFor(() =>
+      expect(toasts).toHaveBeenCalledWith(
+        "error",
+        "Impossible d'enregistrer votre choix — réessayez"
+      )
+    );
+  });
+
+  it("raises no toast for a failed save that a later choice on the same printing has superseded", async () => {
+    const { result } = await renderLoaded({});
+    const failing = gatedReply(SAVE_FAILURES[1].reply);
+    server.use(http.put(INTENT_ROUTE, failing.handler));
+
+    act(() => result.current.setIntent(SOL_RING, "proxy_now"));
+    await waitFor(() => expect(sentRequests("PUT")).toHaveLength(1));
+
+    server.use(http.put(INTENT_ROUTE, savedReply));
+    act(() => result.current.setIntent(SOL_RING, "buy_later"));
+    await waitFor(() => expect(sentRequests("PUT")).toHaveLength(2));
+
+    failing.open();
+
+    // The later choice stands, so there is nothing to tell the player.
+    await settle();
+    expect(result.current.intentById).toEqual({ [SOL_RING]: "buy_later" });
     expect(toasts).not.toHaveBeenCalled();
   });
 });

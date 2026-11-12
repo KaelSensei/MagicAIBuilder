@@ -729,6 +729,7 @@
     "nothingPlanned": "今購入するカードはありません",
     "sessionOnly": "このデッキのプランはこのブラウザーに保存されます。コレクションは変更されません。",
     "intentSaved": "このデッキ用に、ログイン済みのデバイス間で非公開に保存されます。コレクションは変更されません。",
+    "saveFailed": "Could not save your choice — try again",
     "deferredCount": "後で購入: {count} 枚",
     "knownSubtotal": "価格が判明している分の小計",
     "priceUnavailable": "価格不明",

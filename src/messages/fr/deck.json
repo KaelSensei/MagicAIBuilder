@@ -359,6 +359,7 @@
     "nothingPlanned": "Aucun achat prévu maintenant",
     "sessionOnly": "Plan enregistré dans ce navigateur pour ce deck. Votre collection ne change pas.",
     "intentSaved": "Enregistré en privé pour ce deck sur vos appareils connectés. Votre collection ne change pas.",
+    "saveFailed": "Impossible d'enregistrer votre choix — réessayez",
     "deferredCount": "{count, plural, one {# carte pour plus tard} other {# cartes pour plus tard}}",
     "knownSubtotal": "Sous-total connu",
     "priceUnavailable": "Prix indisponible",

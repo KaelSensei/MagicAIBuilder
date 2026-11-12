@@ -359,6 +359,7 @@
     "nothingPlanned": "No cards planned for now",
     "sessionOnly": "Saved in this browser for this deck. Your collection is unchanged.",
     "intentSaved": "Saved privately for this deck across your signed-in devices. Your collection is unchanged.",
+    "saveFailed": "Could not save your choice — try again",
     "deferredCount": "{count, plural, one {# card for later} other {# cards for later}}",
     "knownSubtotal": "Known subtotal",
     "priceUnavailable": "Price unavailable",
