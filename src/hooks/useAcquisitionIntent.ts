@@ -48,7 +48,12 @@ export function useAcquisitionIntent(deckId: string): {
     Readonly<Record<string, AcquisitionMode>>
   >({});
   const intentRef = useRef(intentById);
-  const requestIds = useRef<Record<string, number>>({});
+  /**
+   * The id of the latest save per printing, drawn from one counter so a save
+   * of an earlier deck can never match a later one, and emptied on deck change.
+   */
+  const latestRequestIds = useRef<Record<string, number>>({});
+  const requestCount = useRef(0);
   /** Choices still standing since the current load was requested, by printing. */
   const choicesSinceLoad = useRef<Record<string, AcquisitionChoice>>({});
 
@@ -63,14 +68,16 @@ export function useAcquisitionIntent(deckId: string): {
   useEffect(() => {
     let active = true;
     choicesSinceLoad.current = {};
+    latestRequestIds.current = {};
     void fetch(`/api/decks/${encodeURIComponent(deckId)}/acquisition-intent`)
       .then(async (response) =>
         response.ok ? response.json() : { intents: [] }
       )
       .then((payload: unknown) => {
         if (!active) return;
-        const intents = readAcquisitionIntents(payload);
-        if (intents === null) return;
+        // An answer the hook cannot read counts as no intent, like a failed
+        // request: the new deck must never show the previous deck's choices.
+        const intents = readAcquisitionIntents(payload) ?? {};
         replaceIntents(overlayChoices(intents, choicesSinceLoad.current));
       })
       .catch(() => {
@@ -85,15 +92,15 @@ export function useAcquisitionIntent(deckId: string): {
   const setIntent = useCallback(
     (scryfallId: string, mode: AcquisitionChoice) => {
       const previous = intentRef.current[scryfallId];
-      const requestId = (requestIds.current[scryfallId] ?? 0) + 1;
-      requestIds.current[scryfallId] = requestId;
+      const requestId = ++requestCount.current;
+      latestRequestIds.current[scryfallId] = requestId;
       choicesSinceLoad.current[scryfallId] = mode;
       replaceIntents(
         applyAcquisitionChoice(intentRef.current, scryfallId, mode)
       );
 
       const revert = () => {
-        if (requestIds.current[scryfallId] !== requestId) return;
+        if (latestRequestIds.current[scryfallId] !== requestId) return;
         // The server never took this choice: the loaded row is the truth again.
         delete choicesSinceLoad.current[scryfallId];
         replaceIntents(

@@ -300,7 +300,7 @@ describe("useAcquisitionIntent: loading a deck's saved intents", () => {
     await waitFor(() => expect(rendered.result.current.intentById).toEqual({}));
   });
 
-  it("currently keeps the previous deck's intents when the new deck's payload cannot be trusted (pinned; COL-06)", async () => {
+  it("shows no intent for the new deck when its payload cannot be trusted, never the previous deck's", async () => {
     const rendered = await renderLoaded({ [SOL_RING]: "proxy_now" });
 
     server.use(
@@ -311,12 +311,31 @@ describe("useAcquisitionIntent: loading a deck's saved intents", () => {
     );
     rendered.rerenderFor("deck-2");
 
-    await waitFor(() => expect(sentRequests("GET")).toHaveLength(2));
-    // `readAcquisitionIntents` returns null and the hook leaves the map alone, so
-    // deck-2 shows deck-1's deferrals until the next successful load.
+    await waitFor(() => expect(rendered.result.current.intentById).toEqual({}));
+    expect(sentRequests("GET")).toHaveLength(2);
+  });
+
+  it("does not let a failed save from the previous deck undo a choice of the new deck", async () => {
+    const rendered = await renderLoaded({});
+    const failing = gatedReply(SAVE_FAILURES[1].reply);
+    server.use(http.put(INTENT_ROUTE, failing.handler));
+    act(() => rendered.result.current.setIntent(SOL_RING, "proxy_now"));
+    await waitFor(() => expect(sentRequests("PUT")).toHaveLength(1));
+
+    givenSavedIntents([{ scryfallId: SOL_RING, mode: "buy_later" }]);
+    rendered.rerenderFor("deck-2");
+    await waitFor(() =>
+      expect(rendered.result.current.intentById).toEqual({
+        [SOL_RING]: "buy_later",
+      })
+    );
+
+    failing.open();
+
+    // deck-1's rollback would clear Sol Ring, which deck-2 defers.
     await settle();
     expect(rendered.result.current.intentById).toEqual({
-      [SOL_RING]: "proxy_now",
+      [SOL_RING]: "buy_later",
     });
   });
 });
