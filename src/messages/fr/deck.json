@@ -595,7 +595,8 @@
     "no": "Non",
     "deleteConfirm": "Supprimer ?",
     "restoreTooltip": "Restaurer ce snapshot",
-    "deleteTooltip": "Supprimer le snapshot"
+    "deleteTooltip": "Supprimer le snapshot",
+    "toggleList": "Liste des snapshots"
   },
   "share": {
     "title": "Partager le deck",

@@ -3,8 +3,7 @@
  * sees it listed with its card count, restores the deck to it after a cut, and
  * deletes it. The deck is read back through the API after the restore.
  *
- * Every control is found by role and accessible name, except the panel's
- * expand button, which has none (see `expandHistory`). The snapshots go with
+ * Every control is found by role and accessible name. The snapshots go with
  * the deck when the fixture deletes it (`DeckSnapshot.deck` cascades).
  *
  * The panel sits below the fold of the stats column at 1280×720. The column
@@ -70,8 +69,8 @@ function readCardNames(value: unknown): readonly string[] {
 
 /**
  * The History panel's header row: its title, its "Save" button and its
- * unnamed expand chevron. Both controls are found inside it, because the
- * builder shows other "Save" buttons and the chevron has no name of its own.
+ * "Snapshot list" disclosure button. The "Save" button is found inside it,
+ * because the builder shows other "Save" buttons.
  */
 function historyHeader(page: Page): Locator {
   return page.getByText("History", { exact: true }).locator("..");
@@ -109,13 +108,11 @@ async function saveSnapshot(
   expect((await created).ok()).toBe(true);
 }
 
-/**
- * Opens the snapshot list. The panel's expand button is an unnamed chevron
- * (`SnapshotsPanel.tsx`, a follow-up for DB-49), so it is the last button of
- * the header row, after "Save".
- */
+/** Opens the snapshot list through the panel's "Snapshot list" disclosure button. */
 async function expandHistory(page: Page): Promise<void> {
-  await activate(historyHeader(page).getByRole("button").last());
+  await activate(
+    historyHeader(page).getByRole("button", { name: "Snapshot list" })
+  );
 }
 
 test.describe("Deck snapshots", () => {
