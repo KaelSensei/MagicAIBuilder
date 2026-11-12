@@ -7,9 +7,13 @@
  * deck store and the import dialog. Pages reach it through
  * `HeaderDeckActionsSlot`, which loads this module lazily. The desktop bar and
  * the mobile menu each render one instance; both read and write the UI state
- * that `Header` owns (see `header-deck-actions-state`), so an import started
- * from the mobile menu, which closes itself, opens the desktop instance's
- * dialog.
+ * that `Header` owns (see `header-deck-actions-state`).
+ *
+ * Only the desktop instance renders the `ImportDialog`. The mobile menu
+ * unmounts itself on every press, so a dialog rendered inside it disappeared
+ * with the menu the moment "Import" opened it; the desktop bar is always
+ * mounted, only hidden by CSS on small screens, and the dialog is a portal, so
+ * it shows from there on every viewport.
  *
  * @module layout/HeaderDeckActions
  */
@@ -41,15 +45,27 @@ export interface HeaderDeckActionsProps {
 
 type UiStateChange = HeaderDeckActionsProps["onUiStateChange"];
 
-interface LayoutClasses {
-  readonly import: string | undefined;
-  readonly newDeck: string | undefined;
+interface LayoutConfig {
+  /** Renders the one `ImportDialog`; the other instance only asks to open it. */
+  readonly hostsImportDialog: boolean;
+  readonly importClassName: string | undefined;
+  readonly newDeckClassName: string | undefined;
 }
 
-// In the mobile menu the buttons stack in a column and keep their own width.
-const LAYOUT_CLASSES: Record<HeaderDeckActionsLayout, LayoutClasses> = {
-  desktop: { import: undefined, newDeck: undefined },
-  mobile: { import: "w-fit", newDeck: "mt-2 w-fit" },
+// The desktop bar hosts the dialog because it never unmounts (see the module
+// header). In the mobile menu the buttons stack in a column and keep their own
+// width.
+const LAYOUTS: Record<HeaderDeckActionsLayout, LayoutConfig> = {
+  desktop: {
+    hostsImportDialog: true,
+    importClassName: undefined,
+    newDeckClassName: undefined,
+  },
+  mobile: {
+    hostsImportDialog: false,
+    importClassName: "w-fit",
+    newDeckClassName: "mt-2 w-fit",
+  },
 };
 
 /**
@@ -163,7 +179,9 @@ function ActionIcon({
  * In the builder, "Import" opens the dialog on the current deck. Elsewhere it
  * first creates a deck (see `useImportFromHome`). "New Deck" creates and opens
  * a deck (see `useNewDeck`). `onAction` runs first on every press, so the
- * mobile menu is gone before the action starts.
+ * mobile menu is gone before the action starts; the dialog survives that
+ * because the desktop instance hosts it, and its open state is the shared
+ * `uiState.importOpen` on every page.
  */
 export function HeaderDeckActions({
   deckId,
@@ -174,7 +192,7 @@ export function HeaderDeckActions({
 }: HeaderDeckActionsProps) {
   const t = useTranslations("common");
   const { importOpen, isCreatingDeck, isCreatingImportDeck } = uiState;
-  const classes = LAYOUT_CLASSES[layout];
+  const layoutConfig = LAYOUTS[layout];
   const newDeck = useNewDeck(isCreatingDeck, onUiStateChange);
   const importFromHome = useImportFromHome(
     isCreatingImportDeck,
@@ -185,42 +203,43 @@ export function HeaderDeckActions({
     (open: boolean) => onUiStateChange((s) => ({ ...s, importOpen: open })),
     [onUiStateChange]
   );
+  const openImport = useCallback(
+    () => handleImportOpenChange(true),
+    [handleImportOpenChange]
+  );
 
-  const press = (action: () => Promise<void>) => () => {
+  const press = (action: () => void | Promise<void>) => () => {
     onAction?.();
     void action();
   };
 
+  const importButton = (
+    <Button
+      variant="secondary"
+      onClick={press(deckId ? openImport : importFromHome)}
+      disabled={isCreatingImportDeck}
+      className={layoutConfig.importClassName}
+    >
+      <ActionIcon pending={isCreatingImportDeck} icon={Upload} />
+      {t("nav.import")}
+    </Button>
+  );
+
   return (
     <>
-      {deckId ? (
-        <ImportDialog>
-          <Button
-            variant="secondary"
-            onClick={onAction}
-            className={classes.import}
-          >
-            <Upload className="h-3.5 w-3.5" />
-            {t("nav.import")}
-          </Button>
+      {layoutConfig.hostsImportDialog ? (
+        // The button stays the dialog's trigger here, so it keeps the popup
+        // semantics and gets focus back when the dialog closes.
+        <ImportDialog open={importOpen} onOpenChange={handleImportOpenChange}>
+          {importButton}
         </ImportDialog>
       ) : (
-        <ImportDialog open={importOpen} onOpenChange={handleImportOpenChange}>
-          <Button
-            variant="secondary"
-            onClick={press(importFromHome)}
-            disabled={isCreatingImportDeck}
-            className={classes.import}
-          >
-            <ActionIcon pending={isCreatingImportDeck} icon={Upload} />
-            {t("nav.import")}
-          </Button>
-        </ImportDialog>
+        importButton
       )}
       <Button
         onClick={press(newDeck)}
         disabled={isCreatingDeck}
-        className={classes.newDeck}
+        className={layoutConfig.newDeckClassName}
       >
         <ActionIcon pending={isCreatingDeck} icon={Plus} />
         {t("nav.newDeck")}
