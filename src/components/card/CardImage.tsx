@@ -33,6 +33,10 @@ interface CardImageProps {
   readonly isFlexibleLand?: boolean;
 }
 
+/** The card's clipped, rounded box; `.card-image-wrapper` is what the hover styles target. */
+const SURFACE_CLASS_NAME =
+  "card-image-wrapper cursor-pointer rounded-[4.75%] overflow-hidden w-full";
+
 /** Render mana cost as colored pip icons, with CMC fallback */
 function ManaPips({ manaCost, cmc }: { readonly manaCost?: string; readonly cmc?: number }) {
   if (manaCost) {
@@ -103,11 +107,61 @@ export function CardImage({
 
   const src = imgError ? CARD_BACK_URL : normalizeScryfallImageUrl(imageUri);
 
+  // The surface is a native <button> when the card acts on click, and a plain
+  // box otherwise, so the keyboard and the "button" role come from the element.
+  // The wrapper carries no role of its own: the <Image alt> names the card, and
+  // a `role="img"` wrapper would hide the button from assistive technology.
+  const surface = (
+    <>
+      <Image
+        src={src}
+        alt={name}
+        width={223}
+        height={310}
+        className="block w-full h-auto"
+        onError={() => setImgError(true)}
+        unoptimized
+      />
+
+      {/* Gradient overlay — slides up on hover */}
+      {showOverlay && (
+        <motion.div
+          className="absolute inset-x-0 bottom-0 rounded-b-[4.75%] pointer-events-none"
+          initial={{ opacity: 0, y: 8 }}
+          animate={isHovered ? { opacity: 1, y: 0 } : { opacity: 0, y: 8 }}
+          transition={{ duration: 0.18 }}
+        >
+          <div className="bg-gradient-to-t from-black/85 via-black/40 to-transparent pt-6 pb-2 px-2">
+            <p className="text-white text-[11px] font-semibold leading-tight truncate drop-shadow">
+              {name}
+            </p>
+            {(manaCost || cmc != null) && (
+              <div className="mt-0.5">
+                <ManaPips manaCost={manaCost} cmc={cmc} />
+              </div>
+            )}
+          </div>
+        </motion.div>
+      )}
+
+      {/* Add indicator */}
+      {showOverlay && isHovered && onClick && (
+        <motion.div
+          className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-[var(--accent)] flex items-center justify-center shadow-lg pointer-events-none"
+          initial={{ opacity: 0, scale: 0.7 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.7 }}
+          transition={{ duration: 0.15 }}
+        >
+          <span className="text-white text-base font-bold leading-none">+</span>
+        </motion.div>
+      )}
+    </>
+  );
+
   return (
     <div
       ref={anchorRef}
-      role="img"
-      aria-label={name}
       className={cn("relative inline-block w-full", className)}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => {
@@ -115,59 +169,21 @@ export function CardImage({
         setShowZoom(false);
       }}
     >
-      <motion.div
-        className="card-image-wrapper cursor-pointer rounded-[4.75%] overflow-hidden w-full"
-        transition={{ duration: 0.15 }}
-        onClick={onClick}
-        role={onClick ? "button" : undefined}
-        tabIndex={onClick ? 0 : undefined}
-        onKeyDown={onClick ? (e) => { if (e.key === "Enter" || e.key === " ") onClick(); } : undefined}
-        aria-label={onClick ? `Add ${name} to deck` : undefined}
-      >
-        <Image
-          src={src}
-          alt={name}
-          width={223}
-          height={310}
-          className="block w-full h-auto"
-          onError={() => setImgError(true)}
-          unoptimized
-        />
-
-        {/* Gradient overlay — slides up on hover */}
-        {showOverlay && (
-          <motion.div
-            className="absolute inset-x-0 bottom-0 rounded-b-[4.75%] pointer-events-none"
-            initial={{ opacity: 0, y: 8 }}
-            animate={isHovered ? { opacity: 1, y: 0 } : { opacity: 0, y: 8 }}
-            transition={{ duration: 0.18 }}
-          >
-            <div className="bg-gradient-to-t from-black/85 via-black/40 to-transparent pt-6 pb-2 px-2">
-              <p className="text-white text-[11px] font-semibold leading-tight truncate drop-shadow">
-                {name}
-              </p>
-              {(manaCost || cmc != null) && (
-                <div className="mt-0.5">
-                  <ManaPips manaCost={manaCost} cmc={cmc} />
-                </div>
-              )}
-            </div>
-          </motion.div>
-        )}
-
-        {/* Add indicator */}
-        {showOverlay && isHovered && onClick && (
-          <motion.div
-            className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-[var(--accent)] flex items-center justify-center shadow-lg pointer-events-none"
-            initial={{ opacity: 0, scale: 0.7 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.7 }}
-            transition={{ duration: 0.15 }}
-          >
-            <span className="text-white text-base font-bold leading-none">+</span>
-          </motion.div>
-        )}
-      </motion.div>
+      {onClick ? (
+        <motion.button
+          type="button"
+          className={cn(SURFACE_CLASS_NAME, "block text-left")}
+          transition={{ duration: 0.15 }}
+          onClick={onClick}
+          aria-label={`Add ${name} to deck`}
+        >
+          {surface}
+        </motion.button>
+      ) : (
+        <motion.div className={SURFACE_CLASS_NAME} transition={{ duration: 0.15 }}>
+          {surface}
+        </motion.div>
+      )}
 
       {/* Zoom panel */}
       {showZoom && zoomPos && largeUri && !showOverlay && createPortal(

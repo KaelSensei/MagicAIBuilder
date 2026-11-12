@@ -23,8 +23,11 @@ export function DraggableCard({ card, children }: DraggableCardProps) {
     zIndex: isDragging ? 50 : undefined,
   };
 
+  // dnd-kit makes this wrapper a `role="button"` drag handle. Its name is the card's name:
+  // left unnamed, it borrows the name of its content, and a grid result whose image is the
+  // "Add <card> to deck" button would then announce two buttons with that name.
   return (
-    <div ref={setNodeRef} style={style} {...listeners} {...attributes}>
+    <div ref={setNodeRef} style={style} {...listeners} {...attributes} aria-label={card.name}>
       {children}
     </div>
   );

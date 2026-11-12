@@ -755,7 +755,9 @@ describe("characterization: builder page shell", () => {
 
     it("resizes the search panel from the keyboard in 10-pixel steps and remembers the width", async () => {
       await openSavedDeck();
-      const handle = screen.getByRole("slider", { name: "Search panel width" });
+      const handle = screen.getByRole("separator", {
+        name: "Search panel width",
+      });
       expect(handle).toHaveAttribute("aria-valuenow", "300");
 
       fireEvent.keyDown(handle, { key: "ArrowRight" });

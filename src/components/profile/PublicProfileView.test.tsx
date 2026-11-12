@@ -67,11 +67,10 @@ describe("PublicProfileView avatar", () => {
     const avatar = screen.getByRole("img", { name: "Totoro" });
     fireEvent.error(avatar);
 
-    expect(screen.getByRole("img", { name: "Totoro" })).not.toBeInstanceOf(
-      HTMLImageElement
-    );
-    expect(screen.queryByRole("img", { name: "Totoro" })).not.toHaveAttribute(
-      "src"
+    // The fallback is a bundled silhouette, not a retry of the broken URL.
+    expect(screen.getByRole("img", { name: "Totoro" })).toHaveAttribute(
+      "src",
+      "/images/avatar-placeholder.svg"
     );
   });
 });

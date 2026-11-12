@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { addCardSchema, patchCardSchema, VALID_CATEGORIES, VALID_ZONES } from "@/lib/validation/card";
+import { CARD_CATEGORIES } from "@/lib/deck/types";
+import { addCardSchema, patchCardSchema, VALID_ZONES } from "@/lib/validation/card";
 import { patchDeckSchema } from "@/lib/validation/deck";
 import { buildSchema } from "@/lib/validation/ai";
 
@@ -75,7 +76,7 @@ describe("addCardSchema", () => {
   });
 
   it("accepts all valid categories", () => {
-    for (const cat of VALID_CATEGORIES) {
+    for (const cat of CARD_CATEGORIES) {
       const result = addCardSchema.safeParse({ ...validCard, category: cat });
       expect(result.success).toBe(true);
     }

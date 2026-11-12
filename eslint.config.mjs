@@ -375,6 +375,30 @@ const eslintConfig = [
     },
   },
 
+  // SonarCloud parity (docs/engineering/quality-gate.md, "Sonar parity
+  // rules"). SonarCloud is advisory, so the findings it kept raising on new
+  // pull requests get an ESLint twin here and fail `pnpm lint` before the
+  // push. Both plugins come with `eslint-config-next`, whose block above
+  // declares them; this block only sets the rules. Tests are included: Sonar
+  // reports them too, and a test's JSX ships to nobody but still trains the
+  // next copy-paste.
+  {
+    files: ["**/*.{ts,tsx}"],
+    rules: {
+      // S6819: a `role` that a native element already carries hides that
+      // element's keyboard and assistive-technology behaviour behind a
+      // re-implementation. `<dialog>`, `<fieldset>`, `<output>`, `<img>`,
+      // `<button>` and `<hr>` (a separator) replace the role; roles with no
+      // element, such as `switch` or `tooltip`, stay allowed.
+      "jsx-a11y/prefer-tag-over-role": "error",
+      // S6478: a component declared inside another component's body gets a
+      // new identity on every render, so React unmounts and remounts its
+      // subtree and loses its state. Declare it at module level and pass what
+      // it needs as props.
+      "react/no-unstable-nested-components": "error",
+    },
+  },
+
   // Migration guard (decision D8). While a shim keeps an old path alive,
   // nothing may import or `vi.mock` that path: a mock of the shim does not
   // mock the moved module. The rule resolves `@/` and relative specifiers,

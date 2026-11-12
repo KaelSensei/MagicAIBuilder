@@ -33,7 +33,8 @@ import { beforeEach } from "vitest";
 import { http, HttpResponse, type HttpHandler } from "msw";
 import { z } from "zod";
 import { ALL_FORMATS } from "@/lib/deck/formats";
-import { VALID_CATEGORIES, VALID_ZONES } from "@/lib/validation/card";
+import { CARD_CATEGORIES } from "@/lib/deck/types";
+import { VALID_ZONES } from "@/lib/validation/card";
 import { pairingTypeSchema } from "@/lib/validation/deck";
 import {
   createInMemoryDeckApi,
@@ -120,7 +121,7 @@ const cardChangesSchema = z.object({
 });
 
 const cardPatchSchema = z.object({
-  category: z.enum(VALID_CATEGORIES).optional(),
+  category: z.enum(CARD_CATEGORIES).optional(),
   notes: z.string().nullable().optional(),
   zone: z.enum(VALID_ZONES).optional(),
   quantity: z.number().optional(),

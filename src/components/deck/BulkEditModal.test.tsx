@@ -14,8 +14,7 @@ import type {
   ApiDeckCard,
   DeckCardChanges,
 } from "@/lib/db/deck-api";
-import { VALID_CATEGORIES } from "@/lib/validation/card";
-import type { Deck, DeckCard } from "@/lib/deck/types";
+import { CARD_CATEGORIES, type Deck, type DeckCard } from "@/lib/deck/types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 
 interface FakeServer {
@@ -88,7 +87,7 @@ function insertRow(deckId: string, payload: AddCardPayload): ApiDeckCard {
     imageUri: payload.imageUri ?? "",
     artCropUri: payload.artCropUri ?? "",
     category:
-      VALID_CATEGORIES.find((category) => category === payload.category) ??
+      CARD_CATEGORIES.find((category) => category === payload.category) ??
       "other",
     quantity: payload.quantity ?? 1,
     notes: null,

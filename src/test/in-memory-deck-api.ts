@@ -51,8 +51,7 @@ import type {
   updateDeck,
 } from "@/lib/db/deck-api";
 import { COMMAND_SLOT_ROWS } from "@/lib/deck/bulk-edit-command-zone";
-import type { CardCategory } from "@/lib/deck/types";
-import { VALID_CATEGORIES } from "@/lib/validation/card";
+import { CARD_CATEGORIES, type CardCategory } from "@/lib/deck/types";
 import { prismaQuery } from "@/test/prisma-query";
 
 /**
@@ -184,7 +183,7 @@ export function emptyApiDeck(id: string, name = "Deck"): ApiDeck {
 }
 
 function toCategory(category: string | undefined): CardCategory {
-  return VALID_CATEGORIES.find((known) => known === category) ?? "other";
+  return CARD_CATEGORIES.find((known) => known === category) ?? "other";
 }
 
 /** The row the database inserts for an add-card payload, with its defaults. */

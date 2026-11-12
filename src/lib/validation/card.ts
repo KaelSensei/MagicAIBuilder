@@ -8,14 +8,6 @@ import { deckCardIdSchema, pairingTypeSchema } from "./deck";
 import { CARD_CATEGORIES } from "@/lib/deck/types";
 import { COLOR_SYMBOLS } from "@/lib/mana/colors";
 
-/**
- * The categories a card write accepts: the deck domain's `CARD_CATEGORIES`, under the name the
- * validation tests and the test fakes still import.
- *
- * @deprecated Import `CARD_CATEGORIES` from `@/lib/deck/types`.
- */
-export const VALID_CATEGORIES = CARD_CATEGORIES;
-
 export const VALID_ZONES = ["main", "sideboard", "maybeboard"] as const;
 
 // Schema for POST /api/decks/[id]/cards
