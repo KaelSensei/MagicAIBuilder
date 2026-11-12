@@ -1,18 +1,14 @@
-/** Prisma's error code for a unique-constraint violation. */
-const UNIQUE_VIOLATION = "P2002";
-
 /**
- * @param error - a rejected Prisma write's reason
- * @returns whether the write lost a race to a concurrent insert
+ * Idempotent creates: a row written at most once per idempotency key, so a
+ * client may retry a create without making a duplicate.
+ *
+ * Shared kernel beside the Prisma client. `POST /api/decks` uses it with the
+ * `Idempotency-Key` header. The race between two requests carrying the same
+ * key is settled by a unique index, recognised with `isUniqueViolation`.
+ *
+ * @module db/create-once
  */
-function isUniqueViolation(error: unknown): boolean {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "code" in error &&
-    error.code === UNIQUE_VIOLATION
-  );
-}
+import { isUniqueViolation } from "./prisma-errors";
 
 /** The row, and whether this call wrote it or found an earlier one. */
 export interface CreateOnceResult<T> {

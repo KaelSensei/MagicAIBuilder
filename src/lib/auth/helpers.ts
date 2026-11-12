@@ -13,6 +13,7 @@ import "server-only";
 import { auth } from "@/lib/auth/config";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
+import { isUniqueViolation } from "@/lib/db/prisma-errors";
 
 /** Session with guaranteed user.id */
 export interface AuthenticatedSession {
@@ -42,21 +43,6 @@ const PLAYWRIGHT_USER = {
   name: "Playwright",
   image: null,
 } as const;
-
-/** Prisma's error code for a unique-constraint violation. */
-const UNIQUE_VIOLATION = "P2002";
-
-/**
- * @param error - a rejected Prisma promise's reason
- * @returns whether the write lost a race to a concurrent insert
- */
-function isUniqueViolation(error: unknown): boolean {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    (error as { code?: unknown }).code === UNIQUE_VIOLATION
-  );
-}
 
 /**
  * Look up the user a session token names. Never creates one.

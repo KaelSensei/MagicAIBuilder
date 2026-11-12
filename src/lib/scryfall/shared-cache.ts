@@ -14,7 +14,7 @@
 import "server-only";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
-import { toJsonPayload } from "@/lib/api/json-payload";
+import { toJsonPayload } from "@/lib/db/json-payload";
 import { logger } from "@/lib/logger";
 import type { checkRateLimit } from "@/lib/rate-limit";
 import {
