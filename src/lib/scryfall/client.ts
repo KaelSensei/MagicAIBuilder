@@ -17,9 +17,8 @@ import { isScryfallCard, isScryfallSearchResponse } from "./guards";
 import { resetScryfallQueue, scheduleScryfallRequest } from "./request-queue";
 import { buildLocalizedNamesQueries } from "./localized";
 import { exactNameTerm } from "./exact-name";
+import { SCRYFALL_API } from "./constants";
 import { logger } from "@/lib/logger";
-
-const SCRYFALL_BASE = "https://api.scryfall.com";
 
 /**
  * How long one Scryfall request may run, in milliseconds, before it is aborted
@@ -123,7 +122,7 @@ export async function searchCards(
   let status: number | null = null;
   try {
     const response = await rateLimitedFetch(
-      `${SCRYFALL_BASE}/cards/search?${params}`
+      `${SCRYFALL_API}/cards/search?${params}`
     );
     status = response.status;
 
@@ -145,7 +144,7 @@ export async function searchCards(
 export async function getCardByName(name: string): Promise<ScryfallCard> {
   const params = new URLSearchParams({ exact: name });
   const response = await rateLimitedFetch(
-    `${SCRYFALL_BASE}/cards/named?${params}`
+    `${SCRYFALL_API}/cards/named?${params}`
   );
   return handleResponse<ScryfallCard>(response);
 }
@@ -154,7 +153,7 @@ export async function getCardByName(name: string): Promise<ScryfallCard> {
 export async function getCardByNameFuzzy(name: string): Promise<ScryfallCard> {
   const params = new URLSearchParams({ fuzzy: name });
   const response = await rateLimitedFetch(
-    `${SCRYFALL_BASE}/cards/named?${params}`
+    `${SCRYFALL_API}/cards/named?${params}`
   );
   return handleResponse<ScryfallCard>(response);
 }
@@ -177,7 +176,7 @@ export async function getCardById(id: string): Promise<ScryfallCard> {
   const startedAt = performance.now();
   let status: number | null = null;
   try {
-    const response = await rateLimitedFetch(`${SCRYFALL_BASE}/cards/${id}`);
+    const response = await rateLimitedFetch(`${SCRYFALL_API}/cards/${id}`);
     status = response.status;
     return await handleResponse<ScryfallCard>(response);
   } finally {
@@ -192,7 +191,7 @@ export async function getCardById(id: string): Promise<ScryfallCard> {
 export async function autocompleteCardName(partial: string): Promise<string[]> {
   const params = new URLSearchParams({ q: partial });
   const response = await rateLimitedFetch(
-    `${SCRYFALL_BASE}/cards/autocomplete?${params}`
+    `${SCRYFALL_API}/cards/autocomplete?${params}`
   );
   const data = await handleResponse<ScryfallAutocompleteResponse>(response);
   return data.data;
@@ -202,7 +201,7 @@ export async function autocompleteCardName(partial: string): Promise<string[]> {
 export async function getCardCollection(
   identifiers: ScryfallCollectionIdentifier[]
 ): Promise<ScryfallCollectionResponse> {
-  const response = await rateLimitedFetch(`${SCRYFALL_BASE}/cards/collection`, {
+  const response = await rateLimitedFetch(`${SCRYFALL_API}/cards/collection`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ identifiers }),
@@ -301,7 +300,7 @@ export async function searchCardPrintings(
   if (wantsTranslation) params.set("include_multilingual", "true");
 
   const response = await rateLimitedFetch(
-    `${SCRYFALL_BASE}/cards/search?${params}`
+    `${SCRYFALL_API}/cards/search?${params}`
   );
   return handleResponse<ScryfallSearchResponse>(response);
 }

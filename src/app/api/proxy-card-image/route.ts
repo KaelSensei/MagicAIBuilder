@@ -17,8 +17,8 @@ import { USER_AGENT } from "@/lib/http";
 import { logger } from "@/lib/logger";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { rateLimitResponse } from "@/lib/api/route-kit";
+import { SCRYFALL_IMAGE_HOST } from "@/lib/scryfall/constants";
 
-const ALLOWED_HOST = "cards.scryfall.io";
 const MAX_PARAM_LEN = 700;
 const UPSTREAM_TIMEOUT_MS = 15_000;
 /** Scryfall's largest PNG is ~1.5 MB; 5 MB leaves room without buffering anything absurd. */
@@ -50,7 +50,7 @@ function isAllowedScryfallImageUrl(raw: string): boolean {
     return false;
   }
   if (parsed.protocol !== "https:") return false;
-  if (parsed.hostname !== ALLOWED_HOST) return false;
+  if (parsed.hostname !== SCRYFALL_IMAGE_HOST) return false;
   if (parsed.username !== "" || parsed.password !== "") return false;
   if (parsed.pathname.length < 2) return false;
   return true;

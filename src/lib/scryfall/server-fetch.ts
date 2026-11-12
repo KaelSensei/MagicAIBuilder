@@ -10,14 +10,13 @@ import "server-only";
 import { httpGet, HttpStatusError } from "@/lib/http";
 import { isScryfallCard, isScryfallSearchResponse } from "./guards";
 import { scheduleScryfallRequest } from "./request-queue";
+import { SCRYFALL_API } from "./constants";
 import type { SearchCacheKey } from "./shared-cache-keys";
 import {
   EMPTY_SEARCH_RESPONSE,
   type ScryfallCard,
   type ScryfallSearchResponse,
 } from "./types";
-
-const SCRYFALL_API = "https://api.scryfall.com";
 
 /** What Scryfall answered, reduced to what a cache route can act on. */
 export type UpstreamResult<T> =

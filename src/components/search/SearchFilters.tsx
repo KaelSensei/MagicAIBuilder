@@ -5,6 +5,7 @@ import { useCallback, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Check } from "lucide-react";
 import { cn } from "@/components/ui/utils";
+import { manaSymbolSvgUrl } from "@/lib/scryfall/constants";
 import type {
   CmcMode,
   ColorMode,
@@ -219,7 +220,7 @@ export function SearchFilters({
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={`https://svgs.scryfall.io/card-symbols/${code}.svg`}
+                src={manaSymbolSvgUrl(code)}
                 alt={t(`colors.${code}`)}
                 width={22}
                 height={22}
@@ -242,7 +243,7 @@ export function SearchFilters({
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="https://svgs.scryfall.io/card-symbols/C.svg"
+              src={manaSymbolSvgUrl("C")}
               alt={tf("colorlessAlt")}
               width={22}
               height={22}

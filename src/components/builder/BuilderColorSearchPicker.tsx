@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { cn } from "@/components/ui/utils";
+import { manaSymbolSvgUrl } from "@/lib/scryfall/constants";
 
 /**
  * Colours the builder's colour search can filter by: WUBRG, then colourless.
@@ -52,7 +53,7 @@ export function BuilderColorSearchPicker({
               {/* Official Scryfall mana symbol SVGs — SVG external URL, next/image not applicable */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={`https://svgs.scryfall.io/card-symbols/${code}.svg`}
+                src={manaSymbolSvgUrl(code)}
                 alt={label}
                 className="w-full h-full"
               />
