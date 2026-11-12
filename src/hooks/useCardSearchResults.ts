@@ -17,11 +17,8 @@
  */
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import {
-  MIN_SEARCH_QUERY_LENGTH,
-  STALE_TIME_5MIN,
-  useCardSearch,
-} from "@/hooks/useCardSearch";
+import { MIN_SEARCH_QUERY_LENGTH, useCardSearch } from "@/hooks/useCardSearch";
+import { STALE_TIME_5MIN } from "@/lib/query/stale-times";
 import { useInitContext } from "@/components/providers/InitProvider";
 import { useCollectionStore } from "@/lib/collection/store";
 import {

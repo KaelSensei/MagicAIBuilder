@@ -8,8 +8,8 @@ import {
   type DeckComboQuery,
 } from "@/modules/combos/domain/deck-query";
 import type { Deck } from "@/lib/deck/types";
+import { STALE_TIME_1H } from "@/lib/query/stale-times";
 
-const STALE_TIME_1H = 60 * 60 * 1000;
 const MIN_CARDS = 10;
 
 function toDeckComboQuery(deck: Deck | null): DeckComboQuery {

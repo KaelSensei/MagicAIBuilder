@@ -19,6 +19,7 @@ import { OnboardingProvider } from "@/components/onboarding/OnboardingProvider";
 import { GuestDeckClaimPrompt } from "@/components/deck/GuestDeckClaimPrompt";
 import { ToastContainer } from "@/components/ui/Toast";
 import type { UserInitData } from "@/lib/auth/user-init";
+import { STALE_TIME_5MIN } from "@/lib/query/stale-times";
 import { useCollectionStore } from "@/lib/collection/store";
 
 export function Providers({
@@ -31,7 +32,7 @@ export function Providers({
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 5 * 60 * 1000, // 5 min default
+            staleTime: STALE_TIME_5MIN,
             retry: 2,
             refetchOnWindowFocus: false,
           },

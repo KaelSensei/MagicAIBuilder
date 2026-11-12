@@ -11,9 +11,7 @@
  */
 import { useQuery } from "@tanstack/react-query";
 import { searchCards } from "@/lib/scryfall/client";
-
-/** How long a search answer stays fresh before TanStack Query refetches it. */
-export const STALE_TIME_5MIN = 5 * 60 * 1000;
+import { STALE_TIME_5MIN } from "@/lib/query/stale-times";
 
 /** Shortest query, once trimmed, that a search hook sends to Scryfall. */
 export const MIN_SEARCH_QUERY_LENGTH = 2;
