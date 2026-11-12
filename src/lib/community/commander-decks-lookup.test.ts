@@ -133,6 +133,23 @@ it("answers an empty listing for a commander nobody has published", async () => 
   });
 });
 
+// Before #1444 the commander was saved in three requests, and a failure between
+// them left a deck with a `commanderName` and no `isCommander` row. Read as
+// `commander: undefined`, one such deck made the whole page throw for everyone.
+it("lists a deck whose commander row is missing, named after its commanderName and without an image", async () => {
+  stubMatch([{ ...atraxaDeck("a"), cards: [] }]);
+
+  const listing = await findCommanderDecks("atraxa-praetors-voice", null);
+
+  expect(listing.total).toBe(1);
+  expect(listing.commanderName).toBe(ATRAXA);
+  expect(listing.decks[0]?.commander).toEqual({
+    name: ATRAXA,
+    imageUri: "",
+    artCropUri: "",
+  });
+});
+
 it("reports the signed-in viewer's own vote and nobody else's", async () => {
   stubMatch([
     atraxaDeck("a", [

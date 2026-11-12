@@ -22,6 +22,7 @@ import { ANONYMOUS_READ_REVALIDATE_SECONDS } from "@/lib/community/anonymous-rea
 import type {
   CommanderDeckSummary,
   CommanderDecksResponse,
+  DiscoveryCommander,
 } from "@/lib/community/discovery-types";
 import {
   calculateVoteScore,
@@ -119,6 +120,30 @@ function isDeckVote(
   return isValidVoteValue(vote.value);
 }
 
+/**
+ * The commander as the row shows it: the `isCommander` card when the deck has
+ * one, otherwise a commander named after the denormalised `commanderName`
+ * with no image, which the row renders as the card back.
+ *
+ * A deck can carry a `commanderName` and no `isCommander` row: before #1444
+ * the command zone was saved in three requests, and a failure between them
+ * left exactly that state, and `PATCH /api/decks/[id]` still accepts
+ * `commanderName` on its own. Such a deck is listed rather than dropped or
+ * left to break the page. `.at(0)` keeps the absence visible to `tsc`.
+ *
+ * The SQL match requires a non-null `commanderName`, so the empty name only
+ * covers a deck whose name was cleared between the id query and the hydration.
+ */
+function discoveryCommanderOf(deck: DiscoveryDeckRecord): DiscoveryCommander {
+  return (
+    deck.cards.at(0) ?? {
+      name: deck.commanderName ?? "",
+      imageUri: "",
+      artCropUri: "",
+    }
+  );
+}
+
 /** One discovery row, with the viewer's own vote picked out of the tally. */
 function summarize(
   deck: DiscoveryDeckRecord,
@@ -135,7 +160,7 @@ function summarize(
     format: deck.format,
     updatedAt: deck.updatedAt,
     cardCount: deck._count.cards,
-    commander: deck.cards[0],
+    commander: discoveryCommanderOf(deck),
     author: deck.user,
     score: tally.score,
     upvotes: tally.upvotes,

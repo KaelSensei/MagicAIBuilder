@@ -2,6 +2,7 @@ import React from "react";
 import { screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { CommanderDeckSummary } from "@/lib/community/discovery-types";
+import { CARD_BACK_URL } from "@/lib/scryfall/images";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { CommanderDecksView } from "./CommanderDecksView";
 
@@ -83,5 +84,33 @@ describe("CommanderDecksView average rating", () => {
     );
 
     expect(ratingText()).toBe("4.5");
+  });
+});
+
+// A deck saved with a `commanderName` and no commander row reaches the view as
+// a commander named after that `commanderName`, with no image
+// (`commander-decks-lookup.ts`). Pinned: the row shows the card back under
+// that name instead of failing the page.
+describe("CommanderDecksView commander image", () => {
+  it("shows the card back, named after the commander, when the commander has no image", () => {
+    renderWithIntl(
+      <CommanderDecksView
+        commanderName="Atraxa"
+        decks={[
+          makeDeck({
+            commander: {
+              name: "Atraxa, Praetors' Voice",
+              imageUri: "",
+              artCropUri: "",
+            },
+          }),
+        ]}
+        canVote={false}
+      />
+    );
+
+    expect(
+      screen.getByRole("img", { name: "Atraxa, Praetors' Voice" })
+    ).toHaveAttribute("src", CARD_BACK_URL);
   });
 });
