@@ -28,7 +28,7 @@
     "landsTitle": "Lands (t:land)",
     "match": "Match:",
     "cmc": "CMC",
-    "price": "Price",
+    "priceUsd": "Price (USD)",
     "type": "Type",
     "keyword": "KW",
     "power": "Pow",
@@ -47,7 +47,21 @@
     "presets": "Presets",
     "presetNamePlaceholder": "Preset name…",
     "savePreset": "Save",
-    "loadPreset": "Load a preset…"
+    "loadPreset": "Load a preset…",
+    "fieldLabels": {
+      "cmcMin": "Minimum mana value",
+      "cmcMax": "Maximum mana value",
+      "cmcExact": "Exact mana value",
+      "priceMin": "Minimum price in US dollars",
+      "priceMax": "Maximum price in US dollars",
+      "keyword": "Keyword ability",
+      "powerMin": "Minimum power",
+      "powerMax": "Maximum power",
+      "toughnessMin": "Minimum toughness",
+      "toughnessMax": "Maximum toughness",
+      "presetName": "Preset name",
+      "savedPresets": "Saved presets"
+    }
   },
   "colors": {
     "W": "White",

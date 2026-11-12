@@ -221,12 +221,12 @@ describe("characterization: the Scryfall query of the name search filters", () =
     },
     {
       choice: "Land",
-      steps: [click("🏔 Land")],
+      steps: [click("Land")],
       query: "t:land legal:commander",
     },
     {
       choice: "Green and Land",
-      steps: [click("Green"), click("🏔 Land")],
+      steps: [click("Green"), click("Land")],
       query: "id<=G t:land legal:commander",
     },
     {
@@ -293,7 +293,7 @@ describe("characterization: the Scryfall query of the name search filters", () =
     },
     {
       choice: "Land and the Ramp role, which repeats t:land",
-      steps: [click("🏔 Land"), role("Ramp")],
+      steps: [click("Land"), role("Ramp")],
       query: 't:land (t:land OR o:"add {") legal:commander',
     },
     {
@@ -313,7 +313,7 @@ describe("characterization: the Scryfall query of the name search filters", () =
         click("White"),
         click("Blue"),
         match("All"),
-        click("🏔 Land"),
+        click("Land"),
         fill("Min", "1"),
         fill("Max", "3"),
         fill("Max $", "5"),

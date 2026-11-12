@@ -479,7 +479,8 @@
     "no": "No",
     "deleteConfirm": "Delete?",
     "restoreTooltip": "Restore to this snapshot",
-    "deleteTooltip": "Delete snapshot"
+    "deleteTooltip": "Delete snapshot",
+    "toggleList": "Snapshot list"
   },
   "share": {
     "title": "Поделиться деком",

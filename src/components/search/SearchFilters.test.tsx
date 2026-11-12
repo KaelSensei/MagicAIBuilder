@@ -10,11 +10,13 @@
  * starting from the page's defaults. Tests named "currently … (pinned)" record odd behaviour on
  * purpose; a `fix/` pull request that changes it flips the test with its own Red.
  */
-import { fireEvent, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { NextIntlClientProvider } from "next-intl";
 import { useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SearchFilters } from "./SearchFilters";
+import { testMessages } from "@/test/intl-catalogs";
 import { renderWithIntl } from "@/test/render-with-intl";
 import type { SearchFilters as SearchFiltersValue } from "@/lib/deck/types";
 
@@ -76,6 +78,12 @@ function renderPanel(initial: SearchFiltersValue = PAGE_DEFAULTS) {
 
 const button = (name: string) => screen.getByRole("button", { name });
 
+/** Whether a `<label>` element names the field, as the Type and Role words do. */
+const hasVisibleLabel = (field: HTMLElement): boolean =>
+  (field instanceof HTMLInputElement || field instanceof HTMLSelectElement) &&
+  field.labels !== null &&
+  field.labels.length > 0;
+
 /** The CMC mode tab; the colour "Exact" match also exists, and only it carries a title. */
 const cmcMode = (name: string) =>
   screen.getByRole("button", { name, description: "" });
@@ -88,6 +96,36 @@ describe("SearchFilters", () => {
   it("labels USD-only price bounds explicitly", () => {
     renderWithIntl(<SearchFilters filters={FILTERS} onChange={vi.fn()} />);
     expect(screen.getByText("Price (USD)")).toBeDefined();
+  });
+
+  it("writes the price label, currency included, in the player's language", () => {
+    renderWithIntl(<SearchFilters filters={FILTERS} onChange={vi.fn()} />, {
+      locale: "fr",
+    });
+    expect(screen.getByText("Prix (USD)")).toBeDefined();
+  });
+
+  it("shows the price label as the catalog words it, currency included, so a translator can reword it", () => {
+    const en = testMessages("en");
+    const search = en.search;
+    if (typeof search !== "object" || typeof search.filters !== "object") {
+      throw new TypeError("the en search catalog has no filters block");
+    }
+    const messages = {
+      ...en,
+      search: {
+        ...search,
+        filters: { ...search.filters, priceUsd: "Price, in dollars" },
+      },
+    };
+    render(
+      <NextIntlClientProvider locale="en" timeZone="UTC" messages={messages}>
+        <SearchFilters filters={FILTERS} onChange={vi.fn()} />
+      </NextIntlClientProvider>
+    );
+
+    expect(screen.getByText("Price, in dollars")).toBeDefined();
+    expect(screen.queryByText(/\(USD\)/)).toBeNull();
   });
 
   it("offers Collection only to every player as a toggle button that reports its state", () => {
@@ -128,7 +166,7 @@ describe("SearchFilters", () => {
 });
 
 describe("SearchFilters: colours", () => {
-  it("names the five colour buttons, Colorless and Land, in that order, and describes the last two by their Scryfall syntax", () => {
+  it("names the five colour buttons, Colorless and Land by the word alone, in that order, and describes the last two by their Scryfall syntax", () => {
     renderPanel();
 
     const names = [
@@ -138,7 +176,7 @@ describe("SearchFilters: colours", () => {
       "Red",
       "Green",
       "Colorless",
-      "🏔 Land",
+      "Land",
     ];
     expect(screen.getAllByRole("button").slice(0, names.length)).toEqual(
       names.map((name) => button(name))
@@ -146,18 +184,38 @@ describe("SearchFilters: colours", () => {
     expect(button("Colorless")).toHaveAccessibleDescription(
       "Colorless (c:c) — artifacts, Eldrazi, etc."
     );
-    expect(button("🏔 Land")).toHaveAccessibleDescription("Lands (t:land)");
+    expect(button("Land")).toHaveAccessibleDescription("Lands (t:land)");
   });
 
-  it("currently shows a picked colour, Colorless or Land only by its styling: none of them reports aria-pressed (pinned)", async () => {
+  it("announces each colour, Colorless and Land as a toggle button whose pressed state flips on each click", async () => {
     const panel = renderPanel();
+    const toggles = [
+      "White",
+      "Blue",
+      "Black",
+      "Red",
+      "Green",
+      "Colorless",
+      "Land",
+    ];
+
+    for (const name of toggles) {
+      expect(button(name).getAttribute("aria-pressed")).toBe("false");
+    }
 
     await panel.user.click(button("White"));
-    await panel.user.click(button("🏔 Land"));
+    await panel.user.click(button("Land"));
+    expect(button("White").getAttribute("aria-pressed")).toBe("true");
+    expect(button("Land").getAttribute("aria-pressed")).toBe("true");
+    expect(button("Blue").getAttribute("aria-pressed")).toBe("false");
 
-    for (const name of ["White", "Colorless", "🏔 Land"]) {
-      expect(button(name).getAttribute("aria-pressed")).toBeNull();
-    }
+    await panel.user.click(button("Colorless"));
+    expect(button("Colorless").getAttribute("aria-pressed")).toBe("true");
+    // Colorless clears the picked colours, so White reads as off again.
+    expect(button("White").getAttribute("aria-pressed")).toBe("false");
+
+    await panel.user.click(button("Land"));
+    expect(button("Land").getAttribute("aria-pressed")).toBe("false");
   });
 
   it("adds colours in the order they are clicked and removes one on a second click", async () => {
@@ -199,10 +257,10 @@ describe("SearchFilters: colours", () => {
     const panel = renderPanel();
     await panel.user.click(button("Green"));
 
-    await panel.user.click(button("🏔 Land"));
+    await panel.user.click(button("Land"));
     expect(panel.last()).toMatchObject({ colors: ["G"], landFilter: true });
 
-    await panel.user.click(button("🏔 Land"));
+    await panel.user.click(button("Land"));
     expect(panel.last()).toMatchObject({ colors: ["G"], landFilter: false });
   });
 
@@ -377,17 +435,55 @@ describe("SearchFilters: price, type, keyword and role", () => {
     expect(panel.last()?.interactionType).toBeNull();
   });
 
-  it("currently names its number fields, text fields and Role list by nothing but a placeholder or a nearby word (pinned)", () => {
-    renderPanel();
+  it("names every field a screen reader can land on: number, text, list and slider, creature bounds and presets included", () => {
+    localStorage.setItem(
+      PRESETS_KEY,
+      JSON.stringify([{ name: "Izzet", filters: PAGE_DEFAULTS }])
+    );
+    renderPanel({ ...PAGE_DEFAULTS, types: ["Creature"] });
 
     const fields = [
       ...screen.getAllByRole("spinbutton"),
       ...screen.getAllByRole("textbox"),
-      screen.getByRole("combobox"),
+      ...screen.getAllByRole("combobox"),
+      ...screen.queryAllByRole("slider"),
     ];
-    expect(fields).toHaveLength(8);
+    // 2 mana value + 2 price + 4 power/toughness, subtype + keyword + preset name, Role + presets.
+    expect(fields).toHaveLength(13);
+    // Listed by placeholder so a failure says which field lost its name.
+    const unnamed = fields.filter(
+      (field) => !field.getAttribute("aria-label") && !hasVisibleLabel(field)
+    );
+    expect(unnamed.map((field) => field.getAttribute("placeholder"))).toEqual(
+      []
+    );
     for (const field of fields) {
-      expect(field).toHaveAccessibleName("");
+      expect(field).not.toHaveAccessibleName("");
+    }
+  });
+
+  it("names the Type and Role fields by their visible labels and the abbreviated ones by their full words", () => {
+    renderPanel({ ...PAGE_DEFAULTS, types: ["Creature"] });
+
+    expect(screen.getByRole("textbox", { name: "Type" })).toHaveAttribute(
+      "placeholder",
+      "e.g. Elf, Dragon"
+    );
+    expect(
+      screen.getByRole("textbox", { name: "Keyword ability" })
+    ).toHaveAttribute("placeholder", "e.g. Flying, Trample");
+    expect(screen.getByRole("combobox", { name: "Role" })).toBeDefined();
+    for (const name of [
+      "Minimum mana value",
+      "Maximum mana value",
+      "Minimum price in US dollars",
+      "Maximum price in US dollars",
+      "Minimum power",
+      "Maximum power",
+      "Minimum toughness",
+      "Maximum toughness",
+    ]) {
+      expect(screen.getByRole("spinbutton", { name })).toBeDefined();
     }
   });
 });
