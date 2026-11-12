@@ -109,10 +109,38 @@ describe("processStream", () => {
     expect(published).toEqual([0, 1]);
   });
 
-  it("currently drops a last event that has no line break after it (pinned; see AI-08)", async () => {
-    const { result } = await read([`${ANALYSIS}\n${OPT_REMOVAL}`]);
+  it("applies a last event that has no line break after it and publishes it", async () => {
+    const { result, published } = await read([`${ANALYSIS}\n${OPT_REMOVAL}`]);
 
     expect(result.analysis).toBe("Short on protection.");
+    expect(result.removals).toEqual([
+      { name: "Opt", reason: "Weakest cantrip." },
+    ]);
+    expect(published).toHaveLength(2);
+  });
+
+  it("decodes a multi-byte character split across the last two reads of a final line without a line break", async () => {
+    const line = new TextEncoder().encode(
+      '{"type":"removal","data":{"name":"Lim-Dûl\'s Vault","reason":"Slow."}}'
+    );
+    // "û" is two bytes in UTF-8; cut between them, and end the stream there.
+    const cut = line.indexOf(0xc3) + 1;
+
+    const { result } = await read([line.slice(0, cut), line.slice(cut)]);
+
+    expect(result.removals).toEqual([
+      { name: "Lim-Dûl's Vault", reason: "Slow." },
+    ]);
+  });
+
+  it("ignores an incomplete JSON tail and keeps the events applied before it", async () => {
+    const { result, published } = await read([
+      `${ANALYSIS}\n${SWAN_SONG}\n{"type":"removal","data":{"name":"Op`,
+    ]);
+
+    expect(published).toHaveLength(2);
+    expect(result.analysis).toBe("Short on protection.");
+    expect(result.suggestions).toHaveLength(1);
     expect(result.removals).toEqual([]);
   });
 });

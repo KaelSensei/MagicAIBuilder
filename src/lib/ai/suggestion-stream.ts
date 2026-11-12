@@ -1,4 +1,5 @@
 import type { StreamEvent } from "@/app/api/ai/suggest/route";
+import { readNdjsonLines } from "@/lib/async/ndjson-lines";
 import { isRecordOrArray } from "@/lib/guards";
 import type {
   AISuggestionResult,
@@ -126,6 +127,9 @@ function applyStreamEvent(event: StreamEvent, acc: SuggestionStreamAcc): boolean
 /**
  * Reads a NDJSON suggestion stream and publishes the accumulator after each change.
  *
+ * The last event is read even when the stream ends without a line break after
+ * it; an invalid tail is skipped like any other invalid line.
+ *
  * @param reader - body reader from the suggest response
  * @param onUpdate - called with the accumulator after an event that changes it
  * @returns the final accumulator
@@ -134,26 +138,17 @@ export async function processStream(
   reader: ReadableStreamDefaultReader<Uint8Array>,
   onUpdate: (acc: SuggestionStreamAcc) => void
 ): Promise<SuggestionStreamAcc> {
-  const decoder = new TextDecoder();
   const acc: SuggestionStreamAcc = {
     suggestions: [],
     removals: [],
     analysis: "",
     provider: "mock",
   };
-  let buffer = "";
 
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split("\n");
-    buffer = lines.pop() ?? "";
-    for (const line of lines) {
-      const event = parseNdjsonLine(line);
-      if (event === undefined) continue;
-      if (applyStreamEvent(event, acc)) onUpdate(acc);
-    }
+  for await (const line of readNdjsonLines(reader)) {
+    const event = parseNdjsonLine(line);
+    if (event === undefined) continue;
+    if (applyStreamEvent(event, acc)) onUpdate(acc);
   }
   return acc;
 }
