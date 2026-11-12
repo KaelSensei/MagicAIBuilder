@@ -11,7 +11,7 @@
  *
  * @module e2e/helpers
  */
-import type { APIRequestContext, APIResponse, Page } from "@playwright/test";
+import type { APIRequestContext, APIResponse, Locator, Page } from "@playwright/test";
 
 /** localStorage key the app uses to remember the first-run onboarding was dismissed */
 const ONBOARDING_LS_KEY = "mab-onboarding-done";
@@ -76,6 +76,62 @@ export async function openBuilder(page: Page): Promise<void> {
     .getByRole("link", { name: "Back to my decks" })
     .waitFor({ state: "visible" });
   await page.waitForLoadState("networkidle");
+}
+
+/**
+ * Waits until the builder has loaded a deck: the title bar's back link exists
+ * only on the loaded branch, never on "Loading deck…" (see {@link openBuilder}).
+ */
+export async function waitForBuilder(page: Page): Promise<void> {
+  await page.getByRole("link", { name: "Back to my decks" }).waitFor({ state: "visible" });
+}
+
+/**
+ * Switches the editor's main zone to its list view, where every card is one
+ * row with named controls. The toolbar's own name tells its "List view" button
+ * from the search panel's, which carries the same name (audit TT-11).
+ */
+export async function switchToDeckListView(page: Page): Promise<void> {
+  await page
+    .getByRole("toolbar", { name: "Deck view" })
+    .getByRole("button", { name: "List view" })
+    .click();
+}
+
+/**
+ * Opens a seeded deck in the builder and shows its main zone as a list.
+ *
+ * @param page A page that has not navigated yet: the onboarding flag must be
+ *   set before the first `goto`.
+ * @param deckId A deck the Playwright user owns.
+ */
+export async function openDeckInListView(page: Page, deckId: string): Promise<void> {
+  await suppressOnboarding(page);
+  await page.goto(`/builder/${deckId}`);
+  await waitForBuilder(page);
+  await switchToDeckListView(page);
+}
+
+/**
+ * Reloads the builder and returns to the list view, which the store does not
+ * persist across loads. Used to check that a change survived the round trip.
+ */
+export async function reloadDeckIntoListView(page: Page): Promise<void> {
+  await page.reload();
+  await waitForBuilder(page);
+  await switchToDeckListView(page);
+}
+
+/**
+ * A card's row in the editor's list view, in whichever zone is open.
+ *
+ * The row itself has no role, so it is found through the one control every
+ * zone's row carries and the search panel never does: its "Remove {name}"
+ * button. Opacity alone does not hide an element from Playwright, so the
+ * button counts as visible exactly when its row is rendered.
+ */
+export function deckCardRow(page: Page, name: string): Locator {
+  return page.getByRole("button", { name: `Remove ${name}`, exact: true });
 }
 
 /**

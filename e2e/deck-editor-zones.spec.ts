@@ -1,10 +1,23 @@
+/**
+ * Deck editor zone journeys: a sideboard card moved to Considering, a move the
+ * server refuses, a searched card added to the main deck, a main card moved to
+ * the sideboard, and the same move made with the keyboard alone.
+ *
+ * Every control is found by role and accessible name (audit TT-11). The
+ * keyboard journey listens to dnd-kit's live region, the same text a screen
+ * reader hears, to know which drop target the card is over.
+ *
+ * @module e2e/deck-editor-zones
+ */
 import { test, expect } from "./fixtures";
 import type { Page } from "@playwright/test";
-import { getThroughApi, suppressOnboarding, type DeckSeed } from "./helpers";
-
-async function useListView(page: Page): Promise<void> {
-  await page.getByTitle("List view").nth(1).click();
-}
+import {
+  deckCardRow,
+  getThroughApi,
+  openDeckInListView,
+  reloadDeckIntoListView,
+  type DeckSeed,
+} from "./helpers";
 
 const MAIN_CARD_ID = "00000000-0000-4000-8000-000000000101";
 const SIDEBOARD_CARD_ID = "00000000-0000-4000-8000-000000000102";
@@ -37,6 +50,70 @@ const ZONES_DECK: DeckSeed = {
   ],
 };
 
+/** The zone tabs; each name carries its count, "Sideboard (1)". */
+function sideboardTab(page: Page) {
+  return page.getByRole("button", { name: /^Sideboard \(\d+\)$/ });
+}
+function consideringTab(page: Page) {
+  return page.getByRole("button", { name: /^Considering \(\d+\)$/ });
+}
+
+/** Rejects every zone save for `deckId` with a 503 and lets the other calls through. */
+async function rejectZoneSaves(page: Page, deckId: string): Promise<void> {
+  await page.route(`**/api/decks/${deckId}/cards/*`, async (route) => {
+    if (route.request().method() === "PATCH") {
+      await route.fulfill({
+        status: 503,
+        contentType: "application/json",
+        body: "{}",
+      });
+      return;
+    }
+    await route.continue();
+  });
+}
+
+function zoneSave(page: Page, deckId: string) {
+  return page.waitForResponse(
+    (response) =>
+      response.request().method() === "PATCH" &&
+      response.url().includes(`/api/decks/${deckId}/cards/`)
+  );
+}
+
+/**
+ * Presses `key` until dnd-kit announces the dragged card over a drop target
+ * matching `target`, or gives up after `maxPresses`.
+ *
+ * dnd-kit's KeyboardSensor moves to the nearest drop target in the arrow's
+ * direction and announces "Draggable item X was moved over droppable area Y"
+ * in its live region. A press with no target in that direction announces
+ * nothing new, so the wait after each press is short and a miss just presses
+ * again.
+ */
+async function pressUntilOver(
+  page: Page,
+  key: "ArrowUp" | "ArrowRight",
+  target: RegExp,
+  maxPresses: number
+): Promise<void> {
+  const announcement = page
+    .getByRole("status")
+    .filter({ hasText: /draggable item/i });
+  for (let press = 0; press < maxPresses; press += 1) {
+    await page.keyboard.press(key);
+    try {
+      await expect(announcement).toContainText(target, { timeout: 500 });
+      return;
+    } catch {
+      // Not over the target yet: press again.
+    }
+  }
+  throw new Error(
+    `${key} pressed ${maxPresses} times without reaching ${target}`
+  );
+}
+
 test.describe("Deck Editor zones", () => {
   test("loads and persists a secondary-zone move", async ({
     page,
@@ -45,23 +122,14 @@ test.describe("Deck Editor zones", () => {
   }) => {
     const deckId = await seededDeck.create(ZONES_DECK);
 
-    await suppressOnboarding(page);
-    await page.goto(`/builder/${deckId}`);
-    await page.getByRole("link", { name: "Back to my decks" }).waitFor({ state: "visible" });
-    await useListView(page);
-
-    const sideboardTab = page.getByRole("button", { name: /^Sideboard\b/ });
-    await expect(sideboardTab).toHaveText(/1/);
-    await sideboardTab.click();
-    const sideboardCard = page.locator("span").getByText("Zone Sideboard Card", { exact: true });
+    await openDeckInListView(page, deckId);
+    await expect(sideboardTab(page)).toHaveAccessibleName("Sideboard (1)");
+    await sideboardTab(page).click();
+    const sideboardCard = deckCardRow(page, "Zone Sideboard Card");
     await expect(sideboardCard).toBeVisible();
 
-    const zoneUpdate = page.waitForResponse(
-      (response) =>
-        response.request().method() === "PATCH" &&
-        response.url().includes(`/api/decks/${deckId}/cards/`)
-    );
-    await page.getByTitle("Move to Considering").click();
+    const zoneUpdate = zoneSave(page, deckId);
+    await page.getByRole("button", { name: "→ Considering" }).click();
     expect((await zoneUpdate).ok()).toBe(true);
 
     const loaded = await getThroughApi(request, `/api/decks/${deckId}`);
@@ -69,12 +137,12 @@ test.describe("Deck Editor zones", () => {
     const deck = (await loaded.json()) as {
       cards: readonly { name: string; zone: string }[];
     };
-    expect(deck.cards.find((card) => card.name === "Zone Sideboard Card")?.zone).toBe("maybeboard");
+    expect(
+      deck.cards.find((card) => card.name === "Zone Sideboard Card")?.zone
+    ).toBe("maybeboard");
 
-    await page.reload();
-    await page.getByRole("link", { name: "Back to my decks" }).waitFor({ state: "visible" });
-    await useListView(page);
-    await page.getByRole("button", { name: /^Considering\b/ }).click();
+    await reloadDeckIntoListView(page);
+    await consideringTab(page).click();
     await expect(sideboardCard).toBeVisible();
   });
 
@@ -85,45 +153,35 @@ test.describe("Deck Editor zones", () => {
   }) => {
     const deckId = await seededDeck.create(ZONES_DECK);
 
-    await suppressOnboarding(page);
-    await page.goto(`/builder/${deckId}`);
-    await page.getByRole("link", { name: "Back to my decks" }).waitFor({ state: "visible" });
-    await useListView(page);
-
-    const sideboardTab = page.getByRole("button", { name: /^Sideboard\b/ });
-    await sideboardTab.click();
-    const sideboardCard = page.locator("span").getByText("Zone Sideboard Card", { exact: true });
+    await openDeckInListView(page, deckId);
+    await sideboardTab(page).click();
+    const sideboardCard = deckCardRow(page, "Zone Sideboard Card");
     await expect(sideboardCard).toBeVisible();
 
-    await page.route(`**/api/decks/${deckId}/cards/*`, async (route) => {
-      if (route.request().method() === "PATCH") {
-        await route.fulfill({ status: 503, contentType: "application/json", body: "{}" });
-        return;
-      }
-      await route.continue();
-    });
-
-    const rejectedMove = page.waitForResponse(
-      (response) => response.request().method() === "PATCH" &&
-        response.url().includes(`/api/decks/${deckId}/cards/`)
-    );
-    await page.getByTitle("Move to Considering").click();
+    await rejectZoneSaves(page, deckId);
+    const rejectedMove = zoneSave(page, deckId);
+    await page.getByRole("button", { name: "→ Considering" }).click();
     expect((await rejectedMove).status()).toBe(503);
-    await expect(page.getByText("Could not move card. Try again.")).toBeVisible();
+    await expect(
+      page.getByText("Could not move card. Try again.")
+    ).toBeVisible();
     await expect(sideboardCard).toBeVisible();
 
     const loaded = await getThroughApi(request, `/api/decks/${deckId}`);
     expect(loaded.ok()).toBe(true);
-    expect(await loaded.json()).toEqual(expect.objectContaining({
-      cards: expect.arrayContaining([
-        expect.objectContaining({ name: "Zone Sideboard Card", zone: "sideboard" }),
-      ]),
-    }));
+    expect(await loaded.json()).toEqual(
+      expect.objectContaining({
+        cards: expect.arrayContaining([
+          expect.objectContaining({
+            name: "Zone Sideboard Card",
+            zone: "sideboard",
+          }),
+        ]),
+      })
+    );
 
-    await page.reload();
-    await page.getByRole("link", { name: "Back to my decks" }).waitFor({ state: "visible" });
-    await useListView(page);
-    await sideboardTab.click();
+    await reloadDeckIntoListView(page);
+    await sideboardTab(page).click();
     await expect(sideboardCard).toBeVisible();
   });
 
@@ -133,29 +191,22 @@ test.describe("Deck Editor zones", () => {
   }) => {
     const deckId = await seededDeck.create(ZONES_DECK);
 
-    await suppressOnboarding(page);
-    await page.goto(`/builder/${deckId}`);
-    await page.getByRole("link", { name: "Back to my decks" }).waitFor({ state: "visible" });
-    const mainCard = page.locator("span").getByText("Zone Main Card", { exact: true });
-    await useListView(page);
+    await openDeckInListView(page, deckId);
+    const mainCard = deckCardRow(page, "Zone Main Card");
     await expect(mainCard).toBeVisible();
 
-    await page.route(`**/api/decks/${deckId}/cards/*`, async (route) => {
-      if (route.request().method() === "PATCH") {
-        await route.fulfill({ status: 503, contentType: "application/json", body: "{}" });
-        return;
-      }
-      await route.continue();
-    });
-    await page.getByTitle("Move to Sideboard").click();
-    await expect(page.getByText("Could not move card. Try again.")).toBeVisible();
+    await rejectZoneSaves(page, deckId);
+    await page
+      .getByRole("button", { name: "Move Zone Main Card to Sideboard" })
+      .click();
+    await expect(
+      page.getByText("Could not move card. Try again.")
+    ).toBeVisible();
     await expect(mainCard).toBeVisible();
 
-    await page.reload();
-    await page.getByRole("link", { name: "Back to my decks" }).waitFor({ state: "visible" });
-    await useListView(page);
+    await reloadDeckIntoListView(page);
     await expect(mainCard).toBeVisible();
-    await page.getByRole("button", { name: /^Sideboard\b/ }).click();
+    await sideboardTab(page).click();
     await expect(mainCard).toHaveCount(0);
   });
 
@@ -166,21 +217,29 @@ test.describe("Deck Editor zones", () => {
   }) => {
     const deckId = await seededDeck.create(ZONES_DECK);
 
-    await suppressOnboarding(page);
-    await page.goto(`/builder/${deckId}`);
-    await page.getByRole("link", { name: "Back to my decks" }).waitFor({ state: "visible" });
-    await useListView(page);
+    await openDeckInListView(page, deckId);
 
     await page.getByTestId("search-input").fill("Grizzly Bears");
-    await page.getByAltText(/^Grizzly Bears$/i).first().click();
-    await expect(page.getByRole("heading", { name: /Grizzly Bears/i })).toBeVisible();
-    await expect(page.getByText("Loading printings…")).not.toBeVisible({ timeout: 30_000 });
+    await page
+      .getByAltText(/^Grizzly Bears$/i)
+      .first()
+      .click();
+    await expect(
+      page.getByRole("heading", { name: /Grizzly Bears/i })
+    ).toBeVisible();
+    await expect(page.getByText("Loading printings…")).not.toBeVisible({
+      timeout: 30_000,
+    });
 
     const addedCard = page.waitForResponse(
-      (response) => response.request().method() === "POST" &&
+      (response) =>
+        response.request().method() === "POST" &&
         response.url().endsWith(`/api/decks/${deckId}/cards`)
     );
-    await page.getByRole("button", { name: /Grizzly Bears —/i }).first().click();
+    await page
+      .getByRole("button", { name: /Grizzly Bears —/i })
+      .first()
+      .click();
     expect((await addedCard).ok()).toBe(true);
 
     const loaded = await getThroughApi(request, `/api/decks/${deckId}`);
@@ -192,10 +251,8 @@ test.describe("Deck Editor zones", () => {
       expect.objectContaining({ zone: "main" }),
     ]);
 
-    await page.reload();
-    await page.getByRole("link", { name: "Back to my decks" }).waitFor({ state: "visible" });
-    await useListView(page);
-    await expect(page.locator("span").getByText("Grizzly Bears", { exact: true })).toBeVisible();
+    await reloadDeckIntoListView(page);
+    await expect(deckCardRow(page, "Grizzly Bears")).toBeVisible();
   });
 
   test("persists a main-deck move to the sideboard after reload", async ({
@@ -204,26 +261,92 @@ test.describe("Deck Editor zones", () => {
   }) => {
     const deckId = await seededDeck.create(ZONES_DECK);
 
-    await suppressOnboarding(page);
-    await page.goto(`/builder/${deckId}`);
-    await page.getByRole("link", { name: "Back to my decks" }).waitFor({ state: "visible" });
-
-    const mainCard = page.locator("span").getByText("Zone Main Card", { exact: true });
-    await useListView(page);
+    await openDeckInListView(page, deckId);
+    const mainCard = deckCardRow(page, "Zone Main Card");
     await expect(mainCard).toBeVisible();
-    const zoneUpdate = page.waitForResponse(
-      (response) =>
-        response.request().method() === "PATCH" &&
-        response.url().includes(`/api/decks/${deckId}/cards/`)
-    );
-    await page.getByTitle("Move to Sideboard").click();
+
+    const zoneUpdate = zoneSave(page, deckId);
+    await page
+      .getByRole("button", { name: "Move Zone Main Card to Sideboard" })
+      .click();
     expect((await zoneUpdate).ok()).toBe(true);
 
-    await page.reload();
-    await page.getByRole("link", { name: "Back to my decks" }).waitFor({ state: "visible" });
-    await useListView(page);
-    await page.getByRole("button", { name: /^Sideboard\b/ }).click();
+    await reloadDeckIntoListView(page);
+    await sideboardTab(page).click();
     await expect(mainCard).toBeVisible();
+  });
+
+  test("moves a main card to another zone with the keyboard alone", async ({
+    page,
+    request,
+    seededDeck,
+  }) => {
+    const deckId = await seededDeck.create(ZONES_DECK);
+
+    await openDeckInListView(page, deckId);
+    const mainCard = deckCardRow(page, "Zone Main Card");
+    await expect(mainCard).toBeVisible();
+
+    // The only main-deck row, so the only drag handle. Space picks it up; a
+    // sortable row is its own drop target, so the "picked up" announcement is
+    // at once followed by "moved over" itself. Either proves the drag started.
+    await page.getByRole("button", { name: "Drag to reorder" }).focus();
+    await page.keyboard.press("Space");
+    const announcement = page
+      .getByRole("status")
+      .filter({ hasText: /draggable item/i });
+    await expect(announcement).toContainText(/draggable item deck-card-/i);
+
+    // Up out of the list to the zone tabs. Which tab the arrow lands on is
+    // dnd-kit's choice, the nearest corner; the Main tab would be a no-op, so
+    // from there one press to the right reaches a secondary tab. Walking back
+    // left is not an option: the dragged row's own, full-width droppable is
+    // then the nearest target. The journey asserts on the zone it reached.
+    await pressUntilOver(
+      page,
+      "ArrowUp",
+      /moved over droppable area deck-zone-tab-/,
+      8
+    );
+    if (
+      ((await announcement.textContent()) ?? "").includes("deck-zone-tab-main.")
+    ) {
+      await pressUntilOver(
+        page,
+        "ArrowRight",
+        /moved over droppable area deck-zone-tab-(sideboard|maybeboard)\./,
+        2
+      );
+    }
+    const reached = /deck-zone-tab-(sideboard|maybeboard)\./.exec(
+      (await announcement.textContent()) ?? ""
+    );
+    expect(
+      reached,
+      "the card never reached a secondary zone tab"
+    ).not.toBeNull();
+    const zone = reached?.[1] === "sideboard" ? "sideboard" : "maybeboard";
+
+    const zoneUpdate = zoneSave(page, deckId);
+    await page.keyboard.press("Space");
+    expect((await zoneUpdate).ok()).toBe(true);
+
+    const tab =
+      zone === "sideboard" ? sideboardTab(page) : consideringTab(page);
+    await expect(tab).toHaveAccessibleName(
+      zone === "sideboard" ? "Sideboard (2)" : "Considering (1)"
+    );
+    await tab.click();
+    await expect(mainCard).toBeVisible();
+
+    const loaded = await getThroughApi(request, `/api/decks/${deckId}`);
+    expect(await loaded.json()).toEqual(
+      expect.objectContaining({
+        cards: expect.arrayContaining([
+          expect.objectContaining({ name: "Zone Main Card", zone }),
+        ]),
+      })
+    );
   });
 
   test("recovers from a failed searched-card addition and allows retry", async ({
@@ -232,46 +355,65 @@ test.describe("Deck Editor zones", () => {
   }) => {
     const deckId = await seededDeck.create(ZONES_DECK);
 
-    await suppressOnboarding(page);
-    await page.goto(`/builder/${deckId}`);
-    await page.getByRole("link", { name: "Back to my decks" }).waitFor({ state: "visible" });
-    await useListView(page);
+    await openDeckInListView(page, deckId);
 
     await page.getByTestId("search-input").fill("Grizzly Bears");
-    await page.getByAltText(/^Grizzly Bears$/i).first().click();
-    await expect(page.getByText("Loading printings…")).not.toBeVisible({ timeout: 30_000 });
+    await page
+      .getByAltText(/^Grizzly Bears$/i)
+      .first()
+      .click();
+    await expect(page.getByText("Loading printings…")).not.toBeVisible({
+      timeout: 30_000,
+    });
 
     await page.route(`**/api/decks/${deckId}/cards`, async (route) => {
       if (route.request().method() === "POST") {
-        await route.fulfill({ status: 503, contentType: "application/json", body: "{}" });
+        await route.fulfill({
+          status: 503,
+          contentType: "application/json",
+          body: "{}",
+        });
         return;
       }
       await route.continue();
     });
     const rejectedAdd = page.waitForResponse(
-      (response) => response.request().method() === "POST" &&
+      (response) =>
+        response.request().method() === "POST" &&
         response.url().endsWith(`/api/decks/${deckId}/cards`)
     );
-    await page.getByRole("button", { name: /Grizzly Bears —/i }).first().click();
+    await page
+      .getByRole("button", { name: /Grizzly Bears —/i })
+      .first()
+      .click();
     expect((await rejectedAdd).status()).toBe(503);
-    await expect(page.getByText("Could not add card. Please retry.")).toBeVisible();
-    await expect(page.locator("span").getByText("Grizzly Bears", { exact: true })).toHaveCount(0);
+    await expect(
+      page.getByText("Could not add card. Please retry.")
+    ).toBeVisible();
+    await expect(deckCardRow(page, "Grizzly Bears")).toHaveCount(0);
 
-    await page.reload();
-    await page.getByRole("link", { name: "Back to my decks" }).waitFor({ state: "visible" });
-    await useListView(page);
-    await expect(page.locator("span").getByText("Grizzly Bears", { exact: true })).toHaveCount(0);
+    await reloadDeckIntoListView(page);
+    await expect(deckCardRow(page, "Grizzly Bears")).toHaveCount(0);
 
     await page.unroute(`**/api/decks/${deckId}/cards`);
     await page.getByTestId("search-input").fill("Grizzly Bears");
-    await page.getByAltText(/^Grizzly Bears$/i).first().click();
-    await expect(page.getByText("Loading printings…")).not.toBeVisible({ timeout: 30_000 });
+    await page
+      .getByAltText(/^Grizzly Bears$/i)
+      .first()
+      .click();
+    await expect(page.getByText("Loading printings…")).not.toBeVisible({
+      timeout: 30_000,
+    });
     const retriedAdd = page.waitForResponse(
-      (response) => response.request().method() === "POST" &&
+      (response) =>
+        response.request().method() === "POST" &&
         response.url().endsWith(`/api/decks/${deckId}/cards`)
     );
-    await page.getByRole("button", { name: /Grizzly Bears —/i }).first().click();
+    await page
+      .getByRole("button", { name: /Grizzly Bears —/i })
+      .first()
+      .click();
     expect((await retriedAdd).ok()).toBe(true);
-    await expect(page.locator("span").getByText("Grizzly Bears", { exact: true })).toBeVisible();
+    await expect(deckCardRow(page, "Grizzly Bears")).toBeVisible();
   });
 });
