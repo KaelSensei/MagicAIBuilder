@@ -362,4 +362,49 @@ describe("useAIDeckBuild", () => {
     expect(result.current.state.isLoading).toBe(false);
     vi.unstubAllGlobals();
   });
+
+  it("completes the build when the done event has no line break after it", async () => {
+    const encoder = new TextEncoder();
+    const body = new ReadableStream({
+      start(controller) {
+        controller.enqueue(
+          encoder.encode(
+            JSON.stringify({
+              type: "card",
+              name: "Sol Ring",
+              category: "ramp",
+              quantity: 1,
+            }) + "\n"
+          )
+        );
+        // A relay that trims the body can drop the final line break.
+        controller.enqueue(
+          encoder.encode(JSON.stringify({ type: "done", totalCards: 1 }))
+        );
+        controller.close();
+      },
+    });
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, body }));
+
+    const { result } = renderHook(() => useAIDeckBuild());
+    let built: BuildResult | null = null;
+    await act(async () => {
+      built = await result.current.build({
+        colors: ["R"],
+        strategy: "aggro",
+        bracket: 2,
+        commanderName: null,
+        budget: null,
+      });
+    });
+
+    expect(result.current.state.error).toBeNull();
+    expect(built).toEqual(
+      expect.objectContaining({
+        source: "ai",
+        cards: [{ name: "Sol Ring", category: "ramp", quantity: 1 }],
+      })
+    );
+    vi.unstubAllGlobals();
+  });
 });

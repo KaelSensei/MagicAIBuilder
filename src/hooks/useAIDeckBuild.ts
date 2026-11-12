@@ -10,6 +10,7 @@ import {
   readAiCallDenialResponse,
   type AiCallDenial,
 } from "@/lib/ai/usage/denial";
+import { readNdjsonLines } from "@/lib/async/ndjson-lines";
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -127,12 +128,14 @@ function processLines(
   return false;
 }
 
-/** Reads a NDJSON build stream chunk by chunk, delegating line processing to processLines. */
+/**
+ * Reads a NDJSON build stream line by line, delegating each line to processLines.
+ * The last event is read even when the stream ends without a line break after it.
+ */
 async function processBuildStream(
   reader: ReadableStreamDefaultReader<Uint8Array>,
   onUpdate: (acc: BuildAcc) => void,
 ): Promise<BuildAcc> {
-  const decoder = new TextDecoder();
   const acc: BuildAcc = {
     commander: null,
     cards: [],
@@ -141,15 +144,9 @@ async function processBuildStream(
     source: null,
     corrections: [],
   };
-  let buffer = "";
 
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split("\n");
-    buffer = lines.pop() ?? "";
-    if (processLines(lines, acc, onUpdate)) return acc;
+  for await (const line of readNdjsonLines(reader)) {
+    if (processLines([line], acc, onUpdate)) return acc;
   }
 
   // Falling out of the loop means the stream ended without a "done" event, so
