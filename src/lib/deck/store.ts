@@ -15,6 +15,7 @@ import { detectPairingType, pairCommanders } from "./pairing";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import { getCardById } from "@/lib/scryfall/client";
 import { isBasicLand } from "@/lib/scryfall/type-line";
+import { maxQuantity } from "@/lib/deck/multiples";
 import * as deckApi from "@/lib/db/deck-api";
 import { useCollectionStore } from "@/lib/collection/store";
 import { useToastStore } from "@/hooks/useToast";
@@ -115,6 +116,19 @@ function notifyGameChangerAdded(cardName: string, newTotal: number): void {
 
 function uniqueDeckCards(deck: Pick<Deck, "cards" | "maybeboard">): DeckCard[] {
   return cardsFromZoneSource(deck);
+}
+
+/**
+ * The copies of `card` this deck may hold: four in a constructed deck
+ * (CR 100.2a), one in a singleton deck (CR 903.5b), with the exemptions
+ * `maxQuantity` grants basic lands and the cards whose own text allows more.
+ * The limit is the deck's stored format, never a fixed Commander one.
+ */
+function copyLimit(
+  deck: Pick<Deck, "format">,
+  card: { readonly name: string; readonly typeLine: string; readonly oracleText?: string }
+): number {
+  return maxQuantity(card.name, card.typeLine, card.oracleText ?? "", deck.format);
 }
 
 /**
@@ -1483,8 +1497,11 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
 
     const isBasic = isBasicLand(card.type_line);
 
-    const { maxQuantity } = await import("@/lib/deck/multiples");
-    const max = maxQuantity(card.name, card.type_line, card.oracle_text ?? "");
+    const max = copyLimit(deck, {
+      name: card.name,
+      typeLine: card.type_line,
+      oracleText: card.oracle_text,
+    });
     const exists = uniqueDeckCards(deck).find(
       (c) => c.name === card.name && c.zone === zone
     );
@@ -1600,8 +1617,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     if (!activeDeckId) return;
     const deck = decks[activeDeckId];
     if (!deck) return;
-    const { maxQuantity } = await import("@/lib/deck/multiples");
-    const max = maxQuantity(card.name, card.typeLine, card.oracleText ?? "");
+    const max = copyLimit(deck, card);
     const exists = uniqueDeckCards(deck).find(
       (c) => c.name === card.name && c.zone === card.zone
     );
@@ -1818,8 +1834,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     const card = uniqueDeckCards(deck).find((c) => c.id === cardId);
     if (!card) return;
 
-    const { maxQuantity } = await import("@/lib/deck/multiples");
-    const max = maxQuantity(card.name, card.typeLine, card.oracleText ?? "");
+    const max = copyLimit(deck, card);
     const newQty = Math.max(1, Math.min(max, card.quantity + delta));
     if (newQty === card.quantity) return;
     const writeKey = `${activeDeckId}:${cardId}`;

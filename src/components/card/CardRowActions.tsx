@@ -76,9 +76,13 @@ function asCatalogCard(card: DeckCard): ScryfallCard {
 export function CardQuantityStepper({ card }: { readonly card: DeckCard }) {
   const t = useTranslations("card.quantity");
   const updateCardQuantity = useDeckStore((s) => s.updateCardQuantity);
-  // CR 903.5b: one copy of each card but basic lands. A card whose own text
-  // allows more wins over that rule (CR 101.1): "any number", or Seven Dwarves.
-  const limit = maxQuantity(card.name, card.typeLine, card.oracleText);
+  const format = useDeckStore((s) =>
+    s.activeDeckId ? s.decks[s.activeDeckId]?.format : undefined
+  );
+  // CR 100.2a: four copies of a card in a constructed deck; CR 903.5b: one in
+  // a singleton deck, basic lands aside. A card whose own text allows more
+  // wins over either rule (CR 101.1): "any number", or Seven Dwarves.
+  const limit = maxQuantity(card.name, card.typeLine, card.oracleText, format);
   const count = (
     <span className="text-xs text-[var(--text-secondary)] w-4 text-center shrink-0">
       {card.quantity}
