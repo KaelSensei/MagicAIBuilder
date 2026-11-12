@@ -6,8 +6,8 @@
  *
  * Shell (`components/layout`). The deck actions come from
  * `HeaderDeckActionsSlot`, as in `Header`, and share the header's UI state so
- * an import started here, which closes the menu, finishes in the desktop
- * instance's dialog.
+ * an import started here, which closes the menu, opens the one dialog the
+ * desktop instance hosts.
  *
  * @module layout/HeaderMobileMenu
  */

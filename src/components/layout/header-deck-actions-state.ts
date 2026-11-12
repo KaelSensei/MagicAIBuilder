@@ -4,7 +4,7 @@
  * Shell (`components/layout`). `Header` owns one value of this state and hands
  * it to the desktop bar's and the mobile menu's `HeaderDeckActionsSlot`. The
  * two must share it: the mobile menu closes itself on a press, so an import
- * started there finishes in the dialog of the desktop instance. This module
+ * started there opens the one dialog the desktop instance hosts. This module
  * carries no store import, so `Header` stays light; the actions themselves
  * live in `HeaderDeckActions`.
  *
@@ -13,7 +13,7 @@
 
 /** What the deck actions are doing right now; one value per header. */
 export interface HeaderDeckActionsUiState {
-  /** The import dialog opened from a page without a deck. */
+  /** The import dialog is open, whichever instance asked for it. */
   readonly importOpen: boolean;
   /** "New Deck" is waiting for the server; the button is disabled meanwhile. */
   readonly isCreatingDeck: boolean;
