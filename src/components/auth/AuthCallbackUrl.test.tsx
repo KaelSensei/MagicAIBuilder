@@ -1,7 +1,6 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { NextIntlClientProvider } from "next-intl";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import auth from "@/messages/en/auth.json";
+import { renderWithIntl } from "@/test/render-with-intl";
 import { SignInForm } from "./SignInForm";
 import { SignUpForm } from "./SignUpForm";
 
@@ -29,11 +28,7 @@ function openWith(query: string): void {
 }
 
 function renderForm(form: React.ReactElement): void {
-  render(
-    <NextIntlClientProvider locale="en" messages={{ auth }}>
-      {form}
-    </NextIntlClientProvider>
-  );
+  renderWithIntl(form);
 }
 
 function fillCredentials(): void {

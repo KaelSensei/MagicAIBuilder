@@ -1,9 +1,8 @@
-import { render, screen } from "@testing-library/react";
-import { NextIntlClientProvider } from "next-intl";
+import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import type { PlaytestEngine } from "@/lib/playtest/engine";
 import type { DeckCard } from "@/lib/deck/types";
-import messages from "@/messages/en/playtest-evidence.json";
+import { renderWithIntl } from "@/test/render-with-intl";
 import { DrawProgressEvidence } from "./DrawProgressEvidence";
 
 function card(index: number): DeckCard {
@@ -55,14 +54,7 @@ function engine(overrides: Partial<PlaytestEngine>): PlaytestEngine {
 }
 
 function renderEvidence(playtestEngine: PlaytestEngine) {
-  return render(
-    <NextIntlClientProvider
-      locale="en"
-      messages={{ playtestEvidence: messages }}
-    >
-      <DrawProgressEvidence engine={playtestEngine} />
-    </NextIntlClientProvider>
-  );
+  return renderWithIntl(<DrawProgressEvidence engine={playtestEngine} />);
 }
 
 describe("DrawProgressEvidence", () => {

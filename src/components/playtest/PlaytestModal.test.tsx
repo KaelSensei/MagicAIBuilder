@@ -1,15 +1,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { useState, type ReactNode } from "react";
-import { render, screen, fireEvent, waitFor, within } from "@testing-library/react";
+import { useState } from "react";
+import { screen, fireEvent, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { NextIntlClientProvider } from "next-intl";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { PlaytestModal } from "./PlaytestModal";
 import { usePlaytestStore } from "@/lib/playtest/store";
-import messages from "@/messages/en/playtest.json";
-import evidenceMessages from "@/messages/en/playtest-evidence.json";
-import builderMessages from "@/messages/en/builder.json";
 import type { Deck, DeckCard } from "@/lib/deck/types";
+import { aDeckCard } from "@/test/builders/card";
+import { aDeck } from "@/test/builders/deck";
+import { renderWithProviders } from "@/test/render";
 
 // next/image and framer-motion are noise here; the zones under test are DOM only.
 vi.mock("next/image", () => ({
@@ -17,79 +15,31 @@ vi.mock("next/image", () => ({
 }));
 
 function makeCard(id: string): DeckCard {
-  return {
+  return aDeckCard({
     id,
     scryfallId: id,
     name: `Card ${id}`,
-    quantity: 1,
     category: "creature",
-    zone: "main",
-    manaCost: "",
     cmc: 1,
     typeLine: "Creature",
-    oracleText: "",
-    colorIdentity: [],
-    isGameChanger: false,
-    isBanned: false,
-    price: null,
-    imageUri: "",
-    artCropUri: "",
-  };
+  });
 }
 
 function makeDeck(format: Deck["format"] = "commander"): Deck {
-  return {
-    id: "deck-1",
+  return aDeck({
     name: "Kenrith Goodstuff",
     format,
     commander: makeCard("cmd"),
-    partner: null,
-    companion: null,
-    pairingType: "none",
     cards: Array.from({ length: 40 }, (_, i) => makeCard(`c${i}`)),
-    maybeboard: [],
     cardCount: 41,
-    targetBracket: 3,
-    manualBracket: null,
-    budget: null,
-    tags: [],
-    description: "",
-    shareToken: null,
-    shareEnabled: false,
-    isPublic: false,
-    isAIGenerated: false,
     createdAt: new Date("2026-01-01"),
     updatedAt: new Date("2026-01-01"),
-  };
+  });
 }
 
-function Providers({ children }: { readonly children: ReactNode }) {
-  // The header bar and history panel both query, so the modal needs a client.
-  const [queryClient] = useState(
-    () => new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  );
-  return (
-    <QueryClientProvider client={queryClient}>
-      <NextIntlClientProvider
-        locale="en"
-        messages={{
-          playtest: messages,
-          playtestEvidence: evidenceMessages,
-          builder: builderMessages,
-        }}
-      >
-        {children}
-      </NextIntlClientProvider>
-    </QueryClientProvider>
-  );
-}
-
+// The header bar and history panel both query, so the modal needs the kit's query client.
 function renderModal(deck = makeDeck(), onClose = vi.fn()) {
-  return render(
-    <Providers>
-      <PlaytestModal deck={deck} onClose={onClose} />
-    </Providers>
-  );
+  return renderWithProviders(<PlaytestModal deck={deck} onClose={onClose} />);
 }
 
 /** The builder's side of the playtest: a button that opens it, as the page does. */
@@ -117,11 +67,7 @@ function BuilderPlaytest({ onClose }: { readonly onClose: () => void }) {
 async function openFromBuilder() {
   const user = userEvent.setup();
   const onClose = vi.fn();
-  render(
-    <Providers>
-      <BuilderPlaytest onClose={onClose} />
-    </Providers>
-  );
+  renderWithProviders(<BuilderPlaytest onClose={onClose} />);
   const trigger = screen.getByRole("button", { name: "Playtest this deck" });
   await user.click(trigger);
   return { user, trigger, onClose };

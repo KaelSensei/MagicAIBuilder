@@ -25,14 +25,10 @@ import {
   within,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { http, HttpResponse, type JsonBodyType } from "msw";
 import type { Session } from "next-auth";
-import { SessionProvider } from "next-auth/react";
-import { NextIntlClientProvider, useLocale, useMessages } from "next-intl";
 import { AppRouterContext } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import { PathParamsContext } from "next/dist/shared/lib/hooks-client-context.shared-runtime";
-import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { aiCallDenialBody } from "@/lib/ai/usage/denial";
 import type {
@@ -44,9 +40,8 @@ import { GUEST_DECK_ID } from "@/lib/deck/guest-deck";
 import { useDeckStore } from "@/lib/deck/store";
 import { EMPTY_SEARCH_RESPONSE } from "@/lib/scryfall/types";
 import { useUIStore } from "@/lib/ui/store";
-import auth from "@/messages/en/auth.json";
 import { setupMsw } from "@/test/msw";
-import { renderWithIntl } from "@/test/render-with-intl";
+import { renderWithProviders } from "@/test/render";
 import BuilderPage from "./page";
 
 // eslint-disable-next-line no-restricted-syntax -- the one seam left; the header says why and what removes it
@@ -223,20 +218,6 @@ function heldUntilReleased(answer: () => Response): {
   };
 }
 
-/**
- * `renderWithIntl` loads the namespaces most components read, but not `auth`, which the header's
- * user menu reads. This adds it rather than forking the helper.
- */
-function WithAuthMessages({ children }: { readonly children: ReactNode }) {
-  const locale = useLocale();
-  const messages = useMessages();
-  return (
-    <NextIntlClientProvider locale={locale} messages={{ ...messages, auth }}>
-      {children}
-    </NextIntlClientProvider>
-  );
-}
-
 /** Renders the page at `/en/builder/<deckId>` the way the app router mounts it. */
 function renderBuilder(
   deckId: string,
@@ -251,21 +232,13 @@ function renderBuilder(
     replace: vi.fn(),
     prefetch: vi.fn(),
   };
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
-  });
-  renderWithIntl(
+  renderWithProviders(
     <AppRouterContext.Provider value={router}>
       <PathParamsContext.Provider value={{ locale: "en", deckId }}>
-        <SessionProvider session={session}>
-          <QueryClientProvider client={queryClient}>
-            <WithAuthMessages>
-              <BuilderPage />
-            </WithAuthMessages>
-          </QueryClientProvider>
-        </SessionProvider>
+        <BuilderPage />
       </PathParamsContext.Provider>
-    </AppRouterContext.Provider>
+    </AppRouterContext.Provider>,
+    { session: session }
   );
   return { push };
 }

@@ -1,22 +1,27 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { NextIntlClientProvider } from "next-intl";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import React from "react";
 import { CardTooltip } from "./CardTooltip";
 import { LocalizedDeckTextProvider } from "./LocalizedDeckTextContext";
 import * as scryfallClient from "@/lib/scryfall/client";
 import type { DeckCard } from "@/lib/deck/types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
+import { aDeckCard } from "@/test/builders/card";
+import { renderWithProviders, type TestLocale } from "@/test/render";
 
 vi.mock(import("@/lib/scryfall/client"));
 
-const card: DeckCard = {
-  id: "sol-ring", name: "Sol Ring", manaCost: "{1}", cmc: 1, typeLine: "Artifact",
-  oracleText: "", colorIdentity: [], isGameChanger: false, isBanned: false,
-  price: 1.5, imageUri: "https://img/en.jpg", artCropUri: "",
-  category: "artifact", quantity: 1, zone: "main", scryfallId: "sol-ring",
-};
+const card: DeckCard = aDeckCard({
+  id: "sol-ring",
+  scryfallId: "sol-ring",
+  name: "Sol Ring",
+  manaCost: "{1}",
+  cmc: 1,
+  typeLine: "Artifact",
+  category: "artifact",
+  price: 1.5,
+  imageUri: "https://img/en.jpg",
+});
 
 const frPrinting: ScryfallCard = {
   id: "fr-1",
@@ -29,23 +34,21 @@ const frPrinting: ScryfallCard = {
   image_uris: { small: "", normal: "https://img/fr.jpg", large: "", art_crop: "", border_crop: "", png: "" },
 };
 
-function renderTooltip(locale: string, withProvider: boolean) {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+function renderTooltip(locale: TestLocale, withProvider: boolean) {
   const tooltip = (
     <CardTooltip card={card}>
       <span>row</span>
     </CardTooltip>
   );
-  return render(
-    <NextIntlClientProvider locale={locale} messages={{}}>
-      <QueryClientProvider client={client}>
-        {withProvider ? (
-          <LocalizedDeckTextProvider names={["Sol Ring"]}>{tooltip}</LocalizedDeckTextProvider>
-        ) : (
-          tooltip
-        )}
-      </QueryClientProvider>
-    </NextIntlClientProvider>
+  return renderWithProviders(
+    withProvider ? (
+      <LocalizedDeckTextProvider names={["Sol Ring"]}>
+        {tooltip}
+      </LocalizedDeckTextProvider>
+    ) : (
+      tooltip
+    ),
+    { locale }
   );
 }
 
@@ -78,17 +81,10 @@ describe("CardTooltip", () => {
       imageUri:
         "https://cards.scryfall.io/normal/front/f/c/fc817e07-c1f3-469f-9cf7-0945dea7400f.jpg?1793021181",
     };
-    const client = new QueryClient({
-      defaultOptions: { queries: { retry: false } },
-    });
-    render(
-      <NextIntlClientProvider locale="en" messages={{}}>
-        <QueryClientProvider client={client}>
-          <CardTooltip card={stored}>
-            <span>row</span>
-          </CardTooltip>
-        </QueryClientProvider>
-      </NextIntlClientProvider>
+    renderWithProviders(
+      <CardTooltip card={stored}>
+        <span>row</span>
+      </CardTooltip>
     );
     await hover();
     expect(screen.getByRole("img", { name: "Sol Ring" })).toHaveAttribute(

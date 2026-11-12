@@ -1,59 +1,24 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { renderHook, waitFor } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import React from "react";
+import { waitFor } from "@testing-library/react";
 import { useGameChangersList, useGameChangersSet, useGameChangers } from "./useGameChangers";
 import * as scryfallClient from "@/lib/scryfall/client";
 import type { Deck, DeckCard } from "@/lib/deck/types";
+import { aDeckCard } from "@/test/builders/card";
+import { aDeck } from "@/test/builders/deck";
+import { renderHookWithProviders } from "@/test/render";
 
 vi.mock(import("@/lib/scryfall/client"));
-
-function createWrapper() {
-  const client = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
-  });
-  function Wrapper({ children }: { children: React.ReactNode }) {
-    return React.createElement(QueryClientProvider, { client }, children);
-  }
-  return Wrapper;
-}
 
 afterEach(() => {
   vi.clearAllMocks();
 });
 
 function makeCard(name: string, isGameChanger = false): DeckCard {
-  return {
-    id: name,
-    name,
-    quantity: 1,
-    category: "other",
-    zone: "main",
-    isGameChanger,
-  } as unknown as DeckCard;
+  return aDeckCard({ id: name, name, isGameChanger });
 }
 
 function makeDeck(cards: DeckCard[], commander: DeckCard | null = null): Deck {
-  return {
-    id: "deck-1",
-    name: "Test",
-    commander,
-    partner: null,
-    cards,
-    cardCount: 0,
-    targetBracket: 2,
-    manualBracket: null,
-    budget: null,
-    tags: [],
-    pairingType: "none",
-    isAIGenerated: false,
-    shareEnabled: false,
-    isPublic: false,
-    shareToken: null,
-    description: null,
-    createdAt: "2026-01-01",
-    updatedAt: "2026-01-01",
-  } as unknown as Deck;
+  return aDeck({ name: "Test", commander, cards, targetBracket: 2 });
 }
 
 describe("useGameChangersList", () => {
@@ -63,9 +28,7 @@ describe("useGameChangersList", () => {
       cards as never
     );
 
-    const { result } = renderHook(() => useGameChangersList(), {
-      wrapper: createWrapper(),
-    });
+    const { result } = renderHookWithProviders(() => useGameChangersList());
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(scryfallClient.fetchAllPages).toHaveBeenCalledWith("is:gamechanger");
@@ -77,9 +40,7 @@ describe("useGameChangersSet", () => {
     vi.mocked(scryfallClient.fetchAllPages).mockImplementation(
       () => new Promise(() => {})
     );
-    const { result } = renderHook(() => useGameChangersSet(), {
-      wrapper: createWrapper(),
-    });
+    const { result } = renderHookWithProviders(() => useGameChangersSet());
     expect(result.current.gameChangerNames.size).toBe(0);
     expect(result.current.isLoaded).toBe(false);
   });
@@ -93,9 +54,7 @@ describe("useGameChangersSet", () => {
       cards as never
     );
 
-    const { result } = renderHook(() => useGameChangersSet(), {
-      wrapper: createWrapper(),
-    });
+    const { result } = renderHookWithProviders(() => useGameChangersSet());
 
     await waitFor(() => expect(result.current.isLoaded).toBe(true));
     expect(result.current.gameChangerNames.has("Sol Ring")).toBe(true);
@@ -109,9 +68,7 @@ describe("useGameChangers", () => {
     vi.mocked(scryfallClient.fetchAllPages).mockImplementation(
       () => new Promise(() => {})
     );
-    const { result } = renderHook(() => useGameChangers(null), {
-      wrapper: createWrapper(),
-    });
+    const { result } = renderHookWithProviders(() => useGameChangers(null));
     expect(result.current.gameChangers).toEqual([]);
     expect(result.current.count).toBe(0);
   });
@@ -124,9 +81,7 @@ describe("useGameChangers", () => {
       makeCard("Island", false),
     ]);
 
-    const { result } = renderHook(() => useGameChangers(deck), {
-      wrapper: createWrapper(),
-    });
+    const { result } = renderHookWithProviders(() => useGameChangers(deck));
 
     await waitFor(() => expect(result.current.count).toBeGreaterThan(0));
     expect(result.current.names).toContain("Sol Ring");
@@ -139,9 +94,7 @@ describe("useGameChangers", () => {
     const commander = makeCard("Atraxa", true);
     const deck = makeDeck([makeCard("Island")], commander);
 
-    const { result } = renderHook(() => useGameChangers(deck), {
-      wrapper: createWrapper(),
-    });
+    const { result } = renderHookWithProviders(() => useGameChangers(deck));
 
     await waitFor(() => expect(result.current.count).toBe(1));
     expect(result.current.names).toContain("Atraxa");

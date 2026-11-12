@@ -22,9 +22,7 @@
  */
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { http, HttpResponse } from "msw";
-import { SessionProvider } from "next-auth/react";
 import { useState } from "react";
 import { beforeEach, describe, expect, it } from "vitest";
 import { SearchBar } from "./SearchBar";
@@ -44,7 +42,7 @@ import {
   type ScryfallSearchResponse,
 } from "@/lib/scryfall/types";
 import { setupMsw } from "@/test/msw";
-import { renderWithIntl } from "@/test/render-with-intl";
+import { renderWithProviders } from "@/test/render";
 
 /** The filters the builder page starts from (`DEFAULT_FILTERS`, builder page.tsx:250-269). */
 const PAGE_DEFAULTS: SearchFiltersValue = {
@@ -105,18 +103,12 @@ function renderNameSearch(
     readonly sessionStatus?: SessionStatus;
   } = {}
 ) {
-  const client = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
-  });
-  renderWithIntl(
-    <SessionProvider session={null}>
-      <QueryClientProvider client={client}>
-        <NameSearch
-          format={options.format ?? "commander"}
-          sessionStatus={options.sessionStatus ?? "authenticated"}
-        />
-      </QueryClientProvider>
-    </SessionProvider>
+  renderWithProviders(
+    <NameSearch
+      format={options.format ?? "commander"}
+      sessionStatus={options.sessionStatus ?? "authenticated"}
+    />,
+    { session: null }
   );
   return userEvent.setup();
 }

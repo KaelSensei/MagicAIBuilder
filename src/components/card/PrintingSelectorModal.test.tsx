@@ -1,11 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
-import { NextIntlClientProvider } from "next-intl";
+import { fireEvent, screen } from "@testing-library/react";
 
-import { renderWithIntl } from "@/test/render-with-intl";
+import { aScryfallCard } from "@/test/builders/scryfall";
+import { renderWithIntl, type TestLocale } from "@/test/render-with-intl";
 import { PrintingSelectorModal } from "./PrintingSelectorModal";
-import cardMessages from "@/messages/en/card.json";
-import commonMessages from "@/messages/en/common.json";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import { useCollectionStore } from "@/lib/collection/store";
 import type { CollectionCard } from "@/lib/collection/types";
@@ -22,7 +20,7 @@ vi.mock("@/hooks/useCardPrintings", () => ({
 vi.mock("next/image", () => ({ default: () => null }));
 
 function makeCard(overrides: Partial<ScryfallCard> = {}): ScryfallCard {
-  return {
+  return aScryfallCard({
     id: "en-1",
     name: "Lightning Bolt",
     cmc: 1,
@@ -31,7 +29,7 @@ function makeCard(overrides: Partial<ScryfallCard> = {}): ScryfallCard {
     color_identity: ["R"],
     lang: "en",
     ...overrides,
-  };
+  });
 }
 
 const FRENCH_PRINTING = makeCard({
@@ -45,12 +43,15 @@ const FRENCH_PRINTING = makeCard({
 function renderModal(
   card: ScryfallCard,
   onSelect = () => {},
-  locale = "en"
+  locale: TestLocale = "en"
 ) {
-  return render(
-    <NextIntlClientProvider locale={locale} messages={{ card: cardMessages, common: commonMessages, collection: { ownership: { ownedCount: "Owned (×{count})" } } }}>
-      <PrintingSelectorModal card={card} onSelect={onSelect} onClose={() => {}} />
-    </NextIntlClientProvider>
+  return renderWithIntl(
+    <PrintingSelectorModal
+      card={card}
+      onSelect={onSelect}
+      onClose={() => {}}
+    />,
+    { locale }
   );
 }
 

@@ -1,21 +1,10 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { renderHook, waitFor } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import React from "react";
+import { waitFor } from "@testing-library/react";
 import { useCardSearch } from "./useCardSearch";
 import * as scryfallClient from "@/lib/scryfall/client";
+import { renderHookWithProviders } from "@/test/render";
 
 vi.mock(import("@/lib/scryfall/client"));
-
-function createWrapper() {
-  const client = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
-  });
-  function Wrapper({ children }: { children: React.ReactNode }) {
-    return React.createElement(QueryClientProvider, { client }, children);
-  }
-  return Wrapper;
-}
 
 afterEach(() => {
   vi.clearAllMocks();
@@ -23,17 +12,13 @@ afterEach(() => {
 
 describe("useCardSearch", () => {
   it("does not fetch when query is empty", () => {
-    const { result } = renderHook(() => useCardSearch(""), {
-      wrapper: createWrapper(),
-    });
+    const { result } = renderHookWithProviders(() => useCardSearch(""));
     expect(result.current.fetchStatus).toBe("idle");
     expect(scryfallClient.searchCards).not.toHaveBeenCalled();
   });
 
   it("does not fetch when query is 1 char", () => {
-    const { result } = renderHook(() => useCardSearch("a"), {
-      wrapper: createWrapper(),
-    });
+    const { result } = renderHookWithProviders(() => useCardSearch("a"));
     expect(result.current.fetchStatus).toBe("idle");
   });
 
@@ -41,9 +26,9 @@ describe("useCardSearch", () => {
     const response = { data: [{ id: "1", name: "Lightning Bolt" }], has_more: false };
     vi.mocked(scryfallClient.searchCards).mockResolvedValueOnce(response as never);
 
-    const { result } = renderHook(() => useCardSearch("lightning"), {
-      wrapper: createWrapper(),
-    });
+    const { result } = renderHookWithProviders(() =>
+      useCardSearch("lightning")
+    );
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data).toEqual(response);
@@ -54,9 +39,7 @@ describe("useCardSearch", () => {
     vi.mocked(scryfallClient.searchCards).mockImplementation(
       () => new Promise(() => {})
     );
-    const { result } = renderHook(() => useCardSearch("bolt"), {
-      wrapper: createWrapper(),
-    });
+    const { result } = renderHookWithProviders(() => useCardSearch("bolt"));
     expect(result.current.isPending).toBe(true);
   });
 });
@@ -67,9 +50,9 @@ describe("useCardSearch retry behavior", () => {
       new Error("404 Not Found")
     );
 
-    const { result } = renderHook(() => useCardSearch("noresults"), {
-      wrapper: createWrapper(),
-    });
+    const { result } = renderHookWithProviders(() =>
+      useCardSearch("noresults")
+    );
 
     await waitFor(() => expect(result.current.isError).toBe(true));
     // Only 1 call — no retries for 404

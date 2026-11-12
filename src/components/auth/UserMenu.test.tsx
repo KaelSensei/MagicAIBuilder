@@ -1,9 +1,7 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
-import { NextIntlClientProvider } from "next-intl";
+import { screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import enAuth from "@/messages/en/auth.json";
-import frAuth from "@/messages/fr/auth.json";
+import { renderWithIntl } from "@/test/render-with-intl";
 import { UserMenu } from "./UserMenu";
 
 vi.mock(import("next-auth/react"), () => ({
@@ -31,14 +29,7 @@ vi.mock(
 );
 
 function renderMenu(locale: "en" | "fr") {
-  render(
-    <NextIntlClientProvider
-      locale={locale}
-      messages={{ auth: locale === "fr" ? frAuth : enAuth }}
-    >
-      <UserMenu />
-    </NextIntlClientProvider>
-  );
+  renderWithIntl(<UserMenu />, { locale });
 }
 
 // An account without a display name fell back to the English alt "Avatar".
