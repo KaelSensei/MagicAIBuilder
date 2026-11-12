@@ -656,6 +656,7 @@
     "enableToGenerate": "Activez le partage pour générer un lien public en lecture seule pour ce deck.",
     "copyLink": "Copier le lien",
     "copiedLink": "Copié !",
+    "linkLabel": "Lien de partage",
     "readOnly": "Lecture seule",
     "commandZone": "Zone de commandement",
     "statsTitle": "Stats",

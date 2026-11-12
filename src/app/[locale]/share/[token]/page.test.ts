@@ -8,6 +8,7 @@ vi.mock("@/components/deck/ShareDeckView", () => ({
   ShareDeckView: () => null,
 }));
 
+import { shareLinkCacheTag } from "@/lib/deck/share-link-cache";
 import { generateMetadata } from "./page";
 
 /**
@@ -143,4 +144,24 @@ it("says in French when a shared deck has no commander or cannot be found", asyn
     "Commandant : Aucun commandant · 0 carte · Bracket 2 · commander"
   );
   expect(missing.title).toBe("Deck introuvable — MagicAIBuilder");
+});
+
+// The page caches the deck for a minute per token. `DELETE /api/decks/[id]/share`
+// purges that token's tag, so the tag here and there must be the same one
+// (OD-12: a revoked link stops working at once).
+it("reads the deck under its token's cache tag, so revoking the link purges the page at once", async () => {
+  fetchSharedDeck.mockResolvedValue(Response.json(PARTNERS_DECK));
+
+  await generateMetadata({
+    params: Promise.resolve({ locale: "en", token: "tagged-token" }),
+  });
+
+  expect(fetchSharedDeck).toHaveBeenCalledWith(
+    expect.stringContaining("/api/share/tagged-token"),
+    expect.objectContaining({
+      next: expect.objectContaining({
+        tags: [shareLinkCacheTag("tagged-token")],
+      }),
+    })
+  );
 });

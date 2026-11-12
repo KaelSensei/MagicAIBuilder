@@ -644,7 +644,7 @@
     "deleteTooltip": "Delete snapshot"
   },
   "share": {
-    "title": "Share Deck",
+    "title": "Share deck",
     "editDeck": "Edit",
     "share": "Share",
     "public": "Public",
@@ -656,6 +656,7 @@
     "enableToGenerate": "Enable sharing to generate a public read-only link for this deck.",
     "copyLink": "Copy link",
     "copiedLink": "Copied!",
+    "linkLabel": "Share link",
     "readOnly": "Read-only",
     "commandZone": "Command Zone",
     "statsTitle": "Stats",

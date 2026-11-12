@@ -1072,14 +1072,6 @@
       "count": 1
     }
   },
-  "src/components/deck/SharePopover.tsx": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 2
-    },
-    "max-lines-per-function": {
-      "count": 1
-    }
-  },
   "src/components/deck/ShoppingListModal.tsx": {
     "max-lines-per-function": {
       "count": 1

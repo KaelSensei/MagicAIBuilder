@@ -4,6 +4,10 @@ import { notFound } from "next/navigation";
 import { ShareDeckView } from "@/components/deck/ShareDeckView";
 import type { ApiSharedDeck } from "@/lib/deck/share-types";
 import { normalizeScryfallImageUrl } from "@/lib/scryfall/images";
+import {
+  SHARE_LINK_REVALIDATE_SECONDS,
+  shareLinkCacheTag,
+} from "@/lib/deck/share-link-cache";
 import { metadataTranslations } from "@/lib/seo/page-metadata";
 
 interface Params {
@@ -20,8 +24,14 @@ async function fetchSharedDeck(token: string): Promise<ApiSharedDeck | null> {
         ? `https://${process.env.VERCEL_URL}`
         : "http://localhost:3000");
 
+    // Cached per token for a minute, and tagged so that revoking the link
+    // purges the entry at once (OD-12). The tag is the one DELETE
+    // /api/decks/[id]/share passes to `revalidateTag`.
     const res = await fetch(`${baseUrl}/api/share/${token}`, {
-      next: { revalidate: 60 }, // Cache for 60 seconds
+      next: {
+        revalidate: SHARE_LINK_REVALIDATE_SECONDS,
+        tags: [shareLinkCacheTag(token)],
+      },
     });
 
     if (!res.ok) return null;

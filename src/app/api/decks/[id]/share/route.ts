@@ -1,16 +1,24 @@
+import { revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
 import { randomBytes } from "node:crypto";
 import { prisma } from "@/lib/db/prisma";
 import { requireDeckOwner } from "@/lib/auth/helpers";
 import { logger } from "@/lib/logger";
 import type { RouteParams } from "@/lib/api/route-kit";
+import { shareLinkCacheTag } from "@/lib/deck/share-link-cache";
 
 /** Generate a URL-safe random token of ~12 chars (base64url, trimmed) */
 function generateToken(): string {
   return randomBytes(9).toString("base64url"); // 9 bytes -> 12 base64url chars
 }
 
-// POST /api/decks/[id]/share — enable sharing, generate token
+/**
+ * POST /api/decks/[id]/share — switches sharing on and answers the link.
+ *
+ * Idempotent: a deck that already has a token keeps it, so the popover can
+ * recover the live link without breaking the copies already handed out.
+ * Owner only (401 signed out, 403 another account's deck, 404 unknown deck).
+ */
 export async function POST(_req: Request, { params }: RouteParams<"id">) {
   const { id } = await params;
   try {
@@ -45,17 +53,33 @@ export async function POST(_req: Request, { params }: RouteParams<"id">) {
   }
 }
 
-// DELETE /api/decks/[id]/share — disable sharing
+/**
+ * DELETE /api/decks/[id]/share — revokes the link.
+ *
+ * Clears the token as well as the flag, so switching sharing on again mints a
+ * new link, and purges the share page cached under the old token so the link
+ * stops working at once (OD-12). Idempotent: revoking twice is a 200 that
+ * changes nothing. Owner only, as for POST.
+ */
 export async function DELETE(_req: Request, { params }: RouteParams<"id">) {
   const { id } = await params;
   try {
     const ownership = await requireDeckOwner(id);
     if (ownership.error) return ownership.error;
 
+    // Read before the write: the update returns the cleared row.
+    const previous = await prisma.deck.findUnique({
+      where: { id },
+      select: { shareToken: true },
+    });
+
     await prisma.deck.update({
       where: { id },
       data: { shareToken: null, shareEnabled: false },
     });
+
+    if (previous?.shareToken)
+      revalidateTag(shareLinkCacheTag(previous.shareToken));
 
     return NextResponse.json({ success: true });
   } catch (error) {

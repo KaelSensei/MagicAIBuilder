@@ -43,6 +43,7 @@ import { DeckEditor } from "@/components/deck/DeckEditor";
 import { DeckStats } from "@/components/deck/DeckStats";
 import { BracketIndicator } from "@/components/deck/BracketIndicator";
 import { DeckDetailsPanel } from "@/components/deck/DeckDetailsPanel";
+import { SharePopover } from "@/components/deck/SharePopover";
 import { GameChangersBadge } from "@/components/deck/GameChangersBadge";
 import { BanlistAlert } from "@/components/deck/BanlistAlert";
 import {
@@ -922,6 +923,14 @@ export default function BuilderPage() {
                 {t("actionLabels.export")}
               </span>
             </button>
+            {/* Share link — a guest deck lives in the browser only, so it has none */}
+            {deckId !== GUEST_DECK_ID && (
+              <SharePopover
+                deckId={deckId}
+                initialShareEnabled={deck.shareEnabled}
+                labelClassName="hidden sm:inline"
+              />
+            )}
             {/* Shortcut list — reachable without "?", which a player can turn off */}
             <KeyboardShortcutsTrigger
               className="rounded-full border border-[var(--border)] px-2.5 py-1.5 transition-all hover:border-[var(--accent)] md:px-3"
