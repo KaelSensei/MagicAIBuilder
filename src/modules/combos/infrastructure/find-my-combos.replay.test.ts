@@ -14,7 +14,7 @@
  * and is called by `POST /api/combos`.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { delay, http, HttpResponse, type JsonBodyType } from "msw";
+import { http, HttpResponse, type JsonBodyType } from "msw";
 import {
   FIND_MY_COMBOS_RECORDED,
   FIND_MY_COMBOS_RECORDED_REQUEST,
@@ -26,6 +26,10 @@ import {
   requestDeckCombos,
 } from "@/modules/combos/infrastructure/find-my-combos";
 import { USER_AGENT } from "@/lib/http";
+import {
+  spellbookAnswers as spellbookAnswersWith,
+  spellbookNeverAnswers as spellbookNeverAnswersWith,
+} from "@/modules/combos/testing/spellbook-msw";
 import { setupMsw } from "@/test/msw";
 
 /** The recorded deck as the adapter takes it: plain card names. */
@@ -39,38 +43,18 @@ const RECORDED_QUERY = {
 /** Every request Spellbook received during the current test, in order. */
 let spellbookRequests: Request[] = [];
 
-/** Spellbook's `find-my-combos` endpoint answering every request with `body`. */
-function spellbookAnswers(body: JsonBodyType, status = 200) {
-  return http.post(SPELLBOOK_FIND_MY_COMBOS_URL, ({ request }) => {
-    spellbookRequests.push(request.clone());
-    return HttpResponse.json(body, { status });
-  });
+function recordRequest(request: Request): void {
+  spellbookRequests.push(request);
 }
 
-/**
- * Spellbook taking one request and never answering it. The adapter's own
- * 10-second `AbortSignal.timeout` is swapped, once, for a signal this handler
- * fires when the request arrives, so the test goes through fetch's real abort
- * path without waiting. MSW 3 no longer patches timers (tdd-with-ai.md,
- * "Network in tests"). `vi.restoreAllMocks` undoes the swap.
- */
+/** Spellbook answering every request with `body`, and this file recording each request. */
+function spellbookAnswers(body: JsonBodyType, status = 200) {
+  return spellbookAnswersWith(body, { status, onRequest: recordRequest });
+}
+
+/** Spellbook taking one request, recorded here, and never answering it; `vi.restoreAllMocks` undoes its timer swap. */
 function spellbookNeverAnswers() {
-  const adapterTimeout = new AbortController();
-  vi.spyOn(AbortSignal, "timeout").mockReturnValueOnce(adapterTimeout.signal);
-  return http.post(
-    SPELLBOOK_FIND_MY_COMBOS_URL,
-    async ({ request }) => {
-      spellbookRequests.push(request.clone());
-      adapterTimeout.abort(
-        new DOMException(
-          "The operation was aborted due to timeout",
-          "TimeoutError"
-        )
-      );
-      await delay("infinite");
-    },
-    { once: true }
-  );
+  return spellbookNeverAnswersWith(recordRequest);
 }
 
 function foundCombos(result: DeckCombosResult) {

@@ -63,8 +63,9 @@ export type DeckCombosFailure = Exclude<DeckCombosResult, { kind: "found" }>;
  * (`infrastructure/find-my-combos.ts`), a fake in tests.
  *
  * `findCombos` makes one call for the whole list and returns only the combos
- * the deck fully contains, infinite ones first. CMB-05 adds the contract suite
- * every implementation must pass.
+ * the deck fully contains, infinite ones first. Every implementation passes
+ * the contract suite in `testing/combo-source-contract.ts`; tests use the fake
+ * in `testing/in-memory-combo-source.ts`.
  */
 export interface ComboSource {
   findCombos(query: DeckComboQuery): Promise<DeckCombosResult>;
