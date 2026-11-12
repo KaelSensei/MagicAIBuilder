@@ -868,5 +868,8 @@
     "byAuthor": "par {author}",
     "cardCount": "{count, plural, one {# carte} other {# cartes}}",
     "tagline": "Créateur de decks Commander"
+  },
+  "sync": {
+    "conflictReloaded": "Ce deck a été modifié ailleurs (un autre onglet ou appareil). Il a été rechargé ; refaites votre dernière modification si vous la voulez toujours."
   }
 }
