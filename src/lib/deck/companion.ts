@@ -158,9 +158,10 @@ export function validateCompanionCondition(
         (c) => !isLandTypeLine(c.typeLine) && c.cmc > 0 && c.cmc % 2 !== 0
       );
       if (violators.length > 0) {
+        const violatingCopies = violators.reduce((total, card) => total + card.quantity, 0);
         return {
           valid: false,
-          reason: `Companion needs even mana values on nonland cards; ${violators.length} card(s) have odd mana value`,
+          reason: `Companion needs even mana values on nonland cards; ${violatingCopies} card(s) have odd mana value`,
         };
       }
       return { valid: true };
@@ -227,7 +228,7 @@ export function describeCompanionCondition(condition: CompanionCondition): strin
   }
 }
 
-/** Warnings for stats / bracket / validateDeck (not hard errors). */
+/** Warnings for stats and bracket scoring (not hard errors). */
 export function getCompanionDeckWarnings(deck: Deck): readonly string[] {
   const out: string[] = [];
   const comp = deck.companion;

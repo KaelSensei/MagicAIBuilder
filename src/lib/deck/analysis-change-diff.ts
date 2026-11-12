@@ -1,4 +1,4 @@
-import type { DeckStats } from "./types";
+import type { DeckStats } from "./analysis-types";
 
 export type AnalysisMetricKey =
   | "lands"

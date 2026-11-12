@@ -8,9 +8,18 @@ import {
   analyzeOpeningHand,
   type OpeningHandLandStatus,
 } from "@/lib/playtest/opening-hand-evidence";
+import {
+  OpeningHandKeepAdvice,
+  type KeepRulesContext,
+} from "@/components/playtest/OpeningHandKeepAdvice";
 
 interface OpeningHandEvidenceProps {
   readonly hand: readonly DeckCard[];
+  /**
+   * Set when the guide's keep rules apply (Commander): the stage-aware keep
+   * advice then replaces the land-only verdict.
+   */
+  readonly keepRules?: KeepRulesContext;
 }
 
 function statusClassName(status: OpeningHandLandStatus): string {
@@ -26,15 +35,17 @@ function statusClassName(status: OpeningHandLandStatus): string {
 }
 
 /**
- * Shows deterministic land-balance evidence while a mulligan is still useful.
+ * Shows opening-hand evidence while a mulligan is still useful: the guide's
+ * keep advice for Commander, the land balance otherwise, and missing colors.
  *
- * @param props - current opening hand
+ * @param props - current opening hand, and the keep-rule context when it applies
  * @returns a compact evidence row with an actionable verdict
  */
-export function OpeningHandEvidence({ hand }: OpeningHandEvidenceProps) {
+export function OpeningHandEvidence({ hand, keepRules }: OpeningHandEvidenceProps) {
   const t = useTranslations("builder.playtestEvidence.openingHand");
   const evidence = useMemo(() => analyzeOpeningHand(hand), [hand]);
   const colors = evidence.missingColors.map((color) => t(`colors.${color}`)).join(", ");
+  const landClassName = statusClassName(evidence.isDead ? "land-light" : evidence.landStatus);
   const warning = evidence.isDead
     ? t("deadHand")
     : t(`status.${evidence.landStatus}`);
@@ -46,16 +57,21 @@ export function OpeningHandEvidence({ hand }: OpeningHandEvidenceProps) {
     >
       <div className="flex items-start gap-2">
         <CircleGauge
-          className={`mt-0.5 h-4 w-4 shrink-0 ${statusClassName(evidence.isDead ? "land-light" : evidence.landStatus)}`}
+          className={`mt-0.5 h-4 w-4 shrink-0 ${keepRules ? "text-[var(--text-secondary)]" : landClassName}`}
           aria-hidden="true"
         />
         <div className="min-w-0">
           <p className="text-xs font-medium text-[var(--text-primary)]">
             {t("landCount", { count: evidence.landCount })}
           </p>
-          <p className={`text-xs ${statusClassName(evidence.isDead ? "land-light" : evidence.landStatus)}`}>
-            {warning}
-          </p>
+          {keepRules ? (
+            <>
+              <OpeningHandKeepAdvice hand={hand} context={keepRules} />
+              {evidence.isDead && <p className="text-xs text-amber-300">{t("deadHand")}</p>}
+            </>
+          ) : (
+            <p className={`text-xs ${landClassName}`}>{warning}</p>
+          )}
           {evidence.missingColors.length > 0 && (
             <p className="text-xs text-amber-200">{t("missingColors", { colors })}</p>
           )}

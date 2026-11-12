@@ -103,7 +103,7 @@ const COLORLESS_LANDS: readonly AICard[] = [
 const DECK_SIZE = 99;
 
 /** Sorts the requested colours into canonical WUBRG order and drops duplicates. */
-export function colorIdentityKey(colors: readonly BuildColor[]): string {
+function colorIdentityKey(colors: readonly BuildColor[]): string {
   const wanted = new Set(colors);
   const key = WUBRG.filter((c) => wanted.has(c)).join("");
   return key === "" ? "C" : key;

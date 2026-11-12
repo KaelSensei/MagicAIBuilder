@@ -3,53 +3,23 @@ import { renderHook } from "@testing-library/react";
 import { useDeckPrice } from "./useDeckPrice";
 import { useDeckStore } from "@/lib/deck/store";
 import type { DeckCard, Deck } from "@/lib/deck/types";
+import { aDeckCard } from "@/test/builders/card";
+import { aDeck } from "@/test/builders/deck";
 
-// Minimal DeckCard factory for tests
 function makeCard(overrides: Partial<DeckCard> = {}): DeckCard {
-  return {
+  return aDeckCard({
     id: `card-${Math.random()}`,
     name: "Test Card",
     manaCost: "{1}",
     cmc: 1,
     typeLine: "Creature",
-    oracleText: "",
-    colorIdentity: [],
-    isGameChanger: false,
-    isBanned: false,
-    price: null,
-    imageUri: "",
-    artCropUri: "",
     category: "creature",
-    quantity: 1,
-    zone: "main",
     ...overrides,
-  };
+  });
 }
 
 function makeEmptyDeck(id = "deck-1"): Deck {
-  return {
-    id,
-    name: "Test Deck",
-    commander: null,
-    partner: null,
-    companion: null,
-    pairingType: "none",
-    cards: [],
-    maybeboard: [],
-    format: "commander",
-    cardCount: 0,
-    targetBracket: 3,
-    manualBracket: null,
-    budget: null,
-    description: "",
-    tags: [],
-    shareToken: null,
-    shareEnabled: false,
-    isPublic: false,
-    isAIGenerated: false,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
+  return aDeck({ id });
 }
 
 describe("useDeckPrice", () => {

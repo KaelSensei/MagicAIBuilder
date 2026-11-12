@@ -2,9 +2,20 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // ─── Mock Prisma ──────────────────────────────────────────────────────────────
 
-const { mockDeckFindUnique, mockSnapshotFindFirst, mockSessionFindMany, mockSessionCreate } = vi.hoisted(() => ({
+const {
+  mockDeckFindUnique,
+  mockDeckCardFindMany,
+  mockSnapshotFindFirst,
+  mockSnapshotFindMany,
+  mockSnapshotCreate,
+  mockSessionFindMany,
+  mockSessionCreate,
+} = vi.hoisted(() => ({
   mockDeckFindUnique: vi.fn(),
+  mockDeckCardFindMany: vi.fn(),
   mockSnapshotFindFirst: vi.fn(),
+  mockSnapshotFindMany: vi.fn(),
+  mockSnapshotCreate: vi.fn(),
   mockSessionFindMany: vi.fn(),
   mockSessionCreate: vi.fn(),
 }));
@@ -21,19 +32,33 @@ const { mockUserFindUnique } = vi.hoisted(() => ({
   })),
 }));
 
-vi.mock("@/lib/db/prisma", () => ({
-  prisma: {
+vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
+  const { stubPrisma } = await import("@/test/prisma-stub");
+  const tables = {
     user: { findUnique: mockUserFindUnique },
     deck: { findUnique: mockDeckFindUnique },
-    deckSnapshot: { findFirst: mockSnapshotFindFirst },
-    playtestSession: { findMany: mockSessionFindMany, create: mockSessionCreate },
-  },
-}));
+    deckCard: { findMany: mockDeckCardFindMany },
+    deckSnapshot: {
+      findFirst: mockSnapshotFindFirst,
+      findMany: mockSnapshotFindMany,
+      create: mockSnapshotCreate,
+    },
+    playtestSession: {
+      findMany: mockSessionFindMany,
+      create: mockSessionCreate,
+    },
+  };
+  // Recording runs in an interactive transaction over the same tables.
+  return stubPrisma(await importOriginal(), {
+    ...tables,
+    $transaction: (run: (tx: typeof tables) => unknown) => run(tables),
+  });
+});
 
 // ─── Mock NextAuth auth() ─────────────────────────────────────────────────────
 
 const { mockAuth } = vi.hoisted(() => ({ mockAuth: vi.fn() }));
-vi.mock("@/lib/auth/config", () => ({ auth: mockAuth }));
+vi.mock(import("@/lib/auth/config"), () => ({ auth: mockAuth }));
 
 // ─── Import after mocks ───────────────────────────────────────────────────────
 
@@ -82,6 +107,9 @@ beforeEach(() => {
   vi.clearAllMocks();
   mockSessionFindMany.mockResolvedValue([]);
   mockSnapshotFindFirst.mockResolvedValue(null);
+  mockDeckCardFindMany.mockResolvedValue([]);
+  mockSnapshotFindMany.mockResolvedValue([]);
+  mockSnapshotCreate.mockResolvedValue({ id: "snapshot-auto" });
 });
 
 describe("GET /api/decks/[id]/playtest-sessions", () => {
@@ -112,6 +140,37 @@ describe("GET /api/decks/[id]/playtest-sessions", () => {
     expect(body.sessions).toHaveLength(2);
     expect(body.summary.total).toBe(2);
     expect(body.summary.winRate).toBe(50);
+  });
+
+  it("skips a stored row whose result is not one the app records", async () => {
+    // The column is a plain string. A row edited behind the API cannot be
+    // counted by any aggregate, so it must not inflate the total either.
+    signedInAs("owner-1");
+    mockDeckFindUnique.mockResolvedValue(OWNED_DECK);
+    mockSessionFindMany.mockResolvedValue([
+      row(),
+      row({ id: "s2", result: "victory" }),
+    ]);
+
+    const body = await (await GET(new Request("http://localhost"), params())).json();
+
+    expect(body.sessions.map((session: { id: string }) => session.id)).toEqual(["s1"]);
+    expect(body.summary.total).toBe(1);
+  });
+
+  it("reads a stored difficulty nobody knows as not recorded", async () => {
+    signedInAs("owner-1");
+    mockDeckFindUnique.mockResolvedValue(OWNED_DECK);
+    mockSessionFindMany.mockResolvedValue([
+      row({ difficulty: "cedh" }),
+      row({ id: "s2", difficulty: "competitive" }),
+    ]);
+
+    const body = await (await GET(new Request("http://localhost"), params())).json();
+
+    expect(body.sessions[0].difficulty).toBe("cedh");
+    expect(body.sessions[1].difficulty).toBeUndefined();
+    expect(Object.keys(body.summary.matchups)).toEqual(["cedh"]);
   });
 
   it("scopes the query to the caller, not just the deck", async () => {

@@ -1,26 +1,21 @@
 import { describe, it, expect } from "vitest";
 import { computeDeckStats } from "@/lib/deck/stats";
 import type { Deck, DeckCard } from "@/lib/deck/types";
+import { aDeckCard } from "@/test/builders/card";
+import { aDeck } from "@/test/builders/deck";
 
 function makeDeckCard(overrides: Partial<DeckCard> = {}): DeckCard {
-  return {
+  return aDeckCard({
     id: "test-id",
     name: "Test Card",
     manaCost: "{2}{G}",
     cmc: 3,
     typeLine: "Creature — Elf",
-    oracleText: "",
     colorIdentity: ["G"],
-    isGameChanger: false,
-    isBanned: false,
     price: 1.0,
-    imageUri: "",
-    artCropUri: "",
     category: "creature",
-    quantity: 1,
-    zone: "main",
     ...overrides,
-  };
+  });
 }
 
 function makeCommander(): DeckCard {
@@ -36,29 +31,7 @@ function makeCommander(): DeckCard {
 }
 
 function emptyDeck(): Deck {
-  return {
-    id: "deck-1",
-    name: "Test Deck",
-    commander: makeCommander(),
-    partner: null,
-    companion: null,
-    pairingType: "none",
-    cards: [],
-    maybeboard: [],
-    format: "commander",
-    cardCount: 0,
-    targetBracket: 2,
-    manualBracket: null,
-    budget: null,
-    description: "",
-    tags: [],
-    shareToken: null,
-    shareEnabled: false,
-    isPublic: false,
-    isAIGenerated: false,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
+  return aDeck({ commander: makeCommander(), targetBracket: 2 });
 }
 
 describe("computeDeckStats", () => {
@@ -229,6 +202,39 @@ describe("computeDeckStats", () => {
     ];
     const stats = computeDeckStats(deck);
     expect(stats.colorIdentityViolations).toHaveLength(0);
+  });
+
+  it("reports Arcane Signet as unable to work under a colorless commander", () => {
+    const deck = emptyDeck();
+    deck.commander = makeDeckCard({
+      id: "karn",
+      name: "Karn, Silver Golem",
+      manaCost: "{5}",
+      category: "commander",
+      typeLine: "Legendary Artifact Creature — Golem",
+      oracleText:
+        "Whenever Karn blocks or becomes blocked, it gets -4/+4 until end of turn.\n{1}: Target noncreature artifact becomes an artifact creature with power and toughness each equal to its mana value until end of turn.",
+      colorIdentity: [],
+    });
+    deck.cards = [
+      makeDeckCard({
+        id: "signet",
+        name: "Arcane Signet",
+        manaCost: "{2}",
+        category: "ramp",
+        typeLine: "Artifact",
+        oracleText: "{T}: Add one mana of any color in your commander's color identity.",
+        colorIdentity: [],
+      }),
+    ];
+
+    expect(computeDeckStats(deck).commanderRuleIssues).toEqual([
+      {
+        cardId: "signet",
+        cardName: "Arcane Signet",
+        rule: "colorless-identity-mana",
+      },
+    ]);
   });
 
   it("counts ramp and draw separately", () => {

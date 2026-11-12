@@ -3,13 +3,19 @@
 import { useEffect, useState } from "react";
 import { UserPlus, X } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useSession } from "next-auth/react";
 import { Link } from "@/i18n/navigation";
 
 const CHANNEL_NAME = "magic-ai-builder:guest-deck";
 
-/** Explains browser-only storage and promotes account creation when another tab joins. */
+/**
+ * Explains browser-only storage and promotes account creation when another tab
+ * joins. Signed in, it stands aside: the offer to save the deck to the account
+ * (`GuestDeckClaimPrompt`) is the next step then, not creating an account.
+ */
 export function GuestDeckNotice() {
   const t = useTranslations("builder.guest");
+  const { status } = useSession();
   const [anotherTabOpen, setAnotherTabOpen] = useState(false);
   const [dismissed, setDismissed] = useState(false);
 
@@ -35,7 +41,7 @@ export function GuestDeckNotice() {
     return () => channel.close();
   }, []);
 
-  if (dismissed) return null;
+  if (dismissed || status === "authenticated") return null;
 
   return (
     <aside className="flex items-center gap-3 border-b border-[var(--border)] bg-[var(--surface-elevated)] px-3 py-2 text-xs text-[var(--text-secondary)] md:px-4">

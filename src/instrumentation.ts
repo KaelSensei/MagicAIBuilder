@@ -10,9 +10,16 @@
  */
 
 import * as Sentry from "@sentry/nextjs";
+import { scryfallApiBaseUrl } from "@/lib/scryfall/api-base-url";
 
-/** Loads the runtime-specific Sentry config once, at server start. */
+/**
+ * Loads the runtime-specific Sentry config once, at server start, and checks
+ * the Scryfall origin, so a malformed `SCRYFALL_API_BASE_URL` stops the server
+ * here rather than at its first card lookup.
+ */
 export async function register(): Promise<void> {
+  scryfallApiBaseUrl();
+
   if (process.env.NEXT_RUNTIME === "nodejs") {
     await import("../sentry.server.config");
   }

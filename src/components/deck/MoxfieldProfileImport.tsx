@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
+import { isMoxfieldRefusal } from "@/lib/import/moxfield-refusal";
 import type {
   MoxfieldUserDeckPage,
   MoxfieldUserDeckSummary,
@@ -15,6 +17,15 @@ const STORAGE_KEY = "magic-ai-builder:moxfield-profiles";
 const MOXFIELD_PAGE_SIZE = 20;
 /** Maximum time to wait for a Moxfield profile page before offering retry feedback. */
 export const MOXFIELD_PROFILE_TIMEOUT_MS = 15_000;
+
+/**
+ * Why a profile page failed to load. A Moxfield refusal is not retryable:
+ * asking again only repeats the request Moxfield already turned down.
+ */
+interface ProfileLoadError {
+  readonly message: string;
+  readonly retryable: boolean;
+}
 
 interface MoxfieldProfileImportProps {
   readonly onDeckSelected: (url: string) => void;
@@ -51,16 +62,19 @@ function isDeckPage(value: unknown): value is MoxfieldUserDeckPage {
 export function MoxfieldProfileImport({
   onDeckSelected,
 }: MoxfieldProfileImportProps) {
+  const t = useTranslations("deck");
+  const tProfiles = useTranslations("deck.import.moxfieldProfiles");
   const [username, setUsername] = useState("");
   const [activeProfile, setActiveProfile] = useState("");
   const [profiles, setProfiles] = useState<string[]>(readSavedProfiles);
   const [decks, setDecks] = useState<readonly MoxfieldUserDeckSummary[]>([]);
   const [pageNumber, setPageNumber] = useState(1);
   const latestRequestId = useRef(0);
+  const lastAttempt = useRef({ profile: "", pageNumber: 1 });
   const [total, setTotal] = useState(0);
   const [hasMore, setHasMore] = useState(false);
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<ProfileLoadError | null>(null);
 
   const saveProfile = () => {
     const normalized = username.trim().replace(/^@/, "");
@@ -76,6 +90,7 @@ export function MoxfieldProfileImport({
       const normalized = profile.trim().replace(/^@/, "");
       if (!normalized) return;
       const requestId = ++latestRequestId.current;
+      lastAttempt.current = { profile: normalized, pageNumber: requestedPage };
       setUsername(normalized);
       if (requestedPage === 1) {
         setActiveProfile(normalized);
@@ -98,8 +113,19 @@ export function MoxfieldProfileImport({
         });
         const data: unknown = await response.json();
         if (requestId !== latestRequestId.current) return;
-        if (!response.ok || !isDeckPage(data))
-          throw new Error("Could not load Moxfield decks.");
+        if (isMoxfieldRefusal(data)) {
+          setStatus("error");
+          setError({
+            message: t("import.moxfieldRefused", { tab: t("import.tabText") }),
+            retryable: false,
+          });
+          return;
+        }
+        if (!response.ok || !isDeckPage(data)) {
+          setStatus("error");
+          setError({ message: tProfiles("loadFailed"), retryable: true });
+          return;
+        }
         setDecks(data.decks);
         setPageNumber(requestedPage);
         setTotal(data.total);
@@ -108,14 +134,14 @@ export function MoxfieldProfileImport({
       } catch (cause) {
         if (requestId !== latestRequestId.current) return;
         setStatus("error");
-        setError(
-          cause instanceof Error
-            ? cause.message
-            : "Could not load Moxfield decks."
-        );
+        setError({
+          message:
+            cause instanceof Error ? cause.message : tProfiles("loadFailed"),
+          retryable: true,
+        });
       }
     },
-    []
+    [t, tProfiles]
   );
 
   const loadFirstPage = useCallback(
@@ -143,26 +169,30 @@ export function MoxfieldProfileImport({
   const loadNextPage = useCallback(() => {
     void loadDecks(activeProfile, pageNumber + 1);
   }, [activeProfile, loadDecks, pageNumber]);
+  const retryLastAttempt = useCallback(() => {
+    const attempt = lastAttempt.current;
+    void loadDecks(attempt.profile, attempt.pageNumber);
+  }, [loadDecks]);
 
   return (
     <section className="flex flex-col gap-3 rounded border border-[var(--border)] p-3">
       <div>
         <h3 className="text-sm font-medium text-[var(--text-primary)]">
-          Moxfield profiles
+          {tProfiles("title")}
         </h3>
         <p className="text-xs text-[var(--text-secondary)]">
-          Save a username to quickly import one of its public decks.
+          {tProfiles("description")}
         </p>
       </div>
       <div className="flex items-center gap-2">
         <label className="sr-only" htmlFor="moxfield-username">
-          Moxfield username
+          {tProfiles("username")}
         </label>
         <input
           id="moxfield-username"
           value={username}
           onChange={(event) => setUsername(event.target.value)}
-          placeholder="Moxfield username"
+          placeholder={tProfiles("username")}
           className="min-w-0 flex-1 rounded border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--text-primary)]"
         />
         <button
@@ -171,7 +201,7 @@ export function MoxfieldProfileImport({
           disabled={!username.trim()}
           className="rounded border border-[var(--border)] px-3 py-2 text-xs text-[var(--text-secondary)] disabled:opacity-50"
         >
-          Save profile
+          {tProfiles("saveProfile")}
         </button>
         <button
           type="button"
@@ -179,7 +209,7 @@ export function MoxfieldProfileImport({
           disabled={!username.trim() || status === "loading"}
           className="rounded bg-[var(--accent)] px-3 py-2 text-xs text-white disabled:opacity-50"
         >
-          {status === "loading" ? "Loading…" : "Load decks"}
+          {status === "loading" ? tProfiles("loading") : tProfiles("loadDecks")}
         </button>
       </div>
       <SavedMoxfieldProfiles
@@ -188,9 +218,19 @@ export function MoxfieldProfileImport({
         onRemove={removeProfile}
       />
       {error && (
-        <p role="alert" className="text-xs text-red-400">
-          {error}
-        </p>
+        <div className="flex items-center gap-2 text-xs text-red-400">
+          <p role="alert">{error.message}</p>
+          {error.retryable && (
+            <button
+              type="button"
+              onClick={retryLastAttempt}
+              disabled={status === "loading"}
+              className="underline disabled:opacity-50"
+            >
+              {tProfiles("retry")}
+            </button>
+          )}
+        </div>
       )}
       <MoxfieldDeckResults
         decks={decks}

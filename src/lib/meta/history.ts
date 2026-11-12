@@ -19,7 +19,7 @@
  * those variants against the exactly-measured ones.
  */
 
-import type { MetaCard } from "./fetch";
+import type { MetaCard } from "./types";
 
 /** Inclusion points below which a movement is noise rather than a shift. */
 const STEADY_BAND = 0.01;

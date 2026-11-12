@@ -4,8 +4,10 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/components/ui/utils";
-import type { BracketLevel, BracketScore } from "@/lib/deck/types";
-import { BRACKET_DEFINITIONS } from "@/lib/constants/brackets";
+import type { BracketLevel } from "@/lib/deck/types";
+import type { BracketScore } from "@/lib/deck/analysis-types";
+import { BRACKET_DEFINITIONS, BRACKET_LEVELS } from "@/lib/constants/brackets";
+import { minimumBracket } from "@/lib/deck/bracket-floor";
 import { AlertTriangle, Zap, X, Infinity } from "lucide-react";
 import { GroupedDeckWarnings } from "./GroupedDeckWarnings";
 
@@ -17,23 +19,34 @@ interface BracketIndicatorProps {
   readonly className?: string;
 }
 
-// The six dimensions of the bracket engine. Kept separate from `stats.*` even
+// The five dimensions of the bracket engine. Kept separate from `stats.*` even
 // where the English word coincides: "Draw" here is a 1–4 score, while
 // `stats.cardDraw` is a card count. Same word, different quantity.
-const DIMENSION_KEYS = ["ramp", "draw", "removal", "tutors", "winSpeed", "avgCmc"] as const;
+const DIMENSION_KEYS = [
+  "ramp",
+  "draw",
+  "removal",
+  "winSpeed",
+  "avgCmc",
+] as const;
 
-const BRACKET_BG: Record<BracketLevel, string> = {
+/** Dimension scores run from 1 to 4: no list signal tells Bracket 5 from 4. */
+const DIMENSION_STEPS = [1, 2, 3, 4] as const;
+
+const BRACKET_BG: Readonly<Record<BracketLevel, string>> = {
   1: "bg-green-500/10 border-green-500/30",
   2: "bg-blue-500/10 border-blue-500/30",
   3: "bg-amber-500/10 border-amber-500/30",
   4: "bg-red-500/10 border-red-500/30",
+  5: "bg-fuchsia-500/10 border-fuchsia-500/30",
 };
 
-const BRACKET_TEXT: Record<BracketLevel, string> = {
+const BRACKET_TEXT: Readonly<Record<BracketLevel, string>> = {
   1: "text-green-400",
   2: "text-blue-400",
   3: "text-amber-400",
   4: "text-red-400",
+  5: "text-fuchsia-400",
 };
 
 function MiniBar({
@@ -51,7 +64,7 @@ function MiniBar({
         {label}
       </span>
       <div className="flex-1 flex gap-0.5">
-        {([1, 2, 3, 4] as const).map((b) => (
+        {DIMENSION_STEPS.map((b) => (
           <motion.div
             key={b}
             className="h-2 flex-1 rounded-full"
@@ -104,10 +117,18 @@ export function BracketIndicator({
   const isOverridden = manualBracket != null;
   const displayBracket = isOverridden ? manualBracket : score.overall;
 
-  const bracketDef = BRACKET_DEFINITIONS[displayBracket];
-  const bracketColor = bracketDef.color;
+  const bracketColor = BRACKET_DEFINITIONS[displayBracket].color;
   const bgClass = BRACKET_BG[displayBracket];
   const textClass = BRACKET_TEXT[displayBracket];
+  const bracketName = (level: BracketLevel) => t(`bracket.name.${level}`);
+  const gameChangerFloor = minimumBracket({
+    gameChangers: score.gameChangers,
+    twoCardCombos: 0,
+  });
+  const comboFloor = minimumBracket({
+    gameChangers: 0,
+    twoCardCombos: score.twoCardInfiniteCombos,
+  });
 
   const handleSelectManual = (b: BracketLevel) => {
     onManualBracketChange?.(b);
@@ -146,7 +167,7 @@ export function BracketIndicator({
                 {displayBracket}
               </span>
               <span className="text-sm text-[var(--text-secondary)]">
-                {bracketDef.name}
+                {bracketName(displayBracket)}
               </span>
             </motion.div>
           </AnimatePresence>
@@ -166,7 +187,7 @@ export function BracketIndicator({
               {targetBracket}
             </span>
             <span className="text-xs text-[var(--text-secondary)] ml-1">
-              {BRACKET_DEFINITIONS[targetBracket].name}
+              {bracketName(targetBracket)}
             </span>
           </div>
         )}
@@ -230,7 +251,7 @@ export function BracketIndicator({
               {t("bracket.setManual")}
             </p>
             <div className="flex gap-1.5">
-              {([1, 2, 3, 4] as const).map((b) => (
+              {BRACKET_LEVELS.map((b) => (
                 <button
                   type="button"
                   key={b}
@@ -241,7 +262,7 @@ export function BracketIndicator({
                       ? cn(BRACKET_TEXT[b], "border-current bg-current/10")
                       : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--text-primary)]"
                   )}
-                  title={BRACKET_DEFINITIONS[b].name}
+                  title={bracketName(b)}
                 >
                   {b}
                 </button>
@@ -253,7 +274,7 @@ export function BracketIndicator({
 
       {/* Overall progress bar */}
       <div className="flex gap-1">
-        {([1, 2, 3, 4] as const).map((b) => (
+        {BRACKET_LEVELS.map((b) => (
           <motion.div
             key={b}
             className="h-2 flex-1 rounded-full"
@@ -290,12 +311,15 @@ export function BracketIndicator({
         ))}
       </div>
 
-      {/* 2-card infinite combo badge — forces Bracket 4 per RC rules */}
+      {/* 2-card infinite combo badge — none in Brackets 1–2, none before turn 6 in Bracket 3 */}
       {score.twoCardInfiniteCombos > 0 && (
         <div className="flex items-center gap-1.5">
           <Infinity className="w-3.5 h-3.5 text-red-400" />
           <span className="text-xs text-red-400 font-medium">
-            {t("bracket.infiniteCombos", { count: score.twoCardInfiniteCombos })}
+            {t("bracket.infiniteCombos", {
+              count: score.twoCardInfiniteCombos,
+              bracket: comboFloor,
+            })}
           </span>
         </div>
       )}
@@ -306,7 +330,7 @@ export function BracketIndicator({
           <Zap className="w-3.5 h-3.5 text-amber-400" />
           <span className="text-xs text-amber-400 font-medium">
             {t("bracket.gameChangers", { count: score.gameChangers })}
-            {score.gameChangers > 3
+            {gameChangerFloor >= 4
               ? t("bracket.gcForcesB4")
               : t("bracket.gcForcesB3")}
           </span>

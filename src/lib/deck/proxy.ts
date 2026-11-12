@@ -6,6 +6,8 @@
  */
 import type { DeckCard } from "./types";
 import type { LocalizedCardText } from "@/lib/scryfall/localized";
+import { normalizeScryfallImageUrl } from "@/lib/scryfall/images";
+import { isBasicLand } from "@/lib/scryfall/type-line";
 
 export interface ProxyConfig {
   /** Paper format */
@@ -34,7 +36,7 @@ export const DEFAULT_PROXY_CONFIG: ProxyConfig = {
 export interface ProxySlot {
   readonly id: string;       // unique key (cardId + index for quantity > 1)
   readonly name: string;
-  readonly imageUri: string; // normal or large depending on quality
+  readonly imageUri: string; // Scryfall grid WebP
   readonly manaCost: string;
   readonly typeLine: string;
   readonly oracleText: string;
@@ -47,11 +49,10 @@ const BASIC_LAND_TYPES = new Set([
   "plains", "island", "swamp", "mountain", "forest", "wastes",
 ]);
 
-function isBasicLand(card: DeckCard): boolean {
-  const type = card.typeLine.toLowerCase();
+/** The name list covers deck rows stored without a type line (the column defaults to ""). */
+function isBasicLandRow(card: DeckCard): boolean {
   return (
-    type.includes("basic land") ||
-    BASIC_LAND_TYPES.has(card.name.toLowerCase())
+    isBasicLand(card.typeLine) || BASIC_LAND_TYPES.has(card.name.toLowerCase())
   );
 }
 
@@ -61,7 +62,7 @@ function makeCommanderSlot(cmd: DeckCard): ProxySlot {
   return {
     id: `cmd-${cmd.id}`,
     name: cmd.name,
-    imageUri: cmd.imageUri,
+    imageUri: normalizeScryfallImageUrl(cmd.imageUri),
     manaCost: cmd.manaCost,
     typeLine: cmd.typeLine,
     oracleText: cmd.oracleText ?? "",
@@ -72,7 +73,7 @@ function makeCommanderSlot(cmd: DeckCard): ProxySlot {
 
 function shouldExcludeCard(card: DeckCard, config: ProxyConfig): boolean {
   if (card.zone !== "main") return true;
-  if (!config.includeLands && isBasicLand(card)) return true;
+  if (!config.includeLands && isBasicLandRow(card)) return true;
   return false;
 }
 
@@ -81,10 +82,11 @@ function makeCardSlots(card: DeckCard): ProxySlot[] {
   const powerToughness =
     card.power && card.toughness ? `${card.power}/${card.toughness}` : null;
   const oracleText = card.oracleText ?? "";
+  const imageUri = normalizeScryfallImageUrl(card.imageUri);
   return Array.from({ length: qty }, (_, i) => ({
     id: `${card.id}-${i}`,
     name: card.name,
-    imageUri: card.imageUri,
+    imageUri,
     manaCost: card.manaCost,
     typeLine: card.typeLine,
     oracleText,

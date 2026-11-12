@@ -3,16 +3,18 @@
  * US-AG Phase 1: Zero framework dependencies, zero side effects.
  */
 
+import type { SessionDifficulty, SessionResult } from "./session-enums";
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface PlaytestSession {
   readonly id: string;
   readonly deckId: string;
   readonly userId: string;
-  readonly result: "win" | "loss" | "draw";
+  readonly result: SessionResult;
   readonly turns: number;
   readonly mulliganCount: number;
-  readonly difficulty?: "budget" | "mid-range" | "cedh";
+  readonly difficulty?: SessionDifficulty;
   readonly notes?: string;
   readonly proposedChange?: string;
   readonly snapshotId?: string;

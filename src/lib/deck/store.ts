@@ -1,13 +1,27 @@
 "use client";
 // Zustand deck store — manages all deck state (synced to DB via API routes)
 import { create } from "zustand";
-import type { Deck, DeckCard, DeckZone, CardCategory } from "./types";
+import type { StoreApi } from "zustand";
+import type {
+  BracketLevel,
+  Deck,
+  DeckCard,
+  DeckZone,
+  CardCategory,
+} from "./types";
 import { loadSortPreference, saveSortPreference } from "./sort";
 import type { SortField, SortDirection, GroupBy, SortPreference } from "./sort";
-import { canPairWith, detectPairingType, supportsPartner } from "./pairing";
+import { detectPairingType, pairCommanders } from "./pairing";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import { getCardById } from "@/lib/scryfall/client";
+import { isBasicLand } from "@/lib/scryfall/type-line";
+import { maxQuantity } from "@/lib/deck/multiples";
 import * as deckApi from "@/lib/db/deck-api";
+import {
+  DeckApiError,
+  isStaleDeckRefusal,
+  readAnsweredVersion,
+} from "@/lib/db/deck-api-answer";
 import { useCollectionStore } from "@/lib/collection/store";
 import { useToastStore } from "@/hooks/useToast";
 import { logger } from "@/lib/logger";
@@ -16,13 +30,36 @@ import {
   isScryfallCompanionCard,
 } from "@/lib/deck/companion";
 import {
+  addCardPayload,
   apiDeckToStoreDeck,
+  commandCardPayload,
   createEmptyDeck,
   isDeckStub,
   makeDeckCard,
 } from "./store-factories";
 import { cardsFromZoneSource, deckFromZoneCards } from "./zone-source";
+import { withLoadedCardCount } from "./loaded-card-count";
 import {
+  createDeckWriteQueue,
+  DroppedDeckWriteError,
+} from "./deck-write-queue";
+import type { BulkEdit } from "./bulk-edit";
+import {
+  commandZoneOf,
+  restoreCommanderAfterFailedSave,
+  restorePartnerAfterFailedSave,
+  type CommandZone,
+  type FailedCommanderSave,
+} from "./commander-save-recovery";
+import { withSavedCommandRows } from "./command-zone-rows";
+import {
+  commandZoneRequest,
+  savedRowsBySlot,
+  type CommandSlotEdit,
+  type CommandZoneEdit,
+} from "./command-zone-change";
+import {
+  clearGuestDeck,
   createGuestDeck,
   GUEST_DECK_ID,
   isGuestDeckId,
@@ -96,6 +133,19 @@ function uniqueDeckCards(deck: Pick<Deck, "cards" | "maybeboard">): DeckCard[] {
 }
 
 /**
+ * The copies of `card` this deck may hold: four in a constructed deck
+ * (CR 100.2a), one in a singleton deck (CR 903.5b), with the exemptions
+ * `maxQuantity` grants basic lands and the cards whose own text allows more.
+ * The limit is the deck's stored format, never a fixed Commander one.
+ */
+function copyLimit(
+  deck: Pick<Deck, "format">,
+  card: { readonly name: string; readonly typeLine: string; readonly oracleText?: string }
+): number {
+  return maxQuantity(card.name, card.typeLine, card.oracleText ?? "", deck.format);
+}
+
+/**
  * Checks whether two name sets have identical membership.
  *
  * @param current - Values already held in store state.
@@ -144,14 +194,18 @@ function syncDeckCards(deck: Deck, cards: readonly DeckCard[]): Deck {
   return deckFromZoneCards(deck, cards);
 }
 
+/**
+ * The deck after an edit of its card rows: zones re-read, `cardCount` back in
+ * step with the rows held, and the edit dated.
+ */
 function updateDeckCards(
   deck: Deck,
   update: (cards: DeckCard[]) => DeckCard[]
 ): Deck {
-  return {
+  return withLoadedCardCount({
     ...syncDeckCards(deck, update(uniqueDeckCards(deck))),
     updatedAt: new Date(),
-  };
+  });
 }
 
 interface PendingQuantityWrite {
@@ -201,6 +255,138 @@ let pendingBudgetWrites = 0;
 let pendingBulkRemovals = 0;
 let pendingCardAdditionsAndRemovals = 0;
 let pendingRenameWrites = 0;
+
+/**
+ * The decks map with one deck's version replaced; the map itself when the
+ * deck is not held or already holds that version, so nothing re-renders.
+ */
+function withDeckVersion(
+  state: Pick<DeckStore, "decks">,
+  deckId: string,
+  version: number | undefined
+): Pick<DeckStore, "decks"> {
+  const deck = state.decks[deckId];
+  if (!deck || deck.version === version) return state;
+  return { decks: { ...state.decks, [deckId]: { ...deck, version } } };
+}
+
+/**
+ * The queue every versioned write of this store goes through: it sends the
+ * version the store holds at that moment and adopts the one answered
+ * (`deck-write-queue.ts`). The store is read lazily, since this queue is
+ * created before it.
+ */
+const deckWrites = createDeckWriteQueue(
+  {
+    held: (deckId) => useDeckStore.getState().decks[deckId]?.version,
+    adopt: (deckId, version) =>
+      useDeckStore.setState((state) => withDeckVersion(state, deckId, version)),
+    forget: (deckId) =>
+      useDeckStore.setState((state) => withDeckVersion(state, deckId, undefined)),
+  },
+  isStaleDeckRefusal
+);
+
+/** The conflict message, translated by the toast container in the player's locale. */
+const CONFLICT_TOAST = { key: "deck.sync.conflictReloaded" } as const;
+
+/**
+ * Puts the server's deck back on screen after a write was refused as stale,
+ * and tells the player. The reload replaces the whole deck, version included,
+ * so the next write carries the version the other tab left. The undo entries
+ * of the deck go: they name rows the other tab may have replaced. When the
+ * reload fails, the deck stays as the rollback left it, with no version to
+ * vouch for, and the player is told to retry.
+ *
+ * @param deckId - the deck whose write was refused
+ */
+async function reloadAfterConflict(deckId: string): Promise<void> {
+  try {
+    const apiDeck = await deckApi.fetchDeck(deckId);
+    if (!useDeckStore.getState().decks[deckId]) return;
+    useDeckStore.setState((state) => ({
+      decks: { ...state.decks, [deckId]: apiDeckToStoreDeck(apiDeck) },
+      undoStack: state.undoStack.filter((action) => action.deckId !== deckId),
+    }));
+    useToastStore.getState().add("warning", CONFLICT_TOAST);
+  } catch (err) {
+    logger.error("Unexpected error", "reloadAfterConflict", err);
+    useToastStore
+      .getState()
+      .add("error", "Could not refresh deck. Please retry.");
+  }
+}
+
+/**
+ * Tells the player about a write the server did not save, once the caller
+ * has rolled its change back. A write refused as stale (409) reloads the deck
+ * and shows the conflict message in place of `message`; a write dropped by
+ * that reload says nothing, since the refused write reported the conflict;
+ * any other failure shows `message`, when there is one.
+ *
+ * @param deckId - the deck written
+ * @param error - what the write threw
+ * @param message - the failure toast for an ordinary failure; absent when the
+ *   write has never reported one
+ */
+async function settleFailedWrite(
+  deckId: string,
+  error: unknown,
+  message?: string
+): Promise<void> {
+  if (error instanceof DroppedDeckWriteError) return;
+  if (isStaleDeckRefusal(error)) {
+    await deckWrites.recover(deckId, () => reloadAfterConflict(deckId));
+    return;
+  }
+  if (message !== undefined) useToastStore.getState().add("error", message);
+}
+
+/**
+ * One single-row PATCH the store still sends itself (`updateCardQuantity`,
+ * `swapCardPrinting`; DB-16 moves them into the deck client), with the deck
+ * version this tab read beside its columns. A failure names the columns it
+ * carried, for the log: `[patchCardRow:quantity] HTTP 500`.
+ *
+ * @returns the deck's new version, when the answer carries one
+ * @throws DeckApiError when the server refuses (409 for a stale version) or fails the write
+ */
+async function patchCardRow(
+  { deckId, expectedVersion }: deckApi.DeckWriteTarget,
+  cardId: string,
+  columns: Record<string, unknown>
+): Promise<deckApi.VersionedAnswer> {
+  if (isGuestDeckId(deckId)) return {};
+  const response = await fetch(`/api/decks/${deckId}/cards/${cardId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ...columns, expectedVersion }),
+    signal: AbortSignal.timeout(deckApi.DECK_WRITE_TIMEOUT_MS),
+  });
+  if (!response.ok) {
+    const context = `patchCardRow:${Object.keys(columns).join(",")}`;
+    throw new DeckApiError(context, response.status);
+  }
+  return readAnsweredVersion(response);
+}
+
+/**
+ * Puts the previous command zone back after a failed commander save and tells
+ * the player, in the words the failure calls for, unless a later choice has
+ * already replaced the failed attempt on screen.
+ *
+ * @param store - Store update and read
+ * @param save - The attempt that just failed
+ * @param error - What the save threw
+ */
+async function recoverCommanderSave(
+  { set, get }: StoreAccess,
+  save: FailedCommanderSave,
+  error: unknown
+): Promise<void> {
+  if (!restoreCommanderAfterFailedSave(set, get(), save)) return;
+  await settleFailedWrite(save.activeDeckId, error, "Could not save commander — try again");
+}
 
 /**
  * Reports whether any deck write is still in flight.
@@ -270,10 +456,15 @@ export interface DeckStore {
   ) => Promise<string>;
   duplicateDeck: (id: string) => Promise<string>;
   deleteDeck: (id: string) => Promise<void>;
+  /**
+   * Drops the guest deck from memory and from this browser, once an account
+   * holds a copy. Memory goes first: the guest deck is written back to the
+   * browser on every store change while it is held here.
+   */
+  forgetGuestDeck: () => void;
   renameDeck: (id: string, name: string) => Promise<void>;
   setActiveDeck: (id: string) => Promise<void>;
   loadDecks: () => Promise<void>;
-  resetActiveDeckForBulkEdit: () => void;
 
   // Deck description & tags
   updateDeckDescription: (deckId: string, description: string) => Promise<void>;
@@ -325,15 +516,19 @@ export interface DeckStore {
    * @returns Resolves when the open deck matches the database, or the refresh failed.
    */
   reloadActiveDeck: () => Promise<void>;
+  /**
+   * Saves a bulk text edit of the open deck as one atomic server change.
+   *
+   * @param edit - the rows the edited text changes, and the cards it adds
+   * @returns Resolves once the open deck matches the saved deck.
+   * @throws When the server rejected the change; the deck is then unchanged.
+   */
+  applyBulkEdit: (edit: BulkEdit) => Promise<void>;
 
   // Deck settings
-  setTargetBracket: (bracket: 1 | 2 | 3 | 4) => Promise<void>;
-  setManualBracket: (bracket: 1 | 2 | 3 | 4 | null) => Promise<void>;
+  setTargetBracket: (bracket: BracketLevel) => Promise<void>;
+  setManualBracket: (bracket: BracketLevel | null) => Promise<void>;
   setBudget: (budget: number | null) => Promise<void>;
-
-  // Game Changer / banlist enrichment
-  markGameChanger: (cardName: string) => void;
-  markBanned: (cardName: string) => void;
 
   // Computed getters
   getActiveDeck: () => Deck | null;
@@ -341,51 +536,288 @@ export interface DeckStore {
 
 let latestDeckListRequest = 0;
 const latestRenameRequests = new Map<string, symbol>();
+const latestTagSaves = new Map<string, symbol>();
 
-/** A partner save that may still need to be undone. */
-interface FailedPartnerSave {
-  readonly activeDeckId: string;
-  readonly partnerMetadataSaved: boolean;
-  readonly attemptedPartnerId: string | null;
-  readonly previousPartner: DeckCard | null;
-  readonly previousPairingType: Deck["pairingType"];
+/** A tag save that may still need to be undone. */
+interface FailedTagSave {
+  readonly deckId: string;
+  readonly request: symbol;
+  /** The tags this attempt put on screen. */
+  readonly attempted: readonly string[];
+  /** The tags on screen before this attempt. */
+  readonly previous: string[];
+}
+
+function haveSameTags(a: readonly string[], b: readonly string[]): boolean {
+  return a.length === b.length && a.every((tag, index) => tag === b[index]);
 }
 
 /**
- * Restores the previous partner when the deck record was not saved and this
- * attempt is still the partner on screen.
+ * Restores the tags that were on screen before a tag save failed, while that
+ * attempt is still the latest tag edit of a deck that still exists.
  *
- * A later partner choice is left alone. Once the deck update has resolved, the
- * optimistic partner matches the saved record and stays for the next reload.
+ * Every tag save sends the whole list, so a newer edit already carries this
+ * attempt's change to the server. It is left alone and no error is shown.
  *
  * @param setDeckState - Store update used only when a rollback is required
  * @param state - Store snapshot taken when the save failed
  * @param save - The attempt that just failed
- * @returns Nothing. Updates the store and shows an error when the partner is restored.
+ * @returns Nothing. Updates the store and shows an error when the tags are restored.
  */
-function restorePartnerAfterFailedSave(
+function restoreTagsAfterFailedSave(
   setDeckState: (partial: Pick<DeckStore, "decks">) => void,
   state: DeckStore,
-  save: FailedPartnerSave,
+  save: FailedTagSave,
 ): void {
-  if (save.partnerMetadataSaved) return;
-  const currentDeck = state.decks[save.activeDeckId];
-  const currentPartnerId = currentDeck?.partner?.id ?? null;
-  if (!currentDeck || currentPartnerId !== save.attemptedPartnerId) return;
+  const currentDeck = state.decks[save.deckId];
+  if (
+    !currentDeck ||
+    latestTagSaves.get(save.deckId) !== save.request ||
+    !haveSameTags(currentDeck.tags, save.attempted)
+  ) {
+    return;
+  }
   setDeckState({
     decks: {
       ...state.decks,
-      [save.activeDeckId]: {
-        ...currentDeck,
-        partner: save.previousPartner,
-        pairingType: save.previousPairingType,
-        updatedAt: new Date(),
-      },
+      [save.deckId]: { ...currentDeck, tags: save.previous },
     },
   });
   useToastStore
     .getState()
-    .add("error", "Could not save partner — try again");
+    .add("error", "Could not save deck tags. Please retry.");
+}
+
+/**
+ * Shows a deck's new tag list at once, saves it, and puts the previous list
+ * back if that save fails.
+ *
+ * @param set - Deck store update
+ * @param get - Deck store snapshot
+ * @param deck - The deck as it was before this edit
+ * @param tags - The complete tag list to save
+ * @param operation - Store action name, for the error log
+ * @returns Resolves once the save has settled, whether or not it succeeded.
+ */
+/**
+ * Shows a command zone on the active deck, before or after its save.
+ *
+ * @param set - Store update
+ * @param deckId - Deck being changed
+ * @param zone - The commander, partner and pairing to show
+ */
+function showCommandZone(
+  set: StoreApi<DeckStore>["setState"],
+  deckId: string,
+  zone: CommandZone
+): void {
+  set((state) => ({
+    decks: {
+      ...state.decks,
+      [deckId]: withLoadedCardCount({
+        ...state.decks[deckId],
+        ...zone,
+        updatedAt: new Date(),
+      }),
+    },
+  }));
+}
+
+/**
+ * Sends one command-zone change, which the server stores in one transaction,
+ * with the deck version this tab read, and gives the commander and partner on
+ * screen their saved row ids. Rejects as the request does; the caller then
+ * restores the zone it put on screen.
+ *
+ * @param set - Store update
+ * @param deckId - Deck being changed
+ * @param edit - The planned change
+ * @returns The rows the server added and the deck's new version
+ */
+async function sendCommandZoneChange(
+  set: StoreApi<DeckStore>["setState"],
+  deckId: string,
+  edit: CommandZoneEdit
+): Promise<deckApi.CommandZoneSaved> {
+  const saved = await deckWrites.send(deckId, ({ expectedVersion }) =>
+    deckApi.changeCommandZone(deckId, {
+      ...commandZoneRequest(edit),
+      expectedVersion,
+    })
+  );
+  set((state) => ({
+    decks: withSavedCommandRows(state.decks, deckId, saved.cards),
+  }));
+  return saved;
+}
+
+/**
+ * A card as the commander slot holds it: one copy, addressed by its printing
+ * id until its row is saved, flagged from the store's Game Changer and banned
+ * lists.
+ *
+ * @param card - The card as the search or the deck list holds it
+ * @param lists - The store's Game Changer and banned names
+ * @returns The commander to show and to save
+ */
+function commanderCardOf(
+  card: DeckCard,
+  lists: Pick<DeckStore, "gameChangerNames" | "bannedNames">
+): DeckCard {
+  const printingId = card.scryfallId ?? card.id;
+  return {
+    ...card,
+    id: printingId,
+    scryfallId: printingId,
+    category: "commander",
+    quantity: 1,
+    zone: "main",
+    isMaybeboard: false,
+    isGameChanger: lists.gameChangerNames.has(card.name),
+    isBanned: lists.bannedNames.has(card.name),
+  };
+}
+
+/** The store's update and read, for a helper that runs a whole save. */
+interface StoreAccess {
+  readonly set: StoreApi<DeckStore>["setState"];
+  readonly get: () => DeckStore;
+}
+
+/** A commander to seat, and the deck-list card it was promoted from, if any. */
+interface CommanderSeat {
+  /** The commander, from {@link commanderCardOf}. */
+  readonly commander: DeckCard;
+  /** The deck-list card the commander was promoted from; it leaves the list with the same request. */
+  readonly promoted?: DeckCard;
+}
+
+/**
+ * Seats a commander: the pairing it keeps or opens, the zone on screen, the
+ * one request, and the rollback with its toast when the request fails.
+ *
+ * @param store - Store update and read
+ * @param deckId - Deck being changed
+ * @param seat - The commander, and the deck-list card it came from
+ */
+async function seatCommander(
+  { set, get }: StoreAccess,
+  deckId: string,
+  { commander, promoted }: CommanderSeat
+): Promise<void> {
+  const previous = commandZoneOf(get().decks[deckId]);
+  // CR 702.124: the partner stays only when the new commander can pair with it.
+  const keptPairing = previous.partner
+    ? pairCommanders(commander, previous.partner)
+    : null;
+  const pairingType = keptPairing ?? detectPairingType(commander);
+  const attempted: CommandZone = {
+    commander,
+    pairingType,
+    partner: keptPairing ? previous.partner : null,
+  };
+  const partnerLeaves = previous.partner !== null && attempted.partner === null;
+  // Where the promoted card sat, so a failed save puts it back in place.
+  const listedBefore = promoted ? uniqueDeckCards(get().decks[deckId]) : [];
+  const followingCardIds = new Set(
+    listedBefore
+      .slice(listedBefore.findIndex((card) => card.id === promoted?.id) + 1)
+      .map((card) => card.id)
+  );
+
+  if (commander.isGameChanger) {
+    useToastStore
+      .getState()
+      .add(
+        "warning",
+        `⚡ ${commander.name} is a Game Changer — your deck is automatically Bracket 3 minimum.`
+      );
+  }
+
+  // Optimistic: the promoted card leaves the list as the new zone appears.
+  set((state) => {
+    const deck = state.decks[deckId];
+    const listed = promoted
+      ? updateDeckCards(deck, (cards) => withoutCard(cards, promoted.id))
+      : deck;
+    return {
+      decks: {
+        ...state.decks,
+        [deckId]: withLoadedCardCount({ ...listed, ...attempted, updatedAt: new Date() }),
+      },
+    };
+  });
+
+  set({ isSyncing: true });
+  try {
+    const slots: CommandSlotEdit[] = [{ slot: "commander", card: commander }];
+    if (partnerLeaves) slots.push({ slot: "partner", card: null });
+    await sendCommandZoneChange(set, deckId, {
+      slots,
+      fields: {
+        commanderId: commander.scryfallId ?? commander.id,
+        // Denormalised so community discovery can match the slug in SQL
+        commanderName: commander.name,
+        pairingType,
+        // A partner the new commander cannot keep leaves the record too
+        ...(partnerLeaves ? { partnerId: null } : {}),
+      },
+      removeCardIds: promoted ? [promoted.id] : [],
+    });
+  } catch (err) {
+    logger.error("Unexpected error", "setCommander", err);
+    if (promoted) {
+      set((state) => {
+        const deck = state.decks[deckId];
+        return deck
+          ? {
+              decks: {
+                ...state.decks,
+                [deckId]: updateDeckCards(deck, (cards) =>
+                  restoreRemovedCard(cards, promoted, followingCardIds)
+                ),
+              },
+            }
+          : state;
+      });
+    }
+    await recoverCommanderSave({ set, get }, { activeDeckId: deckId, attempted, previous }, err);
+  } finally {
+    set({ isSyncing: hasPendingSaves() });
+  }
+}
+
+async function saveDeckTags(
+  set: StoreApi<DeckStore>["setState"],
+  get: () => DeckStore,
+  deck: Deck,
+  tags: string[],
+  operation: "addTag" | "removeTag",
+): Promise<void> {
+  const deckId = deck.id;
+  const request = Symbol(operation);
+  latestTagSaves.set(deckId, request);
+  set((state) => ({
+    decks: {
+      ...state.decks,
+      [deckId]: { ...state.decks[deckId], tags, updatedAt: new Date() },
+    },
+  }));
+  set({ isSyncing: true });
+  try {
+    await deckApi.updateDeck(deckId, { tags });
+  } catch (err) {
+    logger.error("Unexpected error", operation, err);
+    restoreTagsAfterFailedSave(set, get(), {
+      deckId,
+      request,
+      attempted: tags,
+      previous: deck.tags,
+    });
+  } finally {
+    if (latestTagSaves.get(deckId) === request) latestTagSaves.delete(deckId);
+    set({ isSyncing: hasPendingSaves() });
+  }
 }
 
 export const useDeckStore = create<DeckStore>()((set, get) => ({
@@ -411,16 +843,18 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     };
   })(),
 
-  setGameChangerNames: (names) => set((state) =>
-    setsContainSameValues(state.gameChangerNames, names)
-      ? state
-      : { gameChangerNames: names }
-  ),
-  setBannedNames: (names) => set((state) =>
-    setsContainSameValues(state.bannedNames, names)
-      ? state
-      : { bannedNames: names }
-  ),
+  setGameChangerNames: (names) =>
+    set((state) =>
+      setsContainSameValues(state.gameChangerNames, names)
+        ? state
+        : { gameChangerNames: names }
+    ),
+  setBannedNames: (names) =>
+    set((state) =>
+      setsContainSameValues(state.bannedNames, names)
+        ? state
+        : { bannedNames: names }
+    ),
   setSearchViewMode: (mode) => set({ searchViewMode: mode }),
   setDeckViewMode: (mode) => set({ deckViewMode: mode }),
   setDeckGridCols: (cols) => set({ deckGridCols: cols }),
@@ -497,7 +931,9 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         },
       }));
       try {
-        await deckApi.removeCard(activeDeckId, card.id);
+        await deckWrites.send(activeDeckId, (target) =>
+          deckApi.removeCard(target, card.id)
+        );
       } catch (err) {
         logger.error("Unexpected error", "undo:ADD_CARD", err);
         if (!get().decks[activeDeckId]) return;
@@ -515,9 +951,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
             undoStack: [...state.undoStack, last],
           };
         });
-        useToastStore
-          .getState()
-          .add("error", "Could not undo card addition. Please retry.");
+        await settleFailedWrite(activeDeckId, err, "Could not undo card addition. Please retry.");
         return;
       }
       return true;
@@ -543,27 +977,9 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         },
       }));
       try {
-        const saved = await deckApi.addCard(activeDeckId, {
-          scryfallId: last.card.scryfallId ?? last.card.id,
-          name: last.card.name,
-          manaCost: last.card.manaCost,
-          cmc: last.card.cmc,
-          typeLine: last.card.typeLine,
-          oracleText: last.card.oracleText,
-          power: last.card.power ?? null,
-          toughness: last.card.toughness ?? null,
-          colorIdentity: last.card.colorIdentity,
-          isGameChanger: last.card.isGameChanger,
-          isBanned: last.card.isBanned,
-          price: last.card.price,
-          imageUri: last.card.imageUri,
-          artCropUri: last.card.artCropUri,
-          category: last.card.category,
-          quantity: last.card.quantity,
-          isCommander: false,
-          isPartner: false,
-          zone: last.card.zone,
-        });
+        const saved = await deckWrites.send(activeDeckId, (target) =>
+          deckApi.addCard(target, addCardPayload(last.card))
+        );
         set((state) => {
           const currentDeck = state.decks[activeDeckId];
           if (!currentDeck) return state;
@@ -593,9 +1009,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
             undoStack: [...state.undoStack, last],
           };
         });
-        useToastStore
-          .getState()
-          .add("error", "Could not undo card removal. Please retry.");
+        await settleFailedWrite(activeDeckId, err, "Could not undo card removal. Please retry.");
         return;
       }
       return true;
@@ -605,13 +1019,17 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       const activeDeckId = last.deckId;
       const deck = get().decks[activeDeckId];
       if (!deck) return;
-      const card = uniqueDeckCards(deck).find((candidate) => candidate.id === last.cardId);
+      const card = uniqueDeckCards(deck).find(
+        (candidate) => candidate.id === last.cardId
+      );
       if (!card) return;
       if (card.zone === last.from) return true;
       await get().moveCardToZone(last.cardId, last.from, { recordUndo: false });
       const updated = get().decks[activeDeckId];
       if (!updated) return;
-      const restored = uniqueDeckCards(updated).find((candidate) => candidate.id === last.cardId);
+      const restored = uniqueDeckCards(updated).find(
+        (candidate) => candidate.id === last.cardId
+      );
       if (restored?.zone !== last.from) {
         set((state) => ({ undoStack: [...state.undoStack, last] }));
         return;
@@ -688,6 +1106,59 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     }
   },
 
+  applyBulkEdit: async (edit) => {
+    const { activeDeckId, gameChangerNames, bannedNames } = get();
+    if (!activeDeckId) return;
+    const flagged = (card: ScryfallCard): DeckCard => ({
+      ...makeDeckCard(card),
+      isGameChanger: gameChangerNames.has(card.name),
+      isBanned: bannedNames.has(card.name),
+    });
+    const commandCards = edit.commandZone?.cards ?? [];
+    set({ isSyncing: true });
+    try {
+      // New lines take an owned printing when there is one, as a hand-added card does.
+      const additions = await Promise.all(
+        edit.additions.map(async (addition) => ({
+          ...addition,
+          card: (await getOwnedPrinting(addition.card)) ?? addition.card,
+        }))
+      );
+      const apiDeck = await deckWrites.send(activeDeckId, ({ expectedVersion }) =>
+        deckApi.applyCardChanges(activeDeckId, {
+          expectedVersion,
+          removeCardIds: edit.removedCardIds,
+          quantityChanges: edit.quantityChanges,
+          addCards: [
+            ...commandCards.map(({ card, slot }) =>
+              commandCardPayload(flagged(card), slot)
+            ),
+            ...additions.map(({ card, quantity, zone }) =>
+              addCardPayload({ ...flagged(card), quantity, zone })
+            ),
+          ],
+          clearCommandSlots: edit.commandZone?.clearedSlots ?? [],
+          commandZone: edit.commandZone?.patch,
+        })
+      );
+      if (!get().decks[activeDeckId]) return;
+      set((state) => ({
+        decks: { ...state.decks, [activeDeckId]: apiDeckToStoreDeck(apiDeck) },
+        // Earlier entries name rows the edit may have removed or re-added.
+        undoStack: state.undoStack.filter(
+          (action) => action.deckId !== activeDeckId
+        ),
+      }));
+    } catch (err) {
+      // The bulk edit is not optimistic, so there is nothing to roll back; the
+      // dialog shows the failure. A stale copy still reloads the deck here.
+      await settleFailedWrite(activeDeckId, err);
+      throw err;
+    } finally {
+      set({ isSyncing: hasPendingSaves() });
+    }
+  },
+
   // Load deck listing from the DB (lightweight: only commander/partner/companion + card count)
   loadDecks: async () => {
     const requestId = ++latestDeckListRequest;
@@ -721,36 +1192,9 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         loadError: err instanceof Error ? err.message : "Failed to load decks",
       });
     } finally {
-      if (requestId === latestDeckListRequest) set({ isSyncing: hasPendingSaves() });
+      if (requestId === latestDeckListRequest)
+        set({ isSyncing: hasPendingSaves() });
     }
-  },
-
-  resetActiveDeckForBulkEdit: () => {
-    const { activeDeckId } = get();
-    if (!activeDeckId) return;
-    set((state) => {
-      const deck = state.decks[activeDeckId];
-      if (!deck) return state;
-      return {
-        decks: {
-          ...state.decks,
-          [activeDeckId]: {
-            ...deck,
-            commander: null,
-            partner: null,
-            companion: null,
-            pairingType: "none",
-            cards: [],
-            maybeboard: [],
-            cardCount: 0,
-            updatedAt: new Date(),
-          },
-        },
-        undoStack: state.undoStack.filter(
-          (action) => action.deckId !== activeDeckId
-        ),
-      };
-    });
   },
 
   createDeck: async (name: string, opts?: { isAIGenerated?: boolean }) => {
@@ -796,6 +1240,21 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     }
   },
 
+  forgetGuestDeck: () => {
+    set((state) => {
+      const { [GUEST_DECK_ID]: _guest, ...rest } = state.decks;
+      return {
+        decks: rest,
+        activeDeckId:
+          state.activeDeckId === GUEST_DECK_ID ? null : state.activeDeckId,
+        undoStack: state.undoStack.filter(
+          (action) => action.deckId !== GUEST_DECK_ID
+        ),
+      };
+    });
+    clearGuestDeck();
+  },
+
   duplicateDeck: async (id: string) => {
     set({ isSyncing: true });
     try {
@@ -837,7 +1296,8 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         if (
           latestRenameRequests.get(id) !== request ||
           currentDeck?.name !== name
-        ) return state;
+        )
+          return state;
         return {
           decks: {
             ...state.decks,
@@ -884,7 +1344,8 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       const fullDeck = apiDeckToStoreDeck(apiDeck);
       set((state) => ({
         decks: { ...state.decks, [id]: fullDeck },
-        deckOpenError: state.deckOpenError?.deckId === id ? null : state.deckOpenError,
+        deckOpenError:
+          state.deckOpenError?.deckId === id ? null : state.deckOpenError,
       }));
     } catch (err) {
       logger.error("Unexpected error", "setActiveDeck.lazyLoad", err);
@@ -944,144 +1405,51 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     if (!current) return;
     const trimmed = tag.trim().slice(0, 50);
     if (!trimmed || current.tags.includes(trimmed)) return;
-    const tags = [...current.tags, trimmed];
-    // Optimistic update
-    set((state) => ({
-      decks: {
-        ...state.decks,
-        [deckId]: { ...state.decks[deckId], tags, updatedAt: new Date() },
-      },
-    }));
-    set({ isSyncing: true });
-    try {
-      await deckApi.updateDeck(deckId, { tags });
-    } catch (err) {
-      logger.error("Unexpected error", "addTag", err);
-    } finally {
-      set({ isSyncing: hasPendingSaves() });
-    }
+    await saveDeckTags(set, get, current, [...current.tags, trimmed], "addTag");
   },
 
   removeTag: async (deckId: string, tag: string) => {
     const current = get().decks[deckId];
     if (!current) return;
     const tags = current.tags.filter((t) => t !== tag);
-    // Optimistic update
-    set((state) => ({
-      decks: {
-        ...state.decks,
-        [deckId]: { ...state.decks[deckId], tags, updatedAt: new Date() },
-      },
-    }));
-    set({ isSyncing: true });
-    try {
-      await deckApi.updateDeck(deckId, { tags });
-    } catch (err) {
-      logger.error("Unexpected error", "removeTag", err);
-    } finally {
-      set({ isSyncing: hasPendingSaves() });
-    }
+    await saveDeckTags(set, get, current, tags, "removeTag");
   },
 
   setCommander: async (card: ScryfallCard) => {
-    const { activeDeckId, gameChangerNames, bannedNames } = get();
-    if (!activeDeckId) return;
-    const deckCard = makeDeckCard(card);
-    deckCard.category = "commander";
-    deckCard.isGameChanger = gameChangerNames.has(card.name);
-    deckCard.isBanned = bannedNames.has(card.name);
-
-    if (deckCard.isGameChanger) {
-      useToastStore
-        .getState()
-        .add(
-          "warning",
-          `⚡ ${card.name} is a Game Changer — your deck is automatically Bracket 3 minimum.`
-        );
-    }
-
-    const pairingType = detectPairingType(card);
-
-    // Optimistic update — also update pairingType and clear partner if new commander doesn't support it
-    set((state) => ({
-      decks: {
-        ...state.decks,
-        [activeDeckId]: {
-          ...state.decks[activeDeckId],
-          commander: deckCard,
-          pairingType,
-          // Clear partner if new commander doesn't support pairing, or if partner is the same card
-          partner:
-            supportsPartner(pairingType) &&
-            state.decks[activeDeckId].partner?.name !== deckCard.name
-              ? state.decks[activeDeckId].partner
-              : null,
-          updatedAt: new Date(),
-        },
-      },
-    }));
-
-    set({ isSyncing: true });
-    try {
-      await deckApi.updateDeck(activeDeckId, {
-        commanderId: card.id,
-        // Denormalised so community discovery can match the slug in SQL
-        commanderName: deckCard.name,
-        pairingType,
-      });
-      // Persist the commander card record
-      await deckApi.addCard(activeDeckId, {
-        scryfallId: card.id,
-        name: deckCard.name,
-        manaCost: deckCard.manaCost,
-        cmc: deckCard.cmc,
-        typeLine: deckCard.typeLine,
-        oracleText: deckCard.oracleText,
-        power: deckCard.power ?? null,
-        toughness: deckCard.toughness ?? null,
-        colorIdentity: deckCard.colorIdentity,
-        isGameChanger: deckCard.isGameChanger,
-        isBanned: deckCard.isBanned,
-        price: deckCard.price,
-        imageUri: deckCard.imageUri,
-        artCropUri: deckCard.artCropUri,
-        category: "commander",
-        quantity: 1,
-        isCommander: true,
-        isPartner: false,
-      });
-    } catch (err) {
-      logger.error("Unexpected error", "setCommander", err);
-    } finally {
-      set({ isSyncing: hasPendingSaves() });
-    }
+    const state = get();
+    if (!state.activeDeckId) return;
+    const commander = commanderCardOf(makeDeckCard(card), state);
+    await seatCommander({ set, get }, state.activeDeckId, { commander });
   },
 
   clearCommander: async () => {
-    const { activeDeckId } = get();
+    const { activeDeckId, decks } = get();
     if (!activeDeckId) return;
-    set((state) => ({
-      decks: {
-        ...state.decks,
-        [activeDeckId]: {
-          ...state.decks[activeDeckId],
-          commander: null,
-          partner: null, // Also clear partner — can't have partner without commander
-          pairingType: "none",
-          updatedAt: new Date(),
-        },
-      },
-    }));
+    const previous = commandZoneOf(decks[activeDeckId]);
+    // Also clear partner — can't have partner without commander
+    const attempted: CommandZone = {
+      commander: null,
+      partner: null,
+      pairingType: "none",
+    };
+    showCommandZone(set, activeDeckId, attempted);
     set({ isSyncing: true });
     try {
-      await deckApi.updateDeck(activeDeckId, {
-        commanderId: null,
-        commanderName: null,
-        partnerId: null,
-        pairingType: "none",
+      await sendCommandZoneChange(set, activeDeckId, {
+        slots: [
+          { slot: "commander", card: null },
+          { slot: "partner", card: null },
+        ],
+        fields: {
+          commanderId: null,
+          commanderName: null,
+          partnerId: null,
+          pairingType: "none",
+        },
       });
     } catch (err) {
       logger.error("Unexpected error", "clearCommander", err);
+      await recoverCommanderSave({ set, get }, { activeDeckId, attempted, previous }, err);
     } finally {
       set({ isSyncing: hasPendingSaves() });
     }
@@ -1090,76 +1458,59 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
   setPartner: async (card: ScryfallCard | null) => {
     const { activeDeckId, decks } = get();
     if (!activeDeckId) return;
+    const commander = decks[activeDeckId]?.commander ?? null;
     const previousPartner = decks[activeDeckId]?.partner ?? null;
     const previousPairingType = decks[activeDeckId]?.pairingType ?? "none";
-    let partnerMetadataSaved = false;
-    const deckCard = card ? makeDeckCard(card) : null;
-    if (deckCard) deckCard.category = "commander";
+    const deckCard: DeckCard | null = card
+      ? { ...makeDeckCard(card), scryfallId: card.id, category: "commander" }
+      : null;
 
-    // If commander has no pairing type but partner does, derive pairingType from partner
-    // e.g. Jaheira has "Choose a Background" → pairingType should be "background"
-    const partnerPairingType = card ? detectPairingType(card) : "none";
-    if (card && previousPairingType === "father_son" &&
-        !canPairWith(previousPairingType, partnerPairingType)) {
-      useToastStore.getState().add("warning", "A Father & son commander needs another Father & son partner.");
+    // CR 702.124: a second commander joins only through a partner ability
+    // that both cards allow.
+    const pairing =
+      commander && deckCard ? pairCommanders(commander, deckCard) : null;
+    if (commander && deckCard && !pairing) {
+      useToastStore
+        .getState()
+        .add(
+          "warning",
+          `${deckCard.name} cannot share the command zone with ${commander.name}.`
+        );
       return;
     }
+    // Without a commander yet, the partner's own pairing opens the slot.
+    const partnerPairingType = deckCard ? detectPairingType(deckCard) : "none";
     const effectivePairingType =
-      previousPairingType === "none" && partnerPairingType !== "none"
+      pairing ??
+      (previousPairingType === "none" && partnerPairingType !== "none"
         ? partnerPairingType
-        : previousPairingType;
+        : previousPairingType);
 
-    // Optimistic update
-    set((state) => ({
-      decks: {
-        ...state.decks,
-        [activeDeckId]: {
-          ...state.decks[activeDeckId],
-          partner: deckCard,
-          pairingType: effectivePairingType,
-          updatedAt: new Date(),
-        },
-      },
-    }));
-
+    showCommandZone(set, activeDeckId, {
+      commander,
+      partner: deckCard,
+      pairingType: effectivePairingType,
+    });
     set({ isSyncing: true });
     try {
-      await deckApi.updateDeck(activeDeckId, {
-        partnerId: card?.id ?? null,
-        pairingType: effectivePairingType,
+      await sendCommandZoneChange(set, activeDeckId, {
+        slots: [{ slot: "partner", card: deckCard }],
+        fields: {
+          partnerId: card?.id ?? null,
+          pairingType: effectivePairingType,
+        },
       });
-      partnerMetadataSaved = true;
-      if (card && deckCard) {
-        await deckApi.addCard(activeDeckId, {
-          scryfallId: card.id,
-          name: deckCard.name,
-          manaCost: deckCard.manaCost,
-          cmc: deckCard.cmc,
-          typeLine: deckCard.typeLine,
-          oracleText: deckCard.oracleText,
-          power: deckCard.power ?? null,
-          toughness: deckCard.toughness ?? null,
-          colorIdentity: deckCard.colorIdentity,
-          isGameChanger: deckCard.isGameChanger,
-          isBanned: deckCard.isBanned,
-          price: deckCard.price,
-          imageUri: deckCard.imageUri,
-          artCropUri: deckCard.artCropUri,
-          category: "commander",
-          quantity: 1,
-          isCommander: true,
-          isPartner: true,
-        });
-      }
     } catch (err) {
       logger.error("Unexpected error", "setPartner", err);
-      restorePartnerAfterFailedSave(set, get(), {
+      const restored = restorePartnerAfterFailedSave(set, get(), {
         activeDeckId,
-        partnerMetadataSaved,
         attemptedPartnerId: deckCard?.id ?? null,
         previousPartner,
         previousPairingType,
       });
+      if (restored) {
+        await settleFailedWrite(activeDeckId, err, "Could not save partner — try again");
+      }
     } finally {
       set({ isSyncing: hasPendingSaves() });
     }
@@ -1171,29 +1522,27 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     const deck = decks[activeDeckId];
     if (!deck) return;
 
-    const prev = deck.companion;
-
     if (card === null) {
-      if (!prev) return;
+      if (!deck.companion) return;
       set({ isSyncing: true });
       try {
-        await deckApi.removeCard(activeDeckId, prev.id);
-        await deckApi.updateDeck(activeDeckId, { companionId: null });
+        await sendCommandZoneChange(set, activeDeckId, {
+          slots: [{ slot: "companion", card: null }],
+          fields: { companionId: null },
+        });
         set((state) => ({
           decks: {
             ...state.decks,
-            [activeDeckId]: {
+            [activeDeckId]: withLoadedCardCount({
               ...state.decks[activeDeckId],
               companion: null,
               updatedAt: new Date(),
-            },
+            }),
           },
         }));
       } catch (err) {
         logger.error("Unexpected error", "setCompanion", err);
-        useToastStore
-          .getState()
-          .add("error", "Could not remove companion — try again");
+        await settleFailedWrite(activeDeckId, err, "Could not remove companion — try again");
       } finally {
         set({ isSyncing: hasPendingSaves() });
       }
@@ -1221,54 +1570,33 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       return;
     }
 
-    const deckCard = makeDeckCard(card);
-    deckCard.category = "companion" as import("./types").CardCategory;
+    const deckCard: DeckCard = { ...makeDeckCard(card), category: "companion" };
 
+    // The companion appears once saved (B2-36 covers making it optimistic).
     set({ isSyncing: true });
     try {
-      if (prev) {
-        await deckApi.removeCard(activeDeckId, prev.id);
-      }
-      const created = await deckApi.addCard(activeDeckId, {
-        scryfallId: card.id,
-        name: deckCard.name,
-        manaCost: deckCard.manaCost,
-        cmc: deckCard.cmc,
-        typeLine: deckCard.typeLine,
-        oracleText: deckCard.oracleText,
-        power: deckCard.power ?? null,
-        toughness: deckCard.toughness ?? null,
-        colorIdentity: deckCard.colorIdentity,
-        isGameChanger: deckCard.isGameChanger,
-        isBanned: deckCard.isBanned,
-        price: deckCard.price,
-        imageUri: deckCard.imageUri,
-        artCropUri: deckCard.artCropUri,
-        category: "companion" as import("./types").CardCategory,
-        quantity: 1,
-        isCommander: false,
-        isPartner: false,
+      const saved = await sendCommandZoneChange(set, activeDeckId, {
+        slots: [{ slot: "companion", card: deckCard }],
+        fields: { companionId: card.id },
       });
-      await deckApi.updateDeck(activeDeckId, { companionId: card.id });
+      const row = savedRowsBySlot(saved.cards).companion;
       set((state) => ({
         decks: {
           ...state.decks,
-          [activeDeckId]: {
+          [activeDeckId]: withLoadedCardCount({
             ...state.decks[activeDeckId],
             companion: {
               ...deckCard,
-              id: created.id,
-              scryfallId: created.scryfallId,
+              id: row?.id ?? deckCard.id,
+              scryfallId: row?.scryfallId ?? card.id,
             },
             updatedAt: new Date(),
-          },
+          }),
         },
       }));
     } catch (err) {
       logger.error("Unexpected error", "setCompanion", err);
-      useToastStore
-        .getState()
-        .add("error", "Could not save companion — try again");
+      await settleFailedWrite(activeDeckId, err, "Could not save companion — try again");
     } finally {
       set({ isSyncing: hasPendingSaves() });
     }
@@ -1284,10 +1612,13 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     const deck = decks[activeDeckId];
     if (!deck) return;
 
-    const isBasic = card.type_line.toLowerCase().includes("basic land");
+    const isBasic = isBasicLand(card.type_line);
 
-    const { maxQuantity } = await import("@/lib/deck/multiples");
-    const max = maxQuantity(card.name, card.type_line, card.oracle_text ?? "");
+    const max = copyLimit(deck, {
+      name: card.name,
+      typeLine: card.type_line,
+      oracleText: card.oracle_text,
+    });
     const exists = uniqueDeckCards(deck).find(
       (c) => c.name === card.name && c.zone === zone
     );
@@ -1337,27 +1668,9 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     pendingCardAdditionsAndRemovals += 1;
     set({ isSyncing: true });
     try {
-      const saved = await deckApi.addCard(activeDeckId, {
-        scryfallId: selectedCard.id,
-        name: deckCard.name,
-        manaCost: deckCard.manaCost,
-        cmc: deckCard.cmc,
-        typeLine: deckCard.typeLine,
-        oracleText: deckCard.oracleText,
-        power: deckCard.power ?? null,
-        toughness: deckCard.toughness ?? null,
-        colorIdentity: deckCard.colorIdentity,
-        isGameChanger: deckCard.isGameChanger,
-        isBanned: deckCard.isBanned,
-        price: deckCard.price,
-        imageUri: deckCard.imageUri,
-        artCropUri: deckCard.artCropUri,
-        category: deckCard.category,
-        quantity: deckCard.quantity,
-        isCommander: false,
-        isPartner: false,
-        zone: deckCard.zone,
-      });
+      const saved = await deckWrites.send(activeDeckId, (target) =>
+        deckApi.addCard(target, addCardPayload(deckCard))
+      );
       // Update the card's local id to the DB-generated CUID for future ops
       set((state) => ({
         decks: {
@@ -1365,7 +1678,9 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
           [activeDeckId]: {
             ...state.decks[activeDeckId],
             ...updateDeckCards(state.decks[activeDeckId], (cards) =>
-              cards.map((c) => (c.id === deckCard.id ? { ...c, id: saved.id } : c))
+              cards.map((c) =>
+                c.id === deckCard.id ? { ...c, id: saved.id } : c
+              )
             ),
           },
         },
@@ -1385,12 +1700,13 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         set((state) => ({
           decks: {
             ...state.decks,
-            [activeDeckId]: updateDeckCards(state.decks[activeDeckId], (cards) =>
-              withoutCard(cards, deckCard.id)
+            [activeDeckId]: updateDeckCards(
+              state.decks[activeDeckId],
+              (cards) => withoutCard(cards, deckCard.id)
             ),
           },
         }));
-        useToastStore.getState().add("error", "Could not add card. Please retry.");
+        await settleFailedWrite(activeDeckId, err, "Could not add card. Please retry.");
       }
     } finally {
       pendingCardAdditionsAndRemovals -= 1;
@@ -1403,8 +1719,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     if (!activeDeckId) return;
     const deck = decks[activeDeckId];
     if (!deck) return;
-    const { maxQuantity } = await import("@/lib/deck/multiples");
-    const max = maxQuantity(card.name, card.typeLine, card.oracleText ?? "");
+    const max = copyLimit(deck, card);
     const exists = uniqueDeckCards(deck).find(
       (c) => c.name === card.name && c.zone === card.zone
     );
@@ -1439,40 +1754,26 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
 
     set({ isSyncing: true });
     try {
-      const saved = await deckApi.addCard(activeDeckId, {
-        scryfallId: enriched.scryfallId ?? enriched.id,
-        name: enriched.name,
-        manaCost: enriched.manaCost,
-        cmc: enriched.cmc,
-        typeLine: enriched.typeLine,
-        oracleText: enriched.oracleText,
-        power: enriched.power ?? null,
-        toughness: enriched.toughness ?? null,
-        colorIdentity: enriched.colorIdentity,
-        isGameChanger: enriched.isGameChanger,
-        isBanned: enriched.isBanned,
-        price: enriched.price,
-        imageUri: enriched.imageUri,
-        artCropUri: enriched.artCropUri,
-        category: enriched.category,
-        quantity: enriched.quantity,
-        isCommander: false,
-        isPartner: false,
-        zone: enriched.zone,
-      });
+      const saved = await deckWrites.send(activeDeckId, (target) =>
+        deckApi.addCard(target, addCardPayload(enriched))
+      );
       set((state) => ({
         decks: {
           ...state.decks,
           [activeDeckId]: {
             ...state.decks[activeDeckId],
             ...updateDeckCards(state.decks[activeDeckId], (cards) =>
-              cards.map((c) => (c.id === enriched.id ? { ...c, id: saved.id } : c))
+              cards.map((c) =>
+                c.id === enriched.id ? { ...c, id: saved.id } : c
+              )
             ),
           },
         },
       }));
     } catch (err) {
       logger.error("Unexpected error", "addDeckCard", err);
+      // No rollback and no toast today (B2-36); a stale copy still reloads.
+      await settleFailedWrite(activeDeckId, err);
     } finally {
       set({ isSyncing: hasPendingSaves() });
     }
@@ -1514,7 +1815,9 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     pendingCardAdditionsAndRemovals += 1;
     set({ isSyncing: true });
     try {
-      await deckApi.removeCard(activeDeckId, cardId);
+      await deckWrites.send(activeDeckId, (target) =>
+        deckApi.removeCard(target, cardId)
+      );
     } catch (err) {
       logger.error("Unexpected error", "removeCard", err);
       set((state) => {
@@ -1543,9 +1846,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
           ),
         };
       });
-      useToastStore
-        .getState()
-        .add("error", "Could not remove card. Please retry.");
+      await settleFailedWrite(activeDeckId, err, "Could not remove card. Please retry.");
     } finally {
       pendingCardAdditionsAndRemovals -= 1;
       set({ isSyncing: hasPendingSaves() });
@@ -1581,7 +1882,9 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     set({ isSyncing: true });
     const write = pending.tail.then(async () => {
       try {
-        await deckApi.updateCardCategory(activeDeckId, cardId, category);
+        await deckWrites.send(activeDeckId, (target) =>
+          deckApi.updateCardCategory(target, cardId, category)
+        );
         pending.confirmedCategory = category;
       } catch (err) {
         logger.error("Unexpected error", "updateCardCategory", err);
@@ -1593,14 +1896,17 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
               decks: {
                 ...state.decks,
                 [activeDeckId]: updateDeckCards(currentDeck, (cards) =>
-                  restoreCardCategory(cards, cardId, category, pending.confirmedCategory)
+                  restoreCardCategory(
+                    cards,
+                    cardId,
+                    category,
+                    pending.confirmedCategory
+                  )
                 ),
               },
             };
           });
-          useToastStore
-            .getState()
-            .add("error", "Could not save card category. Please retry.");
+          await settleFailedWrite(activeDeckId, err, "Could not save card category. Please retry.");
         }
       } finally {
         if (pending.tail === write) {
@@ -1621,8 +1927,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     const card = uniqueDeckCards(deck).find((c) => c.id === cardId);
     if (!card) return;
 
-    const { maxQuantity } = await import("@/lib/deck/multiples");
-    const max = maxQuantity(card.name, card.typeLine, card.oracleText ?? "");
+    const max = copyLimit(deck, card);
     const newQty = Math.max(1, Math.min(max, card.quantity + delta));
     if (newQty === card.quantity) return;
     const writeKey = `${activeDeckId}:${cardId}`;
@@ -1646,18 +1951,9 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     write.promise = (async () => {
       await previousWrite?.promise;
       try {
-        if (!isGuestDeckId(activeDeckId)) {
-          const response = await fetch(
-            `/api/decks/${activeDeckId}/cards/${cardId}`,
-            {
-              method: "PATCH",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ quantity: newQty }),
-            }
-          );
-          if (!response.ok)
-            throw new Error(`Quantity save failed: ${response.status}`);
-        }
+        await deckWrites.send(activeDeckId, (target) =>
+          patchCardRow(target, cardId, { quantity: newQty })
+        );
         write.confirmedQuantity = newQty;
       } catch (err) {
         logger.error("Unexpected error", "updateCardQuantity", err);
@@ -1681,12 +1977,11 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
               },
             };
           });
-          useToastStore
-            .getState()
-            .add(
-              "error",
-              "Could not save card quantity — previous quantity restored."
-            );
+          await settleFailedWrite(
+            activeDeckId,
+            err,
+            "Could not save card quantity — previous quantity restored."
+          );
         }
       } finally {
         const nextWrite = pendingQuantityWrites.get(writeKey);
@@ -1702,63 +1997,16 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
   },
 
   promoteToCommander: async (cardId) => {
-    const { activeDeckId, decks } = get();
+    const state = get();
+    const { activeDeckId } = state;
     if (!activeDeckId) return;
-    const deck = decks[activeDeckId];
-    if (!deck) return;
-    const card = deck.cards.find((c) => c.id === cardId);
+    const card = state.decks[activeDeckId]?.cards.find((c) => c.id === cardId);
     if (!card) return;
-
-    // Build a minimal ScryfallCard from the DeckCard to reuse setCommander
-    const scryfallCard = {
-      id: card.scryfallId ?? card.id,
-      name: card.name,
-      mana_cost: card.manaCost,
-      cmc: card.cmc,
-      type_line: card.typeLine,
-      oracle_text: card.oracleText,
-      color_identity: card.colorIdentity,
-      image_uris: card.imageUri
-        ? { normal: card.imageUri, art_crop: card.artCropUri ?? card.imageUri }
-        : undefined,
-      prices: {},
-      legalities: {},
-      set: "",
-      set_name: "",
-      collector_number: "",
-      rarity: "rare" as const,
-      object: "card" as const,
-      lang: "en",
-      released_at: "",
-      uri: "",
-      scryfall_uri: "",
-      layout: "normal",
-      highres_image: false,
-      image_status: "lowres" as const,
-      keywords: [],
-      games: [],
-      reserved: false,
-      foil: false,
-      nonfoil: true,
-      oversized: false,
-      promo: false,
-      reprint: false,
-      variation: false,
-      set_id: "",
-      set_type: "",
-      border_color: "black" as const,
-      frame: "2015",
-      full_art: false,
-      textless: false,
-      booster: false,
-      story_spotlight: false,
-    };
-
-    // Remove from deck first, then set as commander
-    await get().removeCard(cardId);
-    await get().setCommander(
-      scryfallCard as import("@/lib/scryfall/types").ScryfallCard
-    );
+    // The card leaves the deck list and takes the commander slot in one request.
+    await seatCommander({ set, get }, activeDeckId, {
+      commander: commanderCardOf(card, state),
+      promoted: card,
+    });
   },
 
   swapCardPrinting: async (cardId, printing) => {
@@ -1769,8 +2017,8 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     );
     if (!previousCard) return;
     const { getCardImageUri } = await import("@/lib/scryfall/images");
-    const imageUri = getCardImageUri(printing, "normal");
-    const artCropUri = getCardImageUri(printing, "art_crop");
+    const imageUri = getCardImageUri(printing, "grid");
+    const artCropUri = getCardImageUri(printing, "art");
     set((state) => ({
       decks: {
         ...state.decks,
@@ -1785,21 +2033,9 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     }));
     set({ isSyncing: true });
     try {
-      if (!isGuestDeckId(activeDeckId)) {
-        const response = await fetch(
-          `/api/decks/${activeDeckId}/cards/${cardId}`,
-          {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              scryfallId: printing.id,
-              imageUri,
-              artCropUri,
-            }),
-          }
-        );
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      }
+      await deckWrites.send(activeDeckId, (target) =>
+        patchCardRow(target, cardId, { scryfallId: printing.id, imageUri, artCropUri })
+      );
     } catch (err) {
       logger.error("Unexpected error", "swapCardPrinting", err);
       set((state) => {
@@ -1825,9 +2061,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
           },
         };
       });
-      useToastStore
-        .getState()
-        .add("error", "Could not save card printing — try again");
+      await settleFailedWrite(activeDeckId, err, "Could not save card printing — try again");
     } finally {
       set({ isSyncing: hasPendingSaves() });
     }
@@ -1860,7 +2094,9 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     set({ isSyncing: true });
     const write = pending.tail.then(async () => {
       try {
-        await deckApi.updateCardNotes(activeDeckId, cardId, notes);
+        await deckWrites.send(activeDeckId, (target) =>
+          deckApi.updateCardNotes(target, cardId, notes)
+        );
         pending.confirmedNotes = notes;
       } catch (err) {
         logger.error("Unexpected error", "updateCardNotes", err);
@@ -1877,9 +2113,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
               },
             };
           });
-          useToastStore
-            .getState()
-            .add("error", "Could not save card notes. Try again.");
+          await settleFailedWrite(activeDeckId, err, "Could not save card notes. Try again.");
         }
       } finally {
         if (pending.tail === write) {
@@ -1900,7 +2134,9 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     const deck = get().decks[activeDeckId];
     if (!deck) return;
     const stored = deck.cards.find((card) => card.id === cardId);
-    const mirror = stored ? undefined : deck.maybeboard.find((card) => card.id === cardId);
+    const mirror = stored
+      ? undefined
+      : deck.maybeboard.find((card) => card.id === cardId);
     if (!stored && !mirror) return;
     const currentZone = stored?.zone ?? "maybeboard";
     const persistedZone = stored?.zone ?? mirror?.zone ?? "main";
@@ -1928,13 +2164,21 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     set({ isSyncing: true });
     const write = pending.tail.then(async () => {
       try {
-        await deckApi.updateCardZone(activeDeckId, cardId, zone);
+        await deckWrites.send(activeDeckId, (target) =>
+          deckApi.updateCardZone(target, cardId, zone)
+        );
         pending.confirmedZone = zone;
         if (recordUndo && persistedZone !== zone) {
           set((state) => ({
             undoStack: [
               ...state.undoStack,
-              { type: "MOVE_ZONE", deckId: activeDeckId, cardId, from: persistedZone, to: zone },
+              {
+                type: "MOVE_ZONE",
+                deckId: activeDeckId,
+                cardId,
+                from: persistedZone,
+                to: zone,
+              },
             ],
           }));
         }
@@ -1948,8 +2192,9 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         ) {
           set((state) => {
             const currentDeck = state.decks[activeDeckId];
-            const latestCard =
-              currentDeck ? uniqueDeckCards(currentDeck).find((card) => card.id === cardId) : undefined;
+            const latestCard = currentDeck
+              ? uniqueDeckCards(currentDeck).find((card) => card.id === cardId)
+              : undefined;
             if (latestCard?.zone !== zone) return state;
             return {
               decks: {
@@ -1962,9 +2207,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
               },
             };
           });
-          useToastStore
-            .getState()
-            .add("error", "Could not move card. Try again.");
+          await settleFailedWrite(activeDeckId, err, "Could not move card. Try again.");
         }
       } finally {
         if (pending.tail === write) {
@@ -1982,7 +2225,8 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
   },
 
   bulkRemoveCards: async (cardIds) => {
-    let hasRejectedRemoval = false;
+    // The failures of the rows that were put back, to report once.
+    const failures: unknown[] = [];
     const { activeDeckId } = get();
     if (!activeDeckId || cardIds.length === 0) return;
 
@@ -2013,7 +2257,9 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       await Promise.all(
         [...idSet].map(async (id) => {
           try {
-            await deckApi.removeCard(activeDeckId, id);
+            await deckWrites.send(activeDeckId, (target) =>
+              deckApi.removeCard(target, id)
+            );
           } catch (err) {
             logger.error("Unexpected error", "bulkRemoveCards", err);
             const removedCard = originalCards.find((card) => card.id === id);
@@ -2031,21 +2277,26 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
                 decks: {
                   ...state.decks,
                   [activeDeckId]: updateDeckCards(currentDeck, (cards) =>
-                    restoreRemovedCard(cards, removedCard, followingCardIds)),
+                    restoreRemovedCard(cards, removedCard, followingCardIds)
+                  ),
                 },
               };
             });
-            hasRejectedRemoval = true;
+            failures.push(err);
           }
         })
       );
     } catch (err) {
       logger.error("Unexpected error", "bulkRemoveCards", err);
     } finally {
-      if (hasRejectedRemoval && get().decks[activeDeckId]) {
-        useToastStore
-          .getState()
-          .add("error", "Could not remove card. Please retry.");
+      // One report for the whole removal: the stale refusal when there was
+      // one (the rows behind it were dropped, not refused), else the first
+      // failure that was not a drop.
+      const reported =
+        failures.find(isStaleDeckRefusal) ??
+        failures.find((failure) => !(failure instanceof DroppedDeckWriteError));
+      if (reported !== undefined && get().decks[activeDeckId]) {
+        await settleFailedWrite(activeDeckId, reported, "Could not remove card. Please retry.");
       }
       pendingBulkRemovals -= 1;
       set({ isSyncing: hasPendingSaves() });
@@ -2191,49 +2442,17 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     }
   },
 
-  markGameChanger: (cardName: string) => {
-    const { activeDeckId } = get();
-    if (!activeDeckId) return;
-    set((state) => ({
-      decks: {
-        ...state.decks,
-        [activeDeckId]: updateDeckCards(state.decks[activeDeckId], (cards) =>
-          cards.map((c) =>
-            c.name === cardName ? { ...c, isGameChanger: true } : c
-          )
-        ),
-      },
-    }));
-  },
-
-  markBanned: (cardName: string) => {
-    const { activeDeckId } = get();
-    if (!activeDeckId) return;
-    set((state) => ({
-      decks: {
-        ...state.decks,
-        [activeDeckId]: updateDeckCards(state.decks[activeDeckId], (cards) =>
-          cards.map((c) => (c.name === cardName ? { ...c, isBanned: true } : c))
-        ),
-      },
-    }));
-  },
-
   addToMaybeboard: async (card: ScryfallCard) => {
     const { activeDeckId, decks } = get();
     if (!activeDeckId) return;
     const deck = decks[activeDeckId];
     if (!deck) return;
 
-    const isBasicLand = (card.type_line ?? "")
-      .toLowerCase()
-      .includes("basic land");
+    // As in the deck (CR 903.5b), a basic land may sit in the maybeboard more than once.
     const exists =
-      !isBasicLand &&
+      !isBasicLand(card.type_line ?? "") &&
       uniqueDeckCards(deck).find(
-        (c) =>
-          c.name === card.name &&
-          c.zone === "maybeboard"
+        (c) => c.name === card.name && c.zone === "maybeboard"
       );
     if (exists) return;
 
@@ -2253,27 +2472,9 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     }));
 
     try {
-      const saved = await deckApi.addCard(activeDeckId, {
-        scryfallId: card.id,
-        name: deckCard.name,
-        manaCost: deckCard.manaCost,
-        cmc: deckCard.cmc,
-        typeLine: deckCard.typeLine,
-        oracleText: deckCard.oracleText,
-        power: deckCard.power ?? null,
-        toughness: deckCard.toughness ?? null,
-        colorIdentity: deckCard.colorIdentity,
-        isGameChanger: deckCard.isGameChanger,
-        isBanned: deckCard.isBanned,
-        price: deckCard.price,
-        imageUri: deckCard.imageUri,
-        artCropUri: deckCard.artCropUri,
-        category: deckCard.category,
-        quantity: deckCard.quantity,
-        isCommander: false,
-        isPartner: false,
-        zone: "maybeboard",
-      });
+      const saved = await deckWrites.send(activeDeckId, (target) =>
+        deckApi.addCard(target, addCardPayload(deckCard))
+      );
       // Update id to DB-generated id
       set((state) => ({
         decks: {
@@ -2294,13 +2495,16 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
           decks: {
             ...state.decks,
             [activeDeckId]: updateDeckCards(currentDeck, (cards) =>
-              cards.filter((current) =>
-                current.id !== deckCard.id || current.zone !== "maybeboard"
+              cards.filter(
+                (current) =>
+                  current.id !== deckCard.id || current.zone !== "maybeboard"
               )
             ),
           },
         };
       });
+      // No toast today for the maybeboard; a stale copy still reloads.
+      await settleFailedWrite(activeDeckId, err);
     }
   },
 
@@ -2318,9 +2522,13 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     }));
 
     try {
-      await deckApi.removeCard(activeDeckId, cardId);
+      await deckWrites.send(activeDeckId, (target) =>
+        deckApi.removeCard(target, cardId)
+      );
     } catch (err) {
       logger.error("Unexpected error", "removeFromMaybeboard", err);
+      // No rollback and no toast today; a stale copy still reloads.
+      await settleFailedWrite(activeDeckId, err);
     }
   },
 
@@ -2349,7 +2557,8 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     if (!card) return;
 
     const alreadyInDeck = cards.some(
-      (candidate) => candidate.name === card.name && candidate.zone !== "maybeboard"
+      (candidate) =>
+        candidate.name === card.name && candidate.zone !== "maybeboard"
     );
     if (alreadyInDeck) return;
 

@@ -1,25 +1,34 @@
-import { test, expect, type APIRequestContext } from "@playwright/test";
+import type { APIRequestContext } from "@playwright/test";
+import { test, expect, type SeededDecks } from "./fixtures";
 import { suppressOnboarding } from "./helpers";
 
 /**
  * Seeds a public deck whose commanderName is set the way setCommander sets it,
- * so the listing's SQL slug match has something to find.
+ * so the listing's SQL slug match has something to find. The `seededDeck`
+ * fixture creates the deck and deletes it after the test.
  */
 async function seedCommanderDeck(
   request: APIRequestContext,
+  seededDeck: SeededDecks,
   name: string,
   commanderName: string
 ): Promise<string> {
-  const created = await request.post("/api/decks", {
-    data: { name, format: "commander" },
-  });
-  expect(created.ok(), await created.text()).toBe(true);
-  const { id } = (await created.json()) as { id: string };
+  const id = await seededDeck.create({ name });
 
-  const patched = await request.patch(`/api/decks/${id}`, {
-    data: { commanderName, isPublic: true },
+  // The command zone has one write path; the deck PATCH refuses commanderName.
+  const seated = await request.patch(`/api/decks/${id}/command-zone`, {
+    data: {
+      removeCardIds: [],
+      clearCommandSlots: [],
+      addCards: [],
+      commandZone: { commanderName },
+    },
   });
-  expect(patched.ok(), await patched.text()).toBe(true);
+  expect(seated.ok(), await seated.text()).toBe(true);
+  const published = await request.patch(`/api/decks/${id}`, {
+    data: { isPublic: true },
+  });
+  expect(published.ok(), await published.text()).toBe(true);
   return id;
 }
 
@@ -50,7 +59,12 @@ test.describe("Commander deck discovery — anonymous viewer", () => {
     expect((await response.json()).decks).toEqual([]);
   });
 
-  test("the page renders its empty state for a commander with no public decks", async ({
+  /**
+   * The builder's "Community decks" link reaches this for any commander being
+   * built, so it is an empty state, not a 404. It is thin content, though, so
+   * it carries noindex and no canonical URL.
+   */
+  test("the page renders its empty state for a commander with no public decks, kept out of the index", async ({
     page,
   }) => {
     await suppressOnboarding(page);
@@ -60,16 +74,20 @@ test.describe("Commander deck discovery — anonymous viewer", () => {
       page.getByRole("heading", { name: /nobody has this commander decks/i })
     ).toBeVisible();
     await expect(page.getByText(/no public decks for this commander yet/i)).toBeVisible();
+    await expect(page.locator('meta[name="robots"][content*="noindex"]').first()).toBeAttached();
+    await expect(page.locator('link[rel="canonical"]')).toHaveCount(0);
   });
 
   test("finds a public deck by its commander slug, apostrophes and all", async ({
     request,
+    seededDeck,
   }) => {
     // Exercises the SQL slug expression against real Postgres — the unit tests
     // can only mock it. The name carries a comma and an apostrophe, the two
     // characters commanderToSlug strips.
     const deckId = await seedCommanderDeck(
       request,
+      seededDeck,
       "Discovery Fixture",
       "Kroxa, Titan of Death's Hunger"
     );
@@ -84,6 +102,30 @@ test.describe("Commander deck discovery — anonymous viewer", () => {
       decks: readonly { id: string }[];
     };
     expect(body.commanderName).toBe("Kroxa, Titan of Death's Hunger");
+    expect(body.decks.map((d) => d.id)).toContain(deckId);
+  });
+
+  test("finds a public deck by the slug EDHREC uses for an accented commander", async ({
+    request,
+    seededDeck,
+  }) => {
+    // The SQL slug transliterates "û" to "u" as commanderToSlug does, so the
+    // page the sitemap and the builder link to lists the deck.
+    const deckId = await seedCommanderDeck(
+      request,
+      seededDeck,
+      "Accented Discovery Fixture",
+      "Lim-Dûl the Necromancer"
+    );
+
+    const response = await request.get(
+      "/api/community/commanders/lim-dul-the-necromancer/decks"
+    );
+
+    expect(response.status()).toBe(200);
+    const body = (await response.json()) as {
+      decks: readonly { id: string }[];
+    };
     expect(body.decks.map((d) => d.id)).toContain(deckId);
   });
 

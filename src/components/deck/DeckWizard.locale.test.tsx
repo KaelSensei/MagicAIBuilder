@@ -1,15 +1,11 @@
 import { fireEvent, screen } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { expect, it, vi } from "vitest";
-import { renderWithIntl } from "@/test/render-with-intl";
+import { renderWithProviders } from "@/test/render";
 import { DeckWizard } from "./DeckWizard";
 
 function renderFrenchWizard() {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  renderWithIntl(
-    <QueryClientProvider client={client}>
-      <DeckWizard open onClose={vi.fn()} onComplete={vi.fn()} />
-    </QueryClientProvider>,
+  renderWithProviders(
+    <DeckWizard open onClose={vi.fn()} onComplete={vi.fn()} />,
     { locale: "fr" }
   );
 }
@@ -45,5 +41,7 @@ it("shows the translated bracket description in the French deck wizard", async (
   renderFrenchWizard();
   fireEvent.click(await openStrategyStep());
   fireEvent.click(screen.getByRole("button", { name: "Continuer" }));
-  expect(await screen.findByRole("button", { name: /Optimisé Synergies optimisées/ })).toBeInTheDocument();
+  expect(
+    await screen.findByRole("button", { name: /Amélioré \(bracket 3\) Synergies fortes/ })
+  ).toBeInTheDocument();
 });

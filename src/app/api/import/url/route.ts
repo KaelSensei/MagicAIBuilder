@@ -2,8 +2,10 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { importFromUrl } from "@/lib/import/url-import";
 import { BOT_CHALLENGE_MESSAGE } from "@/lib/http";
+import { MOXFIELD_REFUSED_CODE, MoxfieldRefusedError } from "@/lib/import/moxfield-refusal";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
+import { rateLimitResponse } from "@/lib/api/route-kit";
 
 const RATE_LIMIT = 10;        // max requests
 const RATE_WINDOW = 60_000;   // per 60 seconds
@@ -19,12 +21,9 @@ export async function POST(request: Request) {
   const ip = getClientIp(request);
   const rl = checkRateLimit(`import:${ip}`, RATE_LIMIT, RATE_WINDOW);
   if (!rl.allowed) {
-    return NextResponse.json(
-      { error: `Too many requests. Please wait ${Math.ceil(rl.retryAfterMs / 1000)}s before retrying.` },
-      {
-        status: 429,
-        headers: { "Retry-After": String(Math.ceil(rl.retryAfterMs / 1000)) },
-      }
+    return rateLimitResponse(
+      rl,
+      (seconds) => `Too many requests. Please wait ${seconds}s before retrying.`
     );
   }
 
@@ -47,6 +46,15 @@ export async function POST(request: Request) {
     const result = await importFromUrl(parsed.data.url);
     return NextResponse.json(result);
   } catch (err) {
+    if (err instanceof MoxfieldRefusedError) {
+      // A deliberate refusal, not a fault here: logged so the owner can see
+      // how often it happens, and never retried by another route.
+      logger.warn("Moxfield refused the import", "POST /api/import/url", { status: err.status });
+      return NextResponse.json(
+        { error: err.message, code: MOXFIELD_REFUSED_CODE },
+        { status: 422 }
+      );
+    }
     const message = err instanceof Error ? err.message : "Import failed.";
     const isUserError =
       message.includes("not found") ||

@@ -2,7 +2,7 @@ import { render } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
 import { siteUrl } from "@/lib/seo/alternates";
 
-vi.mock("@/components/landing/LandingPage", () => ({
+vi.mock(import("@/components/landing/LandingPage"), () => ({
   LandingPage: () => <main>MagicAIBuilder</main>,
 }));
 

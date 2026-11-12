@@ -30,15 +30,17 @@ import {
 } from "@/lib/scryfall/client";
 import { logger } from "@/lib/logger";
 import { useAIDeckBuild, countCopies } from "@/hooks/useAIDeckBuild";
+import { useAiDenialMessage } from "@/hooks/useAiDenialMessage";
 import type { BuildCard } from "@/hooks/useAIDeckBuild";
 import { useLocalizedCardText } from "@/hooks/useLocalizedCardText";
 import { useDeckStore } from "@/lib/deck/store";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import { categorizeCard } from "@/lib/deck/categories";
-import { getCardImageUri } from "@/lib/scryfall/images";
-import type { CardCategory, DeckCard } from "@/lib/deck/types";
+import { getCardImageUri, getListedImageUri } from "@/lib/scryfall/images";
+import type { BracketLevel, CardCategory, DeckCard } from "@/lib/deck/types";
 import { createDeckPlan } from "@/lib/ai/deck-plan";
-import type { BuildRequest } from "@/app/api/ai/build/types";
+import type { BuildRequest, DeckCorrection } from "@/app/api/ai/build/types";
+import { GeneratedDeckCorrections } from "./GeneratedDeckCorrections";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -293,14 +295,23 @@ const BRACKET_OPTIONS = [
     border: "border-red-500/40",
     bg: "bg-red-500/10",
   },
+  {
+    value: 5 as const,
+    labelKey: "bracket5",
+    subtitleKey: "bracket5Sub",
+    descriptionKey: "bracket5Desc",
+    color: "text-fuchsia-400",
+    border: "border-fuchsia-500/40",
+    bg: "bg-fuchsia-500/10",
+  },
 ] as const;
 
 function StepBracket({
   value,
   onChange,
 }: {
-  readonly value: 1 | 2 | 3 | 4 | null;
-  readonly onChange: (v: 1 | 2 | 3 | 4) => void;
+  readonly value: BracketLevel | null;
+  readonly onChange: (v: BracketLevel) => void;
 }) {
   const t = useTranslations("deck.wizard");
   return (
@@ -357,6 +368,7 @@ function StepCommander({
   const t = useTranslations("deck");
   // Display only — the deck is always built from the English commanderName.
   const localizedCommander = useLocalizedCardText(commanderCard);
+  const commanderArt = getListedImageUri(commanderCard?.image_uris, "art");
   const [query, setQuery] = useState(commanderName);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -441,10 +453,10 @@ function StepCommander({
       {/* Selected commander preview */}
       {commanderCard && (
         <div className="flex items-center gap-3 w-full px-4 py-3 rounded-xl border border-[var(--accent)]/40 bg-[var(--accent)]/5">
-          {commanderCard.image_uris?.art_crop && (
+          {commanderArt && (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={commanderCard.image_uris.art_crop}
+              src={commanderArt}
               alt={localizedCommander?.name ?? commanderCard.name}
               className="w-12 h-12 rounded-lg object-cover"
             />
@@ -733,8 +745,8 @@ async function importCardsInBatches(
           isGameChanger: false,
           isBanned: false,
           price: sc.prices?.usd ? Number.parseFloat(sc.prices.usd) : null,
-          imageUri: getCardImageUri(sc, "normal"),
-          artCropUri: getCardImageUri(sc, "art_crop"),
+          imageUri: getCardImageUri(sc, "grid"),
+          artCropUri: getCardImageUri(sc, "art"),
           category: isDeckCategory(entry?.category)
             ? entry.category
             : categorizeCard(sc),
@@ -766,7 +778,7 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
   const [strategy, setStrategy] = useState<string | null>(null);
 
   // Step 4 — Bracket (power level)
-  const [bracket, setBracket] = useState<1 | 2 | 3 | 4 | null>(null);
+  const [bracket, setBracket] = useState<BracketLevel | null>(null);
 
   // Step 5 — Commander
   const [commanderName, setCommanderName] = useState("");
@@ -781,8 +793,15 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
   // dialog looks frozen for the whole minute.
   const [importedCount, setImportedCount] = useState(0);
   const [importTotal, setImportTotal] = useState(0);
+  // A deck the server's card-data check changed: the player reads the changes
+  // before the wizard opens it.
+  const [correctedDeck, setCorrectedDeck] = useState<{
+    readonly deckId: string;
+    readonly corrections: readonly DeckCorrection[];
+  } | null>(null);
 
   const { state: buildState, build, reset: resetBuild } = useAIDeckBuild();
+  const describeDenial = useAiDenialMessage();
   const { createDeck, setActiveDeck, addDeckCard, setCommander } =
     useDeckStore();
 
@@ -803,6 +822,7 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
       setIsDemoDeck(false);
       setImportedCount(0);
       setImportTotal(0);
+      setCorrectedDeck(null);
       resetBuild();
     }
   }, [open, resetBuild]);
@@ -871,9 +891,16 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
 
       setIsDemoDeck(result.source === "demo");
 
-      const deckId = await createDeck(`AI Deck — ${strategy}`, {
-        isAIGenerated: true,
-      });
+      // Stored once, in the creator's locale, with the strategy's label
+      // rather than its English id.
+      const strategyOption = STRATEGIES.find((s) => s.value === strategy);
+      const strategyLabel = strategyOption
+        ? t(`wizard.${strategyOption.labelKey}`)
+        : strategy;
+      const deckId = await createDeck(
+        t("wizard.aiDeckName", { strategy: strategyLabel }),
+        { isAIGenerated: true }
+      );
       await setActiveDeck(deckId);
 
       // Read the commander off the build result, not off `buildState`: this
@@ -887,6 +914,10 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
       setImportedCount(0);
       await importCardsInBatches(entries, addDeckCard, setImportedCount);
 
+      if (result.corrections.length > 0) {
+        setCorrectedDeck({ deckId, corrections: result.corrections });
+        return;
+      }
       onComplete(deckId);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Deck build failed";
@@ -969,33 +1000,46 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
               style={{ minHeight: 360 }}
             >
               {isBuilding ? (
-                /* Loading / streaming step */
+                /* Loading / streaming step, then the card-data corrections */
                 <div className="flex flex-col items-center justify-center flex-1 py-8">
-                  <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-8">
-                    {t("wizard.aiBuilding")}
-                  </h2>
-                  <StepLoading
-                    statusMessages={buildState.statusMessages}
-                    commander={buildState.commander}
-                    cardCount={countCopies(buildState.cards)}
-                    totalCards={buildState.totalCards}
-                    isDemoDeck={isDemoDeck}
-                    importedCount={importedCount}
-                    importTotal={importTotal}
-                    error={buildError}
-                  />
-                  {buildError && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsBuilding(false);
-                        setBuildError(null);
-                        resetBuild();
-                      }}
-                      className="mt-6 text-sm text-[var(--accent-text)] hover:underline"
-                    >
-                      {t("wizard.tryAgain")}
-                    </button>
+                  {correctedDeck ? (
+                    <GeneratedDeckCorrections
+                      corrections={correctedDeck.corrections}
+                      onOpenDeck={() => onComplete(correctedDeck.deckId)}
+                    />
+                  ) : (
+                    <>
+                      <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-8">
+                        {t("wizard.aiBuilding")}
+                      </h2>
+                      <StepLoading
+                        statusMessages={buildState.statusMessages}
+                        commander={buildState.commander}
+                        cardCount={countCopies(buildState.cards)}
+                        totalCards={buildState.totalCards}
+                        isDemoDeck={isDemoDeck}
+                        importedCount={importedCount}
+                        importTotal={importTotal}
+                        error={
+                          buildState.denial
+                            ? describeDenial(buildState.denial)
+                            : buildError
+                        }
+                      />
+                      {buildError && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsBuilding(false);
+                            setBuildError(null);
+                            resetBuild();
+                          }}
+                          className="mt-6 text-sm text-[var(--accent-text)] hover:underline"
+                        >
+                          {t("wizard.tryAgain")}
+                        </button>
+                      )}
+                    </>
                   )}
                 </div>
               ) : (

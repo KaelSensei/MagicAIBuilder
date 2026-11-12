@@ -4,7 +4,13 @@ import type {
   BuildEvent,
   BuildRequest,
   BuildSource,
+  DeckCorrection,
 } from "@/app/api/ai/build/types";
+import {
+  readAiCallDenialResponse,
+  type AiCallDenial,
+} from "@/lib/ai/usage/denial";
+import { readNdjsonLines } from "@/lib/async/ndjson-lines";
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -27,6 +33,8 @@ export interface BuildResult {
   commander: string | null;
   cards: BuildCard[];
   source: BuildSource;
+  /** What the server's card-data check changed in the model's list, for the player to see. */
+  corrections: readonly DeckCorrection[];
 }
 
 export interface AIDeckBuildState {
@@ -37,6 +45,8 @@ export interface AIDeckBuildState {
   source: BuildSource | null;
   isLoading: boolean;
   error: string | null;
+  /** Why the server refused the build before calling a model, if it did. */
+  denial: AiCallDenial | null;
 }
 
 export type AIDeckBuildParams = BuildRequest;
@@ -49,6 +59,7 @@ const EMPTY_STATE: AIDeckBuildState = {
   source: null,
   isLoading: false,
   error: null,
+  denial: null,
 };
 
 // ---------------------------------------------------------------------------
@@ -60,6 +71,7 @@ type BuildAcc = {
   messages: string[];
   totalCards: number | null;
   source: BuildSource | null;
+  corrections: readonly DeckCorrection[];
 };
 
 /** Total copies accumulated so far, so the progress bar counts cards not entries. */
@@ -106,6 +118,7 @@ function processLines(
       case "done":
         acc.totalCards = event.totalCards ?? countCopies(acc.cards);
         acc.source = event.source ?? "ai";
+        acc.corrections = event.corrections ?? [];
         onUpdate(acc);
         return true;
       case "error":
@@ -115,28 +128,25 @@ function processLines(
   return false;
 }
 
-/** Reads a NDJSON build stream chunk by chunk, delegating line processing to processLines. */
+/**
+ * Reads a NDJSON build stream line by line, delegating each line to processLines.
+ * The last event is read even when the stream ends without a line break after it.
+ */
 async function processBuildStream(
   reader: ReadableStreamDefaultReader<Uint8Array>,
   onUpdate: (acc: BuildAcc) => void,
 ): Promise<BuildAcc> {
-  const decoder = new TextDecoder();
   const acc: BuildAcc = {
     commander: null,
     cards: [],
     messages: [],
     totalCards: null,
     source: null,
+    corrections: [],
   };
-  let buffer = "";
 
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split("\n");
-    buffer = lines.pop() ?? "";
-    if (processLines(lines, acc, onUpdate)) return acc;
+  for await (const line of readNdjsonLines(reader)) {
+    if (processLines([line], acc, onUpdate)) return acc;
   }
 
   // Falling out of the loop means the stream ended without a "done" event, so
@@ -172,8 +182,11 @@ export function useAIDeckBuild() {
           signal: abort.signal,
         });
 
-        if (!response.ok)
+        if (!response.ok) {
+          const denial = (await readAiCallDenialResponse(response)) ?? null;
+          setState((prev) => ({ ...prev, denial }));
           throw new Error(`Build request failed (${response.status})`);
+        }
         if (!response.body) throw new Error("No response body");
 
         const acc = await processBuildStream(response.body.getReader(), (a) => {
@@ -200,6 +213,7 @@ export function useAIDeckBuild() {
           commander: acc.commander,
           cards: acc.cards,
           source: acc.source ?? "ai",
+          corrections: acc.corrections,
         };
       } catch (err) {
         if (err instanceof DOMException && err.name === "AbortError") return null;

@@ -1,90 +1,78 @@
-// Scryfall API client with rate limiting (max 10 req/s = 100ms between requests)
-// Cards are cached in the DB via /api/cache/cards (TTL: 24h)
-// Search results are cached in the DB via /api/cache/search (TTL: 1h)
+// Scryfall API client, paced to Scryfall's published limits by request-queue.ts
+// Cards by id and search pages are read through the shared server cache
+// (/api/cache/cards, 24h; /api/cache/search, 1h). Only the server writes it, from
+// Scryfall answers it fetched itself; this client never writes it back.
 import { forEachSequential } from "@/lib/async/sequential";
-import type {
-  ScryfallCard,
-  ScryfallSearchResponse,
-  ScryfallAutocompleteResponse,
-  ScryfallCollectionIdentifier,
-  ScryfallCollectionResponse,
-} from "./types";
+import { USER_AGENT } from "@/lib/http";
 import {
-  lookupCardCache,
-  storeCardCache,
-  lookupSearchCache,
-  storeSearchCache,
-} from "@/lib/db/deck-api";
+  EMPTY_SEARCH_RESPONSE,
+  type ScryfallCard,
+  type ScryfallSearchResponse,
+  type ScryfallAutocompleteResponse,
+  type ScryfallCollectionIdentifier,
+  type ScryfallCollectionResponse,
+} from "./types";
+import { lookupCardCache, lookupSearchCache } from "./shared-cache-client";
+import { isScryfallCard, isScryfallSearchResponse } from "./guards";
+import { resetScryfallQueue, scheduleScryfallRequest } from "./request-queue";
 import { buildLocalizedNamesQueries } from "./localized";
+import { exactNameTerm } from "./exact-name";
+import { SCRYFALL_API } from "./constants";
 import { logger } from "@/lib/logger";
 
-const SCRYFALL_BASE = "https://api.scryfall.com";
-const MIN_DELAY_MS = 100;
+/**
+ * How long one Scryfall request may run, in milliseconds, before it is aborted
+ * and rejects with a `TimeoutError`.
+ *
+ * The queue starts the next request only once this one settles, so a request
+ * that never answers would stall every Scryfall call of the runtime after it:
+ * on a server, every visitor that instance serves. Ten seconds is the budget
+ * `httpGet` gives the server's own Scryfall fetches (`server-fetch.ts`).
+ */
+export const SCRYFALL_TIMEOUT_MS = 10_000;
 
-const defaultHeaders = {
-  "User-Agent": "MagicAIBuilder/1.0",
-  Accept: "application/json",
-};
-
-// Detect if we're in a test environment (vitest sets globalThis.vi)
-function isTestMode(): boolean {
-  return typeof globalThis !== "undefined" && "vi" in globalThis;
+/**
+ * Headers for a request to api.scryfall.com, which requires a User-Agent and
+ * an Accept header on every request. A server sends the app's `USER_AGENT`;
+ * a browser keeps its own, as Scryfall asks of on-page JavaScript
+ * (https://scryfall.com/docs/api, "Required Headers", read 2026-11-10).
+ */
+function scryfallHeaders(): Record<string, string> {
+  const runsInBrowser = typeof window !== "undefined";
+  return runsInBrowser
+    ? { Accept: "application/json" }
+    : { "User-Agent": USER_AGENT, Accept: "application/json" };
 }
-
-// Serialized rate-limiting with async mutex (prevents concurrent request race)
-// In test mode (vi.useFakeTimers), bypass delay to avoid timeout issues
-let lastRequestTime = 0;
-let queue: Promise<void> = Promise.resolve();
 
 /**
  * Reset the rate limiter state (for tests only)
  * @internal
  */
 export function __resetRateLimiter() {
-  lastRequestTime = 0;
-  queue = Promise.resolve();
+  resetScryfallQueue();
 }
 
+/**
+ * Sends one request to api.scryfall.com in its turn in the runtime's queue.
+ *
+ * Rejects with a `TimeoutError` after `SCRYFALL_TIMEOUT_MS`. The clock starts
+ * when the request leaves the queue, so time spent waiting for its turn never
+ * counts against it.
+ */
 function rateLimitedFetch(
   url: string,
   options?: RequestInit
 ): Promise<Response> {
-  const run = queue.then(async () => {
-    const now = Date.now();
-    const elapsed = now - lastRequestTime;
-    // Only apply delay in non-test environments (skip in test mode to avoid setTimeout issues)
-    if (elapsed < MIN_DELAY_MS && !isTestMode()) {
-      await new Promise<void>((resolve) =>
-        setTimeout(resolve, MIN_DELAY_MS - elapsed)
-      );
-    }
-    lastRequestTime = Date.now();
-
-    return fetch(url, {
+  return scheduleScryfallRequest(url, () =>
+    fetch(url, {
       ...options,
       headers: {
-        ...defaultHeaders,
+        ...scryfallHeaders(),
         ...options?.headers,
       },
-    });
-  });
-
-  // Handing the tail back to `queue` is what makes this a mutex. The previous
-  // version chained off `queue` but never reassigned it, so every concurrent
-  // caller found the same already-resolved promise and ran immediately: they
-  // read one `lastRequestTime`, waited the same delay, and then fired at
-  // Scryfall together — the 10 req/s ceiling the comment promises was never
-  // enforced.
-  //
-  // The tail must not reject, or one failed request would poison the chain for
-  // every request after it. Swallowing here only affects the ordering handle;
-  // `run` still carries the rejection to this call's own caller.
-  queue = run.then(
-    () => undefined,
-    () => undefined
+      signal: AbortSignal.timeout(SCRYFALL_TIMEOUT_MS),
+    })
   );
-
-  return run;
 }
 
 async function handleResponse<T>(response: Response): Promise<T> {
@@ -99,32 +87,26 @@ async function handleResponse<T>(response: Response): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-/** Empty search response — Scryfall answers 404 when a valid query matches nothing */
-const EMPTY_SEARCH_RESPONSE: ScryfallSearchResponse = {
-  object: "list",
-  total_cards: 0,
-  has_more: false,
-  data: [],
-};
-
 /**
  * Search cards using Scryfall query syntax — results cached 1h.
  *
  * `includeMultilingual` must be set whenever the query carries a `lang:`
  * filter: Scryfall hides non-English cards from search without it, so the
- * filter alone returns nothing at all. The DB cache stays correct because the
- * flag is implied by the query text it always travels with.
+ * filter alone returns nothing at all. The flag is part of the cache key.
+ *
+ * The page is read through the shared cache, which the server fills from
+ * Scryfall on a miss. Only when the server cannot answer does the browser ask
+ * Scryfall itself, and it never stores that answer.
  */
 export async function searchCards(
   query: string,
   page = 1,
   includeMultilingual = false
 ): Promise<ScryfallSearchResponse> {
-  // Check cache first
   try {
-    const cached = await lookupSearchCache(query, page);
-    if (cached) {
-      return cached as ScryfallSearchResponse;
+    const cached = await lookupSearchCache(query, page, includeMultilingual);
+    if (isScryfallSearchResponse(cached)) {
+      return cached;
     }
   } catch {
     // Cache lookup failure is non-fatal — fall through to Scryfall
@@ -140,7 +122,7 @@ export async function searchCards(
   let status: number | null = null;
   try {
     const response = await rateLimitedFetch(
-      `${SCRYFALL_BASE}/cards/search?${params}`
+      `${SCRYFALL_API}/cards/search?${params}`
     );
     status = response.status;
 
@@ -149,14 +131,7 @@ export async function searchCards(
       return EMPTY_SEARCH_RESPONSE;
     }
 
-    const data = await handleResponse<ScryfallSearchResponse>(response);
-
-    // Store in DB cache (fire-and-forget)
-    storeSearchCache(query, page, data).catch(() => {
-      /* non-fatal */
-    });
-
-    return data;
+    return await handleResponse<ScryfallSearchResponse>(response);
   } finally {
     logger.info("Scryfall search completed", "Scryfall search", {
       status,
@@ -169,37 +144,30 @@ export async function searchCards(
 export async function getCardByName(name: string): Promise<ScryfallCard> {
   const params = new URLSearchParams({ exact: name });
   const response = await rateLimitedFetch(
-    `${SCRYFALL_BASE}/cards/named?${params}`
+    `${SCRYFALL_API}/cards/named?${params}`
   );
-  const card = await handleResponse<ScryfallCard>(response);
-  // Cache the card by its ID for future lookups
-  storeCardCache(card.id, card).catch(() => {
-    /* non-fatal */
-  });
-  return card;
+  return handleResponse<ScryfallCard>(response);
 }
 
 /** Fuzzy card name lookup */
 export async function getCardByNameFuzzy(name: string): Promise<ScryfallCard> {
   const params = new URLSearchParams({ fuzzy: name });
   const response = await rateLimitedFetch(
-    `${SCRYFALL_BASE}/cards/named?${params}`
+    `${SCRYFALL_API}/cards/named?${params}`
   );
-  const card = await handleResponse<ScryfallCard>(response);
-  // Cache the card by its ID for future lookups
-  storeCardCache(card.id, card).catch(() => {
-    /* non-fatal */
-  });
-  return card;
+  return handleResponse<ScryfallCard>(response);
 }
 
-/** Get a single card by Scryfall ID — with DB cache (TTL 24h) */
+/**
+ * Get a single card by Scryfall ID — read through the shared cache (TTL 24h),
+ * which the server fills from Scryfall on a miss. Only when the server cannot
+ * answer does the browser ask Scryfall itself, and it never stores that answer.
+ */
 export async function getCardById(id: string): Promise<ScryfallCard> {
-  // Check DB cache first (only available in browser / server-rendered contexts)
   try {
     const cached = await lookupCardCache(id);
-    if (cached) {
-      return cached as ScryfallCard;
+    if (isScryfallCard(cached)) {
+      return cached;
     }
   } catch {
     // Cache lookup failure is non-fatal — fall through to Scryfall
@@ -208,16 +176,9 @@ export async function getCardById(id: string): Promise<ScryfallCard> {
   const startedAt = performance.now();
   let status: number | null = null;
   try {
-    const response = await rateLimitedFetch(`${SCRYFALL_BASE}/cards/${id}`);
+    const response = await rateLimitedFetch(`${SCRYFALL_API}/cards/${id}`);
     status = response.status;
-    const card = await handleResponse<ScryfallCard>(response);
-
-    // Store in DB cache (fire-and-forget)
-    storeCardCache(id, card).catch(() => {
-      /* non-fatal */
-    });
-
-    return card;
+    return await handleResponse<ScryfallCard>(response);
   } finally {
     logger.info("Scryfall card lookup completed", "Scryfall card lookup", {
       status,
@@ -230,7 +191,7 @@ export async function getCardById(id: string): Promise<ScryfallCard> {
 export async function autocompleteCardName(partial: string): Promise<string[]> {
   const params = new URLSearchParams({ q: partial });
   const response = await rateLimitedFetch(
-    `${SCRYFALL_BASE}/cards/autocomplete?${params}`
+    `${SCRYFALL_API}/cards/autocomplete?${params}`
   );
   const data = await handleResponse<ScryfallAutocompleteResponse>(response);
   return data.data;
@@ -240,7 +201,7 @@ export async function autocompleteCardName(partial: string): Promise<string[]> {
 export async function getCardCollection(
   identifiers: ScryfallCollectionIdentifier[]
 ): Promise<ScryfallCollectionResponse> {
-  const response = await rateLimitedFetch(`${SCRYFALL_BASE}/cards/collection`, {
+  const response = await rateLimitedFetch(`${SCRYFALL_API}/cards/collection`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ identifiers }),
@@ -296,16 +257,6 @@ export async function fetchLocalizedPrintingsByNames(
   return cards;
 }
 
-/** Get all Game Changers (cached 24h via TanStack Query) */
-export async function getGameChangers(): Promise<ScryfallSearchResponse> {
-  return searchCards("is:gamechanger");
-}
-
-/** Get commander banlist */
-export async function getCommanderBanlist(): Promise<ScryfallSearchResponse> {
-  return searchCards("banned:commander");
-}
-
 /**
  * Fetch all printings of a card by exact name (unique=prints).
  *
@@ -315,19 +266,23 @@ export async function getCommanderBanlist(): Promise<ScryfallSearchResponse> {
  * returns nothing at all, which reads as "no French printing exists" rather
  * than as the mistake it is.
  *
- * @param cardName - exact English card name
+ * @param cardName - exact English card name; quotes in it are handled by
+ *   `exactNameTerm`
  * @param lang - Scryfall language code; omit or pass "en" for English printings
- * @returns the printings, newest first
+ * @returns the printings, newest first; no printings, without a request, for a
+ *   name that holds both kinds of quote, which no exact term can carry
  */
 export async function searchCardPrintings(
   cardName: string,
   lang?: string
 ): Promise<ScryfallSearchResponse> {
+  const nameTerm = exactNameTerm(cardName);
+  if (nameTerm === null) return EMPTY_SEARCH_RESPONSE;
   const wantsTranslation = lang !== undefined && lang !== "en";
   const langFilter = wantsTranslation ? ` lang:${lang}` : "";
   const params = new URLSearchParams({
     // Do NOT filter by legality here: banned cards still have many printings/arts (e.g. Black Lotus).
-    q: `!"${cardName}" game:paper${langFilter}`,
+    q: `${nameTerm} game:paper${langFilter}`,
     unique: "prints",
     order: "released",
     dir: "desc",
@@ -335,7 +290,7 @@ export async function searchCardPrintings(
   if (wantsTranslation) params.set("include_multilingual", "true");
 
   const response = await rateLimitedFetch(
-    `${SCRYFALL_BASE}/cards/search?${params}`
+    `${SCRYFALL_API}/cards/search?${params}`
   );
   return handleResponse<ScryfallSearchResponse>(response);
 }

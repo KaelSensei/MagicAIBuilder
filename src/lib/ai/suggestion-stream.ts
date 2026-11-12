@@ -1,4 +1,6 @@
 import type { StreamEvent } from "@/app/api/ai/suggest/route";
+import { readNdjsonLines } from "@/lib/async/ndjson-lines";
+import { isRecordOrArray } from "@/lib/guards";
 import type {
   AISuggestionResult,
   CardRemoval,
@@ -14,23 +16,13 @@ export interface SuggestionStreamAcc {
 }
 
 /**
- * True when a value is a plain object.
- *
- * @param value - parsed JSON
- * @returns whether the value has named fields
- */
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
-
-/**
  * Accepts one NDJSON object as a suggestion-stream event.
  *
  * @param value - parsed line
  * @returns whether the object matches a known event
  */
 function isStreamEvent(value: unknown): value is StreamEvent {
-  if (!isRecord(value) || typeof value.type !== "string") return false;
+  if (!isRecordOrArray(value) || typeof value.type !== "string") return false;
   switch (value.type) {
     case "analysis": {
       const provider = value.provider;
@@ -59,7 +51,7 @@ function isStreamEvent(value: unknown): value is StreamEvent {
  * @returns whether the suggestion can be stored
  */
 function isSuggestionData(value: unknown): boolean {
-  if (!isRecord(value)) return false;
+  if (!isRecordOrArray(value)) return false;
   const priority = value.priority;
   return (
     typeof value.name === "string" &&
@@ -76,7 +68,11 @@ function isSuggestionData(value: unknown): boolean {
  * @returns whether the removal can be stored
  */
 function isRemovalData(value: unknown): boolean {
-  return isRecord(value) && typeof value.name === "string" && typeof value.reason === "string";
+  return (
+    isRecordOrArray(value) &&
+    typeof value.name === "string" &&
+    typeof value.reason === "string"
+  );
 }
 
 /**
@@ -131,6 +127,9 @@ function applyStreamEvent(event: StreamEvent, acc: SuggestionStreamAcc): boolean
 /**
  * Reads a NDJSON suggestion stream and publishes the accumulator after each change.
  *
+ * The last event is read even when the stream ends without a line break after
+ * it; an invalid tail is skipped like any other invalid line.
+ *
  * @param reader - body reader from the suggest response
  * @param onUpdate - called with the accumulator after an event that changes it
  * @returns the final accumulator
@@ -139,26 +138,17 @@ export async function processStream(
   reader: ReadableStreamDefaultReader<Uint8Array>,
   onUpdate: (acc: SuggestionStreamAcc) => void
 ): Promise<SuggestionStreamAcc> {
-  const decoder = new TextDecoder();
   const acc: SuggestionStreamAcc = {
     suggestions: [],
     removals: [],
     analysis: "",
     provider: "mock",
   };
-  let buffer = "";
 
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split("\n");
-    buffer = lines.pop() ?? "";
-    for (const line of lines) {
-      const event = parseNdjsonLine(line);
-      if (event === undefined) continue;
-      if (applyStreamEvent(event, acc)) onUpdate(acc);
-    }
+  for await (const line of readNdjsonLines(reader)) {
+    const event = parseNdjsonLine(line);
+    if (event === undefined) continue;
+    if (applyStreamEvent(event, acc)) onUpdate(acc);
   }
   return acc;
 }

@@ -4,6 +4,7 @@
   "start": {
     "prompt": "Ready to test your deck?",
     "hint": "Shuffle and draw your opening hand of seven cards.",
+    "multiplayer": "Multiplayer game (more than two players)",
     "action": "Draw opening hand"
   },
   "turn": "Turn {turn}",
@@ -12,7 +13,7 @@
   "libraryCount": "{count} in library",
   "emptyLibrary": "Empty library",
   "mulligan": "Mulligan",
-  "mulliganDown": "to {count}",
+  "mulliganHint": "{bottom, plural, =0 {free: new seven} other {new seven, # to the bottom}}",
   "restart": "Restart",
   "gameOver": "Game over",
   "phases": {
@@ -44,7 +45,13 @@
     "hideCards": "Hide cards",
     "cardBack": "Card back",
     "toBattlefield": "To battlefield",
-    "toGraveyard": "To graveyard"
+    "toGraveyard": "To graveyard",
+    "bottom": {
+      "prompt": "{count, plural, one {Choose # card to put on the bottom of your library.} other {Choose # cards to put on the bottom of your library, in the order they go.}}",
+      "progress": "{chosen} of {count} chosen",
+      "order": "Bottom order: {cards}",
+      "confirm": "{count, plural, one {Put # card on the bottom} other {Put # cards on the bottom}}"
+    }
   },
   "battlefield": {
     "title": "Battlefield ({count})",
@@ -65,7 +72,15 @@
     "exileEmpty": "Exile is empty",
     "cardCount": "{count, plural, one {# card} other {# cards}}",
     "restoreToHand": "Restore to hand",
-    "play": "Play"
+    "play": "Play",
+    "toCommandZone": "Command zone",
+    "returnToCommandZone": "Return {name} to the command zone"
+  },
+  "commandZone": {
+    "title": "Command zone",
+    "cast": "Cast",
+    "castCard": "Cast {name}",
+    "empty": "Empty. Return your commander from the graveyard or exile."
   },
   "dice": {
     "title": "Dice",
@@ -96,6 +111,7 @@
   "recordResult": "How did it go?",
   "recording": "Saving…",
   "recordFailed": "Could not save",
+  "recordBlockedByMulligan": "Finish your mulligan first.",
   "skipRecording": "Skip",
   "result": {
     "win": "Win",

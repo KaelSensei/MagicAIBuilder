@@ -40,7 +40,7 @@ describe("PublicDeckPrimer", () => {
     );
     expect(screen.getByRole("link", { name: "combo guide" })).toHaveAttribute(
       "rel",
-      "noreferrer noopener"
+      "noopener noreferrer nofollow ugc"
     );
   });
 

@@ -8,8 +8,8 @@ vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
 }));
 
-vi.mock("@/i18n/navigation", () => ({
-  useRouter: () => ({ replace: vi.fn() }),
+vi.mock(import("@/i18n/navigation"), async () => ({
+  ...(await import("@/test/i18n-navigation-stub")),
   usePathname: () => "/decks",
 }));
 

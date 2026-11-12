@@ -1,14 +1,29 @@
+/**
+ * The Auth.js settings the Edge middleware can run: JWT sessions, the sign-in
+ * pages, the Google provider and the `authorized` callback that guards private
+ * paths.
+ *
+ * `config.ts` spreads these settings and adds what needs Node. Server-only
+ * because it holds the Google client secret; Next bundles middleware in a
+ * server layer, where `server-only` resolves to an empty module.
+ *
+ * @module auth/edge-config
+ */
+import "server-only";
 import type { NextAuthConfig } from "next-auth";
 import Google from "next-auth/providers/google";
-import { SUPPORTED_LOCALES } from "@/i18n/routing";
+import {
+  isPublicPagePath,
+  matchesPathPrefix,
+  stripLocalePrefix,
+} from "./public-paths";
 
 /**
- * Routes reachable without a session: auth screens, share links, and the
- * public deck / profile / community surfaces.
+ * API routes reachable without a session: auth itself, health, import, share
+ * links and the public deck / profile / community reads. Public pages are
+ * listed once, in `./public-paths`, for this callback and the middleware.
  */
-const PUBLIC_API_AND_PAGE_PATHS: readonly string[] = [
-  "/auth/signin",
-  "/auth/signup",
+const PUBLIC_API_PATH_PREFIXES: readonly string[] = [
   "/api/auth",
   "/api/health",
   "/api/import",
@@ -16,28 +31,10 @@ const PUBLIC_API_AND_PAGE_PATHS: readonly string[] = [
   "/api/community",
   "/api/deck",
   "/api/users",
-  "/share",
-  "/deck",
-  "/u",
-  "/commanders",
 ];
 
-const PUBLIC_EXACT_PAGE_PATHS = new Set(["/builder/guest"]);
-
 /**
- * Checks whether a pathname equals a prefix or is nested under it.
- * Segment-aware so `/deck` never matches the protected `/decks` listing.
- *
- * @param pathname Locale-stripped request pathname.
- * @param prefix Public route prefix.
- * @returns True when the pathname is the prefix or a child of it.
- */
-function matchesPathPrefix(pathname: string, prefix: string): boolean {
-  return pathname === prefix || pathname.startsWith(`${prefix}/`);
-}
-
-/**
- * Edge-compatible auth config — used by middleware only.
+ * Edge-compatible auth config, run by the middleware and extended by config.ts.
  * Does NOT import Prisma or bcryptjs (both are Node.js-only).
  * Credentials provider is omitted here; it runs server-side in config.ts.
  */
@@ -84,16 +81,12 @@ export const edgeAuthConfig = {
       const isLoggedIn = !!session?.user;
 
       // Strip locale prefix so route matching works regardless of locale
-      const localePattern = new RegExp(
-        `^/(${SUPPORTED_LOCALES.join("|")})(?:/|$)`
-      );
-      const pathname = nextUrl.pathname.replace(localePattern, "/");
+      const pathname = stripLocalePrefix(nextUrl.pathname);
 
       // Public paths — always allow
       const isPublic =
-        pathname === "/" ||
-        PUBLIC_EXACT_PAGE_PATHS.has(pathname) ||
-        PUBLIC_API_AND_PAGE_PATHS.some((p) => matchesPathPrefix(pathname, p));
+        isPublicPagePath(pathname) ||
+        PUBLIC_API_PATH_PREFIXES.some((p) => matchesPathPrefix(pathname, p));
       if (isPublic) return true;
 
       // Static assets — always allow

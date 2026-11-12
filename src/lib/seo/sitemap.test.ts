@@ -1,4 +1,6 @@
 import { describe, it, expect } from "vitest";
+import { routing } from "@/i18n/routing";
+import { buildAlternates, siteUrl } from "./alternates";
 import {
   buildSitemap,
   collapseToCommanders,
@@ -30,12 +32,30 @@ function sources(overrides: Partial<SitemapSources> = {}): SitemapSources {
   };
 }
 
+/**
+ * The hreflang set a page declares in its own metadata, made absolute as a
+ * sitemap must state it.
+ *
+ * @param path Locale-free path, starting with a slash.
+ * @returns Language code (or `x-default`) to absolute URL.
+ */
+function pageHreflang(path: string): Record<string, string> {
+  const { languages } = buildAlternates(routing.defaultLocale, path);
+  const absolute: Record<string, string> = {};
+
+  for (const [language, href] of Object.entries(languages ?? {})) {
+    if (typeof href === "string") absolute[language] = `${siteUrl()}${href}`;
+  }
+
+  return absolute;
+}
+
 describe("buildSitemap", () => {
   it("never emits a share token, whatever it is given", () => {
     const entries = buildSitemap(
       sources({
         decks: [{ id: "deck-1", updatedAt: AUGUST }],
-        profiles: [{ username: "kael", updatedAt: AUGUST }],
+        profiles: [{ username: "kael", updatedAt: AUGUST, publicDeckCount: 1 }],
         commanders: [{ slug: "atraxa", updatedAt: AUGUST }],
       })
     );
@@ -59,7 +79,7 @@ describe("buildSitemap", () => {
     const entries = buildSitemap(
       sources({
         decks: [{ id: "deck-1", updatedAt: AUGUST }],
-        profiles: [{ username: "kael", updatedAt: AUGUST }],
+        profiles: [{ username: "kael", updatedAt: AUGUST, publicDeckCount: 1 }],
         commanders: [{ slug: "atraxa", updatedAt: SEPTEMBER }],
       })
     );
@@ -72,12 +92,49 @@ describe("buildSitemap", () => {
     );
   });
 
+  it("leaves out a profile with no public deck", () => {
+    // A claimed username with nothing published renders an empty profile:
+    // a thin page that I-34 keeps out of the sitemap (spec §4.5).
+    const entries = buildSitemap(
+      sources({
+        profiles: [{ username: "lurker", updatedAt: AUGUST, publicDeckCount: 0 }],
+      })
+    );
+
+    expect(entries.map((entry) => entry.url)).not.toContainEqual(
+      expect.stringMatching(/\/u\/lurker$/)
+    );
+  });
+
   it("carries an hreflang alternate per served locale, matching the page tags", () => {
     const [home] = buildSitemap(sources());
     const languages = home?.alternates?.languages ?? {};
 
-    expect(Object.keys(languages).sort()).toEqual(["en", "fr"]);
+    expect(Object.keys(languages).sort()).toEqual(["en", "fr", "x-default"]);
     expect(String(languages.fr)).toMatch(/\/fr$/);
+  });
+
+  it("names the English URL as x-default, as the pages themselves do", () => {
+    const [home] = buildSitemap(sources());
+
+    expect(home?.alternates?.languages?.["x-default"]).toBe(home?.url);
+  });
+
+  it("declares on every entry the same hreflang set as the page's own metadata", () => {
+    // A sitemap that disagreed with the page's <link rel="alternate"> tags
+    // would give a crawler two answers for the same URL.
+    const entries = buildSitemap(
+      sources({
+        decks: [{ id: "deck-1", updatedAt: AUGUST }],
+        profiles: [{ username: "kael", updatedAt: AUGUST, publicDeckCount: 1 }],
+        commanders: [{ slug: "atraxa", updatedAt: AUGUST }],
+      })
+    );
+    const paths = ["/", "/deck/deck-1", "/u/kael", "/commanders/atraxa/decks"];
+
+    expect(entries.map((entry) => entry.alternates?.languages)).toEqual(
+      paths.map(pageHreflang)
+    );
   });
 
   it("uses the unprefixed URL for the default locale", () => {
@@ -122,5 +179,18 @@ describe("collapseToCommanders", () => {
 
   it("returns nothing for no decks", () => {
     expect(collapseToCommanders([])).toEqual([]);
+  });
+
+  it("drops a commander whose name leaves no usable slug", () => {
+    // `commanderName` accepts any string up to 200 characters. A name with no
+    // ASCII letter or digit slugs to "" (`/commanders//decks`) or to hyphens
+    // only (`/commanders/-/decks`), and the commander page 404s on both.
+    const collapsed = collapseToCommanders([
+      { slug: "", updatedAt: AUGUST },
+      { slug: "-", updatedAt: AUGUST },
+      { slug: "atraxa", updatedAt: AUGUST },
+    ]);
+
+    expect(collapsed.map((commander) => commander.slug)).toEqual(["atraxa"]);
   });
 });

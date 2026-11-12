@@ -8,11 +8,13 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const toastAdd = vi.hoisted(() => vi.fn());
 
-vi.mock("@/lib/scryfall/types", () => ({
+vi.mock(import("@/lib/scryfall/types"), () => ({
   DFC_LAYOUTS: new Set(["modal_dfc", "transform", "reversible_card"]),
 }));
 
 vi.mock("@/lib/db/deck-api", () => ({
+  // The store's own PATCHes read the write budget from the client module.
+  DECK_WRITE_TIMEOUT_MS: 15_000 as const,
   fetchDecks: vi.fn(async () => ({ decks: [], total: 0, page: 0, limit: 20 })),
   fetchDeck: vi.fn(async () => ({
     id: "deck-1",
@@ -54,12 +56,21 @@ vi.mock("@/lib/db/deck-api", () => ({
     isMaybeboard: payload.isMaybeboard ?? false,
   })),
   removeCard: vi.fn(async () => undefined),
+  changeCommandZone: vi.fn(
+    async (
+      deckId: string,
+      change: { readonly addCards: readonly Record<string, unknown>[] }
+    ) => ({
+      cards: change.addCards.map((payload) => ({
+        ...payload,
+        id: "saved-db-id",
+        deckId,
+        notes: null,
+      })),
+      version: 1,
+    })
+  ),
   updateCardCategory: vi.fn(async () => ({})),
-  updateCardMaybeboard: vi.fn(async (_deckId: string, cardId: string, isMaybeboard: boolean) => ({
-    id: cardId,
-    isMaybeboard,
-  })),
-  removeAllCards: vi.fn(async () => undefined),
   updateCardZone: vi.fn(async (_deckId: string, cardId: string, zone: string) => ({
     id: cardId,
     zone,
@@ -73,16 +84,21 @@ vi.mock("@/lib/db/deck-api", () => ({
   })),
 }));
 
-vi.mock("@/hooks/useToast", () => ({
-  useToastStore: { getState: () => ({ add: toastAdd }) },
-}));
+vi.mock(import("@/hooks/useToast"), async (importOriginal) => {
+  const { useToastStore } = await importOriginal();
+  useToastStore.setState({ add: toastAdd });
+  return { useToastStore };
+});
 
 vi.mock("@/lib/scryfall/images", () => ({
   getCardImageUri: vi.fn((_card: unknown, size: string) =>
-    size === "art_crop" ? "https://example.com/art.jpg" : "https://example.com/normal.jpg"
+    size === "art"
+      ? "https://example.com/art.jpg"
+      : "https://example.com/normal.jpg"
   ),
-  buildScryfallImageUrl: vi.fn((id: string, size: string, face: string) =>
-    `https://cards.scryfall.io/${size}/${face}/${id}.jpg`
+  buildScryfallImageUrl: vi.fn(
+    (id: string, size: string, face: string) =>
+      `https://cards.scryfall.io/${size}/${face}/${id}.webp`
   ),
 }));
 
@@ -246,15 +262,15 @@ describe("useDeckStore — promoteToCommander", () => {
   it("does nothing when no active deck", async () => {
     useDeckStore.setState({ activeDeckId: null });
     await useDeckStore.getState().promoteToCommander("card-1");
-    expect(deckApi.removeCard).not.toHaveBeenCalled();
+    expect(deckApi.changeCommandZone).not.toHaveBeenCalled();
   });
 
   it("does nothing when card not found", async () => {
     await useDeckStore.getState().promoteToCommander("nonexistent");
-    expect(deckApi.removeCard).not.toHaveBeenCalled();
+    expect(deckApi.changeCommandZone).not.toHaveBeenCalled();
   });
 
-  it("removes card from deck and sets it as commander", async () => {
+  it("removes card from deck and sets it as commander in one request", async () => {
     const card = makeDeckCard("card-1", "Atraxa, Praetors' Voice", {
       scryfallId: "scryfall-atraxa",
       typeLine: "Legendary Creature — Phyrexian Angel Horror",
@@ -272,6 +288,15 @@ describe("useDeckStore — promoteToCommander", () => {
     expect(state.decks["deck-1"].cards).toHaveLength(0);
     // Set as commander
     expect(state.decks["deck-1"].commander?.name).toBe("Atraxa, Praetors' Voice");
+    // The row leaves and the commander enters in the same request
+    expect(deckApi.changeCommandZone).toHaveBeenCalledWith(
+      "deck-1",
+      expect.objectContaining({
+        removeCardIds: ["card-1"],
+        commandZone: expect.objectContaining({ commanderId: "scryfall-atraxa" }),
+      })
+    );
+    expect(deckApi.removeCard).not.toHaveBeenCalled();
   });
 });
 
@@ -528,16 +553,17 @@ describe("useDeckStore — setBudget error path", () => {
 // ── addTag / removeTag error paths ────────────────────────────────────────────
 
 describe("useDeckStore — addTag / removeTag error paths", () => {
-  it("addTag keeps optimistic tag when API throws", async () => {
+  it("addTag restores the previous tags when API throws", async () => {
     vi.mocked(deckApi.updateDeck).mockRejectedValueOnce(new Error("api error"));
 
     await useDeckStore.getState().addTag("deck-1", "stax");
 
-    expect(useDeckStore.getState().decks["deck-1"].tags).toContain("stax");
+    expect(useDeckStore.getState().decks["deck-1"].tags).not.toContain("stax");
     expect(useDeckStore.getState().isSyncing).toBe(false);
+    expect(toastAdd).toHaveBeenCalledExactlyOnceWith("error", "Could not save deck tags. Please retry.");
   });
 
-  it("removeTag keeps optimistic removal when API throws", async () => {
+  it("removeTag restores the removed tag when API throws", async () => {
     useDeckStore.setState({
       decks: { "deck-1": seedDeck({ tags: ["stax", "budget"] }) },
       activeDeckId: "deck-1",
@@ -546,8 +572,9 @@ describe("useDeckStore — addTag / removeTag error paths", () => {
 
     await useDeckStore.getState().removeTag("deck-1", "stax");
 
-    expect(useDeckStore.getState().decks["deck-1"].tags).not.toContain("stax");
+    expect(useDeckStore.getState().decks["deck-1"].tags).toEqual(["stax", "budget"]);
     expect(useDeckStore.getState().isSyncing).toBe(false);
+    expect(toastAdd).toHaveBeenCalledExactlyOnceWith("error", "Could not save deck tags. Please retry.");
   });
 });
 

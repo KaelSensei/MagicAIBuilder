@@ -2,6 +2,11 @@
 import type { ColorMode, InteractionType, SearchFilters } from "@/lib/deck/types";
 import { getFormatConfig } from "@/lib/deck/formats";
 import type { DeckFormat } from "@/lib/deck/formats";
+import {
+  partnerRequirements,
+  type PartnerRequirement,
+} from "@/lib/deck/pairing";
+import type { PairingCard } from "@/lib/deck/partner-abilities";
 
 // ─── Interaction helpers ──────────────────────────────────────────────────────
 
@@ -114,6 +119,29 @@ function buildPowerToughnessParts(filters: Partial<SearchFilters>): string[] {
   return parts;
 }
 
+// ─── Free-text term helpers ───────────────────────────────────────────────────
+
+/**
+ * Normalises a value the player typed for a `field:value` term, such as the
+ * subtype or keyword inputs of the advanced search.
+ *
+ * Scryfall reads an unquoted space as the end of the term, so `t:Time Lord`
+ * means type "Time" plus the name word "Lord". Its syntax guide says to put
+ * `"` around text with spaces or punctuation and documents no escape for a
+ * literal `"` inside the quotes, so the quote character is stripped rather
+ * than escaped (https://scryfall.com/docs/syntax, checked 2026-11-12).
+ *
+ * @param value - the raw input, which may carry surrounding spaces or quotes
+ * @returns the trimmed value, quoted when it contains whitespace; `null`
+ *   when nothing is left to search for. A single word is returned unchanged
+ *   so existing queries and their cache keys stay the same.
+ */
+function freeTextTerm(value: string): string | null {
+  const bare = value.replace(/"/g, "").trim();
+  if (bare === "") return null;
+  return /\s/.test(bare) ? `"${bare}"` : bare;
+}
+
 // ─── Main query builder ───────────────────────────────────────────────────────
 
 /**
@@ -126,8 +154,8 @@ function buildPowerToughnessParts(filters: Partial<SearchFilters>): string[] {
  *  - types                → (type:X OR type:Y)
  *  - cmcMode + values     → cmc>=N / cmc<=N / cmc=N  (see buildCmcParts)
  *  - priceMin/priceMax    → usd>=N / usd<=N
- *  - subtype              → t:<subtype>
- *  - keyword              → keyword:<keyword>
+ *  - subtype              → t:<subtype>, quoted when multi-word (see freeTextTerm)
+ *  - keyword              → keyword:<keyword>, quoted when multi-word
  *  - powerMin/powerMax    → pow>=N / pow<=N
  *  - toughnessMin/Max     → tou>=N / tou<=N
  *  - interactionType      → oracle-text fragments (see buildInteractionQuery)
@@ -164,8 +192,10 @@ export function buildSearchQuery(
 
   parts.push(...buildCmcParts(filters), ...buildPriceParts(filters));
 
-  if (filters.subtype?.trim()) parts.push(`t:${filters.subtype.trim()}`);
-  if (filters.keyword?.trim()) parts.push(`keyword:${filters.keyword.trim()}`);
+  const subtype = freeTextTerm(filters.subtype ?? "");
+  if (subtype !== null) parts.push(`t:${subtype}`);
+  const keyword = freeTextTerm(filters.keyword ?? "");
+  if (keyword !== null) parts.push(`keyword:${keyword}`);
 
   parts.push(...buildPowerToughnessParts(filters));
 
@@ -190,9 +220,61 @@ export function buildCommanderSearchQuery(
   return parts.join(" ");
 }
 
-/** Build a search query for partner slot based on pairing type */
+/**
+ * The Scryfall query for the cards that meet one partner requirement of the
+ * commander (CR 702.124).
+ *
+ * @param requirement - one way the commander can pair
+ * @param format - the deck's format, for the Background legality filter
+ * @returns a query fragment without name or colour filters
+ */
+function partnerRequirementQuery(
+  requirement: PartnerRequirement,
+  format: DeckFormat
+): string {
+  switch (requirement.kind) {
+    case "partner":
+      return 'is:commander o:"Partner" -o:"Partner with" -o:"Partner—"';
+    case "partnerQuality":
+      return `is:commander o:"Partner—${requirement.quality}"`;
+    case "namedPartner":
+      return `!"${requirement.name}"`;
+    case "background":
+      // Backgrounds are not commanders; they are legendary enchantments with subtype Background.
+      return `t:background legal:${getFormatConfig(format).scryfallLegality}`;
+    case "backgroundChooser":
+      return 'is:commander o:"Choose a Background"';
+    case "timeLordDoctor":
+      return 'is:commander t:"Time Lord" t:Doctor';
+    case "doctorsCompanion":
+      return `is:commander o:"Doctor's companion"`;
+    default: {
+      const exhaustive: never = requirement;
+      return exhaustive;
+    }
+  }
+}
+
+/** Joins alternative queries so that Scryfall matches any of them. */
+function anyOf(queries: readonly string[]): string {
+  if (queries.length === 0) return "is:commander";
+  if (queries.length === 1) return queries[0];
+  const alternatives = queries.map((query) => `(${query})`).join(" or ");
+  return `(${alternatives})`;
+}
+
+/**
+ * Builds the search for the second command-zone slot from the commander's
+ * partner abilities, so the results are the cards it can pair with.
+ *
+ * @param commander - the deck's commander, or null before one is chosen
+ * @param text - the name the player typed
+ * @param filters - the search filters; only the colours apply here
+ * @param format - the deck's format
+ * @returns the Scryfall query
+ */
 export function buildPartnerSearchQuery(
-  pairingType: string,
+  commander: PairingCard | null,
   text: string,
   filters: Partial<SearchFilters> = {},
   format: DeckFormat = "commander"
@@ -203,24 +285,11 @@ export function buildPartnerSearchQuery(
     filters.colors && filters.colors.length > 0
       ? ` id<=${filters.colors.join("")}`
       : "";
-
-  switch (pairingType) {
-    case "partner":
-      return `is:commander o:"Partner" -o:"Partner with" -o:"Character select" -o:"Father & son"${namePart}${colorPart}`;
-    case "character_select":
-      return `is:commander o:"Character select"${namePart}`;
-    case "father_son":
-      return `is:commander o:"Father & son"${namePart}${colorPart}`;
-    case "friends_forever":
-      return `is:commander o:"Friends forever"${namePart}${colorPart}`;
-    case "partner_with":
-      return `is:commander o:"Partner with"${namePart}${colorPart}`;
-    case "background":
-      // Backgrounds are not commanders; they are legendary enchantments with subtype Background.
-      return `t:background legal:${getFormatConfig(format).scryfallLegality}${namePart}${colorPart}`;
-    default:
-      return `is:commander${namePart}${colorPart}`;
-  }
+  const requirements = commander ? partnerRequirements(commander) : [];
+  const queries = requirements.map((requirement) =>
+    partnerRequirementQuery(requirement, format)
+  );
+  return `${anyOf(queries)}${namePart}${colorPart}`;
 }
 
 /** Companion search — cards with the Companion keyword, format-legal */

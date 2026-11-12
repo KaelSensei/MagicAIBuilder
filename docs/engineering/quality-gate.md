@@ -1,35 +1,81 @@
 # Quality Gate — MagicAIBuilder 🧪
 
-> Source of truth for project quality. Any regression against the baseline triggers corrective action.
+> What blocks a merge today, what is only reported, and what is planned. The pre-PR gate itself is in [`CLAUDE.md`](../../CLAUDE.md); this page explains it and must agree with it. The Definition of Done is [definition-of-done.md](definition-of-done.md).
 
-## Baseline (2026-08-15)
+## What blocks today
 
-| Metric                     | Baseline | Minimum | Status |
-| -------------------------- | -------- | ------- | ------ |
-| **Coverage**               | 94.5%    | ≥ 90%   | ✅     |
-| **Bugs**                   | 0        | = 0     | ✅     |
-| **Vulnerabilities**        | 0        | = 0     | ✅     |
-| **Open issues**            | 0        | = 0     | ✅     |
-| **Duplicated Lines**       | ≤ 3.0%   | ≤ 3.0%  | ✅     |
-| **Reliability Rating**     | A        | A       | ✅     |
-| **Security Rating**        | A        | A       | ✅     |
-| **Maintainability Rating** | A        | A       | ✅     |
-| **Unit tests**             | 1764     | —       | ℹ️     |
-| **E2E tests**              | 51       | —       | ℹ️     |
+| Gate                                                    | Where it runs                                                   | What fails it                                                                                                   |
+| ------------------------------------------------------- | --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `pnpm audit --prod --audit-level=high`                  | `.github/workflows/ci.yml`                                      | a high or critical advisory in the production dependency tree                                                   |
+| `pnpm lint` (ESLint 9 flat config, `eslint.config.mjs`) | `ci.yml`; `eslint --fix` on staged files in the pre-commit hook | any lint error or warning (`--max-warnings 0`)                                                                  |
+| `pnpm arch` (dependency-cruiser)                        | `ci.yml`                                                        | a cycle or a new boundary violation                                                                             |
+| `npx tsc --noEmit`                                      | `ci.yml`                                                        | a type error                                                                                                    |
+| `pnpm test:coverage`                                    | `ci.yml`                                                        | a failing test, or coverage under a layer floor in `src/modules/` (see _Coverage_; no file matches a floor yet) |
+| `pnpm build`                                            | `ci.yml`                                                        | a build error                                                                                                   |
+| Playwright suite in Docker (`scripts/e2e-pre-push.sh`)  | `.husky/pre-push`; CI in `e2e.yml` (see _E2E gate_)             | a failing E2E test blocks the push; `e2e.yml` is not required                                                   |
 
-## Blocking thresholds
+Branch protection, read with `gh api` on 2026-11-10: `main` requires the check `Lint, Typecheck, Test, Build` and an up-to-date branch. `dev` and `staging` have no protection rule; their PRs run the same check, and it must be green before a merge.
 
-A PR is **blocked** when it regresses any of these:
+## What is reported but does not block
 
-| Metric             | Hard threshold              |
-| ------------------ | --------------------------- |
-| Coverage           | Must not fall below **90%** |
-| Bugs               | Must stay at **0**          |
-| Vulnerabilities    | Must stay at **0**          |
-| Reliability Rating | Must stay at **A**          |
-| Security Rating    | Must stay at **A**          |
-| Duplicated Lines   | Must not exceed **3.0%**    |
-| Code Smells        | Must not exceed **10**      |
+| Report                                     | Where                                                                    | Status                                                                                                                                                             |
+| ------------------------------------------ | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| SonarCloud analysis                        | `sonar.yml` (job `continue-on-error: true`)                              | **Advisory** while the repository integration is repaired (`CLAUDE.md`). Record it in the PR                                                                       |
+| `pnpm audit --prod --audit-level=moderate` | `ci.yml` (step `continue-on-error: true`)                                | Report only                                                                                                                                                        |
+| Lighthouse CI (`lighthouserc.yml`)         | `lighthouse.yml`                                                         | Fails its own workflow below a category threshold; not a required check                                                                                            |
+| Mutation testing (`stryker.config.mjs`)    | `mutation.yml` (job `continue-on-error: true`, `thresholds.break: null`) | **Advisory**: nightly on `dev`, and on a PR that changes a `domain/` folder; never a required check. See [Mutation testing (advisory)](#mutation-testing-advisory) |
+
+**One local hook still treats Sonar as blocking.** `.claude/settings.json` runs `scripts/pre-pr-sonar-gate.sh` before every `gh pr create`, and the script refuses while SonarCloud reports any open issue. Until it is changed to warn, use its escape `SONAR_GATE_OVERRIDE=1` and give the reason in the PR body.
+
+### SonarCloud targets (advisory)
+
+A regression against these targets is a finding to fix or to explain in the PR. It does not block the merge while Sonar is advisory. When the owner makes Sonar blocking again, this table and `CLAUDE.md` change in the same PR.
+
+| Metric                                         | Target | Last recorded (`main`, 2026-11-08) |
+| ---------------------------------------------- | ------ | ---------------------------------- |
+| Coverage, SonarCloud scope                     | ≥ 90%  | 93.8%                              |
+| Bugs                                           | 0      | 0                                  |
+| Vulnerabilities                                | 0      | 0                                  |
+| Open issues                                    | 0      | 0                                  |
+| Code smells                                    | ≤ 10   | 0                                  |
+| Duplicated lines                               | ≤ 3.0% | 0.6%                               |
+| Reliability, security, maintainability ratings | A      | A                                  |
+
+The column is the CI analysis of `main` at `a6db8d1b`, read on 2026-11-11 from the [measures history](https://sonarcloud.io/api/measures/search_history?component=KaelSensei_MagicAIBuilder&metrics=coverage,bugs,vulnerabilities,violations,code_smells,duplicated_lines_density&from=2026-11-08). The three later analyses filed under `main` (2026-11-11) came from `pnpm sonar` in a feature checkout: `scripts/sonar.mjs` sets no branch name, so a local run overwrites the `main` figures. Before quoting a `main` figure, check that the analysed revision is on `main`.
+
+## Coverage
+
+Two figures, with two scopes. They must not be compared. The decision and its reasons are in [ADR 0010](../adr/0010-coverage-scope-by-layer.md).
+
+| Figure                       | Scope                                                                                                 | Last measured                                                | Source                                                                                                                                   |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Vitest, `pnpm test:coverage` | all of `src`, except generated files, type-only files, `src/lib/db/prisma.ts` and `src/middleware.ts` | 83.01% lines, 86.19% branches, 88.74% functions (2026-11-11) | CI run [43040973372](https://github.com/KaelSensei/MagicAIBuilder/actions/runs/43040973372) (PR #1386; its `src` is `dev` at `de2bedff`) |
+| SonarCloud                   | `src`, except `src/app/**`, `src/components/**`, `src/modules/*/ui/**` and `src/generated/**`         | 93.8%: 95.7% lines, 88.4% branches (2026-11-08)              | the analysis of `main` at `a6db8d1b` (see above)                                                                                         |
+
+The Vitest figure is the repository's coverage. By folder, from the same run: `src/lib` about 98% of lines, `src/hooks` about 95%, `src/components` about 75% (32 of 201 files at 0%), `src/app` about 71% (17 of 108 files at 0%). The comment in `vitest.config.ts` keeps this breakdown, and ADR 0010 says how it was derived.
+
+**Floors per layer.** `pnpm test:coverage` fails when `src/modules/*/domain/**` falls under 90% of lines or branches, or `src/modules/*/application/**` under 80%. A floor is checked on all the files its glob matches, across contexts. No file matches yet, so nothing can fail today; a floor binds from the first file a context moves into that layer. The other layers, and the folders that have not moved, have no floor. `pnpm test` and the pre-push hook do not check floors. To check one context locally, narrow the run: `pnpm test:coverage --coverage.include='src/modules/<context>/**' src/modules/<context>`.
+
+## Mutation testing (advisory)
+
+StrykerJS mutates the pure domain layer, `src/modules/*/domain/**/*.ts` with tests excluded, and runs the Vitest tests that import each mutated file (`vitest.related` and `coverageAnalysis: perTest` in `stryker.config.mjs`). A mutant that no longer compiles is reported as an error, not as a survivor (`@stryker-mutator/typescript-checker`). The glob covers every bounded context, so a module that gains a `domain/` folder joins the run without a config change. [ADR 0005](../adr/0005-testing-strategy-fakes-contracts-and-characterization.md) §8 planned the run; owner decision OD-14 (2026-11-10) approved it as advisory.
+
+**It never blocks.** `thresholds.break` is `null`, so Stryker exits 0 whatever the score. The job in `.github/workflows/mutation.yml` has `continue-on-error: true`, and it is not, and must not become, a required check. `high: 80` and `low: 60` only colour the report. A survivor is a finding to fix or to explain in the PR, like a Sonar regression.
+
+**When it runs.**
+
+- nightly at 02:41 UTC on `dev` (GitHub starts schedules from `main`, the default branch, so the trigger is live once the workflow has been promoted there);
+- on a pull request into `dev`, `staging` or `main` that changes `src/modules/*/domain/**`, `stryker.config.mjs` or the workflow itself;
+- on demand (`workflow_dispatch`);
+- locally with `pnpm mutation`; `pnpm mutation --force` ignores the incremental file.
+
+**Where the report is.** `reports/mutation/` (git-ignored): `mutation.html`, `mutation.json` and `stryker-incremental.json`. CI uploads the folder as the `mutation-report` artifact (14 days) and writes the score to the job's step summary through `scripts/mutation-summary.mjs`. The incremental file travels between runs as an Actions cache (`mutation-incremental-*`), so a later run re-tests only the mutants whose source or tests changed: the second local run below took 56 seconds and re-tested nothing.
+
+**Baseline.** Measured 2026-11-12 on `dev` at `fadd27b4` plus this configuration, on the 4-core VPS with `concurrency: 2`. `lookup-policy.ts` holds numeric constants only and yields no mutant.
+
+| Scope                                         | Mutants | Killed | Survived | No coverage | Compile errors | Score | Duration                                           |
+| --------------------------------------------- | ------- | ------ | -------- | ----------- | -------------- | ----- | -------------------------------------------------- |
+| `combos/domain` (`combo.ts`, `deck-query.ts`) | 37      | 27     | 0        | 0           | 10             | 100%  | 4 min 27 s, of which the dry run 181 tests in 34 s |
 
 ## Pre-PR checklist
 
@@ -38,14 +84,58 @@ Run in this order — see `CLAUDE.md` for the authoritative list:
 ```bash
 npx tsc --noEmit      # zero errors
 pnpm lint             # zero warnings
+pnpm arch             # zero errors
 pnpm test:coverage    # all passing — must run BEFORE sonar
 pnpm sonar            # or rely on CI if it hangs locally
 ```
 
-Then confirm SonarCloud reports **zero open issues**:
+Then record the SonarCloud result in the PR. It is advisory, so open issues do not block the merge:
 <https://sonarcloud.io/api/issues/search?componentKeys=KaelSensei_MagicAIBuilder&statuses=OPEN&ps=100>
 
 > `pnpm sonar` does **not** regenerate coverage. Run `pnpm test:coverage` first, or the quality gate reads a stale `lcov` file.
+
+## Architecture gate
+
+`pnpm arch` runs dependency-cruiser twice on `src/`, test files excluded ([ADR 0007](../adr/0007-architecture-enforcement-in-stages.md), stage 3). Each rule's message says how to fix a breach.
+
+| Half | Configuration                     | Graph                                                      | Fails on                                                                                                                                                                                                                                                         |
+| ---- | --------------------------------- | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1    | `.dependency-cruiser.cjs`         | every import, type-only ones included                      | a cycle; `src/lib` importing `src/components`, `src/hooks` or `src/app`; a component or hook importing `src/app` or Prisma; a breach of the `src/modules/<context>/` layers or entry points ([ADR 0002](../adr/0002-module-entry-points-index-server-client.md)) |
+| 2    | `.dependency-cruiser.runtime.cjs` | the imports left once TypeScript erases the type-only ones | a runtime cycle; a `"use client"` module that reaches a module marked `server-only`, directly or through other imports                                                                                                                                           |
+
+The layer rules are the ones ESLint checks import by import; dependency-cruiser adds cycles and the transitive view.
+
+**Context rules in two tiers.** The floor rules of `src/modules/<context>/` (`domain-is-pure`, `browser-layers-not-server`, `application-is-not-an-adapter`, `public-api-only`) run at `error` for every context from its first commit. The six boundary rules a finished context must also meet (`domain-imports-domain`, `application-imports-domain-and-ports`, `infrastructure-not-browser`, `testing-only-from-tests`, `through-entry-points`, `browser-folders-not-server-entry`) run at `error` for the contexts listed in `CLOSED_CONTEXTS` of `.dependency-cruiser.cjs` and at `warn`, under the suffix `-series-open`, for every other folder under `src/modules/`. A warning never fails the run, so a series in flight sees what it still has to fix. The closing pull request of a series adds its context to `CLOSED_CONTEXTS`, prunes the baseline and deletes the series' shims; `combos` closed with CMB-08 ([architecture.md, the context template](architecture.md#the-context-template)).
+
+**Known violations.** The first half ignores the violations recorded in `.dependency-cruiser-known-violations.json`: the 11 layer violations and the 3 type-only cycles that existed when the gate arrived (21 entries, because the cycle through `src/lib/deck/types.ts` is a knot of 8 loops). Any other violation fails. A recorded violation that no longer occurs fails too, so the file shrinks in the pull request that fixes it:
+
+```bash
+pnpm exec depcruise src --config .dependency-cruiser.cjs --baseline --baseline-mode shrink-only
+```
+
+Never grow the file to get a change through; a pull request that adds an entry says why. The second half reads no baseline: both of its rules hold today.
+
+**Information only.** A module that imports nothing and that nothing imports is listed under `no-orphans`. It never fails the run; deleting a feature is an owner decision.
+
+**The graph.** `pnpm arch:graph` regenerates [dependency-graph.generated.md](dependency-graph.generated.md), the folder-level import graph in Mermaid.
+
+## Planned gates
+
+A gate marked `planned` does not exist yet. The gates land in stages ([ADR 0007](../adr/0007-architecture-enforcement-in-stages.md)), each in its own PR, which updates this table, `CLAUDE.md` and the agent rules. Until a gate exists, review checks its rule by hand.
+
+| Stage | Gate                                                                                                                                                                                                                                                | Will block                                      | Status  |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- | ------- |
+| 1     | ESLint 9 flat config replaces `next lint` and `.eslintrc.json` (`next lint` is deprecated, and removed in Next 16). A prerequisite for stages 3–4. Done in #1351                                                                                    | as today                                        | done    |
+| 2     | The `server-only` package, with a Vitest stub. Done in #1356                                                                                                                                                                                        | a build that pulls server code into the browser | done    |
+| 3     | dependency-cruiser (`pnpm arch`). Runtime cycles fail at once (there are none); the 3 existing type-only cycles and the known layer and context violations start in a recorded baseline that may only shrink. It also generates the Mermaid graphs  | a cycle or a new violation                      | done    |
+| 4     | ESLint `max-lines`, `max-lines-per-function` and `complexity`, with bulk suppressions as a ratchet                                                                                                                                                  | a new file over a limit, or a file that grows   | done    |
+| 5     | Knip: unused files, dependencies and exports                                                                                                                                                                                                        | nothing: an advisory report                     | planned |
+| 6     | `pnpm arch` joins the pre-PR gate in `CLAUDE.md`                                                                                                                                                                                                    | as stage 3                                      | done    |
+| —     | `eslint-plugin-jsdoc`: `require-jsdoc` on exports, then `informative-docs`, starting in `src/modules/**` ([ADR 0006](../adr/0006-comment-and-documentation-standard.md))                                                                            | a missing or restating doc comment              | planned |
+| —     | A lint rule for the typed `vi.mock(import("…"))` form and against new `vi.mock` of internal modules ([ADR 0005](../adr/0005-testing-strategy-fakes-contracts-and-characterization.md)). Done; see [Lint ratchet](#lint-ratchet)                     | a string-path or internal mock                  | done    |
+| —     | Coverage floors per layer in `src/modules/`: `domain/` at 90% and `application/` at 80% of lines and branches ([ADR 0010](../adr/0010-coverage-scope-by-layer.md)). Done; see [Coverage](#coverage)                                                 | coverage under a floor, once a file matches it  | done    |
+| —     | StrykerJS mutation testing on `domain/` folders: nightly, then incremental on changed files ([ADR 0005](../adr/0005-testing-strategy-fakes-contracts-and-characterization.md)). Done; see [Mutation testing (advisory)](#mutation-testing-advisory) | nothing: advisory                               | done    |
+| —     | Docs drift tests: glossary terms exist in code, the ADR index is complete, the dependency graph is generated ([ADR 0006](../adr/0006-comment-and-documentation-standard.md))                                                                        | a stale glossary, index or graph                | planned |
 
 ## Promotion gate
 
@@ -55,13 +145,13 @@ Do not skip a branch, merge feature work directly into `staging` or `main`, or p
 
 ### Branch protection the settings cannot express
 
-`delete_branch_on_merge` was enabled once and had to be reverted within minutes. It deletes the PR's **head** branch, and on a promotion PR (`staging` → `dev`) the head is `staging`. Merging the first promotion after enabling it deleted `staging` from the remote. It was restored from `dev`, which carried the same commit, so nothing was lost — but the setting cannot distinguish a throwaway feature branch from a permanent one.
+`delete_branch_on_merge` was enabled once and had to be reverted within minutes. It deletes the PR's **head** branch, and on a promotion PR (`staging` → `main`) the head is `staging`. Merging the first promotion after enabling it deleted `staging` from the remote. It was restored from `dev`, which carried the same commit, so nothing was lost — but the setting cannot distinguish a throwaway feature branch from a permanent one.
 
 `scripts/git-prune.sh` is the right tool: it carries an explicit protected list (`main master develop dev staging production`) and only removes what is not on it.
 
 ### The scan must fail, not skip
 
-`sonar.yml` carried `if: env.SONAR_TOKEN != ''` on the scan step. With no secret set, the step was skipped and **the job still reported success** — so every PR displayed a green SonarCloud check while nothing was analysed, and the "open issues = 0" line in the checklist above was reading a months-old snapshot rather than the code under review. Thirteen batches shipped in one day under that green tick; the first real analysis afterwards found five issues, all in that day's code.
+`sonar.yml` carried `if: env.SONAR_TOKEN != ''` on the scan step. With no secret set, the step was skipped and **the job still reported success** — so every PR displayed a green SonarCloud check while nothing was analysed, and the "open issues = 0" line the checklist then carried was reading a months-old snapshot rather than the code under review. Thirteen batches shipped in one day under that green tick; the first real analysis afterwards found five issues, all in that day's code.
 
 It now fails with an explicit error when the token is missing.
 
@@ -77,7 +167,9 @@ It now fails with an explicit error when the token is missing.
 
 **The verdict always comes from the e2e container's exit code.** An earlier version branched on `claude -p "@e2e-runner ..."`, which exits 0 whenever the CLI ran — the agent's PASS/FAIL was only prose on stdout. The gate printed `✓ E2E passed — push allowed` on a run with 27 failures. The agent is still invoked, but only after a failure and purely to diagnose it; it cannot turn a red run green.
 
-`SKIP_E2E=1` bypasses the gate in an emergency. CI skips it too, having its own job.
+`SKIP_E2E=1` bypasses the gate in an emergency; say so in the PR. The script also exits early when `CI` is set.
+
+**CI runs the same stack** from `.github/workflows/e2e.yml` (owner decision OD-14, 2026-11-10): on PRs into `staging` and `main`, nightly on `dev`, and on demand. It uploads `playwright-report/` and `test-results/` as the `playwright-report` artifact. PRs into `dev` do not run it, to save CI minutes, so a change that reaches `dev` without a local push (a Dependabot PR, a push made with `SKIP_E2E=1`) is first tested by the next nightly run. It is not a required check. GitHub starts scheduled workflows from the default branch only, so the nightly run begins once the workflow is on `main`.
 
 ### The report has to leave the container
 
@@ -111,6 +203,8 @@ If the failure recurs _with_ the warmup in place, hypothesis 3 is wrong or incom
 
 **Recurred — hypothesis 3 falsified as stated (2026-08-19, same day).** A later gate run failed 3 specs across unrelated files (community, deck-builder, playtest) with seven intl-context errors in the log, warmup active. Two observations survive: the run took 2.1 minutes against the usual ~1.4 — the host was visibly loaded (multiple Docker gate runs that day) — and the error still always accompanies the failures. So compile-timing may be _a_ trigger but is not _the_ mechanism; whatever it is, load widens it. The remaining credible path is the one already recorded: stop testing `next dev` and run the gate against a production build, which requires un-tying the auth bypass from `NODE_ENV` first — a security-relevant redesign that should not be done casually. Until then the flake is understood to be load-sensitive: avoid running other Docker builds while the gate runs.
 
+**The gate no longer runs `next dev` (2026-11-11).** It builds the app once and serves the build with `next start` (see _E2E environment_), so nothing compiles during a run. The build is a _development_ build, so the auth bypass and its `NODE_ENV` guard are unchanged. A production build still needs the bypass redesign above. The same day, the `next dev` server of the gate had reached 3.9 GB RSS on the 7.7 GB host. The first run on the prebuilt server (sampled every 3 s): 83 passed in 3.8 minutes, against 6.8 + 2.3 minutes for the two `next dev` invocations in the gate run recorded in #1364; `next-server` peaked at 730 MB RSS; `next build` peaked at 3.3 GB for about a minute before the tests started; the whole gate took 5.8 minutes.
+
 > **`retries` is 0 here, and stays 0.** Adding retries would stop a known intermittent failure from blocking, which is the sort of quiet loosening this gate has already been fixed for twice. Fix the flake, do not pad the gate.
 >
 > **The config no longer keys anything on `CI` (2026-08-22).** It read `retries: process.env.CI ? 2 : 0`, `workers: process.env.CI ? 1 : undefined` and `forbidOnly: !!process.env.CI` — and `CI` is set nowhere: not in the e2e container, and no GitHub workflow runs Playwright at all. **Every one of those branches was dead code that never took its intended value.** The retries side happened to land on the value this doc wanted, which is why it went unnoticed; the other two did not.
@@ -123,10 +217,10 @@ If the failure recurs _with_ the warmup in place, hypothesis 3 is wrong or incom
 
 ### Tests excluded from the blocking run
 
-| Tag         | Rationale                                                                                                                                                   |
-| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@external` | Depends on a third-party service (e.g. the live Moxfield API). A deck going private there turns the gate red with no code change on our side.               |
-| `@perf`     | Asserts wall-clock latency against `next dev`, which compiles routes on demand — one endpoint measured 41 ms alone and 5163 ms under full-suite contention. |
+| Tag         | Rationale                                                                                                                                                                                                                                                                                                                                      |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@external` | Depends on a third-party service (e.g. the live Moxfield API, or Scryfall's data in `banlist-printings` and `background-commander-pairing`). A deck going private there turns the gate red with no code change on our side. The Docker stack cannot reach Scryfall at all (see _E2E environment_), so its Scryfall checks run only outside it. |
+| `@perf`     | Asserts wall-clock latency. Under `next dev` one endpoint took 41 ms alone, 5163 ms under load. A prebuilt server on a busy host or CI runner still varies.                                                                                                                                                                                    |
 
 Both are opt-out, not silent: `PLAYWRIGHT_GREP_INVERT=""` runs everything. Contract assertions from the same specs still run on every push; only the timing assertions are tagged.
 
@@ -134,12 +228,107 @@ Both are opt-out, not silent: `PLAYWRIGHT_GREP_INVERT=""` runs everything. Contr
 
 `Dockerfile.playwright` pins the Playwright image tag and pnpm. Playwright resolves browser binaries by a version-stamped path, so an image tag that drifts from `@playwright/test` makes every browser test fail to launch; unpinned pnpm resolves to whatever is latest, and pnpm 11 dropped `pnpm.overrides`, failing the frozen install outright. `src/lib/toolchain.test.ts` fails the unit suite if either pin diverges.
 
+### E2E environment
+
+`docker-compose.e2e.yml` runs as its own Compose project (`magicaibuilder-e2e`), so it never replaces the development `db` container. The `db` service starts Postgres 16 on a throwaway `pgdata_e2e` volume, removed by the `down -v` cleanup after every run. The `e2e` service waits for a TCP-level `pg_isready`, applies `prisma migrate deploy`, runs `next build`, then runs Playwright once for the `chromium` and `authenticated` projects, which serves that build with `next start`. Any non-zero exit fails the run.
+
+**The stack never reaches Scryfall (2026-11-12).** The `scryfall` service runs `e2e/scryfall-stand-in.ts` from the same image: an HTTP server that answers `/cards/search`, `/cards/named`, `/cards/autocomplete`, `/cards/collection`, `/cards/:id` and `/cards/:id/rulings` from the recorded `*-v1.ts` fixtures, through the MSW handlers of `src/test/scryfall-stand-in.ts` that Vitest files can register too. The app's server is pointed at it with `SCRYFALL_API_BASE_URL`, read once from the environment (`src/lib/scryfall/api-base-url.ts`, validated at server start in `src/instrumentation.ts`, default `https://api.scryfall.com`). Browser code cannot read a server variable and keeps addressing `api.scryfall.com`, so the `scryfallStandIn` fixture of `e2e/fixtures.ts` forwards those requests to the stand-in; a spec's own `page.route` for a Scryfall URL still wins. The `e2e` container also resolves `api.scryfall.com` to `0.0.0.0` (`extra_hosts`), so a call that escapes both fails at once instead of passing while the network is up. Why: on 2026-11-12 Scryfall's `POST /cards/collection` stalled twice during a gate run, the app's 10 s budget fired, and three tests failed on a branch that touched none of them; one of them stubbed Scryfall in the browser and was failed by the server's own call, which no `page.route` can reach.
+
+The build is a development build: `next.config.ts` sets `experimental.allowDevelopmentBuild` when `E2E_DEVELOPMENT_BUILD=1` and `NODE_ENV=development`. A production build inlines `NODE_ENV="production"` into every bundle and so compiles out the `PLAYWRIGHT_TEST` bypass the specs seed their data through. The same settings skip the type check; `next build --no-lint` skips lint. CI and the pre-PR gate check both.
+
+Every value below is a local test fixture, not a secret. No variable has to be exported on the host: the two `PLAYWRIGHT_*` controls are the only ones read from the host shell, and both have defaults.
+
+| Variable                 | Service | Value                                                      | Purpose                                                                                                                                                                                                                  |
+| ------------------------ | ------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `POSTGRES_DB`            | `db`    | `magicaibuilder`                                           | Database created on the fresh volume.                                                                                                                                                                                    |
+| `POSTGRES_USER`          | `db`    | `magic`                                                    | Owner role used by the app and the health check.                                                                                                                                                                         |
+| `POSTGRES_PASSWORD`      | `db`    | `magic_dev_only`                                           | Fixture password for that role; never reused outside the e2e stack.                                                                                                                                                      |
+| `DATABASE_URL`           | `e2e`   | `postgresql://magic:magic_dev_only@db:5432/magicaibuilder` | Prisma connection for migrations and the app under test, addressed by the `db` service name.                                                                                                                             |
+| `NEXT_PUBLIC_APP_URL`    | `e2e`   | `http://localhost:3000`                                    | Public base URL of the server Playwright drives.                                                                                                                                                                         |
+| `AUTH_SECRET`            | `e2e`   | `playwright-test-secret`                                   | NextAuth signing secret; a fixed fixture because sessions are bypassed in test mode.                                                                                                                                     |
+| `GOOGLE_CLIENT_ID`       | `e2e`   | `playwright`                                               | Placeholder so the Google provider initialises; never contacted.                                                                                                                                                         |
+| `GOOGLE_CLIENT_SECRET`   | `e2e`   | `playwright`                                               | Placeholder paired with the client ID.                                                                                                                                                                                   |
+| `PLAYWRIGHT_TEST`        | `e2e`   | `1`                                                        | Enables the auth bypass. `requireAuth` keeps it dead when `NODE_ENV` is `production`.                                                                                                                                    |
+| `NODE_ENV`               | `e2e`   | `development`                                              | Required by `allowDevelopmentBuild` at `next build` and `next start`; keeps the bypass compiled in.                                                                                                                      |
+| `E2E_DEVELOPMENT_BUILD`  | `e2e`   | `1`                                                        | Makes `next.config.ts` allow the development build and `playwright.config.ts` serve it with `next start`.                                                                                                                |
+| `PLAYWRIGHT_SPEC`        | `e2e`   | host value, default empty                                  | Narrows the run to one spec file. Empty means the full suite; the pre-push gate always forces it empty.                                                                                                                  |
+| `PLAYWRIGHT_GREP_INVERT` | `e2e`   | host value, default `@external\|@perf`                     | Tags excluded from the blocking run (see _Tests excluded from the blocking run_). Set it to `""` to run everything.                                                                                                      |
+| `SCRYFALL_API_BASE_URL`  | `e2e`   | `http://scryfall:8787`                                     | Origin of the Scryfall API for the app's server and for the browser forwarding in `e2e/fixtures.ts`: the `scryfall` stand-in service. Unset in every other environment, where the default is `https://api.scryfall.com`. |
+
+`src/lib/toolchain.test.ts` fails the unit suite when the Compose file sets a variable this table does not list, so a new variable cannot ship undocumented.
+
+## Lint ratchet
+
+`eslint.config.mjs` enforces rules that the existing code does not meet yet (stage 4 of [ADR 0007](../adr/0007-architecture-enforcement-in-stages.md)). Each one is an `error`. The breaches that existed when a rule arrived are recorded in `eslint-suppressions.json` with [ESLint bulk suppressions](https://eslint.org/docs/latest/use/suppressions), which count breaches per file and per rule:
+
+- a new file must meet every rule;
+- a file with recorded breaches fails as soon as it has one more breach of the same rule;
+- a file with fewer breaches than recorded also fails, with "There are suppressions left that do not occur anymore", until the count is pruned. The baseline can only go down.
+
+| Rule                                            | Limit                                                    |
+| ----------------------------------------------- | -------------------------------------------------------- |
+| `max-lines`                                     | 300 code lines in a `.ts` module, 200 in a `.tsx` module |
+| `max-lines-per-function`                        | 80 code lines                                            |
+| `complexity`                                    | 15                                                       |
+| `max-depth`                                     | 3 nested blocks                                          |
+| `@typescript-eslint/max-params`                 | 3 parameters                                             |
+| `@typescript-eslint/consistent-type-assertions` | no cast (`x as T`, `<T>x`); `as const` stays allowed     |
+| `@typescript-eslint/no-non-null-assertion`      | no non-null assertion (`x!`)                             |
+| `no-restricted-imports`                         | the import boundaries below                              |
+
+Comments and blank lines never count toward a line limit, so the comment standard cannot push a module over one. The rules apply to shipped code: every `src/**/*.{ts,tsx}` file except `*.test.{ts,tsx}`, `src/test/**` and the `testing/` and `fixtures/` folders. Tests keep the preset rules, except for the `../` ban and the test-hygiene rules below.
+
+The import boundaries, phase 1. `no-restricted-imports` matches the specifier as written, which is enough because cross-folder imports use the `@/` alias; dependency-cruiser adds the transitive view in stage 3.
+
+- `src/lib` does not import `@/components`, `@/hooks` or `@/app`.
+- `src/components` and `src/hooks` do not import `@/app`, `@/lib/db/prisma` or `@prisma/client`.
+- Shipped code does not import `@/test` or a `testing/` folder.
+- No file under `src`, tests included, imports a `../` path, which would slip past the rules above.
+- `src/modules/*/domain/` and `index.ts` do not import React, Next.js, Zustand, Prisma or an outer layer; `src/modules/*/client/`, `ui/` and `client.ts` do not import Prisma, `server-only`, a `server.ts`, `application/` or `infrastructure/`. No module exists yet, so these bans start with no breach.
+
+Test files (`*.test.{ts,tsx}`) have their own rules, from `@vitest/eslint-plugin` and `no-restricted-syntax` ([ADR 0005](../adr/0005-testing-strategy-fakes-contracts-and-characterization.md), rules 5 and 7). `src/test/test-hygiene-lint.test.ts` pins them.
+
+| Rule                           | Rejects                                                                                                                                       | Baseline when it arrived        |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
+| `vitest/prefer-import-in-mock` | a mock named by a string, `vi.mock("@/x")`; write `vi.mock(import("@/x"))`, which `tsc` checks                                                | 59 string mocks in 41 files     |
+| `no-restricted-syntax`         | a `vi.mock` or `vi.doMock` of a module of this repository (`@/…` or a relative path), in either form, except the two transitional seams below | 222 internal mocks in 130 files |
+| `vitest/no-focused-tests`      | a committed `.only`                                                                                                                           | none                            |
+| `vitest/no-disabled-tests`     | `.skip` and `xit`-style disabled tests; `.todo` stays allowed for a test not written yet                                                      | none                            |
+
+`prefer-import-in-mock` runs with its autofix off, because lint-staged runs `eslint --fix` on every staged file: it would rewrite a baselined mock behind the author's back, leave a factory that fails `tsc`, and fail the commit on the stale suppression. To convert a file on purpose, run `npx eslint --rule '{"vitest/prefer-import-in-mock":["error",{"fixable":true}]}' --fix <file>`, put the quotes back to double quotes, type the factory, then run `pnpm lint --prune-suppressions`. The typed form checks the factory against the real module, so a factory that returned a partial object needs a complete, typed stub: `src/test/prisma-stub.ts` (`stubPrisma`) for the Prisma client and `src/test/i18n-navigation-stub.tsx` for `@/i18n/navigation`. Never cast a stub to make it fit.
+
+The internal-mock ban follows [tdd-with-ai.md](tdd-with-ai.md): test through the module's public behaviour, with an in-memory fake behind a port, or MSW at the HTTP boundary. Packages, such as `next/navigation`, may still be mocked. Two modules of this repository are exempt for now: `@/lib/db/prisma` and `@/lib/auth/config` (Auth.js's `auth()`). Route characterization tests can only replace the database and the session through them until each context has a repository port and an injected session, in phases 3 and later of the migration ([ADR 0001](../adr/0001-modular-monolith-by-bounded-context.md)). The exemption is transitional: each context's move series removes it for its own routes once its repository port lands (`TRANSITIONAL_MOCK_SEAMS` in `eslint.config.mjs`). Mocks of these two modules still take the typed form.
+
+`next build` does not lint (`eslint.ignoreDuringBuilds` in `next.config.ts`): it calls the ESLint Node.js API, which ignores the suppressions file in ESLint 9. `pnpm lint` in CI and lint-staged on commit run the ESLint CLI, which applies it.
+
+### Sonar parity rules
+
+SonarCloud is advisory (see _What is reported but does not block_), so a finding it raises on a pull request reaches the author after the push, and the same kinds came back PR after PR. Each of those Sonar rules now has an ESLint twin that fails `pnpm lint` and the pre-commit hook. The plugins come with `eslint-config-next`; `eslint.config.mjs` only turns the rules on, for every `.ts` and `.tsx` file under `src/` and `e2e/`, tests included. `src/test/sonar-parity-lint.test.ts` pins them.
+
+| ESLint rule                           | Sonar rule | Rejects                                                                                              | Write instead                                                                                                                                                                                                                                 | Baseline when it arrived                   |
+| ------------------------------------- | ---------- | ---------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| `jsx-a11y/prefer-tag-over-role`       | S6819      | a `role` that a native element already carries, such as `<div role="dialog">` or `<span role="img">` | the element: `<dialog open>`, `<fieldset>`, `<output>`, `<img alt>`, `<button type="button">`, and a focusable `<hr>` with `aria-valuenow` for a window splitter. Roles with no element (`switch`, `tooltip`, `menu`, `toolbar`) stay allowed | none: the 8 hits were fixed in the same PR |
+| `react/no-unstable-nested-components` | S6478      | a component declared inside another component's body, which React remounts on every render           | the component at module level, with what it needs passed as props                                                                                                                                                                             | none                                       |
+
+A native element brings its user-agent stylesheet along. Tailwind's preflight resets margins, padding and borders, but not everything: `<dialog>` is centred in its containing block and capped to its size (`left-auto`, `m-0`, `max-w-none max-h-none` undo it), `<fieldset>` refuses to shrink below its content (`min-w-0`), and `<hr>` has no height, a top border and hides overflow (`h-auto border-0 overflow-visible`).
+
+### Shrinking the baseline
+
+1. Fix the breach: split the module, extract the function, flatten the nesting, replace the cast or the `!` with a type guard, a Zod parse at the boundary or `satisfies`, move the shared type down to the layer that owns it. In a test, convert a string mock with the autofix, or replace an internal mock with a fake.
+2. Run `pnpm lint --prune-suppressions`. It lowers the counts in `eslint-suppressions.json`, deletes the entries that reached zero and drops the paths that no longer exist.
+3. Commit the smaller `eslint-suppressions.json` with the fix. The pre-commit hook lints staged files against it, so the commit fails until step 2 is done.
+
+Never grow the file to get a change through. A pull request that adds or raises an entry says why in its description ([ADR 0007](../adr/0007-architecture-enforcement-in-stages.md), "Consequences").
+
+A file move is the one routine case that re-records entries. They are keyed by path, so the moved file fails until `npx eslint <new paths> --suppress-all` records it again; `pnpm lint --prune-suppressions` then drops the old paths. The counts stay the same.
+
 ## Review protocol
 
 1. Read the code and the diff.
-2. Verify CI (lint / typecheck / tests / build) and SonarCloud.
-3. Metrics stable or improved, no regression → merge.
-4. Metrics degraded or problems found → list them with a clear explanation, propose fixes, apply simple ones, open comments for structural ones.
+2. Verify CI (audit, lint, typecheck, tests, build) and read the SonarCloud report (advisory).
+3. Answer the review questions in `.agents/rules/tech-lead-skill.mdc` and check the [Definition of Done](definition-of-done.md).
+4. No blocking gate red and no open finding → merge (a squash merge into `dev`).
+5. Problems found → list them with a clear explanation, propose fixes, apply simple ones, open comments for structural ones.
 
 ### Feedback format
 
@@ -154,7 +343,7 @@ Both are opt-out, not silent: `PLAYWRIGHT_GREP_INVERT=""` runs everything. Contr
 
 **Coverage dropped** — a new branch in a route handler with no test for the error path. Cover at minimum the nominal case plus the Prisma failure.
 
-**Cognitive complexity too high** — SonarCloud blocks above 15. Extract nested `if`/`switch` blocks into named functions.
+**Cognitive complexity too high** — SonarCloud flags a function above 15 (advisory, but the `clean-code` skill sets the same limit). Extract nested `if`/`switch` blocks into named functions.
 
 **Duplication** — near-identical Zod validation across routes belongs in a shared schema under `src/lib/validation/`.
 
@@ -173,22 +362,6 @@ Not blocking current merges, but to be addressed:
 
 ## SonarCloud rule exclusions
 
-### S6747 — "Unknown property" in React Three Fiber components
+### S6747 — "Unknown property" (no longer suppressed)
 
-**Scope:** `src/components/landing/**`
-
-SonarCloud flags JSX attributes like `position`, `args`, `roughness`, `emissive`, `intensity` and `decay` as unknown HTML properties. These are **false positives**: they are React Three Fiber intrinsic element props, not HTML.
-
-R3F extends the JSX namespace to map Three.js classes (`mesh`, `boxGeometry`, `meshStandardMaterial`, `pointLight`, …) to JSX elements, with props corresponding to Three.js constructor arguments and object properties. SonarCloud's analyzer has no R3F plugin and cannot resolve those extended types.
-
-**Verification:** `npx tsc --noEmit` and `pnpm lint` both pass on these files, because `@react-three/fiber` ships proper type declarations.
-
-**Config** (`sonar-project.properties`):
-
-```properties
-sonar.issue.ignore.multicriteria=r3f
-sonar.issue.ignore.multicriteria.r3f.ruleKey=typescript:S6747
-sonar.issue.ignore.multicriteria.r3f.resourceKey=src/components/landing/**
-```
-
-50 false positives suppressed. The rule remains active everywhere else.
+`S6747` was suppressed for `src/components/landing/**` while that folder held a React Three Fiber scene, whose JSX props (`position`, `args`, `roughness`, …) SonarCloud cannot resolve. The scene left the page in #308 and its packages were removed later, so the suppression was removed too. The rule now applies to the whole repository.

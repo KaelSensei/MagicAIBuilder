@@ -1,0 +1,10 @@
+{
+  "summary": "{count, plural, one {# carte inopérante} other {# cartes inopérantes}}",
+  "title": "Cartes inopérantes avec ce commandant",
+  "label": "Vérification des règles : déterministe, d’après le texte Oracle et l’identité couleur de votre commandant. Ce n’est pas une recommandation.",
+  "citation": "Règles complètes {rules}",
+  "reasons": {
+    "colorless-identity-mana": "L’identité couleur de votre commandant ne contient aucune couleur : cette carte ne produit aucun mana, pas même incolore."
+  },
+  "action": "Remplacez chaque carte par une carte qui fonctionne avec ce commandant."
+}

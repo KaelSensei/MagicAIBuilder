@@ -162,7 +162,6 @@ Commander is a **singleton** format — max 1 copy per card — with the followi
 ### Implementation
 
 - `maxQuantity(cardName, typeLine): number` — returns the max allowed quantity for a card
-- `allowsMultiples(cardName, typeLine): boolean` — true if max > 1
 - `addCard` / `addDeckCard` increment quantity up to `maxQuantity` instead of blocking
 - `updateCardQuantity(cardId, delta)` enforces bounds client-side before persisting
 - `+` / `−` buttons appear on hover in list view only when the card allows multiples

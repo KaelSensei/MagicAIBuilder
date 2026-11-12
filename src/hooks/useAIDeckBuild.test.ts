@@ -80,6 +80,52 @@ describe("useAIDeckBuild", () => {
 
     expect(result.current.state.error).toContain("500");
     expect(result.current.state.isLoading).toBe(false);
+    expect(result.current.state.denial).toBeNull();
+    vi.unstubAllGlobals();
+  });
+
+  it("exposes why the server refused the build when the month's allowance is used up", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        Response.json(
+          {
+            error: "Monthly AI allowance used up",
+            code: "allowance_exhausted",
+            route: "build",
+            limit: 10,
+            resetsAt: "2026-12-01T00:00:00.000Z",
+          },
+          { status: 429 }
+        )
+      )
+    );
+
+    const { result } = renderHook(() => useAIDeckBuild());
+    let built: BuildResult | null = null;
+    await act(async () => {
+      built = await result.current.build({
+        colors: ["G"],
+        strategy: "ramp",
+        bracket: 1,
+        commanderName: null,
+        budget: null,
+      });
+    });
+
+    expect(built).toBeNull();
+    expect(result.current.state.isLoading).toBe(false);
+    expect(result.current.state.denial).toEqual({
+      code: "allowance_exhausted",
+      route: "build",
+      limit: 10,
+      resetsAt: new Date("2026-12-01T00:00:00.000Z"),
+    });
+
+    act(() => {
+      result.current.reset();
+    });
+    expect(result.current.state.denial).toBeNull();
     vi.unstubAllGlobals();
   });
 
@@ -246,6 +292,51 @@ describe("useAIDeckBuild", () => {
     vi.unstubAllGlobals();
   });
 
+  it("returns the card-data corrections carried by the done event", async () => {
+    const corrections = [
+      {
+        action: "removed",
+        name: "Lightning Bolt",
+        quantity: 1,
+        reason: "outside_color_identity",
+      },
+      { action: "added", name: "Island", quantity: 1, reason: "fill_to_size" },
+    ];
+    const events = [
+      JSON.stringify({
+        type: "card",
+        name: "Island",
+        category: "land",
+        quantity: 99,
+      }),
+      JSON.stringify({
+        type: "done",
+        totalCards: 99,
+        source: "ai",
+        corrections,
+      }),
+    ];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({ ok: true, body: makeStream(events) })
+    );
+
+    const { result } = renderHook(() => useAIDeckBuild());
+    let built: BuildResult | null = null;
+    await act(async () => {
+      built = await result.current.build({
+        colors: ["U"],
+        strategy: "control",
+        bracket: 2,
+        commanderName: null,
+        budget: null,
+      });
+    });
+
+    expect(built).toEqual(expect.objectContaining({ corrections }));
+    vi.unstubAllGlobals();
+  });
+
   it("errors when the stream is cut short instead of importing a partial deck", async () => {
     const events = [
       JSON.stringify({ type: "commander", name: "Atraxa, Praetors' Voice" }),
@@ -269,6 +360,51 @@ describe("useAIDeckBuild", () => {
     expect(built).toBeNull();
     expect(result.current.state.error).toBe("The AI build ended early");
     expect(result.current.state.isLoading).toBe(false);
+    vi.unstubAllGlobals();
+  });
+
+  it("completes the build when the done event has no line break after it", async () => {
+    const encoder = new TextEncoder();
+    const body = new ReadableStream({
+      start(controller) {
+        controller.enqueue(
+          encoder.encode(
+            JSON.stringify({
+              type: "card",
+              name: "Sol Ring",
+              category: "ramp",
+              quantity: 1,
+            }) + "\n"
+          )
+        );
+        // A relay that trims the body can drop the final line break.
+        controller.enqueue(
+          encoder.encode(JSON.stringify({ type: "done", totalCards: 1 }))
+        );
+        controller.close();
+      },
+    });
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, body }));
+
+    const { result } = renderHook(() => useAIDeckBuild());
+    let built: BuildResult | null = null;
+    await act(async () => {
+      built = await result.current.build({
+        colors: ["R"],
+        strategy: "aggro",
+        bracket: 2,
+        commanderName: null,
+        budget: null,
+      });
+    });
+
+    expect(result.current.state.error).toBeNull();
+    expect(built).toEqual(
+      expect.objectContaining({
+        source: "ai",
+        cards: [{ name: "Sol Ring", category: "ramp", quantity: 1 }],
+      })
+    );
     vi.unstubAllGlobals();
   });
 });

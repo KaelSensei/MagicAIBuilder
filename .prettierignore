@@ -4,9 +4,17 @@
 # next install anyway.
 pnpm-lock.yaml
 
+# Written by dependency-cruiser (`--baseline`); formatting it would turn every
+# shrink into a whitespace diff.
+.dependency-cruiser-known-violations.json
+
 # Build and report output.
 .next/
 .lighthouseci/
 coverage/
 playwright-report/
 test-results/
+
+# Written by ESLint (`--suppress-rule`, `--prune-suppressions`); formatting it
+# would turn every prune into a whitespace diff.
+eslint-suppressions.json

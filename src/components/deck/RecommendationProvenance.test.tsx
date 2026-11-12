@@ -1,16 +1,11 @@
-import { render, screen } from "@testing-library/react";
-import { NextIntlClientProvider } from "next-intl";
+import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import deckMessages from "@/messages/en/deck.json";
+import { renderWithIntl } from "@/test/render-with-intl";
 import { RecommendationProvenance } from "./RecommendationProvenance";
 
 function renderProvenance(kind: "popular" | "synergy" | "tournament" | "ai") {
-  render(
-    <NextIntlClientProvider locale="en" messages={{ deck: deckMessages }}>
-      <RecommendationProvenance kind={kind} />
-    </NextIntlClientProvider>
-  );
+  renderWithIntl(<RecommendationProvenance kind={kind} />);
 }
 
 describe("RecommendationProvenance", () => {

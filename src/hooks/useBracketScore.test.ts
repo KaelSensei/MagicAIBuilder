@@ -2,31 +2,10 @@ import { describe, it, expect } from "vitest";
 import { renderHook } from "@testing-library/react";
 import { useBracketScore } from "./useBracketScore";
 import type { Deck } from "@/lib/deck/types";
+import { aDeck } from "@/test/builders/deck";
 
 function makeDeck(overrides: Partial<Deck> = {}): Deck {
-  return {
-    id: "test-deck",
-    name: "Test Deck",
-    format: "commander",
-    cards: [],
-    commander: null,
-    partner: null,
-    companion: null,
-    cardCount: 0,
-    targetBracket: 2,
-    manualBracket: null,
-    budget: null,
-    tags: [],
-    pairingType: "none",
-    isAIGenerated: false,
-    shareEnabled: false,
-    isPublic: false,
-    shareToken: null,
-    description: null,
-    createdAt: "2026-01-01",
-    updatedAt: "2026-01-01",
-    ...overrides,
-  } as Deck;
+  return aDeck({ id: "test-deck", targetBracket: 2, ...overrides });
 }
 
 describe("useBracketScore", () => {

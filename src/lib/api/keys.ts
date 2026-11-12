@@ -16,6 +16,7 @@
  * rather than a scan-and-compare over every key in the table.
  */
 
+import "server-only";
 import { createHash, randomBytes } from "node:crypto";
 
 // Scopes live in their own module so client components can read the list

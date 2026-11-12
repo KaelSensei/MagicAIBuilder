@@ -20,6 +20,22 @@ describe("Pagination", () => {
     expect(screen.getByText("8")).toBeInTheDocument();
   });
 
+  it("labels the controls and the page position in French", () => {
+    render(
+      <Pagination currentPage={2} totalPages={8} onPageChange={vi.fn()} />,
+      { locale: "fr" }
+    );
+    expect(
+      screen.getByRole("button", { name: "Page précédente" })
+    ).toHaveTextContent("Précédent");
+    expect(
+      screen.getByRole("button", { name: "Page suivante" })
+    ).toHaveTextContent("Suivant");
+    expect(
+      screen.getByRole("navigation", { name: "Pagination" })
+    ).toHaveTextContent("Page 2 sur 8");
+  });
+
   it("disables Previous on first page", () => {
     render(
       <Pagination currentPage={1} totalPages={5} onPageChange={vi.fn()} />

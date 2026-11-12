@@ -1,3 +1,17 @@
+/**
+ * A card's Oracle rulings from Scryfall, with an offline fallback.
+ *
+ * Card catalog context, browser side: `CardRulingsPanel` calls
+ * `getCardRulings`. A successful answer is kept in `localStorage` for the 50
+ * most recently viewed cards and served from there when Scryfall cannot be
+ * reached. Unlike the other Scryfall clients, the request does not wait its
+ * turn in `request-queue.ts`.
+ *
+ * @module scryfall/rulings
+ */
+import { SCRYFALL_API } from "./constants";
+import { isRecord } from "@/lib/guards";
+
 /** A dated card ruling returned by Scryfall. */
 export interface CardRuling {
   readonly source: string;
@@ -15,7 +29,6 @@ interface RulingCacheEntry {
   readonly rulings: readonly CardRuling[];
 }
 
-const SCRYFALL_BASE = "https://api.scryfall.com";
 const RULINGS_CACHE_KEY = "magic-ai-builder:rulings:v1";
 
 /** Longest wait for Scryfall rulings before falling back to the offline cache. */
@@ -23,10 +36,6 @@ export const RULINGS_TIMEOUT_MS = 15_000;
 
 /** Maximum recently viewed cards retained for offline rulings access. */
 const MAX_CACHED_CARDS = 50;
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
 
 function parseRuling(value: unknown): CardRuling | null {
   if (!isRecord(value)) return null;
@@ -103,7 +112,7 @@ function writeCache(cardId: string, rulings: readonly CardRuling[]): void {
 
 async function fetchRulings(cardId: string): Promise<readonly CardRuling[]> {
   const response = await fetch(
-    `${SCRYFALL_BASE}/cards/${encodeURIComponent(cardId)}/rulings`,
+    `${SCRYFALL_API}/cards/${encodeURIComponent(cardId)}/rulings`,
     {
       headers: { Accept: "application/json" },
       signal: AbortSignal.timeout(RULINGS_TIMEOUT_MS),

@@ -1,8 +1,7 @@
 import { describe, expect, it, beforeEach, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { NextIntlClientProvider } from "next-intl";
-import enCommon from "@/messages/en/common.json";
+import { renderWithIntl } from "@/test/render-with-intl";
 import { useThemeStore } from "@/hooks/useTheme";
 import { ThemeToggle } from "./ThemeToggle";
 
@@ -16,11 +15,7 @@ describe("ThemeToggle", () => {
   });
 
   it("selects system and paints the light mode when the OS is light", async () => {
-    render(
-      <NextIntlClientProvider locale="en" messages={{ common: enCommon }}>
-        <ThemeToggle />
-      </NextIntlClientProvider>
-    );
+    renderWithIntl(<ThemeToggle />);
 
     await userEvent.click(screen.getByRole("button", { name: "Use system theme" }));
 

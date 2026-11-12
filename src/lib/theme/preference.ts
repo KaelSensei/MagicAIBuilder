@@ -6,6 +6,8 @@
  * explicit light or dark choice already stored by an older build.
  */
 
+import { isRecord } from "@/lib/guards";
+
 /** Painted appearance. */
 export const THEME_MODES = ["light", "dark"] as const;
 
@@ -42,7 +44,7 @@ export const DARK_COLOR_SCHEME_QUERY = "(prefers-color-scheme: dark)";
  * @param value - untrusted storage or event payload
  * @returns true when the value is `light` or `dark`
  */
-export function isThemeMode(value: unknown): value is ThemeMode {
+function isThemeMode(value: unknown): value is ThemeMode {
   return value === "light" || value === "dark";
 }
 
@@ -52,7 +54,7 @@ export function isThemeMode(value: unknown): value is ThemeMode {
  * @param value - untrusted storage payload
  * @returns true when the value is `light`, `dark`, or `system`
  */
-export function isThemePreference(value: unknown): value is ThemePreference {
+function isThemePreference(value: unknown): value is ThemePreference {
   return value === "light" || value === "dark" || value === "system";
 }
 
@@ -78,16 +80,6 @@ export function resolveTheme(
       return _exhaustive;
     }
   }
-}
-
-/**
- * Checks whether a value is a plain object record.
- *
- * @param value - candidate payload
- * @returns true for non-null, non-array objects
- */
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 /**

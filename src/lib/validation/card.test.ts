@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { addCardSchema, patchCardSchema } from "./card";
+import { addCardSchema, MAX_CARD_NOTES_LENGTH, patchCardSchema } from "./card";
 
 describe("addCardSchema", () => {
   const validCard = {
@@ -150,6 +150,24 @@ describe("patchCardSchema", () => {
 
   it("rejects invalid zone", () => {
     const result = patchCardSchema.safeParse({ zone: "exile" });
+    expect(result.success).toBe(false);
+  });
+
+  it("keeps a note as long as the note editor allows", () => {
+    const notes = "x".repeat(MAX_CARD_NOTES_LENGTH);
+    const result = patchCardSchema.safeParse({ notes });
+    expect(result.success && result.data.notes).toBe(notes);
+  });
+
+  it("keeps a null note, which clears it", () => {
+    const result = patchCardSchema.safeParse({ notes: null });
+    expect(result.success && result.data.notes).toBeNull();
+  });
+
+  it("rejects a note one character over the bound", () => {
+    const result = patchCardSchema.safeParse({
+      notes: "x".repeat(MAX_CARD_NOTES_LENGTH + 1),
+    });
     expect(result.success).toBe(false);
   });
 });

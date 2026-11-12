@@ -1,0 +1,247 @@
+# Functional specs
+
+One spec per roadmap initiative. The [roadmap](../roadmap.md) says _what_ an initiative must achieve and _why_; a spec here says what it does in detail, what the market already does, what the code looks like today, and how the work splits into slices an agent or a developer can pick up without making a product decision.
+
+Written on 2026-11-08 from a market sweep of the whole category, not only the named incumbents, and from the code as it stood on `dev` that day.
+
+## How to read one
+
+Every spec follows the same shape, matching the house format already used by [`commander-power-meter.md`](../commander-power-meter.md):
+
+**Overview** · **What the market does** (sourced, dated) · **Current state in this codebase** (verified paths) · **Functional requirements** (numbered, testable) · **Data and API** · **Non-goals** · **Testing strategy** · **Delivery slices** (with dependencies) · **Open questions**
+
+The **Delivery slices** table is the part that matters for automation: each slice is independently reviewable, and the dependency column says which ones cannot start yet. Three scheduled agents pick work from this roadmap every day — the dependency edges are what stop them colliding. Once [I-74](i74-a-roadmap-agents-can-execute.md) slice 4 ships, each table is generated from `docs/product/slices/` between markers, a CI check fails when one is stale, and a spec writer edits the registry instead of the table; until then the tables are written by hand.
+
+[`dependency-graph.md`](dependency-graph.md) checks those edges across every table and lists the slices that can start now (2026-11-10).
+
+[`owner-decisions.md`](../owner-decisions.md) lists every open decision only the owner can make and opens with a "Decide this week" table. [`legal-questions.md`](../legal-questions.md) collects the lawyer questions of every spec; it is research for counsel, not legal advice. Both were compiled on 2026-11-10.
+
+## Committed work
+
+| Spec                                                                                      | Initiative | Status | The one-line reason it exists                                                                                                                             |
+| ----------------------------------------------------------------------------------------- | ---------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Checkable AI copilot](i02-checkable-ai-copilot.md)                                       | I-02       | Now    | Competitors validate **or** explain; doing both visibly is the cheapest differentiator on the roadmap                                                     |
+| [Visual direction](i13-visual-direction.md)                                               | I-13       | Next   | The audit, the measured failures, and the register chosen over the fantasy one                                                                            |
+| [Verifiable natural-language search](i14-verifiable-natural-language-search.md)           | I-14       | Next   | Showing the query is already table stakes; deck context and French are not                                                                                |
+| [Rule 0 sheets and pod profiles](i15-rule-zero-sheets-and-pod-profiles.md)                | I-15       | Next   | Everyone classifies a deck; nobody records what four people agreed                                                                                        |
+| [Decks buildable from a collection](i16-decks-buildable-from-a-collection.md)             | I-16       | Next   | Four products rank by coverage; none excludes copies already committed elsewhere                                                                          |
+| [Precon path and tiered upgrades](i17-precon-path-and-tiered-upgrades.md)                 | I-17       | Next   | The market publishes upgrade articles; none is a reversible operation on your list                                                                        |
+| [Per-deck radar of new cards](i18-per-deck-radar-of-new-cards.md)                         | I-18       | Later  | Spoiler coverage is universal and entirely set-centric; the per-deck join is open                                                                         |
+| [Offline game-night viewing](i19-offline-game-night-viewing.md)                           | I-19       | Next   | Competitors ship offline card databases; the one deck you are about to play is the honest slice                                                           |
+| [Collaborative review](i20-collaborative-review.md)                                       | I-20       | Later  | Archidekt gives collaborators direct write access; propose-and-accept exists nowhere                                                                      |
+| [Reproducible probability bench](i21-reproducible-probability-bench.md)                   | I-21       | Later  | Several tools simulate hands and two are reproducible (EDHTuner, mtg-mcp-server); none shows an interval or says when a difference is not distinguishable |
+| [Commander deckbuilding guide by bracket](i28-commander-deckbuilding-guide-by-bracket.md) | I-28       | Next   | Wizards publishes rules, sites publish advice or numbers; nobody labels the evidence, and nobody in French                                                |
+
+I-28 was added after the sweep above, on the owner's request, from its own dated research. Its content lives in [`../guides/commander-deckbuilding-by-bracket.md`](../guides/commander-deckbuilding-by-bracket.md).
+
+## 2027 horizon
+
+Six initiatives extending the pipeline into 2027, each from a verified gap in the same sweep. They are hypotheses with a stated basis, not commitments: a 2027 initiative is promoted to Next only once its open questions are answered and its dependency has shipped. Their specs are deliberately less detailed than the ones above — committing to interface details eighteen months early produces precision that ages rather than guides.
+
+| Spec                                                                              | Initiative | The gap it answers                                                                                                                 |
+| --------------------------------------------------------------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| [Verification as a public surface](i22-verification-as-a-public-surface.md)       | I-22       | Six products generate decks; none publishes a verification contract                                                                |
+| [The pod's own surface](i23-the-pods-own-surface.md)                              | I-23       | Three Discord bots answer bracket questions; none carries a pod's declared agreement                                               |
+| [Decks a screen reader can play from](i24-decks-a-screen-reader-can-play-from.md) | I-24       | Blind players adapt cards with NFC tags; no deckbuilder emits output shaped to be heard                                            |
+| [A third locale, chosen on evidence](i25-a-third-locale.md)                       | I-25       | Every AI deckbuilder found is English-only; nine catalogues sit dormant here                                                       |
+| [Collections arriving from elsewhere](i26-collections-arriving-from-elsewhere.md) | I-26       | Scanning is a non-goal, so import is the only honest way a collection gets populated                                               |
+| [Learning while building](i27-learning-while-building.md)                         | I-27       | Tools assume the vocabulary; teaching lives in video. Nobody explains a rule when it fires                                         |
+| [Cross-site Commander deck index](i29-cross-site-deck-index.md)                   | I-29       | EDHREC aggregates by partnership, and the big deck sites forbid crawling; no one offers card include/exclude search across sources |
+
+I-29 was added on 2026-11-09, after the sweep and at the owner's request, from its own dated research into source terms, EU and French law, and scale. Its research notes are not committed, so the spec links every external fact to its own source.
+
+### What the sweep ruled out for 2027
+
+Recorded so the next pass does not re-derive them:
+
+- **Tournament win rates stay blocked, by licence rather than by missing data.** _Corrected 2026-11-09._ This entry said EDHTop16 publishes no win rates, no match-level results and no public API. In fact EDHTop16 computes a win rate (wins divided by wins, losses and draws) and shows each entry's record, and its GraphQL endpoint answers only persisted queries, so it is still not a usable public API ([`llms.txt`](https://edhtop16.com/llms.txt), checked 2026-11-09). The match-level data, with seat order and each table's winner, sits upstream at TopDeck.gg, whose [Developer Terms](https://topdeck.gg/developer-terms), effective 2026-10-27, forbid commercialising API data (§7). MagicMeta and LucidPuzzle derive their tiers from EDHTop16. The roadmap's block stands, now for the right reason; I-09 carries the detail.
+- **Card scanning** stays a non-goal: ManaBox owns it, it is a native-camera capability, and I-06 defers it behind printing-level ownership regardless.
+- **A table companion** — life totals, commander damage, timers — is already served by Discord bots and the official app, and is a different product. [I-35](i35-pod-game-log.md), added on 2026-11-09, logs a result after the game and is not a table companion.
+- **Marketplace and checkout** remain excluded. I-06 hands off to sellers; it does not become one. [I-32](i32-seller-handoff-and-affiliate-carts.md) sends a list to the seller's own cart, and [I-33](i33-marketplace-ladder.md) records the stage at which the owner could decide otherwise.
+
+### Why six
+
+Beyond these, the sweep stopped producing gaps this product is positioned to fill. Further initiatives would be invention, which fills a roadmap without filling a pipeline. Extending 2027 further is the job of another dated sweep, not a longer list.
+
+## What the sweep concluded
+
+Three findings shaped every spec above.
+
+**Generation is commoditised; verification is not.** Six products sell conversational Commander building, several free. One of them documents that its own results vary between runs. What no competitor publishes is which claims were checked against card data and which are model reasoning.
+
+**The collection-to-deck direction is crowded; the ownership detail is not.** SuperBrew, DeckFinder, ManaBuilder, MTG Agents and ManaForge all rank decks by collection coverage. None states that a copy already committed to another of your decks is excluded, and none separates Oracle identity (for legality) from printing identity (for price).
+
+**Reproducibility is absent across the whole category.** Hand simulators, bracket calculators and AI builders all return a number without a seed, an interval or a sample size. For a product positioning itself on checkable output, that is the widest opening found in the sweep. _Corrected 2026-11-09:_ two tools are reproducible. EDHTuner replays the same paired seeds for the same deck, and the open-source mtg-mcp-server takes a `seed`. None found shows an interval with its sample size or says when a difference is not distinguishable, which is the opening that remains for [I-21](i21-reproducible-probability-bench.md) and [I-31](i31-deck-lab.md).
+
+## Business, reference and depth — added 2026-11-09
+
+Eight initiatives from a dated research pass on the owner's goals, stated on 2026-11-09: be one of the deckbuilding references, with more information than EDHREC and an editor more complete than Moxfield; turn the product into a cheap SaaS that pays a decent living; and perhaps become a recognised marketplace. Each goal was tested against traffic estimates, paid tiers, affiliate and data terms, EU and French law, player demand and the code on `dev`, and the [roadmap's Product Direction](../roadmap.md#owner-ambition-and-business-model-2026-11-09) summarises what the research found. The research notes are not committed, so each spec links every external fact to its own source; legal points in them are research, not legal advice. Unlike the 2027 horizon, five of these are Next in whole or in part, so the roadmap gives them [their own section](../roadmap.md#business-reference-and-depth).
+
+| Spec                                                                            | Initiative | Status                                | The one-line reason it exists                                                                                                               |
+| ------------------------------------------------------------------------------- | ---------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Business model and the paid tier](i30-business-model-and-paid-tier.md)         | I-30       | Next, behind a decision gate          | Rivals sell ad removal or AI credits; card data cannot be sold, so only usage and personal tools can, and a lawyer answers first            |
+| [Deck Lab](i31-deck-lab.md)                                                     | I-31       | Next                                  | Every simulator uses a hand-written keep rule; none solves the keep table for your list or shows an interval                                |
+| [Seller handoff and affiliate carts](i32-seller-handoff-and-affiliate-carts.md) | I-32       | Next                                  | Buy buttons are everywhere; none sends exact printings net of copies owned across decks, priced in your market, with the affiliate labelled |
+| [The marketplace ladder](i33-marketplace-ladder.md)                             | I-33       | Parked: owner decision                | Deckbuilders partner with marketplaces and none runs one; the record names the rung that would reverse the non-goal                         |
+| [Commander data reports](i34-commander-data-reports.md)                         | I-34       | Next without the index; Later with it | EDHREC publishes popularity; nobody publishes declared against estimated brackets or per-bracket norms with their n, and nobody in French   |
+| [Pod game log](i35-pod-game-log.md)                                             | I-35       | Later                                 | Trackers count wins at scale; none ties a result to the deck version played or to what the pod declared                                     |
+| [Creator and embed toolkit](i36-creator-and-embed-toolkit.md)                   | I-36       | Later; slices 1–2 Next                | The social layer here evaluates; creators need one that broadcasts: embeds, link previews, view counts, video in primers                    |
+| [Editor depth](i37-editor-depth.md)                                             | I-37       | Next                                  | Archidekt ships editor depth every few months; views, sticky groups, tags, text bulk edit and history are what players compare              |
+
+Two boundaries hold across all eight. Card data, fan content and the evidence a result shows stay free, under the Wizards Fan Content Policy and Scryfall's terms, so a paid tier can sell only usage and personal tools, and only after I-30's legal gate; every other spec names its paid-tier candidate and leaves the decision to I-30. The roadmap's non-goal "full card-trading marketplace" stays in force: I-32 builds the rungs that fit it, and I-33 records the one that would reverse it.
+
+## Trust, growth and the physical table — added 2026-11-09
+
+Specs written on the evening of 2026-11-09 by separate writers, each from its own dated research. They cover what a public, paying product owes its users, the first run and its measurement, the phone and the store, the Commander variants, the physical cards a player stores, trades and sells, and the chat rooms where pods and creators meet. As above, the research notes are not committed, each spec links every external fact to its own source, and legal points are research, not legal advice. The roadmap gives them [their own part](../roadmap.md#trust-growth-and-the-physical-table). [I-40](i40-installable-app-and-card-scanning.md) asks the owner whether card scanning leaves the non-goal list; until then, "Card scanning stays a non-goal" above stands.
+
+| Spec                                                                                    | Initiative | Status                                                      | The one-line reason it exists                                                                                                                   |
+| --------------------------------------------------------------------------------------- | ---------- | ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Trust, safety and user rights](i38-trust-safety-and-user-rights.md)                    | I-38       | Next; gates public growth and the paid tier                 | No deckbuilder read publishes a DSA contact or a full export, and here a deleted account comes back on the next request                         |
+| [First run, activation and measurement](i39-first-run-activation-and-measurement.md)    | I-39       | Next                                                        | A guest's deck is lost at sign-up, and I-30 cannot price what nobody can count; measurement stays first-party                                   |
+| [Installable app and card scanning](i40-installable-app-and-card-scanning.md)           | I-40       | Later; slices 1–5 can ship now                              | Installing a web app is cheap; scanning is the main complaint in ManaBox's own reviews, so it waits for a benchmark and the owner               |
+| [Store Commander nights](i41-store-commander-nights.md)                                 | I-41       | Later; slices 1–2 can ship now                              | EventLink records attendance and forms no pods; nobody pairs a night by declared and estimated bracket                                          |
+| [Commander variants](i42-commander-variants-duel-cedh-pauper.md)                        | I-42       | Next for slices 1–6; Later for other variants               | No format can be chosen, Duel Commander lists land in Commander decks, and no French builder checks Duel Commander legality with a dated list   |
+| [Physical collection and pull lists](i43-physical-collection-storage-and-pull-lists.md) | I-43       | Later; slices 1–5 could be promoted                         | Two products pair a deck with its box; none builds a pull list ordered by place or a put-back list                                              |
+| [Trade lists within the pod](i44-trade-lists-within-the-pod.md)                         | I-44       | Later; slices 1–7 can ship now                              | No product builds wants from a deck's missing cards and haves from unused copies; nearby matching fails without density, so the pod comes first |
+| [Selling spare cards](i45-selling-spare-cards.md)                                       | I-45       | Later; slices 0–3 can ship now                              | Sell tools start from a list the player made; only a deckbuilder knows which copies no deck uses, and the sale stays on the buyer's site        |
+| [Discord and chat integrations](i46-discord-and-chat-integrations.md)                   | I-46       | Next for previews (slices 1–3); Later for feeds and the app | A deck link unfurls as a small thumbnail with no artist credit, other pages show no image, and no bot compares a pod's decks side by side       |
+
+## Rules, access and the online table — added 2026-11-10
+
+Seven specs written on 2026-11-10 by separate writers, each from its own dated research. They cover rules answers for a deck's cards, official changes that reach every saved deck, a display that works for colour-blind and low-vision players, exports to the tables where Commander is played online, cards lent within a pod, a feedback loop players can see, and deckbuilding challenges. As above, the research notes are not committed, each spec links every external fact to its own source, and legal points are research, not legal advice. The roadmap gives I-47 to I-50 [their own part](../roadmap.md#rules-access-and-the-online-table) and adds I-51 to I-53 to [Trust, growth and the physical table](../roadmap.md#trust-growth-and-the-physical-table).
+
+| Spec                                                                                | Initiative | Status                                                      | The one-line reason it exists                                                                                                                              |
+| ----------------------------------------------------------------------------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Rules answers for this deck](i47-rules-answers-for-this-deck.md)                   | I-47       | Next for slices 1–7; Later for reviewed notes               | Rulings per card are table stakes; nobody links a card's keywords to versioned rules, and no model may answer, so the product cites, versions and declines |
+| [Official changes reach every deck](i48-official-changes-reach-every-deck.md)       | I-48       | Next for slices 1–8, before the next Commander announcement | A saved deck keeps the flags it had when each card was added, and no deckbuilder tells an owner which decks an announcement changed                        |
+| [Colour vision and low-vision display](i49-colour-vision-and-low-vision-display.md) | I-49       | Next; never paid                                            | Status colours fail contrast in the light theme and charts rely on hue alone; no deckbuilder says its charts were checked for colour blindness             |
+| [Play this deck online](i50-play-this-deck-online.md)                               | I-50       | Next for slices 0–8; Later for webcam aids                  | The shipped MTGO export writes no real card IDs and XMage rejects it; no deckbuilder builds a Tabletop Simulator object or warns what a platform lacks     |
+| [Cards lent and borrowed](i51-cards-lent-and-borrowed.md)                           | I-51       | Later; slices 1–6 could be promoted                         | Players track loans on paper slips and binders named after a friend; no deckbuilder lets a loan change what a deck counts as owned                         |
+| [A feedback loop players can see](i52-feedback-loop-players-can-see.md)             | I-52       | Next for slices 0–8; Later for the board                    | A player cannot report a bug or see what reached production, and no monitor watches the site                                                               |
+| [Monthly deckbuilding challenges](i53-monthly-deckbuilding-challenges.md)           | I-53       | Later; slices 1 and 5–8 could be promoted                   | Archidekt's monthly contest draws about a thousand decks and checks briefs by hand; nobody freezes an entry or publishes its check report                  |
+
+## Commanders, builds, wishlists and printings — added 2026-11-10
+
+Four specs from a fourth pass later on 2026-11-10, written the same way: dated research that is not committed, every external fact linked to its own source, and legal points as research, not legal advice. The roadmap places I-55 and I-57 with the editor work in [Business, reference and depth](../roadmap.md#business-reference-and-depth), and I-54 and I-56 in [Trust, growth and the physical table](../roadmap.md#trust-growth-and-the-physical-table). [I-56](i56-wishlists-friends-can-buy-from.md) proposes that [I-44](i44-trade-lists-within-the-pod.md)'s want lists become its wanted list; the owner decides.
+
+| Spec                                                                      | Initiative | Status                                                                        | The one-line reason it exists                                                                                                                                  |
+| ------------------------------------------------------------------------- | ---------- | ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Find your next commander](i54-find-your-next-commander.md)               | I-54       | Next for slices 1–7, 9, 10 and 15; Later for deck signals and indexable pages | Finders rank commanders by popularity and explain nothing; none combines a deck budget, complexity and "not like my decks", and our wizard lets a model choose |
+| [One deck, several builds](i55-one-deck-several-builds.md)                | I-55       | Next for slices 1–7 and 9                                                     | Players keep a Bracket 2 and a Bracket 3 version by duplicating decks that drift; no product keeps one core with a bracket check per build                     |
+| [Wishlists friends can buy from](i56-wishlists-friends-can-buy-from.md)   | I-56       | Next for slices 0–4; Later for the rest                                       | Every collection tool keeps a wishlist, and none lets a relative reserve a gift the owner cannot see; the favorites routes here are stubs                      |
+| [Printing preferences everywhere](i57-printing-preferences-everywhere.md) | I-57       | Next; never paid                                                              | Scryfall's newest edition was a Universes Beyond printing for 87 of 150 staples, every entry point picks its own way, and a picked printing can be replaced    |
+
+## Lands, prices, player stats and accounts — added 2026-11-10
+
+Four specs from a fifth pass on 2026-11-10, written the same way: dated research that is not committed, every external fact linked to its own source, and legal points as research, not legal advice. The roadmap places I-58 with the editor work in [Business, reference and depth](../roadmap.md#business-reference-and-depth), and I-59 to I-61 in [Trust, growth and the physical table](../roadmap.md#trust-growth-and-the-physical-table): I-61 after I-38, I-60 after I-39 and I-59 after I-45. [I-59](i59-prices-over-time-and-alerts.md) takes over [I-32](i32-seller-handoff-and-affiliate-carts.md)'s price watch, [I-45](i45-selling-spare-cards.md)'s value history and [I-56](i56-wishlists-friends-can-buy-from.md)'s slice 18, and proposes price history free; the owner confirms the free line.
+
+| Spec                                                                      | Initiative | Status                                                        | The one-line reason it exists                                                                                                                                     |
+| ------------------------------------------------------------------------- | ---------- | ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Mana base builder](i58-mana-base-builder.md)                             | I-58       | Next for slices 1–9; Later for slices 10–15                   | A model picks the wizard's lands and the shipped advice is proportional; no tool reads the player's list, collection and bracket and applies a reviewed land diff |
+| [Prices over time and alerts](i59-prices-over-time-and-alerts.md)         | I-59       | Later; slices 0–2 can ship now                                | A deck row keeps one undated price the browser sent, three deck totals disagree, and finance tools sell alerts in the language of trading                         |
+| [Player stats and year in review](i60-player-stats-and-year-in-review.md) | I-60       | Next for slices 0–5 and 13; Later for sharing and measurement | A player cannot see their decks as a whole, and no deckbuilder offers a recap of the decks themselves; the cross-deck module on `dev` is dead code                |
+| [Account security](i61-account-security.md)                               | I-61       | Next; never paid                                              | Passwords are cut at 72 bytes, sessions never expire while active, and no password can be changed or reset; no deckbuilder read offers a second factor            |
+
+## Moving in, notifications and help — added 2026-11-10
+
+Three specs from a sixth pass on 2026-11-10, written the same way: dated research that is not committed, every external fact linked to its own source, and legal points as research, not legal advice. The roadmap places all three in [Trust, growth and the physical table](../roadmap.md#trust-growth-and-the-physical-table): I-63 after I-61, I-62 after I-60 and I-64 after I-52. [I-63](i63-one-notification-system.md) takes over [I-38](i38-trust-safety-and-user-rights.md)'s email sender (slice 13) and [I-59](i59-prices-over-time-and-alerts.md)'s inbox and digest, and turns the preference columns other specs planned into categories. [I-62](i62-switching-from-another-site.md) found that the shipped Archidekt import reads an API whose terms forbid it; the owner decides.
+
+| Spec                                                                   | Initiative | Status                                                     | The one-line reason it exists                                                                                                                           |
+| ---------------------------------------------------------------------- | ---------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Switching from another site](i62-switching-from-another-site.md)      | I-62       | Next for slices 0–11 and 18; never paid                    | Moving 20 decks means 20 imports that keep names only; no product moves many decks in one step, shows what each loses, or makes a re-run change nothing |
+| [One notification system](i63-one-notification-system.md)              | I-63       | Next; web push blocked; never paid                         | Fourteen specs plan their own notices, columns and senders, while `dev` has four switches nothing reads, no email sender and no scheduled job           |
+| [Help centre and in-product guidance](i64-help-centre-and-guidance.md) | I-64       | Next for slices 0–9 and 13; Later for the rest; never paid | No help page exists, the user guide is out of date, Bracket 1 has two names, and no product read links a figure on screen to its definition             |
+
+## How a deck wins and what the product costs — added 2026-11-10
+
+Two specs from a seventh pass on 2026-11-10, written the same way: dated research that is not committed, every external fact linked to its own source, and legal points as research, not legal advice. The roadmap places I-65 after I-58 in [Business, reference and depth](../roadmap.md#business-reference-and-depth), and I-66 between I-63 and I-39 in [Trust, growth and the physical table](../roadmap.md#trust-growth-and-the-physical-table). [I-65](i65-how-this-deck-wins.md) owns the route model that [I-15](i15-rule-zero-sheets-and-pod-profiles.md), [I-28](i28-commander-deckbuilding-guide-by-bracket.md), [I-02](i02-checkable-ai-copilot.md), [I-31](i31-deck-lab.md) and [I-54](i54-find-your-next-commander.md) read. [I-66](i66-running-costs-and-margin.md) replaces [I-30](i30-business-model-and-paid-tier.md)'s guessed fixed costs and found that the domain the code falls back to is not registered.
+
+| Spec                                                        | Initiative | Status                                                                       | The one-line reason it exists                                                                                                                             |
+| ----------------------------------------------------------- | ---------- | ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [How this deck wins](i65-how-this-deck-wins.md)             | I-65       | Next for slices 1–11; slice 8 blocked on the Tagger licence; Later for 12–16 | Every tool shows combos, which end about 8% of games; none maps the other routes, the cards behind each, what finds and protects them, or what stops them |
+| [Running costs and margin](i66-running-costs-and-margin.md) | I-66       | Next for slices 0–8; internal, never shown to players                        | I-30 guessed fixed costs at €150 a month, nothing reads provider usage, and Vercel's free plan forbids the commercial use a paid tier needs               |
+
+## Card data and play-style guides — added 2026-11-10
+
+Two specs from an eighth pass on 2026-11-10, written the same way: dated research that is not committed, every external fact linked to its own source, and legal points as research, not legal advice. The roadmap places I-67 directly after I-63 in [Trust, growth and the physical table](../roadmap.md#trust-growth-and-the-physical-table), and I-68 directly after [I-28](i28-commander-deckbuilding-guide-by-bracket.md), whose content model it extends. [I-67](i67-one-card-data-pipeline.md) takes over the daily Scryfall job that [I-29](i29-cross-site-deck-index.md), [I-32](i32-seller-handoff-and-affiliate-carts.md) and [I-54](i54-find-your-next-commander.md) each planned, and every spec that waited for "the daily job" now points to one of its slices.
+
+| Spec                                                             | Initiative | Status                                                                                    | The one-line reason it exists                                                                                                                                          |
+| ---------------------------------------------------------------- | ---------- | ----------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [One card data pipeline](i67-one-card-data-pipeline.md)          | I-67       | Next for slices 0–13; slices 1, 2 and 4 start now; never paid                             | Sixteen specs wait for "the daily job" and six plan their own Scryfall schedule, while nothing on `dev` reads a bulk file and seven Next slices cannot run without one |
+| [Archetype guides from play experience](i68-archetype-guides.md) | I-68       | Next for slices 0–8 and 14; Later for the deck panel, norms and French; guides never paid | Style guides are one writer's experience with no counts, brackets, mulligans or budget path, none reads the reader's deck, and none is in French                       |
+
+## Operations, AI quality and recovery — added 2026-11-10
+
+Three specs from a ninth pass on 2026-11-10, written the same way: dated research that is not committed, every external fact linked to its own source, and legal points as research, not legal advice. The roadmap places I-70 directly after [I-02](i02-checkable-ai-copilot.md), whose output it judges with I-02's own validator; I-71 directly after [I-05](i05-production-safety.md), whose health route and shared store it builds on; and I-69 directly before [I-38](i38-trust-safety-and-user-rights.md) in [Trust, growth and the physical table](../roadmap.md#trust-growth-and-the-physical-table), as the operator side of moderation. [I-70](i70-ai-quality-bench-and-model-changes.md) replaces the "golden set" that [I-30](i30-business-model-and-paid-tier.md) slice 3 waited for, and [I-71](i71-speed-uptime-and-recovery.md) slice 12 gates I-30's first paid entitlements. The same pass's gap sweep added scope to existing initiatives and L-40 to L-48 to [`legal-questions.md`](../legal-questions.md).
+
+| Spec                                                                             | Initiative | Status                            | The one-line reason it exists                                                                                                                                                                    |
+| -------------------------------------------------------------------------------- | ---------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [Operator console](i69-operator-console-support-moderation-and-kill-switches.md) | I-69       | Next for slices 0–7; nothing sold | Every lever is ad hoc: a moderator boolean set in SQL, an AI ceiling that takes a redeploy, upstream calls nobody can stop; flag and admin vendors add a processor or cost more than the hosting |
+| [AI quality bench and model changes](i70-ai-quality-bench-and-model-changes.md)  | I-70       | Next for slices 0–13; never paid  | The "golden set" calls no model, the model in use is past its earliest retirement date, and no AI deck tool publishes a test set or a before-and-after                                           |
+| [Speed, uptime and recovery](i71-speed-uptime-and-recovery.md)                   | I-71       | Next for slices 0–8; never paid   | Production on Supabase Free keeps no backups, the docs give a production `--force-reset`, and no budget, alert or restore drill exists                                                           |
+
+## Growth, releases, automation and search — added 2026-11-10
+
+Four specs from a tenth pass on 2026-11-10, written the same way: dated research that is not committed, every external fact linked to its own source, and legal points as research, not legal advice. The roadmap places I-72 directly after [I-39](i39-first-run-activation-and-measurement.md), whose events measure its loops; I-73 directly after [I-67](i67-one-card-data-pipeline.md), whose events feed its release calendar and whose gate it changes; I-74 directly after [I-71](i71-speed-uptime-and-recovery.md), with the engineering work; and I-75 directly after [I-08](i08-share-compare-and-learn.md), whose public decks it searches. [I-72](i72-growth-loops-referrals-creators-and-return.md) takes I-30's referral credit, I-36's creator kit and I-34's publishing calendar; [I-75](i75-finding-public-decks.md) re-scopes [I-29](i29-cross-site-deck-index.md) slice 4 to external decks behind its query contract. Three of their proposals would reverse a non-goal or a shipped behaviour, so they are owner decisions D-80 to D-84 in [`owner-decisions.md`](../owner-decisions.md), and L-49 and L-50 join [`legal-questions.md`](../legal-questions.md).
+
+| Spec                                                                                              | Initiative | Status                                                                    | The one-line reason it exists                                                                                                                                                                   |
+| ------------------------------------------------------------------------------------------------- | ---------- | ------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Growth loops, referrals, creators and return](i72-growth-loops-referrals-creators-and-return.md) | I-72       | Next for slices 1, 5, 7–9, and 2–3 after I-39's event store; nothing sold | A visitor cannot fork a shared deck without losing it, nothing records where an account came from, and no initiative owned a referral, a creator programme or a rule for bringing a player back |
+| [Every set release, ready on day one](i73-every-set-release-ready-on-day-one.md)                  | I-73       | Next for slices 0–6; content free                                         | Search hides preview cards, the editor accepts them unlabelled, the copilot calls them "not legal", and I-67's gate would hold the card data on the day a set turns legal                       |
+| [A roadmap agents can execute](i74-a-roadmap-agents-can-execute.md)                               | I-74       | Next for slices 0–13; scheduled agents pick none; never paid              | Three daily runs read a roadmap that stops at I-37, a lane written by hand and rules that live only in a prompt, while `dev` and `staging` have no protection                                   |
+| [Finding public decks](i75-finding-public-decks.md)                                               | I-75       | Next for slices 0–7 and 10; searching never paid                          | Nothing lists public decks across authors, the commander page loads every deck to keep 50, and no deck site shows exclusion filters, a price with its basis or an alert on a saved search       |
+
+## Deckbuilding across card games — added 2026-11-11
+
+Four specs from an eleventh pass on 2026-11-11, written the same way: dated research that is not committed, every external fact linked to its own source, and legal points as research, not legal advice. The pass read deckbuilders for other card games as well as Magic's; its review is section 12 of [`competitive-landscape.md`](../competitive-landscape.md#12-deckbuilding-across-card-games-2026-11-11). The roadmap places I-77 directly after [I-03](i03-trustworthy-deck-feedback.md), whose score it makes auditable; I-79 directly after [I-15](i15-rule-zero-sheets-and-pod-profiles.md), whose comparison it reuses; I-76 directly after [I-58](i58-mana-base-builder.md), whose reviewed change set it applies through; and I-78 directly after [I-65](i65-how-this-deck-wins.md), whose definition format it reuses. [I-58](i58-mana-base-builder.md) gains slice 16, the change set both apply through, and [I-16](i16-decks-buildable-from-a-collection.md)'s non-goal on generating a full list from the collection stands: I-76 fills a deck the player started. Owner decisions D-88 to D-95 join [`owner-decisions.md`](../owner-decisions.md), and L-51 and L-52 join [`legal-questions.md`](../legal-questions.md).
+
+| Spec                                                                                  | Initiative | Status                                                      | The one-line reason it exists                                                                                                                                               |
+| ------------------------------------------------------------------------------------- | ---------- | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Complete this deck from my collection](i76-complete-this-deck-from-my-collection.md) | I-76       | Next for slices 0–16; one deck's completion never paid      | Nothing fills the open slots of a player's own deck from their own cards; the AI routes never read the collection and the "Collection only" toggle filters nothing          |
+| [A bracket estimate players can audit](i77-a-bracket-estimate-players-can-audit.md)   | I-77       | Next for slices 0–12; never paid                            | The estimate hides its official floors inside an average, is never stored or benchmarked, and published calculators state accuracy without the baseline of a constant guess |
+| [What this deck does to the table](i78-what-this-deck-does-to-the-table.md)           | I-78       | Next for slices 1–3; never paid for one deck                | No tool lists what a player's own list gives to, takes from and provokes in the other three players, while the bracket rules name four such effects                         |
+| [Table sets: decks built to play together](i79-table-sets.md)                         | I-79       | Later, behind two demand gates; building and exporting free | No initiative owns two to four decks built for one table, checked across seats for a duplicate commander or a shared physical copy, and exported together                   |
+
+## Discipline
+
+A spec is a plan, not a record. It does not mark anything shipped — the roadmap's `Status` and its scope checkboxes remain the only source of truth for what exists. Competitor rows are claims read from public pages on a stated date, not evidence; revalidate before a row justifies implementation.
+
+
+## Feature contracts (2026-11-11)
+
+The roadmap is an index. Each initiative's detail lives in one file in this folder. Files that already had a slice table keep it; the player contract and the roadmap text that used to sit under the initiative were appended, under "Feature contract" and "Record moved from the roadmap". Initiatives that had no file now have one. Those new files have no delivery-slice table, so the dependency generator does not invent slices for them.
+
+`_TEMPLATE.md` is the shape of a new file. Every initiative is **Full**, including Later and Parked. The moved roadmap text is kept in full, and each scope line also has a story, a happy path, a failure, and an edge case.
+
+New files this pass:
+
+- [`i01-deck-editor-workflow.md`](i01-deck-editor-workflow.md)
+- [`i03-trustworthy-deck-feedback.md`](i03-trustworthy-deck-feedback.md)
+- [`i04-ux-stability-and-visual-quality.md`](i04-ux-stability-and-visual-quality.md)
+- [`i05-production-safety.md`](i05-production-safety.md)
+- [`i06-collection-and-purchase-planning.md`](i06-collection-and-purchase-planning.md)
+- [`i07-playtest-and-iteration.md`](i07-playtest-and-iteration.md)
+- [`i08-share-compare-and-learn.md`](i08-share-compare-and-learn.md)
+- [`i09-meta-and-evidence.md`](i09-meta-and-evidence.md)
+- [`i10-interoperability-and-integrations.md`](i10-interoperability-and-integrations.md)
+- [`i11-localization-and-regional-experience.md`](i11-localization-and-regional-experience.md)
+- [`i12-local-ai.md`](i12-local-ai.md)
+- [`i80-print-shop-file.md`](i80-print-shop-file.md)
+- [`i81-a-review-of-the-goldfish-sessions-you-recorded.md`](i81-a-review-of-the-goldfish-sessions-you-recorded.md)
+- [`i82-what-changed-since-the-last-session.md`](i82-what-changed-since-the-last-session.md)
+- [`i83-a-primer-draft-filled-from-the-decks-own-reports.md`](i83-a-primer-draft-filled-from-the-decks-own-reports.md)
+- [`i84-a-reprint-watch-for-cards-you-own.md`](i84-a-reprint-watch-for-cards-you-own.md)
+- [`i85-player-supplied-art-that-never-replaces-the-card.md`](i85-player-supplied-art-that-never-replaces-the-card.md)
+- [`i86-a-data-as-of-line-on-every-deck.md`](i86-a-data-as-of-line-on-every-deck.md)
+- [`i87-goldfish-the-deck-you-downloaded.md`](i87-goldfish-the-deck-you-downloaded.md)
+- [`i88-a-pre-game-script-that-fills-the-rule-0-sheet.md`](i88-a-pre-game-script-that-fills-the-rule-0-sheet.md)
+- [`i89-the-condition-of-a-physical-copy.md`](i89-the-condition-of-a-physical-copy.md)
+- [`i90-a-cardsphere-file-you-upload-yourself.md`](i90-a-cardsphere-file-you-upload-yourself.md)
+- [`i91-an-explainer-that-cannot-change-the-deck.md`](i91-an-explainer-that-cannot-change-the-deck.md)
+- [`i92-public-deck-pages-described-with-stored-fields-only.md`](i92-public-deck-pages-described-with-stored-fields-only.md)
+- [`i93-a-reading-mode-for-the-table.md`](i93-a-reading-mode-for-the-table.md)
+- [`i94-four-lists-pinned-for-one-night.md`](i94-four-lists-pinned-for-one-night.md)
+- [`i95-a-changelog-for-the-public-read-api.md`](i95-a-changelog-for-the-public-read-api.md)
+- [`i96-two-labelled-prices-and-no-conversion.md`](i96-two-labelled-prices-and-no-conversion.md)
+- [`i97-the-chance-one-card-is-in-your-hand.md`](i97-the-chance-one-card-is-in-your-hand.md)
+- [`i98-a-cedh-checklist-that-does-not-claim-a-win-rate.md`](i98-a-cedh-checklist-that-does-not-claim-a-win-rate.md)

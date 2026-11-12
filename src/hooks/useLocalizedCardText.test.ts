@@ -5,8 +5,8 @@ import type { ScryfallCard } from "@/lib/scryfall/types";
 const useLocale = vi.fn<() => string>();
 const useCardPrintings = vi.fn();
 
-vi.mock("next-intl", () => ({ useLocale: () => useLocale() }));
-vi.mock("./useCardPrintings", () => ({
+vi.mock(import("next-intl"), () => ({ useLocale: () => useLocale() }));
+vi.mock(import("./useCardPrintings"), () => ({
   useCardPrintings: (name: string | null, lang?: string) =>
     useCardPrintings(name, lang),
 }));

@@ -1,0 +1,62 @@
+You are a Magic: The Gathering Commander deck builder expert.
+
+Build a complete Commander deck with these STRICT constraints:
+
+COLOR IDENTITY (CRITICAL — DO NOT VIOLATE):
+- Required colors: Colorless (Colorless)
+- The commander's color identity MUST be exactly {C} — no more, no fewer colors
+- Example: if colors are Blue + Black, use a Dimir commander (color identity UB), NOT a 4-color commander
+- Every non-land card in the deck must be castable within the Colorless color identity
+
+STRATEGY: Ramp
+BUDGET: No limit
+POWER LEVEL: Bracket 2 (Core): unoptimized and straightforward
+COMMANDER: Choose the best commander whose color identity is EXACTLY {C} — meaning the commander uses ONLY these colors and no others
+
+PLAYER-REVIEWED DECK PLAN (FOLLOW THIS STRUCTURE):
+GAMEPLAN:
+Accelerate ahead of the table and turn the mana advantage into high-impact threats.
+
+WIN CONDITIONS:
+- Resolve and protect oversized threats
+- Convert excess mana into a scalable finisher
+
+ROLE TARGETS:
+- Lands: 36-38 cards
+- Ramp: 14-16 cards
+- Card advantage: 10-12 cards
+- Interaction: 8-10 cards
+- Board wipes: 2-3 cards
+- Protection: 3-5 cards
+
+REVIEWED CONSTRAINTS:
+- Colorless color identity only
+- Choose a commander with exactly Colorless color identity
+- Favor accessible cards; no price cap
+- Bracket 2 (Core): unoptimized and straightforward
+- No Game Changers
+- No two-card combos (game-ending, lockout or infinite)
+- No mass land denial or chained extra turns
+- Tutors are allowed unless they are Game Changers
+- Expect to play at least 8 turns before you win or lose
+
+Return a complete Commander decklist as ONLY valid JSON (no markdown, no text outside JSON):
+{
+  "commander": "Exact Commander Name",
+  "partner": null,
+  "cards": [
+    { "name": "Exact Card Name", "quantity": 1, "category": "ramp|draw|removal|boardWipe|land|creature|protection|winCondition|other" }
+  ]
+}
+
+STRICT RULES:
+- The quantities in "cards" must sum to EXACTLY 99 — this is mandatory
+- Every card except basic lands is singleton: give them "quantity": 1
+- Group basic lands into a single entry each with the right quantity, e.g. { "name": "Island", "quantity": 12 }
+- If using a partner commander, set "partner" and make the quantities sum to EXACTLY 98
+- Include approximately 36-38 lands
+- Use basic lands matching your color identity only (Plains/Island/Swamp/Mountain/Forest)
+- All cards must be legal in Commander format
+- No cards outside the commander's color identity
+- Respect budget (skip expensive staples if over budget)
+- Return ONLY the JSON object, nothing else

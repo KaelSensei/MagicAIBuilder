@@ -1,27 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import React from "react";
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { act, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { NextIntlClientProvider } from "next-intl";
-import enDeck from "@/messages/en/deck.json";
+import { renderWithIntl } from "@/test/render-with-intl";
 
-vi.mock("@/i18n/navigation", () => ({
-  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) =>
-    React.createElement("a", { href, ...props }, children),
-  useRouter: () => ({ replace: vi.fn(), push: vi.fn() }),
-  usePathname: () => "/",
-}));
+vi.mock(import("@/i18n/navigation"), () => import("@/test/i18n-navigation-stub"));
 
-import enCommon from "@/messages/en/common.json";
 import { DeckRatingPanel, type DeckRatingsResponse } from "./DeckRatingPanel";
-
-function renderWithIntl(ui: React.ReactElement) {
-  return render(
-    <NextIntlClientProvider locale="en" messages={{ deck: enDeck, common: enCommon }}>
-      {ui}
-    </NextIntlClientProvider>
-  );
-}
 
 const EMPTY_AGGREGATE: DeckRatingsResponse = {
   average: 0,

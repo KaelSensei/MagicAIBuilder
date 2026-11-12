@@ -3,11 +3,13 @@ import { prisma } from "@/lib/db/prisma";
 import { requireDeckOwner } from "@/lib/auth/helpers";
 import { logger } from "@/lib/logger";
 import { restoredDeckCards } from "@/lib/deck/snapshot-restore";
-
-type Params = { params: Promise<{ id: string; snapshotId: string }> };
+import type { RouteParams } from "@/lib/api/route-kit";
 
 // POST /api/decks/[id]/snapshots/[snapshotId]/restore — restore deck to snapshot state
-export async function POST(_req: Request, { params }: Params) {
+export async function POST(
+  _req: Request,
+  { params }: RouteParams<"id" | "snapshotId">
+) {
   const { id, snapshotId } = await params;
   try {
     const ownership = await requireDeckOwner(id);

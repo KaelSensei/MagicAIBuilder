@@ -1,22 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { installFakeDeckClient } from "@/test/fake-deck-client";
+import { recordToasts } from "@/test/toast-recorder";
 import type { DeckCard } from "./types";
 import { createEmptyDeck } from "./store-factories";
+import { useDeckStore } from "./store";
 
-const mocks = vi.hoisted(() => ({
-  updateCardZone: vi.fn(),
-  updateDeck: vi.fn(),
-  addToast: vi.fn(),
-}));
-
-vi.mock("@/lib/db/deck-api", () => ({
-  updateCardZone: mocks.updateCardZone,
-  updateDeck: mocks.updateDeck,
-}));
-vi.mock("@/hooks/useToast", () => ({
-  useToastStore: { getState: () => ({ add: mocks.addToast }) },
-}));
-
-const { useDeckStore } = await import("./store");
+const deckApi = installFakeDeckClient();
+const mocks = {
+  updateCardZone: deckApi.updateCardZone,
+  updateDeck: deckApi.updateDeck,
+  addToast: recordToasts(),
+};
 
 /**
  * Seed one owned deck with a main-zone card.
@@ -195,7 +189,7 @@ describe("deck zone save recovery", () => {
     const saved = useDeckStore.getState().decks["deck-1"];
     expect(saved.cards.find((entry) => entry.id === "legacy-1")?.zone).toBe("maybeboard");
     expect(saved.maybeboard.map((entry) => entry.id)).toEqual(["legacy-1"]);
-    expect(mocks.updateCardZone).toHaveBeenCalledWith("deck-1", "legacy-1", "maybeboard");
+    expect(mocks.updateCardZone).toHaveBeenCalledWith({ deckId: "deck-1" }, "legacy-1", "maybeboard");
   });
 
   it("undoes a zone move back to the previous persisted zone", async () => {
@@ -207,7 +201,7 @@ describe("deck zone save recovery", () => {
 
     expect(useDeckStore.getState().decks["deck-1"].cards[0]?.zone).toBe("main");
     expect(useDeckStore.getState().decks["deck-1"].maybeboard).toHaveLength(0);
-    expect(mocks.updateCardZone).toHaveBeenCalledWith("deck-1", "card-1", "main");
+    expect(mocks.updateCardZone).toHaveBeenCalledWith({ deckId: "deck-1" }, "card-1", "main");
   });
 
   it("keeps the undo action when reversing a zone move fails", async () => {

@@ -25,44 +25,8 @@ import { CategoryFilter, DeckCardStrip } from "./DeckPreviewChrome";
 import type { CardCategory } from "@/lib/deck/types";
 import { CATEGORY_LABELS, CATEGORY_ORDER } from "@/lib/deck/categories";
 import { logger } from "@/lib/logger";
-
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-interface ApiCard {
-  readonly id: string;
-  readonly scryfallId: string;
-  readonly name: string;
-  readonly manaCost: string;
-  readonly cmc: number;
-  readonly typeLine: string;
-  readonly oracleText: string;
-  readonly colorIdentity: readonly string[];
-  readonly isGameChanger: boolean;
-  readonly isBanned: boolean;
-  readonly price: number | null;
-  readonly imageUri: string;
-  readonly artCropUri: string;
-  readonly category: string;
-  readonly quantity: number;
-  readonly isCommander: boolean;
-  readonly isPartner: boolean;
-}
-
-interface ApiSharedDeck {
-  readonly id: string;
-  readonly name: string;
-  readonly format: string;
-  readonly targetBracket: number;
-  readonly budget: number | null;
-  readonly commanderId: string | null;
-  readonly partnerId: string | null;
-  readonly companionId: string | null;
-  readonly pairingType: string;
-  readonly shareEnabled: boolean;
-  readonly cards: readonly ApiCard[];
-  readonly createdAt: string;
-  readonly updatedAt: string;
-}
+import type { ApiCard, ApiSharedDeck } from "@/lib/deck/share-types";
+import { normalizeScryfallImageUrl } from "@/lib/scryfall/images";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -71,6 +35,7 @@ const BRACKET_COLORS: Record<number, string> = {
   2: "text-blue-400 bg-blue-400/10 border-blue-400/30",
   3: "text-amber-400 bg-amber-400/10 border-amber-400/30",
   4: "text-red-400 bg-red-400/10 border-red-400/30",
+  5: "text-fuchsia-400 bg-fuchsia-400/10 border-fuchsia-400/30",
 };
 
 function computeManaCurve(cards: ApiCard[]): Record<number, number> {
@@ -112,7 +77,9 @@ function CardRow({ card }: { readonly card: ApiCard }) {
       {card.artCropUri ? (
         <div
           className="w-6 h-6 rounded-sm shrink-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: `url(${card.artCropUri})` }}
+          style={{
+            backgroundImage: `url(${normalizeScryfallImageUrl(card.artCropUri)})`,
+          }}
         />
       ) : (
         <div className="w-6 h-6 rounded-sm shrink-0 bg-[var(--border)]" />
@@ -210,7 +177,7 @@ export function ShareDeckView({ deck }: ShareDeckViewProps) {
 
   const bgStyle = commander?.artCropUri
     ? {
-        backgroundImage: `url(${commander.artCropUri})`,
+        backgroundImage: `url(${normalizeScryfallImageUrl(commander.artCropUri)})`,
         backgroundSize: "cover",
         backgroundPosition: "center top",
       }

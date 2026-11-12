@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { requireAuth } from "@/lib/auth/helpers";
 import { logger } from "@/lib/logger";
+import { withRequestLog } from "@/lib/api/route-kit";
 
 /**
  * GET /api/user/init — combined bootstrap endpoint.
@@ -11,18 +12,10 @@ import { logger } from "@/lib/logger";
  * @returns JSON with { onboardingDone, collection }
  */
 export async function GET() {
-  const startedAt = performance.now();
-  let status = 500;
-  try {
-    const response = await loadUserInit();
-    status = response.status;
-    return response;
-  } finally {
-    logger.info("User init request completed", "GET /api/user/init", {
-      status,
-      durationMs: Math.round(performance.now() - startedAt),
-    });
-  }
+  return withRequestLog(
+    { message: "User init request completed", context: "GET /api/user/init" },
+    loadUserInit
+  );
 }
 
 /**

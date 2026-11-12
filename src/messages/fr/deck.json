@@ -1,5 +1,21 @@
 {
   "publicLoading": "Chargement du deck...",
+  "public": {
+    "bracket": "Bracket {bracket}",
+    "aiGenerated": "Généré par IA",
+    "saveDeck": "Enregistrer le deck",
+    "savingDeck": "Enregistrement du deck",
+    "savedDeck": "Deck enregistré",
+    "saveFailed": "Impossible d’enregistrer le deck",
+    "fork": "Dupliquer",
+    "forking": "Duplication…",
+    "forkDeck": "Dupliquer le deck",
+    "forkingDeck": "Duplication du deck",
+    "forkedFrom": "Copie de <link>{source}</link>",
+    "forkSource": "{name} par {author}",
+    "deckShared": "Deck partagé",
+    "printGuide": "Imprimer le guide"
+  },
   "savedFolders": {
     "eyebrow": "Bibliothèque communautaire",
     "title": "Decks publics enregistrés",
@@ -75,6 +91,7 @@
     "startBuildingDescription": "Créez votre premier deck Commander avec le scoring de bracket en direct et la détection de Game Changers.",
     "createDeck": "Créer un deck",
     "newDeck": "Nouveau deck",
+    "newDeckName": "Nouveau deck {index}",
     "deleteConfirm": "Supprimer ce deck ? Cette action est irréversible.",
     "loadFailedTitle": "Impossible de charger vos decks",
     "loadFailedDescription": "Le serveur a rejeté la requête, cette liste peut donc être incomplète. Vos decks ne sont pas perdus — réessayez dans un instant.",
@@ -147,7 +164,8 @@
     "delete": "Supprimer {name}",
     "manualBracket": "Bracket manuel",
     "autoBracket": "Bracket auto",
-    "gameChanger": "Game Changer"
+    "gameChanger": "Game Changer",
+    "aiBadge": "IA"
   },
   "table": {
     "deck": "Deck",
@@ -178,10 +196,27 @@
     "validating": "Validation de {count} cartes avec Scryfall...",
     "importSuccess": "{count} cartes importées avec succès.",
     "importFailed": "Échec de l’import des cartes.",
+    "lookupFailed": "La recherche des cartes n’a pas répondu. Rien n’a été importé ; réessayez.",
     "close": "Fermer",
     "cancel": "Annuler",
     "import": "Importer",
     "previewDecklist": "Prévisualiser la liste",
+    "moxfieldRefused": "Moxfield a refusé la requête de MagicAIBuilder : ce deck ne peut donc pas être récupéré d’ici. Pour l’importer quand même, ouvrez le deck sur moxfield.com, utilisez Export pour copier la liste en texte, puis collez-la dans l’onglet {tab}.",
+    "moxfieldProfiles": {
+      "title": "Profils Moxfield",
+      "description": "Enregistrez un nom d’utilisateur pour importer rapidement l’un de ses decks publics.",
+      "username": "Nom d’utilisateur Moxfield",
+      "saveProfile": "Enregistrer le profil",
+      "loadDecks": "Charger les decks",
+      "loading": "Chargement…",
+      "retry": "Réessayer",
+      "loadFailed": "Impossible de charger les decks Moxfield.",
+      "savedProfiles": "Profils Moxfield enregistrés",
+      "removeProfile": "Retirer @{profile}",
+      "deckPages": "Pages de decks Moxfield",
+      "range": "{first, number}–{last, number} sur {total, plural, one {# deck} other {# decks}}",
+      "importDeck": "Importer {name}"
+    },
     "previewZone": {
       "main": "Principal",
       "sideboard": "Réserve",
@@ -207,29 +242,17 @@
       "zones": "Principal {main} · Réserve {sideboard} · À envisager {maybeboard}"
     }
   },
-  "templates": {
-    "title": "Modèles pour {commander}",
-    "subtitle": "Partez d’un deck sélectionné et personnalisez-le",
-    "close": "Fermer",
-    "loading": "Chargement des modèles...",
-    "loadFailed": "Échec du chargement des modèles",
-    "empty": "Aucun modèle disponible pour ce commandant pour l’instant",
-    "filterByArchetype": "Filtrer par archétype",
-    "all": "Tous",
-    "official": "Officiel",
-    "byAuthor": "{archetype} par {author}",
-    "use": "Utiliser"
-  },
   "bulkEdit": {
     "title": "Édition en bloc — {name}",
     "close": "Fermer",
     "description": "Modifiez votre liste directement. Une carte par ligne : <code>1 Nom de carte</code>. Ajoutez un en-tête <code>Commander</code> pour définir votre commandant.",
     "saving": "Enregistrement...",
-    "clearing": "Suppression du deck existant...",
-    "rebuilding": "Reconstruction du deck...",
-    "reloading": "Enregistré ! Rechargement du deck...",
     "saved": "{count, plural, one {# carte enregistrée avec succès.} other {# cartes enregistrées avec succès.}}",
     "saveFailed": "Échec de l’enregistrement des modifications.",
+    "lookupFailed": "Rien n’a été enregistré — la recherche des cartes n’a pas répondu. Votre liste est conservée ; réessayez l’enregistrement.",
+    "unknownCards": "Rien n’a été enregistré — aucune carte trouvée pour : {names}",
+    "invalidPartner": "Rien n’a été enregistré — {name} ne peut pas être associé à ce commandant.",
+    "invalidCompanion": "Rien n’a été enregistré — {name} ne peut pas être le compagnon de ce deck.",
     "lineCount": "{count, plural, one {# ligne} other {# lignes}}",
     "save": "Enregistrer",
     "savedButton": "Enregistré !"
@@ -300,6 +323,10 @@
     "title": "Exporter des planches de proxys",
     "description": "Configurez et imprimez les proxys de votre deck.",
     "paper": "Papier",
+    "paperOption": {
+      "a4": "A4",
+      "letter": "Lettre US"
+    },
     "layout": "Disposition",
     "quality": "Qualité",
     "qualityOption": {
@@ -319,7 +346,8 @@
     "preload": "Précharger les images",
     "print": "Imprimer / Enregistrer en PDF",
     "hintArt": "Préchargez les images, puis imprimez. Choisissez « Enregistrer en PDF » dans la boîte de dialogue. Ordinateur recommandé.",
-    "hintTextOnly": "Sans images — l'impression s'ouvre immédiatement avec le nom, le type et le texte de règles. Choisissez « Enregistrer en PDF » dans la boîte de dialogue."
+    "hintTextOnly": "Sans images — l'impression s'ouvre immédiatement avec le nom, le type et le texte de règles. Choisissez « Enregistrer en PDF » dans la boîte de dialogue.",
+    "popupBlocked": "Fenêtre pop-up bloquée — autorisez les pop-ups pour ce site"
   },
   "buyList": {
     "buyLater": "Plus tard",
@@ -333,6 +361,7 @@
     "nothingPlanned": "Aucun achat prévu maintenant",
     "sessionOnly": "Plan enregistré dans ce navigateur pour ce deck. Votre collection ne change pas.",
     "intentSaved": "Enregistré en privé pour ce deck sur vos appareils connectés. Votre collection ne change pas.",
+    "saveFailed": "Impossible d'enregistrer votre choix — réessayez",
     "deferredCount": "{count, plural, one {# carte pour plus tard} other {# cartes pour plus tard}}",
     "knownSubtotal": "Sous-total connu",
     "priceUnavailable": "Prix indisponible",
@@ -350,6 +379,13 @@
     "noData": "Pas encore de données de bracket",
     "score": "Score de bracket",
     "target": "Cible",
+    "name": {
+      "1": "Exhibition",
+      "2": "Basique",
+      "3": "Amélioré",
+      "4": "Optimisé",
+      "5": "cEDH"
+    },
     "manualOverride": "Forçage manuel — Bracket {bracket}",
     "ignoresGameChangers": "Ignore les règles Game Changers",
     "resetToCalculated": "Revenir au bracket calculé",
@@ -363,11 +399,10 @@
       "ramp": "Rampe",
       "draw": "Pioche",
       "removal": "Removal",
-      "tutors": "Tuteurs",
       "winSpeed": "Vitesse de victoire",
       "avgCmc": "CMC moyen"
     },
-    "infiniteCombos": "{count, plural, one {# combo infini à 2 cartes → Bracket 4 (règle RC)} other {# combos infinis à 2 cartes → Bracket 4 (règle RC)}}",
+    "infiniteCombos": "{count, plural, one {# combo infini à 2 cartes} other {# combos infinis à 2 cartes}} → Bracket {bracket} minimum (aucun en brackets 1–2, aucun avant le tour 6 en bracket 3)",
     "gameChangers": "{count, plural, one {# Game Changer} other {# Game Changers}}",
     "gcForcesB4": " → Bracket 4 minimum (plus de 3 GC)",
     "gcForcesB3": " → Bracket 3 minimum (GC interdits en B1/B2)",
@@ -379,44 +414,11 @@
       "optional": "Conseils facultatifs pour le deck"
     }
   },
-  "budget": {
-    "title": "Optimisation du budget",
-    "close": "Fermer",
-    "closeOverlay": "Fermer la fenêtre d'optimisation du budget",
-    "current": "Actuel :",
-    "target": "Cible :",
-    "saveUpTo": "Jusqu'à {amount} d'économie",
-    "save": "{amount} d'économie",
-    "goalReached": "Objectif de budget atteint !",
-    "withinBudget": "Votre deck respecte déjà le budget.",
-    "apply": "Appliquer"
-  },
-  "shoppingList": {
-    "title": "Liste d'achat",
-    "close": "Fermer",
-    "closeOverlay": "Fermer la liste d'achat",
-    "card": "Carte",
-    "qty": "Qté",
-    "unit": "Unité",
-    "total": "Total",
-    "subtotal": "Sous-total : {amount}",
-    "unpricedNote": "{count, plural, one {# carte sans prix connu — comptée à zéro dans le CSV} other {# cartes sans prix connu — comptées à zéro dans le CSV}}",
-    "copy": "Copier",
-    "copied": "Copié !",
-    "downloadCsv": "Télécharger le CSV"
-  },
   "companion": {
     "title": "Companion",
     "zoneHint": "(réserve)",
     "emptyHint": "Activez <strong>Companion</strong> dans la recherche, puis cliquez une carte Companion. Elle reste séparée de l'onglet Réserve.",
     "clear": "Retirer"
-  },
-  "maybeboard": {
-    "notCounted": "Non comptées dans les 99",
-    "empty": "Aucune carte ici pour l'instant",
-    "moveToDeck": "Déplacer vers le deck",
-    "deck": "Deck",
-    "remove": "Retirer de cette zone"
   },
   "community": {
     "upvote": "Voter pour",
@@ -457,6 +459,11 @@
     "analysedAgo": "Analysé {time}",
     "addCommanderHint": "Ajoutez un commandant pour obtenir des suggestions",
     "retry": "Réessayer",
+    "limits": {
+      "buildAllowanceExhausted": "Constructions IA du mois épuisées ({limit}). Elles se renouvellent le {date}. Vous pouvez toujours construire un deck à la main.",
+      "suggestAllowanceExhausted": "Suggestions IA du mois épuisées ({limit}). Elles se renouvellent le {date}. Tout le reste fonctionne normalement.",
+      "spendCeilingReached": "Les fonctions IA sont en pause jusqu'au {date}. Tout le reste fonctionne normalement."
+    },
     "cardsToAdd": "Cartes à ajouter",
     "cardsToCut": "Cartes à retirer",
     "ignored": "{count} ignorées",
@@ -524,7 +531,14 @@
     "minCards": "Ajoutez au moins 10 cartes pour détecter les combos",
     "checking": "Vérification avec Commander Spellbook…",
     "noKnown": "Aucun combo connu détecté",
-    "infinite": "Combos infinis"
+    "infinite": "Combos infinis",
+    "unavailable": "Commander Spellbook est injoignable : les combos n’ont pas été vérifiés. Réessayez plus tard.",
+    "prerequisites": "Prérequis",
+    "otherPiece": "Il faut aussi : {piece}",
+    "manaNeeded": "Mana nécessaire : {mana}",
+    "viewOnSpellbook": "Étapes sur Commander Spellbook",
+    "credit": "Données de combos : <link>Commander Spellbook</link>",
+    "observedLabel": "Résultats Commander Spellbook observés le {date}"
   },
   "meta": {
     "title": "Analyse Méta",
@@ -584,7 +598,8 @@
     "no": "Non",
     "deleteConfirm": "Supprimer ?",
     "restoreTooltip": "Restaurer ce snapshot",
-    "deleteTooltip": "Supprimer le snapshot"
+    "deleteTooltip": "Supprimer le snapshot",
+    "toggleList": "Liste des snapshots"
   },
   "share": {
     "title": "Partager le deck",
@@ -599,6 +614,7 @@
     "enableToGenerate": "Activez le partage pour générer un lien public en lecture seule pour ce deck.",
     "copyLink": "Copier le lien",
     "copiedLink": "Copié !",
+    "linkLabel": "Lien de partage",
     "readOnly": "Lecture seule",
     "commandZone": "Zone de commandement",
     "statsTitle": "Stats",
@@ -687,18 +703,21 @@
     "stratRampSub": "Accélérez votre mana",
     "stratVoltron": "Voltron",
     "stratVoltronSub": "Boostez votre commandant",
-    "bracket1": "Bracket 1",
-    "bracket1Sub": "Exhibition",
-    "bracket1Desc": "Pas d’interaction, pas de synergie — pur thème ou narration",
-    "bracket2": "Bracket 2",
-    "bracket2Sub": "Casual",
-    "bracket2Desc": "Précons et améliorations légères, 0–1 game changers, pas de combos infinis",
-    "bracket3": "Bracket 3",
-    "bracket3Sub": "Optimisé",
-    "bracket3Desc": "Synergies optimisées, jusqu’à 3 game changers, quelques staples puissants",
-    "bracket4": "Bracket 4",
-    "bracket4Sub": "cEDH",
-    "bracket4Desc": "Entièrement optimisé, combos rapides, toute carte légale",
+    "bracket1": "Catégorie 1",
+    "bracket1Sub": "Exhibition (bracket 1)",
+    "bracket1Desc": "Le thème avant la puissance. Ni Game Changers ni combos à deux cartes, sauf cartes très thématiques. Comptez au moins 9 tours",
+    "bracket2": "Catégorie 2",
+    "bracket2Sub": "Basique (bracket 2)",
+    "bracket2Desc": "Simple et non optimisé. Aucun Game Changer, aucun combo à deux cartes. Comptez au moins 8 tours",
+    "bracket3": "Catégorie 3",
+    "bracket3Sub": "Amélioré (bracket 3)",
+    "bracket3Desc": "Synergies fortes et cartes de qualité. Jusqu’à 3 Game Changers, pas de combo à deux cartes avant le tour 6. Comptez au moins 6 tours",
+    "bracket4": "Catégorie 4",
+    "bracket4Sub": "Optimisé (bracket 4)",
+    "bracket4Desc": "Létal, régulier et rapide, sans viser le métagame cEDH. Game Changers illimités. Comptez au moins 4 tours",
+    "bracket5": "Catégorie 5",
+    "bracket5Sub": "cEDH (bracket 5)",
+    "bracket5Desc": "Conçu pour le métagame cEDH : la victoire avant tout. Game Changers illimités. La partie peut se terminer à n’importe quel tour",
     "searchCommander": "Rechercher un commandant…",
     "skipLetAI": "Passer — laisser l’IA choisir",
     "aiBuilding": "L’IA construit votre deck…",
@@ -710,36 +729,50 @@
     "buildCancelled": "La construction a été annulée ou a échoué.",
     "addingCards": "Ajout des cartes à votre deck…",
     "demoDeckNotice": "Deck de démonstration — aucun fournisseur IA n’est configuré sur ce déploiement, cette liste est un simple exemple.",
+    "correctionsTitle": "Vérifié avec les données des cartes : {count, plural, one {# correction} other {# corrections}}",
+    "correctionsIntro": "La liste de l’IA enfreignait les règles du Commander. Ces changements ont été faits avant l’enregistrement du deck.",
+    "correctionRemoved": "Retrait de {quantity, plural, =1 {{name}} other {{name} ×#}} : {reason}",
+    "correctionAdded": "Ajout de {quantity, plural, =1 {{name}} other {{name} ×#}} : {reason}",
+    "correctionReasonUnknownCard": "aucune carte ne porte ce nom",
+    "correctionReasonOutsideColorIdentity": "hors de l’identité de couleur de votre commandant",
+    "correctionReasonBanned": "bannie en Commander",
+    "correctionReasonNotLegal": "non légale en Commander",
+    "correctionReasonExtraCopies": "plus d’exemplaires que le Commander n’en autorise",
+    "correctionReasonCommanderInList": "déjà dans la zone de commandement",
+    "correctionReasonOverSize": "la liste dépassait 100 cartes",
+    "correctionReasonFillToSize": "pour compléter le deck à 100 cartes",
+    "openDeck": "Ouvrir le deck",
     "planTitle": "Vérifiez le plan du deck",
     "planSubtitle": "Validez le gameplan et la structure avant que l’IA ne choisisse les cartes.",
     "planGameplan": "Gameplan",
     "planWinConditions": "Conditions de victoire",
     "planRoles": "Rôles du deck",
-    "planConstraints": "Contraintes"
+    "planConstraints": "Contraintes",
+    "aiDeckName": "Deck IA — {strategy}"
   },
   "ratings": {
-    "title": "Community Rating",
-    "noRatings": "No ratings yet — be the first.",
-    "average": "{average} out of 5",
-    "voteCount": "{count, plural, =0 {no ratings} one {1 rating} other {# ratings}}",
-    "starLabel": "Rate {count, plural, one {# star} other {# stars}}",
-    "yourRating": "Your rating",
-    "removeRating": "Remove my rating",
-    "badgeHighlyRated": "Community Favourite",
-    "badgeLowRated": "Needs Work",
-    "reviewsTitle": "Reviews",
-    "noReviews": "No written reviews yet.",
-    "writeReview": "Write a review",
-    "reviewTitleLabel": "Title",
-    "reviewTitlePlaceholder": "Sum it up in a few words",
-    "reviewBodyLabel": "Review",
-    "reviewBodyPlaceholder": "What works, what you would change…",
-    "submitReview": "Post review",
-    "submitting": "Saving…",
-    "cancel": "Cancel",
-    "ownDeck": "You cannot rate your own deck.",
-    "signInToRate": "Sign in to rate this deck.",
-    "saveFailed": "Could not save your rating. Try again.",
+    "title": "Note de la communauté",
+    "noRatings": "Aucune note pour l’instant — soyez le premier.",
+    "average": "{average, number} sur 5",
+    "voteCount": "{count, plural, =0 {aucune note} one {# note} other {# notes}}",
+    "starLabel": "Noter {count, plural, one {# étoile} other {# étoiles}}",
+    "yourRating": "Votre note",
+    "removeRating": "Retirer ma note",
+    "badgeHighlyRated": "Coup de cœur de la communauté",
+    "badgeLowRated": "À améliorer",
+    "reviewsTitle": "Avis",
+    "noReviews": "Aucun avis écrit pour l’instant.",
+    "writeReview": "Écrire un avis",
+    "reviewTitleLabel": "Titre",
+    "reviewTitlePlaceholder": "Résumez-le en quelques mots",
+    "reviewBodyLabel": "Avis",
+    "reviewBodyPlaceholder": "Ce qui fonctionne, ce que vous changeriez…",
+    "submitReview": "Publier l’avis",
+    "submitting": "Enregistrement…",
+    "cancel": "Annuler",
+    "ownDeck": "Vous ne pouvez pas noter votre propre deck.",
+    "signInToRate": "Connectez-vous pour noter ce deck.",
+    "saveFailed": "Impossible d’enregistrer votre note. Réessayez.",
     "loadFailed": "Les notes n'ont pas pu être chargées."
   },
   "comments": {
@@ -817,5 +850,26 @@
     "editorHelp": "{count}/{max} · Ctrl+Entrée pour enregistrer · Échap pour annuler",
     "save": "Enregistrer",
     "empty": "Aucune description — cliquez pour en ajouter une"
+  },
+  "guestClaim": {
+    "title": "Enregistrer votre deck invité dans votre compte ?",
+    "description": "« {name} » ({count, plural, one {# carte} other {# cartes}}) n’est encore enregistré que dans ce navigateur.",
+    "accept": "Enregistrer dans mon compte",
+    "decline": "Plus tard",
+    "saving": "Enregistrement…",
+    "retry": "Réessayer",
+    "failed": "Le deck n’a pas pu être enregistré. Il reste dans ce navigateur : vous pouvez réessayer.",
+    "saved": "« {name} » est maintenant dans votre compte.",
+    "open": "Ouvrir le deck",
+    "close": "Fermer"
+  },
+  "socialImage": {
+    "imageAlt": "Aperçu du deck {deck} par {author}",
+    "byAuthor": "par {author}",
+    "cardCount": "{count, plural, one {# carte} other {# cartes}}",
+    "tagline": "Créateur de decks Commander"
+  },
+  "sync": {
+    "conflictReloaded": "Ce deck a été modifié ailleurs (un autre onglet ou appareil). Il a été rechargé ; refaites votre dernière modification si vous la voulez toujours."
   }
 }

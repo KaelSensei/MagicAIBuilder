@@ -31,13 +31,12 @@ const FALLBACK_SITE_URL = "https://magicaibuilder.com";
  * disagreed with the sitemap would hand a crawler two different answers for the
  * same page.
  *
- * **Not the same thing as `resolveAppBaseUrl()` in `@/lib/api/viewer-request`,
- * and they must not be merged.** That one resolves the instance that is
- * running and falls back to `VERCEL_URL`, so on a preview deployment it is the
- * preview host — correct for fetching this app's own API, and wrong here.
- * This is the site's public identity: a canonical, an hreflang or a sitemap
- * entry pointing at a preview would advertise URLs that disappear. On a preview
- * the two are *supposed* to disagree.
+ * **Never fall back to `VERCEL_URL` here.** That is the host of the deployment
+ * that is running, a preview host on a preview deployment. This is the site's
+ * public identity: a canonical, an hreflang or a sitemap entry pointing at a
+ * preview would advertise URLs that disappear. (Server pages used to carry a
+ * second origin helper that did fall back to `VERCEL_URL`, to call this app's
+ * own API over HTTP; they read the database in-process now.)
  */
 export function siteUrl(): string {
   const configured = process.env.NEXT_PUBLIC_BASE_URL?.trim();
@@ -79,16 +78,17 @@ export function localePath(locale: SupportedLocale, path: string): string {
 }
 
 /**
- * Canonical plus one hreflang entry per served locale, for a single page.
+ * The hreflang set for one page: its path in each served locale, plus
+ * `x-default` pointing at the default locale.
  *
- * @param locale Locale the page is being rendered in.
+ * Page metadata and the sitemap both build from this, so they always declare
+ * the same set. A sitemap that disagreed with the page's own
+ * `<link rel="alternate">` tags would give a crawler two answers for one URL.
+ *
  * @param path Locale-free path, starting with a slash.
- * @returns A `Metadata["alternates"]` value; resolved against `metadataBase`.
+ * @returns Hreflang code to root-relative path.
  */
-export function buildAlternates(
-  locale: SupportedLocale,
-  path: string
-): NonNullable<Metadata["alternates"]> {
+export function hreflangPaths(path: string): Readonly<Record<string, string>> {
   const languages: Record<string, string> = {};
 
   for (const served of SUPPORTED_LOCALES) {
@@ -99,9 +99,23 @@ export function buildAlternates(
   // routed sends a crawler to a redirect or a 404.
   languages["x-default"] = localePath(routing.defaultLocale, path);
 
+  return languages;
+}
+
+/**
+ * Canonical plus the page's hreflang set (see `hreflangPaths`).
+ *
+ * @param locale Locale the page is being rendered in.
+ * @param path Locale-free path, starting with a slash.
+ * @returns A `Metadata["alternates"]` value; resolved against `metadataBase`.
+ */
+export function buildAlternates(
+  locale: SupportedLocale,
+  path: string
+): NonNullable<Metadata["alternates"]> {
   return {
     canonical: localePath(locale, path),
-    languages,
+    languages: hreflangPaths(path),
   };
 }
 
@@ -122,12 +136,22 @@ export function isSupportedLocale(value: string): value is SupportedLocale {
 }
 
 /**
- * `buildAlternates` for a raw `[locale]` route param.
+ * The served locale a raw `[locale]` route param stands for.
  *
  * Pages receive the segment as a plain string. An unrecognised value falls back
  * to the default locale rather than throwing: the middleware has already
  * rejected anything unroutable, and a metadata helper is the wrong place to
  * turn a stray param into a 500.
+ *
+ * @param localeParam The `[locale]` segment as the route supplies it.
+ * @returns That locale when it is served, else the default locale.
+ */
+export function servedLocaleFor(localeParam: string): SupportedLocale {
+  return isSupportedLocale(localeParam) ? localeParam : routing.defaultLocale;
+}
+
+/**
+ * `buildAlternates` for a raw `[locale]` route param (see `servedLocaleFor`).
  *
  * @param localeParam The `[locale]` segment as the route supplies it.
  * @param path Locale-free path, starting with a slash.
@@ -136,8 +160,5 @@ export function alternatesFor(
   localeParam: string,
   path: string
 ): NonNullable<Metadata["alternates"]> {
-  return buildAlternates(
-    isSupportedLocale(localeParam) ? localeParam : routing.defaultLocale,
-    path
-  );
+  return buildAlternates(servedLocaleFor(localeParam), path);
 }

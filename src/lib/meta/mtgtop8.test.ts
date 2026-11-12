@@ -6,7 +6,18 @@ import {
   parseArchetypeOptions,
   parseSearchResults,
   parseTop8Date,
+  readCardFilterEcho,
 } from "./mtgtop8";
+import {
+  RECORDED_ARCHETYPE_IDS,
+  RECORDED_SEARCH_FORM,
+  searchFormLatin1Bytes,
+} from "./fixtures/mtgtop8-search-form-v1";
+import {
+  RECORDED_KNOWN_CARD_NAME,
+  RECORDED_KNOWN_CARD_PAGE,
+  RECORDED_UNKNOWN_CARD_PAGE,
+} from "./fixtures/mtgtop8-card-search-v1";
 
 // Trimmed from a live GET https://www.mtgtop8.com/search (2026-08-20)
 const SEARCH_FORM_HTML = `
@@ -144,5 +155,95 @@ describe("decodeLatin1", () => {
   it("decodes the ISO-8859-1 bytes MTGTop8 serves", () => {
     const bytes = new Uint8Array([0x52, 0x6f, 0x6d, 0xe9, 0x6f]); // "Roméo"
     expect(decodeLatin1(bytes.buffer)).toBe("Roméo");
+  });
+});
+
+describe("findArchetypeId — accented commander names (recorded form, 2026-11-12)", () => {
+  const options = parseArchetypeOptions(RECORDED_SEARCH_FORM);
+
+  it("finds an accented commander from the words of its slug, as the meta route passes them", () => {
+    // `commanderToSlug("Éomer, Marshal of Rohan")` is "eomer-marshal-of-rohan"; the route
+    // turns the hyphens back into spaces before the lookup.
+    expect(findArchetypeId(options, "eomer marshal of rohan")).toBe(
+      RECORDED_ARCHETYPE_IDS["Éomer, Marshal of Rohan"]
+    );
+    expect(findArchetypeId(options, "kili the resourceful")).toBe(
+      RECORDED_ARCHETYPE_IDS["Kíli the Resourceful"]
+    );
+    expect(findArchetypeId(options, "smeagol helpful guide")).toBe(
+      RECORDED_ARCHETYPE_IDS["Sméagol, Helpful Guide"]
+    );
+    expect(findArchetypeId(options, "bartolome del presidio")).toBe(
+      RECORDED_ARCHETYPE_IDS["Bartolomé del Presidio"]
+    );
+  });
+
+  it("finds an accented commander from its printed name", () => {
+    expect(findArchetypeId(options, "Éomer, Marshal of Rohan")).toBe(2229);
+    expect(findArchetypeId(options, "Kíli the Resourceful")).toBe(3179);
+  });
+
+  it("finds a commander whose slug lost both an accent and a colon", () => {
+    // Scryfall prints the modifier colon U+A789; the slug is "ratonhnhaketon".
+    expect(findArchetypeId(options, "ratonhnhaketon")).toBe(2297);
+    expect(findArchetypeId(options, "Ratonhnhaké꞉ton")).toBe(2297);
+  });
+
+  it("still finds plain names exactly as before", () => {
+    expect(findArchetypeId(options, "Denethor, Stone Seer")).toBe(2250);
+    expect(findArchetypeId(options, "denethor stone seer")).toBe(2250);
+    expect(findArchetypeId(options, "a lier disciple of the drowned")).toBe(
+      3106
+    );
+  });
+
+  it("answers null, not an error, for a commander the form does not list", () => {
+    expect(findArchetypeId(options, "Éowyn, Fearless Knight")).toBeNull();
+    expect(findArchetypeId(options, "eowyn fearless knight")).toBeNull();
+  });
+
+  it("spells out the Æ and Œ ligatures, which NFD leaves whole and Oracle text writes as two letters", () => {
+    // Oracle names spell "Aether" ("Aether Vial" on https://api.scryfall.com/cards/named,
+    // read 2026-11-11), so a slug never carries the ligature; the site's option might.
+    const ligatures = new Map([
+      ["æther adept", 1],
+      ["Œnone, the Wanderer".toLowerCase(), 2],
+    ]);
+    expect(findArchetypeId(ligatures, "aether adept")).toBe(1);
+    expect(findArchetypeId(ligatures, "Aether Adept")).toBe(1);
+    expect(findArchetypeId(ligatures, "oenone the wanderer")).toBe(2);
+    expect(findArchetypeId(ligatures, "Œnone, the Wanderer")).toBe(2);
+  });
+
+  it("matches through the Latin-1 bytes the site serves, decoded as the adapter decodes them", () => {
+    const fromWire = parseArchetypeOptions(
+      decodeLatin1(searchFormLatin1Bytes())
+    );
+    expect(findArchetypeId(fromWire, "eomer marshal of rohan")).toBe(2229);
+  });
+});
+
+describe("readCardFilterEcho", () => {
+  it("reads the card MTGTop8 echoes when it applied the card filter, without the site's trailing carriage return", () => {
+    expect(readCardFilterEcho(RECORDED_KNOWN_CARD_PAGE)).toBe(
+      RECORDED_KNOWN_CARD_NAME
+    );
+  });
+
+  it("answers null when MTGTop8 ignored the card filter: the page says 'No match for' and echoes nothing", () => {
+    expect(RECORDED_UNKNOWN_CARD_PAGE).toContain(
+      "No match for Zzyzx Nonexistent Commander Qq"
+    );
+    expect(readCardFilterEcho(RECORDED_UNKNOWN_CARD_PAGE)).toBeNull();
+  });
+
+  it("rejects a page without the card field rather than reading it as an ignored filter", () => {
+    const withoutCardField = RECORDED_KNOWN_CARD_PAGE.replace(
+      "name=cards",
+      "name=card_list"
+    );
+    expect(() => readCardFilterEcho(withoutCardField)).toThrow(
+      "Invalid MTGTop8 response: card filter echo missing"
+    );
   });
 });

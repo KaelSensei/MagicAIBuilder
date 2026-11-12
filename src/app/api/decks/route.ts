@@ -1,3 +1,4 @@
+/** GET lists the signed-in user's decks; POST creates a deck and its cards in one write. */
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { z } from "zod";
@@ -6,12 +7,17 @@ import { logger } from "@/lib/logger";
 import { ALL_FORMATS } from "@/lib/deck/formats";
 import { readJsonBody } from "@/lib/api/json-body";
 import { sharesOracleIdentity } from "@/lib/deck/commander-pairing";
-import { deckCardIdSchema } from "@/lib/validation/deck";
+import { deckCardIdSchema, pairingTypeSchema } from "@/lib/validation/deck";
+import { addCardSchema, type AddCardInput } from "@/lib/validation/card";
+import { readIdempotencyKey } from "@/lib/api/idempotency-key";
+import { createOnce } from "@/lib/db/create-once";
 
 /** Max decks per page for the listing endpoint */
 const MAX_PAGE_SIZE = 50;
 /** Default decks per page */
 const DEFAULT_PAGE_SIZE = 20;
+/** Card rows one create may carry: a full deck, a sideboard and a long maybeboard. */
+const MAX_CREATE_CARDS = 500;
 
 /**
  * Reads a whole-number query parameter, falling back when it is not one.
@@ -30,7 +36,7 @@ function readWholeNumber(value: string | null, fallback: number): number {
   return Number.isFinite(parsed) ? Math.floor(parsed) : fallback;
 }
 
-const createDeckSchema = z.object({
+const createDeckFieldsSchema = z.object({
   name: z.string().min(1).max(200),
   format: z.enum(ALL_FORMATS).optional().default("commander"),
   targetBracket: z.number().int().min(1).max(5).optional().default(3),
@@ -39,12 +45,71 @@ const createDeckSchema = z.object({
   commanderName: z.string().max(200).nullable().optional(),
   partnerId: deckCardIdSchema.nullable().optional(),
   companionId: z.string().nullable().optional(),
-  pairingType: z
-    .enum(["none", "partner", "partner_with", "friends_forever", "background", "doctor", "character_select", "father_son"])
-    .optional()
-    .default("none"),
+  pairingType: pairingTypeSchema.optional().default("none"),
   isAIGenerated: z.boolean().optional().default(false),
+  manualBracket: z.number().int().min(1).max(5).nullable().optional(),
+  description: z.string().max(2000).optional(),
+  tags: z.array(z.string().max(50)).max(20).optional(),
+  // A whole deck in one request — how a guest deck reaches a new account.
+  cards: z.array(addCardSchema).max(MAX_CREATE_CARDS).optional().default([]),
 });
+
+const createDeckSchema = createDeckFieldsSchema.refine(
+  (fields) => hasOneCommandRowPerSlot(fields.cards),
+  {
+    message: "A deck holds at most one commander and one partner",
+    path: ["cards"],
+  }
+);
+
+type CreateDeckInput = z.infer<typeof createDeckSchema>;
+
+/**
+ * @param cards - the card rows of a create request
+ * @returns whether no command-zone slot is claimed by two rows
+ */
+function hasOneCommandRowPerSlot(cards: readonly AddCardInput[]): boolean {
+  let commanders = 0;
+  let partners = 0;
+  for (const card of cards) {
+    if (card.isPartner) partners += 1;
+    else if (card.isCommander) commanders += 1;
+  }
+  return commanders <= 1 && partners <= 1;
+}
+
+/**
+ * @param fields - the validated request
+ * @param name - the request's name with markup stripped
+ * @param userId - the session's user
+ * @param idempotencyKey - the request's key, or null
+ * @returns the Prisma create input: the deck and its cards in one write
+ */
+function buildCreateDeckData(
+  fields: CreateDeckInput,
+  name: string,
+  userId: string,
+  idempotencyKey: string | null
+) {
+  return {
+    name,
+    format: fields.format,
+    targetBracket: fields.targetBracket,
+    manualBracket: fields.manualBracket ?? null,
+    budget: fields.budget ?? null,
+    description: fields.description,
+    tags: fields.tags,
+    commanderId: fields.commanderId ?? null,
+    commanderName: fields.commanderName ?? null,
+    partnerId: fields.partnerId ?? null,
+    companionId: fields.companionId ?? null,
+    pairingType: fields.pairingType,
+    isAIGenerated: fields.isAIGenerated ?? false,
+    userId,
+    idempotencyKey,
+    cards: { create: fields.cards },
+  };
+}
 
 // GET /api/decks — paginated lightweight listing (commander/partner/companion only + card count)
 export async function GET(request: NextRequest) {
@@ -128,11 +193,15 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/decks — create a new deck
+// POST /api/decks — create a new deck, optionally with its cards. A request
+// carrying an Idempotency-Key that already created a deck returns that deck (200).
 export async function POST(request: Request) {
   try {
     const result = await requireAuth();
     if (result.error) return result.error;
+
+    const idempotency = readIdempotencyKey(request);
+    if (!idempotency.ok) return idempotency.response;
 
     const jsonBody = await readJsonBody(request);
 
@@ -143,7 +212,7 @@ export async function POST(request: Request) {
     if (!parsed.success) {
       return NextResponse.json({ error: "Invalid input", details: parsed.error.issues.map((i) => i.message) }, { status: 400 });
     }
-    const { name: rawName, format, targetBracket, budget, commanderId, commanderName, partnerId, companionId, pairingType, isAIGenerated } = parsed.data;
+    const { name: rawName, commanderId, partnerId } = parsed.data;
     if (commanderId && commanderId === partnerId) {
       return NextResponse.json({ error: "Commander and partner must be different cards" }, { status: 400 });
     }
@@ -155,23 +224,26 @@ export async function POST(request: Request) {
     if (!sanitizedName) {
       return NextResponse.json({ error: "name is required" }, { status: 400 });
     }
-    const deck = await prisma.deck.create({
-      data: {
-        name: sanitizedName,
-        format,
-        targetBracket,
-        budget: budget ?? null,
-        commanderId: commanderId ?? null,
-        commanderName: commanderName ?? null,
-        partnerId: partnerId ?? null,
-        companionId: companionId ?? null,
-        pairingType,
-        isAIGenerated: isAIGenerated ?? false,
-        userId: result.session.user.id,
-      },
-      include: { cards: true },
+    const userId = result.session.user.id;
+    const key = idempotency.key;
+    const create = () =>
+      prisma.deck.create({
+        data: buildCreateDeckData(parsed.data, sanitizedName, userId, key),
+        include: { cards: true },
+      });
+    if (key === null) {
+      return NextResponse.json(await create(), { status: 201 });
+    }
+
+    const { row, created } = await createOnce({
+      findExisting: () =>
+        prisma.deck.findFirst({
+          where: { userId, idempotencyKey: key },
+          include: { cards: true },
+        }),
+      create,
     });
-    return NextResponse.json(deck, { status: 201 });
+    return NextResponse.json(row, { status: created ? 201 : 200 });
   } catch (error) {
     logger.error(error instanceof Error ? error.message : "unknown", "POST /api/decks");
     return NextResponse.json(

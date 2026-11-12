@@ -7,38 +7,15 @@
  */
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { ApiDeck } from "@/lib/db/deck-api";
 import type { DeckCard } from "@/lib/deck/types";
-
-const { mockFetchDeck, toastAdd } = vi.hoisted(() => ({
-  mockFetchDeck: vi.fn(),
-  toastAdd: vi.fn(),
-}));
-
-vi.mock("@/lib/db/deck-api", () => ({
-  fetchDeck: mockFetchDeck,
-  fetchDecks: vi.fn(),
-  createDeck: vi.fn(),
-  updateDeck: vi.fn(),
-  deleteDeck: vi.fn(),
-  duplicateDeck: vi.fn(),
-  addCard: vi.fn(),
-  removeCard: vi.fn(),
-  updateCardCategory: vi.fn(),
-  updateCardNotes: vi.fn(),
-  updateCardZone: vi.fn(),
-  updateCardMaybeboard: vi.fn(),
-  removeAllCards: vi.fn(),
-  lookupCardCache: vi.fn(),
-  storeCardCache: vi.fn(),
-  lookupSearchCache: vi.fn(),
-  storeSearchCache: vi.fn(),
-}));
-
-vi.mock("@/hooks/useToast", () => ({
-  useToastStore: { getState: () => ({ add: toastAdd }) },
-}));
+import { installFakeDeckClient } from "@/test/fake-deck-client";
+import { recordToasts } from "@/test/toast-recorder";
 
 import { useDeckStore } from "./store";
+
+const mockFetchDeck = installFakeDeckClient().fetchDeck;
+const toastAdd = recordToasts();
 
 const REMOVED_CARD: DeckCard = {
   id: "old-card",
@@ -58,7 +35,7 @@ const REMOVED_CARD: DeckCard = {
   zone: "main",
 };
 
-function apiDeck(name: string, zone: "main" | "sideboard") {
+function apiDeck(name: string, zone: "main" | "sideboard"): ApiDeck {
   return {
     id: "deck-1",
     name: "Open Deck",
@@ -73,12 +50,16 @@ function apiDeck(name: string, zone: "main" | "sideboard") {
     isPublic: false,
     isAIGenerated: false,
     commanderId: null,
+    commanderName: null,
     partnerId: null,
     companionId: null,
     pairingType: "none",
+    companion: null,
+    maybeboard: [],
     cards: [
       {
         id: "card-1",
+        deckId: "deck-1",
         scryfallId: "card-1",
         name,
         manaCost: "{G}",

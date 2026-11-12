@@ -1,24 +1,57 @@
+/**
+ * Core deck and card types: the deck, its cards, zones and categories, and the card search filters.
+ *
+ * Context: deck building; most of the app imports this file. It must not import analysis or
+ * playtest modules, which import it back: the analysis report types (`DeckStats`, `BracketScore`)
+ * live in `analysis-types.ts`, the playtest state in `lib/playtest/engine.ts`.
+ *
+ * The card categories and the commander pairing types are `as const` tuples: the unions here and
+ * the request schemas in `lib/validation` derive from them, so the two cannot drift apart.
+ *
+ * @module deck/types
+ */
+
 import type { DeckFormat } from "./formats";
-// Core deck and card types for MagicAIBuilder
-export type CardCategory =
-  | "commander"
-  | "companion"
-  | "creature"
-  | "instant"
-  | "sorcery"
-  | "artifact"
-  | "enchantment"
-  | "planeswalker"
-  | "land"
-  | "ramp"
-  | "draw"
-  | "removal"
-  | "boardWipe"
-  | "winCondition"
-  | "protection"
-  | "other";
+import type { BracketLevel } from "@/lib/constants/brackets";
+
+/**
+ * Every category a deck card can be filed under. `DeckCard.category` stores one as a plain
+ * string, so renaming a value needs a data migration.
+ *
+ * - `commander` files the commander (CR 903.3) and, with a partner ability, the second commander
+ *   (CR 702.124a); `companion` files the companion (CR 702.139a).
+ * - `creature` to `land` are card types (CR 205.2a).
+ * - `ramp` to `protection` are deck-building roles the app assigns; no rule defines them.
+ * - `other` is what a card write gets when it names no category.
+ */
+export const CARD_CATEGORIES = [
+  "commander",
+  "companion",
+  "creature",
+  "instant",
+  "sorcery",
+  "artifact",
+  "enchantment",
+  "planeswalker",
+  "land",
+  "ramp",
+  "draw",
+  "removal",
+  "boardWipe",
+  "winCondition",
+  "protection",
+  "other",
+] as const;
+
+/** A category a deck card is filed under: one of {@link CARD_CATEGORIES}. */
+export type CardCategory = (typeof CARD_CATEGORIES)[number];
 export type DeckZone = "main" | "sideboard" | "maybeboard";
-export type BracketLevel = 1 | 2 | 3 | 4;
+export type { BracketLevel };
+
+/**
+ * One face of a two-faced card (CR 712.1), with its own name, mana cost, type line, rules text
+ * and images. `DeckCard.cardFaces` holds the front face, then the back face.
+ */
 export interface CardFace {
   name: string;
   manaCost: string;
@@ -54,15 +87,33 @@ export interface DeckCard {
   cardFaces?: [CardFace, CardFace];
   isFlexibleLand?: boolean;
 }
-export type CommanderPairingType =
-  | "none"
-  | "partner"
-  | "partner_with"
-  | "friends_forever"
-  | "background"
-  | "doctor"
-  | "character_select"
-  | "father_son";
+/**
+ * Every way a deck can hold its commander: alone, or with a second commander under one partner
+ * ability. `Deck.pairingType` stores one as a plain string, so renaming a value needs a data
+ * migration. `pairing.ts` decides which value two cards use.
+ *
+ * - `none`: a single commander (CR 903.3).
+ * - `partner`: "Partner" (CR 702.124h).
+ * - `partner_with`: "Partner with [name]" (CR 702.124j).
+ * - `friends_forever`, `character_select`, `father_son`, `survivors`: the four "partner—[text]"
+ *   abilities (CR 702.124i).
+ * - `background`: "Choose a Background" (CR 702.124k).
+ * - `doctor`: "Doctor's companion" (CR 702.124m).
+ */
+export const PAIRING_TYPES = [
+  "none",
+  "partner",
+  "partner_with",
+  "friends_forever",
+  "background",
+  "doctor",
+  "character_select",
+  "father_son",
+  "survivors",
+] as const;
+
+/** How a deck's second commander is allowed: one of {@link PAIRING_TYPES} (CR 702.124). */
+export type CommanderPairingType = (typeof PAIRING_TYPES)[number];
 export interface Deck {
   id: string;
   name: string;
@@ -75,10 +126,14 @@ export interface Deck {
   /** Derived mirror of cards whose persisted zone is "maybeboard". */
   maybeboard: DeckCard[];
   format: DeckFormat;
-  /** Total card count (including commander/partner/companion). Set from _count on listing, derived from cards on full load. */
+  /**
+   * Row count, command zone included. The server's `_count` while the deck is
+   * the listing stub; the rows held once loaded, kept in step by every edit
+   * (`loaded-card-count.ts`). `isDeckStub` compares the two.
+   */
   cardCount: number;
-  targetBracket: 1 | 2 | 3 | 4;
-  manualBracket: 1 | 2 | 3 | 4 | null;
+  targetBracket: BracketLevel;
+  manualBracket: BracketLevel | null;
   budget: number | null;
   description: string;
   tags: string[];
@@ -90,52 +145,18 @@ export interface Deck {
   updatedAt: Date;
   seekingFeedback?: boolean;
   feedbackQuestion?: string | null;
-}
-export interface DeckStats {
-  totalCards: number;
-  lands: number;
-  creatures: number;
-  ramp: number;
-  draw: number;
-  removal: number;
-  boardWipes: number;
-  avgCmc: number;
-  manaCurve: Record<number, number>;
-  colorDistribution: Record<string, number>;
-  gameChangersCount: number;
-  gameChangersList: string[];
-  totalPrice: number;
-  overBudgetCards: string[];
-  bannedCards: string[];
-  colorIdentityViolations: string[];
-  themes?: import("./themes").DetectedTheme[];
-  flexibleLands: number;
-  /** Curve / threat / interaction measures; null for Commander (bracket scoring instead) */
-  formatStats: import("./format-stats").FormatStats | null;
-  /** Pips asked for vs. sources produced; null when no spell needs coloured mana */
-  manaAlignment: import("./mana-alignment").ManaAlignment | null;
-  /** Odds the opening hand can act on turn one; null when the deck has no one-drops */
-  turnOnePlayability: import("./turn-one").TurnOnePlayability | null;
-}
-export interface BracketScore {
-  overall: 1 | 2 | 3 | 4;
-  dimensions: {
-    ramp: number;
-    draw: number;
-    removal: number;
-    tutors: number;
-    winSpeed: number;
-    avgCmc: number;
-  };
-  gameChangers: number;
-  twoCardInfiniteCombos: number;
-  warnings: string[];
+  /**
+   * The deck's optimistic lock (`Deck.version` on the server), as the store
+   * last read it: with the whole deck (`GET /api/decks/[id]`, the bulk edit's
+   * answer) or with the answer of its last row write. Every versioned write
+   * sends it as `expectedVersion` and is refused with 409 when another tab
+   * wrote first (`deck-write-queue.ts`). Absent for a guest deck, a listing
+   * stub, and after a refused write until the deck is reloaded: a version the
+   * store cannot vouch for must not be sent.
+   */
+  version?: number;
 }
 
-// Playtest state lives in PlaytestEngine (src/lib/playtest/engine.ts), which
-// also tracks phases, life, and the battlefield / graveyard / exile zones.
-
-export type ViewMode = "grid" | "list";
 export type ColorMode = "or" | "and" | "exact";
 export type CmcMode = "range" | "exact" | "min" | "max";
 export type InteractionType =
@@ -160,14 +181,9 @@ export interface SearchFilters {
   subtype: string;
   keyword: string;
   interactionType: InteractionType | null;
+  /**
+   * List only cards whose Oracle card the player owns, in any printing. Applied in the browser
+   * by `useCardSearchResults`; it adds nothing to the Scryfall query.
+   */
   collectionOnly?: boolean;
-}
-
-export interface CardFace {
-  name: string;
-  manaCost: string;
-  typeLine: string;
-  oracleText: string;
-  imageUri: string;
-  artCropUri: string;
 }

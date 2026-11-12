@@ -12,8 +12,9 @@
  */
 
 import Image from "next/image";
-import { useMemo } from "react";
+import { useId, useMemo } from "react";
 import { useTranslations } from "next-intl";
+import { manaSymbolSvgUrl } from "@/lib/scryfall/constants";
 
 /** The identity symbols this banner can draw a pip for. */
 export type BannerManaColor = "W" | "U" | "B" | "R" | "G" | "C";
@@ -64,16 +65,6 @@ function getDisplayColorIdentity(
 }
 
 /**
- * Build the Scryfall SVG URL for a mana symbol used in the banner.
- *
- * @param color Supported mana color symbol.
- * @returns Remote SVG asset URL.
- */
-function getBannerManaSymbolUrl(color: BannerManaColor): string {
-  return `https://svgs.scryfall.io/card-symbols/${color}.svg`;
-}
-
-/**
  * Build the i18n key for a banner mana color label.
  *
  * @param color Supported mana color symbol.
@@ -101,14 +92,20 @@ export function ColorIdentityBanner({
   readonly label?: string;
 }) {
   const t = useTranslations("builder");
+  // The banner is a group named by the card it shows, so its pips and remove
+  // button are announced with their card rather than as loose controls (TT-11).
+  // `<fieldset>` is the native group; `min-w-0` undoes its user-agent
+  // `min-inline-size: min-content`, which would stop `flex-1` from shrinking.
+  const nameId = useId();
   const displayColors = useMemo(
     () => getDisplayColorIdentity(colorIdentity),
     [colorIdentity]
   );
 
   return (
-    <div
-      className="group/banner relative flex-1 h-[82px] overflow-hidden rounded-lg border border-white/10 text-white shadow-[0_18px_50px_rgba(0,0,0,0.22)]"
+    <fieldset
+      aria-labelledby={nameId}
+      className="group/banner relative min-w-0 flex-1 h-[82px] overflow-hidden rounded-lg border border-white/10 text-white shadow-[0_18px_50px_rgba(0,0,0,0.22)]"
       style={{ backgroundImage: COLOR_IDENTITY_BANNER_BACKGROUND }}
     >
       <div
@@ -123,6 +120,7 @@ export function ColorIdentityBanner({
             </div>
           )}
           <p
+            id={nameId}
             className="max-w-[16rem] truncate text-sm font-semibold tracking-[0.01em]"
             style={{ textShadow: "0 1px 3px rgba(0,0,0,0.35)" }}
           >
@@ -138,7 +136,7 @@ export function ColorIdentityBanner({
               >
                 <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.5),_transparent_42%)]" />
                 <Image
-                  src={getBannerManaSymbolUrl(color)}
+                  src={manaSymbolSvgUrl(color)}
                   alt={t("manaSymbolAlt", {
                     color: t(`manaColors.${getBannerManaColorKey(color)}`),
                   })}
@@ -152,14 +150,20 @@ export function ColorIdentityBanner({
           </div>
         </div>
       </div>
+      {/* `z-20` stacks the button above the `z-10` content row, which fills the
+          banner: without it the row took every click and the commander could
+          not be removed with a mouse (caught by e2e/commander-journey). */}
       <button
         type="button"
         onClick={onRemove}
-        className="absolute top-1 right-1 opacity-0 group-hover/banner:opacity-100 focus-visible:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg"
+        className="absolute top-1 right-1 z-20 opacity-0 group-hover/banner:opacity-100 focus-visible:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg"
+        // The "×" content would be the button's name; the title alone is only a
+        // description, so the label repeats it as the name.
+        aria-label={t("actions.removeNamed", { name })}
         title={t("actions.removeNamed", { name })}
       >
         ×
       </button>
-    </div>
+    </fieldset>
   );
 }

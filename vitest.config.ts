@@ -9,28 +9,32 @@ export default defineConfig({
     globals: true,
     setupFiles: ["./vitest.setup.ts"],
     // Only include unit tests — E2E tests are run via Playwright separately
-    include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
+    include: ["src/**/*.test.ts", "src/**/*.test.tsx", "scripts/**/*.test.ts"],
     exclude: ["e2e/**", "node_modules/**", ".next/**"],
+    // next-auth imports "next/server" without an extension, which Node's ESM
+    // loader cannot resolve outside a bundler. Inlining lets Vite resolve it,
+    // so a test can drive the real Auth.js route handlers.
+    server: { deps: { inline: ["next-auth"] } },
     /**
-     * Coverage is measured over **all** of `src`.
+     * Coverage is measured over **all** of `src`, UI and route handlers
+     * included. ADR 0010 (docs/adr/0010-coverage-scope-by-layer.md) records
+     * what is measured where and why.
      *
-     * It was not. `src/app/**` and `src/components/**` were excluded outright,
-     * on two justifications that were both false as written: "not unit-testable
-     * without full Next.js runtime" and "covered by E2E/integration tests
-     * (Playwright)". **53 test files live under those two paths** — 23 API route
-     * tests and 29 component tests — so the code was being unit-tested and the
-     * results were being thrown away.
+     * Until 2026-08 `src/app/**` and `src/components/**` were excluded here as
+     * "not unit-testable" and "covered by Playwright". Both claims were false:
+     * those paths had unit tests, and they held two thirds of the statements.
+     * SonarCloud still keeps them out of its coverage figure
+     * (`sonar-project.properties`), so the Sonar figure and this one measure
+     * different scopes and must not be compared.
      *
-     * Between them they hold 19,467 of the repository's 29,231 statements, and
-     * the number reported everywhere as the repository's coverage described
-     * only the other third. Measured 2026-08-23:
+     * Measured by CI run 43040973372 (PR #1386, 2026-11-11), whose `src` is
+     * the `dev` tree at de2bedff. "All files": 83.01% lines, 86.19% branches,
+     * 88.74% functions. Lines by folder (approximate, method in ADR 0010):
      *
-     *   lib          96.6%   0 of 93 files at 0%   <- what "95.44%" meant
-     *   hooks        87.4%   3 of 26 files at 0%
-     *   components   25.2%  79 of 125 files at 0%
-     *   app          25.1%  48 of 69 files at 0%
-     *   ------------------------------------------
-     *   all of src   48.5%
+     *   lib          ~98%    3 of 206 files at 0%
+     *   hooks        ~95%    0 of 33 files at 0%
+     *   components   ~75%   32 of 201 files at 0%
+     *   app          ~71%   17 of 108 files at 0%
      *
      * Everything below is excluded because it genuinely carries no testable
      * runtime behaviour, or needs a runtime a unit test cannot provide. Nothing
@@ -55,11 +59,27 @@ export default defineConfig({
         // Edge middleware (requires full Next.js edge runtime)
         "src/middleware.ts",
       ],
+      /**
+       * Floors per layer of `src/modules/<context>/` (ADR 0001, ADR 0010).
+       * Each glob is checked against the aggregate of every file it matches,
+       * across all contexts, and only when coverage runs (`pnpm
+       * test:coverage`, the CI step). A glob that matches no file passes, so a
+       * floor binds from the first file a context moves into that layer.
+       * `ui/`, `client/`, `infrastructure/` and the entry points have no
+       * floor yet, like `src/components`, `src/hooks` and `src/lib` today.
+       */
+      thresholds: {
+        "src/modules/*/domain/**": { lines: 90, branches: 90 },
+        "src/modules/*/application/**": { lines: 80, branches: 80 },
+      },
     },
   },
   resolve: {
     alias: {
       "@": resolve(__dirname, "./src"),
+      // The real `server-only` throws unless resolved with the `react-server`
+      // condition, which Vitest does not set; the stub says why that is safe.
+      "server-only": resolve(__dirname, "./src/test/stubs/server-only.ts"),
     },
   },
 });

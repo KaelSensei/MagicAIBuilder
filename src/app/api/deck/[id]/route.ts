@@ -1,13 +1,41 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db/prisma";
 import { auth } from "@/lib/auth/config";
 import { logger } from "@/lib/logger";
+import { findDeckForViewer } from "@/lib/deck/deck-for-viewer";
+import {
+  PUBLIC_DECK_READ_WINDOW_MS,
+  PUBLIC_DECK_READS_PER_CLIENT,
+} from "@/lib/deck/public-read-policy";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { rateLimitResponse, type RouteParams } from "@/lib/api/route-kit";
 
-type Params = { params: Promise<{ id: string }> };
+/** A 429 once this client has spent its read budget, otherwise null. */
+function readRateLimitResponse(request: Request): NextResponse | null {
+  const limit = checkRateLimit(
+    `deck-read:${getClientIp(request)}`,
+    PUBLIC_DECK_READS_PER_CLIENT,
+    PUBLIC_DECK_READ_WINDOW_MS
+  );
+  if (limit.allowed) return null;
+  return rateLimitResponse(limit, "Too many deck requests");
+}
 
-// GET /api/deck/[id] — public deck view (no auth required for public decks)
-// Returns deck if: isPublic=true OR requester is the owner
-export async function GET(_req: Request, { params }: Params) {
+/**
+ * GET /api/deck/[id] — public deck view, no auth required for a public deck.
+ *
+ * The owner gets their whole deck, public or private. Anyone else gets a
+ * public deck read through the public allowlist, and a private deck 404s.
+ * See {@link findDeckForViewer}.
+ *
+ * Anyone may call it without a key, so each client address gets
+ * {@link PUBLIC_DECK_READS_PER_CLIENT} reads per minute, counted before the id
+ * is checked or the deck is read. The limiter is in-memory and per instance
+ * (`src/lib/rate-limit.ts`).
+ */
+export async function GET(request: Request, { params }: RouteParams<"id">) {
+  const rateLimited = readRateLimitResponse(request);
+  if (rateLimited) return rateLimited;
+
   const { id } = await params;
 
   if (!id || id.length > 50) {
@@ -16,32 +44,11 @@ export async function GET(_req: Request, { params }: Params) {
 
   try {
     const session = await auth();
-    const currentUserId = session?.user?.id ?? null;
-
-    const deck = await prisma.deck.findUnique({
-      where: { id },
-      include: {
-        cards: true,
-        user: {
-          select: { id: true, name: true, username: true, image: true },
-        },
-      },
-    });
-
+    const deck = await findDeckForViewer(id, session?.user?.id ?? null);
     if (!deck) {
       return NextResponse.json({ error: "Deck not found" }, { status: 404 });
     }
-
-    // Allow access only if public OR owner
-    const isOwner = currentUserId !== null && deck.userId === currentUserId;
-    if (!deck.isPublic && !isOwner) {
-      return NextResponse.json({ error: "Deck not found" }, { status: 404 });
-    }
-
-    // Strip shareToken before returning
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- omit shareToken from public response
-    const { shareToken: _omitted, ...publicDeck } = deck;
-    return NextResponse.json({ ...publicDeck, isOwner });
+    return NextResponse.json(deck);
   } catch (error) {
     logger.error(
       error instanceof Error ? error.message : "unknown",

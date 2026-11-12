@@ -19,6 +19,7 @@ import { DecksHomeControls } from "@/components/deck/DecksHomeControls";
 import { DeckComparisonPanel } from "@/components/deck/DeckComparisonPanel";
 import { DeckFolderControls } from "@/components/deck/DeckFolderControls";
 import { DeckListRefreshNotice } from "@/components/deck/DeckListRefreshNotice";
+import { GuestDeckClaimOffer } from "@/components/deck/GuestDeckClaimOffer";
 import { LibraryCardSkeleton } from "@/components/layout/RouteSkeleton";
 import { Input } from "@/components/ui/Input";
 import {
@@ -127,7 +128,8 @@ export default function DecksPage() {
 
     setIsCreating(true);
     try {
-      const name = `New Deck ${deckList.length + 1}`;
+      // Stored once, in the creator's locale; renaming stays the user's call.
+      const name = t("home.newDeckName", { index: deckList.length + 1 });
       const id = await createDeck(name);
       router.push(`/builder/${id}`);
     } catch (error) {
@@ -143,6 +145,10 @@ export default function DecksPage() {
       setIsCreating(false);
     }
   }, [createDeck, deckList.length, isCreating, router, t, addToast]);
+
+  const handleGuestDeckSaved = useCallback(() => {
+    void loadDecks();
+  }, [loadDecks]);
 
   const handleRetryLoad = useCallback(() => {
     setIsLoading(true);
@@ -206,6 +212,11 @@ export default function DecksPage() {
             isCreating={isCreating}
           />
         </div>
+
+        <GuestDeckClaimOffer
+          placement="inline"
+          onSaved={handleGuestDeckSaved}
+        />
 
         {sessionBlocked && (
           <div className="flex flex-col items-center justify-center py-24 text-center">

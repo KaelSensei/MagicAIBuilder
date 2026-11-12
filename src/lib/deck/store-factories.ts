@@ -7,21 +7,16 @@
 //
 // @module deck/store-factories
 import type { Deck, DeckCard } from "./types";
+import type { CommandSlot } from "./bulk-edit-command-zone";
 import type * as deckApi from "@/lib/db/deck-api";
+import { parseBracketLevel } from "@/lib/constants/brackets";
 import { rebuildCardFaces } from "./store-card-faces";
+import { countLoadedCards, withLoadedCardCount } from "./loaded-card-count";
 
 export { buildCardFaces, makeDeckCard } from "./store-card-faces";
 
-/**
- * Keeps a manual bracket only when it is one of the four Commander brackets.
- *
- * @param value - bracket stored by the API
- * @returns the bracket, or null when it is absent or out of range
- */
-function toManualBracket(value: number | null | undefined): Deck["manualBracket"] {
-  if (value === 1 || value === 2 || value === 3 || value === 4) return value;
-  return null;
-}
+/** The target bracket of a new deck, and of a stored one outside 1–5 (the database default). */
+const DEFAULT_TARGET_BRACKET: Deck["targetBracket"] = 3;
 
 /**
  * Builds an empty deck shell.
@@ -47,7 +42,7 @@ export function createEmptyDeck(
     maybeboard: [],
     format,
     cardCount: 0,
-    targetBracket: 3,
+    targetBracket: DEFAULT_TARGET_BRACKET,
     manualBracket: null,
     budget: null,
     description: "",
@@ -137,16 +132,15 @@ export function apiDeckToStoreDeck(d: deckApi.ApiDeck): Deck {
   const allCards = d.cards ?? [];
   const { commanderCard, partnerCard, companionCard, deckCards } = partitionApiCards(allCards);
 
-  // cardCount: use _count from listing endpoint, or derive from full card list
-  const cardCount = d._count?.cards ?? allCards.length;
-
-  return {
+  // The listing sends the server's row count; a full deck is counted from the
+  // rows it holds, once the command zone has been read out of them.
+  const deck: Deck = {
     id: d.id,
     name: d.name,
     folderId: d.folderId ?? null,
     format: d.format,
-    targetBracket: d.targetBracket,
-    manualBracket: toManualBracket(d.manualBracket),
+    targetBracket: parseBracketLevel(d.targetBracket) ?? DEFAULT_TARGET_BRACKET,
+    manualBracket: parseBracketLevel(d.manualBracket),
     budget: d.budget,
     description: d.description ?? "",
     tags: d.tags ?? [],
@@ -159,31 +153,76 @@ export function apiDeckToStoreDeck(d: deckApi.ApiDeck): Deck {
     companion: companionCard ? apiCardToDeckCard(companionCard) : null,
     pairingType: d.pairingType ?? "none",
     cards: deckCards.map(apiCardToDeckCard),
-    cardCount,
+    cardCount: d._count?.cards ?? 0,
     maybeboard: deckCards
       .filter((card) => (card.zone ?? "main") === "maybeboard")
       .map(apiCardToDeckCard),
     createdAt: new Date(d.createdAt),
     updatedAt: new Date(d.updatedAt),
   };
+  const held = d._count ? deck : withLoadedCardCount(deck);
+  // A whole deck just read is current: its version is the one to write with.
+  return d.version === undefined ? held : { ...held, version: d.version };
 }
 
 /**
  * Whether a deck in the store is still the lightweight listing version.
  *
  * `GET /api/decks` returns only commander / partner / companion plus a total
- * count, so a stub reports fewer loaded cards than `cardCount`. The full deck
- * comes from `GET /api/decks/[id]`.
+ * count, so a stub holds fewer rows than `cardCount`. The full deck comes from
+ * `GET /api/decks/[id]`, and every edit of a loaded deck keeps `cardCount`
+ * equal to its rows (`withLoadedCardCount`), so a loaded deck never reads as a
+ * stub again.
  *
  * @param deck - a deck held in the store
  * @returns true when its main-deck cards have not been loaded yet
  */
 export function isDeckStub(deck: Deck): boolean {
-  const loaded =
-    deck.cards.length +
-    (deck.commander ? 1 : 0) +
-    (deck.partner ? 1 : 0) +
-    (deck.companion ? 1 : 0);
+  return countLoadedCards(deck) < deck.cardCount;
+}
 
-  return loaded < deck.cardCount;
+/**
+ * The API payload that saves a deck card as a new row outside the command zone.
+ *
+ * @param card - the card as the store would hold it
+ * @returns the row to create
+ */
+export function addCardPayload(card: DeckCard): deckApi.AddCardPayload {
+  return {
+    scryfallId: card.scryfallId ?? card.id,
+    name: card.name,
+    manaCost: card.manaCost,
+    cmc: card.cmc,
+    typeLine: card.typeLine,
+    oracleText: card.oracleText,
+    power: card.power ?? null,
+    toughness: card.toughness ?? null,
+    colorIdentity: card.colorIdentity,
+    isGameChanger: card.isGameChanger,
+    isBanned: card.isBanned,
+    price: card.price,
+    imageUri: card.imageUri,
+    artCropUri: card.artCropUri,
+    category: card.category,
+    quantity: card.quantity,
+    isCommander: false,
+    isPartner: false,
+    zone: card.zone,
+  };
+}
+
+/**
+ * The API payload that saves a card into a command-zone slot.
+ *
+ * @param card - the card as the store would hold it
+ * @param slot - the slot it fills
+ * @returns the row to create
+ */
+export function commandCardPayload(card: DeckCard, slot: CommandSlot): deckApi.AddCardPayload {
+  return {
+    ...addCardPayload({ ...card, quantity: 1, zone: "main" }),
+    category: slot === "companion" ? "companion" : "commander",
+    isCommander: slot !== "companion",
+    isPartner: slot === "partner",
+  };
 }

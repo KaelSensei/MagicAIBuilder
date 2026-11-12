@@ -2,7 +2,7 @@
 // Main builder view — 3-panel layout: Search | DeckEditor | Stats
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import {
   DndContext,
   DragEndEvent,
@@ -18,9 +18,6 @@ import {
 import type { CollisionDetection } from "@dnd-kit/core";
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import {
-  Search,
-  LayoutGrid,
-  BarChart3,
   ArrowLeft,
   Check,
   Copy,
@@ -36,7 +33,7 @@ import { addNamedCardToZone } from "@/lib/deck/ai-add-card";
 import { logger } from "@/lib/logger";
 import { useUIStore } from "@/lib/ui/store";
 import { useBracketScore } from "@/hooks/useBracketScore";
-import { useCardSearch } from "@/hooks/useCardSearch";
+import { useCardSearchResults } from "@/hooks/useCardSearchResults";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { Header } from "@/components/layout/Header";
 import { SearchBar } from "@/components/search/SearchBar";
@@ -45,6 +42,8 @@ import { SearchResults } from "@/components/search/SearchResults";
 import { DeckEditor } from "@/components/deck/DeckEditor";
 import { DeckStats } from "@/components/deck/DeckStats";
 import { BracketIndicator } from "@/components/deck/BracketIndicator";
+import { DeckDetailsPanel } from "@/components/deck/DeckDetailsPanel";
+import { SharePopover } from "@/components/deck/SharePopover";
 import { GameChangersBadge } from "@/components/deck/GameChangersBadge";
 import { BanlistAlert } from "@/components/deck/BanlistAlert";
 import {
@@ -63,14 +62,18 @@ import type {
   DeckZone,
 } from "@/lib/deck/types";
 import type { DeckFormat } from "@/lib/deck/formats";
+import type { PairingCard } from "@/lib/deck/partner-abilities";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 
-import { KeyboardShortcutsModal } from "@/components/layout/KeyboardShortcutsModal";
+import {
+  KeyboardShortcutsModal,
+  KeyboardShortcutsTrigger,
+} from "@/components/layout/KeyboardShortcutsModal";
 import { Link } from "@/i18n/navigation";
 import { motion } from "framer-motion";
 import { cn } from "@/components/ui/utils";
-import { CombosPanel } from "@/components/deck/CombosPanel";
-import { useCombos } from "@/hooks/useCombos";
+import { CombosPanel } from "@/modules/combos/ui/CombosPanel";
+import { useCombos } from "@/modules/combos/client";
 import { ExportModal } from "@/components/deck/ExportModal";
 import { ImportDialog } from "@/components/deck/ImportDialog";
 import { BulkEditModal } from "@/components/deck/BulkEditModal";
@@ -93,6 +96,16 @@ import { CardPackagesPanel } from "@/components/deck/CardPackagesPanel";
 import { useGameChangersSet } from "@/hooks/useGameChangers";
 import { useBanlistSet } from "@/hooks/useBanlist";
 import { BuilderNameSearchModeBar } from "@/components/builder/BuilderNameSearchModeBar";
+import { BuilderDescribedSearch } from "@/components/builder/BuilderDescribedSearch";
+import {
+  buildNaturalLanguageSearchContext,
+  toSearchLocale,
+} from "@/lib/search/natural-language-query";
+import { BuilderColorSearchPicker } from "@/components/builder/BuilderColorSearchPicker";
+import {
+  BuilderMobileTabBar,
+  type BuilderMobilePanel,
+} from "@/components/builder/BuilderMobileTabBar";
 import { GuestDeckNotice } from "@/components/builder/GuestDeckNotice";
 import { GUEST_DECK_ID } from "@/lib/deck/guest-deck";
 import { explicitDropZone, preferSmallerDropTarget, searchDropZone } from "@/lib/deck/drop-targets";
@@ -113,8 +126,40 @@ interface BuildSearchQueryFromModeParams {
   readonly commanderMode: boolean;
   readonly partnerMode: boolean;
   readonly companionMode: boolean;
-  readonly deckPairingType?: string;
+  /** The deck's commander, whose partner abilities decide the partner search. */
+  readonly deckCommander: PairingCard | null;
   readonly format?: DeckFormat;
+}
+
+function pinnedQueryLabel(pinned: string | null): string | undefined {
+  if (pinned === null) return undefined;
+  return pinned;
+}
+
+/** Name search can describe a card only when it is not choosing a command slot. */
+function nameSearchAllowsDescription(input: {
+  readonly mode: SearchMode;
+  readonly commanderMode: boolean;
+  readonly partnerMode: boolean;
+  readonly companionMode: boolean;
+}): boolean {
+  return (
+    input.mode === "name" &&
+    !input.commanderMode &&
+    !input.partnerMode &&
+    !input.companionMode
+  );
+}
+
+/** The confirmed description search, or the syntax query when none is pinned. */
+function searchQueryOrPinned(pinned: string | null, syntax: string): string {
+  if (pinned === null) return syntax;
+  return pinned;
+}
+
+/** The confirmed description search is active only while description search is allowed. */
+function descriptionSearchIsActive(describing: boolean, allowed: boolean): boolean {
+  return describing && allowed;
 }
 
 /** Build Scryfall search query based on current mode and filters */
@@ -125,7 +170,7 @@ function buildSearchQueryFromMode(p: BuildSearchQueryFromModeParams): string {
   }
   if (p.partnerMode) {
     return buildPartnerSearchQuery(
-      p.deckPairingType ?? "none",
+      p.deckCommander,
       p.searchText,
       p.filters,
       fmt
@@ -268,10 +313,11 @@ function UnavailableBuilderPage({
 
 export default function BuilderPage() {
   const t = useTranslations("builder");
+  const searchLocale = toSearchLocale(useLocale());
   const params = useParams();
   const router = useRouter();
   const deckId = params.deckId as string;
-  const { data: sessionData } = useSession();
+  const { data: sessionData, status: sessionStatus } = useSession();
 
   const setActiveDeck = useDeckStore((s) => s.setActiveDeck);
   const addCard = useDeckStore((s) => s.addCard);
@@ -333,12 +379,18 @@ export default function BuilderPage() {
     if (!deck) return null;
     return computeDeckStats(deck);
   }, [deck]);
-  const { data: combos, isLoading: combosLoading, dataUpdatedAt: combosUpdatedAt } = useCombos(deck);
+  const {
+    data: combos,
+    isLoading: combosLoading,
+    isError: combosUnavailable,
+    dataUpdatedAt: combosUpdatedAt,
+  } = useCombos(deck);
   const bracketScore = useBracketScore(deck, combos);
   const {
     result: aiResult,
     isLoading: aiLoading,
     error: aiError,
+    denial: aiDenial,
     analyze: analyzeAI,
     detectedArchetype,
     analysedAt,
@@ -351,9 +403,7 @@ export default function BuilderPage() {
   const [activeZone, setActiveZone] = useState<DeckZone>("main");
 
   // Mobile panel state — which panel is visible on small screens
-  const [mobilePanel, setMobilePanel] = useState<"search" | "deck" | "stats">(
-    "deck"
-  );
+  const [mobilePanel, setMobilePanel] = useState<BuilderMobilePanel>("deck");
 
   // Search state
   const [searchText, setSearchText] = useState("");
@@ -375,6 +425,8 @@ export default function BuilderPage() {
 
   // Search mode
   const [searchMode, setSearchMode] = useState<SearchMode>("name");
+  const [describeSearch, setDescribeSearch] = useState(false);
+  const [pinnedQuery, setPinnedQuery] = useState<string | null>(null);
   const [selectedSet, setSelectedSet] = useState<string>("");
   const [colorFilter, setColorFilter] = useState<string[]>([]);
   const toggleColorFilter = useCallback((code: string) => {
@@ -425,14 +477,39 @@ export default function BuilderPage() {
       return "";
     }
 
-    return `${stats.bannedCards.join("\u0000")}::${stats.colorIdentityViolations.join("\u0000")}`;
+    const ruleIssueIds = stats.commanderRuleIssues.map((issue) => issue.cardId);
+    return `${stats.bannedCards.join("\u0000")}::${stats.colorIdentityViolations.join("\u0000")}::${ruleIssueIds.join("\u0000")}`;
   }, [stats]);
 
   useEffect(() => {
     setIsBanlistAlertDismissed(false);
   }, [banlistAlertKey]);
 
-  const query = buildSearchQueryFromMode({
+  const naturalSearchContext = useMemo(
+    () =>
+      buildNaturalLanguageSearchContext({
+        format: deck?.format ?? "commander",
+        commanderColorIdentity: deck?.commander?.colorIdentity ?? [],
+        partnerColorIdentity: deck?.partner?.colorIdentity ?? [],
+        hasCommander: deck?.commander != null,
+      }),
+    [deck?.format, deck?.commander, deck?.partner]
+  );
+  const naturalSearchAllowed = nameSearchAllowsDescription({
+    mode: searchMode,
+    commanderMode,
+    partnerMode,
+    companionMode,
+  });
+  const describeActive = descriptionSearchIsActive(describeSearch, naturalSearchAllowed);
+
+  useEffect(() => {
+    if (naturalSearchAllowed) return;
+    setDescribeSearch(false);
+    setPinnedQuery(null);
+  }, [naturalSearchAllowed]);
+
+  const syntaxQuery = buildSearchQueryFromMode({
     mode: searchMode,
     searchText,
     filters,
@@ -441,18 +518,30 @@ export default function BuilderPage() {
     commanderMode,
     partnerMode,
     companionMode,
-    deckPairingType: deck?.pairingType,
+    deckCommander: deck?.commander ?? null,
     format: deck?.format,
   });
+  const query = searchQueryOrPinned(pinnedQuery, syntaxQuery);
 
-  const {
-    data: searchData,
-    isLoading: searchLoading,
-    error: searchError,
-  } = useCardSearch(query);
+  // Set and colour search show no filters panel, so a "Collection only" left on there must not
+  // filter a list whose toggle the player cannot see.
+  const searchResults = useCardSearchResults(query, {
+    collectionOnly: searchMode === "name" && filters.collectionOnly === true,
+    sessionStatus,
+  });
+  const searchLoading = searchResults.isLoading;
 
   const handleSearch = useCallback((text: string) => {
     setSearchText(text);
+    if (text.trim().length > 0) setPinnedQuery(null);
+  }, []);
+
+  const handleDescribeActive = useCallback((active: boolean) => {
+    setDescribeSearch(active);
+  }, []);
+
+  const handleNaturalQuery = useCallback((nextQuery: string) => {
+    setPinnedQuery(nextQuery);
   }, []);
 
   const handleCardClick = useCallback(
@@ -510,7 +599,7 @@ export default function BuilderPage() {
 
   // Keyboard shortcuts — global listener
   useKeyboardShortcuts({
-    searchResults: searchData?.data ?? [],
+    searchResults: searchResults.cards,
     onAddCard: handleCardClick,
     isInputFocused,
   });
@@ -685,16 +774,19 @@ export default function BuilderPage() {
   const handleStartEditName = () => {
     setNameInput(deck.name);
     setIsEditingName(true);
+    setIsInputFocused(true);
     setTimeout(() => {
       nameInputRef.current?.focus({ preventScroll: true });
       nameInputRef.current?.select();
     }, 0);
   };
 
-  const handleSaveName = async () => {
-    const trimmed = nameInput.trim();
-    if (trimmed && trimmed !== deck.name) await renameDeck(deckId, trimmed);
+  const commitDeckName = (rawName: string) => {
+    const trimmed = rawName.trim();
     setIsEditingName(false);
+    setIsInputFocused(false);
+    if (!trimmed || trimmed === deck.name) return;
+    void renameDeck(deckId, trimmed);
   };
 
   return (
@@ -730,17 +822,23 @@ export default function BuilderPage() {
                 aria-label={t("actions.rename")}
                 value={nameInput}
                 onChange={(e) => setNameInput(e.target.value)}
-                onBlur={handleSaveName}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") void handleSaveName();
-                  if (e.key === "Escape") setIsEditingName(false);
+                onFocus={() => setIsInputFocused(true)}
+                onBlur={(event) => commitDeckName(event.currentTarget.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    commitDeckName(event.currentTarget.value);
+                  }
+                  if (event.key === "Escape") setIsEditingName(false);
                 }}
                 className="flex-1 text-sm font-semibold bg-transparent border-b border-[var(--accent)] text-[var(--text-primary)] outline-none min-w-0"
                 maxLength={200}
               />
               <button
                 type="button"
-                onClick={handleSaveName}
+                onClick={() =>
+                  commitDeckName(nameInputRef.current?.value ?? nameInput)
+                }
                 className="text-green-400 hover:text-green-300 shrink-0"
               >
                 <Check className="w-3.5 h-3.5" />
@@ -761,7 +859,7 @@ export default function BuilderPage() {
           )}
           {deck.isAIGenerated && (
             <span className="text-xs px-1.5 py-0.5 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/30">
-              ✨ AI
+              ✨ {t("badges.ai")}
             </span>
           )}
           <span className="text-xs text-[var(--text-secondary)]">
@@ -783,7 +881,9 @@ export default function BuilderPage() {
                 title={t("actions.duplicate")}
               >
                 <Copy className="w-3 h-3" />
-                <span className="hidden sm:inline">Duplicate</span>
+                <span className="hidden sm:inline">
+                  {t("actionLabels.duplicate")}
+                </span>
               </button>
             )}
             {/* Bulk edit — edit deck as plain text */}
@@ -794,7 +894,9 @@ export default function BuilderPage() {
                 title={t("actions.bulkEdit")}
               >
                 <FileText className="w-3 h-3" />
-                <span className="hidden sm:inline">Bulk Edit</span>
+                <span className="hidden sm:inline">
+                  {t("actionLabels.bulkEdit")}
+                </span>
               </button>
             </BulkEditModal>
             {/* Playtest deck */}
@@ -805,7 +907,9 @@ export default function BuilderPage() {
               title={t("actions.playtest")}
             >
               <Dices className="w-3 h-3" />
-              <span className="hidden sm:inline">Playtest</span>
+              <span className="hidden sm:inline">
+                {t("actionLabels.playtest")}
+              </span>
             </button>
             {/* Export deck */}
             <button
@@ -815,8 +919,23 @@ export default function BuilderPage() {
               title={t("actions.export")}
             >
               <Download className="w-3 h-3" />
-              <span className="hidden sm:inline">Export</span>
+              <span className="hidden sm:inline">
+                {t("actionLabels.export")}
+              </span>
             </button>
+            {/* Share link — a guest deck lives in the browser only, so it has none */}
+            {deckId !== GUEST_DECK_ID && (
+              <SharePopover
+                deckId={deckId}
+                initialShareEnabled={deck.shareEnabled}
+                labelClassName="hidden sm:inline"
+              />
+            )}
+            {/* Shortcut list — reachable without "?", which a player can turn off */}
+            <KeyboardShortcutsTrigger
+              className="rounded-full border border-[var(--border)] px-2.5 py-1.5 transition-all hover:border-[var(--accent)] md:px-3"
+              labelClassName="hidden sm:inline"
+            />
             {/* Visibility toggle — public / private */}
             {deckId !== GUEST_DECK_ID && (
               <DeckVisibilityToggle
@@ -875,12 +994,17 @@ export default function BuilderPage() {
               {/* Mode-specific controls */}
               {searchMode === "name" && (
                 <>
-                  <SearchBar
+                  <BuilderDescribedSearch
+                    describeActive={describeActive}
+                    allowed={naturalSearchAllowed}
+                    searchLoading={searchLoading}
+                    context={naturalSearchContext}
+                    locale={searchLocale}
                     onSearch={handleSearch}
-                    isLoading={searchLoading}
-                    showKeyboardHint={true}
                     onFocus={() => setIsInputFocused(true)}
                     onBlur={() => setIsInputFocused(false)}
+                    onActiveChange={handleDescribeActive}
+                    onRunQuery={handleNaturalQuery}
                   />
                   <div className="flex items-center gap-2">
                     <button
@@ -888,7 +1012,11 @@ export default function BuilderPage() {
                       onClick={() => setShowFilters((f) => !f)}
                       className="text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
                     >
-                      {showFilters ? "Hide filters" : "Show filters"}
+                      {t(
+                        showFilters
+                          ? "filtersToggle.hide"
+                          : "filtersToggle.show"
+                      )}
                     </button>
                     <div className="ml-auto">
                       <BuilderNameSearchModeBar
@@ -938,76 +1066,48 @@ export default function BuilderPage() {
                     onFocus={() => setIsInputFocused(true)}
                     onBlur={() => setIsInputFocused(false)}
                   />
-                  <div className="flex flex-wrap gap-1.5">
-                    {[
-                      { code: "W", label: "White" },
-                      { code: "U", label: "Blue" },
-                      { code: "B", label: "Black" },
-                      { code: "R", label: "Red" },
-                      { code: "G", label: "Green" },
-                      { code: "C", label: "Colorless" },
-                    ].map((c) => (
-                      <button
-                        type="button"
-                        key={c.code}
-                        onClick={() => toggleColorFilter(c.code)}
-                        className={cn(
-                          "w-9 h-9 rounded-full transition-all border-2 p-0.5",
-                          colorFilter.includes(c.code)
-                            ? "border-[var(--accent)] scale-110"
-                            : "border-transparent opacity-50 hover:opacity-100"
-                        )}
-                        title={c.label}
-                      >
-                        {/* Official Scryfall mana symbol SVGs — SVG external URL, next/image not applicable */}
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={`https://svgs.scryfall.io/card-symbols/${c.code}.svg`}
-                          alt={c.label}
-                          className="w-full h-full"
-                        />
-                      </button>
-                    ))}
-                  </div>
-                  {colorFilter.length === 0 && !searchText && (
-                    <p className="text-xs text-[var(--text-secondary)] italic">
-                      Select colors to browse cards
-                    </p>
-                  )}
+                  <BuilderColorSearchPicker
+                    selected={colorFilter}
+                    hasNameFilter={searchText !== ""}
+                    onToggle={toggleColorFilter}
+                  />
                 </div>
               )}
             </div>
 
             <div className="flex-1 overflow-y-auto">
               <SearchResults
-                cards={searchData?.data ?? []}
+                cards={searchResults.cards}
                 isLoading={searchLoading}
-                error={searchError instanceof Error ? searchError : null}
-                totalCards={searchData?.total_cards}
+                error={searchResults.error}
+                totalCards={searchResults.totalCards}
+                collectionOnly={searchResults.collectionOnly}
                 onCardClick={handleCardClick}
                 onAddToMaybeboard={addToMaybeboard}
                 onAddToZone={handleAddToZone}
                 draggable={true}
+                executedQuery={pinnedQueryLabel(pinnedQuery)}
               />
             </div>
           </motion.div>
 
-          {/* Resize handle between panel 1 and 2 — hidden on mobile */}
-          <div
-            role="slider"
+          {/* Resize handle between panel 1 and 2 — hidden on mobile. A focusable
+              <hr> with a value is the WAI-ARIA window splitter: the native
+              separator, valued by the panel width it moves. The classes undo the
+              user-agent rule (`height: 0`, a top border, `overflow: hidden`) and
+              the `before:` box widens the 4px line into an 8px grab area. */}
+          <hr
             aria-label={t("actions.resizePanel")}
-            aria-orientation="horizontal"
+            aria-orientation="vertical"
             aria-valuemin={220}
             aria-valuemax={520}
             aria-valuenow={searchPanelWidth}
             tabIndex={0}
             onMouseDown={handleSearchResize}
             onKeyDown={handleSearchResizeKeyDown}
-            className="hidden lg:block w-1 shrink-0 cursor-col-resize hover:bg-[var(--accent)]/40 active:bg-[var(--accent)]/60 transition-colors group relative z-10"
+            className="hidden lg:block relative z-10 h-auto w-1 shrink-0 self-stretch overflow-visible border-0 cursor-col-resize transition-colors hover:bg-[var(--accent)]/40 active:bg-[var(--accent)]/60 before:absolute before:inset-y-0 before:-left-0.5 before:-right-0.5"
             title={t("actions.resizeHint")}
-          >
-            <div className="absolute inset-y-0 -left-0.5 -right-0.5" />
-          </div>
+          />
 
           {/* Panel 2: Deck Editor (flex-1) */}
           <motion.div
@@ -1025,11 +1125,13 @@ export default function BuilderPage() {
             {stats &&
               !isBanlistAlertDismissed &&
               (stats.bannedCards.length > 0 ||
-                stats.colorIdentityViolations.length > 0) && (
+                stats.colorIdentityViolations.length > 0 ||
+                stats.commanderRuleIssues.length > 0) && (
                 <div className="p-3 border-b border-[var(--border)]">
                   <BanlistAlert
                     bannedCards={stats.bannedCards}
                     colorViolations={stats.colorIdentityViolations}
+                    rulesIssues={stats.commanderRuleIssues}
                     onDismiss={() => setIsBanlistAlertDismissed(true)}
                   />
                 </div>
@@ -1057,6 +1159,8 @@ export default function BuilderPage() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3, delay: 0.15 }}
           >
+            <DeckDetailsPanel deck={deck} />
+
             <BracketIndicator
               score={bracketScore}
               targetBracket={deck.targetBracket}
@@ -1086,6 +1190,7 @@ export default function BuilderPage() {
               result={aiResult}
               isLoading={aiLoading}
               error={aiError}
+              denial={aiDenial}
               onAnalyze={handleAIAnalyze}
               onAddCard={handleAIAddCard}
               onRemoveCard={(cardName) => {
@@ -1112,6 +1217,7 @@ export default function BuilderPage() {
             <CombosPanel
               combos={combos}
               isLoading={combosLoading}
+              isUnavailable={combosUnavailable}
               isEnabled={(deck?.cards.length ?? 0) >= 10}
               observedAt={combosUpdatedAt ? new Date(combosUpdatedAt) : undefined}
             />
@@ -1135,28 +1241,10 @@ export default function BuilderPage() {
           </motion.div>
 
           {/* Mobile bottom tab bar */}
-          <div className="absolute right-0 bottom-0 left-0 z-30 flex border-t border-[var(--border)] bg-[var(--surface)]/95 backdrop-blur-md lg:hidden">
-            {[
-              { id: "search" as const, icon: Search, label: "Search" },
-              { id: "deck" as const, icon: LayoutGrid, label: "Deck" },
-              { id: "stats" as const, icon: BarChart3, label: "Stats" },
-            ].map((tab) => (
-              <button
-                type="button"
-                key={tab.id}
-                onClick={() => setMobilePanel(tab.id)}
-                className={cn(
-                  "flex flex-1 flex-col items-center gap-0.5 py-2.5 text-xs transition-colors",
-                  mobilePanel === tab.id
-                    ? "bg-[var(--accent-soft)] text-[var(--accent-text)]"
-                    : "text-[var(--text-secondary)]"
-                )}
-              >
-                <tab.icon className="w-4 h-4" />
-                {tab.label}
-              </button>
-            ))}
-          </div>
+          <BuilderMobileTabBar
+            activePanel={mobilePanel}
+            onSelect={setMobilePanel}
+          />
         </div>
       </div>
 

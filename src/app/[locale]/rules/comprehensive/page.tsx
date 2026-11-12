@@ -1,12 +1,8 @@
-import type { Metadata } from "next";
 import { Header } from "@/components/layout/Header";
 import { ComprehensiveRulesView } from "@/components/rules/ComprehensiveRulesView";
+import { fixedPageMetadata } from "@/lib/seo/page-metadata";
 
-export const metadata: Metadata = {
-  title: "Comprehensive Rules — MagicAIBuilder",
-  description:
-    "Browse the official Magic: The Gathering Comprehensive Rules, chapter by chapter, including the full glossary.",
-};
+export const generateMetadata = fixedPageMetadata("rules.comprehensive");
 
 interface ComprehensiveRulesPageProps {
   readonly searchParams: Promise<{ chapter?: string; q?: string }>;

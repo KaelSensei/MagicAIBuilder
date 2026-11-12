@@ -20,6 +20,7 @@ import { useCollectionStore } from "@/lib/collection/store";
 import { AddToCollectionDialog } from "./AddToCollectionDialog";
 import { formatCollectionText } from "@/lib/collection/shopping-list";
 import { formatCollectionPrintingCsv } from "@/lib/collection/printing-csv";
+import { downloadTextFile } from "@/lib/download-text-file";
 import { Button } from "@/components/ui/Button";
 import { cardSurfaceClassName } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
@@ -111,13 +112,7 @@ export function CollectionPageClient() {
 
   const handleExportCsv = useCallback(() => {
     const csv = formatCollectionPrintingCsv(exportCards);
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "my-collection.csv";
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadTextFile(csv, "my-collection.csv", "text/csv;charset=utf-8;");
   }, [exportCards]);
 
   const openPrintingsModal = useCallback(async (card: CollectionCard) => {
@@ -137,7 +132,7 @@ export function CollectionPageClient() {
       await swapPrinting(printingsTarget.id, {
         scryfallId: printing.id,
         name: printing.name,
-        imageUri: getCardImageUri(printing, "normal"),
+        imageUri: getCardImageUri(printing, "grid"),
         price: printing.prices?.usd
           ? Number.parseFloat(printing.prices.usd)
           : null,

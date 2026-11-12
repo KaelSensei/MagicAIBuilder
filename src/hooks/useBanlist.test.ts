@@ -1,21 +1,10 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { renderHook, waitFor } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import React from "react";
+import { waitFor } from "@testing-library/react";
 import { useBanlistQuery, useBanlistSet } from "./useBanlist";
 import * as scryfallClient from "@/lib/scryfall/client";
+import { renderHookWithProviders } from "@/test/render";
 
-vi.mock("@/lib/scryfall/client");
-
-function createWrapper() {
-  const client = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
-  });
-  function Wrapper({ children }: { children: React.ReactNode }) {
-    return React.createElement(QueryClientProvider, { client }, children);
-  }
-  return Wrapper;
-}
+vi.mock(import("@/lib/scryfall/client"));
 
 afterEach(() => {
   vi.clearAllMocks();
@@ -28,9 +17,7 @@ describe("useBanlistQuery", () => {
       bannedCards as never
     );
 
-    const { result } = renderHook(() => useBanlistQuery(), {
-      wrapper: createWrapper(),
-    });
+    const { result } = renderHookWithProviders(() => useBanlistQuery());
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data).toHaveLength(1);
@@ -46,9 +33,7 @@ describe("useBanlistQuery", () => {
       cards as never
     );
 
-    const { result } = renderHook(() => useBanlistQuery(), {
-      wrapper: createWrapper(),
-    });
+    const { result } = renderHookWithProviders(() => useBanlistQuery());
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data).toHaveLength(2);
@@ -61,9 +46,7 @@ describe("useBanlistSet", () => {
     vi.mocked(scryfallClient.fetchAllPages).mockImplementation(
       () => new Promise(() => {})
     );
-    const { result } = renderHook(() => useBanlistSet(), {
-      wrapper: createWrapper(),
-    });
+    const { result } = renderHookWithProviders(() => useBanlistSet());
     expect(result.current.bannedNames.size).toBe(0);
     expect(result.current.isLoaded).toBe(false);
   });
@@ -77,9 +60,7 @@ describe("useBanlistSet", () => {
       bannedCards as never
     );
 
-    const { result } = renderHook(() => useBanlistSet(), {
-      wrapper: createWrapper(),
-    });
+    const { result } = renderHookWithProviders(() => useBanlistSet());
 
     await waitFor(() => expect(result.current.isLoaded).toBe(true));
     expect(result.current.bannedNames.has("Emrakul, the Aeons Torn")).toBe(true);

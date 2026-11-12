@@ -93,3 +93,9 @@ export function saveGuestDeck(deck: Deck): void {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(GUEST_DECK_STORAGE_KEY, serializeGuestDeck(deck));
 }
+
+/** Removes the guest deck from this browser, once an account holds a copy. */
+export function clearGuestDeck(): void {
+  if (typeof window === "undefined") return;
+  window.localStorage.removeItem(GUEST_DECK_STORAGE_KEY);
+}

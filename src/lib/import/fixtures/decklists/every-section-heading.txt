@@ -1,0 +1,16 @@
+Commander:
+1 Thrasios, Triton Hero
+Partner:
+1 Tymna the Weaver
+Companion:
+1 Lurrus of the Dream-Den
+Deck:
+1 Sol Ring
+SIDEBOARD:
+2 Negate
+Maybeboard:
+1 Ponder
+Considering:
+1 Teferi's Protection
+Main:
+1 Arcane Signet

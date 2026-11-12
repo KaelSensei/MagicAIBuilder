@@ -1,8 +1,10 @@
 // Deck statistics computation
-import type { Deck, DeckStats } from "./types";
+import type { Deck } from "./types";
+import type { DeckStats } from "./analysis-types";
 import { detectThemes } from "./themes";
 import { extractColorPips } from "@/lib/mana/parse";
 import { getColorIdentityViolations } from "./color-identity";
+import { getCommanderRuleIssues } from "./commander-rules-check";
 import { buildFormatStats } from "./format-stats";
 import { buildManaAlignment } from "./mana-alignment";
 import { buildTurnOnePlayability } from "./turn-one";
@@ -120,6 +122,7 @@ export function computeDeckStats(deck: Deck): DeckStats {
     overBudgetCards,
     bannedCards,
     colorIdentityViolations,
+    commanderRuleIssues: getCommanderRuleIssues(deck),
     themes,
     flexibleLands,
   };

@@ -5,7 +5,7 @@ import { renderWithIntl as render } from "@/test/render-with-intl";
 import { getCardRulings } from "@/lib/scryfall/rulings";
 import { CardRulingsPanel } from "./CardRulingsPanel";
 
-vi.mock("@/lib/scryfall/rulings", () => ({ getCardRulings: vi.fn() }));
+vi.mock(import("@/lib/scryfall/rulings"), () => ({ getCardRulings: vi.fn() }));
 
 beforeEach(() => {
   vi.clearAllMocks();

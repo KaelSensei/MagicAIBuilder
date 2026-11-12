@@ -58,8 +58,12 @@ const FIXTURE = [
 describe("parseComprehensiveRules", () => {
   const parsed = parseComprehensiveRules(FIXTURE);
 
-  it("extracts the effective date", () => {
-    expect(parsed.effectiveDate).toBe("August 7, 2026");
+  it("parses the effective date into a calendar date", () => {
+    expect(parsed.effectiveDate).toEqual(new Date(Date.UTC(2026, 7, 7)));
+  });
+
+  it("has no effective date when the file does not state one", () => {
+    expect(parseComprehensiveRules("Glossary\n").effectiveDate).toBeNull();
   });
 
   it("parses sections with their chapters", () => {
@@ -118,6 +122,10 @@ describe("parseComprehensiveRules", () => {
 
 describe("loadComprehensiveRules (real file)", () => {
   const rules = loadComprehensiveRules();
+
+  it("reads the effective date of the bundled file", () => {
+    expect(rules.effectiveDate).toEqual(new Date(Date.UTC(2026, 7, 7)));
+  });
 
   it("parses all 9 sections", () => {
     expect(rules.sections).toHaveLength(9);

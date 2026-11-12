@@ -1,15 +1,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
-vi.mock("@/lib/logger", () => ({
-  logger: { info: vi.fn() },
+vi.mock(import("@/lib/logger"), () => ({
+  logger: { warn: vi.fn(), error: vi.fn(), info: vi.fn() },
 }));
 
-// Mock deck-api cache functions before importing client
-vi.mock("@/lib/db/deck-api", () => ({
+// Mock the shared-cache lookups before importing client
+vi.mock(import("@/lib/scryfall/shared-cache-client"), () => ({
   lookupCardCache: vi.fn(async () => null),
-  storeCardCache: vi.fn(async () => undefined),
   lookupSearchCache: vi.fn(async () => null),
-  storeSearchCache: vi.fn(async () => undefined),
 }));
 
 import {
@@ -19,13 +17,12 @@ import {
   getCardById,
   autocompleteCardName,
   getCardCollection,
-  getGameChangers,
-  getCommanderBanlist,
   searchCardPrintings,
   fetchLocalizedPrintingsByNames,
   __resetRateLimiter,
+  SCRYFALL_TIMEOUT_MS,
 } from "@/lib/scryfall/client";
-import { lookupCardCache } from "@/lib/db/deck-api";
+import { lookupCardCache } from "@/lib/scryfall/shared-cache-client";
 import { logger } from "@/lib/logger";
 import type {
   ScryfallCard,
@@ -428,48 +425,6 @@ describe("fetchLocalizedPrintingsByNames", () => {
   });
 });
 
-describe("getGameChangers", () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-  });
-  afterEach(() => {
-    vi.useRealTimers();
-    vi.restoreAllMocks();
-    __resetRateLimiter();
-  });
-
-  it("searches for is:gamechanger", async () => {
-    mockFetchSuccess(makeSearchResponse());
-    const promise = getGameChangers();
-    vi.runAllTimers();
-    await promise;
-    const fetchCall = (global.fetch as ReturnType<typeof vi.fn>).mock
-      .calls[0][0] as string;
-    expect(fetchCall).toContain("gamechanger");
-  });
-});
-
-describe("getCommanderBanlist", () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-  });
-  afterEach(() => {
-    vi.useRealTimers();
-    vi.restoreAllMocks();
-    __resetRateLimiter();
-  });
-
-  it("searches for banned:commander", async () => {
-    mockFetchSuccess(makeSearchResponse());
-    const promise = getCommanderBanlist();
-    vi.runAllTimers();
-    await promise;
-    const fetchCall = (global.fetch as ReturnType<typeof vi.fn>).mock
-      .calls[0][0] as string;
-    expect(fetchCall).toContain("banned%3Acommander");
-  });
-});
-
 describe("searchCardPrintings", () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -491,12 +446,37 @@ describe("searchCardPrintings", () => {
     expect(fetchCall).toContain("unique=prints");
     expect(fetchCall).toContain("game%3Apaper");
   });
+
+  // Scryfall has no escape for a quote inside `!"…"`: the double-quoted form
+  // of this name finds nothing (HTTP 404), the single-quoted form finds its
+  // three printings (api.scryfall.com, checked 2026-11-11).
+  it("finds the printings of a name that holds double quotes", async () => {
+    mockFetchSuccess(makeSearchResponse([makeScryfallCard()]));
+    const promise = searchCardPrintings('Henzie "Toolbox" Torre');
+    vi.runAllTimers();
+    await promise;
+
+    const fetchCall = (global.fetch as ReturnType<typeof vi.fn>).mock
+      .calls[0][0] as string;
+    expect(new URL(fetchCall).searchParams.get("q")).toBe(
+      `!'Henzie "Toolbox" Torre' game:paper`
+    );
+  });
+
+  it("asks Scryfall nothing for a name no exact term can carry", async () => {
+    mockFetchSuccess(makeSearchResponse([makeScryfallCard()]));
+    const promise = searchCardPrintings(`Bad "Name's"`);
+    vi.runAllTimers();
+
+    await expect(promise).resolves.toMatchObject({ total_cards: 0, data: [] });
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
 });
 
-// The module promises "max 10 req/s" and calls its queue an async mutex, so a
+// The request queue paces Scryfall calls and is an async mutex, so a
 // second caller must not reach `fetch` while the first request is still open.
 // The delay itself is skipped under isTestMode(); what is asserted here is the
-// ordering the mutex exists to provide, which is what the 100ms spacing rides on.
+// ordering the mutex exists to provide. request-queue.test.ts tests the spacing.
 describe("rate limiting", () => {
   afterEach(() => {
     vi.restoreAllMocks();
@@ -545,5 +525,97 @@ describe("rate limiting", () => {
     await expect(getCardByName("Llanowar Elves")).resolves.toMatchObject({
       id: "after-failure",
     });
+  });
+});
+
+/**
+ * Stands in for a Scryfall request that never answers: like the real `fetch`,
+ * it rejects with the signal's reason once the signal aborts, and only then.
+ */
+function hangUntilAborted(
+  _input: RequestInfo | URL,
+  init?: RequestInit
+): Promise<Response> {
+  return new Promise((_resolve, reject) => {
+    init?.signal?.addEventListener("abort", () => reject(init.signal?.reason));
+  });
+}
+
+/**
+ * Stands in for a Scryfall request that answers `card` after `delayMs`, unless
+ * its signal aborts first.
+ */
+function answerAfter(delayMs: number, card: ScryfallCard) {
+  return (_input: RequestInfo | URL, init?: RequestInit): Promise<Response> =>
+    new Promise((resolve, reject) => {
+      const timer = setTimeout(
+        () => resolve(new Response(JSON.stringify(card), { status: 200 })),
+        delayMs
+      );
+      init?.signal?.addEventListener("abort", () => {
+        clearTimeout(timer);
+        reject(init.signal?.reason);
+      });
+    });
+}
+
+describe("request headers and timeout in the browser", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+    __resetRateLimiter();
+  });
+
+  it("keeps the browser's own User-Agent, as Scryfall asks of on-page JavaScript", async () => {
+    const fetchMock = vi.fn(
+      async (_input: RequestInfo | URL, _init?: RequestInit) =>
+        new Response(JSON.stringify(makeScryfallCard()), { status: 200 })
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await getCardByName("Sol Ring");
+
+    const headers = new Headers(fetchMock.mock.calls[0]?.[1]?.headers);
+    expect(headers.has("User-Agent")).toBe(false);
+    expect(headers.get("Accept")).toBe("application/json");
+  });
+
+  // jsdom's AbortSignal.timeout runs on the faked timers; Node's does not,
+  // which is why this case lives in the jsdom suite.
+  it("rejects a request Scryfall never answers once the timeout elapses", async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal("fetch", vi.fn(hangUntilAborted));
+
+    let outcome: unknown = "pending";
+    getCardByName("Sol Ring").then(
+      () => (outcome = "resolved"),
+      (error: unknown) => (outcome = error)
+    );
+    await vi.advanceTimersByTimeAsync(SCRYFALL_TIMEOUT_MS);
+
+    expect(outcome).toMatchObject({ name: "TimeoutError" });
+  });
+
+  it("starts the timeout when the request leaves the queue, not while it waits its turn", async () => {
+    vi.useFakeTimers();
+    const firstAnswersAfter = SCRYFALL_TIMEOUT_MS - 1_000;
+    const secondAnswersAfter = 2_000;
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn<typeof fetch>()
+        .mockImplementationOnce(
+          answerAfter(firstAnswersAfter, makeScryfallCard("ring"))
+        )
+        .mockImplementationOnce(
+          answerAfter(secondAnswersAfter, makeScryfallCard("signet"))
+        )
+    );
+
+    void getCardByName("Sol Ring");
+    const second = getCardByName("Arcane Signet");
+    await vi.advanceTimersByTimeAsync(firstAnswersAfter + secondAnswersAfter);
+
+    await expect(second).resolves.toMatchObject({ id: "signet" });
   });
 });

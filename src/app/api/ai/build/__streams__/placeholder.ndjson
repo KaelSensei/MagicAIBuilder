@@ -1,0 +1,41 @@
+{"type":"status","message":"Thinking…"}
+{"type":"commander","name":"Talrand, Sky Summoner"}
+{"type":"status","message":"Building card list…"}
+{"type":"card","name":"Sol Ring","category":"ramp","quantity":1}
+{"type":"card","name":"Arcane Signet","category":"ramp","quantity":1}
+{"type":"card","name":"Mind Stone","category":"ramp","quantity":1}
+{"type":"card","name":"Thought Vessel","category":"ramp","quantity":1}
+{"type":"card","name":"Wayfarer's Bauble","category":"ramp","quantity":1}
+{"type":"card","name":"Hedron Archive","category":"ramp","quantity":1}
+{"type":"card","name":"Worn Powerstone","category":"ramp","quantity":1}
+{"type":"card","name":"Solemn Simulacrum","category":"ramp","quantity":1}
+{"type":"card","name":"Burnished Hart","category":"ramp","quantity":1}
+{"type":"card","name":"Skyscanner","category":"draw","quantity":1}
+{"type":"card","name":"Endless Atlas","category":"draw","quantity":1}
+{"type":"card","name":"Mystic Forge","category":"draw","quantity":1}
+{"type":"card","name":"Meteor Golem","category":"removal","quantity":1}
+{"type":"card","name":"Spine of Ish Sah","category":"removal","quantity":1}
+{"type":"card","name":"Scour from Existence","category":"removal","quantity":1}
+{"type":"card","name":"Nevinyrral's Disk","category":"boardWipe","quantity":1}
+{"type":"card","name":"Oblivion Stone","category":"boardWipe","quantity":1}
+{"type":"card","name":"Steel Hellkite","category":"creature","quantity":1}
+{"type":"card","name":"Wurmcoil Engine","category":"creature","quantity":1}
+{"type":"card","name":"Duplicant","category":"creature","quantity":1}
+{"type":"card","name":"Sundering Titan","category":"creature","quantity":1}
+{"type":"card","name":"Swiftfoot Boots","category":"protection","quantity":1}
+{"type":"card","name":"Lightning Greaves","category":"protection","quantity":1}
+{"type":"card","name":"Darksteel Plate","category":"protection","quantity":1}
+{"type":"card","name":"Sensei's Divining Top","category":"other","quantity":1}
+{"type":"card","name":"Commander's Plate","category":"other","quantity":1}
+{"type":"card","name":"Blackblade Reforged","category":"other","quantity":1}
+{"type":"card","name":"Sword of the Animist","category":"other","quantity":1}
+{"type":"card","name":"Command Tower","category":"land","quantity":1}
+{"type":"card","name":"Exotic Orchard","category":"land","quantity":1}
+{"type":"card","name":"Evolving Wilds","category":"land","quantity":1}
+{"type":"card","name":"Terramorphic Expanse","category":"land","quantity":1}
+{"type":"card","name":"Myriad Landscape","category":"land","quantity":1}
+{"type":"card","name":"Reliquary Tower","category":"land","quantity":1}
+{"type":"card","name":"Rogue's Passage","category":"land","quantity":1}
+{"type":"card","name":"Bonders' Enclave","category":"land","quantity":1}
+{"type":"card","name":"Island","category":"land","quantity":63}
+{"type":"done","totalCards":99,"source":"demo","corrections":[]}

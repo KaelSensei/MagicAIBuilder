@@ -1,14 +1,16 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures";
 
 /**
  * Contract and performance tests for critical API endpoints, under
  * PLAYWRIGHT_TEST=1 (auto-login, real DB).
  *
- * The timing assertions are tagged @perf and excluded from the pre-push gate.
- * The harness runs `next dev`, which compiles each route on first request: the
- * same endpoint measured 41ms alone and 5163ms inside the full suite, purely
- * from bundler contention. Gating on wall-clock latency there measures the dev
- * server, not the endpoint. The contract assertions below always run.
+ * The timing assertions are tagged @perf and excluded from the blocking run.
+ * Under `next dev`, which compiles each route on first request, the same
+ * endpoint measured 41ms alone and 5163ms inside the full suite, purely from
+ * bundler contention. The Docker stack now serves a prebuilt app, which removes
+ * that cause, but a shared host or a CI runner still makes one wall-clock
+ * sample noisy, so the tags and the 1-second budgets stay as they were. The
+ * contract assertions below always run.
  *
  * Run the timing checks deliberately with PLAYWRIGHT_GREP_INVERT="".
  */
@@ -26,7 +28,7 @@ test.describe("API Performance", () => {
   });
 
   test("@perf GET /api/decks responds under 1 second", async ({ request }) => {
-    await request.get("/api/decks"); // warm-up: compile the route
+    await request.get("/api/decks"); // warm-up: under `next dev` this compiles the route
 
     const start = Date.now();
     const response = await request.get("/api/decks");
@@ -56,7 +58,7 @@ test.describe("API Performance", () => {
   });
 
   test("@perf GET /api/user/init responds under 1 second", async ({ request }) => {
-    await request.get("/api/user/init"); // warm-up: compile the route
+    await request.get("/api/user/init"); // warm-up: under `next dev` this compiles the route
 
     const start = Date.now();
     const response = await request.get("/api/user/init");
@@ -66,7 +68,10 @@ test.describe("API Performance", () => {
     expect(duration).toBeLessThan(1000);
   });
 
-  test("GET /api/decks returns only commander/partner/companion cards, not all cards", async ({ request }) => {
+  test("GET /api/decks returns only commander/partner/companion cards, not all cards", async ({
+    request,
+    seededDeck,
+  }) => {
     // Create a deck with a card first
     const createRes = await request.post("/api/decks", {
       data: { name: "Perf Test Deck" },
@@ -74,6 +79,10 @@ test.describe("API Performance", () => {
     expect(createRes.ok()).toBe(true);
     const created = await createRes.json();
     const deckId = created.id;
+    // This test checks each seeding answer itself (the add must be a 201), so
+    // it keeps its own calls; the fixture only deletes the deck, even when an
+    // assertion fails.
+    seededDeck.adopt(deckId);
 
     // Add a non-commander card. `scryfallId` must be a real Scryfall UUID —
     // addCardSchema rejects anything else with a 400, and this write used to
@@ -109,8 +118,5 @@ test.describe("API Performance", () => {
     const fullDeck = await fullRes.json();
     expect(fullDeck.cards).toHaveLength(1);
     expect(fullDeck.cards[0].name).toBe("Lightning Bolt");
-
-    // Cleanup
-    await request.delete(`/api/decks/${deckId}`);
   });
 });

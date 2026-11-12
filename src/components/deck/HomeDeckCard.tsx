@@ -6,6 +6,7 @@ import { useMemo } from "react";
 import { useFormatter, useTranslations } from "next-intl";
 import { Clock, Copy, Loader2, Trash2 } from "lucide-react";
 import type { Deck } from "@/lib/deck/types";
+import { normalizeScryfallImageUrl } from "@/lib/scryfall/images";
 
 interface HomeDeckCardProps {
   readonly deck: Deck;
@@ -23,6 +24,7 @@ const BRACKET_COLORS: Record<number, string> = {
   2: "text-blue-400 bg-blue-500/15 border-blue-500/30",
   3: "text-amber-400 bg-amber-500/15 border-amber-500/30",
   4: "text-red-400 bg-red-500/15 border-red-500/30",
+  5: "text-fuchsia-400 bg-fuchsia-500/15 border-fuchsia-500/30",
 };
 
 /**
@@ -96,7 +98,7 @@ export function HomeDeckCard({
       style={
         hasArt
           ? {
-              backgroundImage: `url(${deck.commander?.artCropUri})`,
+              backgroundImage: `url(${normalizeScryfallImageUrl(deck.commander?.artCropUri ?? "")})`,
               backgroundSize: "cover",
               backgroundPosition: "center top",
             }
@@ -150,7 +152,7 @@ export function HomeDeckCard({
             <div className="flex shrink-0 items-center gap-1.5">
               {deck.isAIGenerated && (
                 <span className="shrink-0 rounded-full border border-purple-500/30 bg-purple-500/20 px-1.5 py-0.5 text-xs text-purple-400">
-                  AI
+                  {t("card.aiBadge")}
                 </span>
               )}
               <span

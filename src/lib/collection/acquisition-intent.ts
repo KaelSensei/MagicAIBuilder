@@ -10,7 +10,7 @@ export type AcquisitionChoice = AcquisitionMode | "buy_now";
  * @param value - unknown mode field
  * @returns whether the value is `proxy_now` or `buy_later`
  */
-export function isAcquisitionMode(value: unknown): value is AcquisitionMode {
+function isAcquisitionMode(value: unknown): value is AcquisitionMode {
   return value === "proxy_now" || value === "buy_later";
 }
 

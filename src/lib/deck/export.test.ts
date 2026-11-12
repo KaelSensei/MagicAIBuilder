@@ -11,53 +11,23 @@ import {
 } from "@/lib/deck/export";
 import type { Deck, DeckCard } from "@/lib/deck/types";
 import { parseTextDecklist } from "@/lib/deck/import";
+import { aDeckCard } from "@/test/builders/card";
+import { aDeck } from "@/test/builders/deck";
 
 function makeCard(name: string, qty = 1, overrides: Partial<DeckCard> = {}): DeckCard {
-  return {
+  return aDeckCard({
     id: "c-" + name,
     name,
     manaCost: "{1}",
     cmc: 1,
     typeLine: "Artifact",
-    oracleText: "",
-    colorIdentity: [],
-    isGameChanger: false,
-    isBanned: false,
-    price: null,
-    imageUri: "",
-    artCropUri: "",
-    category: "other" as const,
     quantity: qty,
-    zone: "main" as const,
     ...overrides,
-  };
+  });
 }
 
 function makeDeck(overrides: Partial<Deck> = {}): Deck {
-  return {
-    id: "deck-1",
-    name: "Test Deck",
-    commander: null,
-    partner: null,
-    companion: null,
-    pairingType: "none",
-    cards: [],
-    maybeboard: [],
-    format: "commander",
-    cardCount: 0,
-    targetBracket: 2 as 1 | 2 | 3 | 4,
-    manualBracket: null as 1 | 2 | 3 | 4 | null,
-    budget: null,
-    description: "",
-    tags: [],
-    shareToken: null,
-    shareEnabled: false,
-    isPublic: false,
-    isAIGenerated: false,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    ...overrides,
-  };
+  return aDeck({ targetBracket: 2, ...overrides });
 }
 
 describe("exportPlainText", () => {

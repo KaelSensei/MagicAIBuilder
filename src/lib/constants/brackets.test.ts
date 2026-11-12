@@ -1,48 +1,138 @@
 import { describe, it, expect } from "vitest";
-import { BRACKET_DEFINITIONS } from "@/lib/constants/brackets";
-import type { BracketLevel } from "@/lib/constants/brackets";
+import {
+  BRACKET_DEFINITIONS,
+  BRACKET_LEVELS,
+  parseBracketLevel,
+  type BracketDefinition,
+  type BracketLevel,
+} from "@/lib/constants/brackets";
+
+/**
+ * The official Commander Brackets table: Wizards' bracket text of 2025-10-21 and
+ * the Commander Format Panel graphic it links, unchanged by the 2026-02-09
+ * update and still current on 2026-11-09.
+ * https://magic.wizards.com/en/news/announcements/commander-brackets-beta-update-october-21-2025
+ */
+type OfficialRow = Pick<
+  BracketDefinition,
+  | "name"
+  | "maxGameChangers"
+  | "massLandDenial"
+  | "extraTurns"
+  | "twoCardCombos"
+  | "thematicExceptions"
+  | "minTurns"
+>;
+
+const OFFICIAL_TABLE: Readonly<Record<BracketLevel, OfficialRow>> = {
+  1: {
+    name: "Exhibition",
+    maxGameChangers: 0,
+    massLandDenial: "none",
+    extraTurns: "none",
+    twoCardCombos: { kind: "none" },
+    thematicExceptions: ["gameChangers", "extraTurns", "twoCardCombos"],
+    minTurns: 9,
+  },
+  2: {
+    name: "Core",
+    maxGameChangers: 0,
+    massLandDenial: "none",
+    extraTurns: "noChaining",
+    twoCardCombos: { kind: "none" },
+    thematicExceptions: [],
+    minTurns: 8,
+  },
+  3: {
+    name: "Upgraded",
+    maxGameChangers: 3,
+    massLandDenial: "none",
+    extraTurns: "noChaining",
+    twoCardCombos: { kind: "notBeforeTurn", turn: 6 },
+    thematicExceptions: [],
+    minTurns: 6,
+  },
+  4: {
+    name: "Optimized",
+    maxGameChangers: Infinity,
+    massLandDenial: "unrestricted",
+    extraTurns: "unrestricted",
+    twoCardCombos: { kind: "unrestricted" },
+    thematicExceptions: [],
+    minTurns: 4,
+  },
+  5: {
+    name: "cEDH",
+    maxGameChangers: Infinity,
+    massLandDenial: "unrestricted",
+    extraTurns: "unrestricted",
+    twoCardCombos: { kind: "unrestricted" },
+    thematicExceptions: [],
+    minTurns: null,
+  },
+};
+
+const OFFICIAL_COLUMNS = [
+  "name",
+  "maxGameChangers",
+  "massLandDenial",
+  "extraTurns",
+  "twoCardCombos",
+  "thematicExceptions",
+  "minTurns",
+] as const satisfies readonly (keyof OfficialRow)[];
+
+const OFFICIAL_CELLS = BRACKET_LEVELS.flatMap((level) =>
+  OFFICIAL_COLUMNS.map((column) => ({
+    level,
+    column,
+    expected: OFFICIAL_TABLE[level][column],
+  }))
+);
 
 describe("BRACKET_DEFINITIONS", () => {
-  it("has definitions for all 4 brackets", () => {
-    expect(Object.keys(BRACKET_DEFINITIONS)).toHaveLength(4);
-    for (let i = 1; i <= 4; i++) {
-      expect(BRACKET_DEFINITIONS[i as BracketLevel]).toBeDefined();
+  it("covers the five official brackets, in order", () => {
+    expect(BRACKET_LEVELS).toEqual([1, 2, 3, 4, 5]);
+    expect(Object.keys(BRACKET_DEFINITIONS)).toEqual(["1", "2", "3", "4", "5"]);
+    for (const level of BRACKET_LEVELS) {
+      expect(BRACKET_DEFINITIONS[level].level).toBe(level);
     }
   });
 
-  it("bracket 1 has maxGameChangers 0 and no tutors", () => {
-    const b1 = BRACKET_DEFINITIONS[1];
-    expect(b1.maxGameChangers).toBe(0);
-    expect(b1.allowsTutors).toBe(false);
-    expect(b1.name).toBe("Casual");
-  });
-
-  it("bracket 2 allows tutors but no game changers", () => {
-    const b2 = BRACKET_DEFINITIONS[2];
-    expect(b2.maxGameChangers).toBe(0);
-    expect(b2.allowsTutors).toBe(true);
-    expect(b2.name).toBe("Core");
-  });
-
-  it("bracket 3 allows up to 3 game changers", () => {
-    const b3 = BRACKET_DEFINITIONS[3];
-    expect(b3.maxGameChangers).toBe(3);
-    expect(b3.allowsTutors).toBe(true);
-    expect(b3.name).toBe("Upgraded");
-  });
-
-  it("bracket 4 allows unlimited game changers", () => {
-    const b4 = BRACKET_DEFINITIONS[4];
-    expect(b4.maxGameChangers).toBe(Infinity);
-    expect(b4.allowsTutors).toBe(true);
-    expect(b4.name).toBe("Optimized");
-  });
-
-  it("each bracket has a color and cssVar", () => {
-    for (let i = 1; i <= 4; i++) {
-      const b = BRACKET_DEFINITIONS[i as BracketLevel];
-      expect(b.color).toBeTruthy();
-      expect(b.cssVar).toContain("bracket");
+  it.each(OFFICIAL_CELLS)(
+    "bracket $level: $column matches the official table",
+    ({ level, column, expected }) => {
+      expect(BRACKET_DEFINITIONS[level][column]).toEqual(expected);
     }
+  );
+
+  // Wizards removed the tutor restriction on 2025-10-21 and relies on the Game
+  // Changers list to catch the most efficient tutors.
+  it.each(BRACKET_LEVELS)(
+    "bracket %i carries no tutor restriction",
+    (level) => {
+      expect(BRACKET_DEFINITIONS[level]).not.toHaveProperty("allowsTutors");
+    }
+  );
+
+  it.each(BRACKET_LEVELS)("bracket %i has its own colour token", (level) => {
+    const { color, cssVar } = BRACKET_DEFINITIONS[level];
+    expect(color).toMatch(/^#[0-9a-f]{6}$/);
+    expect(cssVar).toBe(`var(--bracket-${level})`);
+  });
+});
+
+describe("parseBracketLevel", () => {
+  it.each([
+    { value: 1, expected: 1 },
+    { value: 4, expected: 4 },
+    { value: 5, expected: 5 },
+    { value: 0, expected: null },
+    { value: 6, expected: null },
+    { value: 2.5, expected: null },
+    { value: null, expected: null },
+    { value: undefined, expected: null },
+  ])("reads $value as $expected", ({ value, expected }) => {
+    expect(parseBracketLevel(value)).toBe(expected);
   });
 });

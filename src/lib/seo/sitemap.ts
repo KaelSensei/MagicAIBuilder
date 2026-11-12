@@ -1,6 +1,8 @@
 import type { MetadataRoute } from "next";
-import { SUPPORTED_LOCALES, routing } from "@/i18n/routing";
-import { localePath, siteUrl } from "./alternates";
+import { routing } from "@/i18n/routing";
+import { isCommanderSlug } from "@/lib/meta/fetch";
+import { hreflangPaths, localePath, siteUrl } from "./alternates";
+import { isIndexableProfile } from "./index-policy";
 
 /**
  * Sitemap construction, kept separate from the route so it can be tested
@@ -30,6 +32,8 @@ export interface PublicDeck {
 export interface PublicProfile {
   readonly username: string;
   readonly updatedAt: Date;
+  /** Decks the owner marked `isPublic`, the only ones the profile page lists. */
+  readonly publicDeckCount: number;
 }
 
 /** A commander with at least one public deck. */
@@ -50,11 +54,11 @@ type SitemapEntry = MetadataRoute.Sitemap[number];
 type ChangeFrequency = NonNullable<SitemapEntry["changeFrequency"]>;
 
 /**
- * One entry, with an hreflang alternate per served locale.
+ * One entry, with an hreflang alternate per served locale plus `x-default`.
  *
- * The alternates mirror the `<link rel="alternate">` tags #517 puts on the
- * pages themselves. A sitemap that disagreed with the page would give a
- * crawler two answers.
+ * The alternates come from `hreflangPaths`, the same set behind the
+ * `<link rel="alternate">` tags #517 puts on the pages themselves. A sitemap
+ * that disagreed with the page would give a crawler two answers.
  *
  * @param path Locale-free path, starting with a slash.
  */
@@ -67,8 +71,8 @@ function entryFor(
   const base = siteUrl();
   const languages: Record<string, string> = {};
 
-  for (const locale of SUPPORTED_LOCALES) {
-    languages[locale] = `${base}${localePath(locale, path)}`;
+  for (const [hreflang, href] of Object.entries(hreflangPaths(path))) {
+    languages[hreflang] = `${base}${href}`;
   }
 
   return {
@@ -83,6 +87,9 @@ function entryFor(
 /**
  * Every URL this site wants indexed.
  *
+ * A profile is listed only while it shows a public deck, the same rule its
+ * page uses to declare `noindex` (see `isIndexableProfile`).
+ *
  * @param sources Public records already read from the database.
  * @returns Sitemap entries, home page first.
  */
@@ -92,8 +99,10 @@ export function buildSitemap(sources: SitemapSources): MetadataRoute.Sitemap {
     ...sources.decks.map((deck) =>
       entryFor(`/deck/${deck.id}`, deck.updatedAt, "weekly", 0.7)
     ),
-    ...sources.profiles.map((profile) =>
-      entryFor(`/u/${profile.username}`, profile.updatedAt, "weekly", 0.6)
+    ...sources.profiles.flatMap((profile) =>
+      isIndexableProfile(profile.publicDeckCount)
+        ? [entryFor(`/u/${profile.username}`, profile.updatedAt, "weekly", 0.6)]
+        : []
     ),
     ...sources.commanders.map((commander) =>
       entryFor(
@@ -110,9 +119,11 @@ export function buildSitemap(sources: SitemapSources): MetadataRoute.Sitemap {
  * Collapses decks to one entry per commander, keeping the most recent change.
  *
  * A commander page lists every public deck led by that commander, so its
- * freshness is the freshest deck on it.
+ * freshness is the freshest deck on it. A slug the commander page would answer
+ * with a 404 (see `isCommanderSlug`) is dropped.
  *
  * @param decks Public decks carrying a commander slug.
+ * @returns One page per usable commander slug.
  */
 export function collapseToCommanders(
   decks: readonly { readonly slug: string; readonly updatedAt: Date }[]
@@ -120,6 +131,10 @@ export function collapseToCommanders(
   const newest = new Map<string, Date>();
 
   for (const deck of decks) {
+    // A name with no ASCII letter or digit slugs to "" or to hyphens only,
+    // and the commander page answers both with a 404.
+    if (!isCommanderSlug(deck.slug)) continue;
+
     const seen = newest.get(deck.slug);
     if (seen === undefined || deck.updatedAt > seen)
       newest.set(deck.slug, deck.updatedAt);

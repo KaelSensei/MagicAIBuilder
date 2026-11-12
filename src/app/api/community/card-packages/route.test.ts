@@ -6,10 +6,13 @@ const { mockCreate, mockFindMany, mockRequireAuth } = vi.hoisted(() => ({
   mockRequireAuth: vi.fn(),
 }));
 
-vi.mock("@/lib/auth/helpers", () => ({ requireAuth: mockRequireAuth }));
-vi.mock("@/lib/db/prisma", () => ({
-  prisma: { cardPackage: { create: mockCreate, findMany: mockFindMany } },
-}));
+vi.mock(import("@/lib/auth/helpers"), () => ({ requireAuth: mockRequireAuth }));
+vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
+  const { stubPrisma } = await import("@/test/prisma-stub");
+  return stubPrisma(await importOriginal(), {
+    cardPackage: { create: mockCreate, findMany: mockFindMany },
+  });
+});
 
 import { GET, POST } from "./route";
 

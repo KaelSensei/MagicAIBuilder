@@ -1,7 +1,17 @@
 "use client";
-
-import { useCallback, useState } from "react";
+/**
+ * The action bar of a public deck page: save, fork, share and print, with the
+ * credit to the source deck when this one is a fork.
+ *
+ * Community context (ui). Saving and forking need a signed-in visitor and
+ * leave the owner's deck untouched: a save bookmarks it as a saved deck of the
+ * visitor, a fork copies it into a private deck the visitor owns.
+ *
+ * @module profile/PublicDeckActions
+ */
+import { useCallback, useState, type ReactNode } from "react";
 import { Bookmark, CopyPlus, Printer, Share2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { forkPublicDeck } from "@/lib/db/deck-api";
 
@@ -18,6 +28,38 @@ interface PublicDeckActionsProps {
   readonly forkedFrom?: ForkAttribution;
 }
 
+interface ForkSourceLinkProps {
+  /** Id of the public deck this one was forked from. */
+  readonly sourceDeckId: string;
+  /** The link text: the chunks of the message's `<link>` tag. */
+  readonly children: ReactNode;
+}
+
+/** Links the fork credit to the source deck's public page. */
+function ForkSourceLink({ sourceDeckId, children }: ForkSourceLinkProps) {
+  return (
+    <a
+      href={`/deck/${sourceDeckId}`}
+      className="font-medium text-[var(--accent-text)] hover:underline"
+    >
+      {children}
+    </a>
+  );
+}
+
+/**
+ * The `<link>` tag handler of `deck.public.forkedFrom`. It is built out here,
+ * so `PublicDeckActions` declares no component while it renders (Sonar S6478),
+ * and the source deck reaches the link as a prop.
+ */
+function forkSourceLinkTag(sourceDeckId: string) {
+  return function renderForkSourceLink(chunks: ReactNode) {
+    return (
+      <ForkSourceLink sourceDeckId={sourceDeckId}>{chunks}</ForkSourceLink>
+    );
+  };
+}
+
 /** Actions that preserve ownership boundaries on a public deck page. */
 export function PublicDeckActions({
   deckId,
@@ -25,6 +67,7 @@ export function PublicDeckActions({
   isSignedIn,
   forkedFrom,
 }: PublicDeckActionsProps) {
+  const t = useTranslations("deck");
   const router = useRouter();
   const [forking, setForking] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -69,28 +112,29 @@ export function PublicDeckActions({
     setShared(true);
   }, [deckName]);
 
-  let saveLabel = "Save";
-  let saveAccessibleLabel = "Save deck";
+  let saveLabel = t("savedFolders.save");
+  let saveAccessibleLabel = t("public.saveDeck");
   if (saved) {
-    saveLabel = "Saved";
-    saveAccessibleLabel = "Saved deck";
+    saveLabel = t("savedFolders.saved");
+    saveAccessibleLabel = t("public.savedDeck");
   } else if (saving) {
-    saveLabel = "Saving…";
-    saveAccessibleLabel = "Saving deck";
+    saveLabel = t("savedFolders.saving");
+    saveAccessibleLabel = t("public.savingDeck");
   }
 
   return (
     <div className="flex flex-wrap items-center gap-2">
       {forkedFrom && (
         <span className="mr-auto text-xs text-[var(--text-secondary)]">
-          Forked from{" "}
-          <a
-            href={`/deck/${forkedFrom.id}`}
-            className="font-medium text-[var(--accent-text)] hover:underline"
-          >
-            {forkedFrom.name}
-            {forkedFrom.author ? ` by ${forkedFrom.author}` : ""}
-          </a>
+          {t.rich("public.forkedFrom", {
+            source: forkedFrom.author
+              ? t("public.forkSource", {
+                  name: forkedFrom.name,
+                  author: forkedFrom.author,
+                })
+              : forkedFrom.name,
+            link: forkSourceLinkTag(forkedFrom.id),
+          })}
         </span>
       )}
       {!forkedFrom && <span className="mr-auto" />}
@@ -106,23 +150,23 @@ export function PublicDeckActions({
       </button>
       {saveError && (
         <p role="alert" className="text-xs text-red-400">
-          Unable to save deck
+          {t("public.saveFailed")}
         </p>
       )}
       <button
         type="button"
         onClick={() => void handleFork()}
         disabled={!isSignedIn || forking}
-        aria-label={forking ? "Forking deck" : "Fork deck"}
+        aria-label={forking ? t("public.forkingDeck") : t("public.forkDeck")}
         className="flex items-center gap-1.5 rounded-md border border-[var(--border)] px-2.5 py-1.5 text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:cursor-not-allowed disabled:opacity-40"
       >
         <CopyPlus className="h-3.5 w-3.5" />
-        {forking ? "Forking…" : "Fork"}
+        {forking ? t("public.forking") : t("public.fork")}
       </button>
       <button
         type="button"
         onClick={() => void handleShare()}
-        aria-label={shared ? "Deck shared" : "Share deck"}
+        aria-label={shared ? t("public.deckShared") : t("share.openShare")}
         className="rounded-md border border-[var(--border)] p-1.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
       >
         <Share2 className="h-3.5 w-3.5" />
@@ -130,7 +174,7 @@ export function PublicDeckActions({
       <button
         type="button"
         onClick={() => window.print()}
-        aria-label="Print guide"
+        aria-label={t("public.printGuide")}
         className="rounded-md border border-[var(--border)] p-1.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
       >
         <Printer className="h-3.5 w-3.5" />

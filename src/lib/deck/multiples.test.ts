@@ -2,7 +2,6 @@ import { describe, it, expect } from "vitest";
 import {
   oracleAllowsMultiples,
   maxQuantity,
-  allowsMultiples,
   CAPPED_MULTIPLES,
 } from "@/lib/deck/multiples";
 
@@ -50,6 +49,15 @@ describe("maxQuantity", () => {
     expect(maxQuantity("Island", "Basic Land — Island", "")).toBe(99);
   });
 
+  // CR 903.5b: the singleton exemption covers every land with the basic supertype.
+  it.each([
+    ["Snow-Covered Forest", "Basic Snow Land — Forest"],
+    ["Snow-Covered Wastes", "Basic Snow Land"],
+    ["Wastes", "Basic Land"],
+  ])("returns 99 for %s", (name, typeLine) => {
+    expect(maxQuantity(name, typeLine, "")).toBe(99);
+  });
+
   it("returns 99 for oracle-text multiples (Relentless Rats)", () => {
     expect(
       maxQuantity(
@@ -71,29 +79,5 @@ describe("maxQuantity", () => {
   it("returns 1 for regular cards", () => {
     expect(maxQuantity("Sol Ring", "Artifact", "")).toBe(1);
     expect(maxQuantity("Counterspell", "Instant", "Counter target spell.")).toBe(1);
-  });
-});
-
-describe("allowsMultiples", () => {
-  it("returns true for basic lands", () => {
-    expect(allowsMultiples("Mountain", "Basic Land — Mountain", "")).toBe(true);
-  });
-
-  it("returns true for unlimited multiples by oracle text", () => {
-    expect(
-      allowsMultiples(
-        "Dragon's Approach",
-        "Sorcery",
-        "A deck can have any number of cards named Dragon's Approach."
-      )
-    ).toBe(true);
-  });
-
-  it("returns true for capped multiples (Nazgûl)", () => {
-    expect(allowsMultiples("Nazgûl", "Creature — Wraith", "")).toBe(true);
-  });
-
-  it("returns false for regular cards", () => {
-    expect(allowsMultiples("Lightning Bolt", "Instant", "")).toBe(false);
   });
 });

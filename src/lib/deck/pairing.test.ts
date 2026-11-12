@@ -1,193 +1,311 @@
+/**
+ * Commander pairing against CR 702.124, with real Oracle texts.
+ *
+ * Each row names the rule it pins. Every pair is checked in both orders,
+ * because the rules let either card sit in the commander slot.
+ */
 import { describe, it, expect } from "vitest";
-import { detectPairingType, canPairWith, partnerSlotLabel, supportsPartner } from "./pairing";
-import type { ScryfallCard } from "@/lib/scryfall/types";
+import {
+  canPairCommanders,
+  detectPairingType,
+  pairCommanders,
+  partnerSlotLabel,
+  supportsPartner,
+} from "./pairing";
+import type { PairingCard } from "./partner-abilities";
+import type { CommanderPairingType } from "./types";
+import {
+  AMY_POND,
+  ATREUS,
+  ATRAXA,
+  BJORNA,
+  BRALLIN,
+  CANDLEKEEP_SAGE,
+  CECILY,
+  CECILY_SAVED_BEFORE_RENAME,
+  CLAN_CRAFTER,
+  CLARA_OSWALD,
+  DOCTOR_STRANGE,
+  DONATELLO,
+  ELLIE,
+  FIRST_DOCTOR,
+  HYPOTHETICAL_DOCTOR_WIZARD,
+  JAHEIRA,
+  JOEL,
+  K9_MARK_I,
+  KRATOS,
+  LEONARDO,
+  MASTER_FORMED_ANEW,
+  PIR,
+  RAISED_BY_GIANTS,
+  RORY_WILLIAMS,
+  ROSE_TYLER,
+  ROWAN,
+  SEFRIS,
+  SHABRAZ,
+  SUSAN_FOREMAN,
+  TENTH_DOCTOR,
+  THRASIOS,
+  TOOTHY,
+  TYMNA,
+  WILL,
+  WILSON,
+} from "./fixtures/partner-cards";
 
-function makeCard(overrides: Partial<ScryfallCard> = {}): ScryfallCard {
-  return {
-    id: "test-id",
-    name: "Test Card",
-    keywords: [],
-    oracle_text: "",
-    type_line: "Legendary Creature",
-    color_identity: [],
-    mana_cost: "",
-    cmc: 0,
-    colors: [],
-    set: "tst",
-    collector_number: "1",
-    rarity: "rare",
-    ...overrides,
-  } as unknown as ScryfallCard;
+interface PairCase {
+  readonly rule: string;
+  readonly a: PairingCard;
+  readonly b: PairingCard;
 }
 
-describe("detectPairingType", () => {
-  it("returns none for a card with no partner keywords", () => {
-    expect(detectPairingType(makeCard())).toBe("none");
-  });
+interface LegalPairCase extends PairCase {
+  readonly pairing: Exclude<CommanderPairingType, "none">;
+}
 
-  it("detects partner via keywords", () => {
-    const card = makeCard({ keywords: ["Partner"] });
-    expect(detectPairingType(card)).toBe("partner");
-  });
+const LEGAL_PAIRS: readonly LegalPairCase[] = [
+  {
+    rule: "702.124h, both have partner",
+    a: TYMNA,
+    b: THRASIOS,
+    pairing: "partner",
+  },
+  {
+    rule: "702.124j, each names the other",
+    a: PIR,
+    b: TOOTHY,
+    pairing: "partner_with",
+  },
+  {
+    rule: "702.124j, planeswalkers that can be your commander",
+    a: ROWAN,
+    b: WILL,
+    pairing: "partner_with",
+  },
+  {
+    rule: "702.124j, a reciprocal line without reminder text",
+    a: BRALLIN,
+    b: SHABRAZ,
+    pairing: "partner_with",
+  },
+  {
+    rule: "702.124g, Amy Pond uses partner with",
+    a: AMY_POND,
+    b: RORY_WILLIAMS,
+    pairing: "partner_with",
+  },
+  {
+    rule: "702.124g, Amy Pond uses Doctor's companion",
+    a: AMY_POND,
+    b: TENTH_DOCTOR,
+    pairing: "doctor",
+  },
+  {
+    rule: "702.124m, a companion and a Time Lord Doctor",
+    a: CLARA_OSWALD,
+    b: TENTH_DOCTOR,
+    pairing: "doctor",
+  },
+  {
+    rule: "702.124m, an artifact creature companion",
+    a: K9_MARK_I,
+    b: FIRST_DOCTOR,
+    pairing: "doctor",
+  },
+  {
+    rule: "702.124m, a Time Lord companion",
+    a: SUSAN_FOREMAN,
+    b: FIRST_DOCTOR,
+    pairing: "doctor",
+  },
+  {
+    rule: "702.124k, choose a Background",
+    a: WILSON,
+    b: RAISED_BY_GIANTS,
+    pairing: "background",
+  },
+  {
+    rule: "702.124k, another Background",
+    a: JAHEIRA,
+    b: CLAN_CRAFTER,
+    pairing: "background",
+  },
+  {
+    rule: "702.124i, partner—Friends forever",
+    a: BJORNA,
+    b: CECILY,
+    pairing: "friends_forever",
+  },
+  {
+    rule: "702.124i, the wording saved before the rename",
+    a: BJORNA,
+    b: CECILY_SAVED_BEFORE_RENAME,
+    pairing: "friends_forever",
+  },
+  {
+    rule: "702.124i, partner—Survivors",
+    a: ELLIE,
+    b: JOEL,
+    pairing: "survivors",
+  },
+  {
+    rule: "702.124i, partner—Father & son",
+    a: KRATOS,
+    b: ATREUS,
+    pairing: "father_son",
+  },
+  {
+    rule: "702.124i, partner—Character select",
+    a: LEONARDO,
+    b: DONATELLO,
+    pairing: "character_select",
+  },
+];
 
-  it("detects friends_forever via oracle text", () => {
-    const card = makeCard({ oracle_text: "Friends forever" });
-    expect(detectPairingType(card)).toBe("friends_forever");
-  });
+const ILLEGAL_PAIRS: readonly PairCase[] = [
+  { rule: "903.5b, one card twice", a: TYMNA, b: TYMNA },
+  { rule: "702.124f, partner and partner with", a: TYMNA, b: PIR },
+  { rule: "702.124j, partner with names another card", a: PIR, b: SHABRAZ },
+  { rule: "702.124j, partner with names another card", a: PIR, b: BRALLIN },
+  { rule: "702.124j, Amy Pond names Rory Williams", a: AMY_POND, b: TOOTHY },
+  { rule: "702.124j, a commander without partner with", a: PIR, b: SEFRIS },
+  { rule: "702.124f, partner—Survivors and partner", a: ELLIE, b: TYMNA },
+  {
+    rule: "702.124i, partner—Survivors and partner—Friends forever",
+    a: ELLIE,
+    b: CECILY,
+  },
+  {
+    rule: "702.124i, partner—Father & son and partner—Survivors",
+    a: KRATOS,
+    b: JOEL,
+  },
+  {
+    rule: "702.124i, partner—Character select and partner—Father & son",
+    a: LEONARDO,
+    b: ATREUS,
+  },
+  {
+    rule: "702.124f, partner—Friends forever and partner",
+    a: BJORNA,
+    b: TYMNA,
+  },
+  {
+    rule: "702.124k, a commander that is not a Background",
+    a: WILSON,
+    b: TYMNA,
+  },
+  {
+    rule: "702.124k, a commander without a partner ability",
+    a: WILSON,
+    b: SEFRIS,
+  },
+  {
+    rule: "702.124k, two Backgrounds",
+    a: RAISED_BY_GIANTS,
+    b: CANDLEKEEP_SAGE,
+  },
+  {
+    rule: "702.124k, a Background beside a Partner commander",
+    a: TYMNA,
+    b: CANDLEKEEP_SAGE,
+  },
+  { rule: "702.124k, choose a Background twice", a: WILSON, b: JAHEIRA },
+  {
+    rule: "702.124m, a Doctor who is not a Time Lord",
+    a: CLARA_OSWALD,
+    b: DOCTOR_STRANGE,
+  },
+  {
+    rule: "702.124m, a Time Lord who is not a Doctor",
+    a: CLARA_OSWALD,
+    b: MASTER_FORMED_ANEW,
+  },
+  {
+    rule: "702.124m, a Doctor with another creature type",
+    a: CLARA_OSWALD,
+    b: HYPOTHETICAL_DOCTOR_WIZARD,
+  },
+  { rule: "702.124m, any other commander", a: CLARA_OSWALD, b: SEFRIS },
+  { rule: "702.124m, two companions", a: CLARA_OSWALD, b: ROSE_TYLER },
+  {
+    rule: "702.124m, a companion and a Partner commander",
+    a: CLARA_OSWALD,
+    b: TYMNA,
+  },
+  { rule: "702.124m, two Doctors", a: TENTH_DOCTOR, b: FIRST_DOCTOR },
+  {
+    rule: "702.124m, a Doctor and a commander without the ability",
+    a: TENTH_DOCTOR,
+    b: ATRAXA,
+  },
+  {
+    rule: "702.124g, Amy Pond and another companion",
+    a: AMY_POND,
+    b: CLARA_OSWALD,
+  },
+  { rule: "702.124a, no partner ability on either", a: SEFRIS, b: ATRAXA },
+];
 
-  it("detects partner_with via oracle text", () => {
-    const card = makeCard({ oracle_text: "Partner with Tymna the Weaver" });
-    expect(detectPairingType(card)).toBe("partner_with");
-  });
-
-  it("detects character_select via oracle text", () => {
-    const card = makeCard({ oracle_text: "partner—character select" });
-    expect(detectPairingType(card)).toBe("character_select");
-  });
-
-  it("detects Father & son before generic Partner", () => {
-    const card = makeCard({ keywords: ["Partner"], oracle_text: "Partner—Father & son" });
-    expect(detectPairingType(card)).toBe("father_son");
-  });
-
-  it("detects background via oracle text", () => {
-    const card = makeCard({ oracle_text: "choose a background" });
-    expect(detectPairingType(card)).toBe("background");
-  });
-
-  it("detects doctor companion via oracle text", () => {
-    const card = makeCard({ oracle_text: "doctor's companion" });
-    expect(detectPairingType(card)).toBe("doctor");
-  });
-
-  it("prioritizes friends_forever over partner", () => {
-    const card = makeCard({
-      keywords: ["Partner"],
-      oracle_text: "Friends forever",
-    });
-    expect(detectPairingType(card)).toBe("friends_forever");
-  });
-
-  it("is case-insensitive for keywords", () => {
-    const card = makeCard({ keywords: ["PARTNER"] });
-    expect(detectPairingType(card)).toBe("partner");
-  });
-
-  it("handles undefined keywords gracefully", () => {
-    const card = makeCard({ keywords: undefined });
-    expect(detectPairingType(card)).toBe("none");
-  });
-
-  it("handles undefined oracle_text gracefully", () => {
-    const card = makeCard({ oracle_text: undefined });
-    expect(detectPairingType(card)).toBe("none");
+describe("canPairCommanders — pairs CR 702.124 allows", () => {
+  it.each(LEGAL_PAIRS)("$a.name and $b.name ($rule)", ({ a, b, pairing }) => {
+    expect(canPairCommanders(a, b)).toBe(true);
+    expect(canPairCommanders(b, a)).toBe(true);
+    expect(pairCommanders(a, b)).toBe(pairing);
+    expect(pairCommanders(b, a)).toBe(pairing);
   });
 });
 
-describe("canPairWith", () => {
-  it("partner can pair with partner", () => {
-    expect(canPairWith("partner", "partner")).toBe(true);
+describe("canPairCommanders — pairs CR 702.124 forbids", () => {
+  it.each(ILLEGAL_PAIRS)("$a.name and $b.name ($rule)", ({ a, b }) => {
+    expect(canPairCommanders(a, b)).toBe(false);
+    expect(canPairCommanders(b, a)).toBe(false);
+    expect(pairCommanders(a, b)).toBeNull();
   });
+});
 
-  it("partner_with can pair with partner_with", () => {
-    expect(canPairWith("partner_with", "partner_with")).toBe(true);
-  });
-
-  it("friends_forever can pair with friends_forever", () => {
-    expect(canPairWith("friends_forever", "friends_forever")).toBe(true);
-  });
-
-  it("character_select can pair with character_select", () => {
-    expect(canPairWith("character_select", "character_select")).toBe(true);
-  });
-
-  it("Father & son pairs only with the same variant", () => {
-    expect(canPairWith("father_son", "father_son")).toBe(true);
-    expect(canPairWith("father_son", "partner")).toBe(false);
-  });
-
-  it("background pairs with none", () => {
-    expect(canPairWith("background", "none")).toBe(true);
-  });
-
-  it("doctor pairs with none", () => {
-    expect(canPairWith("doctor", "none")).toBe(true);
-  });
-
-  it("partner cannot pair with friends_forever", () => {
-    expect(canPairWith("partner", "friends_forever")).toBe(false);
-  });
-
-  it("none cannot pair with anything", () => {
-    expect(canPairWith("none", "partner")).toBe(false);
-    expect(canPairWith("none", "none")).toBe(false);
-  });
-
-  it("partner_with cannot pair with partner", () => {
-    expect(canPairWith("partner_with", "partner")).toBe(false);
+describe("detectPairingType — the second slot a lone commander opens", () => {
+  it.each([
+    { card: TYMNA, expected: "partner" },
+    { card: PIR, expected: "partner_with" },
+    { card: AMY_POND, expected: "partner_with" },
+    { card: CLARA_OSWALD, expected: "doctor" },
+    { card: TENTH_DOCTOR, expected: "doctor" },
+    { card: WILSON, expected: "background" },
+    { card: RAISED_BY_GIANTS, expected: "background" },
+    { card: BJORNA, expected: "friends_forever" },
+    { card: CECILY_SAVED_BEFORE_RENAME, expected: "friends_forever" },
+    { card: ELLIE, expected: "survivors" },
+    { card: KRATOS, expected: "father_son" },
+    { card: LEONARDO, expected: "character_select" },
+    { card: SEFRIS, expected: "none" },
+    { card: DOCTOR_STRANGE, expected: "none" },
+    { card: MASTER_FORMED_ANEW, expected: "none" },
+  ] as const)("$card.name opens $expected", ({ card, expected }) => {
+    expect(detectPairingType(card)).toBe(expected);
   });
 });
 
 describe("partnerSlotLabel", () => {
-  it("returns Partner for partner type", () => {
-    expect(partnerSlotLabel("partner")).toBe("Partner");
-  });
-
-  it("returns Partner With for partner_with type", () => {
-    expect(partnerSlotLabel("partner_with")).toBe("Partner With");
-  });
-
-  it("returns Friends Forever for friends_forever type", () => {
-    expect(partnerSlotLabel("friends_forever")).toBe("Friends Forever");
-  });
-
-  it("returns Background for background type", () => {
-    expect(partnerSlotLabel("background")).toBe("Background");
-  });
-
-  it("returns Doctor's Companion for doctor type", () => {
-    expect(partnerSlotLabel("doctor")).toBe("Doctor's Companion");
-  });
-
-  it("returns Character Select Partner for character_select type", () => {
-    expect(partnerSlotLabel("character_select")).toBe("Character Select Partner");
-  });
-
-  it("labels the Father & son partner slot", () => {
-    expect(partnerSlotLabel("father_son")).toBe("Father & Son Partner");
-  });
-
-  it("falls through to default for none", () => {
-    expect(partnerSlotLabel("none")).toBe("Partner");
+  it.each([
+    ["partner", "Partner"],
+    ["partner_with", "Partner With"],
+    ["friends_forever", "Friends Forever"],
+    ["background", "Background"],
+    ["doctor", "Doctor's Companion"],
+    ["character_select", "Character Select Partner"],
+    ["father_son", "Father & Son Partner"],
+    ["survivors", "Survivors Partner"],
+    ["none", "Partner"],
+  ] as const)("labels %s as %s", (pairing, label) => {
+    expect(partnerSlotLabel(pairing)).toBe(label);
   });
 });
 
 describe("supportsPartner", () => {
-  it("returns false for none", () => {
+  it("is false only for a commander without a pairing", () => {
     expect(supportsPartner("none")).toBe(false);
-  });
-
-  it("returns true for partner", () => {
     expect(supportsPartner("partner")).toBe(true);
-  });
-
-  it("returns true for friends_forever", () => {
-    expect(supportsPartner("friends_forever")).toBe(true);
-  });
-
-  it("returns true for background", () => {
-    expect(supportsPartner("background")).toBe(true);
-  });
-
-  it("returns true for doctor", () => {
+    expect(supportsPartner("survivors")).toBe(true);
     expect(supportsPartner("doctor")).toBe(true);
-  });
-
-  it("returns true for character_select", () => {
-    expect(supportsPartner("character_select")).toBe(true);
-  });
-
-  it("returns true for partner_with", () => {
-    expect(supportsPartner("partner_with")).toBe(true);
   });
 });

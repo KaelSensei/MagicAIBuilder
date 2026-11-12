@@ -1,54 +1,22 @@
 import type { AIDeckResponse } from "@/app/api/ai/build/types";
-import { CAPPED_MULTIPLES } from "@/lib/deck/multiples";
-
-const COMMANDER_DECK_CARD_COUNT = 99;
-const BASIC_LANDS = new Set([
-  "plains",
-  "island",
-  "swamp",
-  "mountain",
-  "forest",
-  "wastes",
-]);
-const CAPPED_MULTIPLES_BY_NAME = new Map(
-  Object.entries(CAPPED_MULTIPLES).map(([name, limit]) => [name.toLocaleLowerCase(), limit])
-);
 
 /**
- * Validate the structural invariants required before an AI deck reaches the client.
+ * Validate the shape of an AI deck reply before it is checked against card data.
+ *
+ * Only what needs no card data is checked here: the response shape, a
+ * non-empty commander, named cards and positive integer quantities. Copy
+ * limits, colour identity, legality and the deck size need card data and are
+ * checked, and repaired where possible, by `checkGeneratedDeckLegality`.
  *
  * @param value - Untrusted provider output
- * @returns A list of actionable validation issues, empty when the deck is structurally valid
+ * @returns A list of validation issues, empty when the reply has a usable shape
  */
-function validateCardCopies(name: string, quantity: number, quantitiesByName: Map<string, number>): string[] {
-  const issues: string[] = [];
-  const normalizedName = name.toLocaleLowerCase();
-  const previousQuantity = quantitiesByName.get(normalizedName) ?? 0;
-  const cappedLimit = CAPPED_MULTIPLES_BY_NAME.get(normalizedName);
-  const isBasic = BASIC_LANDS.has(normalizedName);
-  if (previousQuantity > 0 && !isBasic && cappedLimit === undefined) {
-    issues.push(`${name} is duplicated in the generated deck.`);
-  }
-  const combinedQuantity = previousQuantity + quantity;
-  quantitiesByName.set(normalizedName, combinedQuantity);
-  if (cappedLimit !== undefined && combinedQuantity > cappedLimit && previousQuantity <= cappedLimit) {
-    issues.push(`${name} exceeds the ${cappedLimit}-copy limit.`);
-  } else if (quantity > 1 && !isBasic && cappedLimit === undefined) {
-    issues.push(`${name} has more than one copy but is not a basic land.`);
-  }
-  return issues;
-}
-
 export function validateGeneratedDeck(value: unknown): readonly string[] {
   if (!isAIDeckResponse(value)) {
     return ["The AI returned an invalid deck structure."];
   }
 
   const issues: string[] = [];
-  const expectedCardCount = COMMANDER_DECK_CARD_COUNT - (value.partner ? 1 : 0);
-  const normalizedPartner = value.partner?.trim().toLocaleLowerCase();
-  const quantitiesByName = new Map<string, number>();
-  let totalCards = 0;
 
   if (value.commander.trim().length === 0) {
     issues.push("The generated deck has no commander.");
@@ -56,40 +24,24 @@ export function validateGeneratedDeck(value: unknown): readonly string[] {
 
   for (const card of value.cards) {
     const name = card.name.trim();
-    const normalizedName = name.toLocaleLowerCase();
 
     if (name.length === 0) {
       issues.push("The generated deck contains a card without a name.");
-      continue;
-    }
-
-    if (!Number.isInteger(card.quantity) || card.quantity < 1) {
+    } else if (!Number.isInteger(card.quantity) || card.quantity < 1) {
       issues.push(`${name} has an invalid quantity.`);
-      continue;
     }
-
-    totalCards += card.quantity;
-
-    if (normalizedName === value.commander.trim().toLocaleLowerCase()) {
-      issues.push(`The commander ${name} is duplicated in the card list.`);
-    }
-    if (normalizedPartner && normalizedName === normalizedPartner) {
-      issues.push(`The partner ${name} is duplicated in the card list.`);
-    }
-
-    issues.push(...validateCardCopies(name, card.quantity, quantitiesByName));
-  }
-
-  if (totalCards !== expectedCardCount) {
-    issues.push(
-      `The generated deck contains ${totalCards} cards; expected ${expectedCardCount}.`
-    );
   }
 
   return issues;
 }
 
-function isAIDeckResponse(value: unknown): value is AIDeckResponse {
+/**
+ * Narrows untrusted provider output to the decklist shape.
+ *
+ * @param value - parsed provider output
+ * @returns true when the value has a commander, a partner field and typed cards
+ */
+export function isAIDeckResponse(value: unknown): value is AIDeckResponse {
   if (typeof value !== "object" || value === null) return false;
   if (!("commander" in value) || typeof value.commander !== "string") return false;
   if (!("partner" in value) || (value.partner !== null && typeof value.partner !== "string")) {

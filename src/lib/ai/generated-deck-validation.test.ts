@@ -30,86 +30,33 @@ describe("validateGeneratedDeck", () => {
     ]);
   });
 
-  it("rejects an incorrect card total", () => {
+  it("rejects a card without a name", () => {
     const deck = validDeck();
-    deck.cards[1].quantity = 97;
+    deck.cards[0].name = "  ";
 
-    expect(validateGeneratedDeck(deck)).toContain(
-      "The generated deck contains 98 cards; expected 99."
-    );
+    expect(validateGeneratedDeck(deck)).toEqual([
+      "The generated deck contains a card without a name.",
+    ]);
   });
 
-  it("allows repeated basic lands but rejects repeated non-basics", () => {
+  it.each([0, -1, 1.5])("rejects a quantity of %s", (quantity) => {
+    const deck = validDeck();
+    deck.cards[0].quantity = quantity;
+
+    expect(validateGeneratedDeck(deck)).toEqual([
+      "Sol Ring has an invalid quantity.",
+    ]);
+  });
+
+  // Copy limits, the deck size and the commander repeated in the list need card
+  // data: generated-deck-legality.test.ts covers them.
+  it("leaves the deck size and copy limits to the card-data check", () => {
     const deck = validDeck();
     deck.cards = [
-      { name: "Sol Ring", quantity: 1, category: "ramp" },
-      { name: "Sol Ring", quantity: 1, category: "ramp" },
-      { name: "Island", quantity: 97, category: "land" },
-    ];
-
-    expect(validateGeneratedDeck(deck)).toContain(
-      "Sol Ring is duplicated in the generated deck."
-    );
-  });
-
-  it("rejects a non-basic quantity above one", () => {
-    const deck = validDeck();
-    deck.cards[0].quantity = 2;
-    deck.cards[1].quantity = 98;
-
-    expect(validateGeneratedDeck(deck)).toContain(
-      "Sol Ring has more than one copy but is not a basic land."
-    );
-  });
-
-  it("accepts the allowed seven copies of Seven Dwarves", () => {
-    const deck = validDeck();
-    deck.cards = [
-      { name: "Seven Dwarves", quantity: 7, category: "creature" },
-      { name: "Island", quantity: 92, category: "land" },
+      { name: "Sol Ring", quantity: 2, category: "ramp" },
+      { name: "Atraxa, Praetors' Voice", quantity: 1, category: "creature" },
     ];
 
     expect(validateGeneratedDeck(deck)).toEqual([]);
-  });
-
-  it("rejects eight copies of Seven Dwarves", () => {
-    const deck = validDeck();
-    deck.cards = [
-      { name: "Seven Dwarves", quantity: 8, category: "creature" },
-      { name: "Island", quantity: 91, category: "land" },
-    ];
-
-    expect(validateGeneratedDeck(deck)).toContain("Seven Dwarves exceeds the 7-copy limit.");
-  });
-
-  it("enforces the cap across separate entries of the same card", () => {
-    const deck = validDeck();
-    deck.cards = [
-      { name: "Nazgûl", quantity: 5, category: "creature" },
-      { name: "Nazgûl", quantity: 5, category: "creature" },
-      { name: "Island", quantity: 89, category: "land" },
-    ];
-
-    expect(validateGeneratedDeck(deck)).toContain("Nazgûl exceeds the 9-copy limit.");
-  });
-
-  it("accepts capped copies split across entries when their total is legal", () => {
-    const deck = validDeck();
-    deck.cards = [
-      { name: "Nazgûl", quantity: 4, category: "creature" },
-      { name: "Nazgûl", quantity: 5, category: "creature" },
-      { name: "Island", quantity: 90, category: "land" },
-    ];
-
-    expect(validateGeneratedDeck(deck)).toEqual([]);
-  });
-
-  it("rejects the commander appearing in the card list", () => {
-    const deck = validDeck();
-    deck.cards[0].name = "Atraxa, Praetors' Voice";
-
-    expect(validateGeneratedDeck(deck)).toContain(
-      "The commander Atraxa, Praetors' Voice is duplicated in the card list."
-    );
   });
 });

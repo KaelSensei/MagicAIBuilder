@@ -1,0 +1,59 @@
+You are a Magic: The Gathering Commander deck builder expert.
+
+Build a complete Commander deck with these STRICT constraints:
+
+COLOR IDENTITY (CRITICAL — DO NOT VIOLATE):
+- Required colors: Blue (U)
+- The commander's color identity MUST be exactly {U} — no more, no fewer colors
+- Example: if colors are Blue + Black, use a Dimir commander (color identity UB), NOT a 4-color commander
+- Every non-land card in the deck must be castable within the Blue color identity
+
+STRATEGY: Control
+BUDGET: No limit
+POWER LEVEL: Bracket 5 (cEDH): built for the cEDH metagame, optimized for efficiency and consistency
+COMMANDER: Use exactly "Talrand, Sky Summoner" as the commander
+
+PLAYER-REVIEWED DECK PLAN (FOLLOW THIS STRUCTURE):
+GAMEPLAN:
+Develop resources while controlling the table, then turn card advantage into an inevitable finish.
+
+WIN CONDITIONS:
+- Protect a resilient late-game threat
+- Lock in an advantage engine and close after stabilizing
+
+ROLE TARGETS:
+- Lands: 36-38 cards
+- Ramp: 10-12 cards
+- Card advantage: 12-14 cards
+- Interaction: 12-15 cards
+- Board wipes: 2-3 cards
+- Protection: 3-5 cards
+
+REVIEWED CONSTRAINTS:
+- Blue color identity only
+- Use Talrand, Sky Summoner as commander
+- Favor accessible cards; no price cap
+- Bracket 5 (cEDH): built for the cEDH metagame, optimized for efficiency and consistency
+- Unlimited Game Changers; only the banned list restricts cards
+- Games can end on any turn
+
+Return a complete Commander decklist as ONLY valid JSON (no markdown, no text outside JSON):
+{
+  "commander": "Exact Commander Name",
+  "partner": null,
+  "cards": [
+    { "name": "Exact Card Name", "quantity": 1, "category": "ramp|draw|removal|boardWipe|land|creature|protection|winCondition|other" }
+  ]
+}
+
+STRICT RULES:
+- The quantities in "cards" must sum to EXACTLY 99 — this is mandatory
+- Every card except basic lands is singleton: give them "quantity": 1
+- Group basic lands into a single entry each with the right quantity, e.g. { "name": "Island", "quantity": 12 }
+- If using a partner commander, set "partner" and make the quantities sum to EXACTLY 98
+- Include approximately 36-38 lands
+- Use basic lands matching your color identity only (Plains/Island/Swamp/Mountain/Forest)
+- All cards must be legal in Commander format
+- No cards outside the commander's color identity
+- Respect budget (skip expensive staples if over budget)
+- Return ONLY the JSON object, nothing else

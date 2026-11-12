@@ -1,53 +1,20 @@
 import { describe, expect, it } from "vitest";
 import type { Deck, DeckCard } from "./types";
 import { getColorIdentityViolations, isCompanionOutsideColorIdentity } from "./color-identity";
+import { aDeckCard } from "@/test/builders/card";
+import { aDeck } from "@/test/builders/deck";
 
 function makeDeckCard(overrides: Partial<DeckCard>): DeckCard {
-  return {
-    id: "c1",
-    name: "Card",
-    manaCost: "",
-    cmc: 0,
-    typeLine: "",
-    oracleText: "",
-    colorIdentity: [],
-    isGameChanger: false,
-    isBanned: false,
-    price: null,
-    imageUri: "",
-    artCropUri: "",
-    category: "other",
-    quantity: 1,
-    zone: "main",
-    ...overrides,
-  };
+  return aDeckCard({ id: "c1", ...overrides });
 }
 
 function makeDeck(overrides: Partial<Deck> = {}): Deck {
-  return {
-    id: "deck-1",
+  return aDeck({
     name: "Test",
-    format: "commander",
     commander: makeDeckCard({ id: "cmd", name: "Cmd", category: "commander", colorIdentity: ["G", "U"] }),
-    partner: null,
-    companion: null,
-    pairingType: "none",
-    cards: [],
-    maybeboard: [],
-    cardCount: 0,
     targetBracket: 2,
-    manualBracket: null,
-    budget: null,
-    tags: [],
-    description: "",
-    shareEnabled: false,
-    isPublic: false,
-    isAIGenerated: false,
-    shareToken: null,
-    createdAt: new Date(),
-    updatedAt: new Date(),
     ...overrides,
-  };
+  });
 }
 
 describe("getColorIdentityViolations", () => {

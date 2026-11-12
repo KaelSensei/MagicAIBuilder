@@ -16,6 +16,8 @@ import { useMemo, useState } from "react";
 import { useFormatter, useTranslations } from "next-intl";
 import { cn } from "@/components/ui/utils";
 import type { AISuggestionResult } from "@/hooks/useAISuggestions";
+import { useAiDenialMessage } from "@/hooks/useAiDenialMessage";
+import type { AiCallDenial } from "@/lib/ai/usage/denial";
 import { ARCHETYPES } from "@/lib/ai/archetypes";
 import type { Archetype } from "@/lib/ai/archetypes";
 import type { DeckBrief } from "@/lib/ai/deck-brief";
@@ -43,6 +45,8 @@ interface AISuggestionsPanelProps {
   readonly result: AISuggestionResult | null;
   readonly isLoading: boolean;
   readonly error: string | null;
+  /** Why the server refused the analysis; shown instead of `error`. */
+  readonly denial?: AiCallDenial | null;
   readonly onAnalyze: () => void;
   readonly onAddCard: (cardName: string) => void;
   readonly onRemoveCard: (cardName: string) => void;
@@ -80,6 +84,7 @@ export function AISuggestionsPanel({
   result,
   isLoading,
   error,
+  denial = null,
   onAnalyze,
   onAddCard,
   onRemoveCard,
@@ -101,6 +106,7 @@ export function AISuggestionsPanel({
 }: AISuggestionsPanelProps) {
   const t = useTranslations("deck");
   const format = useFormatter();
+  const describeDenial = useAiDenialMessage();
   const [expanded, setExpanded] = useState(true);
   const [addedCards, setAddedCards] = useState<Set<string>>(new Set());
   const [removedCards, setRemovedCards] = useState<Set<string>>(new Set());
@@ -352,7 +358,18 @@ export function AISuggestionsPanel({
                 </p>
               )}
 
-              {error && (
+              {denial && (
+                <output
+                  aria-live="polite"
+                  aria-atomic="true"
+                  className="flex items-start gap-2 text-amber-400 text-xs p-2 bg-amber-500/10 rounded-lg"
+                >
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                  <span>{describeDenial(denial)}</span>
+                </output>
+              )}
+
+              {error && !denial && (
                 <div className="flex items-start gap-2 text-red-400 text-xs p-2 bg-red-500/10 rounded-lg">
                   <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
                   <span>{error}</span>

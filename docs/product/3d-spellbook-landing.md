@@ -1,5 +1,7 @@
 # Feature: 3D Spellbook Landing Page (Three.js)
 
+> **Superseded.** This page describes a landing page that no longer exists. The static marketing landing replaced the 3D scene in #308, and its packages (`three`, `@react-three/*`, `gsap`, `@types/three`) and `public/textures/` were removed later. The current direction is [I-13 visual direction](specs/i13-visual-direction.md), which replaces the 3D landing rather than reviving it. Keep this file as history only.
+
 ## Overview
 
 Replace the current flat login page with an immersive 3D spellbook scene. When users arrive at the app, they see an ancient open spellbook on a dark altar, glowing with mana energy. Instead of traditional buttons, glowing symbols on the book's pages act as Sign In and Sign Up entry points, with cinematic camera animations on interaction.

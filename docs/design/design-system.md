@@ -51,6 +51,7 @@ Color scheme, typography, and visual identity reference.
 | Bracket 2 | `#3b82f6` | `--bracket-2` |
 | Bracket 3 | `#f59e0b` | `--bracket-3` |
 | Bracket 4 | `#ef4444` | `--bracket-4` |
+| Bracket 5 | `#d946ef` | `--bracket-5` |
 
 ### Landing Page (Marketing)
 
@@ -83,9 +84,8 @@ Color scheme, typography, and visual identity reference.
 | **Cinzel**            | `--font-cinzel`      | 400, 600, 700      | Nav links, labels, buttons, plan names  |
 | **Inter**             | `--font-inter`       | 300, 400, 500, 600 | Body text, paragraphs, descriptions     |
 | **Geist**             | `--font-geist-sans`  | variable           | App UI (authenticated pages)            |
-| **Geist Mono**        | `--font-geist-mono`  | variable           | Code, monospace elements                |
 
-All fonts are loaded via `next/font/google` in `app/layout.tsx` for optimal performance (no layout shift, self-hosted subsets).
+Inter and Geist are loaded with `next/font/local` in `src/app/[locale]/layout.tsx`, from files committed under `src/styles/fonts/` (sources, licences and coverage in its README). A build never downloads a font. Monospace text uses Tailwind's `font-mono`, the system monospace stack.
 
 ### Usage Rules
 
@@ -98,7 +98,7 @@ All fonts are loaded via `next/font/google` in `app/layout.tsx` for optimal perf
 | Landing body text     | Inter             | 300–400 | `1–1.2rem`                 | Muted color, `1.7` line-height        |
 | App headings          | Geist             | 600–700 | `1.5–2rem`                 | `--text-primary`                      |
 | App body              | Geist             | 400     | `0.875–1rem`               | `--text-primary` / `--text-secondary` |
-| App monospace         | Geist Mono        | 400     | `0.8rem`                   | Mana costs, code-like data            |
+| App monospace         | `font-mono`       | 400     | `0.8rem`                   | Mana costs, code-like data            |
 
 ### Gradient Text Effect
 

@@ -7,13 +7,14 @@ const { mockFindUnique, mockCompare } = vi.hoisted(() => ({
   mockCompare: vi.fn(),
 }));
 
-vi.mock("@/lib/db/prisma", () => ({
-  prisma: {
+vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
+  const { stubPrisma } = await import("@/test/prisma-stub");
+  return stubPrisma(await importOriginal(), {
     user: { findUnique: mockFindUnique },
-  },
-}));
+  });
+});
 
-vi.mock("bcryptjs", () => ({
+vi.mock(import("bcryptjs"), () => ({
   compare: mockCompare,
 }));
 
@@ -59,7 +60,7 @@ vi.mock("next-auth/providers/credentials", () => ({
   })),
 }));
 
-vi.mock("@auth/prisma-adapter", () => ({
+vi.mock(import("@auth/prisma-adapter"), () => ({
   PrismaAdapter: vi.fn(() => ({})),
 }));
 
@@ -71,6 +72,10 @@ vi.stubEnv("GOOGLE_CLIENT_SECRET", "test-secret");
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars -- side-effect import triggers NextAuth config
 import "./config";
+import Google from "next-auth/providers/google";
+
+/** The options `config.ts` handed to the Google provider when it loaded. */
+const googleOptions = vi.mocked(Google).mock.calls[0]?.[0];
 
 type AuthorizeType = (credentials: Record<string, unknown> | undefined) => Promise<{ id: string; email: string; name: string | null; image: string | null } | null>;
 
@@ -83,6 +88,13 @@ function getAuthorize(): AuthorizeType {
 }
 
 // ─── Tests ───────────────────────────────────────────────────────────────────
+
+describe("Google provider", () => {
+  it("never links a Google sign-in to an existing account by email alone", () => {
+    expect(googleOptions).toBeDefined();
+    expect(googleOptions?.allowDangerousEmailAccountLinking).toBeUndefined();
+  });
+});
 
 describe("Credentials authorize", () => {
   let authorize: AuthorizeType;

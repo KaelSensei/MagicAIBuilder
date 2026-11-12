@@ -8,8 +8,8 @@ import {
   toScryfallLang,
   type LocalizedCardText,
 } from "@/lib/scryfall/localized";
+import { STALE_TIME_24H } from "@/lib/query/stale-times";
 
-const STALE_TIME_24H = 24 * 60 * 60 * 1000;
 const EMPTY_INDEX: ReadonlyMap<string, LocalizedCardText> = new Map();
 
 /**
@@ -34,7 +34,10 @@ export function useLocalizedDeckIndex(
 ): ReadonlyMap<string, LocalizedCardText> {
   const locale = useLocale();
   const lang = toScryfallLang(locale);
-  const sortedNames = useMemo(() => [...new Set(names)].sort((a, b) => a.localeCompare(b)), [names]);
+  const sortedNames = useMemo(
+    () => [...new Set(names)].sort((a, b) => a.localeCompare(b)),
+    [names]
+  );
 
   const { data } = useQuery({
     queryKey: ["scryfall", "deck-localized", lang, sortedNames],

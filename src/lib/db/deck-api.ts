@@ -1,4 +1,20 @@
-// HTTP client for the deck API routes
+/**
+ * HTTP client for the deck API routes, as the deck store calls them.
+ *
+ * Row writes take part in the deck's optimistic lock (#1400): each names the
+ * deck and the version the browser read ({@link DeckWriteTarget}, as the
+ * server's repository port does) and answers the deck's new version
+ * ({@link VersionedAnswer}). A guest deck answers locally, writes nothing and
+ * carries no version.
+ *
+ * @module db/deck-api
+ */
+import {
+  DeckApiError,
+  readAnsweredVersion,
+  type VersionedAnswer,
+} from "@/lib/db/deck-api-answer";
+import type { DeckWriteTarget } from "@/lib/deck/deck-repository-port";
 import type {
   Deck,
   DeckCard,
@@ -6,8 +22,11 @@ import type {
   CardCategory,
   CommanderPairingType,
 } from "@/lib/deck/types";
-import { logger } from "@/lib/logger";
-import { MAX_SEARCH_CACHE_BYTES } from "@/lib/cache-limits";
+import {
+  rowFillsCommandSlot,
+  type CommandSlot,
+  type CommandZonePatch,
+} from "@/lib/deck/bulk-edit-command-zone";
 import {
   createGuestDeck,
   isGuestDeckId,
@@ -22,6 +41,7 @@ export interface ApiDeck extends Omit<
   | "commander"
   | "partner"
   | "cards"
+  | "targetBracket"
   | "manualBracket"
   | "cardCount"
 > {
@@ -32,7 +52,9 @@ export interface ApiDeck extends Omit<
   partnerId: string | null;
   companionId: string | null;
   pairingType: CommanderPairingType;
-  /** Raw DB value — cast to 1|2|3|4|null in store */
+  /** Raw DB value — read as an official bracket (1–5) in the store */
+  targetBracket: number;
+  /** Raw DB value — read as an official bracket (1–5) or null in the store */
   manualBracket: number | null;
   isAIGenerated: boolean;
   isPublic: boolean;
@@ -123,11 +145,15 @@ function getGuestApiCard(cardId: string): ApiDeckCard {
   );
 }
 
+export type { VersionedAnswer } from "@/lib/db/deck-api-answer";
+export type { DeckWriteTarget } from "@/lib/deck/deck-repository-port";
+
 /** Longest server-supplied message we will forward to the UI. */
 const MAX_API_ERROR_LENGTH = 200;
 
 /**
- * Throws with the server's own `error` string when it sent one.
+ * Throws a {@link DeckApiError} with the server's own `error` string when it
+ * sent one.
  *
  * A bare "HTTP 500" told the user nothing and told us nothing either; the deck
  * routes already return a short, fixed reason, so surface it. Only the `error`
@@ -148,8 +174,26 @@ async function handleApiError(res: Response, context: string): Promise<never> {
   } catch {
     // Non-JSON error body (a proxy timeout page, say) — the status is all we have.
   }
-  const suffix = detail ? `: ${detail}` : "";
-  throw new Error(`[${context}] HTTP ${res.status}${suffix}`);
+  throw new DeckApiError(context, res.status, detail);
+}
+
+/**
+ * How long one versioned deck write may run, in milliseconds, before it is
+ * aborted and rejects with a `TimeoutError`, which the store treats as any
+ * other network failure. The same budget as the deck reads above: a loaded
+ * host answers a card write in well under a second, and the writes of one
+ * deck go one after the other (`deck-write-queue.ts`), so a write that never
+ * answers must not hold the deck's later writes for longer than a read would.
+ */
+export const DECK_WRITE_TIMEOUT_MS = 15_000;
+
+/**
+ * The query string of a card DELETE: `?expectedVersion=<n>`, or nothing
+ * (RFC 9110 §9.3.5: no body on DELETE). The server refuses the write with 409
+ * when the deck has moved on; without a version the write is not checked.
+ */
+function deleteQuery({ expectedVersion }: DeckWriteTarget): string {
+  return expectedVersion === undefined ? "" : `?expectedVersion=${expectedVersion}`;
 }
 
 // ─── Deck CRUD ────────────────────────────────────────────────────────────────
@@ -207,26 +251,79 @@ export async function createDeck(
   return res.json();
 }
 
+/** A whole deck, command zone and cards included, for `POST /api/decks`. */
+export interface CreateDeckWithCardsBody {
+  readonly name: string;
+  readonly format: string;
+  readonly targetBracket: number;
+  readonly manualBracket: number | null;
+  readonly budget: number | null;
+  readonly description: string;
+  readonly tags: readonly string[];
+  readonly commanderId: string | null;
+  readonly commanderName: string | null;
+  readonly partnerId: string | null;
+  readonly companionId: string | null;
+  readonly pairingType: CommanderPairingType;
+  readonly cards: readonly AddCardPayload[];
+}
+
+/**
+ * Creates a deck with all of its cards in one request.
+ *
+ * The server keeps the key with the deck: repeating the request with the same
+ * key returns that deck instead of writing a second one, so a double click or a
+ * retry after a lost response is safe.
+ *
+ * @param body - the deck and its cards
+ * @param idempotencyKey - the same value for every attempt at the same deck
+ * @returns the created deck, or the one an earlier attempt created
+ */
+export async function createDeckWithCards(
+  body: CreateDeckWithCardsBody,
+  idempotencyKey: string
+): Promise<ApiDeck> {
+  const res = await fetch("/api/decks", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Idempotency-Key": idempotencyKey,
+    },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) await handleApiError(res, "createDeckWithCards");
+  return res.json();
+}
+
+/**
+ * The deck fields `PATCH /api/decks/[id]` writes: metadata only. The command
+ * zone is not among them; `changeCommandZone` is its one write path.
+ */
+export type DeckMetadataPatch = Partial<{
+  name: string;
+  format: string;
+  targetBracket: number;
+  manualBracket: number | null;
+  budget: number | null;
+  description: string;
+  tags: string[];
+  isAIGenerated?: boolean;
+  isPublic?: boolean;
+  seekingFeedback?: boolean;
+  feedbackQuestion?: string | null;
+}>;
+
+/**
+ * Writes a deck's metadata through `PATCH /api/decks/[id]`.
+ *
+ * @param id - The deck; a guest deck answers locally and writes nothing.
+ * @param patch - The fields to write; an absent key keeps the stored value.
+ * @returns The deck as stored after the write.
+ * @throws Error when the server refuses or fails the write (`handleApiError`).
+ */
 export async function updateDeck(
   id: string,
-  patch: Partial<{
-    name: string;
-    format: string;
-    targetBracket: number;
-    manualBracket: number | null;
-    budget: number | null;
-    commanderId: string | null;
-    commanderName: string | null;
-    partnerId: string | null;
-    companionId?: string | null;
-    pairingType: CommanderPairingType;
-    description: string;
-    tags: string[];
-    isAIGenerated?: boolean;
-    isPublic?: boolean;
-    seekingFeedback?: boolean;
-    feedbackQuestion?: string | null;
-  }>
+  patch: DeckMetadataPatch
 ): Promise<ApiDeck> {
   if (isGuestDeckId(id)) return getGuestApiDeck();
   const res = await fetch(`/api/decks/${id}`, {
@@ -286,115 +383,298 @@ export interface AddCardPayload {
   zone?: "main" | "sideboard" | "maybeboard"; // Target zone (defaults to "main")
 }
 
+/**
+ * The row the guest deck keeps for a card the server would have inserted.
+ *
+ * @param deckId - the guest deck id
+ * @param id - the row id to give it
+ * @param payload - the card as sent to the add-card route
+ * @returns the row, with the defaults the database would apply
+ */
+function guestRowFromPayload(deckId: string, id: string, payload: AddCardPayload): ApiDeckCard {
+  return {
+    id,
+    deckId,
+    scryfallId: payload.scryfallId,
+    name: payload.name,
+    manaCost: payload.manaCost ?? "",
+    cmc: payload.cmc ?? 0,
+    typeLine: payload.typeLine ?? "",
+    oracleText: payload.oracleText ?? "",
+    power: payload.power,
+    toughness: payload.toughness,
+    colorIdentity: payload.colorIdentity ?? [],
+    isGameChanger: payload.isGameChanger ?? false,
+    isBanned: payload.isBanned ?? false,
+    price: payload.price ?? null,
+    imageUri: payload.imageUri ?? "",
+    artCropUri: payload.artCropUri ?? "",
+    category: normalizeCardCategory(payload.category),
+    quantity: payload.quantity ?? 1,
+    notes: null,
+    isCommander: payload.isCommander ?? false,
+    isPartner: payload.isPartner ?? false,
+    zone: payload.zone ?? "main",
+  };
+}
+
+/**
+ * Adds a row through `POST /api/decks/[id]/cards`.
+ *
+ * @param target - the deck, and the version this browser read when it can
+ *   vouch for one; a guest deck answers locally and writes nothing
+ * @param payload - the card as a row
+ * @returns the saved row and the deck's new version
+ * @throws DeckApiError when the server refuses (409 for a stale version) or fails the write
+ */
 export async function addCard(
-  deckId: string,
+  { deckId, expectedVersion }: DeckWriteTarget,
   payload: AddCardPayload
-): Promise<ApiDeckCard> {
-  if (isGuestDeckId(deckId)) {
-    return {
-      id: payload.scryfallId,
-      deckId,
-      scryfallId: payload.scryfallId,
-      name: payload.name,
-      manaCost: payload.manaCost ?? "",
-      cmc: payload.cmc ?? 0,
-      typeLine: payload.typeLine ?? "",
-      oracleText: payload.oracleText ?? "",
-      power: payload.power,
-      toughness: payload.toughness,
-      colorIdentity: payload.colorIdentity ?? [],
-      isGameChanger: payload.isGameChanger ?? false,
-      isBanned: payload.isBanned ?? false,
-      price: payload.price ?? null,
-      imageUri: payload.imageUri ?? "",
-      artCropUri: payload.artCropUri ?? "",
-      category: normalizeCardCategory(payload.category),
-      quantity: payload.quantity ?? 1,
-      notes: null,
-      isCommander: payload.isCommander ?? false,
-      isPartner: payload.isPartner ?? false,
-      zone: payload.zone ?? "main",
-    };
-  }
+): Promise<ApiDeckCard & VersionedAnswer> {
+  if (isGuestDeckId(deckId)) return guestRowFromPayload(deckId, payload.scryfallId, payload);
   const res = await fetch(`/api/decks/${deckId}/cards`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+    body: JSON.stringify({ ...payload, expectedVersion }),
+    signal: AbortSignal.timeout(DECK_WRITE_TIMEOUT_MS),
   });
   if (!res.ok) await handleApiError(res, "addCard");
   return res.json();
 }
 
+/**
+ * Removes a row through `DELETE /api/decks/[id]/cards/[cardId]`.
+ *
+ * @param target - the deck, and the version this browser read, sent as
+ *   `?expectedVersion=`; a guest deck answers locally and writes nothing
+ * @param cardId - the row
+ * @returns the deck's new version
+ * @throws DeckApiError when the server refuses (409 for a stale version) or fails the write
+ */
 export async function removeCard(
-  deckId: string,
+  target: DeckWriteTarget,
   cardId: string
-): Promise<void> {
-  if (isGuestDeckId(deckId)) return;
-  const res = await fetch(`/api/decks/${deckId}/cards/${cardId}`, {
-    method: "DELETE",
-  });
+): Promise<VersionedAnswer> {
+  if (isGuestDeckId(target.deckId)) return {};
+  const res = await fetch(
+    `/api/decks/${target.deckId}/cards/${cardId}${deleteQuery(target)}`,
+    { method: "DELETE", signal: AbortSignal.timeout(DECK_WRITE_TIMEOUT_MS) }
+  );
   if (!res.ok) await handleApiError(res, "removeCard");
+  // The row is gone whatever the body says; only its version is read.
+  return readAnsweredVersion(res);
 }
 
-export async function updateCardCategory(
-  deckId: string,
+/**
+ * Writes some columns of one row through `PATCH /api/decks/[id]/cards/[cardId]`,
+ * with the deck version this browser read beside them. A failure names the
+ * columns it carried, for the log: `[patchCard:notes] HTTP 500`.
+ *
+ * @returns the row as saved, and the deck's new version
+ * @throws DeckApiError when the server refuses (409 for a stale version) or fails the write
+ */
+async function patchCard(
+  { deckId, expectedVersion }: DeckWriteTarget,
+  cardId: string,
+  columns: Record<string, unknown>
+): Promise<ApiDeckCard & VersionedAnswer> {
+  if (isGuestDeckId(deckId)) return getGuestApiCard(cardId);
+  const res = await fetch(`/api/decks/${deckId}/cards/${cardId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ...columns, expectedVersion }),
+    signal: AbortSignal.timeout(DECK_WRITE_TIMEOUT_MS),
+  });
+  if (!res.ok) {
+    await handleApiError(res, `patchCard:${Object.keys(columns).join(",")}`);
+  }
+  return res.json();
+}
+
+/** Writes a row's category. See {@link patchCard}. */
+export function updateCardCategory(
+  target: DeckWriteTarget,
   cardId: string,
   category: CardCategory
-): Promise<ApiDeckCard> {
-  if (isGuestDeckId(deckId)) return getGuestApiCard(cardId);
-  const res = await fetch(`/api/decks/${deckId}/cards/${cardId}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ category }),
-  });
-  if (!res.ok) await handleApiError(res, "updateCardCategory");
-  return res.json();
+): Promise<ApiDeckCard & VersionedAnswer> {
+  return patchCard(target, cardId, { category });
 }
 
-export async function updateCardNotes(
-  deckId: string,
+/** Writes a row's notes; `null` clears them. See {@link patchCard}. */
+export function updateCardNotes(
+  target: DeckWriteTarget,
   cardId: string,
   notes: string | null
-): Promise<ApiDeckCard> {
-  if (isGuestDeckId(deckId)) return getGuestApiCard(cardId);
-  const res = await fetch(`/api/decks/${deckId}/cards/${cardId}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ notes }),
-  });
-  if (!res.ok) await handleApiError(res, "updateCardNotes");
-  return res.json();
+): Promise<ApiDeckCard & VersionedAnswer> {
+  return patchCard(target, cardId, { notes });
 }
 
-export async function updateCardZone(
-  deckId: string,
+/** Moves a row to a zone. See {@link patchCard}. */
+export function updateCardZone(
+  target: DeckWriteTarget,
   cardId: string,
   zone: "main" | "sideboard" | "maybeboard"
-): Promise<ApiDeckCard> {
-  if (isGuestDeckId(deckId)) return getGuestApiCard(cardId);
-  const res = await fetch(`/api/decks/${deckId}/cards/${cardId}`, {
+): Promise<ApiDeckCard & VersionedAnswer> {
+  return patchCard(target, cardId, { zone });
+}
+
+/** Writes a row's quantity. See {@link patchCard}. */
+export function updateCardQuantity(
+  target: DeckWriteTarget,
+  cardId: string,
+  quantity: number
+): Promise<ApiDeckCard & VersionedAnswer> {
+  return patchCard(target, cardId, { quantity });
+}
+
+/** The printing fields a printing swap writes on one row. */
+export interface CardPrinting {
+  readonly scryfallId: string;
+  readonly imageUri?: string;
+  readonly artCropUri?: string;
+}
+
+/** Swaps a row's printing. See {@link patchCard}. */
+export function updateCardPrinting(
+  target: DeckWriteTarget,
+  cardId: string,
+  printing: CardPrinting
+): Promise<ApiDeckCard & VersionedAnswer> {
+  return patchCard(target, cardId, { ...printing });
+}
+
+/** Row changes the server applies to a deck in one transaction. */
+export interface DeckCardChanges {
+  readonly removeCardIds: readonly string[];
+  readonly quantityChanges: readonly { readonly cardId: string; readonly quantity: number }[];
+  readonly addCards: readonly AddCardPayload[];
+  /** Command-zone slots whose rows are removed, whichever rows hold them. */
+  readonly clearCommandSlots?: readonly CommandSlot[];
+  /** The deck's command-zone fields, sent only when the edit changes them. */
+  readonly commandZone?: CommandZonePatch;
+  /** The deck version the client last read; absent means "do not check". */
+  readonly expectedVersion?: number;
+}
+
+/**
+ * Applies a change set to the guest deck the way the server applies it to rows.
+ *
+ * New rows get ids from their printing, role and zone: the guest deck has no
+ * database to hand them out, and one printing can sit in two zones.
+ *
+ * @param deckId - the guest deck id
+ * @param changes - rows to remove, resize and add
+ * @returns the guest deck with the changes applied
+ */
+function applyGuestCardChanges(deckId: string, changes: DeckCardChanges): ApiDeck {
+  const deck = getGuestApiDeck();
+  const removed = new Set(changes.removeCardIds);
+  const clearedSlots = changes.clearCommandSlots ?? [];
+  const quantities = new Map(changes.quantityChanges.map((change) => [change.cardId, change.quantity]));
+  const kept = deck.cards
+    .filter((card) => !removed.has(card.id))
+    .filter(
+      (card) => !clearedSlots.some((slot) => rowFillsCommandSlot(card, slot))
+    )
+    .map((card) => ({ ...card, quantity: quantities.get(card.id) ?? card.quantity }));
+  const added = changes.addCards.map((payload) =>
+    guestRowFromPayload(deckId, guestRowId(payload), payload)
+  );
+  return { ...deck, ...changes.commandZone, cards: [...kept, ...added] };
+}
+
+/**
+ * A guest row id that two rows of one change set cannot share.
+ *
+ * @param payload - the card being added
+ * @returns its printing, its role in the deck and its zone
+ */
+function guestRowId(payload: AddCardPayload): string {
+  let role = "card";
+  if (payload.isCommander) role = payload.isPartner ? "partner" : "commander";
+  else if (payload.category === "companion") role = "companion";
+  return `${payload.scryfallId}:${role}:${payload.zone ?? "main"}`;
+}
+
+/**
+ * Applies a set of row changes to a deck atomically: either every change is
+ * saved or none is. The guest deck keeps no version, so its answer carries
+ * none.
+ *
+ * @param deckId - deck to change
+ * @param changes - rows to remove, resize and add, the command zone, and the
+ *   deck version the client read
+ * @returns the deck with all its cards and its new `version`, as saved
+ * @throws When the server refused the change set (400, 409 for a stale copy,
+ *   500); the deck is then unchanged
+ */
+export async function applyCardChanges(
+  deckId: string,
+  changes: DeckCardChanges
+): Promise<ApiDeck> {
+  if (isGuestDeckId(deckId)) return applyGuestCardChanges(deckId, changes);
+  const res = await fetch(`/api/decks/${deckId}/cards`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ zone }),
+    body: JSON.stringify(changes),
+    signal: AbortSignal.timeout(DECK_WRITE_TIMEOUT_MS),
   });
-  if (!res.ok) await handleApiError(res, "updateCardZone");
+  if (!res.ok) await handleApiError(res, "applyCardChanges");
   return res.json();
 }
 
-export async function updateCardMaybeboard(
-  deckId: string,
-  cardId: string,
-  isMaybeboard: boolean
-): Promise<ApiDeckCard> {
-  return updateCardZone(deckId, cardId, isMaybeboard ? "maybeboard" : "main");
+/**
+ * One change of the command zone, which the server stores in one transaction
+ * (`PATCH /api/decks/[id]/command-zone`): the rows that leave, the rows that
+ * enter and the deck fields that record the result.
+ */
+export interface CommandZoneChangeRequest {
+  /** Main-deck rows that leave with the change, such as a promoted card's row. */
+  readonly removeCardIds: readonly string[];
+  /** Slots whose rows are removed, whichever rows hold them. */
+  readonly clearCommandSlots: readonly CommandSlot[];
+  /** The rows that fill the changed slots. */
+  readonly addCards: readonly AddCardPayload[];
+  /** The deck fields to write; an absent key keeps the stored value. */
+  readonly commandZone: Partial<CommandZonePatch>;
+  /** The deck version the client last read; absent means "do not check". */
+  readonly expectedVersion?: number;
 }
 
-export async function removeAllCards(deckId: string): Promise<void> {
-  if (isGuestDeckId(deckId)) return;
-  const res = await fetch(`/api/decks/${deckId}/cards`, {
-    method: "DELETE",
+/** What a saved command-zone change answers: the rows it added, in the order sent, and the deck's new version. */
+export interface CommandZoneSaved extends VersionedAnswer {
+  readonly cards: ApiDeckCard[];
+}
+
+/**
+ * Changes the command zone atomically: either every row and field of the
+ * change is saved or none is. The guest deck keeps no version, so its answer
+ * carries none, and rows whose id is their printing id, as `addCard` does.
+ *
+ * @param deckId - deck to change
+ * @param change - rows to remove and add, and the deck fields to write
+ * @returns the added rows and the deck's new version
+ * @throws When the server refused the change (400, 409 for a stale copy, 500); the deck is then unchanged
+ */
+export async function changeCommandZone(
+  deckId: string,
+  change: CommandZoneChangeRequest
+): Promise<CommandZoneSaved> {
+  if (isGuestDeckId(deckId)) {
+    return {
+      cards: change.addCards.map((payload) =>
+        guestRowFromPayload(deckId, payload.scryfallId, payload)
+      ),
+    };
+  }
+  const res = await fetch(`/api/decks/${deckId}/command-zone`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(change),
+    signal: AbortSignal.timeout(DECK_WRITE_TIMEOUT_MS),
   });
-  if (!res.ok) await handleApiError(res, "removeAllCards");
+  if (!res.ok) await handleApiError(res, "changeCommandZone");
+  return res.json();
 }
 
 function normalizeCardCategory(category: string | undefined): CardCategory {
@@ -417,72 +697,4 @@ function normalizeCardCategory(category: string | undefined): CardCategory {
     "other",
   ];
   return categories.find((candidate) => candidate === category) ?? "other";
-}
-
-// ─── Scryfall Cache ───────────────────────────────────────────────────────────
-
-export async function lookupCardCache(scryfallId: string): Promise<unknown> {
-  try {
-    const res = await fetch(
-      `/api/cache/cards?id=${encodeURIComponent(scryfallId)}`
-    );
-    if (!res.ok) return null;
-    const body = await res.json();
-    return body.hit ? body.data : null;
-  } catch {
-    return null;
-  }
-}
-
-export async function storeCardCache(
-  scryfallId: string,
-  data: unknown
-): Promise<void> {
-  try {
-    await fetch("/api/cache/cards", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ scryfallId, data }),
-    });
-  } catch (err) {
-    logger.warn("Failed to cache card", "storeCardCache", err);
-  }
-}
-
-// ─── Scryfall Search Cache ────────────────────────────────────────────────────
-
-/** Look up a cached search result by query + page (hash computation happens server-side) */
-export async function lookupSearchCache(
-  query: string,
-  page: number
-): Promise<unknown> {
-  try {
-    const params = new URLSearchParams({ query, page: String(page) });
-    const res = await fetch(`/api/cache/search?${params}`);
-    if (!res.ok) return null;
-    const body = await res.json();
-    return body.hit ? body.data : null;
-  } catch {
-    return null;
-  }
-}
-
-/** Store a search result in the cache (hash computation happens server-side) */
-export async function storeSearchCache(
-  query: string,
-  page: number,
-  data: unknown
-): Promise<void> {
-  try {
-    const body = JSON.stringify({ query, page, data });
-    // The server rejects oversized cache writes with 413 — skip them entirely
-    if (body.length > MAX_SEARCH_CACHE_BYTES) return;
-    await fetch("/api/cache/search", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body,
-    });
-  } catch (err) {
-    logger.warn("Failed to cache search result", "storeSearchCache", err);
-  }
 }

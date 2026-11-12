@@ -8,8 +8,9 @@ const { mockDeckFindUnique, mockUserFindUnique, mockUserUpsert } = vi.hoisted(()
   mockUserUpsert: vi.fn(),
 }));
 
-vi.mock("@/lib/db/prisma", () => ({
-  prisma: {
+vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
+  const { stubPrisma } = await import("@/test/prisma-stub");
+  return stubPrisma(await importOriginal(), {
     user: {
       findUnique: mockUserFindUnique,
       upsert: mockUserUpsert,
@@ -17,8 +18,8 @@ vi.mock("@/lib/db/prisma", () => ({
     deck: {
       findUnique: mockDeckFindUnique,
     },
-  },
-}));
+  });
+});
 
 // ─── Mock NextAuth auth() ─────────────────────────────────────────────────────
 
@@ -26,7 +27,7 @@ const { mockAuth } = vi.hoisted(() => ({
   mockAuth: vi.fn(),
 }));
 
-vi.mock("@/lib/auth/config", () => ({
+vi.mock(import("@/lib/auth/config"), () => ({
   auth: mockAuth,
 }));
 
@@ -84,21 +85,18 @@ describe("requireAuth", () => {
     expect(result.error?.status).toBe(401);
   });
 
-  it("falls back to resolving by email when the session carries no id", async () => {
+  // Every real token carries the id the JWT callback copied from the row the
+  // sign-in created, so an email alone names no account to resolve.
+  it("returns 401 without creating a user when the session carries no id", async () => {
     mockAuth.mockResolvedValueOnce({
       user: { name: "Kael", email: "kael@test.com" },
-    });
-    mockUserUpsert.mockResolvedValueOnce({
-      id: "user-1",
-      name: "Kael",
-      email: "kael@test.com",
-      image: null,
     });
 
     const result = await requireAuth();
 
-    expect(result.error).toBeUndefined();
-    expect(result.session?.user.id).toBe("user-1");
+    expect(result.session).toBeUndefined();
+    expect(result.error?.status).toBe(401);
+    expect(mockUserUpsert).not.toHaveBeenCalled();
   });
 
   it("verifies the JWT session ID against the database", async () => {
@@ -120,41 +118,14 @@ describe("requireAuth", () => {
     expect(mockUserUpsert).not.toHaveBeenCalled();
   });
 
-  // A signed JWT outlives the row it points at. Handing that id straight to a
-  // write produced a foreign-key violation — a 500 on every deck creation.
-  it("re-resolves by email when the JWT's user row no longer exists", async () => {
+  // A signed JWT outlives the row it points at. Handing that id to a write
+  // produced a foreign-key violation, and re-creating the row from the token's
+  // email brought a deleted account back, so the token is signed out instead.
+  it("returns 401 without re-creating the user when the JWT's user row no longer exists", async () => {
     mockAuth.mockResolvedValueOnce({
       user: { id: "deleted-user", name: "Kael", email: "Kael@Test.com" },
     });
     mockUserFindUnique.mockResolvedValueOnce(null);
-    mockUserUpsert.mockResolvedValueOnce({
-      id: "rebuilt-user",
-      name: "Kael",
-      email: "kael@test.com",
-      image: null,
-    });
-
-    const result = await requireAuth();
-
-    expect(result.error).toBeUndefined();
-    // The caller gets the id that actually exists, not the stale one.
-    expect(result.session?.user.id).toBe("rebuilt-user");
-    expect(mockUserUpsert).toHaveBeenCalledOnce();
-  });
-
-  it("returns 401 when the stale id has no email to recover from", async () => {
-    mockAuth.mockResolvedValueOnce({ user: { id: "deleted-user" } });
-    mockUserFindUnique.mockResolvedValueOnce(null);
-
-    const result = await requireAuth();
-
-    expect(result.session).toBeUndefined();
-    expect(result.error?.status).toBe(401);
-    expect(mockUserUpsert).not.toHaveBeenCalled();
-  });
-
-  it("returns 401 when the session has neither an id nor an email to resolve", async () => {
-    mockAuth.mockResolvedValueOnce({ user: { name: "Nameless" } });
 
     const result = await requireAuth();
 

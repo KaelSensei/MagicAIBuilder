@@ -1,12 +1,12 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
-import { renderWithIntl } from "@/test/render-with-intl";
+import { renderWithProviders } from "@/test/render";
 import { DeckWizard } from "./DeckWizard";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 it("does not steal focus when reaching the commander search step", async () => {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  renderWithIntl(<QueryClientProvider client={client}><DeckWizard open onClose={vi.fn()} onComplete={vi.fn()} /></QueryClientProvider>);
+  renderWithProviders(
+    <DeckWizard open onClose={vi.fn()} onComplete={vi.fn()} />
+  );
   fireEvent.click(screen.getByRole("button", { name: /Budget.*50/ }));
   fireEvent.click(screen.getByRole("button", { name: "Continue" }));
   fireEvent.click(await screen.findByRole("button", { name: "Blue" }));

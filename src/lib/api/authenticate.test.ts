@@ -7,11 +7,16 @@ const { mockFindUnique, mockUpdate, mockCheckRateLimit, mockLogError } = vi.hois
   mockLogError: vi.fn(),
 }));
 
-vi.mock("@/lib/db/prisma", () => ({
-  prisma: { apiKey: { findUnique: mockFindUnique, update: mockUpdate } },
+vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
+  const { stubPrisma } = await import("@/test/prisma-stub");
+  return stubPrisma(await importOriginal(), {
+    apiKey: { findUnique: mockFindUnique, update: mockUpdate },
+  });
+});
+vi.mock(import("@/lib/rate-limit"), () => ({ checkRateLimit: mockCheckRateLimit }));
+vi.mock(import("@/lib/logger"), () => ({
+  logger: { info: vi.fn(), warn: vi.fn(), error: mockLogError },
 }));
-vi.mock("@/lib/rate-limit", () => ({ checkRateLimit: mockCheckRateLimit }));
-vi.mock("@/lib/logger", () => ({ logger: { error: mockLogError } }));
 
 import { authenticateApiKey, requireApiScope } from "./authenticate";
 import { hashApiKey, mintApiKey } from "./keys";

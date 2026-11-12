@@ -1,24 +1,31 @@
 "use client";
-import { forEachSequential } from "@/lib/async/sequential";
 // Bulk Edit modal — edit the entire deck as plain text, Moxfield-style
 import { useState, useEffect, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import * as Dialog from "@radix-ui/react-dialog";
 import { X, Loader2, CheckCircle2, AlertCircle, FileText } from "lucide-react";
-import { exportToText, parseTextDecklist } from "@/lib/deck/import";
+import { exportToText, parseTextDecklist, type ImportResult } from "@/lib/deck/import";
+import {
+  isEmptyBulkEdit,
+  namesToLookUp,
+  planBulkEdit,
+  resolveBulkEdit,
+  type BulkEditRejection,
+} from "@/lib/deck/bulk-edit";
 import { fetchInBatches } from "@/lib/deck/batch-fetch";
+import { CardLookupError } from "@/lib/deck/card-lookup-error";
+import { isStaleDeckRefusal } from "@/lib/db/deck-api-answer";
 import { useDeckStore } from "@/lib/deck/store";
-import * as deckApi from "@/lib/db/deck-api";
 import type { Deck } from "@/lib/deck/types";
-import type { ScryfallCard } from "@/lib/scryfall/types";
-import { buildScryfallNameIndex, normalizeImportedName } from "@/lib/scryfall/name-index";
+import { cardsFromZoneSource } from "@/lib/deck/zone-source";
+import { buildScryfallNameIndex } from "@/lib/scryfall/name-index";
 
 interface BulkEditModalProps {
   readonly deck: Deck;
   readonly children: React.ReactNode;
 }
 
-type SaveStatus = "idle" | "saving" | "reloading" | "done" | "error";
+type SaveStatus = "idle" | "saving" | "done" | "error";
 
 const DESCRIPTION_RICH_TAGS = {
   code: (chunks: ReactNode) => (
@@ -34,6 +41,38 @@ function getStatusTextClass(status: SaveStatus): string {
   return "text-[var(--text-secondary)]";
 }
 
+interface SaveStatusMessageProps {
+  readonly status: SaveStatus;
+  /** The line to show; the caller renders nothing while it is empty. */
+  readonly message: string;
+}
+
+/**
+ * The save's progress line. A failure is an alert, so it interrupts; progress
+ * and success are a polite status in a native `<output>` (Sonar S6819), which
+ * states the politeness and atomicity that `role="status"` implied.
+ */
+function SaveStatusMessage({ status, message }: SaveStatusMessageProps) {
+  const className = `flex items-center gap-2 text-sm shrink-0 ${getStatusTextClass(status)}`;
+  if (status === "error") {
+    return (
+      <div role="alert" className={className}>
+        <AlertCircle className="w-4 h-4 shrink-0" />
+        {message}
+      </div>
+    );
+  }
+  return (
+    <output aria-live="polite" aria-atomic="true" className={className}>
+      {status === "saving" && (
+        <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+      )}
+      {status === "done" && <CheckCircle2 className="w-4 h-4 shrink-0" />}
+      {message}
+    </output>
+  );
+}
+
 export function BulkEditModal({ deck, children }: BulkEditModalProps) {
   const t = useTranslations("deck");
   const [open, setOpen] = useState(false);
@@ -42,62 +81,59 @@ export function BulkEditModal({ deck, children }: BulkEditModalProps) {
   const [message, setMessage] = useState("");
 
   const activeDeckId = useDeckStore((s) => s.activeDeckId);
-  const addCard = useDeckStore((s) => s.addCard);
-  const setCommander = useDeckStore((s) => s.setCommander);
-  const setPartner = useDeckStore((s) => s.setPartner);
-  const setCompanion = useDeckStore((s) => s.setCompanion);
-  const forceSave = useDeckStore((s) => s.forceSave);
-  const resetActiveDeckForBulkEdit = useDeckStore((s) => s.resetActiveDeckForBulkEdit);
+  const applyBulkEdit = useDeckStore((s) => s.applyBulkEdit);
 
-  // Pre-fill textarea with current deck content whenever the modal opens
+  // Pre-fill textarea with current deck content whenever the modal opens.
+  // Every row the save compares against is listed, so none can vanish unseen.
   useEffect(() => {
     if (open) {
-      setText(exportToText(deck.commander, deck.partner, deck.cards, deck.companion));
+      setText(exportToText(deck.commander, deck.partner, cardsFromZoneSource(deck), deck.companion));
     }
   }, [open, deck]);
 
-  /** Add all found cards to the active deck; returns count of added cards */
-  async function addParsedCards(
-    parsed: ReturnType<typeof parseTextDecklist>,
-    foundCards: ScryfallCard[]
-  ): Promise<number> {
-    const byName = buildScryfallNameIndex(foundCards);
-    let added = 0;
-
-    // Set commander first and await — it updates pairingType which partner needs
-    if (parsed.commander) {
-      const cmd = byName.get(normalizeImportedName(parsed.commander));
-      if (cmd) {
-        await setCommander(cmd);
-        added++;
+  /** Explains why the edited list cannot be saved as written. */
+  function rejectionMessage(rejection: BulkEditRejection): string {
+    switch (rejection.status) {
+      case "unknownCards":
+        return t("bulkEdit.unknownCards", { names: rejection.names.join(", ") });
+      case "invalidPartner":
+        return t("bulkEdit.invalidPartner", { name: rejection.name });
+      case "invalidCompanion":
+        return t("bulkEdit.invalidCompanion", { name: rejection.name });
+      default: {
+        const exhaustive: never = rejection;
+        return exhaustive;
       }
     }
+  }
 
-    // Set partner after commander is persisted
-    if (parsed.partner) {
-      const prt = byName.get(normalizeImportedName(parsed.partner));
-      if (prt) {
-        await setPartner(prt);
-        added++;
-      }
-    }
+  /**
+   * Explains a save that threw. The card lookup's failure gets the player's
+   * words: a browser's "signal timed out" or "Failed to fetch" means nothing
+   * to them, and the deck API already phrases its own refusals.
+   */
+  function failureMessage(error: unknown): string {
+    if (error instanceof CardLookupError) return t("bulkEdit.lookupFailed");
+    return error instanceof Error ? error.message : t("bulkEdit.saveFailed");
+  }
 
-    if (parsed.companion) {
-      const companion = byName.get(normalizeImportedName(parsed.companion));
-      if (companion) {
-        await setCompanion(companion);
-        added++;
-      }
-    }
-
-    await forEachSequential(parsed.cards, async ({ name, quantity, zone }) => {
-      const card = byName.get(normalizeImportedName(name));
-      if (!card) return;
-      // Pass quantity directly — addCard handles basics with quantity > 1 in a single call
-      await addCard(card, quantity, zone ?? "main");
-      added++;
-    });
-    return added;
+  /**
+   * Saves only what the edited list changes, as one atomic request. New names
+   * are looked up first; the deck is untouched when the list is refused.
+   *
+   * @returns why the list was refused, or null once it is saved
+   */
+  async function saveChanges(parsed: ImportResult): Promise<BulkEditRejection | null> {
+    const plan = planBulkEdit(deck, parsed);
+    if (isEmptyBulkEdit(plan)) return null;
+    const names = namesToLookUp(plan);
+    if (names.length > 0) setMessage(t("import.validating", { count: names.length }));
+    const found = names.length > 0 ? await fetchInBatches(names.map((name) => ({ name }))) : [];
+    const resolution = resolveBulkEdit(plan, buildScryfallNameIndex(found));
+    if (resolution.status !== "ready") return resolution;
+    setMessage(t("bulkEdit.saving"));
+    await applyBulkEdit(resolution.edit);
+    return null;
   }
 
   const handleSave = async () => {
@@ -113,57 +149,24 @@ export function BulkEditModal({ deck, children }: BulkEditModalProps) {
 
     try {
       const parsed = parseTextDecklist(text);
-
-      // Deduplicate card names before sending to Scryfall batch
-      const allCardNames = [
-        ...(parsed.commander ? [{ name: parsed.commander }] : []),
-        ...(parsed.partner ? [{ name: parsed.partner }] : []),
-        ...(parsed.companion ? [{ name: parsed.companion }] : []),
-        ...Array.from(new Set(parsed.cards.map((c) => c.name))).map((name) => ({
-          name,
-        })),
-      ];
-
-      if (allCardNames.length === 0) {
+      const lineCount =
+        parsed.cards.length +
+        [parsed.commander, parsed.partner, parsed.companion].filter(Boolean).length;
+      if (lineCount === 0) {
         setStatus("error");
         setMessage(t("import.noCardsFound"));
         return;
       }
 
-      setMessage(t("import.validating", { count: allCardNames.length }));
-      const foundCards = await fetchInBatches(allCardNames);
-      const foundByName = buildScryfallNameIndex(foundCards);
-      if (allCardNames.some(({ name }) => !foundByName.has(normalizeImportedName(name)))) {
+      const rejection = await saveChanges(parsed);
+      if (rejection) {
         setStatus("error");
-        setMessage(t("bulkEdit.saveFailed"));
+        setMessage(rejectionMessage(rejection));
         return;
       }
 
-      // Step 1: Remove all existing cards from DB
-      setMessage(t("bulkEdit.clearing"));
-      await deckApi.removeAllCards(activeDeckId);
-
-      // Step 2: Reset commander / partner / companion
-      await deckApi.updateDeck(activeDeckId, {
-        commanderId: null,
-        commanderName: null,
-        partnerId: null,
-        companionId: null,
-        pairingType: "none",
-      });
-      resetActiveDeckForBulkEdit();
-
-      // Step 3: Re-add commander and all cards
-      setMessage(t("bulkEdit.rebuilding"));
-      const added = await addParsedCards(parsed, foundCards);
-
-      // Step 4: Reload the full deck, including persisted zones and count.
-      setStatus("reloading");
-      setMessage(t("bulkEdit.reloading"));
-      await forceSave();
-
       setStatus("done");
-      setMessage(t("bulkEdit.saved", { count: added }));
+      setMessage(t("bulkEdit.saved", { count: lineCount }));
 
       // Auto-close after a short delay
       setTimeout(() => {
@@ -171,9 +174,13 @@ export function BulkEditModal({ deck, children }: BulkEditModalProps) {
       }, 1200);
     } catch (err) {
       setStatus("error");
-      setMessage(
-        err instanceof Error ? err.message : t("bulkEdit.saveFailed")
-      );
+      // A stale copy: the store has reloaded the deck behind the dialog, so
+      // saving again plans the list on the deck as it now is.
+      if (isStaleDeckRefusal(err)) {
+        setMessage(t("sync.conflictReloaded"));
+        return;
+      }
+      setMessage(failureMessage(err));
     }
   };
 
@@ -231,7 +238,7 @@ export function BulkEditModal({ deck, children }: BulkEditModalProps) {
               placeholder={`Commander\n1 Atraxa, Praetors' Voice\n\nDeck\n1 Sol Ring\n1 Arcane Signet\n4 Forest\n...`}
               value={text}
               onChange={(e) => setText(e.target.value)}
-              disabled={status === "saving" || status === "reloading"}
+              disabled={status === "saving"}
               spellCheck={false}
             />
             {/* Line counter */}
@@ -241,29 +248,14 @@ export function BulkEditModal({ deck, children }: BulkEditModalProps) {
           </div>
 
           {/* Status message */}
-          {message && (
-            <div
-              className={`flex items-center gap-2 text-sm shrink-0 ${getStatusTextClass(status)}`}
-            >
-              {(status === "saving" || status === "reloading") && (
-                <Loader2 className="w-4 h-4 animate-spin shrink-0" />
-              )}
-              {status === "done" && (
-                <CheckCircle2 className="w-4 h-4 shrink-0" />
-              )}
-              {status === "error" && (
-                <AlertCircle className="w-4 h-4 shrink-0" />
-              )}
-              {message}
-            </div>
-          )}
+          {message && <SaveStatusMessage status={status} message={message} />}
 
           {/* Actions */}
           <div className="flex items-center justify-end gap-2 shrink-0">
             <button
               type="button"
               onClick={handleClose}
-              disabled={status === "saving" || status === "reloading"}
+              disabled={status === "saving"}
               className="px-4 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border)] rounded hover:border-[var(--text-secondary)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {t("import.cancel")}
@@ -274,12 +266,11 @@ export function BulkEditModal({ deck, children }: BulkEditModalProps) {
               disabled={
                 !text.trim() ||
                 status === "saving" ||
-                status === "reloading" ||
                 status === "done"
               }
               className="px-4 py-2 text-sm bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
-              {(status === "saving" || status === "reloading") && (
+              {status === "saving" && (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
               )}
               {status === "done" ? t("bulkEdit.savedButton") : t("bulkEdit.save")}

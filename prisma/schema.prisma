@@ -23,8 +23,6 @@ model User {
   decks             Deck[]
   deckFolders       DeckFolder[]
   collection        CollectionCard[]
-  favorites         CardFavorite[]
-  favoriteLists     FavoriteList[]
   ratings           DeckRating[]
   votes             DeckVote[]
   playtests         PlaytestSession[]
@@ -40,6 +38,8 @@ model User {
   followers         UserFollow[]       @relation("Followers")
   apiKeys           ApiKey[]
   notificationPreferences NotificationPreference?
+  aiUsage           AiUsage[]
+  usageCounters     UsageCounter[]
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
 }
@@ -148,9 +148,17 @@ model Deck {
   reports            DeckReport[]
   acquisitionIntents AcquisitionIntent[]
   savedBy            SavedPublicDeck[]
+  /// Client-chosen key that makes POST /api/decks safe to repeat: a retry with
+  /// the same key returns this deck instead of writing a second one.
+  idempotencyKey     String?
+  /// Optimistic lock: moves by one with every saved card write
+  /// (src/lib/deck/deck-repository.ts). A writer that sends the version it
+  /// read is refused with 409 when another write landed in between.
+  version            Int               @default(0)
   createdAt          DateTime          @default(now())
   updatedAt          DateTime          @updatedAt
 
+  @@unique([userId, idempotencyKey])
   @@index([userId])
   @@index([folderId])
 }
@@ -296,17 +304,20 @@ model DeckCard {
   @@index([deckId])
 }
 
+/// Shared cache of Scryfall cards (24h TTL), written only by the server from
+/// its own Scryfall requests (src/lib/scryfall/shared-cache.ts).
 model CardCache {
-  scryfallId String   @id
-  data       Json
+  scryfallId String   @id // "srv1:<scryfall id>"; rows without the prefix are retired
+  data       Json // ScryfallCard
   cachedAt   DateTime @default(now())
 
   @@index([cachedAt])
 }
 
-/// Cache for Scryfall search results (1h TTL)
+/// Shared cache of Scryfall search pages (1h TTL), written only by the server
+/// from its own Scryfall requests (src/lib/scryfall/shared-cache.ts).
 model ScryfallSearchCache {
-  cacheKey String   @id // sha256(query|page)
+  cacheKey String   @id // "srv1:" + sha256(multilingual|page|query); rows without the prefix are retired
   data     Json // ScryfallSearchResponse
   cachedAt DateTime @default(now())
 
@@ -401,63 +412,6 @@ model CollectionCard {
   @@unique([scryfallId, foil, userId])
   @@index([scryfallId])
   @@index([userId])
-}
-
-// Deck templates for reusable archetypes
-model DeckTemplate {
-  id            String   @id @default(cuid())
-  name          String
-  commanderName String
-  archetype     String // Combo, Control, Voltron, etc.
-  deckList      Json // Array of DeckCard objects (99 cards)
-  author        String
-  upvotes       Int      @default(0)
-  source        String   @default("community") // "official" or "community"
-  userId        String? // Creator (if community)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  @@index([commanderName])
-  @@index([upvotes])
-}
-
-// Card favorites & wishlists
-model CardFavorite {
-  id         String   @id @default(cuid())
-  scryfallId String
-  name       String
-  typeLine   String
-  cmc        Float    @default(0)
-  price      Float?
-  imageUri   String   @default("")
-  userId     String
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  addedAt    DateTime @default(now())
-
-  @@unique([scryfallId, userId])
-  @@index([userId])
-}
-
-model FavoriteList {
-  id        String               @id @default(cuid())
-  name      String
-  userId    String
-  user      User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
-  cards     CardInFavoriteList[]
-  createdAt DateTime             @default(now())
-  updatedAt DateTime             @updatedAt
-
-  @@index([userId])
-}
-
-model CardInFavoriteList {
-  id         String       @id @default(cuid())
-  listId     String
-  list       FavoriteList @relation(fields: [listId], references: [id], onDelete: Cascade)
-  scryfallId String
-  order      Int          @default(0)
-
-  @@unique([listId, scryfallId])
 }
 
 // ─── Community ──────────────────────────────────────────────────────
@@ -565,4 +519,52 @@ model UserFollow {
 
   @@unique([followerId, followingId])
   @@index([followingId])
+}
+
+/// One metered model call, or one placeholder answer when no provider key is
+/// set: its tokens, how it ended and what it cost us (I-30 requirement 4.1).
+/// Personal data, deleted with the user; the month's total survives in
+/// `AiMonthlySpend`.
+model AiUsage {
+  id                     String   @id @default(cuid())
+  userId                 String
+  user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  route                  String // "build" | "suggest"
+  provider               String // "anthropic" | "openai" | "placeholder"
+  model                  String
+  inputTokens            Int      @default(0)
+  outputTokens           Int      @default(0)
+  cacheReadTokens        Int      @default(0)
+  cacheWriteTokens       Int      @default(0)
+  stopReason             String?
+  outcome                String // "ok" | "truncated" | "refused" | "parseFailed" | "rejectedByValidator" | "providerError"
+  costMicroUsd           Int      @default(0)
+  priceTableVersion      String
+  countsAgainstAllowance Boolean
+  createdAt              DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+/// Calls one user made on one metered key ("ai.build", "ai.suggest") in one
+/// UTC month. Claiming a call is a single conditional
+/// `UPDATE … SET used = used + 1 WHERE used < limit`, so two instances cannot
+/// both take the last unit.
+model UsageCounter {
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  key         String
+  /// First instant of the UTC month the count belongs to.
+  periodStart DateTime
+  used        Int      @default(0)
+
+  @@id([userId, key, periodStart])
+}
+
+/// What every metered model call cost in one UTC month, across all users.
+/// Read against the global spend ceiling before a call.
+model AiMonthlySpend {
+  /// First instant of the UTC month.
+  periodStart   DateTime @id
+  spentMicroUsd BigInt   @default(0)
 }

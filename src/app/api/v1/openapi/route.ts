@@ -12,12 +12,10 @@ import { buildOpenApiDocument } from "@/lib/api/openapi";
 /**
  * The origin this request actually arrived on.
  *
- * Deliberately neither `siteUrl()` nor `resolveAppBaseUrl()`. `siteUrl()` is
- * the site's public identity and would tell a developer reading the spec on a
- * preview deployment to call production; `resolveAppBaseUrl()` is for this app
- * fetching itself server-side. What a client needs is the host it just
- * downloaded the document from — derived from the request, so the two cannot
- * disagree.
+ * Deliberately not `siteUrl()`: that is the site's public identity, and it
+ * would tell a developer reading the spec on a preview deployment to call
+ * production. What a client needs is the host it just downloaded the document
+ * from — derived from the request, so the two cannot disagree.
  *
  * `x-forwarded-*` win when present because a proxy sets them and `request.url`
  * then carries the internal address.

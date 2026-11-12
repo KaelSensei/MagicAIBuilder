@@ -140,6 +140,15 @@ describe("edgeAuthConfig.callbacks.authorized", () => {
     ).toBe(true);
   });
 
+  it("allows the rules reference pages in every served locale", () => {
+    expect(authorizedCallback(makeArgs("/rules/game-changers", false))).toBe(
+      true
+    );
+    expect(authorizedCallback(makeArgs("/fr/rules/comprehensive", false))).toBe(
+      true
+    );
+  });
+
   it("does not treat /decks as public because /deck is", () => {
     expect(authorizedCallback(makeArgs("/decks", false))).toBe(false);
   });

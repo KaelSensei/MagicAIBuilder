@@ -1,17 +1,17 @@
 import { describe, it, expect } from "vitest";
-import { categorizeCard, categorizeDfcCard, isDfcLayout, isMdfcWithLandBack, CATEGORY_LABELS } from "@/lib/deck/categories";
+import { categorizeCard, categorizeDfcCard, isMdfcWithLandBack, CATEGORY_LABELS } from "@/lib/deck/categories";
 import type { ScryfallCard } from "@/lib/scryfall/types";
+import { aScryfallCard } from "@/test/builders/scryfall";
 
 function makeCard(overrides: Partial<ScryfallCard>): ScryfallCard {
-  return {
+  return aScryfallCard({
     id: "test-id",
     name: "Test Card",
     layout: "normal",
     cmc: 2,
     type_line: "Instant",
-    color_identity: [],
     ...overrides,
-  };
+  });
 }
 
 describe("categorizeCard", () => {
@@ -118,12 +118,6 @@ describe("CATEGORY_LABELS", () => {
 
 function makeMdfc(o: Partial<ScryfallCard> = {}): ScryfallCard { return { id:"m1", name:"Shatterskull Smashing // Shatterskull, the Hammer Pass", layout:"modal_dfc", cmc:2, type_line:"Sorcery // Land", color_identity:["R"], card_faces:[{name:"Shatterskull Smashing",mana_cost:"{X}{R}{R}",type_line:"Sorcery",oracle_text:"Deals X damage.",image_uris:{normal:"https://ex.com/f.jpg"}},{name:"Shatterskull, the Hammer Pass",mana_cost:"",type_line:"Land",oracle_text:"Enters tapped.",image_uris:{normal:"https://ex.com/b.jpg"}}], ...o }; }
 function makeTf(o: Partial<ScryfallCard> = {}): ScryfallCard { return { id:"t1", name:"Delver of Secrets // Insectile Aberration", layout:"transform", cmc:1, type_line:"Creature — Human Wizard // Creature — Human Insect", color_identity:["U"], card_faces:[{name:"Delver of Secrets",mana_cost:"{U}",type_line:"Creature — Human Wizard",oracle_text:"Look at top.",image_uris:{normal:"https://ex.com/d1.jpg"}},{name:"Insectile Aberration",mana_cost:"",type_line:"Creature — Human Insect",oracle_text:"Flying",image_uris:{normal:"https://ex.com/d2.jpg"}}], ...o }; }
-describe("isDfcLayout", () => {
-  it("modal_dfc → true", () => expect(isDfcLayout(makeMdfc())).toBe(true));
-  it("transform → true", () => expect(isDfcLayout(makeTf())).toBe(true));
-  it("normal → false", () => expect(isDfcLayout(makeCard({layout:"normal"}))).toBe(false));
-  it("no faces → false", () => expect(isDfcLayout(makeMdfc({card_faces:undefined}))).toBe(false));
-});
 describe("isMdfcWithLandBack", () => {
   it("land back → true", () => expect(isMdfcWithLandBack(makeMdfc())).toBe(true));
   it("transform → false", () => expect(isMdfcWithLandBack(makeTf())).toBe(false));

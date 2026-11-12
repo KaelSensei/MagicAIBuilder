@@ -1,6 +1,24 @@
 // Scryfall API response types
+/**
+ * Image versions of a card or face. Scryfall added the WebP set on 2026-10-14
+ * (thumb 146×204, grid 488×680, display 672×936, crop 480×680, art varies) and
+ * renamed `normal` to `jpeg`. On 2027-01-01 it drops the small, large,
+ * border_crop and art_crop JPEGs and stops PNG hotlinking; card JSON cached
+ * before the change carries only those JPEG-era keys.
+ */
 export interface ScryfallImageUris {
-  small?: string; normal?: string; large?: string; png?: string; art_crop?: string; border_crop?: string;
+  thumb?: string;
+  grid?: string;
+  display?: string;
+  crop?: string;
+  art?: string;
+  jpeg?: string;
+  small?: string;
+  normal?: string;
+  large?: string;
+  png?: string;
+  art_crop?: string;
+  border_crop?: string;
 }
 export interface ScryfallCardFace {
   name: string; mana_cost?: string; type_line?: string; oracle_text?: string;
@@ -24,6 +42,8 @@ export interface ScryfallCard {
   printed_name?: string; printed_type_line?: string; printed_text?: string;
 }
 export interface ScryfallSearchResponse { object: "list"; total_cards: number; has_more: boolean; next_page?: string; data: ScryfallCard[]; }
+/** Empty search response — Scryfall answers 404 when a valid query matches nothing */
+export const EMPTY_SEARCH_RESPONSE: ScryfallSearchResponse = { object: "list", total_cards: 0, has_more: false, data: [] };
 export interface ScryfallError { object: "error"; code: string; status: number; details: string; }
 export interface ScryfallAutocompleteResponse { object: "catalog"; total_values: number; data: string[]; }
 export interface ScryfallCollectionIdentifier { id?: string; name?: string; set?: string; collector_number?: string; }

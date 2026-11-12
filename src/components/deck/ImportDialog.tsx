@@ -8,6 +8,7 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { X, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { parseTextDecklist } from "@/lib/deck/import";
 import { fetchInBatches } from "@/lib/deck/batch-fetch";
+import { CardLookupError } from "@/lib/deck/card-lookup-error";
 import { useDeckStore } from "@/lib/deck/store";
 import { ImportFromUrlTab } from "@/components/deck/ImportFromUrlTab";
 import { Button } from "@/components/ui/Button";
@@ -257,6 +258,15 @@ export function ImportDialog({
     }
   };
 
+  /**
+   * Explains a preview that threw: the card lookup's failure in the player's
+   * words, any other error as it reports itself.
+   */
+  function previewFailureMessage(error: unknown): string {
+    if (error instanceof CardLookupError) return t("import.lookupFailed");
+    return error instanceof Error ? error.message : t("import.importFailed");
+  }
+
   const handlePreview = async () => {
     const parsed = parseTextDecklist(text);
     if (!parsed.commander && !parsed.partner && !parsed.companion && parsed.cards.length === 0) {
@@ -283,7 +293,7 @@ export function ImportDialog({
     } catch (err) {
       if (requestId !== previewRequest.current) return;
       setStatus("error");
-      setMessage(err instanceof Error ? err.message : t("import.importFailed"));
+      setMessage(previewFailureMessage(err));
     }
   };
 
@@ -319,6 +329,7 @@ export function ImportDialog({
             <Dialog.Close asChild>
               <button
                 type="button"
+                aria-label={t("import.close")}
                 className="p-1 rounded text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors"
               >
                 <X className="w-4 h-4" />

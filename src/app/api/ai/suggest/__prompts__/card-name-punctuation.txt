@@ -1,0 +1,54 @@
+You are a Magic: The Gathering Commander expert. Analyze this deck and suggest targeted improvements.
+
+DECK INFO:
+- Commander: Atraxa, Praetors' Voice
+- Color Identity: WUBG
+- Total cards: 7
+- Average CMC: 1.91
+- Current Bracket: 3/5
+- Target Bracket: 3/5
+- Budget: No per-card budget limit
+- Archetype: Spellslinger
+- Detected Themes: Spellslinger, Card draw
+
+PLAYER DECK BRIEF:
+  No additional preferences provided
+
+CATEGORY BREAKDOWN:
+  ramp: 2
+  draw: 5
+  removal: 2
+  creatures: 1
+  lands: 1
+
+BRACKET DIMENSION SCORES (1=weak, 5=strong):
+  ramp: 2/4
+  draw: 4/4
+  removal: 2/4
+  winSpeed: 2/4
+  avgCmc: 4/4
+
+GAME CHANGERS IN DECK (2):
+  Rhystic Study, Cyclonic Rift
+
+IDENTIFIED GAPS / WARNINGS:
+  - Only 1 land: Commander decks usually run 36 or more
+
+ALL CURRENT CARDS (6):
+Urza's Saga, Henzie "Toolbox" Torre, Borrowing 100,000 Arrows, Lim-Dûl's Vault, Fire // Ice, Krark-Clan Ironworks
+
+PRIVATE USER-OWNED PLAYTEST EVIDENCE:
+  None recorded
+
+ARCHETYPE GUIDANCE (Spellslinger):
+Focus on copy effects (Swarm Intelligence, Thousand-Year Storm, Reverberate), instant/sorcery payoffs (Guttersnipe, Runechanter's Pike, Aria of Flame), cantrips for velocity, and protection for the commander.
+
+TASK:
+Explain why Borrowing 100,000 Arrows belongs in this specific deck. Use the commander, archetype, deck brief, current cards and identified gaps as evidence. Mention a limitation or replacement condition when relevant. Do not propose unrelated deck changes.
+
+Respond ONLY in this JSON format (no markdown):
+{
+  "analysis": "A concise, evidence-based answer in 2-4 sentences",
+  "suggestions": [],
+  "removals": []
+}

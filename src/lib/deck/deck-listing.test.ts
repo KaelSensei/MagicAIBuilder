@@ -1,6 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { filterDecksByQuery, getStoredDecksViewMode, storeDecksViewMode, sortDecks } from "./deck-listing";
 import type { Deck } from "./types";
+import { aDeck } from "@/test/builders/deck";
 
 const localStorageMock = (() => {
   let store: Record<string, string> = {};
@@ -17,29 +18,13 @@ const localStorageMock = (() => {
 
 function makeDeck(partial: Partial<Deck>): Deck {
   const now = new Date("2026-03-30T12:00:00.000Z");
-  return {
-    id: partial.id ?? "d1",
-    name: partial.name ?? "Deck",
-    commander: null,
-    partner: null,
-    companion: null,
-    pairingType: "none",
-    cards: [],
-    maybeboard: [],
-    format: "commander",
-    cardCount: 0,
-    targetBracket: 3,
-    manualBracket: null,
-    budget: null,
-    description: "",
-    tags: [],
-    shareToken: null,
-    shareEnabled: false,
-    isPublic: false,
-    isAIGenerated: false,
+  return aDeck({
+    id: "d1",
+    name: "Deck",
     createdAt: now,
-    updatedAt: partial.updatedAt ?? now,
-  };
+    updatedAt: now,
+    ...partial,
+  });
 }
 
 describe("deck listing preferences", () => {

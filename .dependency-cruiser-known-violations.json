@@ -1,0 +1,213 @@
+[
+  {
+    "type": "dependency",
+    "from": "src/lib/ai/deck-plan.ts",
+    "to": "src/app/api/ai/build/types.ts",
+    "unresolvedTo": "@/app/api/ai/build/types",
+    "dependencyTypes": [
+      "aliased",
+      "aliased-tsconfig",
+      "aliased-tsconfig-paths",
+      "local",
+      "type-only",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "lib-not-outer-layers"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/lib/ai/generated-deck-legality.ts",
+    "to": "src/app/api/ai/build/types.ts",
+    "unresolvedTo": "@/app/api/ai/build/types",
+    "dependencyTypes": [
+      "aliased",
+      "aliased-tsconfig",
+      "aliased-tsconfig-paths",
+      "local",
+      "type-only",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "lib-not-outer-layers"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/lib/ai/generated-deck-size.ts",
+    "to": "src/app/api/ai/build/types.ts",
+    "unresolvedTo": "@/app/api/ai/build/types",
+    "dependencyTypes": [
+      "aliased",
+      "aliased-tsconfig",
+      "aliased-tsconfig-paths",
+      "local",
+      "type-only",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "lib-not-outer-layers"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/lib/ai/generated-deck-validation.ts",
+    "to": "src/app/api/ai/build/types.ts",
+    "unresolvedTo": "@/app/api/ai/build/types",
+    "dependencyTypes": [
+      "aliased",
+      "aliased-tsconfig",
+      "aliased-tsconfig-paths",
+      "local",
+      "type-only",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "lib-not-outer-layers"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/lib/ai/suggestion-review.ts",
+    "to": "src/hooks/useAISuggestions.ts",
+    "unresolvedTo": "@/hooks/useAISuggestions",
+    "dependencyTypes": [
+      "aliased",
+      "aliased-tsconfig",
+      "aliased-tsconfig-paths",
+      "local",
+      "type-only",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "lib-not-outer-layers"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/lib/ai/suggestion-stream.ts",
+    "to": "src/app/api/ai/suggest/route.ts",
+    "unresolvedTo": "@/app/api/ai/suggest/route",
+    "dependencyTypes": [
+      "aliased",
+      "aliased-tsconfig",
+      "aliased-tsconfig-paths",
+      "local",
+      "type-only",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "lib-not-outer-layers"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/lib/deck/store.ts",
+    "to": "src/hooks/useToast.ts",
+    "unresolvedTo": "@/hooks/useToast",
+    "dependencyTypes": [
+      "aliased",
+      "aliased-tsconfig",
+      "aliased-tsconfig-paths",
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "lib-not-outer-layers"
+    }
+  },
+  {
+    "type": "cycle",
+    "from": "src/lib/import/decklist-parse.ts",
+    "to": "src/lib/import/url-import.ts",
+    "unresolvedTo": "./url-import",
+    "dependencyTypes": [
+      "local",
+      "type-only",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "src/lib/import/url-import.ts",
+        "dependencyTypes": [
+          "local",
+          "type-only",
+          "import"
+        ]
+      },
+      {
+        "name": "src/lib/import/decklist-parse.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "dependency",
+    "from": "src/components/deck/DeckWizard.tsx",
+    "to": "src/app/api/ai/build/types.ts",
+    "unresolvedTo": "@/app/api/ai/build/types",
+    "dependencyTypes": [
+      "aliased",
+      "aliased-tsconfig",
+      "aliased-tsconfig-paths",
+      "local",
+      "type-only",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "ui-not-routes"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/components/deck/GeneratedDeckCorrections.tsx",
+    "to": "src/app/api/ai/build/types.ts",
+    "unresolvedTo": "@/app/api/ai/build/types",
+    "dependencyTypes": [
+      "aliased",
+      "aliased-tsconfig",
+      "aliased-tsconfig-paths",
+      "local",
+      "type-only",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "ui-not-routes"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/hooks/useAIDeckBuild.ts",
+    "to": "src/app/api/ai/build/types.ts",
+    "unresolvedTo": "@/app/api/ai/build/types",
+    "dependencyTypes": [
+      "aliased",
+      "aliased-tsconfig",
+      "aliased-tsconfig-paths",
+      "local",
+      "type-only",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "ui-not-routes"
+    }
+  }
+]

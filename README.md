@@ -57,7 +57,7 @@ Follow a deck from the first card to a list you can actually play:
 
 - Build for Commander, Brawl, Oathbreaker, Standard, Pioneer, Modern, Legacy, Vintage, and Pauper.
 - Use the complete interface in English or French, including localized card data when available.
-- Switch between persistent light and dark themes; reduced-motion and mobile fallbacks support the 3D landing experience.
+- Switch between persistent light and dark themes.
 
 ## Stack
 
@@ -74,8 +74,6 @@ Follow a deck from the first card to a list you can actually play:
 | Auth          | NextAuth.js v5 (Google OAuth + credentials)                 |
 | i18n          | next-intl 4 (`en`, `fr`)                                    |
 | Drag & Drop   | dnd-kit 6                                                   |
-| 3D Engine     | Three.js + R3F + drei                                       |
-| Animations    | gsap (camera), Framer                                       |
 | Observability | Sentry, Vercel Speed Insights                               |
 
 ## Getting Started

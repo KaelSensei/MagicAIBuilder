@@ -61,7 +61,7 @@ describe("deck API error reporting", () => {
 
   it("truncates an over-long server message", async () => {
     mockErrorResponse(400, { error: "x".repeat(500) });
-    await expect(addCard("deck-1", { scryfallId: "a", name: "b" })).rejects.toThrow(
+    await expect(addCard({ deckId: "deck-1" }, { scryfallId: "a", name: "b" })).rejects.toThrow(
       /^\[addCard\] HTTP 400: x{200}$/
     );
   });

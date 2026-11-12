@@ -1,40 +1,50 @@
 "use client";
 
-import { Loader2, Package, Plus, Shield, Upload } from "lucide-react";
+/**
+ * The header's navigation on small screens: the same links, deck actions and
+ * account menu as the desktop bar, stacked under it.
+ *
+ * Shell (`components/layout`). The deck actions come from
+ * `HeaderDeckActionsSlot`, as in `Header`, and share the header's UI state so
+ * an import started here, which closes the menu, opens the one dialog the
+ * desktop instance hosts.
+ *
+ * @module layout/HeaderMobileMenu
+ */
+
+import type { Dispatch, SetStateAction } from "react";
+import { Package, Shield } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { ImportDialog } from "@/components/deck/ImportDialog";
 import { UserMenu } from "@/components/auth/UserMenu";
-import { Button } from "@/components/ui/Button";
+import type { HeaderDeckActionsUiState } from "@/components/layout/header-deck-actions-state";
+import { HeaderDeckActionsSlot } from "@/components/layout/HeaderDeckActionsSlot";
 import { Link } from "@/i18n/navigation";
 
 interface HeaderMobileMenuProps {
   readonly open: boolean;
+  /** The deck open in the builder. Import then fills it instead of a new deck. */
   readonly deckId?: string;
-  readonly importOpen: boolean;
-  readonly isCreatingDeck: boolean;
-  readonly isCreatingImportDeck: boolean;
+  /** Shared with the desktop bar; see `header-deck-actions-state`. */
+  readonly deckActions: HeaderDeckActionsUiState;
+  readonly onDeckActionsChange: Dispatch<
+    SetStateAction<HeaderDeckActionsUiState>
+  >;
   readonly onClose: () => void;
-  readonly onImportOpenChange: (open: boolean) => void;
-  readonly onImportFromHome: () => Promise<void>;
-  readonly onNewDeck: () => Promise<void>;
 }
 
 /**
  * Full-width navigation shown under the header on small screens.
  *
- * @param props - open state and the same deck actions the desktop bar uses
+ * Every link and action closes the menu as it runs.
+ *
  * @returns the menu, or nothing while it is closed
  */
 export function HeaderMobileMenu({
   open,
   deckId,
-  importOpen,
-  isCreatingDeck,
-  isCreatingImportDeck,
+  deckActions,
+  onDeckActionsChange,
   onClose,
-  onImportOpenChange,
-  onImportFromHome,
-  onNewDeck,
 }: HeaderMobileMenuProps) {
   const t = useTranslations("common");
 
@@ -67,48 +77,13 @@ export function HeaderMobileMenu({
           {t("nav.rules")}
         </Link>
         <hr className="my-2 border-[var(--border)]" />
-        {deckId ? (
-          <ImportDialog>
-            <Button variant="secondary" onClick={onClose} className="w-fit">
-              <Upload className="h-3.5 w-3.5" />
-              {t("nav.import")}
-            </Button>
-          </ImportDialog>
-        ) : (
-          <ImportDialog open={importOpen} onOpenChange={onImportOpenChange}>
-            <Button
-              variant="secondary"
-              onClick={() => {
-                onClose();
-                void onImportFromHome();
-              }}
-              disabled={isCreatingImportDeck}
-              className="w-fit"
-            >
-              {isCreatingImportDeck ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              ) : (
-                <Upload className="h-3.5 w-3.5" />
-              )}
-              {t("nav.import")}
-            </Button>
-          </ImportDialog>
-        )}
-        <Button
-          onClick={() => {
-            onClose();
-            void onNewDeck();
-          }}
-          disabled={isCreatingDeck}
-          className="mt-2 w-fit"
-        >
-          {isCreatingDeck ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          ) : (
-            <Plus className="h-3.5 w-3.5" />
-          )}
-          {t("nav.newDeck")}
-        </Button>
+        <HeaderDeckActionsSlot
+          deckId={deckId}
+          layout="mobile"
+          uiState={deckActions}
+          onUiStateChange={onDeckActionsChange}
+          onAction={onClose}
+        />
         <div className="pt-2">
           <UserMenu />
         </div>
