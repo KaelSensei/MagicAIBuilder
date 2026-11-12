@@ -257,26 +257,35 @@ export async function createDeckWithCards(
   return res.json();
 }
 
+/**
+ * The deck fields `PATCH /api/decks/[id]` writes: metadata only. The command
+ * zone is not among them; `changeCommandZone` is its one write path.
+ */
+export type DeckMetadataPatch = Partial<{
+  name: string;
+  format: string;
+  targetBracket: number;
+  manualBracket: number | null;
+  budget: number | null;
+  description: string;
+  tags: string[];
+  isAIGenerated?: boolean;
+  isPublic?: boolean;
+  seekingFeedback?: boolean;
+  feedbackQuestion?: string | null;
+}>;
+
+/**
+ * Writes a deck's metadata through `PATCH /api/decks/[id]`.
+ *
+ * @param id - The deck; a guest deck answers locally and writes nothing.
+ * @param patch - The fields to write; an absent key keeps the stored value.
+ * @returns The deck as stored after the write.
+ * @throws Error when the server refuses or fails the write (`handleApiError`).
+ */
 export async function updateDeck(
   id: string,
-  patch: Partial<{
-    name: string;
-    format: string;
-    targetBracket: number;
-    manualBracket: number | null;
-    budget: number | null;
-    commanderId: string | null;
-    commanderName: string | null;
-    partnerId: string | null;
-    companionId?: string | null;
-    pairingType: CommanderPairingType;
-    description: string;
-    tags: string[];
-    isAIGenerated?: boolean;
-    isPublic?: boolean;
-    seekingFeedback?: boolean;
-    feedbackQuestion?: string | null;
-  }>
+  patch: DeckMetadataPatch
 ): Promise<ApiDeck> {
   if (isGuestDeckId(id)) return getGuestApiDeck();
   const res = await fetch(`/api/decks/${id}`, {

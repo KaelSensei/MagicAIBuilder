@@ -96,8 +96,23 @@ const deckFieldsSchema = z.looseObject({
 });
 
 const createDeckBodySchema = deckFieldsSchema.extend({ name: z.string() });
+/**
+ * A command field on the deck PATCH answers 400, as the server does: the
+ * command zone changes only through `PATCH …/command-zone`.
+ */
+const refusedCommandField = z.optional(
+  z.never({
+    error:
+      "the command zone changes through PATCH /api/decks/[id]/command-zone",
+  })
+);
 const deckPatchSchema = deckFieldsSchema.extend({
   name: z.string().optional(),
+  commanderId: refusedCommandField,
+  commanderName: refusedCommandField,
+  partnerId: refusedCommandField,
+  companionId: refusedCommandField,
+  pairingType: refusedCommandField,
 });
 
 const cardChangesSchema = z.object({
