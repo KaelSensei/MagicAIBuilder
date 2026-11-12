@@ -254,6 +254,7 @@ Scryfall's card object exposes `prints_search_uri` for every printing and `relea
 - [ ] For each owned printing, list newer paper printings of the same oracle identity. Digital-only printings are omitted. The line is "Reprinted in {set} on {date}."
 - [ ] No verb about selling, buying or holding. No predicted price. The labelled price, if shown, stays I-59's or the stored USD amount.
 - [ ] The player can turn the watch off for a card. Off is the stored state, not a hidden filter.
+- [ ] Added 2026-11-12 (thirteenth pass): the reprint line also appears on the missing printings of an [I-101](i101-collecting-goals-beyond-a-set.md) goal, with this initiative's wording and no buy verb (I-101 slice 5).
 
 ### Enrichment (2026-11-11)
 

@@ -359,6 +359,7 @@ Collections already live in ManaBox, Moxfield, Deckbox and in spreadsheets, and 
 - [ ] Never silently merge. An ambiguous printing is reported, not guessed.
 - [ ] Record the source and date of an import, so a collection's provenance is readable later.
 - [ ] Support re-import as reconciliation rather than duplication.
+- [ ] Added 2026-11-12 (thirteenth pass): the ManaBox preset (slice 4) maps "Purchase price", "Purchase currency", "Misprint" and "Altered", which ManaBox's import guide lists ([guide](https://manabox.app/guides/collection/import-export/), read 2026-11-12), into I-06's purchase price and currency and I-89's flags. A Cardmarket purchases CSV joins the source register as a third-party claim to verify: the mkmcsv tool says "Cardmarket allows you to export CSV files listing your purchases" ([mkmcsv](https://github.com/demogorgon1/mkmcsv)) and Grimoria's purchase checker has a Cardmarket preset ([Grimoria](https://grimoria.app/help/collection/purchase-checker)); Cardmarket's own help was not read, and its 2022 export note concerns sellers ([Cardmarket](https://news.cardmarket.com/en/Vanguard/Changes-To-Exportable-Order-Data), 2022-07-25).
 
 ### Definition of done
 

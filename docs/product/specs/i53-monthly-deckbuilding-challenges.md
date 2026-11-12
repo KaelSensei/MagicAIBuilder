@@ -597,6 +597,7 @@ Archidekt and EDHREC have run a monthly deckbuilding contest since at least Marc
   - `queryBan {query}`, shown verbatim;
   - `pointsCap {list, cap}`;
   - a `scope` of deck or table set, such as no duplicate commander across a set.
+- [ ] Added 2026-11-12 (thirteenth pass): a deck's standing rules, the rule types of slice 1 attached to one deck by its owner (a budget cap in one market, no infinite two-card combo, a custom banlist, no extra turns), checked in the editor on every change and worded as "your rule", never "illegal" (D-90). Archidekt's feature board scores "custom format legality" at 56 points and "custom banlists" at 29 (read 2026-11-11, [landscape §13](../competitive-landscape.md#13-a-twelfth-pass-on-commander-tools-2026-11-11)).
 
   NetrunnerDB types restrictions down to `points` with a `point_limit` ([API v3](https://api.netrunnerdb.com/api/v3/public/restrictions), seen 2026-11-10). Riftbound 2v2 forbids allies repeating battlefields ([rules](https://playriftbound.com/en-us/news/rules-and-releases/riftbound-core-rules-patch-notes/), 2025-10-24). Added 2026-11-11.
 

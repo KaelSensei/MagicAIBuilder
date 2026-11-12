@@ -236,9 +236,9 @@ Slices 1, 2 and 4 can start today in sequence; 5 to 10 follow in parallel. Sched
 
 | I-67 slice | Unblocks                                                                                                                                                            |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2          | I-29 slice 1 (keys), I-54 slice 1, I-58 slice 5, I-19's token item, I-18 slice 1, I-40 slice 8; the `DeckCard.oracleId` backfill for I-37 slice 12 with no API call |
+| 2          | I-29 slice 1 (keys), I-54 slice 1, I-58 slice 5, I-19's token item, I-18 slice 1, I-40 slice 8; the `DeckCard.oracleId` backfill for I-37 slice 12 with no API call; I-101 slice 1 (added 2026-11-12) |
 | 4          | I-48 slices 6 and 9's evidence, I-42 slice 6, I-57 slice 3's set check, I-59 slice 10, recompute on change for I-54, I-58 and I-65                                  |
-| 5          | I-32 slice 2, I-59 slice 3, I-57 slice 13, I-58 slice 10, I-29 slice 9, I-53's price rules, I-44's balance view                                                     |
+| 5          | I-32 slice 2, I-59 slice 3, I-57 slice 13, I-58 slice 10, I-29 slice 9, I-53's price rules, I-44's balance view, I-101 slice 3 (added 2026-11-12)                                                     |
 | 6, 7       | I-47 slices 3 and 4; I-54 slice 2's Tagger clauses, I-65 slice 8 and I-37 slice 18, still blocked for display on the licence                                        |
 | 9, 10      | I-66 moves 2 and 11; I-57 slice 3 and I-62's imports resolved locally; I-02 slice 8's card check without the 2-a-second limit                                       |
 | 11, 12, 13 | I-48 1.6 and I-42 2.4; I-05's "derive from `scryfallId`" and I-19's image freshness; I-17 slice 1's import and I-29 slice 6's precons                               |

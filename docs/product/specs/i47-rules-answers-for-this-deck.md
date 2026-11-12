@@ -632,6 +632,7 @@ At the table, a pod argues about how two cards in one deck interact, and players
   - The rulings file's freshness moved to I-67 slice 11 on 2026-11-10; slice 7 keeps the Comprehensive Rules check.
 - [ ] Later: the notes' content model, citation contract and drift rules; a review record, "Report a rules error" and a public changelog of notes; a first catalogue of Commander notes on 903.3d, 903.8, 903.9a and 903.9b; and "Worth knowing in this deck" (slices 8–11). A note whose cited rule changes goes back to review and stops rendering.
 - [ ] Later: rulings and notes in I-19's offline copy and I-24's export (slice 12); the rules watch as entries in I-48's per-deck report (slice 13); and model retrieval of citations only if the owner decides for it (slice 14).
+- [ ] Added 2026-11-12 (thirteenth pass): [I-99](i99-a-pilot-sheet-and-how-heavy-this-deck-is-to-pilot.md)'s timing classes link their CR rule (502, 504, 507, 508, 513, 603, 614) through slice 2's anchors once they exist; nothing changes in the rules pages themselves.
 
 ### Engineering enablers
 
