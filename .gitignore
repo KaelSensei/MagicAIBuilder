@@ -66,3 +66,7 @@ skills-lock.json
 
 # Lighthouse CI reports
 .lighthouseci/
+
+# Mutation testing (Stryker): reports and the sandbox copy of the project
+reports/
+.stryker-tmp/

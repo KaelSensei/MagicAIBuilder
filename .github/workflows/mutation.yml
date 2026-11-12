@@ -1,0 +1,99 @@
+name: Mutation testing
+
+# StrykerJS on the domain folders (`src/modules/*/domain/**`), configured in
+# stryker.config.mjs. The run is advisory (ADR 0005 §8; owner decision OD-14,
+# 2026-11-10): `thresholds.break` is null, the job has `continue-on-error`,
+# and it must never be made a required check. The score goes to the step
+# summary and the HTML report to an artifact; see "Mutation testing
+# (advisory)" in docs/engineering/quality-gate.md.
+#
+# When it runs:
+# - nightly on `dev`. GitHub starts scheduled workflows from the default branch
+#   (`main`) only, so the trigger is live once the file has been promoted
+#   there; the checkout below then tests `dev`;
+# - on a pull request that changes a domain folder, this file or the Stryker
+#   config, so the author sees the score of the code under review;
+# - on demand, on any branch.
+on:
+  schedule:
+    - cron: "41 2 * * *"
+  workflow_dispatch:
+  pull_request:
+    branches: [dev, staging, main]
+    paths:
+      - "src/modules/*/domain/**"
+      - "stryker.config.mjs"
+      - ".github/workflows/mutation.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  mutation:
+    name: Stryker on the domain folders (advisory)
+    runs-on: ubuntu-latest
+    # A crash of the tool itself must not block a merge either.
+    continue-on-error: true
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          # Empty means the triggering ref (the PR merge commit, or the branch
+          # picked for a manual run).
+          ref: ${{ github.event_name == 'schedule' && 'dev' || '' }}
+
+      # No `version:` here on purpose — see the note in ci.yml.
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Stryker re-tests only the mutants whose source or tests changed since
+      # the run that wrote this file. The key is unique per run and the
+      # restore prefix picks the most recent file this ref may read: its own
+      # earlier runs, the base branch's, or the nightly's (saved under `main`,
+      # the default branch, which every ref can restore).
+      - name: Restore the incremental file
+        uses: actions/cache/restore@v6
+        with:
+          path: reports/mutation/stryker-incremental.json
+          key: mutation-incremental-${{ github.run_id }}
+          restore-keys: mutation-incremental-
+
+      - name: Run Stryker
+        run: pnpm mutation
+
+      - name: Write the score to the step summary
+        if: always()
+        run: node scripts/mutation-summary.mjs reports/mutation/mutation.json >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload the report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: mutation-report
+          path: reports/mutation/
+          # A run that stops before Stryker reports writes nothing here; its
+          # log is in the step above.
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Save the incremental file
+        if: ${{ always() && hashFiles('reports/mutation/stryker-incremental.json') != '' }}
+        uses: actions/cache/save@v6
+        with:
+          path: reports/mutation/stryker-incremental.json
+          key: mutation-incremental-${{ github.run_id }}

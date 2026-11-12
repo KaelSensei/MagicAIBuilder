@@ -20,6 +20,7 @@ change; a major upgrade is its own PR.
 | Logging         | pino, Sentry                                                           | `src/lib/logger.ts`, `sentry.*.config.ts`                   |
 | Unit tests      | Vitest 3, Testing Library, jsdom; tests next to the code (`*.test.ts`) | `vitest.config.ts`, shared test kit in `src/test/`          |
 | End-to-end      | Playwright in Docker, run by the pre-push hook (no CI job)             | `e2e/`, `docker-compose.e2e.yml`, `scripts/e2e-pre-push.sh` |
+| Mutation        | StrykerJS on `src/modules/*/domain/**`, nightly and on PRs, advisory   | `stryker.config.mjs`, `.github/workflows/mutation.yml`      |
 | Lint and format | ESLint 9 flat config (`eslint.config.mjs`), Prettier 3              | `.lintstagedrc.cjs` runs both on commit                     |
 | Tooling         | pnpm 10 (`packageManager`), Node 22 in CI, Husky hooks                 | `.github/workflows/`, `.husky/`                             |
 
