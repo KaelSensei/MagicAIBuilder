@@ -1,5 +1,4 @@
 import { describe, it, expect } from "vitest";
-import type { DeckTemplate as _DeckTemplate } from "@/lib/deck/templates";
 
 // Mock API response types
 interface TemplateResponse {

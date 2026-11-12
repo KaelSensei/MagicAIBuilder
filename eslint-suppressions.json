@@ -700,11 +700,6 @@
       "count": 1
     }
   },
-  "src/components/deck/BudgetOptimizationModal.tsx": {
-    "max-lines-per-function": {
-      "count": 1
-    }
-  },
   "src/components/deck/BulkEditModal.guest.test.tsx": {
     "no-restricted-syntax": {
       "count": 1
@@ -1024,11 +1019,6 @@
       "count": 1
     }
   },
-  "src/components/deck/PricingShoppingListModal.tsx": {
-    "max-lines-per-function": {
-      "count": 1
-    }
-  },
   "src/components/deck/ProxyExportModal.tsx": {
     "complexity": {
       "count": 1
@@ -1078,17 +1068,6 @@
     }
   },
   "src/components/deck/SnapshotsPanel.tsx": {
-    "max-lines": {
-      "count": 1
-    },
-    "max-lines-per-function": {
-      "count": 2
-    }
-  },
-  "src/components/deck/TemplatesModal.tsx": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    },
     "max-lines": {
       "count": 1
     },
@@ -1743,11 +1722,6 @@
       "count": 7
     },
     "no-restricted-imports": {
-      "count": 1
-    }
-  },
-  "src/lib/deck/templates.ts": {
-    "@typescript-eslint/max-params": {
       "count": 1
     }
   },

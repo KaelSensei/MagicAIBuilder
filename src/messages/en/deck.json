@@ -241,19 +241,6 @@
       "zones": "Main {main} · Sideboard {sideboard} · Maybeboard {maybeboard}"
     }
   },
-  "templates": {
-    "title": "Templates for {commander}",
-    "subtitle": "Start with a curated deck and customize it",
-    "close": "Close",
-    "loading": "Loading templates...",
-    "loadFailed": "Failed to load templates",
-    "empty": "No templates available for this commander yet",
-    "filterByArchetype": "Filter by archetype",
-    "all": "All",
-    "official": "Official",
-    "byAuthor": "{archetype} by {author}",
-    "use": "Use"
-  },
   "bulkEdit": {
     "title": "Bulk Edit — {name}",
     "close": "Close",
@@ -424,44 +411,11 @@
       "optional": "Optional deck advice"
     }
   },
-  "budget": {
-    "title": "Budget Optimization",
-    "close": "Close",
-    "closeOverlay": "Close budget optimization modal",
-    "current": "Current:",
-    "target": "Target:",
-    "saveUpTo": "Save up to {amount}",
-    "save": "Save {amount}",
-    "goalReached": "Budget goal reached!",
-    "withinBudget": "Your deck is already within budget.",
-    "apply": "Apply"
-  },
-  "shoppingList": {
-    "title": "Shopping List",
-    "close": "Close",
-    "closeOverlay": "Close shopping list modal",
-    "card": "Card",
-    "qty": "Qty",
-    "unit": "Unit",
-    "total": "Total",
-    "subtotal": "Subtotal: {amount}",
-    "unpricedNote": "{count, plural, one {# card has no known price — listed at zero in the CSV} other {# cards have no known price — listed at zero in the CSV}}",
-    "copy": "Copy",
-    "copied": "Copied!",
-    "downloadCsv": "Download CSV"
-  },
   "companion": {
     "title": "Companion",
     "zoneHint": "(sideboard)",
     "emptyHint": "Turn on <strong>Companion</strong> in search, then click a Companion card. It stays separate from the Sideboard tab.",
     "clear": "Clear"
-  },
-  "maybeboard": {
-    "notCounted": "Not counted in the 99",
-    "empty": "No cards here yet",
-    "moveToDeck": "Move to deck",
-    "deck": "Deck",
-    "remove": "Remove from this zone"
   },
   "community": {
     "upvote": "Upvote",

@@ -52,7 +52,7 @@ src/
                                 #   deck-folders/, favorites/, import/, meta/, moderation/;
                                 #   1 each: combos/, deck/, health/, og/, proxy-card-image/,
                                 #   share/, templates/, users/
-  components/                   # React components, by screen: deck/ (74 files), card/,
+  components/                   # React components, by screen: deck/ (72 files), card/,
                                 # search/, builder/, playtest/, collection/, community/,
                                 # profile/, moderation/, settings/, landing/, rules/,
                                 # layout/ (app shell), ui/ (primitives), providers/
@@ -467,7 +467,7 @@ Every slice so far has turned up a defect that the hardcoded strings were hiding
 
 Two kinds recur:
 
-**The same thing under two names.** `MaybeboardPanel` labelled the zone "Maybeboard" while the tab the user clicks says "Considering" (`builder.zones.considering`) — the same zone had two names depending on where you looked. `CardListItem` had the same split in #409. Both now read the builder catalog, which is where the tab that shows the name is defined. A component reaching into another namespace is the right trade when the alternative is a second copy that drifts.
+**The same thing under two names.** `MaybeboardPanel` (an unmounted panel, deleted in P1-31) labelled the zone "Maybeboard" while the tab the user clicks says "Considering" (`builder.zones.considering`) — the same zone had two names depending on where you looked. `CardListItem` had the same split in #409. It now reads the builder catalog, which is where the tab that shows the name is defined. A component reaching into another namespace is the right trade when the alternative is a second copy that drifts.
 
 Likewise `ColorDistribution` carried its own `White` / `Blue` / … table while `stats.color.*` already held those names for the mana alignment panel. The table now keeps only what is genuinely its own — the CSS variables and fallback hex.
 
@@ -479,7 +479,7 @@ Domain jargon is deliberately **not** extracted. Archetype names (`Tokens`, `Ari
 
 Card prices come from Scryfall's **`prices.usd`** on every ingest path — `PrintingSelectorModal`, `AddToCollectionDialog`, `QuickAddCollectionButton`, `CollectionPageClient`. The currency is USD and nothing converts it.
 
-`BudgetOptimizationModal`, `PricingShoppingListModal` and the shopping-list CSV nonetheless printed a **euro sign**, so the same figure read as `$12.50` in the stats panel and `€12.50` in the budget modal, and an exported file named a currency its numbers were never in. A user setting a "€50" budget was setting $50.
+Two unmounted modals (`BudgetOptimizationModal` and `PricingShoppingListModal`, both deleted in P1-31) and the shopping-list CSV nonetheless printed a **euro sign**, so the same figure read as `$12.50` in the stats panel and `€12.50` in the budget modal, and an exported file named a currency its numbers were never in. A user setting a "€50" budget was setting $50.
 
 Amounts are now formatted, never concatenated with a symbol:
 

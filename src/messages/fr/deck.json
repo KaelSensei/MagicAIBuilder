@@ -241,19 +241,6 @@
       "zones": "Principal {main} · Réserve {sideboard} · À envisager {maybeboard}"
     }
   },
-  "templates": {
-    "title": "Modèles pour {commander}",
-    "subtitle": "Partez d’un deck sélectionné et personnalisez-le",
-    "close": "Fermer",
-    "loading": "Chargement des modèles...",
-    "loadFailed": "Échec du chargement des modèles",
-    "empty": "Aucun modèle disponible pour ce commandant pour l’instant",
-    "filterByArchetype": "Filtrer par archétype",
-    "all": "Tous",
-    "official": "Officiel",
-    "byAuthor": "{archetype} par {author}",
-    "use": "Utiliser"
-  },
   "bulkEdit": {
     "title": "Édition en bloc — {name}",
     "close": "Fermer",
@@ -424,44 +411,11 @@
       "optional": "Conseils facultatifs pour le deck"
     }
   },
-  "budget": {
-    "title": "Optimisation du budget",
-    "close": "Fermer",
-    "closeOverlay": "Fermer la fenêtre d'optimisation du budget",
-    "current": "Actuel :",
-    "target": "Cible :",
-    "saveUpTo": "Jusqu'à {amount} d'économie",
-    "save": "{amount} d'économie",
-    "goalReached": "Objectif de budget atteint !",
-    "withinBudget": "Votre deck respecte déjà le budget.",
-    "apply": "Appliquer"
-  },
-  "shoppingList": {
-    "title": "Liste d'achat",
-    "close": "Fermer",
-    "closeOverlay": "Fermer la liste d'achat",
-    "card": "Carte",
-    "qty": "Qté",
-    "unit": "Unité",
-    "total": "Total",
-    "subtotal": "Sous-total : {amount}",
-    "unpricedNote": "{count, plural, one {# carte sans prix connu — comptée à zéro dans le CSV} other {# cartes sans prix connu — comptées à zéro dans le CSV}}",
-    "copy": "Copier",
-    "copied": "Copié !",
-    "downloadCsv": "Télécharger le CSV"
-  },
   "companion": {
     "title": "Companion",
     "zoneHint": "(réserve)",
     "emptyHint": "Activez <strong>Companion</strong> dans la recherche, puis cliquez une carte Companion. Elle reste séparée de l'onglet Réserve.",
     "clear": "Retirer"
-  },
-  "maybeboard": {
-    "notCounted": "Non comptées dans les 99",
-    "empty": "Aucune carte ici pour l'instant",
-    "moveToDeck": "Déplacer vers le deck",
-    "deck": "Deck",
-    "remove": "Retirer de cette zone"
   },
   "community": {
     "upvote": "Voter pour",
