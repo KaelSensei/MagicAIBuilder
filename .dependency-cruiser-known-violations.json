@@ -174,37 +174,6 @@
     ]
   },
   {
-    "type": "cycle",
-    "from": "src/lib/meta/fetch.ts",
-    "to": "src/lib/meta/mtgtop8.ts",
-    "unresolvedTo": "./mtgtop8",
-    "dependencyTypes": [
-      "local",
-      "import"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "no-circular"
-    },
-    "cycle": [
-      {
-        "name": "src/lib/meta/mtgtop8.ts",
-        "dependencyTypes": [
-          "local",
-          "import"
-        ]
-      },
-      {
-        "name": "src/lib/meta/fetch.ts",
-        "dependencyTypes": [
-          "local",
-          "type-only",
-          "import"
-        ]
-      }
-    ]
-  },
-  {
     "type": "dependency",
     "from": "src/components/deck/DeckWizard.tsx",
     "to": "src/app/api/ai/build/types.ts",

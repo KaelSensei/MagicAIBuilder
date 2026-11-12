@@ -20,7 +20,7 @@
  */
 
 import { commanderToSlug } from "./commander-slug";
-import type { TournamentDeck } from "./fetch";
+import type { TournamentDeck } from "./types";
 
 export const MTGTOP8_SEARCH_URL = "https://www.mtgtop8.com/search";
 
