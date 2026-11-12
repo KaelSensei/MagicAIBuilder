@@ -132,4 +132,14 @@ describe("renderWithIntl, kept for intl-only tests", () => {
 
     expect(screen.getAllByRole("listitem")[1].textContent).toBe("Sign In");
   });
+
+  it("keeps the provider when the test rerenders", () => {
+    const view = renderWithIntl(<CatalogProbe />, { locale: "fr" });
+
+    view.rerender(<CatalogProbe />);
+
+    const [locale, submit] = screen.getAllByRole("listitem");
+    expect(locale.textContent).toBe("fr");
+    expect(submit.textContent).toBe("Se connecter");
+  });
 });

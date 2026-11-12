@@ -4,7 +4,7 @@
  *
  * @module test/render-with-intl
  */
-import type { ReactElement } from "react";
+import type { ReactElement, ReactNode } from "react";
 import {
   render,
   type RenderOptions,
@@ -37,6 +37,10 @@ interface RenderWithIntlOptions extends Omit<RenderOptions, "wrapper"> {
  * `timeZone` is pinned to UTC so a date assertion means the same thing on a
  * developer's machine as it does in CI.
  *
+ * The provider is passed as Testing Library's `wrapper`, not wrapped around `ui`,
+ * so `rerender(<Other />)` keeps it; wrapped around `ui`, a rerender mounted the
+ * new element bare and `useTranslations` threw.
+ *
  * @param ui - element under test
  * @param options - forwarded to Testing Library's `render`, plus `locale`
  * @returns the usual render result
@@ -47,14 +51,17 @@ export function renderWithIntl(
 ): RenderResult {
   const { locale = "en", ...renderOptions } = options ?? {};
 
-  return render(
-    <NextIntlClientProvider
-      locale={locale}
-      timeZone="UTC"
-      messages={testMessages(locale)}
-    >
-      {ui}
-    </NextIntlClientProvider>,
-    renderOptions
-  );
+  function IntlProvider({ children }: { readonly children: ReactNode }) {
+    return (
+      <NextIntlClientProvider
+        locale={locale}
+        timeZone="UTC"
+        messages={testMessages(locale)}
+      >
+        {children}
+      </NextIntlClientProvider>
+    );
+  }
+
+  return render(ui, { ...renderOptions, wrapper: IntlProvider });
 }
