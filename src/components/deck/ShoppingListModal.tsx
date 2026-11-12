@@ -35,7 +35,7 @@ export function ShoppingListModal({
   const [copied, copy] = useCopyToClipboard();
   const { intentById, setIntent } = useAcquisitionIntent(deck.id);
 
-  // USD, like every other price surface — see BudgetOptimizationModal.
+  // USD, like every other price surface (technical.md, "Money").
   const money = (value: number) =>
     format.number(value, { style: "currency", currency: "USD" });
 

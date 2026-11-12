@@ -46,13 +46,13 @@ src/
       builder/[deckId]/         # the builder (a client page)
       decks/, collection/, deck/[id]/, share/[token]/, u/[username]/,
       commanders/[slug]/decks/, saved-decks/, settings/, moderation/, rules/, auth/
-    api/                        # 67 route handlers, by URL family:
+    api/                        # 65 route handlers, by URL family:
                                 #   decks/ 15, community/ 13, user/ 7, collection/ 4,
                                 #   v1/ 4 (public API, API keys), 2 each: ai/, auth/, cache/,
-                                #   deck-folders/, favorites/, import/, meta/, moderation/;
+                                #   deck-folders/, import/, meta/, moderation/;
                                 #   1 each: combos/, deck/, health/, og/, proxy-card-image/,
-                                #   share/, templates/, users/
-  components/                   # React components, by screen: deck/ (74 files), card/,
+                                #   share/, users/
+  components/                   # React components, by screen: deck/ (72 files), card/,
                                 # search/, builder/, playtest/, collection/, community/,
                                 # profile/, moderation/, settings/, landing/, rules/,
                                 # layout/ (app shell), ui/ (primitives), providers/
@@ -224,30 +224,28 @@ tokens. The behaviour is specified in [I-02](../product/specs/i02-checkable-ai-c
 
 ## Prisma Schema
 
-`prisma/schema.prisma` holds 30 models. Grouped by the bounded context that owns them (see
+`prisma/schema.prisma` holds 29 models. Grouped by the bounded context that owns them (see
 [architecture.md](architecture.md#bounded-contexts)):
 
 | Context       | Models                                                                                                                                       |
 | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| Deck building | `Deck`, `DeckCard`, `DeckFolder`, `DeckSnapshot`, `DeckTemplate`                                                                             |
+| Deck building | `Deck`, `DeckCard`, `DeckFolder`, `DeckSnapshot`                                                                                             |
 | Playtest      | `PlaytestSession`                                                                                                                            |
 | Card catalog  | `CardCache`, `ScryfallSearchCache`                                                                                                           |
 | Meta insights | `MetaCache`, `MetaSnapshot`                                                                                                                  |
-| Collection    | `CollectionCard`, `AcquisitionIntent`, `CardFavorite`, `FavoriteList`, `CardInFavoriteList`                                                  |
+| Collection    | `CollectionCard`, `AcquisitionIntent`                                                                                                        |
 | Community     | `DeckVote`, `DeckRating`, `DeckComment`, `DeckReport`, `SavedPublicDeck`, `PublicDeckFolder`, `CardPackage`, `CardPackageCard`, `UserFollow` |
 | Identity      | `User`, `Account`, `Session`, `VerificationToken`, `ApiKey`, `NotificationPreference`                                                        |
-
-`CardFavorite`, `FavoriteList`, `CardInFavoriteList` and `DeckTemplate` are never queried.
 
 ---
 
 ## API Routes
 
-There are 67 route handlers under `src/app/api/`. Each URL family belongs to one bounded context:
+There are 65 route handlers under `src/app/api/`. Each URL family belongs to one bounded context:
 
 | URL family                                                                               | Context          | Notes                                                                                                             |
 | ---------------------------------------------------------------------------------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `/api/decks/**`, `/api/deck/[id]`, `/api/deck-folders/**`, `/api/templates`              | Deck building    | `/api/deck/[id]` is the public read of one deck; `/api/decks/[id]/legality` returns the server's legality verdict |
+| `/api/decks/**`, `/api/deck/[id]`, `/api/deck-folders/**`                                | Deck building    | `/api/deck/[id]` is the public read of one deck; `/api/decks/[id]/legality` returns the server's legality verdict |
 | `/api/decks/[id]/playtest-sessions`                                                      | Playtest         | Recorded goldfish runs                                                                                            |
 | `/api/decks/[id]/acquisition-intent`, `/api/collection/**`                               | Collection       |                                                                                                                   |
 | `/api/ai/suggest`, `/api/ai/build`                                                       | AI copilot       | Streamed as NDJSON                                                                                                |
@@ -258,7 +256,6 @@ There are 67 route handlers under `src/app/api/`. Each URL family belongs to one
 | `/api/community/**`, `/api/users/[username]`, `/api/share/[token]`, `/api/moderation/**` | Community        |                                                                                                                   |
 | `/api/auth/**`, `/api/user/**`, `/api/v1/**`                                             | Identity         | `/api/v1` is the public API, authenticated by API key                                                             |
 | `/api/og`, `/api/health`                                                                 | Site             | Open Graph images; the health check                                                                               |
-| `/api/favorites/**`                                                                      | Collection       | A stub: persistence is deferred                                                                                   |
 
 URLs are a public contract: they stay when the code behind them moves.
 
@@ -467,7 +464,7 @@ Every slice so far has turned up a defect that the hardcoded strings were hiding
 
 Two kinds recur:
 
-**The same thing under two names.** `MaybeboardPanel` labelled the zone "Maybeboard" while the tab the user clicks says "Considering" (`builder.zones.considering`) — the same zone had two names depending on where you looked. `CardListItem` had the same split in #409. Both now read the builder catalog, which is where the tab that shows the name is defined. A component reaching into another namespace is the right trade when the alternative is a second copy that drifts.
+**The same thing under two names.** `MaybeboardPanel` (an unmounted panel, deleted in P1-31) labelled the zone "Maybeboard" while the tab the user clicks says "Considering" (`builder.zones.considering`) — the same zone had two names depending on where you looked. `CardListItem` had the same split in #409. It now reads the builder catalog, which is where the tab that shows the name is defined. A component reaching into another namespace is the right trade when the alternative is a second copy that drifts.
 
 Likewise `ColorDistribution` carried its own `White` / `Blue` / … table while `stats.color.*` already held those names for the mana alignment panel. The table now keeps only what is genuinely its own — the CSS variables and fallback hex.
 
@@ -479,7 +476,7 @@ Domain jargon is deliberately **not** extracted. Archetype names (`Tokens`, `Ari
 
 Card prices come from Scryfall's **`prices.usd`** on every ingest path — `PrintingSelectorModal`, `AddToCollectionDialog`, `QuickAddCollectionButton`, `CollectionPageClient`. The currency is USD and nothing converts it.
 
-`BudgetOptimizationModal`, `PricingShoppingListModal` and the shopping-list CSV nonetheless printed a **euro sign**, so the same figure read as `$12.50` in the stats panel and `€12.50` in the budget modal, and an exported file named a currency its numbers were never in. A user setting a "€50" budget was setting $50.
+Two unmounted modals (`BudgetOptimizationModal` and `PricingShoppingListModal`, both deleted in P1-31) and the shopping-list CSV nonetheless printed a **euro sign**, so the same figure read as `$12.50` in the stats panel and `€12.50` in the budget modal, and an exported file named a currency its numbers were never in. A user setting a "€50" budget was setting $50.
 
 Amounts are now formatted, never concatenated with a symbol:
 

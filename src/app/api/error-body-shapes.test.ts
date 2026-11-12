@@ -41,12 +41,10 @@ import {
   GET as listSnapshots,
   POST as saveSnapshot,
 } from "./decks/[id]/snapshots/route";
-import { POST as addFavorite } from "./favorites/route";
 import { POST as importFromUrl } from "./import/url/route";
 import { GET as readMeta } from "./meta/[commanderSlug]/route";
 import { GET as listReports } from "./moderation/deck-reports/route";
 import { GET as openShare } from "./share/[token]/route";
-import { POST as createTemplate } from "./templates/route";
 import { DELETE as revokeApiKey } from "./user/api-keys/[id]/route";
 import { PATCH as editProfile } from "./user/profile/route";
 import { GET as readV1Collection } from "./v1/collection/route";
@@ -427,38 +425,6 @@ describe("400 shape 4: { error: fieldErrors }", () => {
     expect(await answer(response)).toEqual({
       status: 400,
       body: { error: { rating: ["Too small: expected number to be >=1"] } },
-    });
-  });
-
-  it("favorites: currently answer { error: { field: messages } } (pinned; B2-56)", async () => {
-    const response = await addFavorite(
-      request("POST", "/api/favorites", {
-        scryfallId: "scryfall-1",
-        name: "Sol Ring",
-      })
-    );
-    expect(await answer(response)).toEqual({
-      status: 400,
-      body: {
-        error: {
-          typeLine: ["Invalid input: expected string, received undefined"],
-        },
-      },
-    });
-  });
-
-  it("templates: currently answer { error: { field: messages } } (pinned; B2-56)", async () => {
-    signInAs(OWNER_ID);
-    const response = await createTemplate(
-      request("POST", "/api/templates", {
-        deckId: "not-a-uuid",
-        templateName: "Turbo",
-        archetype: "Combo",
-      })
-    );
-    expect(await answer(response)).toEqual({
-      status: 400,
-      body: { error: { deckId: ["Invalid deck ID"] } },
     });
   });
 });
