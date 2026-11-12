@@ -12,12 +12,9 @@
  */
 import type { ReactElement } from "react";
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
-import { NextIntlClientProvider } from "next-intl";
+import { screen } from "@testing-library/react";
 import type { Session } from "next-auth";
-import { SessionProvider } from "next-auth/react";
-import enCommon from "@/messages/en/common.json";
-import enLanding from "@/messages/en/landing.json";
+import { renderWithProviders } from "@/test/render";
 import { FinalCta } from "./FinalCta";
 import { Hero } from "./Hero";
 import { LandingNavbar } from "./LandingNavbar";
@@ -50,16 +47,7 @@ function classesOf(list: string): readonly string[] {
 }
 
 function renderLanding(ui: ReactElement, session: Session | null) {
-  return render(
-    <SessionProvider session={session} refetchOnWindowFocus={false}>
-      <NextIntlClientProvider
-        locale="en"
-        messages={{ landing: enLanding, common: enCommon }}
-      >
-        {ui}
-      </NextIntlClientProvider>
-    </SessionProvider>
-  );
+  return renderWithProviders(ui, { session });
 }
 
 describe("Hero", () => {
