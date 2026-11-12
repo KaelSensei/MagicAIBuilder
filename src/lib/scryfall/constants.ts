@@ -15,12 +15,17 @@
  *
  * @module scryfall/constants
  */
+import { scryfallApiBaseUrl } from "./api-base-url";
 
 /**
  * Origin of the Scryfall REST API, without a trailing slash: append a path
  * such as `/cards/search`. Every request to it is paced by `request-queue.ts`.
+ *
+ * `https://api.scryfall.com` everywhere but on a server whose
+ * `SCRYFALL_API_BASE_URL` names another origin, which only the E2E stack does
+ * (`api-base-url.ts`).
  */
-export const SCRYFALL_API = "https://api.scryfall.com";
+export const SCRYFALL_API = scryfallApiBaseUrl();
 
 /**
  * Host name of Scryfall's card image CDN, compared with `URL.hostname`.

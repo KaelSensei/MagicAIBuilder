@@ -51,7 +51,10 @@ jobs:
 
       # `--exit-code-from e2e` makes the job's verdict the Playwright exit code,
       # as in scripts/e2e-pre-push.sh. PLAYWRIGHT_SPEC stays empty (the full
-      # suite) and PLAYWRIGHT_GREP_INVERT keeps its compose default.
+      # suite) and PLAYWRIGHT_GREP_INVERT keeps its compose default. The
+      # compose file also sets SCRYFALL_API_BASE_URL to its `scryfall`
+      # stand-in service and resolves api.scryfall.com to nowhere, so this job
+      # needs no egress to Scryfall and nothing here overrides that.
       - name: Run the E2E stack
         run: >
           docker compose -f docker-compose.e2e.yml up

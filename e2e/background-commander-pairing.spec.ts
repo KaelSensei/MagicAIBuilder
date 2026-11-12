@@ -1,8 +1,14 @@
-/** API-level check that the partner search of a "choose a Background" commander finds Backgrounds. */
+/**
+ * API-level check that the partner search of a "choose a Background" commander finds Backgrounds.
+ *
+ * It asks live Scryfall, so it is `@external` and the blocking gate skips it. The E2E container
+ * resolves api.scryfall.com to nowhere, so this spec runs only outside the Docker stack, with
+ * `PLAYWRIGHT_GREP_INVERT=""`.
+ */
 import { test, expect } from "@playwright/test";
 import { buildPartnerSearchQuery } from "@/lib/scryfall/search";
 
-test.describe("Background commander pairing (API-level E2E)", () => {
+test.describe("Background commander pairing (API-level E2E) @external", () => {
   test("Jaheira has Choose a Background and Background query finds Clan Crafter", async ({ request }) => {
     test.setTimeout(120000);
 

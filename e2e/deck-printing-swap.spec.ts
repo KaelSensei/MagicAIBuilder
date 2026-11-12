@@ -3,9 +3,11 @@
  * another printing of the same card, and the row keeps its name, zone and
  * quantity while its printing changes.
  *
- * The printings come from Scryfall, so this spec needs the network, as the
- * search specs do. The seeded printing id is a fixture UUID that matches no
- * real printing, so any printing the player picks is a change.
+ * The browser asks Scryfall's search for the printings. In the E2E stack the
+ * Scryfall stand-in answers (`scryfall-stand-in.ts`) with the two recorded
+ * printings of Grizzly Bears, so the spec needs no network. The seeded
+ * printing id is a fixture UUID that matches no real printing, so any printing
+ * the player picks is a change.
  *
  * @module e2e/deck-printing-swap
  */

@@ -366,11 +366,12 @@ The analyzer is disabled by default and has zero impact on normal builds (`pnpm 
 
 ### Environment Variables
 
-| Variable            | Required    | Description                                                                         |
-| ------------------- | ----------- | ----------------------------------------------------------------------------------- |
-| `DATABASE_URL`      | ✅ Yes      | PostgreSQL connection string (e.g. `postgresql://user:pass@localhost:5432/magicai`) |
-| `ANTHROPIC_API_KEY` | ⚠️ Optional | Enables Claude AI suggestions (falls back to mock)                                  |
-| `OPENAI_API_KEY`    | ⚠️ Optional | Secondary AI provider fallback                                                      |
+| Variable                | Required    | Description                                                                                                                                                                                                                                                                |
+| ----------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`          | ✅ Yes      | PostgreSQL connection string (e.g. `postgresql://user:pass@localhost:5432/magicai`)                                                                                                                                                                                        |
+| `ANTHROPIC_API_KEY`     | ⚠️ Optional | Enables Claude AI suggestions (falls back to mock)                                                                                                                                                                                                                         |
+| `OPENAI_API_KEY`        | ⚠️ Optional | Secondary AI provider fallback                                                                                                                                                                                                                                             |
+| `SCRYFALL_API_BASE_URL` | ⚠️ Optional | Origin of the Scryfall API the server calls; default `https://api.scryfall.com`. Must be an absolute http(s) URL or the server refuses to start. Set only by the E2E stack, which points it at a fixture stand-in (`docs/engineering/quality-gate.md`, _E2E environment_). |
 
 See `docs/engineering/infrastructure.md` for Docker + full infra setup.
 
