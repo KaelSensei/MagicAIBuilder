@@ -24,9 +24,6 @@
     "notAffiliated": "MagicAIBuilder n’est pas affilié, approuvé, sponsorisé ou spécifiquement approuvé par Wizards of the Coast LLC. MagicAIBuilder peut utiliser les marques et autres propriétés intellectuelles de Wizards of the Coast LLC, ce qui est autorisé par la politique de site de fan de Wizards. MAGIC: THE GATHERING® est une marque de Wizards of the Coast. Pour plus d’informations sur Wizards of the Coast ou l’une de ses marques ou autres propriétés intellectuelles, veuillez visiter leur site Web à <link>company.wizards.com</link>.",
     "scryfallDisclaimer": "Certains prix et données de cartes sont fournis par Scryfall. Scryfall ne garantit pas ses informations tarifaires et recommande de consulter les magasins pour les prix et détails finaux."
   },
-  "sidebar": {
-    "navigation": "Navigation"
-  },
   "notFound": {
     "title": "Page introuvable",
     "description": "Cette adresse ne correspond à aucune page. Elle a peut-être été déplacée, ou le deck n'est plus public.",

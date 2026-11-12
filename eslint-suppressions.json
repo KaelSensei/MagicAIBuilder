@@ -1396,11 +1396,6 @@
       "count": 1
     }
   },
-  "src/hooks/useCardLookup.test.ts": {
-    "no-restricted-syntax": {
-      "count": 1
-    }
-  },
   "src/hooks/useCardPrintings.test.ts": {
     "no-restricted-syntax": {
       "count": 1

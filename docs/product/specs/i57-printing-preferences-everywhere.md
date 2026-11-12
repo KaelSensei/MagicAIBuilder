@@ -37,7 +37,7 @@ Verified on `dev` at `72fbfc1` on 2026-11-10 by reading the code; nothing was ru
 
 - **Name lookups return Scryfall's newest edition.** `src/lib/scryfall/client.ts` exposes `getCardByName` and `getCardByNameFuzzy` (`/cards/named`), `getCardCollection` (`/cards/collection`) and `searchCards` (default `unique`, `order=edhrec`). They serve text and URL import (`ImportDialog.tsx`, `ImportFromUrlTab.tsx`, through `fetchInBatches` in `src/lib/deck/batch-fetch.ts`), the AI wizard (`importCardsInBatches` and the commander lookup in `DeckWizard.tsx`), AI suggestions (`addNamedCardToZone` in `src/lib/deck/ai-add-card.ts`), suggestion evidence (`src/app/api/ai/suggest/route.ts`) and the server check of generated decks (`src/lib/ai/generated-deck-legality.ts`). The AI returns names only (`src/app/api/ai/build/types.ts`).
 - **Imports drop the printing their source gives.** `SET_CODE_PATTERN` in `src/lib/deck/import.ts` strips `(SET) 123`. `src/lib/import/url-import.ts` reads Moxfield's `card.name` and Archidekt's `oracleCard.name` only, although Archidekt's public payload carries the Scryfall `uid`, `collectorNumber`, `edition.editioncode` and a `modifier` such as `Normal` [14].
-- **Owned-first is implicit and partial.** `getOwnedPrinting` in `src/lib/deck/store.ts` takes the first collection row with the same name, a positive quantity and a different Scryfall ID, from the collection the browser loaded (`CollectionProvider.tsx`, signed-in only). `addCard`, `addDeckCard` and `applyBulkEdit` call it; `setCommander`, `setPartner`, `setCompanion` and `addToMaybeboard` do not. No notice tells the player. The roadmap's I-06 line says import matching remains open; main-deck import rows already pass through `addCard`.
+- **Owned-first is implicit and partial.** `getOwnedPrinting` in `src/lib/deck/store.ts` takes the first collection row with the same name, a positive quantity and a different Scryfall ID, from the collection the browser loaded (`InitProvider.tsx`, signed-in only). `addCard`, `addDeckCard` and `applyBulkEdit` call it; `setCommander`, `setPartner`, `setCompanion` and `addToMaybeboard` do not. No notice tells the player. The roadmap's I-06 line says import matching remains open; main-deck import rows already pass through `addCard`.
 - **Defect 1: an explicit pick can be replaced.** `handlePrintingSelect` in `src/app/[locale]/builder/[deckId]/page.tsx` passes the printing chosen in the selector to `addCard`. When the player owns any other printing of that name, `addCard` adds that one instead. Because the lookup skips the chosen ID, this happens even when the player owns the chosen printing too.
 - **Defect 2: a printing swap keeps the old price.** `swapCardPrinting` sends `scryfallId`, `imageUri` and `artCropUri` to `PATCH /api/decks/[id]/cards/[cardId]`, never `price`. Deck totals (`PricingShoppingListModal.tsx`, `ShoppingListModal.tsx`) and the acquisition plan (`src/lib/collection/acquisition-plan.ts`) read `DeckCard.price`.
 - **Name lookups do not filter paper.** `searchCardPrintings` adds `game:paper`; the name lookups do not, hence the digital-only Lotus Petal above.
@@ -618,22 +618,22 @@ Then they come from the French catalogue and are not hard-coded English
 
 The player-visible outcome is: a player sets one printing rule, such as the original printing, the cheapest in their market, no crossover printings and owned copies first, and every card that enters a deck by any path follows it, with the reason recorded. The rule can be applied to a whole deck as a reviewed diff, overridden per deck and pinned per card, and the chosen printing then drives prices, exports, proxies and the acquisition plan.
 
-| State | What the player sees |
-| --- | --- |
-| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
-| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
-| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
-| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
-| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
-| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
-| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
-| English | New controls use the `en` catalogue. |
-| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| State            | What the player sees                                                                                                                                  |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Empty            | A sentence that names what is missing and the next action. No invented row, author, price or score.                                                   |
+| Loading          | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready.                                        |
+| Error            | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there.                                                       |
+| Partial          | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished.                                                 |
+| Stale            | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed.                                             |
+| Guest            | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401.               |
+| Signed-in        | Writes go to that account only. Another player's notes, budget and collection are not in the response.                                                |
+| English          | New controls use the `en` catalogue.                                                                                                                  |
+| French           | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control.                                                         |
 | Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
-| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
-| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
-| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
-| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+| Keyboard         | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes.                         |
+| Screen reader    | Each new control has an accessible name. A status change is announced in words, not only by colour.                                                   |
+| Colour           | A warning and an error differ by text or icon as well as hue, in both themes.                                                                         |
+| Success          | The completed action is confirmed in words. A second identical action does not duplicate the write.                                                   |
 
 ### Alternate paths
 
@@ -691,6 +691,7 @@ A card enters a deck by at least ten paths, and each picks a printing its own wa
 **User story.** As a player who picked a printing, I want that printing to stay, so that a later import does not swap it for a different edition and a stale price.
 
 **Acceptance.**
+
 - Choosing a printing keeps it, including when the player owns another printing of the same card.
 - A printing change updates the stored price.
 - The rule that chooses a printing is the same at search, import, the wizard and a suggestion.
@@ -712,4 +713,3 @@ A card enters a deck by at least ten paths, and each picks a printing its own wa
 With "no Universes Beyond", importing Sol Ring never yields a Universes Beyond printing, and each deck row says why its printing was chosen; a printing the player picks stays picked; a swap updates the price; and applying the rule to a deck changes its total exactly as the preview showed.
 
 ---
-
