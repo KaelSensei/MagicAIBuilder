@@ -6,7 +6,9 @@
     "rules": "Rules",
     "newDeck": "New Deck",
     "import": "Import",
-    "importedDeck": "Imported Deck — {date}"
+    "importedDeck": "Imported Deck — {date}",
+    "createFailed": "No se pudo crear el mazo — {reason}",
+    "unknownError": "error desconocido"
   },
   "theme": {
     "toggle": "Cambiar tema",

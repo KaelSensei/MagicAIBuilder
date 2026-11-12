@@ -6,7 +6,9 @@
     "rules": "Rules",
     "newDeck": "New Deck",
     "import": "Import",
-    "importedDeck": "Imported Deck — {date}"
+    "importedDeck": "Imported Deck — {date}",
+    "createFailed": "Não foi possível criar o deck — {reason}",
+    "unknownError": "erro desconhecido"
   },
   "theme": {
     "toggle": "Mudar tema",

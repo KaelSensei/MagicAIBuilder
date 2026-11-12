@@ -6,7 +6,9 @@
     "rules": "Rules",
     "newDeck": "New Deck",
     "import": "Import",
-    "importedDeck": "Imported Deck — {date}"
+    "importedDeck": "Imported Deck — {date}",
+    "createFailed": "덱을 만들지 못했습니다 — {reason}",
+    "unknownError": "알 수 없는 오류"
   },
   "theme": {
     "toggle": "테마 전환",

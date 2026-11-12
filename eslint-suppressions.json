@@ -1109,16 +1109,6 @@
       "count": 1
     }
   },
-  "src/components/layout/Header.tsx": {
-    "max-lines-per-function": {
-      "count": 1
-    }
-  },
-  "src/components/layout/HeaderMobileMenu.tsx": {
-    "max-lines-per-function": {
-      "count": 1
-    }
-  },
   "src/components/layout/LocaleSwitcher.test.tsx": {
     "no-restricted-syntax": {
       "count": 1
