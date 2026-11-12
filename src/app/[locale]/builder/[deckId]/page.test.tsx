@@ -45,7 +45,7 @@ import { useDeckStore } from "@/lib/deck/store";
 import { EMPTY_SEARCH_RESPONSE } from "@/lib/scryfall/types";
 import { useUIStore } from "@/lib/ui/store";
 import auth from "@/messages/en/auth.json";
-import { useMsw } from "@/test/msw";
+import { setupMsw } from "@/test/msw";
 import { renderWithIntl } from "@/test/render-with-intl";
 import BuilderPage from "./page";
 
@@ -313,7 +313,7 @@ afterEach(() => {
 });
 
 describe("characterization: builder page shell", () => {
-  const server = useMsw(
+  const server = setupMsw(
     http.get("/api/decks/:id", async ({ request }) => {
       await record(request);
       return HttpResponse.json(savedDeck());

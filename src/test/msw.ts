@@ -70,12 +70,3 @@ export function setupMsw(...handlers: readonly AnyHandler[]): SetupServer {
 
   return server;
 }
-
-/**
- * Former name of {@link setupMsw}, kept only while branches written before the
- * rename land.
- *
- * @deprecated Use `setupMsw`. The react-hooks lint rule reads a `use` prefix as
- * a React hook, which this is not. Remove this alias once no test calls it.
- */
-export const useMsw = setupMsw;

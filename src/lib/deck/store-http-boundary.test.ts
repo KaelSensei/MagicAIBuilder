@@ -11,7 +11,7 @@
  * error. It also pins that a guest deck, which lives in this browser only,
  * sends no request.
  *
- * MSW serves the deck API routes (`useMsw`); no internal module is mocked, so
+ * MSW serves the deck API routes (`setupMsw`); no internal module is mocked, so
  * `duplicateDeck`'s follow-up listing request goes through the real deck
  * client. A request no handler serves fails the test. Toasts are read from the
  * real toast store.
@@ -29,7 +29,7 @@ import {
 } from "@/lib/deck/guest-deck";
 import type { Deck, DeckCard } from "@/lib/deck/types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
-import { useMsw } from "@/test/msw";
+import { setupMsw } from "@/test/msw";
 
 const DECK_ID = "deck-1";
 const COPY_ID = "deck-2";
@@ -245,7 +245,7 @@ function toasts(): { readonly type: string; readonly message: string }[] {
 }
 
 describe("the raw-fetch deck store actions", () => {
-  const server = useMsw(...DECK_ROUTES);
+  const server = setupMsw(...DECK_ROUTES);
 
   /** Makes every request to `route` fail with `failure`. */
   function failRoute(

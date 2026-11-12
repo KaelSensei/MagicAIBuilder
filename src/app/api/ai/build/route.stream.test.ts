@@ -32,7 +32,7 @@ import {
   type SentModelRequest,
 } from "@/test/ai-route-msw";
 import { resetAiUsageDb } from "@/test/ai-usage-db";
-import { useMsw } from "@/test/msw";
+import { setupMsw } from "@/test/msw";
 import { mockDeck } from "./mock-deck";
 
 const ANTHROPIC_MESSAGES_URL = "https://api.anthropic.com/v1/messages";
@@ -108,7 +108,7 @@ function placeholderCardData(): readonly ScryfallCard[] {
 }
 
 describe("POST /api/ai/build event stream", () => {
-  const server = useMsw(
+  const server = setupMsw(
     anthropicAnswers(BUILD_REPLY_FENCED_TEXT_V1),
     modelProviderServes(OPENAI_CHAT_URL, sent, () =>
       HttpResponse.json(openAIChatCompletion(BUILD_REPLY_TEXT_V1))

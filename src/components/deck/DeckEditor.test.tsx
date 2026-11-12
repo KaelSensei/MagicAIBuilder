@@ -24,7 +24,7 @@ import { createGuestDeck } from "@/lib/deck/guest-deck";
 import { useDeckStore } from "@/lib/deck/store";
 import { EMPTY_SEARCH_RESPONSE } from "@/lib/scryfall/types";
 import type { Deck, DeckCard, DeckZone } from "@/lib/deck/types";
-import { useMsw } from "@/test/msw";
+import { setupMsw } from "@/test/msw";
 import { renderWithIntl, type TestLocale } from "@/test/render-with-intl";
 import { DeckEditor } from "./DeckEditor";
 
@@ -190,7 +190,7 @@ beforeEach(() => {
 });
 
 describe("characterization: DeckEditor commands", () => {
-  useMsw(
+  setupMsw(
     http.patch("/api/decks/:id/cards/:cardId", async ({ request, params }) => {
       await record(request);
       return HttpResponse.json({ id: params.cardId });

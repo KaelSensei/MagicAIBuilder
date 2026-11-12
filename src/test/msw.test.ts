@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { http, HttpResponse } from "msw";
+import * as mswKit from "@/test/msw";
 import { setupMsw } from "@/test/msw";
 
 const PROVIDER_URL = "https://provider.example.test/answer";
@@ -10,6 +11,12 @@ async function providerAnswer(): Promise<unknown> {
   const response = await fetch(PROVIDER_URL);
   return response.json();
 }
+
+describe("the test kit's MSW module", () => {
+  it("exports setupMsw alone: the deprecated useMsw alias is gone", () => {
+    expect(Object.keys(mswKit).sort()).toEqual(["setupMsw"]);
+  });
+});
 
 describe("setupMsw", () => {
   const server = setupMsw(

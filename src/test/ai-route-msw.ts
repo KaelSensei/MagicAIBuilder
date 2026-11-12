@@ -62,7 +62,7 @@ export interface SentModelRequest {
  * @param url - the provider endpoint, from the calling suite
  * @param sent - the suite's log; the suite empties it between tests
  * @param answer - the provider's response to every request
- * @returns the handler, for `useMsw` or `server.use`
+ * @returns the handler, for `setupMsw` or `server.use`
  */
 export function modelProviderServes(
   url: string,
@@ -92,7 +92,7 @@ export function modelProviderServes(
  *
  * @param cards - the card data Scryfall "holds" for the test
  * @param asked - when given, receives the names of each request, in order
- * @returns the handler, for `useMsw` or `server.use`
+ * @returns the handler, for `setupMsw` or `server.use`
  */
 export function scryfallCollectionServes(
   cards: readonly ScryfallCard[],

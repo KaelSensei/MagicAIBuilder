@@ -24,7 +24,7 @@
  *
  * Before each test every operation is back to its default and no deck is
  * held. Only the routes the deck store calls are served; any other request
- * fails the test (`useMsw`).
+ * fails the test (`setupMsw`).
  *
  * @module test/fake-deck-client
  */
@@ -41,7 +41,7 @@ import {
   type DeckApiOperations,
   type InMemoryDeckApi,
 } from "@/test/in-memory-deck-api";
-import { useMsw } from "@/test/msw";
+import { setupMsw } from "@/test/msw";
 
 export { DeckApiRefusal, emptyApiDeck } from "@/test/in-memory-deck-api";
 export type {
@@ -252,9 +252,7 @@ export function deckApiHandlers(client: DeckApiOperations): HttpHandler[] {
  */
 export function installFakeDeckClient(): InMemoryDeckApi {
   const client = createInMemoryDeckApi();
-  // `useMsw` registers Vitest hooks, not React ones; the rule only sees its name.
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  useMsw(...deckApiHandlers(client));
+  setupMsw(...deckApiHandlers(client));
   beforeEach(() => {
     client.reset();
   });
