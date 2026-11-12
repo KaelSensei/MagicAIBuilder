@@ -20,6 +20,13 @@ vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
 const { mockAuth } = vi.hoisted(() => ({ mockAuth: vi.fn() }));
 vi.mock(import("@/lib/auth/config"), () => ({ auth: mockAuth }));
 
+// `revalidateTag` needs Next's request store; outside a server it throws.
+const { mockRevalidateTag } = vi.hoisted(() => ({
+  mockRevalidateTag: vi.fn(),
+}));
+vi.mock(import("next/cache"), () => ({ revalidateTag: mockRevalidateTag }));
+
+import { shareLinkCacheTag } from "@/lib/deck/share-link-cache";
 import { DELETE, POST } from "./route";
 
 const OWNER = "user-1";
@@ -156,6 +163,26 @@ describe("DELETE /api/decks/[id]/share", () => {
       where: { id: "deck-1" },
       data: { shareToken: null, shareEnabled: false },
     });
+  });
+
+  /**
+   * The share page keeps the deck behind a token in Next's data cache for a
+   * minute (`share/[token]/page.tsx`). Clearing the row is not enough: a
+   * visitor who reloads inside that minute would still see the deck. The
+   * route purges the token's cache tag so the link dies with the row (OD-12).
+   */
+  it("purges the share page cached under the revoked token, so the link stops working at once", async () => {
+    signedInAs(OWNER);
+    mockFindUnique
+      .mockResolvedValueOnce({ id: "deck-1", userId: OWNER })
+      .mockResolvedValueOnce({ shareToken: "already-set1" });
+
+    const response = await DELETE(new Request("http://localhost:3000"), params());
+
+    expect(response.status).toBe(200);
+    expect(mockRevalidateTag).toHaveBeenCalledWith(
+      shareLinkCacheTag("already-set1")
+    );
   });
 
   it("refuses another account's deck and revokes nothing", async () => {
