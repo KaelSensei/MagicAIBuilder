@@ -8,6 +8,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { useLocale, useTranslations } from "next-intl";
 import { describe, expect, it } from "vitest";
+import { testMessages } from "@/test/intl-catalogs";
 import {
   renderHookWithProviders,
   renderWithIntl,
@@ -141,5 +142,21 @@ describe("renderWithIntl, kept for intl-only tests", () => {
     const [locale, submit] = screen.getAllByRole("listitem");
     expect(locale.textContent).toBe("fr");
     expect(submit.textContent).toBe("Se connecter");
+  });
+
+  it("renders with the catalogs a test passes, so it can prove a text comes from the catalog", () => {
+    const en = testMessages("en");
+    const auth = en.auth;
+    if (typeof auth !== "object" || typeof auth.signIn !== "object") {
+      throw new TypeError("the en auth catalog has no signIn block");
+    }
+    const messages = {
+      ...en,
+      auth: { ...auth, signIn: { ...auth.signIn, submit: "Come in" } },
+    };
+
+    renderWithIntl(<CatalogProbe />, { messages });
+
+    expect(screen.getAllByRole("listitem")[1].textContent).toBe("Come in");
   });
 });

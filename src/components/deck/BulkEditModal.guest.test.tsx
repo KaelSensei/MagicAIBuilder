@@ -5,6 +5,8 @@
  */
 import { fireEvent, screen } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
+import { aDeckCard } from "@/test/builders/card";
+import { aScryfallCard } from "@/test/builders/scryfall";
 import { renderWithIntl } from "@/test/render-with-intl";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import type { DeckCard } from "@/lib/deck/types";
@@ -26,45 +28,25 @@ function guestCard(
   name: string,
   extra: Partial<DeckCard> = {}
 ): DeckCard {
-  return {
+  return aDeckCard({
     id,
     scryfallId: `${id}-printing`,
     name,
-    manaCost: "",
-    cmc: 0,
     typeLine: "Artifact",
-    oracleText: "",
-    colorIdentity: [],
-    isGameChanger: false,
-    isBanned: false,
-    price: null,
-    imageUri: "",
-    artCropUri: "",
     category: "ramp",
-    quantity: 1,
     notes: null,
-    zone: "main",
     ...extra,
-  };
+  });
 }
 
+/** The default printing a Scryfall name lookup returns. */
 function scryfallCard(name: string): ScryfallCard {
-  return {
+  return aScryfallCard({
     id: `${name.toLowerCase().replaceAll(/\W+/g, "-")}-default-printing`,
     name,
-    mana_cost: "",
-    cmc: 0,
     type_line: "Artifact",
-    oracle_text: "",
-    color_identity: [],
-    colors: [],
-    set: "cmm",
-    set_name: "Commander Masters",
-    rarity: "common",
-    prices: { usd: null, usd_foil: null, eur: null },
-    keywords: [],
     legalities: { commander: "legal" },
-  };
+  });
 }
 
 const network = vi.fn(async () => {

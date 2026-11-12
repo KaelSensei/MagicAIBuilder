@@ -3,32 +3,10 @@ import { scoreBracket } from "@/lib/deck/bracket";
 import type { Combo } from "@/modules/combos";
 import type { Deck, DeckCard } from "@/lib/deck/types";
 import type { DeckStats } from "@/lib/deck/analysis-types";
+import { aDeck } from "@/test/builders/deck";
 
 function makeDeck(overrides: Partial<Deck> = {}): Deck {
-  return {
-    id: "test-deck",
-    name: "Test Deck",
-    commander: null,
-    partner: null,
-    companion: null,
-    pairingType: "none",
-    cards: [],
-    maybeboard: [],
-    format: "commander",
-    cardCount: 0,
-    targetBracket: 2 as 1 | 2 | 3 | 4,
-    manualBracket: null as 1 | 2 | 3 | 4 | null,
-    budget: null,
-    description: "",
-    tags: [],
-    shareToken: null,
-    shareEnabled: false,
-    isPublic: false,
-    isAIGenerated: false,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    ...overrides,
-  };
+  return aDeck({ id: "test-deck", targetBracket: 2, ...overrides });
 }
 
 function makeStats(overrides: Partial<DeckStats> = {}): DeckStats {

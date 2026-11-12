@@ -11,16 +11,20 @@ import {
   getMissingCollectionCards,
 } from "./shopping-list";
 import type { DeckCard } from "@/lib/deck/types";
+import { aDeckCard } from "@/test/builders/card";
 
 function makeCard(overrides: Partial<DeckCard> = {}): DeckCard {
-  return {
-    id: "c1", name: "Sol Ring", manaCost: "{1}", cmc: 1,
-    typeLine: "Artifact", oracleText: "", colorIdentity: [],
-    isGameChanger: false, isBanned: false, price: 1.5,
-    imageUri: "", artCropUri: "", category: "ramp",
-    quantity: 1, zone: "main", scryfallId: "abc",
+  return aDeckCard({
+    id: "c1",
+    name: "Sol Ring",
+    manaCost: "{1}",
+    cmc: 1,
+    typeLine: "Artifact",
+    price: 1.5,
+    category: "ramp",
+    scryfallId: "abc",
     ...overrides,
-  };
+  });
 }
 
 const BASIC_LAND = makeCard({

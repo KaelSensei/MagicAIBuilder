@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import { screen, fireEvent, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createElement } from "react";
+import { aDeckCard } from "@/test/builders/card";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { HandZone } from "./HandZone";
 import type { DeckCard } from "@/lib/deck/types";
@@ -21,12 +22,14 @@ vi.mock("next/image", () => ({
 }));
 
 function makeCard(id: string, name = "Test Card"): DeckCard {
-  return {
-    id, name, manaCost: "", cmc: 1, typeLine: "Creature",
-    oracleText: "", colorIdentity: [], isGameChanger: false,
-    isBanned: false, price: null, imageUri: "", artCropUri: "",
-    category: "creature", quantity: 1, zone: "main", scryfallId: id,
-  };
+  return aDeckCard({
+    id,
+    name,
+    cmc: 1,
+    typeLine: "Creature",
+    category: "creature",
+    scryfallId: id,
+  });
 }
 
 describe("HandZone", () => {

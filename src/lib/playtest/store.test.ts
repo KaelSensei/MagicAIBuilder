@@ -2,56 +2,33 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { createPlaytestStore, usePlaytestStore } from "./store";
 import type { PlaytestDeps } from "./engine";
 import type { Deck, DeckCard } from "@/lib/deck/types";
+import { aDeckCard } from "@/test/builders/card";
+import { aDeck } from "@/test/builders/deck";
 import { seededRandom } from "@/test/seeded-random";
 
 function makeCard(id: string, name = id): DeckCard {
-  return {
+  return aDeckCard({
     id,
     scryfallId: id,
     name,
-    quantity: 1,
-    category: "creature",
-    zone: "main",
-    manaCost: "",
     cmc: 1,
     typeLine: "Creature",
-    oracleText: "",
-    colorIdentity: [],
-    isGameChanger: false,
-    isBanned: false,
-    price: null,
-    imageUri: "",
-    artCropUri: "",
-  };
+    category: "creature",
+  });
 }
 
 function makeDeck(
   opts: { cardCount?: number; commander?: DeckCard | null; format?: Deck["format"] } = {}
 ): Deck {
   const { cardCount = 25, commander = makeCard("cmd", "Kenrith"), format = "commander" } = opts;
-  return {
-    id: "deck-1",
+  return aDeck({
     name: "Test",
     format,
     commander,
-    partner: null,
-    companion: null,
-    pairingType: "none",
-    cards: Array.from({ length: cardCount }, (_, i) => makeCard(`c${i}`, `Card ${i}`)),
-    maybeboard: [],
-    cardCount: 0,
-    targetBracket: 3,
-    manualBracket: null,
-    budget: null,
-    tags: [],
-    description: "",
-    shareToken: null,
-    shareEnabled: false,
-    isPublic: false,
-    isAIGenerated: false,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
+    cards: Array.from({ length: cardCount }, (_, i) =>
+      makeCard(`c${i}`, `Card ${i}`)
+    ),
+  });
 }
 
 describe("usePlaytestStore", () => {

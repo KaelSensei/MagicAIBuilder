@@ -3,30 +3,19 @@ import { renderHook, act } from "@testing-library/react";
 import { useAISuggestions } from "./useAISuggestions";
 import type { Deck } from "@/lib/deck/types";
 import type { DeckStats, BracketScore } from "@/lib/deck/analysis-types";
+import { aDeckCard } from "@/test/builders/card";
+import { aDeck } from "@/test/builders/deck";
 
 function makeDeck(): Deck {
-  return {
-    id: "deck-1",
+  return aDeck({
     name: "Test",
-    format: "commander",
-    commander: { id: "c1", name: "Atraxa", colorIdentity: ["W", "U", "B", "G"] } as never,
-    partner: null,
-    companion: null,
-    cards: [],
-    cardCount: 0,
+    commander: aDeckCard({
+      id: "c1",
+      name: "Atraxa",
+      colorIdentity: ["W", "U", "B", "G"],
+    }),
     targetBracket: 2,
-    manualBracket: null,
-    budget: null,
-    tags: [],
-    pairingType: "none",
-    isAIGenerated: false,
-    shareEnabled: false,
-    isPublic: false,
-    shareToken: null,
-    description: null,
-    createdAt: "2026-01-01",
-    updatedAt: "2026-01-01",
-  } as unknown as Deck;
+  });
 }
 
 function makeStats(): DeckStats {

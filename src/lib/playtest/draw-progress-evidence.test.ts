@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { DeckCard } from "@/lib/deck/types";
+import { aDeckCard } from "@/test/builders/card";
 import {
   analyzeDrawProgress,
   analyzeEngineDrawProgress,
@@ -7,24 +8,14 @@ import {
 import { applyBottomCards, applyMulligan, createPlaytestState } from "./engine";
 
 function makeCard(id: string): DeckCard {
-  return {
+  return aDeckCard({
     id,
     scryfallId: id,
     name: `Card ${id}`,
-    quantity: 1,
-    category: "creature",
-    zone: "main",
-    manaCost: "",
     cmc: 1,
     typeLine: "Creature",
-    oracleText: "",
-    colorIdentity: [],
-    isGameChanger: false,
-    isBanned: false,
-    price: null,
-    imageUri: "",
-    artCropUri: "",
-  };
+    category: "creature",
+  });
 }
 
 describe("analyzeEngineDrawProgress", () => {

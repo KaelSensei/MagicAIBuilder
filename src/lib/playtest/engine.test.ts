@@ -26,14 +26,17 @@ import {
 import type { PlaytestEngine } from "./engine";
 import { STARTING_LIFE } from "@/lib/deck/game-constants";
 import type { DeckCard } from "@/lib/deck/types";
+import { aDeckCard } from "@/test/builders/card";
 
 function makeCard(id: string, name = "Test Card"): DeckCard {
-  return {
-    id, name, manaCost: "", cmc: 1, typeLine: "Creature",
-    oracleText: "", colorIdentity: [], isGameChanger: false,
-    isBanned: false, price: null, imageUri: "", artCropUri: "",
-    category: "creature", quantity: 1, zone: "main", scryfallId: id,
-  };
+  return aDeckCard({
+    id,
+    name,
+    cmc: 1,
+    typeLine: "Creature",
+    category: "creature",
+    scryfallId: id,
+  });
 }
 
 function makeState(overrides: Partial<PlaytestEngine> = {}): PlaytestEngine {

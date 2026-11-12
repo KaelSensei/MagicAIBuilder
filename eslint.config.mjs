@@ -100,6 +100,27 @@ const INTERNAL_MOCK_BANS = [
   },
 ];
 
+/**
+ * `no-restricted-syntax` entries for the shared test kit (ADR 0005; master
+ * plan P1-26): a test renders through `renderWithIntl`, `renderWithProviders`
+ * or `renderHookWithProviders` and takes its query client from
+ * `aTestQueryClient` (`src/test/render.tsx`), so every test reads the real
+ * catalogs of every namespace and the same client options (no retries). Only
+ * the kit, under `src/test/`, builds the providers itself.
+ */
+const HAND_ROLLED_PROVIDER_BANS = [
+  {
+    selector: "ImportSpecifier[imported.name='NextIntlClientProvider']",
+    message:
+      "Render through `renderWithIntl` or `renderWithProviders` (`src/test/render.tsx`): they mount `NextIntlClientProvider` with the real catalogs of every namespace. Only the kit builds the provider.",
+  },
+  {
+    selector: "NewExpression[callee.name='QueryClient']",
+    message:
+      "Take the query client from `aTestQueryClient()`, or render through `renderWithProviders` / `renderHookWithProviders` (`src/test/render.tsx`): one client per test, no retries.",
+  },
+];
+
 /** Every TypeScript module under `src/`; combine with `ignores: TEST_FILES`. */
 const SOURCE_FILES = ["src/**/*.{ts,tsx}"];
 
@@ -372,6 +393,21 @@ const eslintConfig = [
       // No autofix: the author sees the failure instead of a silent edit.
       "vitest/no-focused-tests": ["error", { fixable: false }],
       "vitest/no-disabled-tests": "error",
+    },
+  },
+  // Shared test kit: no hand-rolled provider outside `src/test/` (see
+  // HAND_ROLLED_PROVIDER_BANS). ESLint keeps only the last options set for
+  // `no-restricted-syntax`, so this block repeats the mock bans; the hygiene
+  // test checks both are reported from one file.
+  {
+    files: VITEST_FILES,
+    ignores: ["src/test/**"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        ...INTERNAL_MOCK_BANS,
+        ...HAND_ROLLED_PROVIDER_BANS,
+      ],
     },
   },
 

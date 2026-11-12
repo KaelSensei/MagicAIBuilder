@@ -1,16 +1,19 @@
 import { describe, it, expect, vi } from "vitest";
 import { screen, fireEvent } from "@testing-library/react";
+import { aDeckCard } from "@/test/builders/card";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { GraveyardZone } from "./GraveyardZone";
 import type { DeckCard } from "@/lib/deck/types";
 
 function makeCard(id: string, name = "Card"): DeckCard {
-  return {
-    id, name, manaCost: "", cmc: 1, typeLine: "Creature",
-    oracleText: "", colorIdentity: [], isGameChanger: false,
-    isBanned: false, price: null, imageUri: "", artCropUri: "",
-    category: "creature", quantity: 1, zone: "main", scryfallId: id,
-  };
+  return aDeckCard({
+    id,
+    name,
+    cmc: 1,
+    typeLine: "Creature",
+    category: "creature",
+    scryfallId: id,
+  });
 }
 
 describe("GraveyardZone", () => {

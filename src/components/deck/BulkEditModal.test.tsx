@@ -6,6 +6,7 @@
  */
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { aScryfallCard } from "@/test/builders/scryfall";
 import { renderWithIntl } from "@/test/render-with-intl";
 import type {
   AddCardPayload,
@@ -176,22 +177,12 @@ function row(
 
 /** The default printing a Scryfall name lookup returns. */
 function scryfallCard(name: string, typeLine = "Artifact"): ScryfallCard {
-  return {
+  return aScryfallCard({
     id: `${name.toLowerCase().replaceAll(/\W+/g, "-")}-default-printing`,
     name,
-    mana_cost: "",
-    cmc: 0,
     type_line: typeLine,
-    oracle_text: "",
-    color_identity: [],
-    colors: [],
-    set: "cmm",
-    set_name: "Commander Masters",
-    rarity: "common",
-    prices: { usd: null, usd_foil: null, eur: null },
-    keywords: [],
     legalities: { commander: "legal" },
-  };
+  });
 }
 
 function seedServer(rows: ApiDeckCard[]): void {

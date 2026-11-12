@@ -23,6 +23,7 @@ import { createGuestDeck } from "@/lib/deck/guest-deck";
 import { useDeckStore } from "@/lib/deck/store";
 import { EMPTY_SEARCH_RESPONSE } from "@/lib/scryfall/types";
 import type { Deck, DeckCard, DeckZone } from "@/lib/deck/types";
+import { aDeckCard } from "@/test/builders/card";
 import { setupMsw } from "@/test/msw";
 import { renderWithProviders, type TestLocale } from "@/test/render";
 import { DeckEditor } from "./DeckEditor";
@@ -32,26 +33,16 @@ const DECK_ID = "deck-1";
 /** A deck row as the store holds it; card data follows Scryfall's Oracle text. */
 function deckCard(name: string, card: Partial<DeckCard>): DeckCard {
   const slug = name.toLowerCase().replaceAll(/[^a-z]+/g, "-");
-  return {
+  return aDeckCard({
     id: `row-${slug}`,
     scryfallId: `scryfall-${slug}`,
     name,
-    manaCost: "",
-    cmc: 0,
-    typeLine: "",
-    oracleText: "",
     colorIdentity: ["U"],
-    isGameChanger: false,
-    isBanned: false,
-    price: null,
     imageUri: `https://cards.scryfall.io/normal/front/${slug}.jpg`,
     artCropUri: `https://cards.scryfall.io/art_crop/front/${slug}.jpg`,
-    category: "other",
-    quantity: 1,
     notes: null,
-    zone: "main",
     ...card,
-  };
+  });
 }
 
 const TALRAND = deckCard("Talrand, Sky Summoner", {
