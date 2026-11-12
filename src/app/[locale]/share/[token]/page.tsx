@@ -1,13 +1,12 @@
 // Public read-only deck view — accessible without authentication
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 import { ShareDeckView } from "@/components/deck/ShareDeckView";
 import type { ApiSharedDeck } from "@/lib/deck/share-types";
+import { findSharedDeckCached } from "@/lib/deck/shared-deck-lookup";
 import { normalizeScryfallImageUrl } from "@/lib/scryfall/images";
-import {
-  SHARE_LINK_REVALIDATE_SECONDS,
-  shareLinkCacheTag,
-} from "@/lib/deck/share-link-cache";
+import { logger } from "@/lib/logger";
 import { metadataTranslations } from "@/lib/seo/page-metadata";
 
 interface Params {
@@ -16,30 +15,29 @@ interface Params {
 
 // ─── Server-side data fetching ────────────────────────────────────────────────
 
-async function fetchSharedDeck(token: string): Promise<ApiSharedDeck | null> {
-  try {
-    const baseUrl =
-      process.env.NEXT_PUBLIC_APP_URL ??
-      (process.env.VERCEL_URL
-        ? `https://${process.env.VERCEL_URL}`
-        : "http://localhost:3000");
-
-    // Cached per token for a minute, and tagged so that revoking the link
-    // purges the entry at once (OD-12). The tag is the one DELETE
-    // /api/decks/[id]/share passes to `revalidateTag`.
-    const res = await fetch(`${baseUrl}/api/share/${token}`, {
-      next: {
-        revalidate: SHARE_LINK_REVALIDATE_SECONDS,
-        tags: [shareLinkCacheTag(token)],
-      },
-    });
-
-    if (!res.ok) return null;
-    return res.json();
-  } catch {
-    return null;
+/**
+ * The deck behind `token`, read in-process from Next's data cache under the
+ * token's tag, so revoking the link purges it at once (OD-12). Read once per
+ * request: `generateMetadata` and the page share the result.
+ *
+ * A database failure is logged and reads as a missing deck, as the HTTP read
+ * did before; the link holder sees the not-found page, not a 500.
+ */
+const fetchSharedDeck = cache(
+  async (token: string): Promise<ApiSharedDeck | null> => {
+    try {
+      const lookup = await findSharedDeckCached(token);
+      return lookup.status === "found" ? lookup.deck : null;
+    } catch (error) {
+      // No token in the log: it is a bearer capability.
+      logger.error(
+        error instanceof Error ? error.message : "unknown",
+        "/share/[token]"
+      );
+      return null;
+    }
   }
-}
+);
 
 // ─── OG meta tags ─────────────────────────────────────────────────────────────
 
