@@ -94,7 +94,9 @@ describe("Header", () => {
     const { Header } = await import("./Header");
 
     renderWithIntl(React.createElement(Header));
-    await userEvent.click(screen.getByRole("button", { name: /import/i }));
+    await userEvent.click(
+      await screen.findByRole("button", { name: /import/i })
+    );
 
     await waitFor(() => expect(createDeck).toHaveBeenCalledTimes(1));
     expect(setActiveDeck).toHaveBeenCalledWith("deck-123");
@@ -107,7 +109,9 @@ describe("Header", () => {
     const { Header } = await import("./Header");
 
     renderWithIntl(React.createElement(Header), "fr");
-    await userEvent.click(screen.getByRole("button", { name: /importer/i }));
+    await userEvent.click(
+      await screen.findByRole("button", { name: /importer/i })
+    );
 
     expect(createDeck).toHaveBeenCalledWith(expect.stringMatching(/^Deck importé — /));
   });
@@ -120,16 +124,19 @@ describe("Header", () => {
     const { Header } = await import("./Header");
 
     renderWithIntl(React.createElement(Header), "fr");
-    await userEvent.click(screen.getByRole("button", { name: "Nouveau deck" }));
+    await userEvent.click(
+      await screen.findByRole("button", { name: "Nouveau deck" })
+    );
 
     expect(createDeck).toHaveBeenCalledWith("Nouveau deck");
   });
 });
 
 /*
- * Characterization for P1-52, which turns the header's deck actions into a
- * lazy slot (audit_architecture 1.10): what "New Deck" does from any page,
- * and what the mobile menu holds. The menu button's state and the missing
+ * Characterization written for P1-52, which turned the header's deck actions
+ * into a lazy slot (audit_architecture 1.10): what "New Deck" does from any
+ * page, and what the mobile menu holds. The deck buttons arrive with the
+ * slot's chunk, so the tests wait for them with `findByRole`. The menu button's state and the missing
  * language switch are pinned as they are; B2-19 changes them.
  */
 describe("Header deck actions and mobile menu (characterization)", () => {
@@ -152,7 +159,9 @@ describe("Header deck actions and mobile menu (characterization)", () => {
     const { Header } = await import("./Header");
 
     renderWithIntl(React.createElement(Header));
-    await userEvent.click(screen.getByRole("button", { name: "New Deck" }));
+    await userEvent.click(
+      await screen.findByRole("button", { name: "New Deck" })
+    );
 
     await waitFor(() =>
       expect(router.push).toHaveBeenCalledWith("/builder/deck-123")
@@ -167,7 +176,7 @@ describe("Header deck actions and mobile menu (characterization)", () => {
     const { Header } = await import("./Header");
 
     renderWithIntl(React.createElement(Header));
-    const newDeck = screen.getByRole("button", { name: "New Deck" });
+    const newDeck = await screen.findByRole("button", { name: "New Deck" });
     await userEvent.click(newDeck);
     await waitFor(() => expect(newDeck).toBeDisabled());
     await userEvent.click(newDeck);
@@ -197,7 +206,9 @@ describe("Header deck actions and mobile menu (characterization)", () => {
       ["Collection", "/collection"],
       ["Rules", "/rules/game-changers"],
     ]);
-    expect(menu.getByRole("button", { name: "Import" })).toBeInTheDocument();
+    expect(
+      await menu.findByRole("button", { name: "Import" })
+    ).toBeInTheDocument();
     expect(menu.getByRole("button", { name: "New Deck" })).toBeInTheDocument();
     expect(menu.getByText("user menu")).toBeInTheDocument();
   });
@@ -261,7 +272,7 @@ describe("Header deck actions and mobile menu (characterization)", () => {
       name: "My Decks",
     });
     await userEvent.click(
-      within(mobileMenu).getByRole("button", { name: "New Deck" })
+      await within(mobileMenu).findByRole("button", { name: "New Deck" })
     );
 
     await waitFor(() =>
@@ -290,7 +301,7 @@ describe("Header deck creation failures", () => {
     const { Header } = await import("./Header");
 
     renderWithIntl(React.createElement(Header));
-    const newDeck = screen.getByRole("button", { name: "New Deck" });
+    const newDeck = await screen.findByRole("button", { name: "New Deck" });
     await userEvent.click(newDeck);
 
     await waitFor(() =>
@@ -314,7 +325,7 @@ describe("Header deck creation failures", () => {
     const { Header } = await import("./Header");
 
     renderWithIntl(React.createElement(Header));
-    const importButton = screen.getByRole("button", { name: "Import" });
+    const importButton = await screen.findByRole("button", { name: "Import" });
     await userEvent.click(importButton);
 
     await waitFor(() =>

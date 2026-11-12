@@ -1,20 +1,31 @@
 "use client";
 
+/**
+ * The app shell's top bar: brand, primary navigation, theme, language, account
+ * and the deck actions.
+ *
+ * Shell (`components/layout`), rendered by every page. It holds no deck logic:
+ * "New Deck" and "Import" come from `HeaderDeckActionsSlot`, loaded lazily so
+ * public pages do not ship the deck store in their first bundle. The header
+ * only owns the UI state those actions share between the desktop bar and the
+ * mobile menu.
+ *
+ * @module layout/Header
+ */
+
 import { useCallback, useState } from "react";
-import { useFormatter, useTranslations } from "next-intl";
-import { Link, useRouter } from "@/i18n/navigation";
-import { Loader2, Menu, Package, Plus, Shield, Sparkles, Upload, X } from "lucide-react";
-import { ImportDialog } from "@/components/deck/ImportDialog";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
+import { Menu, Package, Shield, Sparkles, X } from "lucide-react";
 import { UserMenu } from "@/components/auth/UserMenu";
+import { IDLE_HEADER_DECK_ACTIONS } from "@/components/layout/header-deck-actions-state";
+import { HeaderDeckActionsSlot } from "@/components/layout/HeaderDeckActionsSlot";
 import { HeaderMobileMenu } from "@/components/layout/HeaderMobileMenu";
 import { LocaleSwitcher } from "@/components/layout/LocaleSwitcher";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
-import { Button } from "@/components/ui/Button";
-import { useToastStore } from "@/hooks/useToast";
-import { useDeckStore } from "@/lib/deck/store";
-import { logger } from "@/lib/logger";
 
 interface HeaderProps {
+  /** The deck open in the builder. Import then fills it instead of a new deck. */
   readonly deckId?: string;
 }
 
@@ -41,72 +52,17 @@ function BrandWordmark({ name }: { readonly name: string }) {
   );
 }
 
+/**
+ * The top bar of every page.
+ *
+ * On wide screens the deck actions, the language switch and the account menu
+ * sit in the bar; on small screens a toggle opens `HeaderMobileMenu`, which
+ * holds the same links and actions.
+ */
 export function Header({ deckId }: HeaderProps = {}) {
   const t = useTranslations("common");
-  const format = useFormatter();
-  const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [importOpen, setImportOpen] = useState(false);
-  const [isCreatingImportDeck, setIsCreatingImportDeck] = useState(false);
-  const [isCreatingDeck, setIsCreatingDeck] = useState(false);
-
-  const createDeck = useDeckStore((s) => s.createDeck);
-  const setActiveDeck = useDeckStore((s) => s.setActiveDeck);
-  const addToast = useToastStore((s) => s.add);
-
-  const reportCreateFailure = useCallback(
-    (operation: string, error: unknown) => {
-      // Logging alone made the button look inert: it spun, the request failed,
-      // and the player was left on the same screen with no explanation.
-      logger.error("Unexpected error", operation, error);
-      addToast(
-        "error",
-        t("nav.createFailed", {
-          reason:
-            error instanceof Error ? error.message : t("nav.unknownError"),
-        })
-      );
-    },
-    [addToast, t]
-  );
-
-  const handleNewDeck = useCallback(async () => {
-    if (isCreatingDeck) return;
-    setIsCreatingDeck(true);
-    try {
-      // The default name is stored data: write it once, in the creator's
-      // locale, as the imported-deck name below already does.
-      const id = await createDeck(t("nav.newDeck"));
-      router.push(`/builder/${id}`);
-    } catch (error) {
-      reportCreateFailure("Header.handleNewDeck", error);
-    } finally {
-      setIsCreatingDeck(false);
-    }
-  }, [createDeck, isCreatingDeck, reportCreateFailure, router, t]);
-
-  const handleImportFromHome = useCallback(async () => {
-    if (isCreatingImportDeck) return;
-    setIsCreatingImportDeck(true);
-    try {
-      const id = await createDeck(
-        t("nav.importedDeck", { date: format.dateTime(new Date()) })
-      );
-      await setActiveDeck(id);
-      setImportOpen(true);
-    } catch (error) {
-      reportCreateFailure("Header.handleImportFromHome", error);
-    } finally {
-      setIsCreatingImportDeck(false);
-    }
-  }, [
-    createDeck,
-    format,
-    isCreatingImportDeck,
-    reportCreateFailure,
-    setActiveDeck,
-    t,
-  ]);
+  const [deckActions, setDeckActions] = useState(IDLE_HEADER_DECK_ACTIONS);
 
   const handleCloseMenu = useCallback(() => {
     setMenuOpen(false);
@@ -126,7 +82,10 @@ export function Header({ deckId }: HeaderProps = {}) {
         </span>
       </Link>
 
-      <nav aria-label={t("nav.myDecks")} className="ml-2 hidden items-center gap-1 md:flex">
+      <nav
+        aria-label={t("nav.myDecks")}
+        className="ml-2 hidden items-center gap-1 md:flex"
+      >
         <Link href="/decks" className={NAV_LINK_CLASS}>
           {t("nav.myDecks")}
         </Link>
@@ -143,37 +102,12 @@ export function Header({ deckId }: HeaderProps = {}) {
       <div className="ml-auto flex items-center gap-2">
         <ThemeToggle />
         <div className="hidden items-center gap-2 md:flex">
-          {deckId ? (
-            <ImportDialog>
-              <Button variant="secondary">
-                <Upload className="h-3.5 w-3.5" />
-                {t("nav.import")}
-              </Button>
-            </ImportDialog>
-          ) : (
-            <ImportDialog open={importOpen} onOpenChange={setImportOpen}>
-              <Button
-                variant="secondary"
-                onClick={handleImportFromHome}
-                disabled={isCreatingImportDeck}
-              >
-                {isCreatingImportDeck ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <Upload className="h-3.5 w-3.5" />
-                )}
-                {t("nav.import")}
-              </Button>
-            </ImportDialog>
-          )}
-          <Button onClick={handleNewDeck} disabled={isCreatingDeck}>
-            {isCreatingDeck ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <Plus className="h-3.5 w-3.5" />
-            )}
-            {t("nav.newDeck")}
-          </Button>
+          <HeaderDeckActionsSlot
+            deckId={deckId}
+            layout="desktop"
+            uiState={deckActions}
+            onUiStateChange={setDeckActions}
+          />
           <LocaleSwitcher />
           <UserMenu />
         </div>
@@ -190,13 +124,9 @@ export function Header({ deckId }: HeaderProps = {}) {
       <HeaderMobileMenu
         open={menuOpen}
         deckId={deckId}
-        importOpen={importOpen}
-        isCreatingDeck={isCreatingDeck}
-        isCreatingImportDeck={isCreatingImportDeck}
+        deckActions={deckActions}
+        onDeckActionsChange={setDeckActions}
         onClose={handleCloseMenu}
-        onImportOpenChange={setImportOpen}
-        onImportFromHome={handleImportFromHome}
-        onNewDeck={handleNewDeck}
       />
     </header>
   );
