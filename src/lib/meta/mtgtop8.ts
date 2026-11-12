@@ -19,6 +19,7 @@
  * @module meta/mtgtop8
  */
 
+import { commanderToSlug } from "./commander-slug";
 import type { TournamentDeck } from "./fetch";
 
 export const MTGTOP8_SEARCH_URL = "https://www.mtgtop8.com/search";
@@ -38,12 +39,38 @@ function cellText(html: string): string {
     .trim();
 }
 
-/** Lower-cases and drops punctuation so a slug-shaped name still matches. */
-function normalizeName(name: string): string {
-  return name
-    .toLowerCase()
-    .replaceAll(/[^a-z0-9]+/g, " ")
-    .trim();
+/**
+ * "Æ" → "Ae", "œ" → "oe". Unicode NFD leaves these ligatures whole, so the slug
+ * drops them, while Oracle text spells them out ("Aether Vial" on
+ * https://api.scryfall.com/cards/named, read 2026-11-11). Spelling them out
+ * before slugging lets a site option written with the ligature meet the slug
+ * of the Oracle name.
+ */
+const LIGATURES: ReadonlyMap<string, string> = new Map([
+  ["æ", "ae"],
+  ["Æ", "Ae"],
+  ["œ", "oe"],
+  ["Œ", "Oe"],
+]);
+
+function spellOutLigatures(name: string): string {
+  return name.replaceAll(
+    /[æÆœŒ]/g,
+    (ligature) => LIGATURES.get(ligature) ?? ligature
+  );
+}
+
+/**
+ * The key two spellings of one commander share: the words of the commander
+ * slug. Folding through {@link commanderToSlug} keeps this rule and the slug's
+ * one rule, so "Éomer, Marshal of Rohan" and the slug-derived "eomer marshal
+ * of rohan" both key as "eomer marshal of rohan".
+ */
+function archetypeKey(name: string): string {
+  return commanderToSlug(spellOutLigatures(name))
+    .split("-")
+    .filter(Boolean)
+    .join(" ");
 }
 
 /**
@@ -66,8 +93,8 @@ export function parseArchetypeOptions(html: string): ReadonlyMap<string, number>
 }
 
 /**
- * Finds a commander's archetype id, tolerating the punctuation loss of a
- * slug round-trip ("atraxa praetors voice" → Atraxa, Praetors' Voice).
+ * Finds a commander's archetype id, tolerating the accent and punctuation loss
+ * of a slug round-trip ("eomer marshal of rohan" → Éomer, Marshal of Rohan).
  *
  * @param options - from {@link parseArchetypeOptions}
  * @param commanderName - display name or slug-derived words
@@ -79,9 +106,9 @@ export function findArchetypeId(
 ): number | null {
   const exact = options.get(commanderName.toLowerCase());
   if (exact !== undefined) return exact;
-  const wanted = normalizeName(commanderName);
+  const wanted = archetypeKey(commanderName);
   for (const [name, id] of options) {
-    if (normalizeName(name) === wanted) return id;
+    if (archetypeKey(name) === wanted) return id;
   }
   return null;
 }
