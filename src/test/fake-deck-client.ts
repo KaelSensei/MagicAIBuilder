@@ -232,9 +232,6 @@ export function deckApiHandlers(client: DeckApiOperations): HttpHandler[] {
         client.applyCardChanges(params.deckId, changes)
       )
     ),
-    http.delete<DeckParams>(CARDS, ({ params }) =>
-      answer(() => client.removeAllCards(params.deckId))
-    ),
     http.patch<CardParams>(CARD, ({ request, params }) =>
       answerBody(request, cardPatchSchema, (patch) =>
         patchCard(client, [params.deckId, params.cardId], patch)

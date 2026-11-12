@@ -1,4 +1,4 @@
-/** Zod schemas for deck requests: card ids, pairing types, and the create and patch bodies. */
+/** Zod schemas for deck requests: card ids, pairing types, and the patch body. */
 import { z } from "zod";
 import { ALL_FORMATS } from "@/lib/deck/formats";
 import { PAIRING_TYPES } from "@/lib/deck/types";
@@ -42,11 +42,3 @@ export const patchDeckSchema = z.object({
 );
 
 export type PatchDeckInput = z.infer<typeof patchDeckSchema>;
-
-// Schema for POST /api/decks (create)
-export const createDeckSchema = z.object({
-  name: z.string().min(1).max(200),
-  format: z.enum(ALL_FORMATS).optional().default("commander"),
-});
-
-export type CreateDeckInput = z.infer<typeof createDeckSchema>;

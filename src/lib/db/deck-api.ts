@@ -441,14 +441,6 @@ export async function updateCardZone(
   return res.json();
 }
 
-export async function updateCardMaybeboard(
-  deckId: string,
-  cardId: string,
-  isMaybeboard: boolean
-): Promise<ApiDeckCard> {
-  return updateCardZone(deckId, cardId, isMaybeboard ? "maybeboard" : "main");
-}
-
 /** Row changes the server applies to a deck in one transaction. */
 export interface DeckCardChanges {
   readonly removeCardIds: readonly string[];
@@ -534,14 +526,6 @@ export async function applyCardChanges(
   });
   if (!res.ok) await handleApiError(res, "applyCardChanges");
   return res.json();
-}
-
-export async function removeAllCards(deckId: string): Promise<void> {
-  if (isGuestDeckId(deckId)) return;
-  const res = await fetch(`/api/decks/${deckId}/cards`, {
-    method: "DELETE",
-  });
-  if (!res.ok) await handleApiError(res, "removeAllCards");
 }
 
 function normalizeCardCategory(category: string | undefined): CardCategory {

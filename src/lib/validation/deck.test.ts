@@ -1,37 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { patchDeckSchema, createDeckSchema, deckCardIdSchema } from "./deck";
-
-describe("createDeckSchema", () => {
-  it("accepts valid name", () => {
-    const result = createDeckSchema.safeParse({ name: "My Deck" });
-    expect(result.success).toBe(true);
-  });
-
-  it("defaults format to commander", () => {
-    const result = createDeckSchema.safeParse({ name: "My Deck" });
-    if (result.success) expect(result.data.format).toBe("commander");
-  });
-
-  it("accepts brawl format", () => {
-    const result = createDeckSchema.safeParse({ name: "Brawl Deck", format: "brawl" });
-    expect(result.success).toBe(true);
-  });
-
-  it("rejects empty name", () => {
-    const result = createDeckSchema.safeParse({ name: "" });
-    expect(result.success).toBe(false);
-  });
-
-  it("rejects name over 200 chars", () => {
-    const result = createDeckSchema.safeParse({ name: "a".repeat(201) });
-    expect(result.success).toBe(false);
-  });
-
-  it("rejects invalid format", () => {
-    const result = createDeckSchema.safeParse({ name: "Test", format: "not_a_real_format" });
-    expect(result.success).toBe(false);
-  });
-});
+import { patchDeckSchema, deckCardIdSchema } from "./deck";
 
 describe("patchDeckSchema", () => {
   it("accepts empty object", () => {
