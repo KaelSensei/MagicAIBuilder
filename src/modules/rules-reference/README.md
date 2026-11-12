@@ -18,11 +18,12 @@ and banlist hooks (`hooks/useGameChangers.ts`, `hooks/useBanlist.ts`, format-rul
 
 ## Layers
 
-| Folder            | Holds                            | Files                                                                                                                                                                                                                                                  |
-| ----------------- | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `domain/`         | Readonly data and pure functions | `comprehensive-rules.ts`: the parsed shape of the rules (sections, chapters, paragraphs, glossary), `parseComprehensiveRules` and `searchComprehensiveRules`. `effective-date.ts`: `parseRulesEffectiveDate`, the "August 7, 2026" line as a UTC date. |
-| `infrastructure/` | Server-only file access          | `rules-file.ts`: `RULES_FILE`, the edition the app ships, and the once-per-process `loadComprehensiveRules`. `data/MagicCompRules-20260807.txt`: the edition itself (effective 2026-08-07).                                                            |
-| `ui/`             | React components                 | `ComprehensiveRulesView.tsx`: the server-rendered rules browser; it takes the parsed rules from the page. `GameChangersPageClient.tsx`: the paginated Game Changers and banlist page. `Pagination.tsx`: its pager.                                     |
+| Folder            | Holds                            | Files                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ----------------- | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `domain/`         | Readonly data and pure functions | `comprehensive-rules.ts`: the parsed shape of the rules (sections, chapters, paragraphs, glossary), `parseComprehensiveRules` and `searchComprehensiveRules`. `effective-date.ts`: `parseRulesEffectiveDate`, the "August 7, 2026" line as a UTC date.                                                                                                                                                   |
+| `infrastructure/` | Server-only file access          | `rules-file.ts`: `RULES_FILE`, the edition the app ships, and the once-per-process `loadComprehensiveRules`. `data/MagicCompRules-20260807.txt`: the edition itself (effective 2026-08-07).                                                                                                                                                                                                              |
+| `client/`         | Browser state hooks              | `usePagedFilteredList.ts`: the search, the page slice and the `?page=N` URL sync of a list a visitor pages through (the deep link, the reset on a new search, the scroll on a page change).                                                                                                                                                                                                              |
+| `ui/`             | React components                 | `ComprehensiveRulesView.tsx`: the server-rendered rules browser; it takes the parsed rules from the page. `GameChangersPageClient.tsx`: the Game Changers and banlist page; it keeps the tabs, the zoom modal and the printing selector and composes the rest. `CardTile.tsx`: one card of its grid. `card-image.ts`: which listed Scryfall image a tile or the zoom shows. `Pagination.tsx`: its pager. |
 
 ## Entry points
 
@@ -31,7 +32,8 @@ and banlist hooks (`hooks/useGameChangers.ts`, `hooks/useBanlist.ts`, format-rul
 | `index.ts`  | `searchComprehensiveRules` and the parsed types (`ComprehensiveRules`, `RulesSection`, `RulesChapter`, `RuleParagraph`, `GlossaryEntry`, `RulesSearchResult`) |
 | `server.ts` | `loadComprehensiveRules` (`server-only`)                                                                                                                      |
 
-There is no `client.ts` yet: nothing client-side is imported outside the context. The two pages
+There is no `client.ts` yet: nothing client-side is imported outside the context, and
+`usePagedFilteredList` has one user, the page. The two pages
 under `src/app/[locale]/rules/` import the views by their `ui/` paths, and the comprehensive rules
 page loads the file through `server.ts` and passes the parsed document to the view.
 `entry-points.test.ts` pins the runtime export list of each entry point.
@@ -40,5 +42,8 @@ page loads the file through `server.ts` and passes the parsed document to the vi
 
 - The rules edition is two versions behind the file Wizards links; the update is product work
   ([I-47](../../../docs/product/specs/i47-rules-answers-for-this-deck.md)).
-- `GameChangersPageClient.tsx` is one 400-line component; RR-04 and RR-05 split it.
+- `GameChangersPageClient.tsx` still holds `CardZoomModal` and the tab bar, so it stays over the
+  file and function size limits (two `eslint-suppressions.json` entries); RR-05 moves them out.
+- `ui/card-image.ts` belongs to the card catalog beside `lib/scryfall/images.ts`; it moves there
+  once the branch editing that file (P1-49) has merged.
 - The boundary rules run at `warn` for this context until RR-06 closes the series.
