@@ -1702,7 +1702,7 @@
   },
   "src/lib/deck/store.ts": {
     "@typescript-eslint/consistent-type-assertions": {
-      "count": 4
+      "count": 1
     },
     "@typescript-eslint/max-params": {
       "count": 3
@@ -1714,7 +1714,7 @@
       "count": 1
     },
     "max-lines-per-function": {
-      "count": 7
+      "count": 6
     },
     "no-restricted-imports": {
       "count": 1
