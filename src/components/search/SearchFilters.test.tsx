@@ -78,6 +78,12 @@ function renderPanel(initial: SearchFiltersValue = PAGE_DEFAULTS) {
 
 const button = (name: string) => screen.getByRole("button", { name });
 
+/** Whether a `<label>` element names the field, as the Type and Role words do. */
+const hasVisibleLabel = (field: HTMLElement): boolean =>
+  (field instanceof HTMLInputElement || field instanceof HTMLSelectElement) &&
+  field.labels !== null &&
+  field.labels.length > 0;
+
 /** The CMC mode tab; the colour "Exact" match also exists, and only it carries a title. */
 const cmcMode = (name: string) =>
   screen.getByRole("button", { name, description: "" });
@@ -183,7 +189,15 @@ describe("SearchFilters: colours", () => {
 
   it("announces each colour, Colorless and Land as a toggle button whose pressed state flips on each click", async () => {
     const panel = renderPanel();
-    const toggles = ["White", "Blue", "Black", "Red", "Green", "Colorless", "Land"];
+    const toggles = [
+      "White",
+      "Blue",
+      "Black",
+      "Red",
+      "Green",
+      "Colorless",
+      "Land",
+    ];
 
     for (const name of toggles) {
       expect(button(name).getAttribute("aria-pressed")).toBe("false");
@@ -436,8 +450,13 @@ describe("SearchFilters: price, type, keyword and role", () => {
     ];
     // 2 mana value + 2 price + 4 power/toughness, subtype + keyword + preset name, Role + presets.
     expect(fields).toHaveLength(13);
-    const unnamed = fields.filter((field) => !field.getAttribute("aria-label") && !field.labels?.length);
-    expect(unnamed.map((field) => field.getAttribute("placeholder"))).toEqual([]);
+    // Listed by placeholder so a failure says which field lost its name.
+    const unnamed = fields.filter(
+      (field) => !field.getAttribute("aria-label") && !hasVisibleLabel(field)
+    );
+    expect(unnamed.map((field) => field.getAttribute("placeholder"))).toEqual(
+      []
+    );
     for (const field of fields) {
       expect(field).not.toHaveAccessibleName("");
     }
@@ -446,8 +465,13 @@ describe("SearchFilters: price, type, keyword and role", () => {
   it("names the Type and Role fields by their visible labels and the abbreviated ones by their full words", () => {
     renderPanel({ ...PAGE_DEFAULTS, types: ["Creature"] });
 
-    expect(screen.getByRole("textbox", { name: "Type" })).toHaveAttribute("placeholder", "e.g. Elf, Dragon");
-    expect(screen.getByRole("textbox", { name: "Keyword ability" })).toHaveAttribute("placeholder", "e.g. Flying, Trample");
+    expect(screen.getByRole("textbox", { name: "Type" })).toHaveAttribute(
+      "placeholder",
+      "e.g. Elf, Dragon"
+    );
+    expect(
+      screen.getByRole("textbox", { name: "Keyword ability" })
+    ).toHaveAttribute("placeholder", "e.g. Flying, Trample");
     expect(screen.getByRole("combobox", { name: "Role" })).toBeDefined();
     for (const name of [
       "Minimum mana value",
