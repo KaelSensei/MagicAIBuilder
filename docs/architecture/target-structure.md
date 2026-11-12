@@ -127,6 +127,11 @@ exists; until then, a new route is not an excuse to add another inline query.
 
 ## Enforcement, aligned with `pnpm arch`
 
+> Dated 2026-11-10. The live rule list is `.dependency-cruiser.cjs`; since CMB-08 (2026-11-12) it
+> adds six boundary rules per context, at `error` for the contexts in `CLOSED_CONTEXTS` and at
+> `warn` for the others. The checklist the next contexts copy is
+> [architecture.md, the context template](../engineering/architecture.md#the-context-template).
+
 The rules already shipped do the following, and a new module has to satisfy them on its
 first commit because they match `src/modules/` today and match nothing only because the
 folder is empty:

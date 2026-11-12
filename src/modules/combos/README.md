@@ -56,10 +56,14 @@ Other code reaches the context only through three entry points, or the panel by 
 
 Inside the context, layers import downwards only: `ui/` and `client/` read `domain/`;
 `application/` reads `domain/`; `infrastructure/` reads `domain/` and the port types in
-`application/`; nothing reads `infrastructure/` except `server.ts`. `pnpm arch` checks the
-boundary: `combos-through-entry-points` warns on a deep import from code outside `src/modules/`
-until CMB-08 raises it to an error, and `public-api-only` already rejects one from another
-context.
+`application/`; nothing reads `infrastructure/` except `server.ts`. `pnpm arch` fails on a
+breach: since CMB-08 closed the series, `combos` is listed in `CLOSED_CONTEXTS` of
+`.dependency-cruiser.cjs`, so its six boundary rules run at `error` (`domain-imports-domain`,
+`application-imports-domain-and-ports`, `infrastructure-not-browser`, `testing-only-from-tests`,
+`through-entry-points` for code outside `src/modules/`, `browser-folders-not-server-entry`), on
+top of the floor rules every context meets (`domain-is-pure`, `browser-layers-not-server`,
+`application-is-not-an-adapter`, `public-api-only`). The context has no entry in the
+known-violations baseline and never had one.
 
 ## Data flow
 

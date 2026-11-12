@@ -21,6 +21,7 @@
 - [Where does this code go?](#where-does-this-code-go)
 - [Current state and target](#current-state-and-target)
 - [Migration approach](#migration-approach)
+- [The context template](#the-context-template)
 - [How to read the code base today](#how-to-read-the-code-base-today)
 
 ## Purpose
@@ -91,7 +92,7 @@ flowchart TB
 | Next.js server      | Next.js 15 App Router on Node.js, Auth.js 5 (Google and credentials) | Server Components, 67 route handlers including the public `/api/v1` API, the shared Scryfall cache, provider calls.                                                                     | `src/app/**`                                                                         |
 | Database            | PostgreSQL 16, Prisma 6                                              | Decks, collections, community data, sessions, caches. Docker locally; hosted in production (see [infrastructure.md](infrastructure.md)).                                                | `prisma/schema.prisma`                                                               |
 | Scryfall            | HTTPS JSON API                                                       | Card data, search, printings, rulings, images. The server fills a shared cache (cards 24 h, searches 1 h); the browser reads through it and calls Scryfall directly only as a fallback. | `src/lib/scryfall/`                                                                  |
-| Commander Spellbook | HTTPS JSON API                                                       | Combos contained in a decklist, used for the combo panel and the bracket estimate.                                                                                                      | `src/lib/combos/`, `src/app/api/combos/route.ts`                                     |
+| Commander Spellbook | HTTPS JSON API                                                       | Combos contained in a decklist, used for the combo panel and the bracket estimate.                                                                                                      | `src/modules/combos/infrastructure/`, `src/app/api/combos/route.ts`                  |
 | Anthropic, OpenAI   | HTTPS JSON APIs                                                      | The AI copilot: suggestions and deck builds, Anthropic first, then OpenAI, then a mock.                                                                                                 | `src/app/api/ai/**`, `src/lib/ai/`                                                   |
 | EDHREC, MTGTop8     | JSON and HTML scraping                                               | What the wider meta plays for a commander, and how it shifts.                                                                                                                           | `src/lib/meta/`, `src/app/api/meta/**`                                               |
 | Deck sites          | JSON or HTML per site                                                | URL import from Moxfield, Archidekt, TappedOut, MTGTop8, MTGDecks, AetherHub and EDHREC.                                                                                                | `src/lib/import/`, `src/app/api/import/**`                                           |
@@ -254,7 +255,7 @@ so the dependency points inward.
 
 | Layer             | Holds                                                                                                                                 | May import                                                                                                                 | Must not import                                                                                    |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `domain/`         | Readonly types and pure functions: rules, value types, ports when the domain owns them                                                | Its own `domain/`; other contexts' `index.ts`; pure shared helpers                                                         | React, Next.js, Prisma, Zustand, TanStack Query, `fetch`, `process.env`, `window`; any other layer |
+| `domain/`         | Readonly types and pure functions: rules, value types, ports when the domain owns them                                                | Its own `domain/`; other contexts' `index.ts`; the pure shared helpers `src/lib/guards.ts` and `src/lib/text/`             | React, Next.js, Prisma, Zustand, TanStack Query, `fetch`, `process.env`, `window`; any other layer |
 | `application/`    | Use cases (`makeX(deps) → x(input)`), port interfaces, input contracts                                                                | Its own `domain/` and ports; other contexts' `index.ts` and `server.ts`; the server shared kernel (logger)                 | React, Next.js routing, Prisma directly, `client/`, `ui/`                                          |
 | `infrastructure/` | Prisma repositories, provider adapters with their wire types and mappers, recorded fixtures. Server-only, except a browser API client | Its own `domain/` and `application/` ports; `src/lib/db/prisma.ts`, `src/lib/http.ts`, the logger                          | `ui/`, `client/`, other contexts' internals                                                        |
 | `client/`         | The typed browser API client, Zustand stores, TanStack Query hooks                                                                    | Its own `domain/`; other contexts' `index.ts` and `client.ts`; browser-safe shared helpers                                 | `server.ts`, `application/`, `infrastructure/`, Prisma                                             |
@@ -285,19 +286,23 @@ UI components are imported by path (`@/modules/<context>/ui/<Component>`), never
 Entry files use explicit named re-exports, not `export *`. Other contexts import only these entry
 points or a `ui/` component path.
 
-The shape of a context, for orientation (the folder names are fixed; the files are examples):
+The shape of a context, as the pilot left it (the folder names are fixed; these are the real
+combos files, see [the context template](#the-context-template)):
 
 ```text
 src/modules/combos/
-  README.md            purpose, public API, data flow, invariants, diagram
-  domain/              deck-query.ts: canonical combo query; combo.ts: the Combo type
-  application/         find-deck-combos.ts: the use case; ports.ts
-  infrastructure/      spellbook-client.ts: the ACL; fixtures/find-my-combos-v1.ts
-  client/              api.ts: browser call to /api/combos; use-combos.ts
+  README.md            purpose, layers, public API, data flow, ports, invariants, testing, gaps
+  domain/              combo.ts: the Combo type and the two-card policy; deck-query.ts; lookup-policy.ts
+  application/         ports.ts: ComboCache, ComboSourceBudget, ComboSource; lookup-deck-combos.ts
+  infrastructure/      find-my-combos.ts and spellbook-variant.ts: the ACL; combo-cache.ts;
+                       spellbook-budget.ts; fixtures/find-my-combos-v1.ts
+  client/              api.ts: the typed client of POST /api/combos; useCombos.ts
   ui/                  CombosPanel.tsx
-  index.ts             export type { Combo } …
-  server.ts            import "server-only"; export const findDeckCombos = …
-  client.ts            export { useCombos } …
+  testing/             in-memory-combo-source.ts; combo-source-contract.ts; spellbook-msw.ts
+  index.ts             export { isTwoCardInfiniteCombo, type Combo, … } from "./domain/…"
+  server.ts            import "server-only"; export const lookupDeckCombos = makeLookupDeckCombos({ … })
+  client.ts            export { fetchCombosForDeck, useCombos }
+  entry-points.test.ts pins the runtime export list of each entry point
 ```
 
 ## Where does this code go?
@@ -416,6 +421,88 @@ named in docs and configs, which are fixed by hand. An entry marked `"shim": tru
 re-export shim at its old path; the codemod lists it in `eslint.config.mjs`, where the
 `migration-guard/no-shim-import` rule fails any import or `vi.mock` of that path. Details and limits:
 [scripts/refactor/README.md](../../scripts/refactor/README.md).
+
+## The context template
+
+The `combos` pilot ran from CMB-01 (#1384, 2026-11-11) to CMB-08 (2026-11-12), eight pull requests
+in two days. This section is its retrospective: the checklist every later context copies, and what
+the pilot got wrong or found slower than planned. The master plan rows that cite it are the
+`RR-`, `MI-`, `PT-`, `COL-` and later series.
+
+### The checklist
+
+1. **Folder layout.** `src/modules/<context>/` with `domain/`, `application/`, `infrastructure/`,
+   `client/`, `ui/` and `testing/`, each only when the context needs it, plus `README.md`. The
+   [sketch above](#entry-points) shows the real combos files. Ports live in `application/ports.ts`;
+   the provider's wire type and its mapper (`toX`) stay in `infrastructure/` with the recorded
+   fixture under `infrastructure/fixtures/<call>-v1.ts` ([ADR 0004](../adr/0004-anti-corruption-layers-for-external-providers.md)).
+2. **Entry points.** `index.ts` (pure), `server.ts` (`import "server-only"`, the composition root
+   that wires `makeX(ports)` once) and `client.ts`; UI by path. Each re-exports by name only what
+   is imported outside the context. `entry-points.test.ts` pins the runtime export list of each
+   file, so a dropped export fails a test before it fails a build.
+3. **Ports and the contract suite.** One hand-written in-memory fake per owned port in `testing/`,
+   one shared `describe<Port>Contract(makeHarness)` run against the fake and the real adapter
+   through MSW with the recorded payload ([ADR 0005](../adr/0005-testing-strategy-fakes-contracts-and-characterization.md)).
+   The contract states what both must do and names what it leaves to adapter tests (wording,
+   ordering).
+4. **README and functional doc.** `src/modules/<context>/README.md` on the per-context template of
+   [code-documentation.md](code-documentation.md); `docs/functional/<context>.md`, indexed in
+   `docs/functional/README.md`; the `CONTEXT.md` rows point at the new files; a module header on
+   every file, TSDoc on every export, a URL and date on every external limit.
+5. **Mutation testing.** `stryker.config.mjs` mutates `src/modules/*/domain/**`, so a new `domain/`
+   folder joins the nightly without a config change; the closing pull request records the baseline
+   score (combos: 37 mutants, 100 %, 10 compile errors).
+6. **Slice order.** Characterize, move, value type, use case, contract, docs, enforce. Each is one
+   pull request; the move is the scheduling point of the series, and logic changes come after it,
+   in the new location. The pilot inserted a tooling slice (mutation testing) that no later series
+   repeats.
+7. **Enforce (the closing slice).** Add the context to `CLOSED_CONTEXTS` in
+   `.dependency-cruiser.cjs`, which turns its six boundary rules from `warn` to `error`; prune the
+   known-violations baseline with `--baseline-mode shrink-only`; delete the series' shims and their
+   `"shim": true` marks in `scripts/refactor/moves.json` after a whole-repository grep for the old
+   paths (`src/`, `e2e/`, `scripts/`, docs); record the Red of each rule on a deliberate violation
+   and the baseline count before and after.
+
+### What went wrong, or took longer
+
+- **Every slice outgrew its estimate**, by two to ten times in lines: the tests, comments and docs
+  the standard asks for, not the code, made the difference. CMB-01 was planned at +120 lines and
+  landed at +925; CMB-07 at +300 and landed at +445. Plan a context's series on the pilot's sizes,
+  not on the move's.
+- **Characterization found behaviour to pin as bugs.** Four tests pin the ten-card minimum's
+  counting rules and the companion exclusion (B2-43), and two pin the infinity-keyword heuristic
+  (no B2 row). They stay pinned: a behaviour change is never hidden in a series.
+- **The floor rules missed a layer leak.** The move left the provider type `SpellbookVariant` in
+  `client/api.ts`, imported by two `infrastructure/` files. No rule forbade `infrastructure/` →
+  `client/`; review caught it and CMB-03 moved the type into `domain/`. CMB-08 added
+  `infrastructure-not-browser` so the next series cannot repeat it.
+- **No use case at move time.** For two slices `server.ts` said "there is no use case yet". Moving
+  first was right (the route kept working), but a context should extract its use case right after
+  the move, before docs describe a shape that is still changing.
+- **A rebase mid-series means re-running the codemod.** The route kit (#1395) landed during CMB-02
+  and the codemod rewrote 7 more specifiers in 2 files. The codemod does not run Prettier, so the
+  longer `@/modules/…` specifiers broke `prettier --check` on two files until the next commit.
+- **The pre-commit hook refused a stale ESLint suppression** once `CombosPanel.tsx` shrank below its
+  `max-lines` entry (CMB-03); `eslint --prune-suppressions` fixes it, and reorders two entries.
+- **Zod stayed in `domain/`.** `deck-query.ts` still builds the request schema, against ADR 0003's
+  "parse once at the boundary". `domain-is-pure` does not ban Zod, so the gate lets it through;
+  moving the schema to the route is an open structural follow-up, not a CMB slice.
+- **One port of three has a contract suite.** `ComboCache` and `ComboSourceBudget` keep local fakes
+  in the use-case test; a budget contract needs a clock port. Plan the contract slice per port.
+- **Stryker under pnpm** needed its plugins named explicitly (`node_modules` is strict), and
+  related-test mode pulls in the builder page tests because the page imports the combos UI: 181
+  tests for 37 mutants. Watch the nightly's duration as contexts join.
+- **Docs drift lasted three slices.** The Spellbook row of this document named `src/lib/combos/`
+  from CMB-02 to CMB-08, the sketch above kept its planned file names, and 24 old-path mentions
+  remain in dated audits, ADR problem statements and product specs (left on purpose; two relative
+  links in `docs/product/specs/` broke). The codemod's old-path report lists them: read it in every
+  slice, not only in the move.
+- **Shims were never needed.** The only pending-branch importer (the builder page, held by the AI
+  metering branch) was rewritten with the owner's agreement, so the pilot exercised neither the
+  `"shim": true` path of the codemod nor the `migration-guard/no-shim-import` rule in production.
+  The first series that needs a shim is also the first to test that path.
+- **Rule names in prose go stale.** The README named `combos-through-entry-points`, which the
+  generic rule set renamed. Name rules in docs only where a reader must find them in the config.
 
 ## How to read the code base today
 
