@@ -276,6 +276,7 @@ The cEDH Decklist Database's submit page, read 2026-11-11, requires a descriptio
 - [ ] The player copies chosen lines. Nothing writes `Deck.description` until they paste or press a separate "Insert into primer" control that shows the result first.
 - [ ] If the insert would pass 2,000 characters, the control refuses and names the cap. Raising the cap stays I-08's decision.
 - [ ] A test fails if the draft contains a card name that is not in the deck.
+- [ ] Added 2026-11-12 (thirteenth pass): one offered section, "How it plays", whose lines come from [I-99](i99-a-pilot-sheet-and-how-heavy-this-deck-is-to-pilot.md)'s timing blocks and pilot line, named as their source like every other line, copied or discarded by the player and inserted only on request.
 
 ### Enrichment (2026-11-11)
 

@@ -647,6 +647,7 @@ CommanderSalt, DeckCheck DTI and EDHREC salt are the references for describing h
 
 - [ ] Download one `.ics` file for a planned night: the date, the pod's name and a link to the sheet. No Google account and no mail. Recurrence is a later line in the same file, still with no external calendar service.
 **Twelfth pass, 2026-11-11:** the walkthrough that asks the questions one at a time is [I-88](i88-a-pre-game-script-that-fills-the-rule-0-sheet.md). It writes these fields and adds none. Wizards' 21 October 2025 update calls more pregame conversations "the real goal" ([update](https://magic.wizards.com/en/news/announcements/commander-brackets-beta-update-october-21-2025)).
+- [ ] Added 2026-11-12 (thirteenth pass): the calculated column shows [I-99](i99-a-pilot-sheet-and-how-heavy-this-deck-is-to-pilot.md)'s pilot line ("Pilot load: moderate. 9 timed triggers, 4 library searches, 0 extra turns or combats per 99 cards") beside I-77's estimate, I-65's route line and I-78's table line, labelled computed; "copy into my sheet" puts it in the declared speed note. I-99 slice 6 waits for spec slice 2.
 
 ### Enrichment (2026-11-11)
 

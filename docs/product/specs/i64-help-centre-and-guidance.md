@@ -684,6 +684,7 @@ None of the 16 page routes is a help, FAQ, glossary or about page, and the produ
 - [ ] The French review, with a typography lint and "Disponible en anglais" entries for articles not yet reviewed (slice 6); help search from a build-time index that folds accents and expands aliases such as "GC", with searches that found nothing counted per week and deleted after 90 days (slice 7); a help link in every empty state and dismissible "what's this" panels, with no tour (slice 8); and "Still stuck? Report a problem" into I-52's form with the article attached (slice 9).
 - [ ] Subscription articles and a test that maps every I-30 entitlement to an article, in the same release as I-30's billing (slice 13).
 - [ ] Later: a help row above builder card search results (slice 10), the `title=` ratchet (slice 11), the owner's measurement view (slice 12) and glossary links from I-28, I-47 and I-27 (slice 14). Only if the owner decides: a model that maps a question to article identifiers and writes nothing (slice 15).
+- [ ] Added 2026-11-12 (thirteenth pass): glossary terms for [I-99](i99-a-pilot-sheet-and-how-heavy-this-deck-is-to-pilot.md) (upkeep, trigger, replacement effect, optional trigger, pilot load) and [I-100](i100-cards-that-work-against-each-other.md) (symmetric effect, payoff, enabler), each reached from the info button beside the class, in English and French.
 
 ### Engineering enablers
 

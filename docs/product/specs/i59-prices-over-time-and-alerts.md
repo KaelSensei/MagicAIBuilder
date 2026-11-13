@@ -621,6 +621,7 @@ Today a deck row holds one USD price that the browser sent when the card was add
   - Moved 2026-11-10: the inbox and the email digest are [I-63](i63-one-notification-system.md)'s (its slices 2 and 10), and the spec's `priceAlertEmail` column becomes I-63's "Price alerts I created" category. I-59 keeps the alert rules, their evaluation and the alert text.
 - [ ] Taken over on 2026-11-10, so that one series and one alert engine serve every list: I-32's price watch (requirements 6.3 and 6.4, slice 12), I-45's value history (requirement 5.1, slice 12) and I-56's wanted items in the price watch (slice 18). Slices 6, 7 and 11 to 13 cover them; each source keeps a pointer.
 - [ ] After I-30's decision and the lawyer's answer: alert rules above a free allowance, list-wide scopes and the email digest as a paid entitlement (slice 13).
+- [ ] Added 2026-11-12 (thirteenth pass): when I-06 stores a purchase price per copy, the value-over-time view may show the sum paid beside the sum of listed prices, both labelled, with the deny-list of 8.4 applied to every word around them; the two lines are never netted into a "gain" on a shared or public page.
 
 ### Engineering enablers
 

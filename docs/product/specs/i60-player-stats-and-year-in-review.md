@@ -613,6 +613,7 @@ A player with a dozen decks cannot see them as a whole: the profile lists public
 - [ ] Later: the public recap image and preview tags (slice 7), events and the owner's growth view (slice 8), a visitor call to action into an import-first first run (slice 9), games from I-35 (slice 10), a recap embed (slice 11), exact change counts from I-37's change log (slice 12), and a staggered-invitation experiment (slice 15).
   - Slice 9's sign-up entry is `User.signupEntry = recap`, written by [I-72](i72-growth-loops-referrals-creators-and-return.md) slice 2, instead of a `signup_entry` event (2026-11-10).
 - [ ] After I-30's decision: statistics over any date range and trends across several years (slice 14).
+- [ ] Added 2026-11-12 (thirteenth pass): the private stats page gains a collection overview beside the deck statistics (rows, copies, value with its date through I-59, a breakdown by colour and type; no card named on a public surface) and, once I-35 logs games, the player's decks ordered by last played, with "not played since" as a sortable column and no streak.
 
 ### Engineering enablers
 

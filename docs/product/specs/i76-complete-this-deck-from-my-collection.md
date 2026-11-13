@@ -588,6 +588,7 @@ Nothing fills the remaining slots of the player's own deck. No file under `src/a
 - [ ] The review panel: a role meter, slot by slot with up to four alternatives, "Fill this role" and "Fill the rest" as explicit buttons, and a before-and-after summary (slice 8); apply and revert through [I-58](i58-mana-base-builder.md) slice 16's reviewed change set (slice 9); the owned substitute for one missing card, which I-06's missing-card panel, I-17's working copies and I-62's import report call (slice 10).
 - [ ] Free copies first and a "free copies only" pool (slice 11); a per-card cap and a budget to acquire (slice 12); "owned first" and "any card" pools from I-67's catalogue, with guest and pasted proposals (slice 13); printings through I-57 (slice 14); "Another proposal" with a visible seed (slice 15); EDHREC inclusion as a labelled column with its sample, never the order (slice 16).
 - [ ] Later: count-only acceptance events through I-39 (slice 17); measured norms in place of ranges after the owner approves them (slice 18); model rewording of reasons with a post-check (slice 19); an AI mode that picks numbered cards from the legal pool, re-checked by code and scored on I-70's bench (slice 20); the collection-wide allocation of owned copies across decks, a paid candidate (slice 21).
+- [ ] Added 2026-11-12 (thirteenth pass): each completion candidate carries the [I-100](i100-cards-that-work-against-each-other.md) findings it would create, as a labelled, sortable column and never as a hidden filter (I-100 slice 8, after slice 5).
 
 ### Engineering enablers
 
