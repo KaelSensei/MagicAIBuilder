@@ -1,6 +1,7 @@
 /**
  * Draw-odds library count: the deck side of a draw-odds question, read from a
- * deck: how many cards its library holds, and how many of them are a hit.
+ * deck: how many cards its library holds, how many of them are a hit, and
+ * which cards a question can name.
  *
  * Deck analysis, I-97. The library is what the deck becomes when the game
  * begins (CR 401.1), so only main-deck cards count:
@@ -11,7 +12,8 @@
  * `Deck.cards` never holds the command zone or the companion, so the count
  * reads the main-zone rows of `cards`.
  * Not responsible for: the formula (`chanceOfAtLeast` in `draw-odds.ts`), the
- * number of cards drawn by a given turn, or the panel that asks.
+ * number of cards drawn by a given turn (`cardsDrawnBy` in `cards-drawn.ts`),
+ * or the panel that asks (`components/deck/DrawOddsPanel.tsx`).
  *
  * @module deck/draw-odds-library
  */
@@ -30,6 +32,17 @@ export type DrawOddsTarget =
 
 /** The library and its matching cards, as a draw-odds question takes them. */
 export type LibraryCount = Pick<DrawOddsQuestion, "librarySize" | "matching">;
+
+/**
+ * Whether a deck row is in the library: only main-deck rows are. Sideboard and
+ * Considering rows are not in the deck at all, and `Deck.cards` never holds the
+ * command zone or the companion (see the module header).
+ *
+ * @param card - a row of `Deck.cards`
+ */
+function isInLibrary(card: DeckCard): boolean {
+  return card.zone === "main";
+}
 
 /**
  * Whether a library card is a hit for the question.
@@ -75,9 +88,30 @@ export function countLibrary(
   let librarySize = 0;
   let matching = 0;
   for (const card of deck.cards) {
-    if (card.zone !== "main") continue;
+    if (!isInLibrary(card)) continue;
     librarySize += card.quantity;
     if (isHit(card, target)) matching += card.quantity;
   }
   return { librarySize, matching };
+}
+
+/**
+ * The cards a draw-odds question can ask about by name: every card in the
+ * library, once, in alphabetical order. A card in several rows, such as two
+ * printings, is named once, as `countLibrary` counts its copies together.
+ *
+ * @example
+ * // Sol Ring, 36 Forests in two printings, Arcane Signet, a Sideboard card:
+ * libraryCardNames(deck); // → ["Arcane Signet", "Forest", "Sol Ring"]
+ *
+ * @param deck - the deck asked about; only its cards are read
+ * @returns the distinct names of the library's cards; empty for a deck with
+ *   no main-deck card
+ */
+export function libraryCardNames(deck: Pick<Deck, "cards">): readonly string[] {
+  const names = new Set<string>();
+  for (const card of deck.cards) {
+    if (isInLibrary(card)) names.add(card.name);
+  }
+  return [...names].sort((a, b) => a.localeCompare(b));
 }
