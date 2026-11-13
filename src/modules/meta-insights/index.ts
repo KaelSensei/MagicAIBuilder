@@ -14,6 +14,8 @@
  */
 export { computeMetaShifts } from "@/modules/meta-insights/domain/history";
 export type {
+  CommanderMetaData,
   EdhrecData,
+  MetaSource,
   TournamentData,
 } from "@/modules/meta-insights/domain/types";
