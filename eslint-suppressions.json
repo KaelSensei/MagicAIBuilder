@@ -948,17 +948,6 @@
       "count": 3
     }
   },
-  "src/modules/meta-insights/ui/MetaPanel.tsx": {
-    "complexity": {
-      "count": 1
-    },
-    "max-lines": {
-      "count": 1
-    },
-    "max-lines-per-function": {
-      "count": 1
-    }
-  },
   "src/modules/meta-insights/ui/MetaTrendsView.test.tsx": {
     "no-restricted-syntax": {
       "count": 1
