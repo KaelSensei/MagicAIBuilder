@@ -1,5 +1,4 @@
 import { test, expect } from "@playwright/test";
-import { suppressOnboarding } from "./helpers";
 
 test.describe("i18n Locale Routing", () => {
   test("default locale (en) serves pages without prefix", async ({ page }) => {
@@ -51,9 +50,9 @@ test.describe("i18n Locale Routing", () => {
   });
 
   test("locale prefix is preserved after navigation", async ({ page }) => {
-    // The onboarding wizard mounts over the landing page for a first-time
-    // visitor, and its modal backdrop intercepts the click below.
-    await suppressOnboarding(page);
+    // A first-time visitor, on purpose: the onboarding dialog never opens by
+    // itself on the landing page (I-39 requirement 1.1), so nothing covers the
+    // link below.
     await page.goto("/fr");
 
     // The capability atlas links to the deck list whatever the session state.
