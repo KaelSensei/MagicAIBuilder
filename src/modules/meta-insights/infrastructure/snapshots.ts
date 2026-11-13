@@ -1,11 +1,18 @@
 /**
- * Reading and writing the retained EDHRec distribution (`MetaSnapshot`).
+ * Reading and writing the retained EDHREC distribution (`MetaSnapshot`).
  *
- * The history accrues from ordinary traffic: every live EDHRec fetch the meta
+ * Meta-insights context, `infrastructure/`, `server-only`. `server.ts` wires
+ * {@link recordEdhrecSnapshot} as the `MetaHistory` port of the use case and
+ * publishes {@link readSnapshotHistory} with the window constants for the
+ * history route, which hands the rows to `domain/history.ts`.
+ *
+ * The history accrues from ordinary traffic: every live EDHREC fetch the meta
  * route already performs is also written here, so no cron job, no scheduled
- * crawl and no extra request to EDHRec. The consequence is that a commander
+ * crawl and no extra request to EDHREC. The consequence is that a commander
  * nobody has opened twice has no history, which is why every read path treats
  * "no report" as the normal state rather than a failure.
+ *
+ * @module meta-insights/infrastructure/snapshots
  */
 
 import "server-only";

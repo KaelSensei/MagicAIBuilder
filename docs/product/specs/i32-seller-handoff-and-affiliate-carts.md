@@ -61,7 +61,7 @@ Verified on `dev` on 2026-11-09 (commit `49983a9`):
 - **Finish and condition exist only for owned cards.** `CollectionCard` has `foil` and `condition` (NM, LP, MP, HP, DMG). `DeckCard` has neither, so a cart built today could not carry a wanted finish or condition.
 - **Estimate wording exists.** `src/messages/en/collection.json` says "Prices are estimates for the deck printings", and `src/messages/en/deck.json` has "Estimated price". The product direction requires "prices labeled as estimates" ([roadmap](../roadmap.md#product-direction), step 5).
 - **Exports.** `src/lib/deck/export.ts` writes Moxfield, Arena, MTGO, TappedOut, Archidekt, MTGGoldfish and EDHREC formats. It has no seller format.
-- **No legal page, analytics or alert delivery.** `src/app/[locale]/` has no legal or disclosure route. No product analytics library is installed; Sentry reports errors only. `NotificationPreference` stores four toggles (replies, mentions, follows, watched decks), but no notification table, email sender or scheduled job exists. `src/lib/meta/snapshots.ts` says it deliberately avoids a cron job.
+- **No legal page, analytics or alert delivery.** `src/app/[locale]/` has no legal or disclosure route. No product analytics library is installed; Sentry reports errors only. `NotificationPreference` stores four toggles (replies, mentions, follows, watched decks), but no notification table, email sender or scheduled job exists. `src/modules/meta-insights/infrastructure/snapshots.ts` says it deliberately avoids a cron job.
 
 ## Functional requirements
 

@@ -1,13 +1,18 @@
 /**
- * Meta shifts over time — differencing two EDHRec snapshots of one commander.
+ * Meta shifts over time: differencing two EDHREC snapshots of one commander.
+ *
+ * Meta-insights context, `domain/`: pure functions over readonly data, with
+ * no I/O (ADR 0003). `infrastructure/snapshots.ts` reads and writes the
+ * snapshots, the history route calls {@link computeMetaShifts} on them, and
+ * the panel's shift rows and the trends view render the result.
  *
  * `MetaCache` holds a single row per (commander, source) and overwrites it on
  * every refresh, so the previous distribution was destroyed the moment a newer
  * one arrived. `MetaSnapshot` retains one row per commander per day instead;
  * this module turns a series of them into a readable "what moved" report.
  *
- * **The list is truncated, and that governs the whole design.** EDHRec is read
- * through `collectMetaCardsFromEdhrecLists`, which stops at 20 cards. A card
+ * **The list is truncated, and that governs the whole design.** The EDHREC
+ * adapter (`infrastructure/edhrec.ts`) keeps the top 20 cards. A card
  * missing from a snapshot is therefore *not* a card at 0% inclusion — it is a
  * card below that snapshot's cut-off, at an inclusion nobody recorded. Reporting
  * it as a fall from 78% to zero would invent a collapse out of a ranking change.
@@ -17,6 +22,8 @@
  * list has no exclusion cut-off, so its missing-card bound is zero. The bound
  * is real arithmetic, not a guess, and it is what ranks
  * those variants against the exactly-measured ones.
+ *
+ * @module meta-insights/domain/history
  */
 
 import type { MetaCard } from "./types";
@@ -27,19 +34,15 @@ const STEADY_BAND = 0.01;
 /** Only a full top-20 list establishes an exclusion cut-off. */
 const META_TOP_LIMIT = 20;
 
+/** One day's EDHREC list for a commander, as `readSnapshotHistory` hands it over. */
 export interface MetaSnapshotInput {
   /** UTC midnight of the day the snapshot was captured. */
   readonly capturedOn: Date;
+  /** The list as recorded: at most the top 20, possibly fewer, never a card at 0 %. */
   readonly cards: readonly MetaCard[];
 }
 
-/**
- * One card's movement between two snapshots.
- *
- * `rose` / `fell` / `steady` carry an exact `delta`; the two variants where the
- * card is listed at only one end carry a bound instead, because the other end
- * was never recorded — see the module note on truncation.
- */
+/** The kinds of movement measured exactly, a card being listed at both ends. */
 export type MeasuredShiftKind = "rose" | "fell" | "steady";
 
 /**
@@ -59,6 +62,14 @@ type MeasuredShift<K extends MeasuredShiftKind> = K extends MeasuredShiftKind
     }
   : never;
 
+/**
+ * One card's movement between two snapshots.
+ *
+ * `rose`, `fell` and `steady` carry an exact `delta`; `entered` and `left`,
+ * where the card is listed at only one end, carry a bound instead, because
+ * the other end was never recorded (see the module note on truncation). A
+ * `steady` movement is within {@link STEADY_BAND} of zero.
+ */
 export type MetaShift =
   | MeasuredShift<MeasuredShiftKind>
   | {
@@ -76,8 +87,11 @@ export type MetaShift =
       readonly deltaAtMost: number;
     };
 
+/** What moved between the oldest usable snapshot of the window and the newest one. */
 export interface MetaShiftReport {
+  /** The baseline's day: the oldest non-empty snapshot inside the window. */
   readonly baselineCapturedOn: Date;
+  /** The newest snapshot's day. */
   readonly currentCapturedOn: Date;
   /** Whole days between the two snapshots compared. */
   readonly spanDays: number;
