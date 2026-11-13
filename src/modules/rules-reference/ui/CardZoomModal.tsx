@@ -22,6 +22,7 @@ import {
 import { resolveLocalizedText } from "@/lib/scryfall/localized";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 
+/** The zoomed card, the page it steps through, and what closing and the printings button do. */
 export interface CardZoomModalProps {
   /** The zoomed card; it must be one of `cards`. */
   readonly card: ScryfallCard;

@@ -13,12 +13,14 @@
  */
 import { parseRulesEffectiveDate } from "@/modules/rules-reference/domain/effective-date";
 
+/** One line of a chapter's body: a numbered rule, a subrule or an example. */
 export interface RuleParagraph {
   /** Rule reference like "100.1" or "100.1a"; null for example/plain lines. */
   readonly ref: string | null;
   readonly text: string;
 }
 
+/** A numbered chapter such as "903. Commander", the unit the browser renders. */
 export interface RulesChapter {
   /** Three-digit chapter number, e.g. "903". */
   readonly number: string;
@@ -26,6 +28,7 @@ export interface RulesChapter {
   readonly paragraphs: readonly RuleParagraph[];
 }
 
+/** One of the nine top-level sections, such as "9. Casual Variants", with its chapters. */
 export interface RulesSection {
   /** Single-digit section number, e.g. "9". */
   readonly number: string;
@@ -33,11 +36,13 @@ export interface RulesSection {
   readonly chapters: readonly RulesChapter[];
 }
 
+/** A glossary term and its definition, which may run over several lines. */
 export interface GlossaryEntry {
   readonly term: string;
   readonly definition: string;
 }
 
+/** One edition of the Comprehensive Rules, parsed: its date, its sections and its glossary. */
 export interface ComprehensiveRules {
   /**
    * Day the rules take effect (midnight UTC), parsed from the file's
@@ -182,6 +187,7 @@ export function parseComprehensiveRules(raw: string): ComprehensiveRules {
   };
 }
 
+/** One search hit: a rule paragraph with its chapter, or a glossary entry with no chapter. */
 export interface RulesSearchResult {
   readonly kind: "rule" | "glossary";
   readonly chapter: string | null;

@@ -62,6 +62,16 @@ function ChapterArticle({ chapter }: { readonly chapter: RulesChapter }) {
   );
 }
 
+/**
+ * The Comprehensive Rules browser: the effective date, the search form, the
+ * contents navigation and one chapter or the glossary.
+ *
+ * A Server Component: it renders on the server from the parsed `rules` and
+ * never ships the 1 MB document to the browser. An unknown `requestedChapter`
+ * falls back to the first chapter; a blank `requestedQuery` hides the results
+ * section. The effective date is formatted in UTC because the file states a
+ * calendar day, not an instant.
+ */
 export async function ComprehensiveRulesView({
   rules,
   requestedChapter,
