@@ -306,6 +306,24 @@ What the panel assumes:
 - **Your commander is not counted.** It waits in the command zone and is never drawn, so it neither fills a slot in your library nor helps you act on turn one.
 - **Hybrid one-drops count for both colours**, since either will cast them. That is why the colour rows can add up to more than 100% — they overlap on purpose.
 
+### Draw Odds
+
+This panel answers one question at a time: what is the chance of drawing **at least** some number of lands, or of copies of one card, by a given point of the game?
+
+- **Looking for** — your lands, or any one card in your library. Choosing a card asks for at least one copy; choosing lands asks for at least three. Change **At least** to ask for more or fewer.
+- **When** — your opening hand, or one of your first ten turns.
+
+Under the percentage, the panel lists the four numbers the figure comes from: the cards in your library, how many of them match, how many you have drawn, and the minimum you asked for. You can check the figure by hand from them.
+
+What the panel counts:
+
+- **Your library is your main deck.** Your commander and partner wait in the command zone, so a Commander library holds 99 cards, or 98 with a partner. Sideboard and Considering cards are never in it.
+- **Lands are the cards filed as lands**, the same count the Deck Checks panel shows. A chosen card counts every copy, across printings.
+- **One draw per turn.** In a Commander game nobody skips their first draw, so turn 3 means ten cards seen. In a two-player format the panel counts as the player who goes first, who skips the turn-1 draw, so turn 3 means nine. The panel says which rule it used.
+- **No mulligans, no extra draws.** The figure is an exact count of equally likely hands, not a simulated or recorded game, so the same deck always shows the same digits.
+
+When a question has no answer — an empty main deck, a blank minimum, or a turn that would draw more cards than your library holds — the panel says what is missing instead of showing 0%.
+
 ### Cards in Your Language
 
 When you open the printing selector, the app looks for printings of that card in your interface language and shows the name, type line and rules text as they are actually printed on the card.
