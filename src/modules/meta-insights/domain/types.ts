@@ -71,3 +71,13 @@ export interface EdhrecData {
 export interface TournamentData {
   readonly decks: readonly TournamentDeck[];
 }
+
+/**
+ * Which provider a meta answer comes from. The value is also the `source`
+ * column of `MetaCache` and the `?source=` query of `GET /api/meta/:slug`,
+ * so renaming one renames the stored rows and the public API.
+ */
+export type MetaSource = "edhrec" | "tournament";
+
+/** The two halves of the meta data, as one answer of the meta route carries one of them. */
+export type CommanderMetaData = EdhrecData | TournamentData;
