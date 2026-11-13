@@ -1,8 +1,20 @@
+/**
+ * The badge that names the kind of evidence behind a recommendation: popular
+ * (EDHREC), high-synergy, tournament, or AI.
+ *
+ * Meta-insights context, `ui/`. Presentational. The meta sections render it
+ * through `MetaSourceDisclosure`; the AI suggestions panel (ai-copilot
+ * context) imports it by path to badge its own suggestions `ai`, so the four
+ * kinds read the same across the builder page.
+ *
+ * @module meta-insights/ui/RecommendationProvenance
+ */
 import { useTranslations } from "next-intl";
 
 import type { MetaEvidenceKind } from "@/modules/meta-insights/domain/evidence-label";
 import { cn } from "@/components/ui/utils";
 
+/** One colour per kind, so a reader tells the kinds apart before reading the label. */
 const PROVENANCE_STYLES: Record<MetaEvidenceKind, string> = {
   popular: "border-sky-400/30 bg-sky-400/10 text-sky-300",
   synergy: "border-violet-400/30 bg-violet-400/10 text-violet-300",
@@ -11,10 +23,10 @@ const PROVENANCE_STYLES: Record<MetaEvidenceKind, string> = {
 };
 
 /**
- * Shows the origin category of a recommendation without implying equal evidence.
- *
- * @param props - Recommendation provenance selected by the recommendation source
- * @returns A concise, accessible provenance badge
+ * The badge for one evidence kind, labelled "Recommendation provenance: <kind>"
+ * for assistive technology. The kinds are not equally strong evidence, which
+ * is why the badge exists: a reader should see at a glance whether a card is
+ * recommended by inclusion counts, by a tournament result or by a model.
  */
 export function RecommendationProvenance({
   kind,

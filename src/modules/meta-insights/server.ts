@@ -15,10 +15,8 @@ import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
 import { makeGetCommanderMeta } from "@/modules/meta-insights/application/get-commander-meta";
-import {
-  fetchEdhrecData,
-  fetchTournamentData,
-} from "@/modules/meta-insights/infrastructure/fetch";
+import { fetchEdhrecData } from "@/modules/meta-insights/infrastructure/edhrec";
+import { fetchTournamentData } from "@/modules/meta-insights/infrastructure/mtgtop8-source";
 import { prismaMetaCacheRepository } from "@/modules/meta-insights/infrastructure/meta-cache-repository";
 import { metaProvider } from "@/modules/meta-insights/infrastructure/meta-provider";
 import {
@@ -28,6 +26,7 @@ import {
   recordEdhrecSnapshot,
 } from "@/modules/meta-insights/infrastructure/snapshots";
 
+/** The use case's query and result types, so the route maps outcomes without importing `application/`. */
 export type {
   CommanderMetaResult,
   GetCommanderMeta,
@@ -35,6 +34,11 @@ export type {
   MetaFetchFailure,
 } from "@/modules/meta-insights/application/get-commander-meta";
 
+/**
+ * The two adapters and the snapshot store, published as they are: the
+ * history route reads snapshots with the window constants, and a caller may
+ * ask one provider without the cache. `entry-points.test.ts` pins this list.
+ */
 export {
   DEFAULT_WINDOW_DAYS,
   fetchEdhrecData,

@@ -39,7 +39,7 @@ vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
 });
 
 import { GET } from "./route";
-import { __resetArchetypeCache } from "@/modules/meta-insights/infrastructure/fetch";
+import { __resetArchetypeCache } from "@/modules/meta-insights/infrastructure/mtgtop8-source";
 
 const SEARCH_URL = "https://www.mtgtop8.com/search";
 

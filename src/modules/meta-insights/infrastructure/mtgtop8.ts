@@ -25,6 +25,10 @@
 import { commanderToSlug } from "@/lib/meta/commander-slug";
 import type { TournamentDeck } from "@/modules/meta-insights/domain/types";
 
+/**
+ * The one URL both calls use: `GET` serves the search form with the archetype
+ * select, `POST` with the form body answers the search itself.
+ */
 export const MTGTOP8_SEARCH_URL = "https://www.mtgtop8.com/search";
 
 /** Decodes a response body MTGTop8 serves as ISO-8859-1. */
@@ -195,7 +199,9 @@ export function readCardFilterEcho(html: string): string | null {
   return cards === "" ? null : cards;
 }
 
+/** What decides the search: the archetype when MTGTop8 lists one, else the name for a card search. */
 export interface SearchBodyInput {
+  /** From {@link findArchetypeId}; null means "search decks containing the card". */
   readonly archetypeId: number | null;
   readonly commanderName: string;
 }
