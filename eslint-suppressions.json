@@ -1086,17 +1086,6 @@
       "count": 1
     }
   },
-  "src/components/playtest/PlaytestActionLog.tsx": {
-    "complexity": {
-      "count": 1
-    },
-    "max-lines": {
-      "count": 1
-    },
-    "max-lines-per-function": {
-      "count": 1
-    }
-  },
   "src/components/playtest/PlaytestComparisonPanel.tsx": {
     "max-lines-per-function": {
       "count": 1
