@@ -13,7 +13,7 @@
  * would remove this seam.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, screen, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { renderWithIntl } from "@/test/render-with-intl";
 import React from "react";
 import { MetaPanel } from "./MetaPanel";
@@ -210,8 +210,12 @@ describe("MetaPanel once expanded for a commander", () => {
       "/api/meta/atraxa-praetors-voice?source=tournament",
     ]);
     await screen.findByText("Sol Ring");
-    expect(requested()[2]).toBe(
-      "/api/meta/atraxa-praetors-voice/history?days=90"
+    // The history request leaves from an effect that runs after EDHREC's
+    // answer renders, so it can land a tick after the card appears.
+    await waitFor(() =>
+      expect(requested()[2]).toBe(
+        "/api/meta/atraxa-praetors-voice/history?days=90"
+      )
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Meta Analysis" }));
