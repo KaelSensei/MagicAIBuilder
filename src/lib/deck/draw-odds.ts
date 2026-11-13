@@ -7,7 +7,8 @@
  * the same question always gets the same answer.
  * Not responsible for: choosing the library size or the matching count from a
  * deck (commanders start in the command zone, CR 903.6, and Sideboard and
- * Considering cards are not in the library), or the panel that asks.
+ * Considering cards are not in the library; `countLibrary` in
+ * `draw-odds-library.ts` reads them), or the panel that asks.
  *
  * @module deck/draw-odds
  */
