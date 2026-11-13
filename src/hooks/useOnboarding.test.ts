@@ -25,6 +25,9 @@ import { useOnboarding } from "./useOnboarding";
 // ─── localStorage mock ────────────────────────────────────────────────────────
 const LS_KEY = "mab-onboarding-done";
 
+/** A page that needs an account, where the wizard may open unasked. */
+const ON_A_SIGNED_IN_PAGE = { mayOpenUnasked: true };
+
 const localStorageMock = (() => {
   let store: Record<string, string> = {};
   return {
@@ -123,12 +126,12 @@ describe("useOnboarding", () => {
       status: "loading",
       update: vi.fn(),
     });
-    const { result } = renderHook(() => useOnboarding());
+    const { result } = renderHook(() => useOnboarding(ON_A_SIGNED_IN_PAGE));
     expect(result.current.loading).toBe(true);
   });
 
   it("unauthenticated: showWizard when localStorage not done", async () => {
-    const { result } = renderHook(() => useOnboarding());
+    const { result } = renderHook(() => useOnboarding(ON_A_SIGNED_IN_PAGE));
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
     });
@@ -138,7 +141,7 @@ describe("useOnboarding", () => {
 
   it("unauthenticated: hide wizard when localStorage marks done", async () => {
     localStorage.setItem(LS_KEY, "true");
-    const { result } = renderHook(() => useOnboarding());
+    const { result } = renderHook(() => useOnboarding(ON_A_SIGNED_IN_PAGE));
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
     });
@@ -156,7 +159,7 @@ describe("useOnboarding", () => {
     });
     mockInitOnboardingDone.value = false;
 
-    const { result } = renderHook(() => useOnboarding());
+    const { result } = renderHook(() => useOnboarding(ON_A_SIGNED_IN_PAGE));
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
     });
@@ -171,7 +174,7 @@ describe("useOnboarding", () => {
     });
     mockInitOnboardingDone.value = true;
 
-    const { result } = renderHook(() => useOnboarding());
+    const { result } = renderHook(() => useOnboarding(ON_A_SIGNED_IN_PAGE));
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
     });
@@ -186,12 +189,12 @@ describe("useOnboarding", () => {
     });
     mockInitOnboardingDone.value = null;
 
-    const { result } = renderHook(() => useOnboarding());
+    const { result } = renderHook(() => useOnboarding(ON_A_SIGNED_IN_PAGE));
     expect(result.current.loading).toBe(true);
   });
 
   it("completeOnboarding unauthenticated sets localStorage", async () => {
-    const { result } = renderHook(() => useOnboarding());
+    const { result } = renderHook(() => useOnboarding(ON_A_SIGNED_IN_PAGE));
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
     });
@@ -213,7 +216,7 @@ describe("useOnboarding", () => {
       new Response(JSON.stringify({ onboardingDone: true }), { status: 200 })
     );
 
-    const { result } = renderHook(() => useOnboarding());
+    const { result } = renderHook(() => useOnboarding(ON_A_SIGNED_IN_PAGE));
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
     });
@@ -236,7 +239,7 @@ describe("useOnboarding", () => {
       new Response(JSON.stringify({ onboardingDone: true }), { status: 200 })
     );
 
-    const { result } = renderHook(() => useOnboarding());
+    const { result } = renderHook(() => useOnboarding(ON_A_SIGNED_IN_PAGE));
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
     });
@@ -251,7 +254,7 @@ describe("useOnboarding", () => {
 
   it("resetOnboarding unauthenticated clears localStorage", async () => {
     localStorage.setItem(LS_KEY, "true");
-    const { result } = renderHook(() => useOnboarding());
+    const { result } = renderHook(() => useOnboarding(ON_A_SIGNED_IN_PAGE));
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
     });

@@ -1,6 +1,5 @@
 import { test as setup, expect } from "@playwright/test";
 import { STORAGE_STATE } from "./storage-state";
-import { suppressOnboarding } from "./helpers";
 
 const ACCOUNT = {
   name: "Playwright Session",
@@ -32,9 +31,8 @@ setup("authenticate", async ({ page, request }) => {
     await created.text()
   ).toBe(true);
 
-  // The onboarding dialog mounts over every page for a first-time visitor and
-  // its backdrop swallows the click on the submit button.
-  await suppressOnboarding(page);
+  // The onboarding dialog never opens by itself on a sign-in page (I-39
+  // requirement 1.1), so nothing covers the submit button.
   await page.goto("/auth/signin");
   await page.fill("#email", ACCOUNT.email);
   await page.fill("#password", ACCOUNT.password);
@@ -43,11 +41,11 @@ setup("authenticate", async ({ page, request }) => {
   // The form redirects with `location.href`, so the URL change is the signal
   // that the credentials call came back without an error.
   await page.waitForURL(/\/decks$/);
-  // suppressOnboarding only covers the signed-OUT path: useOnboarding reads the
-  // localStorage flag for anonymous visitors and `user.onboardingDone` from the
-  // database for everyone else. So the wizard mounts for this account whatever
-  // localStorage says, and its backdrop swallows every click on the pages below.
-  // Marking it done through the app own route is the signed-in equivalent.
+  // Signed in, useOnboarding reads `user.onboardingDone` from the database, not
+  // the localStorage flag `suppressOnboarding` sets for anonymous visitors. So
+  // the wizard mounts for this new account on the pages below, and its backdrop
+  // swallows every click there. Marking it done through the app's own route is
+  // the signed-in equivalent of `suppressOnboarding`.
   const onboarded = await page.request.post("/api/user/onboarding");
   expect(onboarded.ok(), await onboarded.text()).toBe(true);
   await page.reload();
