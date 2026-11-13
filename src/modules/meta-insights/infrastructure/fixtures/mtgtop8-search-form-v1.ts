@@ -9,7 +9,7 @@
  * sibling selects the parser must ignore. The ids and spellings are the site's own; the line
  * breaks between options are the only edit.
  *
- * @module meta/fixtures/mtgtop8-search-form-v1
+ * @module meta-insights/infrastructure/fixtures/mtgtop8-search-form-v1
  */
 
 /** The search form, as text, after Latin-1 decoding. */

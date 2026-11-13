@@ -122,5 +122,109 @@
   {
     "from": "src/modules/rules-reference/infrastructure/comprehensive-search.test.ts",
     "to": "src/modules/rules-reference/domain/comprehensive-rules-search.test.ts"
+  },
+  {
+    "from": "src/lib/meta/types.ts",
+    "to": "src/modules/meta-insights/domain/types.ts"
+  },
+  {
+    "from": "src/lib/meta/evidence-label.ts",
+    "to": "src/modules/meta-insights/domain/evidence-label.ts"
+  },
+  {
+    "from": "src/lib/meta/history.ts",
+    "to": "src/modules/meta-insights/domain/history.ts"
+  },
+  {
+    "from": "src/lib/meta/history.test.ts",
+    "to": "src/modules/meta-insights/domain/history.test.ts"
+  },
+  {
+    "from": "src/lib/meta/fetch.ts",
+    "to": "src/modules/meta-insights/infrastructure/fetch.ts"
+  },
+  {
+    "from": "src/lib/meta/fetch.test.ts",
+    "to": "src/modules/meta-insights/infrastructure/fetch.test.ts"
+  },
+  {
+    "from": "src/lib/meta/fetch.replay.test.ts",
+    "to": "src/modules/meta-insights/infrastructure/fetch.replay.test.ts"
+  },
+  {
+    "from": "src/lib/meta/mtgtop8.ts",
+    "to": "src/modules/meta-insights/infrastructure/mtgtop8.ts"
+  },
+  {
+    "from": "src/lib/meta/mtgtop8.test.ts",
+    "to": "src/modules/meta-insights/infrastructure/mtgtop8.test.ts"
+  },
+  {
+    "from": "src/lib/meta/snapshots.ts",
+    "to": "src/modules/meta-insights/infrastructure/snapshots.ts"
+  },
+  {
+    "from": "src/lib/meta/snapshots.test.ts",
+    "to": "src/modules/meta-insights/infrastructure/snapshots.test.ts"
+  },
+  {
+    "from": "src/lib/meta/fixtures",
+    "to": "src/modules/meta-insights/infrastructure/fixtures"
+  },
+  {
+    "from": "src/hooks/useMetaAnalysis.ts",
+    "to": "src/modules/meta-insights/client/useMetaAnalysis.ts"
+  },
+  {
+    "from": "src/hooks/useMetaAnalysis.test.tsx",
+    "to": "src/modules/meta-insights/client/useMetaAnalysis.test.tsx"
+  },
+  {
+    "from": "src/hooks/useMetaShifts.ts",
+    "to": "src/modules/meta-insights/client/useMetaShifts.ts"
+  },
+  {
+    "from": "src/hooks/useMetaShifts.test.ts",
+    "to": "src/modules/meta-insights/client/useMetaShifts.test.ts"
+  },
+  {
+    "from": "src/components/deck/MetaPanel.tsx",
+    "to": "src/modules/meta-insights/ui/MetaPanel.tsx"
+  },
+  {
+    "from": "src/components/deck/MetaPanel.test.tsx",
+    "to": "src/modules/meta-insights/ui/MetaPanel.test.tsx"
+  },
+  {
+    "from": "src/components/deck/MetaTrendsView.tsx",
+    "to": "src/modules/meta-insights/ui/MetaTrendsView.tsx"
+  },
+  {
+    "from": "src/components/deck/MetaTrendsView.test.tsx",
+    "to": "src/modules/meta-insights/ui/MetaTrendsView.test.tsx"
+  },
+  {
+    "from": "src/components/deck/MetaSourceDisclosure.tsx",
+    "to": "src/modules/meta-insights/ui/MetaSourceDisclosure.tsx"
+  },
+  {
+    "from": "src/components/deck/MetaSourceDisclosure.test.tsx",
+    "to": "src/modules/meta-insights/ui/MetaSourceDisclosure.test.tsx"
+  },
+  {
+    "from": "src/components/deck/RecommendationProvenance.tsx",
+    "to": "src/modules/meta-insights/ui/RecommendationProvenance.tsx"
+  },
+  {
+    "from": "src/components/deck/RecommendationProvenance.test.tsx",
+    "to": "src/modules/meta-insights/ui/RecommendationProvenance.test.tsx"
+  },
+  {
+    "from": "src/components/deck/ExternalRecommendationFreshness.tsx",
+    "to": "src/modules/meta-insights/ui/ExternalRecommendationFreshness.tsx"
+  },
+  {
+    "from": "src/components/deck/ExternalRecommendationFreshness.test.tsx",
+    "to": "src/modules/meta-insights/ui/ExternalRecommendationFreshness.test.tsx"
   }
 ]

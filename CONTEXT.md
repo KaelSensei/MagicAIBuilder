@@ -220,15 +220,17 @@ The Commander Spellbook adapter; the pilot context. Context folder: `combos`. To
 
 ## Meta insights
 
-What the wider meta plays for a commander. Context folder: `meta-insights`. Today: `lib/meta/`.
+What the wider meta plays for a commander. Context folder: `modules/meta-insights/` (moved by MI-03;
+the series is open). The commander slug stays at `lib/meta/commander-slug.ts` until COM-02 moves it
+to the community context.
 
-| Term                | Meaning                                                                                                                                          | Source      | Code today                                                                                          |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ----------- | --------------------------------------------------------------------------------------------------- |
-| **Commander slug**  | The URL form of a commander's name, accents transliterated as EDHREC does, shared by meta data, commander pages and SEO.                         | EDHREC URLs | `commanderToSlug`, `isCommanderSlug` in `lib/meta/fetch.ts`                                         |
-| **Meta data**       | The cards EDHREC reports for a commander, with inclusion rates.                                                                                  | EDHREC      | `EdhrecData`, `MetaCard`, `fetchEdhrecData`                                                         |
-| **Tournament deck** | A decklist from a recorded MTGTop8 event.                                                                                                        | MTGTop8     | `TournamentDeck`, `fetchTournamentData`; `lib/meta/mtgtop8.ts`                                      |
-| **Meta snapshot**   | One day's EDHREC data for a commander, kept 365 days to show shifts.                                                                             | Product     | Prisma `MetaSnapshot`; `recordEdhrecSnapshot`, `SNAPSHOT_RETENTION_DAYS` in `lib/meta/snapshots.ts` |
-| **Meta shift**      | A change in a card's inclusion between snapshots. A card missing from a truncated list is below the cut-off, not at 0 %, so shifts carry bounds. | Product     | `MetaShift`, `computeMetaShifts` in `lib/meta/history.ts`                                           |
+| Term                | Meaning                                                                                                                                          | Source      | Code today                                                                                                                      |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ----------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| **Commander slug**  | The URL form of a commander's name, accents transliterated as EDHREC does, shared by meta data, commander pages and SEO.                         | EDHREC URLs | `commanderToSlug`, `isCommanderSlug` in `lib/meta/commander-slug.ts` (community context, COM-02)                                |
+| **Meta data**       | The cards EDHREC reports for a commander, with inclusion rates.                                                                                  | EDHREC      | `EdhrecData`, `MetaCard` in `modules/meta-insights/domain/types.ts`; `fetchEdhrecData` in `infrastructure/fetch.ts`             |
+| **Tournament deck** | A decklist from a recorded MTGTop8 event.                                                                                                        | MTGTop8     | `TournamentDeck`, `fetchTournamentData`; `modules/meta-insights/infrastructure/mtgtop8.ts`                                      |
+| **Meta snapshot**   | One day's EDHREC data for a commander, kept 365 days to show shifts.                                                                             | Product     | Prisma `MetaSnapshot`; `recordEdhrecSnapshot`, `SNAPSHOT_RETENTION_DAYS` in `modules/meta-insights/infrastructure/snapshots.ts` |
+| **Meta shift**      | A change in a card's inclusion between snapshots. A card missing from a truncated list is below the cut-off, not at 0 %, so shifts carry bounds. | Product     | `MetaShift`, `computeMetaShifts` in `modules/meta-insights/domain/history.ts`                                                   |
 
 ## Deck interchange
 
