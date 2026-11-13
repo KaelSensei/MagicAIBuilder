@@ -33,9 +33,9 @@ const config: {
 
 /**
  * The contexts whose series have closed: `combos` with CMB-08 (#1470),
- * `rules-reference` with RR-06.
+ * `rules-reference` with RR-06 (#1478), `meta-insights` with MI-07.
  */
-const CLOSED_CONTEXTS = ["combos", "rules-reference"] as const;
+const CLOSED_CONTEXTS = ["combos", "rules-reference", "meta-insights"] as const;
 
 /** The boundary rules every closed context runs at `error`. */
 const BOUNDARY_RULES = [
