@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import { chanceOfAtLeast } from "./draw-odds";
-import { countLibrary, type DrawOddsTarget } from "./draw-odds-library";
+import {
+  countLibrary,
+  libraryCardNames,
+  type DrawOddsTarget,
+} from "./draw-odds-library";
 import { OPENING_HAND_SIZE } from "./game-constants";
 import type { DeckCard } from "./types";
 import { aDeckCard } from "@/test/builders/card";
@@ -202,5 +206,27 @@ describe("countLibrary", () => {
       kind: "unknown",
       reason: "empty-library",
     });
+  });
+});
+
+describe("libraryCardNames", () => {
+  it("names each card in the library once, in alphabetical order, leaving out Sideboard and Considering cards", () => {
+    const deck = aDeck({
+      commander: COMMANDER,
+      cards: [
+        aDeckCard({ id: "sol-ring", name: "Sol Ring", category: "ramp" }),
+        forests(20),
+        forests(16, "forest-other-printing"),
+        aDeckCard({ id: "signet", name: "Arcane Signet", category: "ramp" }),
+        aDeckCard({ id: "side", name: "Pest Control", zone: "sideboard" }),
+        aDeckCard({ id: "maybe", name: "Craterhoof Behemoth", zone: "maybeboard" }),
+      ],
+    });
+
+    expect(libraryCardNames(deck)).toEqual([
+      "Arcane Signet",
+      "Forest",
+      "Sol Ring",
+    ]);
   });
 });
