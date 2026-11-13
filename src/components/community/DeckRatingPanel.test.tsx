@@ -103,6 +103,49 @@ describe("DeckRatingPanel", () => {
     });
   });
 
+  it("keeps the newer deck's aggregate when an older request resolves last", async () => {
+    interface StubResponse {
+      readonly ok: boolean;
+      readonly status: number;
+      readonly json: () => Promise<unknown>;
+    }
+    let resolveOlder: (value: StubResponse) => void = () => {};
+    const older = new Promise<StubResponse>((resolve) => {
+      resolveOlder = resolve;
+    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((url: string) => {
+        if (url.includes("deck-older")) return older;
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: async () => aggregate({ average: 4, count: 2 }),
+        });
+      })
+    );
+
+    const { rerender } = renderWithIntl(
+      <DeckRatingPanel deckId="deck-older" isOwner={false} isSignedIn={false} />
+    );
+    rerender(
+      <DeckRatingPanel deckId="deck-newer" isOwner={false} isSignedIn={false} />
+    );
+
+    expect(await screen.findByText(/2 ratings/i)).toBeInTheDocument();
+
+    await act(async () => {
+      resolveOlder({
+        ok: true,
+        status: 200,
+        json: async () => aggregate({ average: 1, count: 12 }),
+      });
+    });
+
+    expect(screen.getByText(/2 ratings/i)).toBeInTheDocument();
+    expect(screen.queryByText(/12 ratings/i)).not.toBeInTheDocument();
+  });
+
   it("tells the owner they cannot rate their own deck and hides the input", async () => {
     mockFetch(aggregate({ average: 4, count: 2 }));
     renderWithIntl(<DeckRatingPanel {...defaultProps} isOwner />);

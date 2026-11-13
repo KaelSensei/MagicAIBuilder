@@ -1,9 +1,10 @@
 "use client";
 // Community rating block on a public deck page: aggregate, star input, reviews.
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { useTranslations } from "next-intl";
 import { MessageSquare } from "lucide-react";
 import type { QualityBadge, RatingHistogram } from "@/lib/ratings/ratings";
+import { useRemoteResource } from "@/hooks/useRemoteResource";
 import { StarRating } from "./StarRating";
 import { RatingHistogramBars } from "./RatingHistogramBars";
 import { ReviewForm } from "./ReviewForm";
@@ -41,11 +42,9 @@ const BADGE_LABEL_KEYS: Record<NonNullable<QualityBadge>, string> = {
 export function DeckRatingPanel({ deckId, isOwner, isSignedIn }: DeckRatingPanelProps) {
   const t = useTranslations("deck.ratings");
   const tCommon = useTranslations("common");
-  const [data, setData] = useState<DeckRatingsResponse | null>(null);
+  /** `failed` reports a failed *write* under the stars; a failed read shows in `status`. */
   const [saving, setSaving] = useState(false);
   const [failed, setFailed] = useState(false);
-  /** Distinct from `failed`, which reports a failed *write* under the stars. */
-  const [loadFailed, setLoadFailed] = useState(false);
   const [writing, setWriting] = useState(false);
 
   const endpoint = `/api/community/decks/${encodeURIComponent(deckId)}/ratings`;
@@ -55,26 +54,18 @@ export function DeckRatingPanel({ deckId, isOwner, isSignedIn }: DeckRatingPanel
    * when `data` is set, so silently ignoring a non-OK response or a thrown
    * fetch left the panel showing its title and nothing else, forever — and a
    * failed read looked exactly like a deck with no ratings, with no way back.
+   * The hook keeps only the latest read: before it, a slow answer for the
+   * previous deck landed over the current deck's aggregate.
    */
-  const load = useCallback(async () => {
-    setLoadFailed(false);
-    try {
-      const res = await fetch(endpoint, {
-        signal: AbortSignal.timeout(RATINGS_LOAD_TIMEOUT_MS),
-      });
-      if (!res.ok) {
-        setLoadFailed(true);
-        return;
-      }
-      setData(await res.json());
-    } catch {
-      setLoadFailed(true);
-    }
+  const loadRatings = useCallback(async (): Promise<DeckRatingsResponse> => {
+    const res = await fetch(endpoint, {
+      signal: AbortSignal.timeout(RATINGS_LOAD_TIMEOUT_MS),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const body: DeckRatingsResponse = await res.json();
+    return body;
   }, [endpoint]);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
+  const { data, status, reload } = useRemoteResource(loadRatings);
 
   async function submit(body: { rating: number; title?: string; body?: string }) {
     setSaving(true);
@@ -87,7 +78,7 @@ export function DeckRatingPanel({ deckId, isOwner, isSignedIn }: DeckRatingPanel
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       setWriting(false);
-      await load();
+      await reload();
     } catch {
       setFailed(true);
     } finally {
@@ -101,7 +92,7 @@ export function DeckRatingPanel({ deckId, isOwner, isSignedIn }: DeckRatingPanel
     try {
       const res = await fetch(endpoint, { method: "DELETE" });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      await load();
+      await reload();
     } catch {
       setFailed(true);
     } finally {
@@ -124,12 +115,12 @@ export function DeckRatingPanel({ deckId, isOwner, isSignedIn }: DeckRatingPanel
         )}
       </header>
 
-      {loadFailed && !data && (
+      {status === "failed" && !data && (
         <div className="flex flex-wrap items-center gap-3">
           <p className="text-sm text-[var(--text-secondary)]">{t("loadFailed")}</p>
           <button
             type="button"
-            onClick={() => void load()}
+            onClick={() => void reload()}
             className="text-xs px-2 py-1 rounded border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent)] transition-colors"
           >
             {tCommon("error.retry")}
