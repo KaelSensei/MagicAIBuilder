@@ -1,10 +1,10 @@
 /**
  * The playtest session the modal shows: one Zustand store around the pure engine.
  *
- * Context: playtest. The store deals a deck into a game (one card per physical copy,
- * commanders in the command zone, CR 903.6), forwards each player action to its engine
- * transition, and keeps the setup so a reset deals the same deck again. It is separate from
- * the deck store, so a game never changes the saved deck.
+ * Context: playtest. The store deals a deck into a game through `deal.ts` (one card per
+ * physical copy, commanders in the command zone, CR 903.6), forwards each player action to its
+ * engine transition, and keeps the setup so a reset deals the same deck again. It is separate
+ * from the deck store, so a game never changes the saved deck.
  *
  * `createPlaytestStore` builds a store whose shuffles, die rolls and timestamps come from the
  * ports it is given; the app uses `usePlaytestStore`, built with the production ports. Copy and
@@ -14,15 +14,13 @@
  */
 
 import { create, type StoreApi, type UseBoundStore } from "zustand";
-import type { Deck, DeckCard } from "@/lib/deck/types";
-import { getFormatConfig } from "@/lib/deck/formats";
+import type { Deck } from "@/lib/deck/types";
 import { randomAlphanumericId } from "@/lib/crypto-random";
 import type { TokenLibraryEntry } from "@/lib/deck/token-library";
 import type { CardZone, PlaytestDeps, PlaytestEngine } from "./engine";
-import { isFirstMulliganFree, isMultiplayerByDefault } from "./free-mulligan";
+import { buildSetup, dealFrom, type PlaytestOptions, type PlaytestSetup } from "./deal";
 import {
   defaultPlaytestDeps,
-  createPlaytestState,
   applyDrawCard,
   applyNextPhase,
   applyNextTurn,
@@ -44,102 +42,8 @@ import {
   applyRemoveActionLogEntry,
 } from "./engine";
 
-/** The deck as dealt at the start, so a reset does not depend on live zones. */
-interface PlaytestSetup {
-  /** One entry per physical card the engine shuffles into the library. */
-  readonly cards: readonly DeckCard[];
-  /** Commanders, which start in the command zone instead (CR 903.6). */
-  readonly commandZone: readonly DeckCard[];
-  /** The format's starting life total at this session's table size. */
-  readonly startingLife: number;
-  /**
-   * Whether the table has more than two players: the player's answer, or the format's usual
-   * table when they gave none. Settled when the session starts, so a restart keeps it.
-   */
-  readonly multiplayer: boolean;
-  /** Settled when the session starts, so a restart keeps the player's choice. */
-  readonly firstMulliganFree: boolean;
-}
-
-/** What the player chooses before the opening hand is dealt. */
-export interface PlaytestOptions {
-  /**
-   * Whether the game has more than two players, which makes the first
-   * mulligan free (CR 103.5c), gives the starting player a draw on turn 1
-   * (CR 103.8c) and sets Brawl's life total (CR 903.12f). The app stores no
-   * pod size, so an unanswered question falls back on the format's usual
-   * table (`isMultiplayerByDefault`).
-   */
-  readonly multiplayer?: boolean;
-}
-
-/**
- * Turns a deck row into the physical cards it stands for.
- *
- * Zones find, tap and key cards by id, so every copy needs its own: the first
- * keeps the row's id and each further copy gets `<row id>#<copy number>`.
- *
- * @param card - a deck row holding `quantity` copies
- * @returns one single-copy card per physical copy
- */
-function physicalCopies(card: DeckCard): readonly DeckCard[] {
-  return Array.from({ length: card.quantity }, (_, index) => ({
-    ...card,
-    id: index === 0 ? card.id : `${card.id}#${index + 1}`,
-    quantity: 1,
-  }));
-}
-
-/**
- * Splits a deck into the library the engine shuffles and the command zone.
- *
- * `deck.cards` also holds the sideboard and the cards being considered; only
- * the main deck is dealt. A format without a command zone shuffles any
- * commander slot into the library, as it always has.
- *
- * @param deck - the deck being playtested
- * @param options - the player's choices for this session
- * @returns the library cards, the commanders and the session's starting rules
- */
-function buildSetup(deck: Deck, options: PlaytestOptions): PlaytestSetup {
-  const { hasCommander, startingLife: lifeByTable } = getFormatConfig(
-    deck.format
-  );
-  const multiplayer =
-    options.multiplayer ?? isMultiplayerByDefault(deck.format);
-  // CR 903.12f: Brawl starts at 25 in a two-player game and at 30 in a multiplayer one.
-  const startingLife = multiplayer
-    ? lifeByTable.multiplayer
-    : lifeByTable.twoPlayer;
-  const firstMulliganFree = isFirstMulliganFree(deck.format, multiplayer);
-  const rules = { startingLife, multiplayer, firstMulliganFree };
-  const commanders = [deck.commander, deck.partner].filter(
-    (card): card is DeckCard => card !== null
-  );
-  const mainDeck = deck.cards
-    .filter((card) => card.zone === "main")
-    .flatMap(physicalCopies);
-
-  return hasCommander
-    ? { cards: mainDeck, commandZone: commanders, ...rules }
-    : { cards: [...commanders, ...mainDeck], commandZone: [], ...rules };
-}
-
-/**
- * Deals a fresh game from the retained setup.
- *
- * @param setup - the deck and the format's starting rules
- * @param deps - the shuffle's random source
- * @returns a new engine with the format's life total, table size, mulligan rule and command zone
- */
-function dealFrom(setup: PlaytestSetup, deps: PlaytestDeps): PlaytestEngine {
-  return createPlaytestState(setup.cards, {
-    lifeTotal: setup.startingLife,
-    multiplayer: setup.multiplayer,
-    firstMulliganFree: setup.firstMulliganFree,
-    commandZone: setup.commandZone,
-  }, deps);
-}
+/** The modal's start screen types its choices with this; the type lives with the deal. */
+export type { PlaytestOptions } from "./deal";
 
 interface PlaytestStore {
   // State
