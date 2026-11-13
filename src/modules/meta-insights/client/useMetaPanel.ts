@@ -9,7 +9,8 @@
  * three models this returns; the rows and sections stay presentational.
  *
  * What it owns, as `MetaPanel` held it before MI-05:
- * - the open state, and the first read of both sources when the panel opens;
+ * - the open state, and the first read of both sources for each commander the
+ *   panel is open on (keyed by commander, so a change while open reads again);
  * - the history read, which waits for the EDHREC answer (see the effect);
  * - the "not in deck" filter over the popular cards;
  * - the movements shown: `steady` dropped, at most {@link MAX_SHIFTS_SHOWN};
@@ -179,9 +180,11 @@ function tournamentSection(analysis: MetaAnalysis): TournamentSectionModel {
 /**
  * State of the meta panel for one commander.
  *
- * Nothing is read until the panel is opened; then both sources are read once,
- * and again only through `refresh`, a section's `retry`, or the next opening
- * after the commander changed. `commanderName` null leaves every source empty.
+ * Nothing is read until the panel is opened; then both sources are read once
+ * per commander, and again only through `refresh`, a section's `retry`, or a
+ * commander the open panel has not read yet. A commander change while the
+ * panel is closed reads nothing until the next opening. `commanderName` null
+ * leaves every source empty.
  *
  * @param deckCardNames - the deck's card names, for the in-deck check and the "not in deck" filter
  */
@@ -191,39 +194,38 @@ export function useMetaPanel(
 ): MetaPanelState {
   const [expanded, setExpanded] = useState(false);
   const [showOnlyMissing, setShowOnlyMissing] = useState(false);
-  const fetched = useRef(false);
+  // The commander both sources were last read for. Keyed by name rather than
+  // a once-only flag, so a commander change is an ordinary dependency change
+  // and no reset effect has to run before this one (B2 fix, 2026-11-13).
+  const fetchedFor = useRef<string | null>(null);
   const analysis = useMetaAnalysis(commanderName);
   const shifts = useMetaShifts(commanderName);
   const { fetchAll } = analysis;
-  const { fetchShifts, reset: resetShifts } = shifts;
+  const { fetchShifts } = shifts;
 
-  // Auto-fetch when expanded for the first time
+  // Read both sources when the panel is open on a commander it has not read.
   useEffect(() => {
-    if (expanded && !fetched.current && commanderName) {
-      fetched.current = true;
-      fetchAll();
-    }
+    if (!expanded || !commanderName) return;
+    if (fetchedFor.current === commanderName) return;
+    fetchedFor.current = commanderName;
+    fetchAll();
   }, [expanded, commanderName, fetchAll]);
 
   // Read the history only once the EDHREC call has returned. That call is what
   // *writes* today's snapshot, so firing both together would race: on a
   // commander recorded once before, the read could land first and report no
-  // history on the very visit that completed it.
+  // history on the very visit that completed it. `analysis.edhrec` is the new
+  // commander's answer or null: `useMetaAnalysis` reads another commander's
+  // payload as absent, and `useMetaShifts` resets itself on a commander change.
   useEffect(() => {
     if (analysis.edhrec) void fetchShifts();
   }, [analysis.edhrec, fetchShifts]);
 
-  // Reset when commander changes
-  useEffect(() => {
-    fetched.current = false;
-    resetShifts();
-  }, [commanderName, resetShifts]);
-
   const toggleExpanded = useCallback(() => setExpanded((open) => !open), []);
   const refresh = useCallback(() => {
-    fetched.current = true;
+    fetchedFor.current = commanderName;
     fetchAll(true);
-  }, [fetchAll]);
+  }, [commanderName, fetchAll]);
 
   return {
     expanded,

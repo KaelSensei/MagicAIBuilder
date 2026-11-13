@@ -171,6 +171,66 @@ describe("useMetaAnalysis", () => {
     expect(result.current.isLoadingEdhrec).toBe(false);
   });
 
+  it("starts the new commander from nothing when the commander changes", async () => {
+    vi.mocked(globalThis.fetch).mockResolvedValueOnce(
+      new Response(JSON.stringify({ cards: [{ name: "Sol Ring" }] }), {
+        status: 200,
+      })
+    );
+    const { result, rerender } = renderHook(
+      ({ commander }: { commander: string }) => useMetaAnalysis(commander),
+      { initialProps: { commander: "Atraxa" } }
+    );
+    await act(async () => {
+      await result.current.fetchSource("edhrec");
+    });
+    expect(result.current.edhrec).toEqual({ cards: [{ name: "Sol Ring" }] });
+
+    rerender({ commander: "Kenrith" });
+
+    expect(result.current.edhrec).toBeNull();
+    expect(result.current.isLoadingEdhrec).toBe(false);
+    expect(result.current.errorEdhrec).toBeNull();
+    expect(result.current.sourceHealth.edhrec).toEqual({
+      status: "idle",
+      attempts: 0,
+    });
+  });
+
+  it("does not show the previous commander's late answer as the new commander's", async () => {
+    let resolveAtraxa: (value: Response) => void = () => {};
+    vi.mocked(globalThis.fetch).mockImplementationOnce(
+      () =>
+        new Promise<Response>((resolve) => {
+          resolveAtraxa = resolve;
+        })
+    );
+    const { result, rerender } = renderHook(
+      ({ commander }: { commander: string }) => useMetaAnalysis(commander),
+      { initialProps: { commander: "Atraxa" } }
+    );
+    let atraxaFetch: Promise<void> = Promise.resolve();
+    act(() => {
+      atraxaFetch = result.current.fetchSource("edhrec");
+    });
+    expect(result.current.isLoadingEdhrec).toBe(true);
+
+    rerender({ commander: "Kenrith" });
+    expect(result.current.isLoadingEdhrec).toBe(false);
+
+    await act(async () => {
+      resolveAtraxa(
+        new Response(JSON.stringify({ cards: [{ name: "Sol Ring" }] }), {
+          status: 200,
+        })
+      );
+      await atraxaFetch;
+    });
+
+    expect(result.current.edhrec).toBeNull();
+    expect(result.current.sourceHealth.edhrec.status).toBe("idle");
+  });
+
   it("records source health after a failed request", async () => {
     vi.mocked(globalThis.fetch).mockRejectedValueOnce(new Error("offline"));
     const { result } = renderHook(() => useMetaAnalysis("Atraxa"));
