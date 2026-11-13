@@ -111,12 +111,14 @@ it("tells a signed-in stranger who arrives after the owner that the deck is not 
 });
 
 it("reads the deck anew for every viewer and never through the data cache", async () => {
-  await ownershipShownTo(ANONYMOUS);
-  await ownershipShownTo(ANONYMOUS);
-  await ownershipShownTo(OWNER);
-
-  // Each signed-out run is one public read; the owner's is one owned read.
-  expect(mockDeckFindUnique).toHaveBeenCalledTimes(3);
+  // Each render must reach the database. How many queries one read costs is
+  // the visibility policy's business (COM-11), so only "at least one more per
+  // render" is pinned here.
+  for (const viewer of [ANONYMOUS, ANONYMOUS, OWNER]) {
+    const before = mockDeckFindUnique.mock.calls.length;
+    await ownershipShownTo(viewer);
+    expect(mockDeckFindUnique.mock.calls.length).toBeGreaterThan(before);
+  }
   expect(dataCache.wraps).toHaveLength(0);
   expect(dataCache.size).toBe(0);
 });
