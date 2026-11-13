@@ -19,7 +19,7 @@
  *
  * The site serves ISO-8859-1, not UTF-8 — see `decodeLatin1`.
  *
- * @module meta/mtgtop8
+ * @module meta-insights/infrastructure/mtgtop8
  */
 
 import { commanderToSlug } from "@/lib/meta/commander-slug";

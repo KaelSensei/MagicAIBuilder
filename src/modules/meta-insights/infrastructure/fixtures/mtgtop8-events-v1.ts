@@ -19,7 +19,7 @@
  * The two card-content searches (`cards=`), the fallback for a commander the form does not
  * list, are in `mtgtop8-card-search-v1.ts` with the form row the parser reads.
  *
- * @module meta/fixtures/mtgtop8-events-v1
+ * @module meta-insights/infrastructure/fixtures/mtgtop8-events-v1
  */
 
 import { latin1Bytes } from "./mtgtop8-search-form-v1";

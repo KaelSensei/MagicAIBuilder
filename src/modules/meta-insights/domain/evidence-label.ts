@@ -6,7 +6,7 @@
  * tournament source. The visible label is translated under
  * `deck.meta.evidence.<kind>` in every locale; it is not built here.
  *
- * @module meta/evidence-label
+ * @module meta-insights/domain/evidence-label
  */
 
 /**

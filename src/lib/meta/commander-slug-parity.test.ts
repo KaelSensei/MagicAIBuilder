@@ -4,7 +4,7 @@
  *
  * Community context. One slug, two implementations:
  *
- * - `commanderToSlug` (`src/lib/meta/fetch.ts`) builds the slug in JavaScript. The sitemap
+ * - `commanderToSlug` (`src/lib/meta/commander-slug.ts`) builds the slug in JavaScript. The sitemap
  *   (`src/app/sitemap.ts`) lists `/commanders/<slug>/decks` from it, and the EDHREC lookup uses it.
  * - The commander decks lookup (`src/lib/community/commander-decks-lookup.ts`, behind
  *   `GET /api/community/commanders/[slug]/decks` and the commander decks page) matches

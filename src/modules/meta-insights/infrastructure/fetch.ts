@@ -4,14 +4,18 @@
  * EDHRec  → popular cards for a commander (via unofficial JSON endpoint)
  * MTGTop8 → recent tournament decks for a commander (scraping)
  *
- * The shapes they return are declared in `./types`, so modules that only need
- * a type (the MTGTop8 parser, snapshots, history, the panel) do not import the
- * fetchers.
+ * The shapes they return are declared in `domain/types`, so modules that only
+ * need a type (the MTGTop8 parser, snapshots, history, the panel) do not import
+ * the fetchers.
  *
- * @module meta/fetch
+ * @module meta-insights/infrastructure/fetch
  */
 
-import type { EdhrecData, MetaCard, TournamentData } from "@/modules/meta-insights/domain/types";
+import type {
+  EdhrecData,
+  MetaCard,
+  TournamentData,
+} from "@/modules/meta-insights/domain/types";
 
 // ─── EDHRec ───────────────────────────────────────────────────────────────────
 

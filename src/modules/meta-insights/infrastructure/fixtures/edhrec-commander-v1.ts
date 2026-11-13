@@ -20,7 +20,7 @@
  * No card appears in two lists on the live page, so the de-duplication rule has no recorded
  * example; the replay test builds one from these views.
  *
- * @module meta/fixtures/edhrec-commander-v1
+ * @module meta-insights/infrastructure/fixtures/edhrec-commander-v1
  */
 
 /** The commander slug the page was recorded for, as the adapter puts it in the URL. */

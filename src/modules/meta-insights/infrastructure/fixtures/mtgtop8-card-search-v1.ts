@@ -26,7 +26,7 @@
  *   and the answer is the "15 decks matching" that contain the card, all on one page, so no pager
  *   (first 5 of 15 rows kept; the sixth carries a carriage return inside its deck name).
  *
- * @module meta/fixtures/mtgtop8-card-search-v1
+ * @module meta-insights/infrastructure/fixtures/mtgtop8-card-search-v1
  */
 
 import { latin1Bytes } from "./mtgtop8-search-form-v1";

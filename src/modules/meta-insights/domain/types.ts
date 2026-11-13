@@ -8,7 +8,7 @@
  * them through `useMetaAnalysis`. They live apart from the fetchers so the
  * MTGTop8 parser can type its output without importing the module that calls it.
  *
- * @module meta/types
+ * @module meta-insights/domain/types
  */
 
 /**
