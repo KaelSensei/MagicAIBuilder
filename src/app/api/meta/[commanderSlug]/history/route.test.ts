@@ -5,9 +5,9 @@ const { mockReadHistory, mockCheckRateLimit } = vi.hoisted(() => ({
   mockCheckRateLimit: vi.fn(),
 }));
 
-vi.mock(import("@/lib/meta/snapshots"), async () => {
-  const actual = await vi.importActual<typeof import("@/lib/meta/snapshots")>(
-    "@/lib/meta/snapshots"
+vi.mock(import("@/modules/meta-insights/infrastructure/snapshots"), async () => {
+  const actual = await vi.importActual<typeof import("@/modules/meta-insights/infrastructure/snapshots")>(
+    "@/modules/meta-insights/infrastructure/snapshots"
   );
   return { ...actual, readSnapshotHistory: mockReadHistory };
 });

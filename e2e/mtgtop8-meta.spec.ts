@@ -17,7 +17,7 @@ type TournamentDeck = {
  * panel silently showed "no tournament decks" — this contract test exists so
  * a markup change on their side fails loudly instead. Assertions are
  * structural: the parser is covered hermetically in
- * src/lib/meta/mtgtop8.test.ts.
+ * src/modules/meta-insights/infrastructure/mtgtop8.test.ts.
  *
  * The gate excludes @external by default; run deliberately with
  * PLAYWRIGHT_GREP_INVERT="".

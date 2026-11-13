@@ -11,12 +11,12 @@
 
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { computeMetaShifts } from "@/lib/meta/history";
+import { computeMetaShifts } from "@/modules/meta-insights";
 import {
   DEFAULT_WINDOW_DAYS,
   MAX_WINDOW_DAYS,
   readSnapshotHistory,
-} from "@/lib/meta/snapshots";
+} from "@/modules/meta-insights/server";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 import { rateLimitResponse, type RouteParams } from "@/lib/api/route-kit";

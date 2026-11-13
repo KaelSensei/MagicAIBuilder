@@ -32,12 +32,12 @@ vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
 });
 vi.mock(import("@/lib/auth/config"), () => ({ auth: mockAuth }));
 
-vi.mock(import("@/lib/meta/fetch"), () => ({
+vi.mock(import("@/modules/meta-insights/infrastructure/fetch"), () => ({
   fetchEdhrecData: mockFetchEdhrecData,
   fetchTournamentData: mockFetchTournamentData,
 }));
 
-vi.mock(import("@/lib/meta/snapshots"), () => ({
+vi.mock(import("@/modules/meta-insights/infrastructure/snapshots"), () => ({
   recordEdhrecSnapshot: mockRecordSnapshot,
 }));
 vi.mock(import("@/lib/rate-limit"), () => ({

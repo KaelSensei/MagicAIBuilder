@@ -3,8 +3,8 @@
 import { useEffect, useMemo } from "react";
 import { AlertCircle, Loader2, TrendingUp } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
-import { useMetaShifts } from "@/hooks/useMetaShifts";
-import { buildMetaTrendView, type MetaTrendViewRow } from "@/lib/meta/history";
+import { useMetaShifts } from "@/modules/meta-insights/client/useMetaShifts";
+import { buildMetaTrendView, type MetaTrendViewRow } from "@/modules/meta-insights/domain/history";
 
 const MAX_TRENDS_SHOWN = 5;
 

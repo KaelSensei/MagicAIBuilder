@@ -19,11 +19,11 @@
  *
  * The site serves ISO-8859-1, not UTF-8 — see `decodeLatin1`.
  *
- * @module meta/mtgtop8
+ * @module meta-insights/infrastructure/mtgtop8
  */
 
-import { commanderToSlug } from "./commander-slug";
-import type { TournamentDeck } from "./types";
+import { commanderToSlug } from "@/lib/meta/commander-slug";
+import type { TournamentDeck } from "@/modules/meta-insights/domain/types";
 
 export const MTGTOP8_SEARCH_URL = "https://www.mtgtop8.com/search";
 

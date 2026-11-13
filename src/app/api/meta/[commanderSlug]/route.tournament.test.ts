@@ -17,11 +17,11 @@ import {
   latin1Bytes,
   RECORDED_ARCHETYPE_IDS,
   searchFormLatin1Bytes,
-} from "@/lib/meta/fixtures/mtgtop8-search-form-v1";
+} from "@/modules/meta-insights/infrastructure/fixtures/mtgtop8-search-form-v1";
 import {
   RECORDED_UNKNOWN_CARD_NAME,
   unknownCardPageLatin1Bytes,
-} from "@/lib/meta/fixtures/mtgtop8-card-search-v1";
+} from "@/modules/meta-insights/infrastructure/fixtures/mtgtop8-card-search-v1";
 import { setupMsw } from "@/test/msw";
 
 const fake = vi.hoisted(() => ({
@@ -39,7 +39,7 @@ vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
 });
 
 import { GET } from "./route";
-import { __resetArchetypeCache } from "@/lib/meta/fetch";
+import { __resetArchetypeCache } from "@/modules/meta-insights/infrastructure/fetch";
 
 const SEARCH_URL = "https://www.mtgtop8.com/search";
 

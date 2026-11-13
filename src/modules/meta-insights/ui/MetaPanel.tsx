@@ -20,14 +20,14 @@ import {
   Sparkles,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useMetaAnalysis } from "@/hooks/useMetaAnalysis";
-import { useMetaShifts } from "@/hooks/useMetaShifts";
+import { useMetaAnalysis } from "@/modules/meta-insights/client/useMetaAnalysis";
+import { useMetaShifts } from "@/modules/meta-insights/client/useMetaShifts";
 import { cn } from "@/components/ui/utils";
 import { MetaSourceDisclosure } from "./MetaSourceDisclosure";
 import { Link } from "@/i18n/navigation";
-import { commanderToSlug } from "@/lib/meta/fetch";
-import type { MetaCard, TournamentDeck } from "@/lib/meta/types";
-import { shiftMagnitude, type MetaShift } from "@/lib/meta/history";
+import { commanderToSlug } from "@/lib/meta/commander-slug";
+import type { MetaCard, TournamentDeck } from "@/modules/meta-insights/domain/types";
+import { shiftMagnitude, type MetaShift } from "@/modules/meta-insights/domain/history";
 
 /** Movements shown in the panel; the report itself is not truncated. */
 const MAX_SHIFTS_SHOWN = 8;

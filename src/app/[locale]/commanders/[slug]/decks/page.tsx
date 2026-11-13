@@ -7,7 +7,7 @@ import { auth } from "@/lib/auth/config";
 import { findCommanderDecksForViewer } from "@/lib/community/commander-decks-lookup";
 import type { CommanderDecksResponse } from "@/lib/community/discovery-types";
 import { logger } from "@/lib/logger";
-import { isCommanderSlug } from "@/lib/meta/fetch";
+import { isCommanderSlug } from "@/lib/meta/commander-slug";
 import { alternatesFor } from "@/lib/seo/alternates";
 import { metadataTranslations } from "@/lib/seo/page-metadata";
 
