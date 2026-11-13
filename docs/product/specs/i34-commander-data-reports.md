@@ -679,6 +679,7 @@ Nothing in the roadmap entry was dropped. The section below is the initiative te
   - one reviewed caveat sentence per metric, shown with the number. 17lands' IWD "slightly emphasizes cards that are good in long games" ([SCG](https://articles.starcitygames.com/2021/03/25/using-17lands-com-as-a-resource-to-improve-at-limited/), 2021-03-25, search summary). Added 2026-11-11.
 - [ ] The corpus section profiles contributors (pod sizes, declared brackets, games per account), since opt-in loggers are not a random sample ([MTG Arena Zone](https://mtgazone.com/17lands-where-i-agree-disagree-and-what-data-you-should-be-taking-from-it/), 2021-10-12). Added 2026-11-11.
 - [ ] An anchor for [I-77](i77-a-bracket-estimate-players-can-audit.md)'s estimator accuracy, with its baseline: slice 3 reserves `bracket-estimate`, and I-77 slice 9 fills it with the report, its labelled sets, the baseline and the method change log. Added 2026-11-11.
+- [ ] Added 2026-11-12 (thirteenth pass): the methods page gains one row per heuristic class of [I-99](i99-a-pilot-sheet-and-how-heavy-this-deck-is-to-pilot.md) and [I-100](i100-cards-that-work-against-each-other.md) with its precision on the owner-labelled fixture, and the reports gain "pilot load by declared bracket" with n and a 95% interval, suppressed below the minimum sample (I-99 slices 9 and 10). No goal page of [I-101](i101-collecting-goals-beyond-a-set.md) is ever a page kind of the index policy.
 
 ### Engineering enablers
 

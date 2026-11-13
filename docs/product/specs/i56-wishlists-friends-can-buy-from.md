@@ -608,6 +608,7 @@ Players keep a list of cards they want, and around a birthday or the holidays a 
 - [ ] Later: received gifts into the collection, the gift-window notice in the plan, a store view with a QR code, and the seller handoff of a giver's reservations, with affiliate codes only after I-32 slice 6 and never on a list without the adult declaration (slices 5–8).
 - [ ] Later: I-44's want side reading the items open to trades, once the owner confirms the amendment (slice 9); the friends and profile audiences, precons and sealed products, reports, blocking and export, the keep mark, market prices, and any-printing items that follow I-57's exclusions (slices 10–17).
 - Moved 2026-11-10: wanted items in the price watch (slice 18) are now [I-59](i59-prices-over-time-and-alerts.md)'s alert rules, which take the wanted list as a scope.
+- [ ] Added 2026-11-12 (thirteenth pass): [I-101](i101-collecting-goals-beyond-a-set.md) slice 4 writes `WantedItem` rows with `source: goal` and the goal id through slice 2's preview, skipping what is already wanted; the blind gift reservations apply unchanged.
 
 ### Engineering enablers
 

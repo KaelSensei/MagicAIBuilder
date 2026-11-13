@@ -1,8 +1,8 @@
 # MTG Competitive Landscape
 
-> **Last updated:** 11 November 2026 (section 13; sections 1 to 12 unchanged except this header and the method line)
+> **Last updated:** 12 November 2026 (section 14; sections 1 to 13 unchanged except this header and the method line)
 > **Purpose:** Product strategy reference for MagicAIBuilder
-> **Method:** Public product pages, help pages and vendor changelogs reviewed on 8 November 2026 (Europe/Paris), plus the `dev` roadmap and README. This was not a signed-in test of every product. Vendor claims are not independent measurements. Reddit threads cited below are dated testimony, not a survey. **Not established** means not verified on the surfaces reviewed, not proven absent. A second pass on 9 November 2026 covered traffic, monetization, the marketplace path, editor depth, analytics, game tracking, AI economics and player demand; its findings and corrections are in [section 10](#10-additions-from-the-9-november-2026-pass). Traffic figures there are third-party modelled estimates. Reddit scores in that section come from the Arctic Shift archive, because Reddit refused automated reads. A third pass that evening, for the I-38 to I-46 specs, covered trust and user rights, store tools, Commander variants, storage, trading, selling, scanning and chat apps; its facts are in [section 11](#11-physical-card-tools-stores-and-trust-2026-11-09). A fourth pass, read on 10 and 11 November 2026, looked at deckbuilding in other card games and re-checked several Magic entries; its findings are in [section 12](#12-deckbuilding-across-card-games-2026-11-11), and its corrections are marked "Corrected 2026-11-11" or "Added 2026-11-11" where they apply. A further pass on 11 November 2026, the roadmap's twelfth, looked for Commander jobs that pass had not owned. It is [section 13](#13-a-twelfth-pass-on-commander-tools-2026-11-11).
+> **Method:** Public product pages, help pages and vendor changelogs reviewed on 8 November 2026 (Europe/Paris), plus the `dev` roadmap and README. This was not a signed-in test of every product. Vendor claims are not independent measurements. Reddit threads cited below are dated testimony, not a survey. **Not established** means not verified on the surfaces reviewed, not proven absent. A second pass on 9 November 2026 covered traffic, monetization, the marketplace path, editor depth, analytics, game tracking, AI economics and player demand; its findings and corrections are in [section 10](#10-additions-from-the-9-november-2026-pass). Traffic figures there are third-party modelled estimates. Reddit scores in that section come from the Arctic Shift archive, because Reddit refused automated reads. A third pass that evening, for the I-38 to I-46 specs, covered trust and user rights, store tools, Commander variants, storage, trading, selling, scanning and chat apps; its facts are in [section 11](#11-physical-card-tools-stores-and-trust-2026-11-09). A fourth pass, read on 10 and 11 November 2026, looked at deckbuilding in other card games and re-checked several Magic entries; its findings are in [section 12](#12-deckbuilding-across-card-games-2026-11-11), and its corrections are marked "Corrected 2026-11-11" or "Added 2026-11-11" where they apply. A further pass on 11 November 2026, the roadmap's twelfth, looked for Commander jobs that pass had not owned. It is [section 13](#13-a-twelfth-pass-on-commander-tools-2026-11-11). A pass on 12 November 2026, the roadmap's thirteenth, asked which jobs a player and a collector still do on paper: remembering what a deck asks at each step, finding the cards in a list that undo each other, and tracking a collecting goal that is not a set. It is [section 14](#14-a-thirteenth-pass-piloting-coherence-and-collecting-2026-11-12).
 
 The March 2026 edition of this document treated EDHREC's interface as dated, treated conversational Commander building as an empty market, and quoted approximate traffic, subscriber and premium prices. Those audience figures were not revalidated and are withdrawn. Prices below are the figures found on the cited page, in that page's currency, with no conversion.
 
@@ -549,6 +549,38 @@ The roadmap's twelfth pass adds I-80 through I-98. Seven are Next only in the se
 
 ---
 
+## 14. A thirteenth pass: piloting, coherence and collecting (2026-11-12)
+
+Read on 12 November 2026, after I-80 through I-98 were on `dev` (`db3d45fb`, #1404). The pass asked which jobs a player and a collector still do on paper: remembering what a deck asks at each step of the turn, finding the cards in a list that undo each other, and tracking a collecting goal that is not a set. It did not sign in to any site. Reddit posts are dated testimony; "search summary" marks a page known only from a search engine's summary.
+
+### What was checked
+
+- Wizards' two bracket pages. The beta announcement of 11 February 2025 says Exhibition games "are likely to go long and end slowly" and that "extra-turn spells take a ton of time away from other players"; the update of 21 October 2025 says "length of game is an important factor" and sets "at least nine turns" (Exhibition) down to "at least four" (Optimized) ([beta](https://magic.wizards.com/en/news/announcements/introducing-commander-brackets-beta), [update](https://magic.wizards.com/en/news/announcements/commander-brackets-beta-update-october-21-2025)). Game length is official language; no tool read measures what a deck asks of its pilot. That is [I-99](specs/i99-a-pilot-sheet-and-how-heavy-this-deck-is-to-pilot.md).
+- EDHREC's advice column of 9 September 2026 answers a letter about "a poorly piloted trigger-heavy deck that eats up 80% of time during a game" and suggests "a turn timer and setting a limit"; its column of 22 December 2025 lists the mechanics players fail to track ([big turn](https://edhrec.com/articles/am-i-the-bolas-big-turn-for-me-but-not-for-thee/), [tracking](https://edhrec.com/articles/the-top-5-most-annoying-cards-mechanics-to-track-in-commander)). A judge's per-set guide lists triggers that "upgrade to a Warning when missed" ([guide](https://blogs.magicjudges.org/rules/2026/03/08/magic-the-gathering-teenage-mutant-ninja-turtles-missed-triggers-guide/), 8 March 2026). r/EDH: a chess clock built after "an 11-hour cEDH match" (593 points, 28 May 2025) and a turn-timer PSA (530 points, 24 March 2025). I-99's sheet lists the triggers by step; the timer stays a non-goal.
+- The free Commander analysers. Rate My Decks (12 factors, "generated by deterministic heuristic rules, not AI"), ScryCheck (five vectors, "Every point is traceable") and EDHTuner (v0.250.0, 11 November 2026; goldfish speed and swaps) measure power and speed. None measures pilot load or flags a card that works against its owner ([Rate My Decks](https://ratemydecks.com/en), [ScryCheck](https://scrycheck.com/), [EDHTuner](https://edhtuner.com/)).
+- MTG EDH's "Card Synergies" page: "Flag anti-synergy where cards fight your commander, your packages, or your own win condition", with no method, rule, certainty or price shown ([page](https://mtgedh.com/card-synergies/)). EDHREC's Lift article of 15 December 2025 defines a score below 1 as cards that "co-occur less often than random", a statistic over other people's decks, not a rule ([article](https://edhrec.com/articles/from-synergy-to-lift-the-math-behind-edhrecs-new-era)). The deterministic version, with the count of the owner's own cards hit and a question rather than a verdict, is [I-100](specs/i100-cards-that-work-against-each-other.md). An Arctic Shift title search of r/EDH for "nonbo" timed out on every attempt, so I-100's player voice is low evidence.
+- ManaBox's Collector mode and import guide: completion by set and subsets, sorted by "Percentage of completion"; import columns for "Purchase price", "Purchase currency", "Misprint" and "Altered" ([collector mode](https://manabox.app/guides/collection/collector-mode/), [import](https://manabox.app/guides/collection/import-export/)). Pokémon trackers count "master sets" and PSA runs a ranked registry (search summaries). Two reprint counts for Lightning Bolt the same day, 38 "unique set printings" on one site and 71 by Scryfall's `unique:prints` ([most reprinted](https://casualplaneswalker.com/reprints/most-reprinted/)), show that a goal must state its counting rule. The goal that is not a set is [I-101](specs/i101-collecting-goals-beyond-a-set.md), Later behind a demand gate; the purchase price and the two flags are folded below.
+- Oracle phrasings counted on Scryfall, Commander-legal, 12 November 2026: "at the beginning of your upkeep" 845, "at the beginning of your end step" 466, "search your library" 877, "for each" 1,681, "each opponent" 996, "destroy all creatures" 99, "nonbasic land" 71, "don't cause abilities to trigger" 6. Each appears with its query in the spec that uses it.
+
+### Where the new initiatives sit
+
+The roadmap's thirteenth pass adds I-99 to I-101. I-99 and I-100 are Next after the numbered Next band, as the twelfth pass's seven Next items are, and both wait for I-65 slice 1's clause module; I-100 also waits for I-78 slice 1. I-101 is Later (2027) behind I-26's import, I-67's printing tables and a demand gate on the product's own collection counts. None is a timer, a score, a cut, a registry, a set gallery or a marketplace, and none is paid.
+
+### Folded back into an existing initiative
+
+| Finding                                                                                                                                                                                                                       | Where it went                                                                                  |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| A game's length in minutes, which Playgroup.gg logs and I-99 would later check its band against                                                                                                                                | I-35: `PodGame.durationMinutes?`, optional                                                      |
+| A purchase price and its currency per copy, which ManaBox exports and Mana Pool reads ([support](https://support.manapool.com/hc/en-us/articles/21894301054487))                                                              | I-06's row, read by I-26's ManaBox preset, I-45's seller files and I-59's value over time        |
+| Misprint and altered flags, which ManaBox exports                                                                                                                                                                             | I-89, beside the signed flag                                                                    |
+| A Cardmarket purchases file as a collection source: third-party tools read one ([mkmcsv](https://github.com/demogorgon1/mkmcsv), [Grimoria](https://grimoria.app/help/collection/purchase-checker)); Cardmarket's own help was not read | I-26's source register, to verify                                                               |
+| A printed decklist registration sheet, which Duel Commander organisers produce for events ([example](https://unityleague.gg/decklists/91701bb5-a8a1-4ed4-b0fb-02c8a47e429a/pdf), December 2025)                                 | I-50 as an export target, with I-42's variants                                                  |
+| A deck's standing rules (a budget cap, no infinite combos, a custom banlist) checked in the editor; Archidekt's board scores custom legality at 56 and custom banlists at 29 (read 2026-11-11, section 13)                       | I-53's rule types attached to one deck                                                          |
+| A collection overview beside the deck statistics, and decks ordered by last played from the game log                                                                                                                           | I-60                                                                                           |
+| Set completion on its own; a deck code; a pod's group order to one seller; a returning-player digest; a large-print text sheet                                                                                                 | Not promoted: ManaBox's job, or no source showed demand, or I-101 covers the collector's part    |
+
+---
+
 ## Sources
 
 Primary pages and announcements:
@@ -852,3 +884,56 @@ Section 12, community tools and official rules for other games:
 - Sorcery TCG news, Curiosa.io and the Codex, 5 December 2025: <https://sorcerytcg.com/news/gothic-descends-curiosa-io-updated-codex-refreshed-and-a-12-hour-livestream-awaits>
 - altered.gg digital services Q&A (search summary): <https://www.altered.gg/en-us/qa/qa-digital-services>
 - GamingTrend, Altered returns via print-on-demand, 12 September 2026: <https://gamingtrend.com/news/the-altered-tcg-returns-via-print-on-demand/>
+
+### Added 12 November 2026
+
+Read on 12 November 2026 unless another date is given. "Search summary" marks a page known only from a search engine's summary; "403" or "404" marks a page that refused or lacked an automated read.
+
+Section 14, piloting (I-99):
+
+- Wizards of the Coast, Introducing Commander Brackets Beta, 11 February 2025: <https://magic.wizards.com/en/news/announcements/introducing-commander-brackets-beta>
+- Wizards of the Coast, Commander Brackets Beta Update, 21 October 2025: <https://magic.wizards.com/en/news/announcements/commander-brackets-beta-update-october-21-2025>
+- EDHREC, Mike Carrozza, "Am I the Bolas? – Big Turn for Me, but Not for Thee", 9 September 2026: <https://edhrec.com/articles/am-i-the-bolas-big-turn-for-me-but-not-for-thee/>
+- EDHREC, Mike Carrozza, "Am I the Bolas? – Slowing Games Down", 1 October 2025: <https://edhrec.com/articles/am-i-the-bolas-slowing-games-down>
+- EDHREC, Cas Hinds, "The Top 5 Most Annoying Cards/Mechanics to Track in Commander", 22 December 2025: <https://edhrec.com/articles/the-top-5-most-annoying-cards-mechanics-to-track-in-commander>
+- Commander's Herald, Amanda Stevens, "Beyond Rule Zero: You're Not Going to Like Every Game of Commander", 16 January 2023: <https://commandersherald.com/beyond-rule-zero-youre-not-going-to-like-every-game-of-commander/>
+- Commander's Herald, Elliot Raff, "The Trouble With Triggers", 10 December 2022: <https://commandersherald.com/the-trouble-with-triggers/>
+- Magic Judges, Teenage Mutant Ninja Turtles Missed Triggers Guide, 8 March 2026: <https://blogs.magicjudges.org/rules/2026/03/08/magic-the-gathering-teenage-mutant-ninja-turtles-missed-triggers-guide/>
+- TappedOut forum, "Keeping track of the stack", 1 August 2020: <https://tappedout.net/mtg-forum/commander/keeping-track-of-the-stack>
+- BoardGameGeek wiki, Weight (search summary; 403): <https://boardgamegeek.com/wiki/page/weight>
+- Rate My Decks (© 2025): <https://ratemydecks.com/en>
+- ScryCheck (© 2026): <https://scrycheck.com/>
+- EDHTuner, v0.250.0, 11 November 2026: <https://edhtuner.com/>
+- r/EDH, chess clock after an 11-hour match, 28 May 2025 (593 points): <https://www.reddit.com/r/EDH/comments/1kxnwe4/>
+- r/EDH, lifetap turn timer PSA, 24 March 2025 (530 points): <https://www.reddit.com/r/EDH/comments/1jikepx/>
+- r/EDH, commanders that aren't too complex, 6 April 2025 (36 points, 98 comments): <https://www.reddit.com/r/EDH/comments/1jss7qe/>
+- r/EDH, steep learning curve and complexity, 4 August 2026 (48 comments): <https://www.reddit.com/r/EDH/comments/1vfcl01/>
+- r/EDH, rules for a turn timer, 2 January 2025 (69 comments): <https://www.reddit.com/r/EDH/comments/1hrt48t/>
+- r/EDH, precon complexity, 3 September 2026: <https://www.reddit.com/r/EDH/comments/1w69p38/>
+- Arctic Shift, the Reddit archive used for title searches (several searches timed out on 12 November 2026): <https://arctic-shift.photon-reddit.com/>
+
+Section 14, coherence (I-100):
+
+- MTG EDH, Card Synergies: <https://mtgedh.com/card-synergies/>
+- MTG EDH, home page (posts dated to 10 November 2026): <https://mtgedh.com/>
+- EDHREC, Julia Maddalena, "From Synergy to Lift: The Math Behind EDHREC's New Era of Recommendations", 15 December 2025: <https://edhrec.com/articles/from-synergy-to-lift-the-math-behind-edhrecs-new-era>
+- Decks of KeyForge, About SAS (read 11 November 2026 by the eleventh pass): <https://decksofkeyforge.com/about/sas>
+- EDHREC, "How Much Information Should Be Shared During Rule Zero", 11 June 2026 (cited by I-65): <https://edhrec.com/articles/how-much-information-should-be-shared-during-rule-zero>
+
+Section 14, collecting (I-101) and the folded findings:
+
+- ManaBox, Collector mode guide (undated): <https://manabox.app/guides/collection/collector-mode/>
+- ManaBox, Import and export the collection (undated): <https://manabox.app/guides/collection/import-export/>
+- Mana Pool support, ManaBox CSV import: <https://support.manapool.com/hc/en-us/articles/21894301054487>
+- EchoMTG blog, Pokémon set pages and CSV round-trips (search summary): <https://www.echomtg.com/blog/1086/pok-mon-set-pages-csv-round-trips-and-multi-game-color-filters/>
+- mkmcsv, a Cardmarket CSV tool (README): <https://github.com/demogorgon1/mkmcsv>
+- Grimoria, Purchase checker help: <https://grimoria.app/help/collection/purchase-checker>
+- Cardmarket news, "Changes to Exportable Sales Data", 25 July 2022: <https://news.cardmarket.com/en/Vanguard/Changes-To-Exportable-Order-Data>
+- Unity League, a National Duel Commander decklist PDF, December 2025: <https://unityleague.gg/decklists/91701bb5-a8a1-4ed4-b0fb-02c8a47e429a/pdf>
+- The Casual Planeswalker, Top 200 Most Reprinted MTG Cards (2026), read to about a third of its length: <https://casualplaneswalker.com/reprints/most-reprinted/>
+- mtg.wiki, Collector (search summary; 403): <https://mtg.wiki/page/Collector>
+- r/magicTCG, "This guy completed every single regularly printed…", 16 January 2025 (mirror): <https://www.reddit.com/r/magicTCG/comments/1i2ql3h/>
+- r/magicTCG comment of February 2026 on three versions per card (mirror snapshot, search summary): <https://reddit.sentinel-team.org/posts/1r270dt/snapshots/2026-02-11T22%3A51%3A55.624387Z>
+- TCG Collector (search summary): <https://tcgcollector.com/>
+- PSA/DNA Set Registry rules (search summary): <https://www.psacard.com/dnasetregistry/rules>
+- Scryfall API documentation (card search, sets), read with a named User-Agent: <https://scryfall.com/docs/api>

@@ -254,6 +254,7 @@ Wizards describes brackets as a pregame conversation: ask what bracket people ar
 - [ ] An authored sequence, in English and French: bracket, intent, combos, extra turns, mass land denial, proxies, and anything the pod wants to allow that the bracket would not. No model. No new sheet field.
 - [ ] Each answer writes the matching I-15 field. Skip leaves the field empty. The sheet's existing sentence, that it does not guarantee a balanced game, stays on screen.
 - [ ] One phone can collect four players. The sheet is still private until I-15's consent action.
+- [ ] Added 2026-11-12 (thirteenth pass): one authored question, "How long are your turns, usually?", with [I-99](i99-a-pilot-sheet-and-how-heavy-this-deck-is-to-pilot.md)'s pilot line as its hint, writing I-15's declared speed; the owner confirms the wording before it joins the list, and the script keeps "no question that is not in the authored list" (I-99 slice 7).
 
 ### Enrichment (2026-11-11)
 
