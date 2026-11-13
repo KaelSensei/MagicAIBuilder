@@ -6,7 +6,7 @@
 import { useCallback, useRef, useState } from "react";
 import { isNonEmptyString, isRecord } from "@/lib/guards";
 import { commanderToSlug } from "@/lib/meta/commander-slug";
-import type { EdhrecData, TournamentData } from "@/lib/meta/types";
+import type { EdhrecData, TournamentData } from "@/modules/meta-insights/domain/types";
 
 type MetaSource = "edhrec" | "tournament";
 

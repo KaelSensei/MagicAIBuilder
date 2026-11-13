@@ -11,7 +11,7 @@
  * @module meta/fetch
  */
 
-import type { EdhrecData, MetaCard, TournamentData } from "./types";
+import type { EdhrecData, MetaCard, TournamentData } from "@/modules/meta-insights/domain/types";
 
 // ─── EDHRec ───────────────────────────────────────────────────────────────────
 

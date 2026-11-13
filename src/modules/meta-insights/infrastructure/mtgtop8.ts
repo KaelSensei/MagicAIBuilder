@@ -22,8 +22,8 @@
  * @module meta/mtgtop8
  */
 
-import { commanderToSlug } from "./commander-slug";
-import type { TournamentDeck } from "./types";
+import { commanderToSlug } from "@/lib/meta/commander-slug";
+import type { TournamentDeck } from "@/modules/meta-insights/domain/types";
 
 export const MTGTOP8_SEARCH_URL = "https://www.mtgtop8.com/search";
 

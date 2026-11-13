@@ -9,7 +9,7 @@
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 import { commanderToSlug } from "@/lib/meta/commander-slug";
-import type { MetaShift } from "@/lib/meta/history";
+import type { MetaShift } from "@/modules/meta-insights/domain/history";
 
 /** The window the panel asks for; the API caps it at a year. */
 export const SHIFT_WINDOW_DAYS = 90;

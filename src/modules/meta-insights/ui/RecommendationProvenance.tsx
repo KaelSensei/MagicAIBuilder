@@ -1,6 +1,6 @@
 import { useTranslations } from "next-intl";
 
-import type { MetaEvidenceKind } from "@/lib/meta/evidence-label";
+import type { MetaEvidenceKind } from "@/modules/meta-insights/domain/evidence-label";
 import { cn } from "@/components/ui/utils";
 
 const PROVENANCE_STYLES: Record<MetaEvidenceKind, string> = {

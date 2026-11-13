@@ -12,8 +12,8 @@ import "server-only";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { logger } from "@/lib/logger";
-import type { EdhrecData } from "./types";
-import { toCaptureDay, type MetaSnapshotInput } from "./history";
+import type { EdhrecData } from "@/modules/meta-insights/domain/types";
+import { toCaptureDay, type MetaSnapshotInput } from "@/modules/meta-insights/domain/history";
 
 /** How far back the comparison may reach when the caller does not say. */
 export const DEFAULT_WINDOW_DAYS = 90;
