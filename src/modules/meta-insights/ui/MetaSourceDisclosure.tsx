@@ -1,7 +1,7 @@
 "use client";
 
 import { useFormatter, useTranslations } from "next-intl";
-import type { MetaEvidenceKind } from "@/lib/meta/evidence-label";
+import type { MetaEvidenceKind } from "@/modules/meta-insights/domain/evidence-label";
 import { RecommendationProvenance } from "./RecommendationProvenance";
 
 type MetaDisclosureSource = "edhrec" | "tournament";

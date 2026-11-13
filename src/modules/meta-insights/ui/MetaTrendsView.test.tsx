@@ -16,7 +16,7 @@ const metaShifts = vi.hoisted(() => ({
   },
 }));
 
-vi.mock("@/hooks/useMetaShifts", () => ({
+vi.mock("@/modules/meta-insights/client/useMetaShifts", () => ({
   useMetaShifts: () => ({
     report: metaShifts.report,
     isLoading: false,

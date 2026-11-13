@@ -2,10 +2,13 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { requireModerator } from "@/lib/auth/require-moderator";
-import { fetchEdhrecData, fetchTournamentData } from "@/lib/meta/fetch";
-import { recordEdhrecSnapshot } from "@/lib/meta/snapshots";
+import {
+  fetchEdhrecData,
+  fetchTournamentData,
+  recordEdhrecSnapshot,
+} from "@/modules/meta-insights/server";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
-import type { EdhrecData, TournamentData } from "@/lib/meta/types";
+import type { EdhrecData, TournamentData } from "@/modules/meta-insights";
 import { logger } from "@/lib/logger";
 import { toJsonPayload } from "@/lib/db/json-payload";
 import { rateLimitResponse, type RouteParams } from "@/lib/api/route-kit";

@@ -3,14 +3,14 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { renderWithIntl } from "@/test/render-with-intl";
 import React from "react";
 import { MetaPanel, TournamentDeckRow } from "./MetaPanel";
-import type { TournamentDeck } from "@/lib/meta/types";
+import type { TournamentDeck } from "@/modules/meta-insights/domain/types";
 
 const metaAnalysisMocks = vi.hoisted(() => ({
   fetchSource: vi.fn(),
   errorEdhrec: null as string | null,
 }));
 
-vi.mock(import("@/hooks/useMetaAnalysis"), () => ({
+vi.mock(import("@/modules/meta-insights/client/useMetaAnalysis"), () => ({
   useMetaAnalysis: () => ({
     edhrec: {
       cards: [{ name: "Sol Ring", inclusion: 0.8, sample: { decksWithCard: 80, eligibleDecks: 100 } }],
@@ -46,7 +46,7 @@ vi.mock(import("@/hooks/useMetaAnalysis"), () => ({
   }),
 }));
 
-vi.mock(import("@/hooks/useMetaShifts"), () => ({
+vi.mock(import("@/modules/meta-insights/client/useMetaShifts"), () => ({
   useMetaShifts: () => ({
     report: null,
     snapshotCount: 0,
