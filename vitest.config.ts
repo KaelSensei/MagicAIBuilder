@@ -13,8 +13,14 @@ export default defineConfig({
     exclude: ["e2e/**", "node_modules/**", ".next/**"],
     // next-auth imports "next/server" without an extension, which Node's ESM
     // loader cannot resolve outside a bundler. Inlining lets Vite resolve it,
-    // so a test can drive the real Auth.js route handlers.
-    server: { deps: { inline: ["next-auth"] } },
+    // so a test can drive the real Auth.js route handlers. next-intl's
+    // navigation files (`navigation.react-client.js` and `navigation/**`)
+    // import "next/navigation" and "next/link" the same way; inlining those
+    // files, and only those, lets a page test import a page whose view links
+    // through `@/i18n/navigation` without mocking that module.
+    server: {
+      deps: { inline: ["next-auth", /\/next-intl\/dist\/.*\/navigation[./]/] },
+    },
     /**
      * Coverage is measured over **all** of `src`, UI and route handlers
      * included. ADR 0010 (docs/adr/0010-coverage-scope-by-layer.md) records
