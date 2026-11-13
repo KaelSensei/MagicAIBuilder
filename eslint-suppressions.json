@@ -1686,14 +1686,6 @@
       "count": 1
     }
   },
-  "src/lib/playtest/engine/history.ts": {
-    "@typescript-eslint/max-params": {
-      "count": 1
-    },
-    "complexity": {
-      "count": 1
-    }
-  },
   "src/lib/playtest/engine/life.ts": {
     "@typescript-eslint/max-params": {
       "count": 1

@@ -24,12 +24,12 @@ import type { PlaytestEngine } from "./types";
  * `deckCards` holds one entry per physical library card. The commanders go in
  * `overrides.commandZone`, never in `deckCards`; they become `commanderIds`.
  *
- * @param deps - only `random` is read, for the shuffle
+ * @param deps - the random source for the shuffle; a full `PlaytestDeps` is accepted
  */
 export function createPlaytestState(
   deckCards: readonly DeckCard[],
   overrides: Partial<PlaytestEngine> = {},
-  deps: PlaytestDeps = defaultPlaytestDeps
+  deps: Pick<PlaytestDeps, "random"> = defaultPlaytestDeps
 ): PlaytestEngine {
   const shuffled = shuffleCards(deckCards, deps.random);
 

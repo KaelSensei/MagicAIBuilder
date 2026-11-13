@@ -33,7 +33,7 @@ export function applyAddActionLogEntry(
   if (isChoosingBottom(state)) return state;
   const normalized = description.trim();
   if (normalized === "") return state;
-  return pushHistory(state, deps.clock, {}, normalized);
+  return pushHistory(state, deps.clock, { patch: {}, description: normalized });
 }
 
 /**
@@ -51,9 +51,10 @@ export function applyRecordMana(
 ): PlaytestEngine {
   if (isChoosingBottom(state)) return state;
   if (!Number.isInteger(amount) || amount < 1 || amount > 100) return state;
-  return pushHistory(state, deps.clock, {}, `Produced ${amount} mana`, {
-    kind: "mana",
-    amount,
+  return pushHistory(state, deps.clock, {
+    patch: {},
+    description: `Produced ${amount} mana`,
+    evidence: { kind: "mana", amount },
   });
 }
 
@@ -78,17 +79,19 @@ export function applyEditActionLogEntry(
   const exists = state.actionLog.some((entry) => entry.id === entryId);
   if (!exists || normalized === "") return state;
   return pushHistory(state, deps.clock, {
-    actionLog: state.actionLog.map((entry) => {
-      if (entry.id !== entryId) return entry;
-      return {
-        ...entry,
-        description: normalized,
-        kind: undefined,
-        amount: undefined,
-        lifeDelta: undefined,
-        counterDelta: undefined,
-      };
-    }),
+    patch: {
+      actionLog: state.actionLog.map((entry) => {
+        if (entry.id !== entryId) return entry;
+        return {
+          ...entry,
+          description: normalized,
+          kind: undefined,
+          amount: undefined,
+          lifeDelta: undefined,
+          counterDelta: undefined,
+        };
+      }),
+    },
   });
 }
 
@@ -106,6 +109,8 @@ export function applyRemoveActionLogEntry(
   if (isChoosingBottom(state)) return state;
   if (!state.actionLog.some((entry) => entry.id === entryId)) return state;
   return pushHistory(state, deps.clock, {
-    actionLog: state.actionLog.filter((entry) => entry.id !== entryId),
+    patch: {
+      actionLog: state.actionLog.filter((entry) => entry.id !== entryId),
+    },
   });
 }
