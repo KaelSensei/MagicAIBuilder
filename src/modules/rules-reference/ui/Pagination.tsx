@@ -1,5 +1,15 @@
 "use client";
-// Generic pagination controls: Prev / Next + "Page X / Y" indicator
+/**
+ * Previous and next controls around a "Page X / Y" indicator, for a list the
+ * visitor pages through.
+ *
+ * Rules reference context, `ui/`. Generic: it knows the page numbers only, so
+ * `PagedCardList` passes it the pager state of `usePagedFilteredList`. Its
+ * labels come from the `common` namespace because the Pagination strings are
+ * shared with other paged views.
+ *
+ * @module rules-reference/ui/Pagination
+ */
 import type { ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -11,12 +21,20 @@ const PAGE_NUMBER_TAG = (chunks: ReactNode) => (
 );
 
 interface PaginationProps {
+  /** The page shown, from 1 to `totalPages`. */
   readonly currentPage: number;
   readonly totalPages: number;
+  /** Called with the neighbouring page number when the visitor presses a control. */
   readonly onPageChange: (page: number) => void;
   readonly className?: string;
 }
 
+/**
+ * The pager, or nothing when the list fits on one page.
+ *
+ * The control at either end is disabled rather than hidden, so the pager keeps
+ * its width and the visitor sees that the end is reached.
+ */
 export function Pagination({
   currentPage,
   totalPages,

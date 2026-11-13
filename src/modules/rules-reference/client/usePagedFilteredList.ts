@@ -33,6 +33,7 @@ import {
   useSearchParams,
 } from "next/navigation";
 
+/** What the hook needs from its caller: the list, how to search it, and its load state. */
 export interface PagedFilteredListOptions<T> {
   /** The full list; `[]` while it loads. */
   readonly items: readonly T[];
@@ -48,6 +49,7 @@ export interface PagedFilteredListOptions<T> {
   readonly isError: boolean;
 }
 
+/** The search and page state the hook holds, with the actions that change it. */
 export interface PagedFilteredList<T> {
   /** The search text as typed. */
   readonly search: string;
