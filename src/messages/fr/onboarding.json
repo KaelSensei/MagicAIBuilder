@@ -10,8 +10,8 @@
     },
     "createDeck": {
       "title": "Créez votre premier deck",
-      "description": "Cliquez sur « Nouveau Deck » dans le coin supérieur droit de n'importe quelle page. Donnez-lui un nom, choisissez votre format et définissez un bracket cible.",
-      "hint": "Vous pouvez aussi utiliser l'Assistant IA pour construire un deck complet en quelques secondes."
+      "description": "Cliquez sur « Nouveau deck » en haut à droite de la page, ou dans le menu sur un petit écran. Donnez-lui un nom, choisissez votre format et définissez un bracket cible.",
+      "hint": "Avec un compte, vous pouvez aussi cliquer sur « Construire avec l’IA » dans Mes Decks pour construire un deck complet à partir de zéro."
     },
     "searchCards": {
       "title": "Recherchez et ajoutez des cartes",

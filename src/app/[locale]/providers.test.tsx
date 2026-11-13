@@ -8,7 +8,9 @@
  * imports `next/navigation` without an extension, which Vitest cannot load
  * outside a bundler, so every component test uses the shared typed stub
  * (`src/test/i18n-navigation-stub.tsx`). Inlining next-intl in the Vitest
- * config would remove this seam.
+ * config would remove this seam. `next/navigation`'s `usePathname` gets the
+ * page address Next's app router would give it, since no router runs in jsdom;
+ * the onboarding provider reads it.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { waitFor } from "@testing-library/react";
@@ -23,6 +25,11 @@ vi.mock(
   import("@/i18n/navigation"),
   () => import("@/test/i18n-navigation-stub")
 );
+
+vi.mock(import("next/navigation"), async (importOriginal) => ({
+  ...(await importOriginal()),
+  usePathname: () => "/decks",
+}));
 
 const SOL_RING_ID = "scry-sol-ring";
 
