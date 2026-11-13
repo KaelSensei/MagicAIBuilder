@@ -255,6 +255,7 @@ Cardsphere's sample import file has a Conditions column ([sample](https://www.ca
 - [ ] On a collection copy: one of NM, LP, MP, HP, Damaged, or "not recorded". New copies are "not recorded".
 - [ ] Later, and off unless the player sets them: a signed flag, and a serialization note of at most 40 characters. Neither changes the price.
 - [ ] The grade is not sent to a public deck page. I-45's seller file may include it when that file exists.
+- [ ] Added 2026-11-12 (thirteenth pass): a misprint flag and an altered flag, off unless the player sets them, as ManaBox exports both ([guide](https://manabox.app/guides/collection/import-export/), read 2026-11-12); neither changes the price, and I-26's ManaBox preset fills them. A graded slab (company, grade, certificate) was considered and not added: no Magic source was read for it.
 
 ### Enrichment (2026-11-11)
 

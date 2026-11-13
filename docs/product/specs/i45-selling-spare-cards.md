@@ -590,6 +590,7 @@ Players own more copies than their decks use, and nothing in the product works i
 - [ ] Switch the spare count to I-16's commitment index once it ships (slice 10).
 - [ ] Paid candidates, each blocked on a decision: a buylist comparison against Card Kingdom's price list and a snapshot archive on a licensed feed (slices 11 and 13).
 - Moved 2026-11-10: value history (requirement 5.1, slice 12) is now [I-59](i59-prices-over-time-and-alerts.md)'s collection value over time, which proposes it free on Scryfall's daily prices, an owner decision in the status note. The snapshot archive (slice 13) stays here.
+- [ ] Added 2026-11-12 (thirteenth pass): when I-06 stores a purchase price per copy, the spare list and the seller files show it beside the listed price, labelled "paid", with no verb and no gain figure on any shared or public surface; the insurance report (5.2) carries it on its own line.
 
 ### Engineering enablers
 

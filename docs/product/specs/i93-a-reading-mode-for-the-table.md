@@ -253,6 +253,7 @@ EDHREC's 6 November 2026 changelog put card names over images on mobile "so they
 - [ ] One card, the command zone included, with next and previous on screen and on the keyboard. No drag, no hover preview, no add button.
 - [ ] No life total, no commander-damage tally and no timer. Those stay out.
 - [ ] English and French chrome. Card text follows the printing's language when I-37 slice 12 has stored it, and the oracle text until then.
+- [ ] Added 2026-11-12 (thirteenth pass): a "What to remember" tab that shows [I-99](i99-a-pilot-sheet-and-how-heavy-this-deck-is-to-pilot.md)'s timing blocks for the same card sequence, read-only and in the same large type, with no life total (I-99 slice 13).
 
 ### Enrichment (2026-11-11)
 

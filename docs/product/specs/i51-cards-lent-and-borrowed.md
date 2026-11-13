@@ -600,6 +600,7 @@ Commander players lend cards and whole decks to the people they play with. They 
 - [ ] Loans in the full export, and lent copies excluded from I-16's free cards, I-43's pull lists, I-44's have lists and I-45's spare copies (slices 12–16).
 - [ ] After I-63's email (slice 9) and I-30's decision: e-mail reminders, and the borrow plan in I-43's game-night planner (slices 17–18).
   - Reminders reach players through [I-63](i63-one-notification-system.md)'s "Loans" category, off by default. I-63 proposes that email delivery is never paid, against this spec's paid hypothesis for e-mail reminders; I-30 decides (status note).
+- [ ] Added 2026-11-12 (thirteenth pass): the household view counts an [I-101](i101-collecting-goals-beyond-a-set.md) goal across household copies and names each copy's owner, under this initiative's rule that a household never shows a purchase price (I-101 slice 10).
 
 ### Engineering enablers
 

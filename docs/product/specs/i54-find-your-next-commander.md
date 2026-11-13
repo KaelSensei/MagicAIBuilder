@@ -610,6 +610,7 @@ Nothing in the roadmap entry was dropped. The section below is the initiative te
 - [ ] Later: a full-deck cost estimate and a bracket distribution from public decks, with n and date (slice 8); curated pages under I-34's policy, `noindex` until deck signals pass its thresholds (slice 11); collection-aware ranking (slice 12); similarity and popularity bands with their denominators (slice 13); and the French review (slice 16).
 - [ ] After I-30's decision: a paid entitlement for slice 12 (slice 14).
 - [ ] A filter "can include card X": colour identity contains X's, X is legal, and X's Game Changer status fits the chosen bracket. Pokémon TCG Pocket builds theme decks around a "highlight card" ([Serebii](https://serebii.net/tcgpocket/themedecks.shtml), seen 2026-11-10). Added 2026-11-11.
+- [ ] Added 2026-11-12 (thirteenth pass): slice 4's complexity formula becomes one `cardComplexity(card)` in the shared deck-analysis module, read here for the commander and by [I-99](i99-a-pilot-sheet-and-how-heavy-this-deck-is-to-pilot.md) slice 8 for every card of a deck; the formula, its factors and its owner-labelled fixture stay this initiative's.
 
 ### Engineering enablers
 

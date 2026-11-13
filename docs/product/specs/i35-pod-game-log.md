@@ -122,7 +122,7 @@ Verified on `dev` (commit `49983a9`) on 2026-11-09:
 ## Data model / API
 
 ```
-PodGame          id, loggedById, podId?, playedOn (date), playerCount (2–6), endedOnTurn?, endedBy?, isDraw,
+PodGame          id, loggedById, podId?, playedOn (date), playerCount (2–6), endedOnTurn?, durationMinutes? (added 2026-11-12), endedBy?, isDraw,
                  agreedBracket?, frozenSheets Json?, notes?, funRating?, createdAt, updatedAt
 PodGameSeat      id, gameId, seat (1 = went first), kind (self | linked | label), userId?, confirmedAt?,
                  deckId?, snapshotId?, commanderScryfallIds[], won, mulligans?,
@@ -600,6 +600,7 @@ Casual results are already tracked at scale by life-counter apps. [Playgroup.gg]
 - [ ] Opt-in contribution and a weekly aggregate job that publishes a cell only at 40 games from 10 accounts and 5 pods, none supplying more than a third (slices 8–9).
 - [ ] Optional elimination order per seat, with the turn when known, so a log shows placements as well as the winner. Flesh and Blood's Ultimate Pit Fight "may also track the order in which players lost" ([TRP §9](https://rules.fabtcg.com/en/trp/09-special-formats/), seen 2026-11-10). Added 2026-11-11.
 - [ ] On slice 7: after about twenty logged games of one deck version, the owner privately sees whether it plays above or below its declared bracket, with the interval. It is never shared unless the owner shares it, and never ranks a player. A deck's own record predicts its later games "roughly 15-20 times better" than its declared bracket ([Playgroup](https://playgroup.gg/commander/power-level), updated 2026-11-10). Added 2026-11-11.
+- [ ] Added 2026-11-12 (thirteenth pass): `PodGame.durationMinutes?`, an optional whole number the logger may type after the game, as Playgroup.gg's log records a length [1]. Nothing reads it until [I-99](i99-a-pilot-sheet-and-how-heavy-this-deck-is-to-pilot.md) slice 11 reports the association between a deck's pilot load and the length of its logged games, with n and an interval and no causal claim. It is typed after the game, never timed by the product.
 
 ### Engineering enablers
 

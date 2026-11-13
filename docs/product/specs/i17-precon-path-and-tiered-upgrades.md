@@ -573,6 +573,7 @@ EDHREC precon upgrades, DeckCheck and Farseek are the references. Generic budget
 
 - [ ] "This precon would cost you X": the singles value of the cards the player lacks, set against the sealed price once I-32 has one (extends slice 8). Arena prices a Brawl precon down by the cards owned ([Draftsim](https://draftsim.com/mtg-arena-brawl-precon/), updated 2025-05-19, search summary). Added 2026-11-11.
 - [ ] Open a catalogue precon in the playtest, signed out, before "Copy this deck" (slice 2 with I-07). Hearthstone lends six decks for seven days, then the player keeps one ([32.2](https://hearthstone.blizzard.com/en-us/news/24198086), 2025-04-24). Added 2026-11-11.
+- [ ] Added 2026-11-12 (thirteenth pass): the catalogue serves [I-101](i101-collecting-goals-beyond-a-set.md)'s product goal, "one of each Commander precon", through I-67 slice 13's set files (I-101 slice 11); nothing changes in the catalogue itself.
 
 **Twelfth pass, 2026-11-11:** Archidekt's board has "Deck import defaults to editions owned" at 217 points, seen that day. That job is [I-57](i57-printing-preferences-everywhere.md) and I-06, not a second precon path.
 
