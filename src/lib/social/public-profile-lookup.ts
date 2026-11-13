@@ -4,7 +4,9 @@
  * The account's public fields and public decks come through
  * {@link PUBLIC_PROFILE_SELECT}, an allowlist; the community stats (follow
  * counts, the viewer's own follow, the player badges) are computed beside
- * them. `isFollowing` is the one viewer-relative field, so a signed-in
+ * them. This module only gathers the counts: the badge thresholds and the
+ * trending rule are the pure functions of `@/lib/social/player-badges`.
+ * `isFollowing` is the one viewer-relative field, so a signed-in
  * viewer's read is never cached, while a signed-out visitor's read may be
  * served from Next's data cache for {@link ANONYMOUS_READ_REVALIDATE_SECONDS}.
  *
@@ -20,21 +22,13 @@ import type { Prisma } from "@prisma/client";
 import { unstable_cache } from "next/cache";
 import { ANONYMOUS_READ_REVALIDATE_SECONDS } from "@/lib/community/anonymous-read-cache";
 import { prisma } from "@/lib/db/prisma";
-import { toDeckRating, type DeckRatingRow } from "@/lib/ratings/mappers";
 import { calculateAverageRating } from "@/lib/ratings/ratings";
-import { getPlayerBadges, type PlayerBadge } from "@/lib/social/follow";
+import {
+  countTrendingDecks,
+  getPlayerBadges,
+  type PlayerBadge,
+} from "@/lib/social/player-badges";
 import type { PublicProfile } from "@/lib/social/public-profile";
-
-/** A deck is trending once it has drawn this many ratings recently. */
-const TRENDING_MIN_RATINGS = 3;
-const TRENDING_WINDOW_DAYS = 30;
-const MS_PER_DAY = 24 * 60 * 60 * 1000;
-
-/** Rating fields needed for badge scoring; no review text. */
-type ScoringRow = Pick<
-  DeckRatingRow,
-  "id" | "userId" | "deckId" | "rating" | "createdAt"
->;
 
 /**
  * The account columns and public decks a visitor may read. Never the email or
@@ -99,30 +93,12 @@ interface CommunityStats {
 }
 
 /**
- * Counts how many of a player's decks are currently trending: at least
- * {@link TRENDING_MIN_RATINGS} ratings in the last {@link TRENDING_WINDOW_DAYS}.
- */
-function countTrendingDecks(rows: readonly ScoringRow[], now: number): number {
-  const cutoff = now - TRENDING_WINDOW_DAYS * MS_PER_DAY;
-  const recentByDeck = new Map<string, number>();
-
-  for (const row of rows) {
-    if (row.createdAt.getTime() < cutoff) continue;
-    recentByDeck.set(row.deckId, (recentByDeck.get(row.deckId) ?? 0) + 1);
-  }
-
-  let trending = 0;
-  for (const count of recentByDeck.values()) {
-    if (count >= TRENDING_MIN_RATINGS) trending += 1;
-  }
-  return trending;
-}
-
-/**
  * Follow counts, the viewer's follow state and the earned badges.
  *
  * The owner is never reported as following themselves, and the follow row is
- * not even looked up for them or for a signed-out viewer.
+ * not even looked up for them or for a signed-out viewer. The rating rows are
+ * read without their review text: the badge rules need the star, the deck
+ * and the date, and that selection already is a `DeckRating`.
  */
 async function loadCommunityStats(
   userId: string,
@@ -166,11 +142,7 @@ async function loadCommunityStats(
     isFollowing: viewerFollow !== null,
     badges: getPlayerBadges({
       publicDeckCount: deckIds.length,
-      averageRating: calculateAverageRating(
-        ratingRows.map((row) =>
-          toDeckRating({ ...row, title: null, body: null, helpfulCount: 0 })
-        )
-      ),
+      averageRating: calculateAverageRating(ratingRows),
       trendingDecksCount: countTrendingDecks(ratingRows, Date.now()),
     }),
   };
