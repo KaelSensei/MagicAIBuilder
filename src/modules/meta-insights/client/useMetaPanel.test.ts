@@ -157,6 +157,42 @@ describe("useMetaPanel", () => {
     expect(requested()).toHaveLength(3);
   });
 
+  it("reads the new commander's sources, then its history, when the commander changes while open", async () => {
+    const requested = stubMetaApi(ALL_SOURCES);
+    const deckCardNames = new Set<string>();
+    const initialProps: { readonly commander: string | null } = {
+      commander: "Atraxa, Praetors' Voice",
+    };
+    const { result, rerender } = renderHook(
+      ({ commander }: typeof initialProps) =>
+        useMetaPanel(commander, deckCardNames),
+      { initialProps }
+    );
+    act(() => result.current.toggleExpanded());
+    await waitFor(() => expect(result.current.shifts.report).not.toBeNull());
+
+    rerender({ commander: "Kenrith, the Returned King" });
+
+    expect(result.current.expanded).toBe(true);
+    expect(result.current.isFetching).toBe(true);
+    expect(result.current.edhrec.cards).toEqual([]);
+    expect(result.current.tournament.decks).toEqual([]);
+    expect(result.current.shifts.report).toBeNull();
+    expect(requested().slice(3)).toEqual([
+      "/api/meta/kenrith-the-returned-king?source=edhrec",
+      "/api/meta/kenrith-the-returned-king?source=tournament",
+    ]);
+
+    await waitFor(() => expect(result.current.shifts.report).not.toBeNull());
+    expect(requested().slice(5)).toEqual([
+      "/api/meta/kenrith-the-returned-king/history?days=90",
+    ]);
+
+    rerender({ commander: null });
+    expect(result.current.edhrec.cards).toEqual([]);
+    expect(requested()).toHaveLength(6);
+  });
+
   it("does not read for a deck without a commander", () => {
     const requested = stubMetaApi(ALL_SOURCES);
     const { result } = renderPanel(null);

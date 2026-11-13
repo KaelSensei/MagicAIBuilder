@@ -279,12 +279,19 @@ describe("MetaPanel once expanded for a commander", () => {
     ]);
   });
 
-  it("currently keeps the previous commander's cards when the commander changes while open, and refetches only once re-expanded (pinned; see the MI-05 follow-up)", async () => {
-    const requested = stubMetaApi(ALL_SOURCES);
-    const { rerender } = renderPanel();
+  it("follows a commander change while open: reads the new commander's sources once, shows nothing of the previous one meanwhile, and asks its history after EDHREC answers", async () => {
+    stubMetaApi(ALL_SOURCES);
+    const { container, rerender } = renderPanel();
     expand();
     await screen.findByText("vs 7/25/2026");
 
+    // The new commander's answers: EDHREC lists another card, the tournament
+    // source never answers, so its section must stay in its loading state.
+    const requested = stubMetaApi({
+      edhrec: { body: { cards: [{ name: "Kenrith's Transformation" }] } },
+      tournament: NEVER,
+      history: NO_HISTORY,
+    });
     rerender(
       <MetaPanel
         commanderName="Kenrith, the Returned King"
@@ -293,25 +300,78 @@ describe("MetaPanel once expanded for a commander", () => {
       />
     );
 
-    // The history is asked for the new commander, then discarded by the reset
-    // that follows it; the sources are not asked again, so the old cards stay.
-    expect(requested().slice(3)).toEqual([
-      "/api/meta/kenrith-the-returned-king/history?days=90",
+    expect(requested()).toEqual([
+      "/api/meta/kenrith-the-returned-king?source=edhrec",
+      "/api/meta/kenrith-the-returned-king?source=tournament",
     ]);
-    expect(screen.getAllByText("Sol Ring").length).toBeGreaterThan(0);
-    expect(await screen.findByText(/^No history yet/)).toBeInTheDocument();
+    expect(screen.queryByText("Sol Ring")).not.toBeInTheDocument();
+    expect(screen.queryByText("Atraxa spring list")).not.toBeInTheDocument();
+    expect(screen.queryByText("vs 7/25/2026")).not.toBeInTheDocument();
+    // Both sources load again: the same skeletons as a first opening.
+    expect(container.querySelectorAll(".animate-pulse")).toHaveLength(7);
 
+    await screen.findByText("Kenrith's Transformation");
+    await waitFor(() =>
+      expect(requested()[2]).toBe(
+        "/api/meta/kenrith-the-returned-king/history?days=90"
+      )
+    );
+    expect(await screen.findByText(/^No history yet/)).toBeInTheDocument();
+    expect(requested()).toHaveLength(3);
+    expect(screen.queryByText("Sol Ring")).not.toBeInTheDocument();
+    expect(screen.queryByText("Atraxa spring list")).not.toBeInTheDocument();
+  });
+
+  it("requests nothing for a commander change while closed, and reads the new commander on the next opening", async () => {
+    const requested = stubMetaApi(ALL_SOURCES);
+    const { rerender } = renderPanel();
+    expand();
+    await screen.findByText("vs 7/25/2026");
     fireEvent.click(screen.getByRole("button", { name: "Meta Analysis" }));
+
+    rerender(
+      <MetaPanel
+        commanderName="Kenrith, the Returned King"
+        deckCardNames={new Set<string>()}
+        onAddCard={vi.fn()}
+      />
+    );
+    expect(requested()).toHaveLength(3);
+
     expand();
 
-    expect(requested().slice(4)).toEqual([
+    expect(requested().slice(3)).toEqual([
       "/api/meta/kenrith-the-returned-king?source=edhrec",
       "/api/meta/kenrith-the-returned-king?source=tournament",
     ]);
     await screen.findByText("vs 7/25/2026");
-    expect(requested().at(-1)).toBe(
-      "/api/meta/kenrith-the-returned-king/history?days=90"
+    await waitFor(() =>
+      expect(requested().at(-1)).toBe(
+        "/api/meta/kenrith-the-returned-king/history?days=90"
+      )
     );
+    expect(requested()).toHaveLength(6);
+  });
+
+  it("asks the visitor to select a commander when the deck loses its commander while open, and requests nothing", async () => {
+    const requested = stubMetaApi(ALL_SOURCES);
+    const { rerender } = renderPanel();
+    expand();
+    await screen.findByText("vs 7/25/2026");
+
+    rerender(
+      <MetaPanel
+        commanderName={null}
+        deckCardNames={new Set<string>()}
+        onAddCard={vi.fn()}
+      />
+    );
+
+    expect(
+      screen.getByText("Select a commander to see meta data")
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Sol Ring")).not.toBeInTheDocument();
+    expect(requested()).toHaveLength(3);
   });
 });
 

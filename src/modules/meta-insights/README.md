@@ -59,11 +59,11 @@ pins the runtime export list of each entry point.
   route did; reusing the first read would save one query on that path.
 - The deck-versus-meta comparison (which popular cards the deck lacks) lives in
   `client/useMetaPanel.ts` since MI-05; it moves to `domain/` in a later slice.
-- A commander change while the panel is open does not read the new commander's sources: the
-  auto-fetch effect in `useMetaPanel.ts` runs before the reset clears its once-only flag, so only the
-  history is asked for, and then discarded. The sources are read again once the panel is re-opened or
-  refreshed. Pinned as current behaviour in `MetaPanel.characterization.test.tsx`; the fix is a
-  behavioural follow-up.
+- Fixed on 2026-11-13: a commander change while the panel is open now reads the new commander's
+  sources and shows nothing of the previous one meanwhile. `useMetaPanel.ts` keys its "already read"
+  state by commander name, and `useMetaAnalysis.ts` holds its state with the commander it was loaded
+  for, so another commander reads it as untouched. `MetaPanel.characterization.test.tsx` pins the
+  open, closed and cleared-commander cases.
 - `fetch.ts` holds both providers in one module behind one `meta-provider.ts`; ADR 0004 wants one
   adapter each (MI-07).
 - The commander slug is imported from `lib/meta/commander-slug.ts` by `infrastructure/mtgtop8.ts`,

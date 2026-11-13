@@ -12,6 +12,13 @@
  * comparison (which popular cards the deck lacks) is not here: the panel does
  * it from `deckCardNames`.
  *
+ * The state is held with the commander it was loaded for, and read as
+ * {@link INITIAL_META_STATE} for any other commander. So a commander change
+ * drops the previous payloads in the same render, with no reset effect that
+ * would leave one render showing them under the new name; and a late answer
+ * for the previous commander is stored under that commander, never shown as
+ * the new one's (B2 fix, 2026-11-13).
+ *
  * @module meta-insights/client/useMetaAnalysis
  */
 import { useCallback, useRef, useState } from "react";
@@ -27,6 +34,7 @@ import {
   failSourceLoad,
   finishSourceLoad,
   type MetaSource,
+  type MetaState,
 } from "@/modules/meta-insights/client/meta-source-state";
 
 export type {
@@ -40,21 +48,35 @@ export type {
  */
 export const META_FETCH_TIMEOUT_MS = 30_000;
 
+/** The source state and the commander it belongs to; no commander before the first request. */
+interface CommanderMetaState {
+  readonly commanderName: string | null;
+  readonly state: MetaState;
+}
+
+const NO_COMMANDER_STATE: CommanderMetaState = {
+  commanderName: null,
+  state: INITIAL_META_STATE,
+};
+
 /**
  * Loads EDHREC and tournament meta for one commander, on demand.
  *
  * Overlapping requests for the same source keep only the latest response.
- * An older reply cannot replace a newer commander or a newer refresh.
+ * An older reply cannot replace a newer commander or a newer refresh. The
+ * state belongs to one commander: another commander reads it as untouched.
  *
  * @param commanderName - commander to analyse, or null to no-op fetches
  * @returns the source state plus `fetchAll` and `fetchSource`
  */
 export function useMetaAnalysis(commanderName: string | null) {
-  const [state, setState] = useState(INITIAL_META_STATE);
+  const [held, setHeld] = useState(NO_COMMANDER_STATE);
   const requestIds = useRef<Record<MetaSource, number>>({
     edhrec: 0,
     tournament: 0,
   });
+  const state =
+    held.commanderName === commanderName ? held.state : INITIAL_META_STATE;
 
   const fetchSource = useCallback(
     async (source: MetaSource, refresh = false) => {
@@ -63,6 +85,17 @@ export function useMetaAnalysis(commanderName: string | null) {
       requestIds.current[source] = requestId;
       const slug = commanderToSlug(commanderName);
       const stillCurrent = () => requestIds.current[source] === requestId;
+      // A transition applies to this commander's state only: the state held
+      // for another commander is replaced, not transitioned.
+      const setState = (transition: (prev: MetaState) => MetaState) =>
+        setHeld((prev) => ({
+          commanderName,
+          state: transition(
+            prev.commanderName === commanderName
+              ? prev.state
+              : INITIAL_META_STATE
+          ),
+        }));
 
       setState((prev) => beginSourceLoad(prev, source));
 
