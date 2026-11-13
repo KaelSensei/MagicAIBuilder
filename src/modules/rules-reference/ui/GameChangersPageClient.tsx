@@ -5,24 +5,20 @@
  *
  * Rules reference context, `ui/`. The page composes `CardTile`, the
  * `usePagedFilteredList` hook (search, page slice and the `?page=N` URL sync)
- * and `Pagination`; it keeps the tab state and the two modals. `CardZoomModal`
- * and the tab bar move out in RR-05.
+ * `Pagination` and `CardZoomModal`; it keeps the tab state and the printing
+ * selector. The tab bar moves out in the next commit of RR-05.
  *
  * @module rules-reference/ui/GameChangersPageClient
  */
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import { BookOpen, Loader2, Search, Shield, Zap, X } from "lucide-react";
+import { BookOpen, Loader2, Search, Shield, Zap } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { useLocalizedGameChangersList } from "@/hooks/useGameChangers";
-import { resolveLocalizedText } from "@/lib/scryfall/localized";
 import { useLocalizedBanlistQuery } from "@/hooks/useBanlist";
 import { usePagedFilteredList } from "@/modules/rules-reference/client/usePagedFilteredList";
 import { CardTile } from "@/modules/rules-reference/ui/CardTile";
-import {
-  getCardGridImageUri,
-  getListedCardImageUri,
-} from "@/modules/rules-reference/ui/card-image";
+import { CardZoomModal } from "@/modules/rules-reference/ui/CardZoomModal";
 import { Pagination } from "@/modules/rules-reference/ui/Pagination";
 import { PrintingSelectorModal } from "@/components/card/PrintingSelectorModal";
 import { cn } from "@/components/ui/utils";
@@ -42,136 +38,6 @@ function cardMatchesSearch(card: ScryfallCard, query: string): boolean {
   if (card.name.toLowerCase().includes(query)) return true;
   const printed = card.printed_name ?? card.card_faces?.[0]?.printed_name;
   return printed?.toLowerCase().includes(query) ?? false;
-}
-
-// ---------------------------------------------------------------------------
-// Zoom modal — full-size image with printing selector access
-// ---------------------------------------------------------------------------
-interface CardZoomModalProps {
-  readonly card: ScryfallCard;
-  readonly cards: readonly ScryfallCard[];
-  readonly onClose: () => void;
-  readonly onNavigate: (card: ScryfallCard) => void;
-  readonly onOpenPrintings: () => void;
-}
-
-function CardZoomModal({
-  card,
-  cards,
-  onClose,
-  onNavigate,
-  onOpenPrintings,
-}: CardZoomModalProps) {
-  const t = useTranslations("rules");
-  const text = resolveLocalizedText(card);
-  const currentIndex = cards.findIndex((c) => c.id === card.id);
-  const hasPrev = currentIndex > 0;
-  const hasNext = currentIndex < cards.length - 1;
-
-  const goPrev = useCallback(() => {
-    if (hasPrev) onNavigate(cards[currentIndex - 1]);
-  }, [hasPrev, cards, currentIndex, onNavigate]);
-
-  const goNext = useCallback(() => {
-    if (hasNext) onNavigate(cards[currentIndex + 1]);
-  }, [hasNext, cards, currentIndex, onNavigate]);
-
-  // Keyboard: Escape to close, Arrow keys to navigate
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
-      if (e.key === "ArrowLeft") goPrev();
-      if (e.key === "ArrowRight") goNext();
-    }
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [onClose, goPrev, goNext]);
-
-  const largeUri =
-    getListedCardImageUri(card, "display") ?? getCardGridImageUri(card);
-
-  return (
-    <dialog
-      open
-      className="fixed inset-0 z-50 m-0 flex h-full w-full max-h-none max-w-none items-center justify-center border-none bg-transparent p-4"
-      aria-label={`${text.name} — zoom`}
-    >
-      <div className="relative flex h-full w-full max-h-full items-center justify-center">
-        <button
-          type="button"
-          className="absolute inset-0 z-0 cursor-default border-0 bg-black/80 p-0 backdrop-blur-sm"
-          aria-label={t("zoom.close")}
-          onClick={onClose}
-        />
-
-        {hasPrev && (
-          <button
-            type="button"
-            onClick={goPrev}
-            className="absolute left-4 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white/70 transition-colors hover:bg-black/80 hover:text-white"
-            aria-label={t("zoom.previousCard")}
-          >
-            ‹
-          </button>
-        )}
-
-        {hasNext && (
-          <button
-            type="button"
-            onClick={goNext}
-            className="absolute right-4 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white/70 transition-colors hover:bg-black/80 hover:text-white"
-            aria-label={t("zoom.nextCard")}
-          >
-            ›
-          </button>
-        )}
-
-        <div className="relative z-10 w-full max-w-[400px]">
-          <button
-            type="button"
-            onClick={onClose}
-            className="absolute -right-3 -top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface)] text-[var(--text-secondary)] shadow-lg transition-colors hover:text-[var(--text-primary)]"
-            aria-label={t("zoom.closeButton")}
-          >
-            <X className="w-4 h-4" />
-          </button>
-
-          {largeUri && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={largeUri}
-              alt={text.name}
-              className="w-full rounded-xl shadow-2xl"
-            />
-          )}
-
-          <div className="mt-3 flex items-center justify-between">
-            <div>
-              <p className="text-sm font-semibold text-white">{text.name}</p>
-              <p className="text-xs text-white/60">
-                {text.typeLine}
-                {cards.length > 1 && (
-                  <span className="ml-2 text-white/40">
-                    {t("zoom.cardPosition", {
-                      current: currentIndex + 1,
-                      total: cards.length,
-                    })}
-                  </span>
-                )}
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={onOpenPrintings}
-              className="rounded-lg border border-white/20 px-3 py-1.5 text-xs text-white/80 transition-colors hover:border-white/40 hover:text-white"
-            >
-              {t("zoom.viewAllArts")}
-            </button>
-          </div>
-        </div>
-      </div>
-    </dialog>
-  );
 }
 
 // ---------------------------------------------------------------------------
