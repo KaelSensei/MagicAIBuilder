@@ -1671,15 +1671,37 @@
       "count": 1
     }
   },
-  "src/lib/playtest/engine.ts": {
+  "src/lib/playtest/engine/action-log.ts": {
     "@typescript-eslint/max-params": {
-      "count": 9
+      "count": 1
+    }
+  },
+  "src/lib/playtest/engine/battlefield.ts": {
+    "@typescript-eslint/max-params": {
+      "count": 3
+    }
+  },
+  "src/lib/playtest/engine/dice.ts": {
+    "@typescript-eslint/max-params": {
+      "count": 1
+    }
+  },
+  "src/lib/playtest/engine/history.ts": {
+    "@typescript-eslint/max-params": {
+      "count": 1
     },
     "complexity": {
       "count": 1
-    },
-    "max-lines": {
+    }
+  },
+  "src/lib/playtest/engine/life.ts": {
+    "@typescript-eslint/max-params": {
       "count": 1
+    }
+  },
+  "src/lib/playtest/engine/zones.ts": {
+    "@typescript-eslint/max-params": {
+      "count": 2
     }
   },
   "src/lib/playtest/keep-rules.ts": {
