@@ -32,9 +32,13 @@ vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
 });
 vi.mock(import("@/lib/auth/config"), () => ({ auth: mockAuth }));
 
-vi.mock(import("@/modules/meta-insights/infrastructure/fetch"), () => ({
-  fetchEdhrecData: mockFetchEdhrecData,
-  fetchTournamentData: mockFetchTournamentData,
+// One mock at the `MetaProvider` seam, where the two adapters meet the use
+// case; the route still runs the real use case and cache repository.
+vi.mock(import("@/modules/meta-insights/infrastructure/meta-provider"), () => ({
+  metaProvider: {
+    fetchEdhrec: mockFetchEdhrecData,
+    fetchTournament: mockFetchTournamentData,
+  },
 }));
 
 vi.mock(import("@/modules/meta-insights/infrastructure/snapshots"), () => ({

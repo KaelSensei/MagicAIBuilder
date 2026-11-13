@@ -1,8 +1,8 @@
 // @vitest-environment node
 /**
- * Replays the recorded EDHREC and MTGTop8 pages through `fetchEdhrecData` and
- * `fetchTournamentData`, the Meta Insights adapters, with MSW in place of the
- * network (ADR 0005, rule 4).
+ * Replays the recorded EDHREC and MTGTop8 pages through `fetchEdhrecData`
+ * (`edhrec.ts`) and `fetchTournamentData` (`mtgtop8-source.ts`), the Meta
+ * Insights adapters, with MSW in place of the network (ADR 0005, rule 4).
  *
  * Contract tests for the anti-corruption layer in front of the two sources
  * (architecture audit, §3.2): they pin what the app reads from each recorded
@@ -40,11 +40,8 @@ import {
   knownCardPageLatin1Bytes,
   unknownCardPageLatin1Bytes,
 } from "./fixtures/mtgtop8-card-search-v1";
-import {
-  __resetArchetypeCache,
-  fetchEdhrecData,
-  fetchTournamentData,
-} from "./fetch";
+import { fetchEdhrecData } from "./edhrec";
+import { __resetArchetypeCache, fetchTournamentData } from "./mtgtop8-source";
 import { MTGTOP8_SEARCH_URL } from "./mtgtop8";
 import { BOT_CHALLENGE_MESSAGE, HttpStatusError, USER_AGENT } from "@/lib/http";
 import { setupMsw } from "@/test/msw";

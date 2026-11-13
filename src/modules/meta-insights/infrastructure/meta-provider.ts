@@ -2,18 +2,16 @@
  * The two providers as the `MetaProvider` port: EDHREC addressed by the
  * commander slug, MTGTop8 by the commander name folded from that slug.
  *
- * An adapter of the meta insights context over the fetchers of `fetch.ts`.
- * Each provider's wire format and failure modes stay in the fetcher; this
- * module only knows how each one is addressed. ADR 0004 wants one adapter
- * per provider; MI-07 decides whether to split `fetch.ts` to match.
+ * The composition of the two adapters, one per provider (ADR 0004):
+ * `edhrec.ts` and `mtgtop8-source.ts`. Each provider's wire format and
+ * failure modes stay in its adapter; this module only knows how each one is
+ * addressed from the slug the use case passes.
  *
  * @module meta-insights/infrastructure/meta-provider
  */
 import type { MetaProvider } from "@/modules/meta-insights/application/ports";
-import {
-  fetchEdhrecData,
-  fetchTournamentData,
-} from "@/modules/meta-insights/infrastructure/fetch";
+import { fetchEdhrecData } from "@/modules/meta-insights/infrastructure/edhrec";
+import { fetchTournamentData } from "@/modules/meta-insights/infrastructure/mtgtop8-source";
 
 /**
  * The name MTGTop8 is searched for, from the route's slug. The slug is
