@@ -15,6 +15,7 @@ import { getCardGridImageUri } from "@/modules/rules-reference/ui/card-image";
 import { resolveLocalizedText } from "@/lib/scryfall/localized";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 
+/** What one grid tile shows and what it does when pressed. */
 export interface CardTileProps {
   readonly card: ScryfallCard;
   /** The list badge shown beside the name: Game Changer or Banned. */

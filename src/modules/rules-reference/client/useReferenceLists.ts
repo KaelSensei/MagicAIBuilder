@@ -19,6 +19,7 @@ import type { ScryfallCard } from "@/lib/scryfall/types";
 /** The two lists the page shows: WotC's Game Changers and the Commander banlist. */
 export type ReferenceList = "game-changers" | "banlist";
 
+/** The active list with its load state, and both lists' counts for the tabs. */
 export interface ReferenceLists {
   /** The active list's cards; empty until it has loaded or when it failed. */
   readonly cards: readonly ScryfallCard[];

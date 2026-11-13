@@ -15,6 +15,7 @@ import type { ReferenceList } from "@/modules/rules-reference/client/useReferenc
 import { CardTile } from "@/modules/rules-reference/ui/CardTile";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 
+/** The cards of one page, the list they belong to, and the zoom callback. */
 export interface ReferenceCardGridProps {
   /** The list the cards belong to; it picks the badge on every tile. */
   readonly list: ReferenceList;

@@ -18,6 +18,7 @@ import { Link } from "@/i18n/navigation";
 import { cn } from "@/components/ui/utils";
 import type { ReferenceList } from "@/modules/rules-reference/client/useReferenceLists";
 
+/** The active list, the selection callback and each list's count once known. */
 export interface ReferenceListTabsProps {
   readonly activeList: ReferenceList;
   /** Called with the tab the visitor pressed, including the active one. */
