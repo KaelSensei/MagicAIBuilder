@@ -69,9 +69,10 @@ const PRISMA = [
  * series runs, so a branch that predates a move sees what to fix without
  * being blocked. A series' closing pull request adds its context here and
  * deletes the context's entries from the known-violations baseline; nothing
- * else in this file changes. `combos` closed with CMB-08 (2026-11).
+ * else in this file changes. `combos` closed with CMB-08 (2026-11),
+ * `rules-reference` with RR-06 (2026-11).
  */
-const CLOSED_CONTEXTS = ["combos"];
+const CLOSED_CONTEXTS = ["combos", "rules-reference"];
 
 /**
  * The shared kernel a `domain/` folder may import: pure helpers with no IO,

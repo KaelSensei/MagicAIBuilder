@@ -246,7 +246,7 @@ Nothing in the roadmap entry was dropped. The section below is the initiative te
 **Risk:** Low. The failure is a date the product did not record. The line must omit a date it does not have.
 **Depends on:** nothing. I-67 replaces "not loaded from the daily file" with a load timestamp when that load exists. I-59 replaces "stored when the card was added" when a series exists.
 
-I-09 labels external recommendations with a source. The deck itself does not say how old its rules file or its prices are. The app ships the Comprehensive Rules effective 2026-08-07 (`src/lib/rules/data/MagicCompRules-20260807.txt`). Prices are the USD amount stored with the card (`src/lib/deck/pricing.ts`).
+I-09 labels external recommendations with a source. The deck itself does not say how old its rules file or its prices are. The app ships the Comprehensive Rules effective 2026-08-07 (`src/modules/rules-reference/infrastructure/data/MagicCompRules-20260807.txt`). Prices are the USD amount stored with the card (`src/lib/deck/pricing.ts`).
 
 ### Scope
 

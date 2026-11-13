@@ -38,6 +38,13 @@ function cardMatchesSearch(card: ScryfallCard, query: string): boolean {
   return printed?.toLowerCase().includes(query) ?? false;
 }
 
+/**
+ * The Game Changers and banlist page, rendered by `app/[locale]/rules/game-changers`.
+ *
+ * It takes no props: both lists come from Scryfall through the format-rules
+ * hooks, and the page number from the URL. It must render under a `Suspense`
+ * boundary, since `usePagedFilteredList` reads `useSearchParams`.
+ */
 export function GameChangersPageClient() {
   const t = useTranslations("rules");
 

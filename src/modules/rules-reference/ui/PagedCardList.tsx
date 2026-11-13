@@ -18,6 +18,7 @@ import { Pagination } from "@/modules/rules-reference/ui/Pagination";
 import { ReferenceCardGrid } from "@/modules/rules-reference/ui/ReferenceCardGrid";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 
+/** The active list's state, as the page holds it, and the zoom callback. */
 export interface PagedCardListProps {
   /** The list on screen; it picks the badge on every tile. */
   readonly list: ReferenceList;
