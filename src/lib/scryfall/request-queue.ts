@@ -137,23 +137,30 @@ export function createScryfallQueue(
   return { schedule, reset };
 }
 
-// Detect if we're in a test environment (vitest sets globalThis.vi)
-function isTestMode(): boolean {
-  return typeof globalThis !== "undefined" && "vi" in globalThis;
-}
-
-// The runtime's queue skips its waits under Vitest, where most suites call the
-// Scryfall client without fake timers; pacing is tested on a queue of its own.
-// CC-02 replaces this switch with an injected clock.
-const runtimeQueue = createScryfallQueue(
-  isTestMode()
-    ? { now: WALL_CLOCK.now, sleep: () => Promise.resolve() }
-    : WALL_CLOCK
-);
+// One instance per runtime: a module is evaluated once per browser tab and once
+// per server function instance, so every caller of the two functions below
+// waits in the same line.
+let runtimeQueue = createScryfallQueue();
 
 /**
- * Reset the queue (for tests only)
+ * Rebuilds the runtime's queue on `clock`, forgetting its line and its last
+ * start times.
+ *
+ * The seam the Vitest setup (`src/test/unpaced-scryfall-queue.ts`) uses to put
+ * the runtime's queue on a clock that never waits, so suites that call the
+ * Scryfall client for real stay fast while this module carries no test-mode
+ * branch of its own. Nothing in production calls it.
+ *
  * @internal
+ */
+export function setScryfallQueueClock(clock: QueueClock): void {
+  runtimeQueue = createScryfallQueue(clock);
+}
+
+/**
+ * Forgets the runtime queue's line and last start times, keeping its clock.
+ *
+ * @internal for tests, between two cases that share the runtime queue
  */
 export function resetScryfallQueue(): void {
   runtimeQueue.reset();
