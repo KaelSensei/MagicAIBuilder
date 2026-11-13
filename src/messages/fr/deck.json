@@ -319,6 +319,28 @@
     "gcForcesBracket": "→ Bracket {bracket} minimum",
     "andMore": "+{count} de plus"
   },
+  "drawOdds": {
+    "title": "Probabilités de pioche",
+    "target": "Chercher",
+    "lands": "Terrains",
+    "cardGroup": "Une carte de la bibliothèque",
+    "drawPoint": "Quand",
+    "openingHand": "Main de départ",
+    "turn": "Tour {turn}",
+    "drawRule": "{table, select, multiplayer {Chaque tour ajoute une pioche, tour 1 compris, comme à une table multijoueur.} other {Chaque tour après le premier ajoute une pioche, comme pour le joueur qui commence une partie à deux.}}",
+    "librarySize": "Cartes dans la bibliothèque",
+    "matching": "Cartes recherchées",
+    "drawn": "Cartes piochées",
+    "minimum": "Au moins",
+    "countNotGame": "C’est un dénombrement de mains également probables, pas une partie enregistrée.",
+    "notSet": "non renseigné",
+    "gap": {
+      "empty-library": "Ajoutez des cartes au deck principal pour voir les probabilités.",
+      "not-a-card-count": "Saisissez un nombre entier de cartes, 0 ou plus.",
+      "more-drawn-than-library": "La bibliothèque contient moins de cartes que cette pioche.",
+      "more-matching-than-library": "Plus de cartes correspondent que la bibliothèque n’en contient."
+    }
+  },
   "proxy": {
     "title": "Exporter des planches de proxys",
     "description": "Configurez et imprimez les proxys de votre deck.",
