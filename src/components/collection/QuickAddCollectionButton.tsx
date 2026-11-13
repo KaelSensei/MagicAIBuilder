@@ -10,6 +10,7 @@ import { useSession } from "next-auth/react";
 import { useCollectionStore } from "@/lib/collection/store";
 import { cn } from "@/components/ui/utils";
 import { getListedImageUri } from "@/lib/scryfall/images";
+import { priceUsdOf } from "@/lib/scryfall/price";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 
 interface QuickAddCollectionButtonProps {
@@ -36,7 +37,7 @@ export function QuickAddCollectionButton({
         scryfallId: card.id,
         name: card.name,
         quantity: 1,
-        price: card.prices?.usd ? Number.parseFloat(card.prices.usd) : null,
+        price: priceUsdOf(card),
         imageUri: getListedImageUri(card.image_uris, "grid") ?? "",
       });
       setJustAdded(true);

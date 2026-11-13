@@ -8,6 +8,7 @@ import type { ScryfallCard } from "@/lib/scryfall/types";
 import { useCardPrintings } from "@/hooks/useCardPrintings";
 import { getCardImageUri } from "@/lib/scryfall/images";
 import { resolveLocalizedText, toScryfallLang } from "@/lib/scryfall/localized";
+import { priceUsdOf } from "@/lib/scryfall/price";
 import { Modal, ModalTitle } from "@/components/ui/Modal";
 import { CardRulingsPanel } from "@/components/card/CardRulingsPanel";
 import { useCollectionStore } from "@/lib/collection/store";
@@ -40,6 +41,7 @@ export function PrintingSelectorModal({
   const tCommon = useTranslations("common");
   const tOwnership = useTranslations("collection.ownership");
   const locale = useLocale();
+  const priceUsd = priceUsdOf(card);
   const { data, isLoading } = useCardPrintings(card.name, toScryfallLang(locale));
   const [previewedPrintingId, setPreviewedPrintingId] = useState(card.id);
   const [ownedOnly, setOwnedOnly] = useState(false);
@@ -129,9 +131,9 @@ export function PrintingSelectorModal({
             cardId={previewedPrinting.id}
           />
 
-          {card.prices?.usd && (
+          {priceUsd !== null && (
             <p className="text-xs text-(--accent) mt-auto pt-2 border-t border-(--border)">
-              {formatUsdPrice(locale, Number.parseFloat(card.prices.usd))}
+              {formatUsdPrice(locale, priceUsd)}
             </p>
           )}
         </div>
