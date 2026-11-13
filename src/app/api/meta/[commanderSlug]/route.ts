@@ -1,19 +1,26 @@
+/**
+ * `GET /api/meta/:commanderSlug?source=edhrec|tournament&refresh=true|false`:
+ * what the wider meta plays for a commander, as `getCommanderMeta` answers it.
+ *
+ * The route holds HTTP concerns only: the per-client rate limit, the slug and
+ * query validation, who may force a refresh, the `_meta` envelope of each
+ * outcome and the status codes. The read-through itself (fresh cache, else
+ * the provider, else the stale entry) is the meta insights use case (MI-04).
+ *
+ * @module app/api/meta/[commanderSlug]
+ */
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { prisma } from "@/lib/db/prisma";
 import { requireModerator } from "@/lib/auth/require-moderator";
 import {
-  fetchEdhrecData,
-  fetchTournamentData,
-  recordEdhrecSnapshot,
+  getCommanderMeta,
+  type CommanderMetaResult,
 } from "@/modules/meta-insights/server";
+import type { MetaSource } from "@/modules/meta-insights";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
-import type { EdhrecData, TournamentData } from "@/modules/meta-insights";
 import { logger } from "@/lib/logger";
-import { toJsonPayload } from "@/lib/db/json-payload";
 import { rateLimitResponse, type RouteParams } from "@/lib/api/route-kit";
 
-const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24h
 const RATE_LIMIT = 30;
 const RATE_WINDOW = 60_000;
 
@@ -26,8 +33,6 @@ const querySchema = z.object({
     .default("false")
     .transform((flag) => flag === "true"),
 });
-
-type MetaSource = z.infer<typeof querySchema>["source"];
 
 function metaRateLimitResponse(request: Request): NextResponse | null {
   const ip = getClientIp(request);
@@ -55,101 +60,56 @@ async function mayForceRefresh(requested: boolean): Promise<boolean> {
     const moderator = await requireModerator();
     return moderator.error === undefined;
   } catch {
-    // The moderator lookup failed: serve the cache rather than scrape.
+    // The moderator lookup failed: serve the cache rather than scrape (B2-12).
     return false;
   }
 }
 
-async function readFreshMetaCache(
-  commanderSlug: string,
-  source: MetaSource
-): Promise<NextResponse | null> {
-  try {
-    const cached = await prisma.metaCache.findUnique({
-      where: { commanderSlug_source: { commanderSlug, source } },
-    });
-    if (cached && cached.expiresAt > new Date()) {
+/**
+ * The response of one outcome: the data at the top level and a `_meta`
+ * envelope that says where it came from and when it was observed. A cached
+ * answer reports its `cachedAt` as `observedAt`, since the cache stores what
+ * the provider showed at that moment.
+ */
+function metaResponse(
+  source: MetaSource,
+  result: Exclude<CommanderMetaResult, { kind: "unavailable" }>
+): NextResponse {
+  switch (result.kind) {
+    case "fresh-cache": {
+      const cachedAt = result.cachedAt.toISOString();
       return NextResponse.json({
-        ...(cached.data as Record<string, unknown>),
-        _meta: {
-          source,
-          cached: true,
-          cachedAt: cached.cachedAt.toISOString(),
-          observedAt: cached.cachedAt.toISOString(),
-        },
+        ...result.data,
+        _meta: { source, cached: true, cachedAt, observedAt: cachedAt },
       });
     }
-  } catch {
-    // DB error — fall through to live fetch
-  }
-  return null;
-}
-
-async function persistMetaCache(
-  commanderSlug: string,
-  source: MetaSource,
-  data: EdhrecData | TournamentData,
-  observedAt: Date
-) {
-  const expiresAt = new Date(observedAt.getTime() + CACHE_TTL_MS);
-  const payload = toJsonPayload(data);
-  try {
-    await prisma.metaCache.upsert({
-      where: { commanderSlug_source: { commanderSlug, source } },
-      create: {
-        commanderSlug,
-        source,
-        data: payload,
-        cachedAt: observedAt,
-        expiresAt,
-      },
-      update: { data: payload, cachedAt: observedAt, expiresAt },
-    });
-  } catch {
-    // Cache write failure is non-fatal
-  }
-}
-
-async function loadLiveMeta(
-  commanderSlug: string,
-  source: MetaSource
-): Promise<EdhrecData | TournamentData> {
-  if (source === "edhrec") {
-    return fetchEdhrecData(commanderSlug);
-  }
-  const commanderName = commanderSlug.replaceAll("-", " ");
-  return fetchTournamentData(commanderName);
-}
-
-/** `EdhrecData` is the branch carrying a distribution; the tournament feed is a list of events. */
-function isEdhrecData(data: EdhrecData | TournamentData): data is EdhrecData {
-  return "cards" in data;
-}
-
-async function tryStaleMetaResponse(
-  commanderSlug: string,
-  source: MetaSource
-): Promise<NextResponse | null> {
-  try {
-    const stale = await prisma.metaCache.findUnique({
-      where: { commanderSlug_source: { commanderSlug, source } },
-    });
-    if (stale) {
+    case "live":
       return NextResponse.json({
-        ...(stale.data as Record<string, unknown>),
+        ...result.data,
+        _meta: {
+          source,
+          cached: false,
+          observedAt: result.observedAt.toISOString(),
+        },
+      });
+    case "stale-cache": {
+      const cachedAt = result.cachedAt.toISOString();
+      return NextResponse.json({
+        ...result.data,
         _meta: {
           source,
           cached: true,
           stale: true,
-          cachedAt: stale.cachedAt.toISOString(),
-          observedAt: stale.cachedAt.toISOString(),
+          cachedAt,
+          observedAt: cachedAt,
         },
       });
     }
-  } catch {
-    // DB also failing
+    default: {
+      const exhaustive: never = result;
+      return exhaustive;
+    }
   }
-  return null;
 }
 
 export async function GET(
@@ -177,35 +137,22 @@ export async function GET(
   }
 
   const { source, refresh } = parsed.data;
+  const result = await getCommanderMeta({
+    commanderSlug,
+    source,
+    forceRefresh: await mayForceRefresh(refresh),
+  });
 
-  if (!(await mayForceRefresh(refresh))) {
-    const cachedResponse = await readFreshMetaCache(commanderSlug, source);
-    if (cachedResponse) return cachedResponse;
-  }
-
-  try {
-    const data = await loadLiveMeta(commanderSlug, source);
-    const observedAt = new Date();
-    await persistMetaCache(commanderSlug, source, data, observedAt);
-    if (isEdhrecData(data)) {
-      // Retain the distribution before the next refresh overwrites the cache.
-      // Awaited rather than fired and forgotten: a serverless invocation can be
-      // frozen the moment its response is returned, and a detached promise
-      // would then be lost at random — the history would have holes nothing
-      // could explain. `recordEdhrecSnapshot` never throws.
-      await recordEdhrecSnapshot(commanderSlug, data);
-    }
-    return NextResponse.json({
-      ...data,
-      _meta: { source, cached: false, observedAt: observedAt.toISOString() },
+  if (result.kind === "stale-cache" || result.kind === "unavailable") {
+    // Upstream detail (EDHREC / MTGTop8 hostnames, status lines) stays logged
+    // and out of the response.
+    logger.error(result.failure.message, "GET /api/meta/:slug", {
+      commanderSlug,
+      source,
     });
-  } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Meta fetch failed";
-    logger.error(message, "GET /api/meta/:slug", { commanderSlug, source });
-    const stale = await tryStaleMetaResponse(commanderSlug, source);
-    if (stale) return stale;
-    // Upstream detail (EDHRec / MTGTop8 hostnames, status lines) stays logged.
+  }
+  if (result.kind === "unavailable") {
     return NextResponse.json({ error: "Meta fetch failed" }, { status: 502 });
   }
+  return metaResponse(source, result);
 }
