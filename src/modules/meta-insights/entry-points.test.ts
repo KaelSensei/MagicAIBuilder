@@ -20,12 +20,13 @@ describe("the meta insights entry points", () => {
     ]);
   });
 
-  it("server.ts publishes the two fetchers and the snapshot store, nothing else", async () => {
+  it("server.ts publishes the wired use case, the two fetchers and the snapshot store, nothing else", async () => {
     expect(exportNames(await import("@/modules/meta-insights/server"))).toEqual(
       [
         "DEFAULT_WINDOW_DAYS",
         "fetchEdhrecData",
         "fetchTournamentData",
+        "getCommanderMeta",
         "MAX_WINDOW_DAYS",
         "readSnapshotHistory",
         "recordEdhrecSnapshot",
