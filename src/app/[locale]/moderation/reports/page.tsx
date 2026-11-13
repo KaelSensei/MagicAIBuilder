@@ -1,19 +1,18 @@
 import { Header } from "@/components/layout/Header";
 import { DeckReportQueue } from "@/components/moderation/DeckReportQueue";
 import { auth } from "@/lib/auth/config";
-import { prisma } from "@/lib/db/prisma";
+import { isModerator } from "@/lib/auth/is-moderator";
 import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 
-/** Private moderation workspace for reports submitted against public decks. */
+/**
+ * Private moderation workspace for reports submitted against public decks.
+ * Anyone without moderation access gets 404, not 403, so the page's existence
+ * is not disclosed.
+ */
 export default async function ModerationReportsPage() {
   const session = await auth();
-  if (!session?.user?.id) notFound();
-  const moderator = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { isModerator: true },
-  });
-  if (!moderator?.isModerator) notFound();
+  if (!(await isModerator(session?.user?.id ?? null))) notFound();
 
   const t = await getTranslations("deck.moderation");
   return (
