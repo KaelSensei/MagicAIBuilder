@@ -41,6 +41,7 @@ import { SearchFilters } from "@/components/search/SearchFilters";
 import { SearchResults } from "@/components/search/SearchResults";
 import { DeckEditor } from "@/components/deck/DeckEditor";
 import { DeckStats } from "@/components/deck/DeckStats";
+import { DrawOddsPanel } from "@/components/deck/DrawOddsPanel";
 import { BracketIndicator } from "@/components/deck/BracketIndicator";
 import { DeckDetailsPanel } from "@/components/deck/DeckDetailsPanel";
 import { SharePopover } from "@/components/deck/SharePopover";
@@ -1238,6 +1239,10 @@ export default function BuilderPage() {
               cards={deckAnalysisCards}
               targetBracket={deck.targetBracket}
             />
+
+            {/* The library is deck.cards: the commander rows of
+                deckAnalysisCards are in the command zone, not drawn. */}
+            <DrawOddsPanel deck={deck} />
           </motion.div>
 
           {/* Mobile bottom tab bar */}

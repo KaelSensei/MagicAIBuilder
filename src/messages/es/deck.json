@@ -319,6 +319,28 @@
     "gcForcesBracket": "→ Bracket {bracket} minimum",
     "andMore": "+{count} more"
   },
+  "drawOdds": {
+    "title": "Draw Odds",
+    "target": "Looking for",
+    "lands": "Lands",
+    "cardGroup": "A card in the library",
+    "drawPoint": "When",
+    "openingHand": "Opening hand",
+    "turn": "Turn {turn}",
+    "drawRule": "{table, select, multiplayer {Each turn adds one draw, turn 1 included, as at a multiplayer table.} other {Each turn after the first adds one draw, as for the player who starts a two-player game.}}",
+    "librarySize": "Cards in the library",
+    "matching": "Matching cards",
+    "drawn": "Cards drawn",
+    "minimum": "At least",
+    "countNotGame": "This is a count of equally likely hands, not a recorded game.",
+    "notSet": "not set",
+    "gap": {
+      "empty-library": "Add cards to the main deck to see the odds.",
+      "not-a-card-count": "Enter a whole number of cards, 0 or more.",
+      "more-drawn-than-library": "The library holds fewer cards than this draw.",
+      "more-matching-than-library": "More cards match than the library holds."
+    }
+  },
   "ai": {
     "questions": {
       "title": "Ask about this deck",
