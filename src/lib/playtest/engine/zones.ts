@@ -204,22 +204,22 @@ export function applyMoveToZone(
 
   const { card, updates } = removed;
   if (isSessionCopyLeavingPlay(card, to)) {
-    return pushHistory(
-      state,
-      deps.clock,
-      updates,
-      `Removed ${card.name} from the battlefield`
-    );
+    return pushHistory(state, deps.clock, {
+      patch: updates,
+      description: `Removed ${card.name} from the battlefield`,
+    });
   }
 
   placeInZone(state, updates, to, card);
   const description = describeMove(card.name, from, to);
   if (from === "library") {
-    return pushHistory(state, deps.clock, updates, description, {
-      kind: "cardSeen",
+    return pushHistory(state, deps.clock, {
+      patch: updates,
+      description,
+      evidence: { kind: "cardSeen" },
     });
   }
-  return pushHistory(state, deps.clock, updates, description);
+  return pushHistory(state, deps.clock, { patch: updates, description });
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────

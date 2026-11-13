@@ -6,17 +6,36 @@
  * owes is taken here, by whichever move first leaves the Draw step of turn 1.
  * Rules: drawing (CR 121.1), the draw step (CR 504.1), the untap step (CR 502.3), the
  * first-turn draw (CR 103.8a, 103.8c) and the mulligans that come before it (CR 103.5).
- * Not responsible for: the step list itself (`types.ts`) or the deal (`initial-state.ts`).
+ * Not responsible for: the step list itself (`types.ts`), the deal (`initial-state.ts`) or the
+ * untap itself (`untapAll`, in `battlefield.ts`).
  *
  * @module playtest/engine/turn
  */
 
+import { untapAll } from "./battlefield";
 import { pushHistory } from "./history";
 import { isChoosingBottom } from "./mulligan";
 import { defaultPlaytestDeps, type PlaytestDeps } from "./ports";
 import { PHASES, type PlaytestEngine } from "./types";
 
-// ─── Draw card ────────────────────────────────────────────────────────────
+// ─── Drawing ──────────────────────────────────────────────────────────────
+/** The two zones a draw moves a card between. */
+type HandAndLibrary = Pick<PlaytestEngine, "hand" | "library">;
+
+/**
+ * Draws the top card of the library into the hand (CR 121.1): the draw step's own draw
+ * (CR 504.1) and every draw outside it go through here.
+ *
+ * Pure: returns new zones and leaves the given ones unchanged. Returns the same zones when the
+ * library is empty; what an empty library means (no log line, a shorter description) is each
+ * caller's decision.
+ */
+export function drawTop(zones: HandAndLibrary): HandAndLibrary {
+  if (zones.library.length === 0) return zones;
+  const [top, ...rest] = zones.library;
+  return { hand: [...zones.hand, top], library: rest };
+}
+
 /**
  * Draws the top card of the library into the hand (CR 121.1), outside the draw step: the
  * "draw a card" button, for an effect the player resolves by hand.
@@ -33,17 +52,11 @@ export function applyDrawCard(
   if (isChoosingBottom(state)) return state;
   if (state.library.length === 0) return state;
 
-  const [drawn, ...rest] = state.library;
-  return pushHistory(
-    state,
-    deps.clock,
-    {
-      hand: [...state.hand, drawn],
-      library: rest,
-    },
-    "Drew a card",
-    { kind: "draw" }
-  );
+  return pushHistory(state, deps.clock, {
+    patch: drawTop(state),
+    description: "Drew a card",
+    evidence: { kind: "draw" },
+  });
 }
 
 // ─── First-turn draw ──────────────────────────────────────────────────────
@@ -83,10 +96,8 @@ function takeFirstTurnDraw(state: PlaytestEngine): AfterFirstTurnDraw {
   if (!owesFirstTurnDraw(state) || library.length === 0) {
     return { hand, library, actionLog, nextActionId };
   }
-  const [drawn, ...rest] = library;
   return {
-    hand: [...hand, drawn],
-    library: rest,
+    ...drawTop(state),
     actionLog: [
       ...actionLog,
       {
@@ -122,36 +133,26 @@ export function applyNextPhase(
   const isLastPhase = currentIndex === PHASES.length - 1;
 
   if (isLastPhase) {
-    // End → Untap of next turn (+ untap all permanents)
-    const untappedBattlefield = state.battlefield.map((p) => ({
-      ...p,
-      tapped: false,
-    }));
-
-    return pushHistory(
-      state,
-      deps.clock,
-      {
-        turn: state.turn + 1,
+    const nextTurn = state.turn + 1;
+    return pushHistory(state, deps.clock, {
+      patch: {
+        turn: nextTurn,
         phase: "Untap" as const,
-        battlefield: untappedBattlefield,
+        battlefield: untapAll(state.battlefield),
       },
-      `Started turn ${state.turn + 1}`,
-      { turn: state.turn + 1, phase: "Untap" }
-    );
+      description: `Started turn ${nextTurn}`,
+      evidence: { turn: nextTurn, phase: "Untap" },
+    });
   }
 
-  // Advance to next phase
   const nextPhase = PHASES[currentIndex + 1];
   if (nextPhase === undefined) return state;
   // Leaving the Draw step of turn 1 takes the draw a multiplayer game owes (CR 103.8c).
   const firstTurnDraw = state.phase === "Draw" ? takeFirstTurnDraw(state) : {};
-  return pushHistory(
-    state,
-    deps.clock,
-    { ...firstTurnDraw, phase: nextPhase },
-    `Advanced to ${nextPhase}`
-  );
+  return pushHistory(state, deps.clock, {
+    patch: { ...firstTurnDraw, phase: nextPhase },
+    description: `Advanced to ${nextPhase}`,
+  });
 }
 
 // ─── Next turn ────────────────────────────────────────────────────────────
@@ -170,45 +171,28 @@ export function applyNextTurn(
   deps: PlaytestDeps = defaultPlaytestDeps
 ): PlaytestEngine {
   if (isChoosingBottom(state)) return state;
-  // Untap all permanents
-  const untappedBattlefield = state.battlefield.map((p) => ({
-    ...p,
-    tapped: false,
-  }));
 
   // Leaving turn 1 leaves its Draw step too: a multiplayer game takes the turn-1 draw it still
   // owes (CR 103.8c) before the new turn's own.
   const start = takeFirstTurnDraw(state);
-
-  // Draw a card if library not empty
-  let newHand = start.hand;
-  let newLibrary = start.library;
   const drawsForNewTurn = start.library.length > 0;
+  const nextTurn = state.turn + 1;
 
-  if (drawsForNewTurn) {
-    const [drawn, ...rest] = start.library;
-    newHand = [...start.hand, drawn];
-    newLibrary = rest;
-  }
-
-  return pushHistory(
-    state,
-    deps.clock,
-    {
+  return pushHistory(state, deps.clock, {
+    patch: {
       ...start,
-      turn: state.turn + 1,
+      ...drawTop(start),
+      turn: nextTurn,
       phase: "Draw" as const,
-      hand: newHand,
-      library: newLibrary,
-      battlefield: untappedBattlefield,
+      battlefield: untapAll(state.battlefield),
     },
-    drawsForNewTurn
-      ? `Started turn ${state.turn + 1} and drew a card`
-      : `Started turn ${state.turn + 1}`,
-    {
-      turn: state.turn + 1,
+    description: drawsForNewTurn
+      ? `Started turn ${nextTurn} and drew a card`
+      : `Started turn ${nextTurn}`,
+    evidence: {
+      turn: nextTurn,
       phase: "Draw",
       ...(drawsForNewTurn ? { kind: "draw" as const } : {}),
-    }
-  );
+    },
+  });
 }

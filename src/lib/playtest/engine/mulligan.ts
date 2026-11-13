@@ -128,10 +128,8 @@ export function applyMulligan(
     firstMulliganFree: state.firstMulliganFree,
   });
 
-  return pushHistory(
-    state,
-    deps.clock,
-    {
+  return pushHistory(state, deps.clock, {
+    patch: {
       mulliganCount,
       cardsToBottom,
       hand: shuffled.slice(0, OPENING_HAND_SIZE),
@@ -140,8 +138,8 @@ export function applyMulligan(
         ? { commandZone: [...state.commandZone, ...commanders] }
         : {}),
     },
-    describeMulligan(cardsToBottom)
-  );
+    description: describeMulligan(cardsToBottom),
+  });
 }
 
 /**
@@ -213,14 +211,12 @@ export function applyBottomCards(
   if (chosen === null) return state;
 
   const chosenIds = new Set(cardIds);
-  return pushHistory(
-    state,
-    deps.clock,
-    {
+  return pushHistory(state, deps.clock, {
+    patch: {
       cardsToBottom: 0,
       hand: state.hand.filter((card) => !chosenIds.has(card.id)),
       library: [...state.library, ...chosen],
     },
-    `Put ${chosen.map((card) => card.name).join(", ")} on the bottom of the library`
-  );
+    description: `Put ${chosen.map((card) => card.name).join(", ")} on the bottom of the library`,
+  });
 }
