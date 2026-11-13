@@ -25,7 +25,7 @@ import { useMetaShifts } from "@/hooks/useMetaShifts";
 import { cn } from "@/components/ui/utils";
 import { MetaSourceDisclosure } from "./MetaSourceDisclosure";
 import { Link } from "@/i18n/navigation";
-import { commanderToSlug } from "@/lib/meta/fetch";
+import { commanderToSlug } from "@/lib/meta/commander-slug";
 import type { MetaCard, TournamentDeck } from "@/lib/meta/types";
 import { shiftMagnitude, type MetaShift } from "@/lib/meta/history";
 

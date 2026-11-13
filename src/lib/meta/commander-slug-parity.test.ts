@@ -30,7 +30,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { collapseToCommanders } from "@/lib/seo/sitemap";
-import { commanderToSlug, isCommanderSlug } from "./fetch";
+import { commanderToSlug, isCommanderSlug } from "./commander-slug";
 
 /** The repository root, three levels above this file (`src/lib/meta/`). */
 const REPO_ROOT = join(__dirname, "..", "..", "..");

@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 import { routing } from "@/i18n/routing";
-import { isCommanderSlug } from "@/lib/meta/fetch";
+import { isCommanderSlug } from "@/lib/meta/commander-slug";
 import { hreflangPaths, localePath, siteUrl } from "./alternates";
 import { isIndexableProfile } from "./index-policy";
 

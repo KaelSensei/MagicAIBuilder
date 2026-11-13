@@ -8,7 +8,7 @@
  * than two recorded days, not an error — `snapshotCount` tells the two apart.
  */
 import { useCallback, useEffect, useRef, useState } from "react";
-import { commanderToSlug } from "@/lib/meta/fetch";
+import { commanderToSlug } from "@/lib/meta/commander-slug";
 import type { MetaShift } from "@/lib/meta/history";
 
 /** The window the panel asks for; the API caps it at a year. */

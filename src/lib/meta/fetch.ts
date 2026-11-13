@@ -15,10 +15,6 @@ import type { EdhrecData, MetaCard, TournamentData } from "./types";
 
 // ─── EDHRec ───────────────────────────────────────────────────────────────────
 
-// The slug lives in `./commander-slug` so the MTGTop8 parser can share it
-// without a cycle; it stays exported here for the callers that import it.
-export { commanderToSlug, isCommanderSlug } from "./commander-slug";
-
 interface EdhrecCardView {
   name: string;
   num_decks?: number;

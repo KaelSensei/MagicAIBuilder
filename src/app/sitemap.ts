@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { prisma } from "@/lib/db/prisma";
 import { logger } from "@/lib/logger";
-import { commanderToSlug } from "@/lib/meta/fetch";
+import { commanderToSlug } from "@/lib/meta/commander-slug";
 import {
   buildSitemap,
   collapseToCommanders,
