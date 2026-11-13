@@ -27,7 +27,7 @@
 
 Not owned here:
 
-- the **commander slug** (`src/lib/meta/commander-slug.ts`): the community context's, COM-02 moves it;
+- the **commander slug** (`src/lib/community/commander-slug.ts`): the community context's (COM-02);
   this context imports it from `infrastructure/mtgtop8.ts`, `client/` and `ui/` (see
   [Boundary rules](#boundary-rules));
 - the **HTTP concerns of the two meta routes** (`src/app/api/meta/[commanderSlug]/route.ts` and
@@ -73,11 +73,12 @@ only; code outside `src/modules/` reaches the context through its entry points o
 components and hooks never import `server.ts`. `src/test/arch-context-boundaries.test.ts` pins the
 severity.
 
-The import of `src/lib/meta/commander-slug.ts` passes these rules because the allow-lists cover
+The import of `src/lib/community/commander-slug.ts` passes these rules because the allow-lists cover
 `domain/` and `application/` only, and neither imports the slug: `infrastructure/mtgtop8.ts` folds
 option names with it, `client/` builds the route URL with it, and `ui/CommanderMetaLinks.tsx` builds
-the two links with it. When COM-02 publishes the slug from the community context's `index.ts`, the
-three importers switch to that path and nothing else changes.
+the two links with it. When COM-18 moves the community context into `src/modules/community/` and
+publishes the slug from its `index.ts`, the three importers switch to that entry point and nothing
+else changes.
 
 ## Data flow
 
@@ -206,4 +207,5 @@ each source 30 s and the history 15 s.
   store, Prisma, Auth.js, the rate limiter and the logger); its ESLint suppression entry counts 4.
 - The mutation-testing baseline of `domain/` was not recorded by the closing slice: Stryker was not
   run in MI-07 (the nightly covers `src/modules/*/domain/**`).
-- The commander slug stays at `src/lib/meta/commander-slug.ts` until COM-02.
+- The commander slug is imported by path from `src/lib/community/commander-slug.ts` (COM-02) until
+  COM-18 publishes it from the community context's `index.ts`.

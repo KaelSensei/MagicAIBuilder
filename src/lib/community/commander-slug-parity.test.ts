@@ -4,7 +4,7 @@
  *
  * Community context. One slug, two implementations:
  *
- * - `commanderToSlug` (`src/lib/meta/commander-slug.ts`) builds the slug in JavaScript. The sitemap
+ * - `commanderToSlug` (`src/lib/community/commander-slug.ts`) builds the slug in JavaScript. The sitemap
  *   (`src/app/sitemap.ts`) lists `/commanders/<slug>/decks` from it, and the EDHREC lookup uses it.
  * - The commander decks lookup (`src/lib/community/commander-decks-lookup.ts`, behind
  *   `GET /api/community/commanders/[slug]/decks` and the commander decks page) matches
@@ -24,7 +24,8 @@
  * The first tests check that the lookup and the index still ship exactly the recorded
  * expression, so the recording cannot go stale silently.
  *
- * COM-02 moves `commanderToSlug` into the community domain; this table protects that move.
+ * COM-02 moved `commanderToSlug` into the community context; this table protected that move and
+ * keeps the two implementations together.
  */
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -32,7 +33,7 @@ import { describe, expect, it } from "vitest";
 import { collapseToCommanders } from "@/lib/seo/sitemap";
 import { commanderToSlug, isCommanderSlug } from "./commander-slug";
 
-/** The repository root, three levels above this file (`src/lib/meta/`). */
+/** The repository root, three levels above this file (`src/lib/community/`). */
 const REPO_ROOT = join(__dirname, "..", "..", "..");
 
 /**
