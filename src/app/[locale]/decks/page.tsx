@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import { useRouter } from "next/navigation";
 import { useInitContext } from "@/components/providers/InitProvider";
 import { useBoundedSession } from "@/hooks/useBoundedSession";
@@ -22,6 +28,8 @@ import { DeckListRefreshNotice } from "@/components/deck/DeckListRefreshNotice";
 import { GuestDeckClaimOffer } from "@/components/deck/GuestDeckClaimOffer";
 import { LibraryCardSkeleton } from "@/components/layout/RouteSkeleton";
 import { Input } from "@/components/ui/Input";
+import { deriveLibraryView } from "@/lib/deck/deck-library-view";
+import type { Deck } from "@/lib/deck/types";
 import {
   filterDecksByQuery,
   getStoredDecksViewMode,
@@ -61,13 +69,6 @@ export default function DecksPage() {
   const [folderFilter, setFolderFilter] = useState("all");
   const [query, setQuery] = useState("");
   const deckList = Object.values(decks);
-  const showLoading =
-    deckList.length === 0 &&
-    !timedOut &&
-    (sessionStatus === "loading" || (sessionStatus === "authenticated" && isLoading));
-  const sessionBlocked = timedOut && deckList.length === 0;
-  // A failed listing must not read as an empty account.
-  const hasLoadFailed = loadError !== null && deckList.length === 0;
   const sortedDeckList = useMemo(() => {
     const folderFiltered =
       folderFilter === "all"
@@ -75,6 +76,15 @@ export default function DecksPage() {
         : deckList.filter((deck) => (deck.folderId ?? "") === folderFilter);
     return sortDecks(filterDecksByQuery(folderFiltered, query), sortKey, sortDir);
   }, [deckList, folderFilter, query, sortKey, sortDir]);
+  // The precedence between the six screens lives in `deriveLibraryView`.
+  const libraryView = deriveLibraryView({
+    sessionStatus,
+    sessionTimedOut: timedOut,
+    isLoadingDecks: isLoading,
+    loadError,
+    decks: deckList,
+    visibleDecks: sortedDeckList,
+  });
 
   useEffect(() => {
     if (sessionStatus !== "authenticated") return;
@@ -165,6 +175,169 @@ export default function DecksPage() {
     setSortDir(dir);
   }, []);
 
+  // The folder filter and the comparison panel sit above every screen that
+  // has a library to show, the session timeout included, as they always did.
+  const libraryControls = (
+    <>
+      <DeckFolderControls
+        decks={deckList}
+        filterId={folderFilter}
+        onFilterChange={setFolderFilter}
+        onMoved={loadDecks}
+      />
+      <DeckComparisonPanel decks={sortedDeckList} />
+    </>
+  );
+
+  function librarySubtitle(): string {
+    switch (libraryView.kind) {
+      case "loading":
+        return t("home.loading");
+      case "loadFailed":
+        return t("home.loadFailedSubtitle");
+      // The timeout still reads as an empty library: pinned by the page's
+      // tests, and the P1-20 follow-up owns the wording.
+      case "sessionBlocked":
+      case "empty":
+        return t("home.empty");
+      case "searchEmpty":
+      case "ready":
+        return t("home.deckCount", { count: libraryView.deckCount });
+      default: {
+        const unreachable: never = libraryView;
+        return unreachable;
+      }
+    }
+  }
+
+  function renderLibraryBody(): ReactNode {
+    switch (libraryView.kind) {
+      case "loading":
+        return (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {SKELETON_KEYS.map((key) => (
+              <LibraryCardSkeleton key={key} />
+            ))}
+          </div>
+        );
+      case "sessionBlocked":
+        return (
+          <>
+            <SessionTimeoutPanel onRetry={retrySession} />
+            {libraryControls}
+          </>
+        );
+      case "loadFailed":
+        return (
+          <LoadFailedPanel
+            error={libraryView.error}
+            onRetry={handleRetryLoad}
+          />
+        );
+      case "empty":
+        return (
+          <>
+            {libraryControls}
+            <EmptyLibraryPanel
+              onCreate={handleNewDeck}
+              isCreating={isCreating}
+            />
+          </>
+        );
+      case "searchEmpty":
+        return (
+          <>
+            {libraryView.refreshFailed && (
+              <DeckListRefreshNotice onRetry={handleRetryLoad} />
+            )}
+            {libraryControls}
+            <p className="rounded-[var(--lumen-radius-xl)] border border-[var(--border)] bg-[var(--surface)] p-6 text-center text-sm text-[var(--text-secondary)] shadow-[var(--lumen-shadow-sm)]">
+              {t("home.searchEmpty")}
+            </p>
+          </>
+        );
+      case "ready":
+        return (
+          <>
+            {libraryView.refreshFailed && (
+              <DeckListRefreshNotice onRetry={handleRetryLoad} />
+            )}
+            {libraryControls}
+            {renderDeckViews(libraryView.decks)}
+          </>
+        );
+      default: {
+        const unreachable: never = libraryView;
+        return unreachable;
+      }
+    }
+  }
+
+  function renderDeckViews(visibleDecks: readonly Deck[]): ReactNode {
+    if (viewMode === "list") {
+      return (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <DeckListTable
+            decks={visibleDecks}
+            deletingId={deletingId}
+            duplicatingId={duplicatingId}
+            onDelete={handleDeleteDeck}
+            onDuplicate={handleDuplicateDeck}
+          />
+        </motion.div>
+      );
+    }
+    return (
+      <motion.div
+        className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4"
+        initial="hidden"
+        animate="show"
+        variants={{
+          hidden: {},
+          show: { transition: { staggerChildren: 0.08 } },
+        }}
+      >
+        {visibleDecks.map((deck) => (
+          <motion.div
+            key={deck.id}
+            variants={{
+              hidden: { opacity: 0, y: 16 },
+              show: { opacity: 1, y: 0 },
+            }}
+          >
+            <HomeDeckCard
+              deck={deck}
+              onDelete={handleDeleteDeck}
+              onDuplicate={handleDuplicateDeck}
+              deletingId={deletingId}
+              duplicatingId={duplicatingId}
+            />
+          </motion.div>
+        ))}
+
+        <motion.button
+          onClick={handleNewDeck}
+          disabled={isCreating}
+          className="flex h-40 flex-col items-center justify-center gap-2 rounded-[var(--lumen-radius-xl)] border border-dashed border-[var(--border)] bg-transparent p-5 text-[var(--text-secondary)] transition-all hover:border-[var(--accent)] hover:bg-[var(--surface)] hover:text-[var(--accent-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-60"
+          variants={{
+            hidden: { opacity: 0, y: 16 },
+            show: { opacity: 1, y: 0 },
+          }}
+        >
+          {isCreating ? (
+            <Loader2 className="h-6 w-6 animate-spin" />
+          ) : (
+            <Plus className="h-6 w-6" />
+          )}
+          <span className="text-sm font-medium">{t("home.newDeck")}</span>
+        </motion.button>
+      </motion.div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
@@ -176,18 +349,12 @@ export default function DecksPage() {
               {t("home.title")}
             </h1>
             <p className="mt-1 text-sm text-[var(--text-secondary)]">
-              {showLoading && t("home.loading")}
-              {!showLoading && hasLoadFailed && t("home.loadFailedSubtitle")}
-              {!showLoading &&
-                !hasLoadFailed &&
-                deckList.length === 0 &&
-                t("home.empty")}
-              {!showLoading &&
-                deckList.length > 0 &&
-                t("home.deckCount", { count: deckList.length })}
+              {librarySubtitle()}
             </p>
           </div>
-          {deckList.length > 0 && (
+          {/* The search box belongs to the two screens that have decks to search. */}
+          {(libraryView.kind === "searchEmpty" ||
+            libraryView.kind === "ready") && (
             <div className="relative w-full lg:max-w-sm">
               <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-[var(--text-secondary)]" />
               <Input
@@ -218,190 +385,21 @@ export default function DecksPage() {
           onSaved={handleGuestDeckSaved}
         />
 
-        {sessionBlocked && (
-          <div className="flex flex-col items-center justify-center py-24 text-center">
-            <AlertTriangle className="mb-4 h-12 w-12 text-red-400 opacity-80" />
-            <h2 className="mb-2 text-lg font-semibold text-[var(--text-primary)]">
-              {t("home.sessionTimeoutTitle")}
-            </h2>
-            <p className="mb-6 max-w-md text-sm text-[var(--text-secondary)]">
-              {t("home.sessionTimeoutDescription")}
-            </p>
-            <button
-              type="button"
-              onClick={retrySession}
-              className="flex items-center gap-2 rounded-[var(--lumen-radius-pill)] bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[var(--accent-hover)]"
-            >
-              <RefreshCw className="h-4 w-4" />
-              {t("home.retry")}
-            </button>
-          </div>
-        )}
-
-        {!sessionBlocked && initializationStatus === "error" && (
-          <div className="mb-4 flex items-center justify-between gap-3 rounded-[var(--lumen-radius-lg)] border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm text-[var(--text-primary)]">
-            <p>{t("home.profileLoadFailed")}</p>
-            <button
-              type="button"
-              onClick={retryInitialization}
-              className="shrink-0 rounded-[var(--lumen-radius-pill)] border border-[var(--border)] px-3 py-2"
-            >
-              {t("home.retry")}
-            </button>
-          </div>
-        )}
-
-        {!showLoading && loadError !== null && deckList.length > 0 && (
-          <DeckListRefreshNotice onRetry={handleRetryLoad} />
-        )}
-
-        {!showLoading && !hasLoadFailed && (
-          <>
-            <DeckFolderControls
-              decks={deckList}
-              filterId={folderFilter}
-              onFilterChange={setFolderFilter}
-              onMoved={loadDecks}
-            />
-            <DeckComparisonPanel decks={sortedDeckList} />
-          </>
-        )}
-
-        {showLoading && (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {SKELETON_KEYS.map((key) => (
-              <LibraryCardSkeleton key={key} />
-            ))}
-          </div>
-        )}
-
-        {!showLoading && hasLoadFailed && (
-          <motion.div
-            className="flex flex-col items-center justify-center py-24 text-center"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <AlertTriangle className="mb-4 h-12 w-12 text-red-400 opacity-80" />
-            <h2 className="mb-2 text-lg font-semibold text-[var(--text-primary)]">
-              {t("home.loadFailedTitle")}
-            </h2>
-            <p className="mb-2 max-w-md text-sm text-[var(--text-secondary)]">
-              {t("home.loadFailedDescription")}
-            </p>
-            <p className="mb-6 max-w-md break-words font-mono text-xs text-[var(--text-secondary)] opacity-70">
-              {loadError}
-            </p>
-            <button
-              type="button"
-              onClick={handleRetryLoad}
-              className="flex items-center gap-2 rounded-[var(--lumen-radius-pill)] bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white shadow-[var(--lumen-shadow-sm)] transition-colors hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
-            >
-              <RefreshCw className="h-4 w-4" />
-              {t("home.retry")}
-            </button>
-          </motion.div>
-        )}
-
-        {!showLoading && !hasLoadFailed && !sessionBlocked && deckList.length === 0 && (
-          <motion.div
-            className="flex flex-col items-center justify-center py-24 text-center"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <Layers className="mb-4 h-12 w-12 text-[var(--accent-text)] opacity-60" />
-            <h2 className="mb-2 text-lg font-semibold text-[var(--text-primary)]">
-              {t("home.startBuilding")}
-            </h2>
-            <p className="mb-6 max-w-sm text-sm text-[var(--text-secondary)]">
-              {t("home.startBuildingDescription")}
-            </p>
-            <button
-              type="button"
-              onClick={handleNewDeck}
-              disabled={isCreating}
-              className="flex items-center gap-2 rounded-[var(--lumen-radius-pill)] bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white shadow-[var(--lumen-shadow-sm)] transition-colors hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {isCreating ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Plus className="h-4 w-4" />
-              )}
-              {t("home.createDeck")}
-            </button>
-          </motion.div>
-        )}
-
-        {!showLoading && deckList.length > 0 && sortedDeckList.length === 0 && (
-          <p className="rounded-[var(--lumen-radius-xl)] border border-[var(--border)] bg-[var(--surface)] p-6 text-center text-sm text-[var(--text-secondary)] shadow-[var(--lumen-shadow-sm)]">
-            {t("home.searchEmpty")}
-          </p>
-        )}
-
-        {!showLoading && sortedDeckList.length > 0 && (
-          <>
-            {viewMode === "list" ? (
-              <motion.div
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
+        {libraryView.kind !== "sessionBlocked" &&
+          initializationStatus === "error" && (
+            <div className="mb-4 flex items-center justify-between gap-3 rounded-[var(--lumen-radius-lg)] border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm text-[var(--text-primary)]">
+              <p>{t("home.profileLoadFailed")}</p>
+              <button
+                type="button"
+                onClick={retryInitialization}
+                className="shrink-0 rounded-[var(--lumen-radius-pill)] border border-[var(--border)] px-3 py-2"
               >
-                <DeckListTable
-                  decks={sortedDeckList}
-                  deletingId={deletingId}
-                  duplicatingId={duplicatingId}
-                  onDelete={handleDeleteDeck}
-                  onDuplicate={handleDuplicateDeck}
-                />
-              </motion.div>
-            ) : (
-              <motion.div
-                className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4"
-                initial="hidden"
-                animate="show"
-                variants={{
-                  hidden: {},
-                  show: { transition: { staggerChildren: 0.08 } },
-                }}
-              >
-                {sortedDeckList.map((deck) => (
-                  <motion.div
-                    key={deck.id}
-                    variants={{
-                      hidden: { opacity: 0, y: 16 },
-                      show: { opacity: 1, y: 0 },
-                    }}
-                  >
-                    <HomeDeckCard
-                      deck={deck}
-                      onDelete={handleDeleteDeck}
-                      onDuplicate={handleDuplicateDeck}
-                      deletingId={deletingId}
-                      duplicatingId={duplicatingId}
-                    />
-                  </motion.div>
-                ))}
+                {t("home.retry")}
+              </button>
+            </div>
+          )}
 
-                <motion.button
-                  onClick={handleNewDeck}
-                  disabled={isCreating}
-                  className="flex h-40 flex-col items-center justify-center gap-2 rounded-[var(--lumen-radius-xl)] border border-dashed border-[var(--border)] bg-transparent p-5 text-[var(--text-secondary)] transition-all hover:border-[var(--accent)] hover:bg-[var(--surface)] hover:text-[var(--accent-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-60"
-                  variants={{
-                    hidden: { opacity: 0, y: 16 },
-                    show: { opacity: 1, y: 0 },
-                  }}
-                >
-                  {isCreating ? (
-                    <Loader2 className="h-6 w-6 animate-spin" />
-                  ) : (
-                    <Plus className="h-6 w-6" />
-                  )}
-                  <span className="text-sm font-medium">
-                    {t("home.newDeck")}
-                  </span>
-                </motion.button>
-              </motion.div>
-            )}
-          </>
-        )}
+        {renderLibraryBody()}
       </main>
 
       <Footer />
@@ -415,5 +413,108 @@ export default function DecksPage() {
         }}
       />
     </div>
+  );
+}
+
+/** The session request timed out: nothing is listed until it is asked again. */
+function SessionTimeoutPanel({ onRetry }: { readonly onRetry: () => void }) {
+  const t = useTranslations("deck");
+  return (
+    <div className="flex flex-col items-center justify-center py-24 text-center">
+      <AlertTriangle className="mb-4 h-12 w-12 text-red-400 opacity-80" />
+      <h2 className="mb-2 text-lg font-semibold text-[var(--text-primary)]">
+        {t("home.sessionTimeoutTitle")}
+      </h2>
+      <p className="mb-6 max-w-md text-sm text-[var(--text-secondary)]">
+        {t("home.sessionTimeoutDescription")}
+      </p>
+      <button
+        type="button"
+        onClick={onRetry}
+        className="flex items-center gap-2 rounded-[var(--lumen-radius-pill)] bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[var(--accent-hover)]"
+      >
+        <RefreshCw className="h-4 w-4" />
+        {t("home.retry")}
+      </button>
+    </div>
+  );
+}
+
+/**
+ * The listing failed with no deck to fall back on. A failed listing must not
+ * read as an empty account, so the raw error is shown with a reload.
+ */
+function LoadFailedPanel({
+  error,
+  onRetry,
+}: {
+  readonly error: string;
+  readonly onRetry: () => void;
+}) {
+  const t = useTranslations("deck");
+  return (
+    <motion.div
+      className="flex flex-col items-center justify-center py-24 text-center"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+    >
+      <AlertTriangle className="mb-4 h-12 w-12 text-red-400 opacity-80" />
+      <h2 className="mb-2 text-lg font-semibold text-[var(--text-primary)]">
+        {t("home.loadFailedTitle")}
+      </h2>
+      <p className="mb-2 max-w-md text-sm text-[var(--text-secondary)]">
+        {t("home.loadFailedDescription")}
+      </p>
+      <p className="mb-6 max-w-md break-words font-mono text-xs text-[var(--text-secondary)] opacity-70">
+        {error}
+      </p>
+      <button
+        type="button"
+        onClick={onRetry}
+        className="flex items-center gap-2 rounded-[var(--lumen-radius-pill)] bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white shadow-[var(--lumen-shadow-sm)] transition-colors hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
+      >
+        <RefreshCw className="h-4 w-4" />
+        {t("home.retry")}
+      </button>
+    </motion.div>
+  );
+}
+
+/** The library holds no deck: the first one is one click away. */
+function EmptyLibraryPanel({
+  onCreate,
+  isCreating,
+}: {
+  readonly onCreate: () => void;
+  readonly isCreating: boolean;
+}) {
+  const t = useTranslations("deck");
+  return (
+    <motion.div
+      className="flex flex-col items-center justify-center py-24 text-center"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+    >
+      <Layers className="mb-4 h-12 w-12 text-[var(--accent-text)] opacity-60" />
+      <h2 className="mb-2 text-lg font-semibold text-[var(--text-primary)]">
+        {t("home.startBuilding")}
+      </h2>
+      <p className="mb-6 max-w-sm text-sm text-[var(--text-secondary)]">
+        {t("home.startBuildingDescription")}
+      </p>
+      <button
+        type="button"
+        onClick={onCreate}
+        disabled={isCreating}
+        className="flex items-center gap-2 rounded-[var(--lumen-radius-pill)] bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white shadow-[var(--lumen-shadow-sm)] transition-colors hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        {isCreating ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <Plus className="h-4 w-4" />
+        )}
+        {t("home.createDeck")}
+      </button>
+    </motion.div>
   );
 }
