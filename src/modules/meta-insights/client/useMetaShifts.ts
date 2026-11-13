@@ -14,7 +14,7 @@
  * @module meta-insights/client/useMetaShifts
  */
 import { useCallback, useEffect, useRef, useState } from "react";
-import { commanderToSlug } from "@/lib/meta/commander-slug";
+import { commanderToSlug } from "@/lib/community/commander-slug";
 import type { MetaShift } from "@/modules/meta-insights/domain/history";
 
 /** The window the panel asks for; the API caps it at a year. */
