@@ -504,14 +504,15 @@ describe("the card zoom", () => {
     expect(tile).toHaveFocus();
   });
 
-  it("pins: closing with the close button drops focus to the document body (see RR-05)", async () => {
+  it("closes with the close button and gives focus back to the tile that opened it", async () => {
     const { user } = await openPage();
-    await user.click(screen.getByRole("button", { name: "View Sol Ring" }));
+    const tile = screen.getByRole("button", { name: "View Sol Ring" });
+    await user.click(tile);
 
     await user.click(screen.getByRole("button", { name: "Close" }));
 
     expect(screen.queryByRole("dialog")).toBeNull();
-    expect(document.body).toHaveFocus();
+    await waitFor(() => expect(tile).toHaveFocus());
   });
 
   it("closes when the visitor clicks the backdrop around the card", async () => {
