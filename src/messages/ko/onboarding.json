@@ -10,8 +10,8 @@
     },
     "createDeck": {
       "title": "Create your first deck",
-      "description": "Click \"New Deck\" in the top-right corner of any page. Give it a name, choose your format, and set a target bracket.",
-      "hint": "You can also use the AI Wizard to build a full deck from scratch in seconds."
+      "description": "Click \"New Deck\" at the top right of the page, or in the menu on a small screen. Give it a name, choose your format, and set a target bracket.",
+      "hint": "With an account, you can also click \"Build with AI\" on My Decks to build a full deck from scratch."
     },
     "searchCards": {
       "title": "Search & add cards",
