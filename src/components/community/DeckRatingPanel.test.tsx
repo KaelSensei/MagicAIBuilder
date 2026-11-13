@@ -5,7 +5,8 @@ import { renderWithIntl } from "@/test/render-with-intl";
 
 vi.mock(import("@/i18n/navigation"), () => import("@/test/i18n-navigation-stub"));
 
-import { DeckRatingPanel, type DeckRatingsResponse } from "./DeckRatingPanel";
+import type { DeckRatingsResponse } from "@/lib/community/community-contracts";
+import { DeckRatingPanel } from "./DeckRatingPanel";
 
 const EMPTY_AGGREGATE: DeckRatingsResponse = {
   average: 0,
@@ -20,13 +21,31 @@ function aggregate(overrides: Partial<DeckRatingsResponse> = {}): DeckRatingsRes
   return { ...EMPTY_AGGREGATE, ...overrides };
 }
 
-/** Resolves every GET with `data`; other verbs resolve OK so a reload follows. */
+/** The row the ratings route answers to a POST: the saved rating with its ids and date. */
+const SAVED_RATING = {
+  id: "rating-1",
+  userId: "u-1",
+  deckId: "deck-1",
+  rating: 4,
+  title: null,
+  body: null,
+  helpfulCount: 0,
+  createdAt: "2026-08-01T00:00:00.000Z",
+};
+
+/**
+ * Resolves every GET with `data`; a POST answers the saved row (201) and a
+ * DELETE the deleted count, as the route does, so a reload follows each write.
+ */
 function mockFetch(data: DeckRatingsResponse) {
   const fetchMock = vi.fn().mockImplementation((_url: string, init?: RequestInit) => {
     if (!init?.method || init.method === "GET") {
       return Promise.resolve({ ok: true, status: 200, json: async () => data });
     }
-    return Promise.resolve({ ok: true, status: 201, json: async () => ({}) });
+    if (init.method === "DELETE") {
+      return Promise.resolve({ ok: true, status: 200, json: async () => ({ deleted: 1 }) });
+    }
+    return Promise.resolve({ ok: true, status: 201, json: async () => SAVED_RATING });
   });
   vi.stubGlobal("fetch", fetchMock);
   return fetchMock;
@@ -188,25 +207,20 @@ describe("DeckRatingPanel", () => {
   });
 
   it("renders existing reviews with their author", async () => {
-    mockFetch(
-      aggregate({
-        average: 5,
-        count: 1,
-        reviews: [
-          {
-            id: "r-1",
-            userId: "u-2",
-            deckId: "deck-1",
-            rating: 5,
-            title: "Excellent",
-            body: "Very tuned",
-            helpfulCount: 0,
-            createdAt: new Date("2026-08-01"),
-            author: { name: "Voter", username: "voter", image: null },
-          },
-        ],
-      })
-    );
+    // The route sends the whole rating row; the contract names only what the
+    // list renders, and its guard lets the other fields through.
+    const review = {
+      id: "r-1",
+      userId: "u-2",
+      deckId: "deck-1",
+      rating: 5,
+      title: "Excellent",
+      body: "Very tuned",
+      helpfulCount: 0,
+      createdAt: "2026-08-01T00:00:00.000Z",
+      author: { name: "Voter", username: "voter", image: null },
+    };
+    mockFetch(aggregate({ average: 5, count: 1, reviews: [review] }));
     renderWithIntl(<DeckRatingPanel {...defaultProps} />);
 
     expect(await screen.findByText("Excellent")).toBeInTheDocument();
@@ -221,7 +235,11 @@ describe("DeckRatingPanel", () => {
         if (!init?.method || init.method === "GET") {
           return Promise.resolve({ ok: true, status: 200, json: async () => aggregate() });
         }
-        return Promise.resolve({ ok: false, status: 500, json: async () => ({}) });
+        return Promise.resolve({
+          ok: false,
+          status: 500,
+          json: async () => ({ error: "Failed to save rating" }),
+        });
       })
     );
     const user = userEvent.setup();
@@ -264,7 +282,11 @@ describe("DeckRatingPanel", () => {
     it("says so instead of sitting on an empty panel, when the API errors", async () => {
       vi.stubGlobal(
         "fetch",
-        vi.fn().mockResolvedValue({ ok: false, status: 500, json: async () => ({}) })
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 500,
+          json: async () => ({ error: "Failed to fetch ratings" }),
+        })
       );
       renderWithIntl(<DeckRatingPanel {...defaultProps} />);
 
@@ -283,7 +305,11 @@ describe("DeckRatingPanel", () => {
       const user = userEvent.setup();
       const fetchMock = vi
         .fn()
-        .mockResolvedValueOnce({ ok: false, status: 500, json: async () => ({}) })
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 500,
+          json: async () => ({ error: "Failed to fetch ratings" }),
+        })
         .mockResolvedValue({
           ok: true,
           status: 200,
