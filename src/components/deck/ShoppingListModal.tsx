@@ -15,6 +15,7 @@ import { formatAcquisitionCsv } from "@/lib/collection/acquisition-csv";
 import { useAcquisitionIntent } from "@/hooks/useAcquisitionIntent";
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 import { downloadTextFile } from "@/lib/download-text-file";
+import { underscoreFileStem } from "@/lib/text/slug";
 import { ShoppingListRow } from "./ShoppingListRow";
 
 interface ShoppingListModalProps {
@@ -84,7 +85,7 @@ export function ShoppingListModal({
 
   const handleExportCsv = () => {
     const csv = formatAcquisitionCsv(buyNowItems);
-    const deckSlug = deck.name.replaceAll(/[^a-z0-9]/gi, "_").toLowerCase();
+    const deckSlug = underscoreFileStem(deck.name);
     downloadTextFile(csv, `${deckSlug}-buy-now.csv`, "text/csv");
   };
 
