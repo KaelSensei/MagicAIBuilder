@@ -8,7 +8,9 @@
  * Not responsible for: choosing the library size or the matching count from a
  * deck (commanders start in the command zone, CR 903.6, and Sideboard and
  * Considering cards are not in the library; `countLibrary` in
- * `draw-odds-library.ts` reads them), or the panel that asks.
+ * `draw-odds-library.ts` reads them), the cards drawn by a turn
+ * (`cardsDrawnBy` in `cards-drawn.ts`), or the panel that asks
+ * (`components/deck/DrawOddsPanel.tsx`).
  *
  * @module deck/draw-odds
  */
