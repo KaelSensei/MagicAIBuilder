@@ -398,8 +398,12 @@ describe("MetaPanel popular cards (EDHREC)", () => {
     expect(
       screen.queryByRole("button", { name: "Add Sol Ring" })
     ).not.toBeInTheDocument();
-    // The card row stays listed (the second "Sol Ring" is its meta-shift line).
-    expect(screen.getAllByText("Sol Ring")).toHaveLength(2);
+    // The card row stays listed (the second "Sol Ring" is its meta-shift line,
+    // which arrives with the history request after EDHREC's answer, so it can
+    // land after the click on a slow run).
+    await waitFor(() =>
+      expect(screen.getAllByText("Sol Ring")).toHaveLength(2)
+    );
   });
 
   it("attributes the cards to EDHREC with the observation time, and says when they are stale", async () => {
