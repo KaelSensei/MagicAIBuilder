@@ -12,8 +12,30 @@
 
 import { pushHistory } from "./history";
 import { isChoosingBottom } from "./mulligan";
-import { defaultPlaytestDeps, type PlaytestDeps } from "./ports";
+import { type Clock, defaultPlaytestDeps, type PlaytestDeps } from "./ports";
 import type { LifeHistoryEntry, PlaytestEngine } from "./types";
+
+// ─── Life history ─────────────────────────────────────────────────────────
+/**
+ * The life-history entry for one change of the life total (CR 119.3): `delta` is negative for
+ * a loss and positive for a gain, stamped with the turn and step it happened in and the time
+ * `clock` reads now.
+ *
+ * Pure: the entry is returned, not recorded; `applyDamage` and `applyHeal` append it.
+ */
+export function lifeEntry(
+  state: Pick<PlaytestEngine, "turn" | "phase">,
+  clock: Clock,
+  change: Pick<LifeHistoryEntry, "delta" | "description">
+): LifeHistoryEntry {
+  return {
+    turn: state.turn,
+    phase: state.phase,
+    timestamp: clock.now(),
+    delta: change.delta,
+    description: change.description,
+  };
+}
 
 // ─── Damage / heal ────────────────────────────────────────────────────────
 /**
@@ -34,26 +56,17 @@ export function applyDamage(
 ): PlaytestEngine {
   if (isChoosingBottom(state)) return state;
   const newLife = state.lifeTotal - amount;
-  const entry: LifeHistoryEntry = {
-    turn: state.turn,
-    phase: state.phase,
-    timestamp: deps.clock.now(),
-    delta: -amount,
-    description,
-  };
-  const newHistory = [...state.lifeHistory, entry];
+  const entry = lifeEntry(state, deps.clock, { delta: -amount, description });
 
-  return pushHistory(
-    state,
-    deps.clock,
-    {
+  return pushHistory(state, deps.clock, {
+    patch: {
       lifeTotal: newLife,
-      lifeHistory: newHistory,
+      lifeHistory: [...state.lifeHistory, entry],
       isGameOver: newLife <= 0,
     },
-    `Lost ${amount} life: ${description}`,
-    { kind: "life", lifeDelta: -amount }
-  );
+    description: `Lost ${amount} life: ${description}`,
+    evidence: { kind: "life", lifeDelta: -amount },
+  });
 }
 
 /**
@@ -70,24 +83,17 @@ export function applyHeal(
   deps: PlaytestDeps = defaultPlaytestDeps
 ): PlaytestEngine {
   if (isChoosingBottom(state)) return state;
-  const newLife = state.lifeTotal + amount;
-  const entry: LifeHistoryEntry = {
-    turn: state.turn,
-    phase: state.phase,
-    timestamp: deps.clock.now(),
+  const entry = lifeEntry(state, deps.clock, {
     delta: amount,
     description: "heal",
-  };
-  const newHistory = [...state.lifeHistory, entry];
+  });
 
-  return pushHistory(
-    state,
-    deps.clock,
-    {
-      lifeTotal: newLife,
-      lifeHistory: newHistory,
+  return pushHistory(state, deps.clock, {
+    patch: {
+      lifeTotal: state.lifeTotal + amount,
+      lifeHistory: [...state.lifeHistory, entry],
     },
-    `Gained ${amount} life`,
-    { kind: "life", lifeDelta: amount }
-  );
+    description: `Gained ${amount} life`,
+    evidence: { kind: "life", lifeDelta: amount },
+  });
 }

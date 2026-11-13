@@ -32,12 +32,8 @@ export function applyRollDie(
   if (!Number.isInteger(sides) || sides < 2) return state;
   if (!Number.isInteger(result) || result < 1 || result > sides) return state;
 
-  return pushHistory(
-    state,
-    deps.clock,
-    {
-      diceRolls: [...state.diceRolls, { sides, result }].slice(-10),
-    },
-    `Rolled d${sides}: ${result}`
-  );
+  return pushHistory(state, deps.clock, {
+    patch: { diceRolls: [...state.diceRolls, { sides, result }].slice(-10) },
+    description: `Rolled d${sides}: ${result}`,
+  });
 }
