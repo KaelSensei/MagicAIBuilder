@@ -117,12 +117,12 @@ export function buildSetup(
  * the same hand, which is how a test replays a game.
  *
  * @param setup - the deck and the format's starting rules
- * @param deps - only `random` is read, for the shuffle
+ * @param deps - the random source for the shuffle; a full `PlaytestDeps` is accepted
  * @returns a new engine with the format's life total, table size, mulligan rule and command zone
  */
 export function dealFrom(
   setup: PlaytestSetup,
-  deps: PlaytestDeps
+  deps: Pick<PlaytestDeps, "random">
 ): PlaytestEngine {
   return createPlaytestState(
     setup.cards,

@@ -4,9 +4,11 @@
  *
  * Context: playtest, the engine. `BattlefieldZone.tsx` calls these through the store; the
  * store generates the ids of new tokens and copies and passes them in, so the engine stays pure.
- * Rules: tokens (CR 111.1), emblems (CR 114.1), counters (CR 122.1), copies (CR 707.1).
- * Not responsible for: moving a card on or off the battlefield (`zones.ts`), or the untap that
- * starts a turn (`turn.ts`).
+ * Rules: tokens (CR 111.1), emblems (CR 114.1), counters (CR 122.1), copies (CR 707.1), the
+ * untap step (CR 502.3), which `untapAll` performs here for `applyUntapAll` and for the turn
+ * starts in `turn.ts`.
+ * Not responsible for: moving a card on or off the battlefield (`zones.ts`), or when a turn
+ * starts (`turn.ts`).
  *
  * @module playtest/engine/battlefield
  */
@@ -43,12 +45,24 @@ export function applyTap(
   );
 
   const permanent = state.battlefield.find((card) => card.id === cardId);
-  return pushHistory(
-    state,
-    deps.clock,
-    { battlefield: updated },
-    `${permanent?.tapped ? "Untapped" : "Tapped"} ${permanent?.name ?? "card"}`
-  );
+  return pushHistory(state, deps.clock, {
+    patch: { battlefield: updated },
+    description: `${permanent?.tapped ? "Untapped" : "Tapped"} ${permanent?.name ?? "card"}`,
+  });
+}
+
+/**
+ * Every permanent untapped at once: the untap step (CR 502.3), in which all of the active
+ * player's permanents untap simultaneously. The engine has no effect that keeps a permanent
+ * tapped, so every one untaps.
+ *
+ * Pure: returns a new battlefield in the same order and leaves the given one unchanged. Shared
+ * by `applyUntapAll` and the two turn starts in `turn.ts`.
+ */
+export function untapAll(
+  battlefield: readonly BattlefieldCard[]
+): readonly BattlefieldCard[] {
+  return battlefield.map((permanent) => ({ ...permanent, tapped: false }));
 }
 
 /**
@@ -65,13 +79,10 @@ export function applyUntapAll(
   deps: PlaytestDeps = defaultPlaytestDeps
 ): PlaytestEngine {
   if (isChoosingBottom(state)) return state;
-  const untapped = state.battlefield.map((p) => ({ ...p, tapped: false }));
-  return pushHistory(
-    state,
-    deps.clock,
-    { battlefield: untapped },
-    "Untapped all permanents"
-  );
+  return pushHistory(state, deps.clock, {
+    patch: { battlefield: untapAll(state.battlefield) },
+    description: "Untapped all permanents",
+  });
 }
 
 // ─── Card copies ─────────────────────────────────────────────────────────
@@ -107,12 +118,10 @@ export function applyCreateCardCopy(
     isSessionCopy: true,
   };
 
-  return pushHistory(
-    state,
-    deps.clock,
-    { battlefield: [...state.battlefield, copy] },
-    `Created a copy of ${source.name}`
-  );
+  return pushHistory(state, deps.clock, {
+    patch: { battlefield: [...state.battlefield, copy] },
+    description: `Created a copy of ${source.name}`,
+  });
 }
 
 const TOKEN_COLOR_IDENTITIES: Readonly<Record<string, string>> = {
@@ -179,14 +188,10 @@ export function applyCreateToken(
     isSessionCopy: true,
   };
 
-  return pushHistory(
-    state,
-    deps.clock,
-    {
-      battlefield: [...state.battlefield, battlefieldToken],
-    },
-    `Created ${name}`
-  );
+  return pushHistory(state, deps.clock, {
+    patch: { battlefield: [...state.battlefield, battlefieldToken] },
+    description: `Created ${name}`,
+  });
 }
 
 // ─── Counters ─────────────────────────────────────────────────────────────
@@ -214,11 +219,9 @@ export function applyAddCounter(
     c.id === cardId ? { ...c, counters: newCounters } : c
   );
 
-  return pushHistory(
-    state,
-    deps.clock,
-    { battlefield: updated },
-    `${amount >= 0 ? "Added" : "Removed"} a counter ${amount >= 0 ? "to" : "from"} ${permanent.name}`,
-    { kind: "counter", counterDelta: amount }
-  );
+  return pushHistory(state, deps.clock, {
+    patch: { battlefield: updated },
+    description: `${amount >= 0 ? "Added" : "Removed"} a counter ${amount >= 0 ? "to" : "from"} ${permanent.name}`,
+    evidence: { kind: "counter", counterDelta: amount },
+  });
 }
