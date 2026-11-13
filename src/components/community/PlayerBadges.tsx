@@ -2,7 +2,7 @@
 // Badge pills earned by a builder, derived server-side by getPlayerBadges().
 import { useTranslations } from "next-intl";
 import { Award, Star, TrendingUp } from "lucide-react";
-import type { PlayerBadge } from "@/lib/social/follow";
+import type { PlayerBadge } from "@/lib/social/player-badges";
 
 interface PlayerBadgesProps {
   readonly badges: readonly PlayerBadge[];

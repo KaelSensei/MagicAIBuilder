@@ -4,39 +4,10 @@ import { Link } from "@/i18n/navigation";
 import { useFormatter, useTranslations } from "next-intl";
 import { Layers } from "lucide-react";
 import { useState } from "react";
-import type { PlayerBadge } from "@/lib/social/follow";
 import { FollowButton } from "@/components/community/FollowButton";
 import { PlayerBadges } from "@/components/community/PlayerBadges";
 import { normalizeScryfallImageUrl } from "@/lib/scryfall/images";
-
-interface PublicDeckPreview {
-  readonly id: string;
-  readonly name: string;
-  readonly description: string | null;
-  readonly format: string;
-  readonly targetBracket: number;
-  readonly isAIGenerated: boolean;
-  readonly createdAt: string;
-  readonly updatedAt: string;
-  readonly cards: ReadonlyArray<{
-    readonly name: string;
-    readonly artCropUri: string;
-    readonly imageUri: string;
-  }>;
-}
-
-interface PublicProfile {
-  readonly id: string;
-  readonly name: string | null;
-  readonly username: string;
-  readonly image: string | null;
-  readonly createdAt: string;
-  readonly decks: readonly PublicDeckPreview[];
-  readonly followerCount: number;
-  readonly followingCount: number;
-  readonly isFollowing: boolean;
-  readonly badges: readonly PlayerBadge[];
-}
+import type { PublicProfile } from "@/lib/social/public-profile";
 
 interface PublicProfileViewProps {
   readonly profile: PublicProfile;

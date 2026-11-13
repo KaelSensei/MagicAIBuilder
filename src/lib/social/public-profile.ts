@@ -10,7 +10,7 @@
  * @module social/public-profile
  */
 
-import type { PlayerBadge } from "@/lib/social/follow";
+import type { PlayerBadge } from "@/lib/social/player-badges";
 
 /** The commander card of a public deck, as the profile's deck grid shows it. */
 export interface PublicProfileCommanderCard {
