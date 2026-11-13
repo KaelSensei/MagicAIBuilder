@@ -17,6 +17,7 @@ import {
   copyToClipboard,
 } from "@/lib/deck/export";
 import { downloadTextFile } from "@/lib/download-text-file";
+import { underscoreFileStem } from "@/lib/text/slug";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { textAreaShellClassName } from "@/components/ui/Input";
@@ -86,7 +87,7 @@ export function ExportModal({ deck, onClose }: ExportModalProps) {
 
   const handleDownload = (format: ExportFormat) => {
     const text = getExportText(deck, format);
-    const deckName = deck.name.replaceAll(/[^a-z0-9]/gi, "_").toLowerCase();
+    const deckName = underscoreFileStem(deck.name);
     if (format === "mtgo") {
       downloadTextFile(text, `${deckName}.dek`, "application/xml");
     } else {

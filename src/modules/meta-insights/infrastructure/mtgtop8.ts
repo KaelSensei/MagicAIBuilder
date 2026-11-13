@@ -23,6 +23,7 @@
  */
 
 import { commanderToSlug } from "@/lib/meta/commander-slug";
+import { spellOutLigatures } from "@/lib/text/transliterate";
 import type { TournamentDeck } from "@/modules/meta-insights/domain/types";
 
 /**
@@ -47,31 +48,12 @@ function cellText(html: string): string {
 }
 
 /**
- * "Æ" → "Ae", "œ" → "oe". Unicode NFD leaves these ligatures whole, so the slug
- * drops them, while Oracle text spells them out ("Aether Vial" on
- * https://api.scryfall.com/cards/named, read 2026-11-11). Spelling them out
- * before slugging lets a site option written with the ligature meet the slug
- * of the Oracle name.
- */
-const LIGATURES: ReadonlyMap<string, string> = new Map([
-  ["æ", "ae"],
-  ["Æ", "Ae"],
-  ["œ", "oe"],
-  ["Œ", "Oe"],
-]);
-
-function spellOutLigatures(name: string): string {
-  return name.replaceAll(
-    /[æÆœŒ]/g,
-    (ligature) => LIGATURES.get(ligature) ?? ligature
-  );
-}
-
-/**
  * The key two spellings of one commander share: the words of the commander
  * slug. Folding through {@link commanderToSlug} keeps this rule and the slug's
  * one rule, so "Éomer, Marshal of Rohan" and the slug-derived "eomer marshal
- * of rohan" both key as "eomer marshal of rohan".
+ * of rohan" both key as "eomer marshal of rohan". The slug drops a ligature
+ * whole, while Oracle text spells it out, so {@link spellOutLigatures} runs
+ * first and a site option written "Æther" meets the slug of "Aether".
  */
 function archetypeKey(name: string): string {
   return commanderToSlug(spellOutLigatures(name))

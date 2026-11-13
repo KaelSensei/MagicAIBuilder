@@ -3,8 +3,8 @@
  * (master plan PT-07). It pins what `PlaytestActionLog.test.tsx` leaves thin:
  * the export file names and contents, the composer's keyboard paths, the row's
  * save and cancel paths, the mana form's bounds, and when each filter row
- * shows. The behaviour pinned here is today's, including the file-stem rule
- * that drops an accented letter.
+ * shows. The behaviour pinned here is today's; the file-stem rule that
+ * dropped an accented letter was fixed (B2) and its test now reads the fix.
  */
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -135,12 +135,12 @@ describe("PlaytestActionLog export files (characterization)", () => {
     expect(savedFile().name).toBe("deck-playtest.txt");
   });
 
-  it("currently keeps the case of the name and drops an accented letter from the stem (pinned)", () => {
+  it("keeps the case of the name and an accented letter as its base letter in the stem (B2)", () => {
     renderLog(ONE_ENTRY, { deckName: "Ürza's Saga" });
 
     fireEvent.click(screen.getByRole("button", { name: "JSON" }));
 
-    expect(savedFile().name).toBe("rza-s-Saga-playtest.json");
+    expect(savedFile().name).toBe("Urza-s-Saga-playtest.json");
   });
 
   it("hides the copy and export buttons while the log is empty", () => {
