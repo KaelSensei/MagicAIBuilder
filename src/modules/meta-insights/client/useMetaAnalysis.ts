@@ -37,6 +37,7 @@ import {
   type MetaState,
 } from "@/modules/meta-insights/client/meta-source-state";
 
+/** The state shape this hook returns, re-exported so `useMetaPanel` types against the hook, not the state machine. */
 export type {
   MetaState,
   MetaSourceHealth,

@@ -1,5 +1,17 @@
 "use client";
-
+/**
+ * The standalone trends view of the builder page: the largest movements in
+ * the commander's EDHREC list over the recorded window, each marked exact or
+ * bounded.
+ *
+ * Meta-insights context, `ui/`. Reads the history through `useMetaShifts`
+ * on its own, apart from the meta panel, and renders `buildMetaTrendView`
+ * from `domain/history.ts`. It states EDHREC's top-20 limit beside the list
+ * because an entry or an exit is a bound, not a measured change, and a
+ * reader who misses that would read a ranking change as a collapse.
+ *
+ * @module meta-insights/ui/MetaTrendsView
+ */
 import { useEffect, useMemo } from "react";
 import { AlertCircle, Loader2, TrendingUp } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
@@ -38,10 +50,12 @@ function MetaTrendRow({ row }: { readonly row: MetaTrendViewRow }) {
 }
 
 /**
- * Displays EDHREC movements without misrepresenting entries and exits as exact data.
+ * The trends section for one commander: at most five movements, largest
+ * first, with "≥" or "≤" on the bounded ones, the two snapshot dates, and the
+ * loading, error and "no history yet" states. Renders nothing without a
+ * commander.
  *
  * @param commanderName - commander whose locally recorded EDHREC history is read
- * @returns the standalone, uncertainty-aware trend panel
  */
 export function MetaTrendsView({ commanderName }: { readonly commanderName: string | null }) {
   const t = useTranslations("deck");

@@ -63,11 +63,12 @@ export interface MetaCacheRepository {
 /**
  * The two providers behind the meta answers: EDHREC for the popular cards,
  * MTGTop8 for the recent tournament decks (`infrastructure/meta-provider.ts`
- * over the fetchers of `infrastructure/fetch.ts`).
+ * over the adapters `infrastructure/edhrec.ts` and
+ * `infrastructure/mtgtop8-source.ts`, one per provider as ADR 0004 asks).
  *
- * Both methods take the commander slug; the adapter knows how each provider
- * is addressed. Either may reject: the fetchers throw on a transport or
- * parsing failure, and the use case turns the rejection into the stale
+ * Both methods take the commander slug; the composition knows how each
+ * provider is addressed. Either may reject: the adapters throw on a transport
+ * or parsing failure, and the use case turns the rejection into the stale
  * fallback or the `unavailable` outcome.
  */
 export interface MetaProvider {

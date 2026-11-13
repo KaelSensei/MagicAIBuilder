@@ -54,7 +54,7 @@ Verified on `dev` at `72fbfc1` on 2026-11-10.
 - **Lutri is code.** `src/lib/deck/companion.ts` hard-codes "Lutri is banned as a companion in Commander".
 - **One reference doc is wrong.** `docs/references/game-changers.md`, corrected on 2026-11-08, matches the announcements [2]–[6]. `docs/references/banlists.md` lists Sway of the Stars as banned, although it was unbanned on 2025-04-22 [3]. It omits Channel, Erayo, Fastbond and Recurring Nightmare, which the official list names [8], and it dates the Gifts Ungiven and Panoptic Mirror unbans to February 2026.
 - **Preferences exist; notices do not.** `NotificationPreference` holds `replies`, `mentions`, `follows` and `watchedDecks`, all defaulting to true, with an API since 2026-11-02 (`acc66d01`) and a settings page since 2026-11-03 (`13f8a35f`). No notification table, delivery code or e-mail SDK exists, and `package.json` has no mail dependency.
-- **No scheduled jobs.** The repository has no cron configuration. `src/lib/meta/snapshots.ts` records the house pattern: history "accrues from ordinary traffic", with "no cron job".
+- **No scheduled jobs.** The repository has no cron configuration. `src/modules/meta-insights/infrastructure/snapshots.ts` records the house pattern: history "accrues from ordinary traffic", with "no cron job".
 - **What can be reused:** `compareDeckAnalysis` (`src/lib/deck/analysis-change-diff.ts`) for before and after, `categorizeCard` (`src/lib/deck/categories.ts`) for a card's role, the reviewed package diff from I-08, `CollectionCard` for owned copies, and `User.isModerator` to gate publishing.
 
 ## Functional requirements

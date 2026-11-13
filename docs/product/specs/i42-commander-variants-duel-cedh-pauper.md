@@ -74,7 +74,7 @@ Verified on `dev` (`61792c1`) on 2026-11-09.
 - **The commander search ignores the format.** `buildCommanderSearchQuery` in `src/lib/scryfall/search.ts` sends `is:commander` with no `legal:` filter. Scryfall's `is:commander` returns 45 planeswalkers, against 310 legal in Oathbreaker and every legendary planeswalker allowed in Brawl [9][12]. It never excludes a banned-as-commander card.
 - **Brawl mixes two formats.** `FORMAT_CONFIG.brawl` checks Arena Brawl's card pool (`brawl`) against a 60-card deck at 30 life, the tabletop size and multiplayer life [9][12][13].
 - **Imports never set a format.** `src/lib/import/url-import.ts` adds cards to the open deck. Its Moxfield check accepts `duel` as Commander-like without a warning; Archidekt warns for any `deckFormat` other than 3.
-- **Duel Commander data is shown in Commander decks.** `src/lib/meta/mtgtop8.ts` notes that MTGTop8's "EDH" is "overwhelmingly Duel Commander", and `src/components/deck/MetaPanel.tsx` shows the source's format label beside each result.
+- **Duel Commander data is shown in Commander decks.** `src/modules/meta-insights/infrastructure/mtgtop8.ts` notes that MTGTop8's "EDH" is "overwhelmingly Duel Commander", and `src/modules/meta-insights/ui/MetaPanel.tsx` shows the source's format label beside each result.
 - **The playtest reads the format.** `src/lib/playtest/store.ts` takes `startingLife` and `firstMulliganFree` from `FORMAT_CONFIG`. The engine models no commander tax, no commander damage and no limit on commander casts. I-07 records a follow-up for a per-session multiplayer choice.
 - **Brackets stop at 4.** `BracketLevel` in `src/lib/constants/brackets.ts` and `src/lib/deck/types.ts` is `1 | 2 | 3 | 4`; `src/lib/playtest/keep-rules.ts` already uses 5 for cEDH. Bracket scoring runs only where `hasBracketScoring` is set, but `setCommander` shows the Game Changer toast in every format.
 - **Labels are English.** Format labels live in `FORMAT_CONFIG`, and the banned and singleton messages in `validation.ts` are English strings, not catalogue entries.
@@ -386,7 +386,7 @@ As a player, I want the product to a format picker at creation and in deck setti
 
 Given a signed-in player, the English locale, and the deck or screen this behaviour belongs to
 When the player uses this behaviour
-Then the behaviour holds: A format picker at creation and in deck settings; switching re-validates and removes no card (slice 1). Today src/components/deck/FormatSelector.tsx is never rendered and createDeck sends no format, so every deck created in the app is a Commander deck. Duel Commander lists from the MTGTop8 meta panel (src/lib/meta/mtgtop8.ts, src/components/deck/MetaPanel.tsx) and Moxfield duel imports (src/lib/import/url-import.ts) land in those decks, with the multiplayer banned list, 40 life and the free mulligan.
+Then the behaviour holds: A format picker at creation and in deck settings; switching re-validates and removes no card (slice 1). Today src/components/deck/FormatSelector.tsx is never rendered and createDeck sends no format, so every deck created in the app is a Commander deck. Duel Commander lists from the MTGTop8 meta panel (src/modules/meta-insights/infrastructure/mtgtop8.ts, src/modules/meta-insights/ui/MetaPanel.tsx) and Moxfield duel imports (src/lib/import/url-import.ts) land in those decks, with the multiplayer banned list, 40 life and the free mulligan.
 
 #### AC-42-101 Failure
 
@@ -579,7 +579,7 @@ The roadmap lists nine formats as a completed foundation, but no screen lets a p
 
 ### Scope
 
-- [ ] A format picker at creation and in deck settings; switching re-validates and removes no card (slice 1). Today `src/components/deck/FormatSelector.tsx` is never rendered and `createDeck` sends no format, so every deck created in the app is a Commander deck. Duel Commander lists from the MTGTop8 meta panel (`src/lib/meta/mtgtop8.ts`, `src/components/deck/MetaPanel.tsx`) and Moxfield `duel` imports (`src/lib/import/url-import.ts`) land in those decks, with the multiplayer banned list, 40 life and the free mulligan.
+- [ ] A format picker at creation and in deck settings; switching re-validates and removes no card (slice 1). Today `src/components/deck/FormatSelector.tsx` is never rendered and `createDeck` sends no format, so every deck created in the app is a Commander deck. Duel Commander lists from the MTGTop8 meta panel (`src/modules/meta-insights/infrastructure/mtgtop8.ts`, `src/modules/meta-insights/ui/MetaPanel.tsx`) and Moxfield `duel` imports (`src/lib/import/url-import.ts`) land in those decks, with the multiplayer banned list, 40 life and the free mulligan.
 - [ ] Legality computed on the server from Scryfall at each deck load, with a per-format meaning for `restricted` and the fetch date shown; a client-sent `isBanned` is never trusted (slice 2).
   - [x] Build the legality verdict on the server from Scryfall card data, never from the browser's stored flag, and answer `unsupported_format` for an unknown format (#1330, 2026-11-10): slice 2, server side only, by its own message.
 - [ ] A Duel Commander format: 100 cards, 20 life, no free mulligan, no bracket scoring or Game Changer toast, and banned-as-commander cards excluded from the commander picker (slice 3).

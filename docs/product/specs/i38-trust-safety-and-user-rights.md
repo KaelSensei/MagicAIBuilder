@@ -48,7 +48,7 @@ Verified on `dev` on 2026-11-09 (commit `61792c1`).
 - **No legal pages.** No route under `src/app/[locale]` holds a legal notice, terms, privacy policy or DSA contact. The footer (`src/components/layout/Footer.tsx`) shows only the Wizards and Scryfall notices. A grep of `src/` for privacy, terms of use or service, legal notice, consent, GDPR, RGPD and CNIL finds nothing.
 - **Undisclosed processors.** `src/instrumentation-client.ts` enables Sentry Session Replay for 1% of sessions and every session with an error; `src/app/[locale]/layout.tsx` loads Vercel Speed Insights. Prompts go to `api.anthropic.com` and fall back to `api.openai.com` (`src/app/api/ai/build/route.ts`, `src/app/api/ai/suggest/route.ts`). Hosting is Vercel with Supabase, region suggested "Europe West" (`docs/engineering/infrastructure.md`). Sign-in uses Google. Error logs carry `userId`. No email sender exists. None of this is disclosed, because no privacy page exists, and there is no cookie banner.
 - **No age statement.** Signup (`src/app/api/auth/signup/route.ts`) asks for name, email and password, and records no acceptance of terms.
-- **One retention rule.** `MetaSnapshot` keeps 365 days (`src/lib/meta/snapshots.ts`). Nothing expires inactive accounts, old reports or verification tokens.
+- **One retention rule.** `MetaSnapshot` keeps 365 days (`src/modules/meta-insights/infrastructure/snapshots.ts`). Nothing expires inactive accounts, old reports or verification tokens.
 
 ## Functional requirements
 
@@ -129,7 +129,7 @@ Verified on `dev` on 2026-11-09 (commit `61792c1`).
 | Expired verification tokens                | Deleted daily                                                                              | No use after expiry                     |
 | Contributor identification data            | As the decree requires, in the restricted store                                            | LCEN Art. 6 V A [6][7]; lawyer question |
 | Logs, Sentry events and replays            | The provider's retention, stated in the privacy policy                                     | Provider settings                       |
-| `MetaSnapshot`                             | 365 days (exists)                                                                          | `src/lib/meta/snapshots.ts`             |
+| `MetaSnapshot`                             | 365 days (exists)                                                                          | `src/modules/meta-insights/infrastructure/snapshots.ts`             |
 
 8.2 Each row's period lives in one constant, and the privacy policy is rendered from the same table, so the two cannot drift.
 

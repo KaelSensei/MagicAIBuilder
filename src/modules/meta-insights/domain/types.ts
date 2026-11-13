@@ -2,10 +2,11 @@
  * The data the meta panel shows for a commander: EDHREC's popular cards and
  * MTGTop8's recent tournament decks.
  *
- * Meta-insights context. `fetch.ts` produces these shapes from the two
+ * Meta-insights context. The adapters `infrastructure/edhrec.ts` and
+ * `infrastructure/mtgtop8-source.ts` produce these shapes from the two
  * providers, the meta route serves them (cached in `MetaCache`), `snapshots.ts`
  * stores the EDHREC half for `history.ts` to difference, and the panel reads
- * them through `useMetaAnalysis`. They live apart from the fetchers so the
+ * them through `useMetaAnalysis`. They live apart from the adapters so the
  * MTGTop8 parser can type its output without importing the module that calls it.
  *
  * @module meta-insights/domain/types

@@ -13,6 +13,7 @@
  * @module meta-insights
  */
 export { computeMetaShifts } from "@/modules/meta-insights/domain/history";
+/** The shapes the meta route serves and the `source` discriminator; the route and its tests type against these. */
 export type {
   CommanderMetaData,
   EdhrecData,
