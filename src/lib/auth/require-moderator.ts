@@ -1,17 +1,17 @@
 /**
- * The moderation gate for route handlers: a signed-in user whose `isModerator`
- * flag is set.
+ * The moderation gate for route handlers: a signed-in user who holds
+ * moderation access, as `isModerator` reads it.
  *
- * The flag is read from the database on every call, not from the session
- * token, so revoking it takes effect on the next request. Answers 401 through
- * `requireAuth` and 403 when the flag is off.
+ * Answers 401 through `requireAuth` and 403 when access is refused. The
+ * moderation pages share the read and answer 404 instead, so the two gates
+ * differ only in the answer, never in the rule.
  *
  * @module auth/require-moderator
  */
 import "server-only";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db/prisma";
 import { requireAuth } from "./helpers";
+import { isModerator } from "./is-moderator";
 
 /** Require an authenticated user with explicit moderation access. */
 export async function requireModerator(): Promise<
@@ -21,13 +21,12 @@ export async function requireModerator(): Promise<
   const authentication = await requireAuth();
   if (authentication.error) return authentication;
 
-  const moderator = await prisma.user.findUnique({
-    where: { id: authentication.session.user.id },
-    select: { isModerator: true },
-  });
-  if (!moderator?.isModerator) {
-    return { error: NextResponse.json({ error: "Forbidden" }, { status: 403 }) };
+  const moderatorId = authentication.session.user.id;
+  if (!(await isModerator(moderatorId))) {
+    return {
+      error: NextResponse.json({ error: "Forbidden" }, { status: 403 }),
+    };
   }
 
-  return { moderatorId: authentication.session.user.id };
+  return { moderatorId };
 }
