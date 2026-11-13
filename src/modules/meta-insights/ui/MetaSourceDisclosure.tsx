@@ -1,5 +1,18 @@
 "use client";
-
+/**
+ * The attribution line under a meta section: which source the cards or decks
+ * come from, when it was observed, whether the answer is stale, the kind of
+ * evidence, and the caveats the source carries.
+ *
+ * Meta-insights context, `ui/`. Presentational; the EDHREC and tournament
+ * sections render it once an observation time exists. EDHREC's line says its
+ * sample window is unavailable, because the site publishes counts without the
+ * period they cover; the tournament line prints the span of the dated events
+ * instead. The "unavailable" health line appears after a failed request so a
+ * list kept from an earlier answer is not read as current.
+ *
+ * @module meta-insights/ui/MetaSourceDisclosure
+ */
 import { useFormatter, useTranslations } from "next-intl";
 import type { MetaEvidenceKind } from "@/modules/meta-insights/domain/evidence-label";
 import { RecommendationProvenance } from "./RecommendationProvenance";
@@ -32,7 +45,14 @@ function sourceLabel(source: MetaDisclosureSource): string {
   return exhaustive;
 }
 
-/** Shows where external recommendations came from and when they were observed. */
+/**
+ * "Source: EDHREC · Observed <date>" (or "Last observed <date> · stale", in
+ * amber) with the evidence badge, then the source's caveat lines. The date is
+ * formatted in UTC so the same answer reads the same in every time zone. An
+ * `observedAt` that is not a date still names the source, without a time.
+ *
+ * @param kind - the evidence kind to badge; defaults to `popular` for EDHREC and `tournament` otherwise
+ */
 export function MetaSourceDisclosure({
   source,
   observedAt,
