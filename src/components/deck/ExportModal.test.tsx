@@ -56,6 +56,36 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
+describe("ExportModal download names", () => {
+  it("keeps an accented letter of the deck name as its base letter (B2)", async () => {
+    const user = userEvent.setup();
+    const downloads: string[] = [];
+    Object.defineProperty(URL, "createObjectURL", {
+      configurable: true,
+      value: vi.fn().mockReturnValue("blob:export-modal"),
+    });
+    Object.defineProperty(URL, "revokeObjectURL", {
+      configurable: true,
+      value: vi.fn(),
+    });
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function (
+      this: HTMLAnchorElement
+    ) {
+      downloads.push(this.download);
+    });
+    renderWithIntl(
+      <ExportModal
+        deck={{ ...DECK, name: "Lim-Dûl the Necromancer" }}
+        onClose={vi.fn()}
+      />
+    );
+
+    await user.click(screen.getByTitle("Download MTGO file"));
+
+    expect(downloads).toEqual(["lim_dul_the_necromancer.dek"]);
+  });
+});
+
 describe("ExportModal in French", () => {
   it("names the plain-text format with the import dialog's tab label", () => {
     renderWithIntl(<ExportModal deck={DECK} onClose={vi.fn()} />, {
