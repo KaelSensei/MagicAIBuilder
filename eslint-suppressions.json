@@ -1222,14 +1222,6 @@
       "count": 1
     }
   },
-  "src/modules/rules-reference/ui/GameChangersPageClient.tsx": {
-    "max-lines": {
-      "count": 1
-    },
-    "max-lines-per-function": {
-      "count": 2
-    }
-  },
   "src/components/search/SearchBar.tsx": {
     "max-lines-per-function": {
       "count": 1
