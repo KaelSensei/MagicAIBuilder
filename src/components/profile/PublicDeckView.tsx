@@ -16,6 +16,8 @@ import { SavePublicDeckButton } from "@/components/community/SavePublicDeckButto
 import { cardSurfaceClassName } from "@/components/ui/Card";
 import { cn } from "@/components/ui/utils";
 import { PublicDeckCards } from "./PublicDeckCards";
+import { DataAsOfLine } from "@/components/deck/DataAsOfLine";
+import { currentDataAsOfFacts } from "@/lib/deck/data-as-of";
 import { normalizeScryfallImageUrl } from "@/lib/scryfall/images";
 
 interface PublicDeckViewProps {
@@ -125,6 +127,8 @@ export function PublicDeckView({ deck, isSignedIn }: PublicDeckViewProps) {
               </span>
             )}
           </div>
+
+          <DataAsOfLine facts={currentDataAsOfFacts()} />
 
           {/* Author */}
           <div className="flex items-center gap-2 mt-3">
