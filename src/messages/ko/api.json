@@ -1,0 +1,10 @@
+{
+  "title": "Public read API changelog",
+  "description": "Dated changes to the public read routes. Compatible and breaking are the only labels.",
+  "empty": "No dated change is recorded yet.",
+  "compatible": "compatible",
+  "breaking": "breaking",
+  "field": "Field: {field}",
+  "routes": "Routes",
+  "date": "Date {date}"
+}
