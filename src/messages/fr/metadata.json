@@ -41,6 +41,10 @@
       "description": "Parcourez les règles complètes officielles de Magic: The Gathering, chapitre par chapitre, glossaire compris."
     }
   },
+  "apiChangelog": {
+    "title": "Journal de l’API de lecture publique — MagicAIBuilder",
+    "description": "Changements datés des routes de lecture publiques sous /api/v1."
+  },
   "collection": {
     "title": "Ma Collection — MagicAIBuilder",
     "description": "Gérez votre collection physique de cartes MTG"

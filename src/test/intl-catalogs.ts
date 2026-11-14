@@ -9,6 +9,7 @@
  * @module test/intl-catalogs
  */
 import type { AbstractIntlMessages } from "next-intl";
+import enApi from "@/messages/en/api.json";
 import enAuth from "@/messages/en/auth.json";
 import enBuilder from "@/messages/en/builder.json";
 import enCard from "@/messages/en/card.json";
@@ -25,6 +26,7 @@ import enProfile from "@/messages/en/profile.json";
 import enRules from "@/messages/en/rules.json";
 import enSearch from "@/messages/en/search.json";
 import enSettings from "@/messages/en/settings.json";
+import frApi from "@/messages/fr/api.json";
 import frAuth from "@/messages/fr/auth.json";
 import frBuilder from "@/messages/fr/builder.json";
 import frCard from "@/messages/fr/card.json";
@@ -66,6 +68,7 @@ const CATALOGS: Readonly<Record<TestLocale, AbstractIntlMessages>> = {
     commanderRules: enCommanderRules,
     settings: enSettings,
     metadata: enMetadata,
+    api: enApi,
   },
   fr: {
     common: frCommon,
@@ -84,6 +87,7 @@ const CATALOGS: Readonly<Record<TestLocale, AbstractIntlMessages>> = {
     commanderRules: frCommanderRules,
     settings: frSettings,
     metadata: frMetadata,
+    api: frApi,
   },
 };
 
