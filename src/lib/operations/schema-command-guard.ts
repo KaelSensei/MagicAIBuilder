@@ -25,6 +25,9 @@ const LOCAL_DATABASE_HOSTS: ReadonlySet<string> = new Set([
 const DESTRUCTIVE_ON_PRODUCTION =
   "Refusing to reset a production database. This command drops every table, and Supabase Free keeps no backup.";
 
+const EXPORT_REQUIRED =
+  "Refusing a production schema change until an on-demand export exists. Pass --export-file pointing at a non-empty dump. See docs/engineering/infrastructure.md.";
+
 /** A database host classified for the guard. The hostname is not a secret. */
 export type DatabaseHost = {
   readonly kind: "local" | "production";
@@ -39,7 +42,7 @@ export type SchemaCommandPlan =
   | { readonly outcome: "allow"; readonly argv: readonly string[] }
   | {
       readonly outcome: "refuse";
-      readonly code: "destructive-on-production";
+      readonly code: "destructive-on-production" | "export-required";
       readonly message: string;
     };
 
@@ -187,15 +190,16 @@ function prismaArgv(command: Exclude<SchemaCommand, { readonly name: "unrecognis
  * Decides whether a reset may run, and which Prisma argv an allowed command uses.
  *
  * On a production host both `db push --force-reset` and `migrate reset` are
- * refused, including when an export file was passed. An allowed command's
- * argv comes from the parsed command. Requiring an export before a production
- * schema change is not decided here yet.
+ * refused, including when an export file was passed. Any other production
+ * command needs a non-empty export first. An allowed command's argv comes
+ * from the parsed command.
  *
  * @param input.databaseUrl - The URL to classify. It is not copied into the plan.
  * @param input.argv - The operator's arguments.
- * @param input.exportFileBytes - Present so a later rule can require an export.
- *   This rule ignores it.
- * @returns Refuse for a production reset, otherwise the Prisma argv to run.
+ * @param input.exportFileBytes - Size of the on-demand export, or null when
+ *   the file is missing. Zero is not an export.
+ * @returns Refuse for a production reset or a production change with no
+ *   export, otherwise the Prisma argv to run.
  */
 export function planSchemaCommand(input: {
   readonly databaseUrl: string | undefined;
@@ -209,6 +213,15 @@ export function planSchemaCommand(input: {
       outcome: "refuse",
       code: "destructive-on-production",
       message: DESTRUCTIVE_ON_PRODUCTION,
+    };
+  }
+
+  const exportMissing = input.exportFileBytes === null || input.exportFileBytes <= 0;
+  if (host.ok && host.host.kind === "production" && exportMissing) {
+    return {
+      outcome: "refuse",
+      code: "export-required",
+      message: EXPORT_REQUIRED,
     };
   }
 
