@@ -1,0 +1,9 @@
+{
+  "label": "Data as of",
+  "rulesDated": "Rules: {date}",
+  "rulesAbsent": "Rules date: not recorded",
+  "pricesStored": "Prices: USD stored with each card",
+  "pricesDated": "Prices: USD stored on {date}",
+  "cardDataPending": "Card data: not loaded from the daily file",
+  "cardDataLoaded": "Card data: loaded on {date}"
+}
