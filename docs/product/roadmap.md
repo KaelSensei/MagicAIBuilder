@@ -1,6 +1,6 @@
 # MagicAIBuilder: Product Roadmap
 
-> **Updated:** 2026-11-12 (thirteenth pass: I-99 to I-101, the pilot sheet, deck coherence and collecting goals)
+> **Updated:** 2026-11-14 (fourteenth pass: no new initiative; collection counting, the editor, the mana base, prices and the bracket floor gained scenarios)
 
 > **North star:** help a Commander player go from an idea to a legal, explainable, testable and enjoyable deck.
 
@@ -8,7 +8,7 @@ This roadmap is the index. The user stories, scenarios and scope for each initia
 
 ## Themes
 
-The initiatives group into the jobs a Commander player actually has. I-80 to I-98, added on 2026-11-11, and I-99 to I-101, added on 2026-11-12, are marked. Placement and the impact table are in [Impact and effort](#twelfth-pass-impact-effort-and-placement). Personas, the dependency graph, the quarter sequence and the risks are in [Planning Views](#planning-views).
+The initiatives group into the jobs a Commander player actually has. I-80 to I-98, added on 2026-11-11, and I-99 to I-101, added on 2026-11-12, are marked. The fourteenth pass, on 2026-11-14, added no initiative. Placement and the impact table are in [Impact and effort](#twelfth-pass-impact-effort-and-placement). Personas, the dependency graph, the quarter sequence and the risks are in [Planning Views](#planning-views).
 
 | Theme | Already on the roadmap | Added 2026-11-11 | Added 2026-11-12 |
 | --- | --- | --- | --- |
@@ -179,6 +179,19 @@ Added 2026-11-12, with the twelfth pass's labels. I-99 and I-100 are Next and si
 | I-100 Deck coherence | Medium | Medium | Medium | Next | Medium | One competitor advertises anti-synergy flags without a method; the r/EDH search timed out, so the player voice is low evidence. Waits on I-65 slice 1 and I-78 slice 1. |
 | I-101 Collecting goals | Medium | Medium | Low | Later | Medium | ManaBox owns set completion; goals beyond a set are documented but thin in Magic. Waits on I-26's import, I-67's printings and gate C. |
 
+### Fourteenth pass: impact, effort and placement
+
+Added 2026-11-14. No new initiative number, so no glance row. The rows below score the scope this pass attached to an id that already exists. They do not change that id's place in Now, Next or Later, and they do not jump the numbered Next band. Effort is the addition, not the whole initiative. Confidence uses the twelfth pass's words.
+
+| Existing id            | What was added                                                                                                  | Impact | Effort | Risk   | Place            | Confidence | Why it is not a new number                                                            |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------- | ------ | ------ | ------ | ---------------- | ---------- | ------------------------------------------------------------------------------------- |
+| I-101 Collecting goals | Archidekt's set completion, with foil and unique-against-printings, and the Portal 199-of-200 case              | Medium | Small  | Low    | Later, unchanged | High       | The set goal and the counting rule are already requirement 1                          |
+| I-37 Editor depth      | One deck's own sort, a mobile swipe, type counts that are text, primer alignment                                | Medium | Small  | Low    | Next, unchanged  | High       | Views, categories and the type filter are already requirements 2, 3 and 10            |
+| I-58 Mana base         | A modal land-back, a transforming spell, a bounce land, and mana that needs an opponent's library               | High   | Small  | Medium | Next, unchanged  | High       | MDFCs and "depends on opponents" are already in the land count and the source check   |
+| I-55 Several builds    | A cheaper-card list whose query, date and legality stay visible. The competitor's 40 percent cap is not adopted | Medium | Small  | Medium | Next, unchanged  | High       | The target-total swap list is already a scope line                                    |
+| I-77 Bracket audit     | A spoken Bracket 3 that hid cards, and a checker that reports a floor from 2 to 4                               | High   | Small  | Medium | Next, unchanged  | Medium     | The audit already separates floors from the owner's words. The r/EDH post is 7 points |
+| I-30 Paid tier         | A competitor that meters saved decks and collection size, dated 2026-11-14                                      | High   | Small  | High   | Next, unchanged  | High       | Requirement 1.2 already forbids that paywall. The row is evidence, not a new price    |
+
 ---
 
 ## Planning Views
@@ -329,6 +342,19 @@ Read on 2026-11-12. Three new initiative numbers, I-99 to I-101; the rest went t
 - A tournament decklist registration sheet, which Duel Commander organisers print, is an I-50 export target with I-42.
 - A deck's standing rules (a budget cap, no infinite combos, a custom banlist) checked in the editor are I-53's rule types attached to one deck; Archidekt's board scores custom legality at 56 points and custom banlists at 29.
 - A collection overview and "decks by last played" join I-60. A pod's group order to one seller, a returning-player digest, a deck code, a large-print text sheet and set completion on its own were read and not promoted: no source showed demand, or the job is ManaBox's, or I-101 covers the collector's part.
+
+### What the fourteenth pass checked and did not promote
+
+Read on 2026-11-14. No new initiative number. The review is [section 15 of the landscape](competitive-landscape.md#15-a-fourteenth-pass-notes-that-landed-after-the-thirteenth-2026-11-14).
+
+- EDHREC's changelog category still ends on 6 November 2026. Scryfall's blog still ends on 14 October 2026. Both were already cited.
+- Wizards' announcements archive showed no Commander bracket or banlist article. The 12 October banned-and-restricted page, fetched again, still names 30 November 2026 as the next announcement and does not contain the word Commander. I-48 gains no new rules version.
+- Commander Spellbook's home page returned a title and no changelog. The salt score stays on I-78.
+- ManaBox's App Store listing is still version 4.3.0 of 3 November 2026. The URL was already cited. The sentence that collector mode no longer clears a search is now on I-101.
+- Archidekt's fifteen colour themes, its repainted card page, a request for colour identity on custom cards, and a followers list were read and not promoted. Themes are colour-only chrome and wait on I-49 if they are ever reconsidered. Card pages stay with Scryfall. Custom cards stay a non-goal. I-72 already refuses a public follower count that ranks anyone.
+- EDHcheck's updates index also lists a collection import, deck-page printings, a Turn Clock and a pack simulator. Those article bodies were not opened. The index lines sit on I-26, I-57, I-21 and the draft non-goal. They are not new work.
+- A 1-point r/EDH post about kitchen-table 1v1 and sideboards does not open a format beside I-42.
+- r/EDH after 2026-11-12, fifty posts from Arctic Shift, topped out at 21 points. `reddit.com` itself returned HTTP 403.
 
 ---
 

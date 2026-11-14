@@ -98,6 +98,7 @@ Verified on `dev` at `72fbfc1` on 2026-11-10.
 2.4 At Bracket 5 the screen quotes Karsten: his model "won't be useful for cEDH" [1]. The formula still runs and is labelled.
 2.5 By default the proposal keeps the deck's current land count (open question 1). The player can choose the formula's count or any number.
 2.6 A count change shows as slots needed or freed. The player resolves needed slots in the review by choosing nonland cards to move to Considering. Freed slots stay empty, and the deck shows its existing size warning. The builder never adds or cuts a nonland card on its own.
+2.7 **Added 2026-11-14, from EDHcheck's 8 November note.** A modal double-faced card with a land on the back, such as Shatterskull Smashing, is a spell that can be a land. It counts at Karsten's published weight in 2.2, and the land line says "spell that can be a land" beside the weight. It is not a full land and it is not zero. A card whose front is not a land and which transforms into a land, such as Treasure Map, is a spell. It is not in the land count and it is not an opening-hand land. The current code already disagrees with itself: stats use `flexibleLands`, and the playtest's `isOpeningHandLand` treats any type line containing "Land" as a land. This requirement is the one rule both call. EDHcheck's own counts, 835 public decks, 341 and 247, stay theirs and are not a fixture.
 
 ### 3. Source target per colour
 
@@ -108,6 +109,8 @@ Verified on `dev` at `72fbfc1` on 2026-11-10.
 3.5 Current sources count lands and Karsten's partial sources at his published weights, each on its own line: fetch lands, Signets, dorks, two-mana land ramp, Treasure makers, Exotic Orchard and Fellwar Stone (flagged "depends on opponents"), and MDFCs [3].
 3.6 Tapped lands count from turn 2 [3]. A one-mana driver counts untapped sources only.
 3.7 Every figure names its entry, for example "White: 26 sources for {2}{W}{W} (Karsten 2022, 99-card column), driven by Wrath of God; 24.5 now". It explains "consistent" in Karsten's terms [3]. The check states no other probability.
+3.8 **Added 2026-11-14.** A land that cannot be the first land is not a turn-1 source. The class covers a bounce land, which returns a land to hand, a land that sacrifices a land as it enters, and a land that requires a mana payment to stay. The line names the class. It does not play the land on turn 1 in the count. EDHcheck's Turn Clock, in the article read that day, had been playing them on turn 1 and stopped [the fourteenth pass](../competitive-landscape.md#15-a-fourteenth-pass-notes-that-landed-after-the-thirteenth-2026-11-14).
+3.9 **Added 2026-11-14.** Mana that depends on cards this product cannot see is `notChecked`, the same flag 3.5 already uses for Exotic Orchard and Fellwar Stone. Selvala, Explorer Returned adds green mana for each nonland among cards revealed from each player's library. EDHcheck estimates the opponents by reusing the deck's own nonland rate, and says it cannot see their decks. This builder does not reuse that rate and does not invent three libraries. The line says the mana is not checked.
 
 ### 4. The land catalogue
 
@@ -234,6 +237,30 @@ Renamed 2026-11-11 for [I-76](i76-complete-this-deck-from-my-collection.md): `Ma
 | 16  | Reviewed change set: snapshot-then-apply route, 409, apply record with `kind`, revert (added 2026-11-11 for I-76)                                                                         | —                                                                  |
 
 Slices 1, 2, 4 and 16 ship alone; slice 16, added 2026-11-11, is Next and is the apply engine [I-76](i76-complete-this-deck-from-my-collection.md) reuses. Slice 3 corrects advice players see today. Slices 1–9 are the free product and need nothing outside this table except I-57 slice 2 for slice 9; slices 10–15 wait on other initiatives.
+
+## Fourteenth pass (2026-11-14)
+
+Requirements 2.7, 3.8 and 3.9 are the behaviour. This section is the player contract for them. The source is EDHcheck's article of 8 November 2026, read 2026-11-14 ([landscape §15](../competitive-landscape.md#15-a-fourteenth-pass-notes-that-landed-after-the-thirteenth-2026-11-14)). No slice was added: the classifications are data in slice 1's tables.
+
+#### US-58-14-01
+
+As a player counting lands, I want a spell with a land on the back to count as a partial land, and a spell that only later becomes a land to count as a spell, so that the opening hand and the land total use one rule.
+
+#### US-58-14-02
+
+As a player, I want a bounce land left out of the turn-1 sources, so that the builder does not tell me I can cast a one-drop off a land that returns itself.
+
+#### US-58-14-03
+
+As a player whose commander adds mana from cards I cannot see, I want the line to say the mana is not checked, so that the builder does not pretend to know my opponents' libraries.
+
+**Passing.** Shatterskull Smashing is in the land line at the 2.2 weight, labelled "spell that can be a land". Treasure Map is absent from that line and from the opening-hand land count. Simic Growth Chamber is not a turn-1 source, and the line names the bounce class. Selvala, Explorer Returned's triggered mana is `notChecked`.
+
+**Non-passing.** Counting every modal double-faced card as a full land. Counting Treasure Map as a land because its back is a land. Playing a bounce land, Lake of the Dead or Rupture Spire as a turn-1 source. Copying the deck's own nonland rate onto three imagined opponents and printing a mana number. Using EDHcheck's 835, 341, 247 or the turn-9-to-turn-8 figure as this product's result.
+
+**Acceptance.** One function classifies the three land shapes, and the playtest's opening-hand land test calls it. A `notChecked` line has no integer. English and French names exist for the three classes.
+
+**Open question.** Karsten's 0.38 and 0.74 weights stay the published weights. EDHcheck counts the land-back card as a full land when the hand has no other land. This spec does not switch weights. Whether the opening-hand keep rule should treat that card as a land only in a hand with no other land is a question for the keep-rule owner, I-07's `keep-rules.ts`, and is not decided here.
 
 ## Open questions
 
@@ -651,22 +678,22 @@ Then the player sees an empty state that names what is missing, and the page doe
 
 The player-visible outcome is: a player opens a Commander deck and gets a land count from a published formula, a source target per colour from a published table, and a proposed land base within a budget, owned copies first, with a reason on every line. Nothing changes until the player reviews the diff; apply takes a snapshot first, and one action reverts it.
 
-| State | What the player sees |
-| --- | --- |
-| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
-| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
-| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
-| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
-| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
-| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
-| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
-| English | New controls use the `en` catalogue. |
-| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| State            | What the player sees                                                                                                                                  |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Empty            | A sentence that names what is missing and the next action. No invented row, author, price or score.                                                   |
+| Loading          | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready.                                        |
+| Error            | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there.                                                       |
+| Partial          | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished.                                                 |
+| Stale            | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed.                                             |
+| Guest            | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401.               |
+| Signed-in        | Writes go to that account only. Another player's notes, budget and collection are not in the response.                                                |
+| English          | New controls use the `en` catalogue.                                                                                                                  |
+| French           | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control.                                                         |
 | Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
-| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
-| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
-| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
-| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+| Keyboard         | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes.                         |
+| Screen reader    | Each new control has an accessible name. A status change is announced in words, not only by colour.                                                   |
+| Colour           | A warning and an error differ by text or icon as well as hue, in both themes.                                                                         |
+| Success          | The completed action is confirmed in words. A second identical action does not duplicate the write.                                                   |
 
 ### Alternate paths
 
@@ -720,6 +747,7 @@ Today the deck page's "Mana Alignment" (`buildManaAlignment` in `src/lib/deck/ma
 **User story.** As a player fixing a mana base, I want a land count and a source target from a published table, so that a model is not picking my lands.
 
 **Acceptance.**
+
 - The suggestion cites Karsten's table and the inputs it used.
 - Applying it is one change the player can revert.
 - The deck is unchanged until the player applies.
@@ -741,4 +769,3 @@ Today the deck page's "Mana Alignment" (`buildManaAlignment` in `src/lib/deck/ma
 On a two-colour deck, a player sees the formula's count and each colour's target with its driver and table entry, takes a proposal within a budget with owned lands first and a reason on every line, applies it after unchecking one line, and reverts it in one action; a Bracket 2 deck never receives a Game Changer land; and no model chose a land.
 
 ---
-
