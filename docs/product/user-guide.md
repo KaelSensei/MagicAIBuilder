@@ -61,7 +61,8 @@ The builder has three panels:
 
 - Click a card to add it to your deck
 - Drag a card from search into the deck editor
-- The printing selector lets you pick your preferred art
+- The printing selector lets you pick your preferred art. The printing you pick is the one added, even when you own another printing of the card
+- A card added any other way (dragged, imported or suggested) takes a printing you own first, when your collection holds one
 - **Cards are added to the active zone** — if you're on the Sideboard tab, clicking or dragging adds there
 
 #### Deck Zones (Main / Sideboard / Considering)
