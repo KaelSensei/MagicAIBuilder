@@ -11,7 +11,7 @@ describe("addNamedCardToZone", () => {
     await addNamedCardToZone("Sol Ring", "sideboard", { lookup, addCard, onLookupError });
 
     expect(lookup).toHaveBeenCalledWith("Sol Ring");
-    expect(addCard).toHaveBeenCalledWith(card, undefined, "sideboard");
+    expect(addCard).toHaveBeenCalledWith(card, { zone: "sideboard" });
     expect(onLookupError).not.toHaveBeenCalled();
   });
 

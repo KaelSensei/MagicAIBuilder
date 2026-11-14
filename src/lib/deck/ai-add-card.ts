@@ -4,8 +4,7 @@ interface AddNamedCardActions<TCard> {
   readonly lookup: (name: string) => Promise<TCard>;
   readonly addCard: (
     card: TCard,
-    quantity: undefined,
-    zone: DeckZone
+    addition: { readonly zone: DeckZone }
   ) => Promise<void>;
   readonly onLookupError: (cardName: string) => void;
 }
@@ -28,7 +27,7 @@ export async function addNamedCardToZone<TCard>(
 ): Promise<void> {
   try {
     const card = await actions.lookup(cardName);
-    await actions.addCard(card, undefined, zone);
+    await actions.addCard(card, { zone });
   } catch {
     actions.onLookupError(cardName);
   }

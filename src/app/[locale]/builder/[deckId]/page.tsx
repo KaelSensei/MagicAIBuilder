@@ -569,7 +569,7 @@ export default function BuilderPage() {
 
   const handlePrintingSelect = useCallback(
     (card: ScryfallCard) => {
-      void addCard(card, undefined, activeZone);
+      void addCard(card, { zone: activeZone });
       setPrintingCard(null);
     },
     [addCard, activeZone]
@@ -694,14 +694,14 @@ export default function BuilderPage() {
   const dropSearchCard = useCallback(
     (searchCard: ScryfallCard, overId: string) => {
       const zone = searchDropZone(overId, activeZone);
-      void addCard(searchCard, undefined, zone);
+      void addCard(searchCard, { zone });
     },
     [addCard, activeZone]
   );
 
   const handleAddToZone = useCallback(
     (searchCard: ScryfallCard, zone: DeckZone) => {
-      void addCard(searchCard, undefined, zone);
+      void addCard(searchCard, { zone });
     },
     [addCard]
   );
