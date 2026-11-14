@@ -133,6 +133,7 @@ const SOL_RING = deckCard({
   name: "Sol Ring",
   imageUri: "https://img.test/sol-ring-c21-grid.webp",
   artCropUri: "https://img.test/sol-ring-c21-art.webp",
+  price: 2.5,
   category: "ramp",
   notes: "Turn one, always",
 });
@@ -150,6 +151,7 @@ const SOL_RING_LTC: ScryfallCard = {
     grid: "https://img.test/sol-ring-ltc-grid.webp",
     art: "https://img.test/sol-ring-ltc-art.webp",
   },
+  prices: { usd: "4.99", usd_foil: null, eur: null },
   keywords: [],
 };
 
@@ -338,7 +340,8 @@ describe("the raw-fetch deck store actions", () => {
   // ---------------------------------------------------------------------------
 
   describe("swapCardPrinting at the HTTP boundary", () => {
-    it("sends PATCH /api/decks/[id]/cards/[cardId] with the printing id and its two image URLs as JSON", async () => {
+    // I-57 defect 2: the body used to carry no price, so the row kept the old printing's.
+    it("sends PATCH /api/decks/[id]/cards/[cardId] with the printing id, its two image URLs and its USD price as JSON", async () => {
       await useDeckStore.getState().swapCardPrinting(SOL_RING.id, SOL_RING_LTC);
 
       expect(sent).toEqual([
@@ -350,12 +353,13 @@ describe("the raw-fetch deck store actions", () => {
             scryfallId: "scry-sol-ring-ltc",
             imageUri: "https://img.test/sol-ring-ltc-grid.webp",
             artCropUri: "https://img.test/sol-ring-ltc-art.webp",
+            price: 4.99,
           },
         },
       ]);
     });
 
-    it("keeps the new printing, and the row's other fields, after a 2xx answer", async () => {
+    it("keeps the new printing and its price, and the row's other fields, after a 2xx answer", async () => {
       await useDeckStore.getState().swapCardPrinting(SOL_RING.id, SOL_RING_LTC);
 
       // toMatchObject: the store also derives `isMaybeboard` on every row it rewrites.
@@ -364,6 +368,7 @@ describe("the raw-fetch deck store actions", () => {
         scryfallId: "scry-sol-ring-ltc",
         imageUri: "https://img.test/sol-ring-ltc-grid.webp",
         artCropUri: "https://img.test/sol-ring-ltc-art.webp",
+        price: 4.99,
       });
       expect(useDeckStore.getState().isSyncing).toBe(false);
       expect(toasts()).toEqual([]);

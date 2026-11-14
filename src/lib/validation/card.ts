@@ -11,6 +11,12 @@ import { COLOR_SYMBOLS } from "@/lib/mana/colors";
 
 export const VALID_ZONES = ["main", "sideboard", "maybeboard"] as const;
 
+/**
+ * A deck row's USD price, as an added card and a printing swap send it:
+ * dollars from 0 to 100,000, or `null` when the printing has no USD price.
+ */
+const cardPriceSchema = z.number().min(0).max(100000).nullable();
+
 // Schema for POST /api/decks/[id]/cards
 export const addCardSchema = z.object({
   scryfallId: z.string().regex(SCRYFALL_ID_PATTERN, "Invalid Scryfall ID"),
@@ -41,7 +47,7 @@ export const addCardSchema = z.object({
   colorIdentity: z.array(z.enum(COLOR_SYMBOLS)).optional().default([]),
   isGameChanger: z.boolean().optional().default(false),
   isBanned: z.boolean().optional().default(false),
-  price: z.number().min(0).max(100000).nullable().optional().default(null),
+  price: cardPriceSchema.optional().default(null),
   imageUri: z.url().max(500).optional().default(""),
   artCropUri: z.url().max(500).optional().default(""),
   category: z.enum(CARD_CATEGORIES).optional().default("other"),
@@ -98,7 +104,9 @@ export const MAX_CARD_NOTES_LENGTH = 1000;
  * Body of PATCH /api/decks/[id]/cards/[cardId]. Each key is optional and the
  * route writes exactly the keys present. Zod drops unlisted keys without an
  * error, so a field the client sends must be listed here or it is silently
- * lost. `notes: null` clears the note.
+ * lost. `notes: null` clears the note. A printing swap sends the new
+ * printing's `price` beside its `scryfallId` and images, `null` when the
+ * printing has no USD price (I-57 requirement 6.1).
  */
 export const patchCardSchema = z.object({
   category: z.enum(CARD_CATEGORIES).optional(),
@@ -107,6 +115,7 @@ export const patchCardSchema = z.object({
   scryfallId: z.string().regex(SCRYFALL_ID_PATTERN, "Invalid Scryfall ID").optional(),
   imageUri: z.url().max(500).optional(),
   artCropUri: z.url().max(500).optional(),
+  price: cardPriceSchema.optional(),
   notes: z.string().max(MAX_CARD_NOTES_LENGTH).nullable().optional(),
 });
 

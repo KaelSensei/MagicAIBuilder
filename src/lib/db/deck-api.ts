@@ -527,11 +527,16 @@ export function updateCardQuantity(
   return patchCard(target, cardId, { quantity });
 }
 
-/** The printing fields a printing swap writes on one row. */
+/**
+ * The printing fields a printing swap writes on one row. `price` is the new
+ * printing's USD price, `null` when Scryfall has none; an absent `price`
+ * keeps the stored one.
+ */
 export interface CardPrinting {
   readonly scryfallId: string;
   readonly imageUri?: string;
   readonly artCropUri?: string;
+  readonly price?: number | null;
 }
 
 /** Swaps a row's printing. See {@link patchCard}. */
