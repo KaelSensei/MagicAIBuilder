@@ -70,7 +70,8 @@ export interface StoredDeckCard extends NewDeckCard {
 
 /**
  * The columns one card edit may change. An absent key keeps the stored value;
- * `notes: null` clears the note.
+ * `notes: null` clears the note and `price: null` records that the row's
+ * printing has no known price.
  */
 export type DeckCardEdit = Partial<
   Pick<
@@ -81,6 +82,7 @@ export type DeckCardEdit = Partial<
     | "scryfallId"
     | "imageUri"
     | "artCropUri"
+    | "price"
     | "notes"
   >
 >;
