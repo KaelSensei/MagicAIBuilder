@@ -102,4 +102,32 @@ describe("planSchemaCommand", () => {
     expect(notPostgres).toEqual(refusal);
     expect(JSON.stringify(notPostgres)).not.toContain("secret-password");
   });
+
+  it("runs migrate deploy on production once the export file has bytes", () => {
+    const plan = planSchemaCommand({
+      databaseUrl: PRODUCTION_URL,
+      argv: ["--export-file", "decks.dump", "migrate", "deploy"],
+      exportFileBytes: 4_096,
+    });
+
+    expect(plan).toEqual({
+      outcome: "allow",
+      argv: ["npx", "prisma", "migrate", "deploy"],
+    });
+  });
+
+  it("refuses a command it does not recognise instead of guessing a push", () => {
+    const plan = planSchemaCommand({
+      databaseUrl: "postgresql://app:secret-password@localhost:5432/postgres",
+      argv: ["db", "push", "--accept-data-loss"],
+      exportFileBytes: null,
+    });
+
+    expect(plan).toEqual({
+      outcome: "refuse",
+      code: "unrecognised-command",
+      message:
+        "Refusing to run: the command is not migrate deploy, db push, or migrate reset. Nothing was changed.",
+    });
+  });
 });
