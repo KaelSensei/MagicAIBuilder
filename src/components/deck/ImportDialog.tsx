@@ -113,7 +113,7 @@ async function addParsedCards(
   await forEachSequential(parsed.cards, async ({ name, quantity, zone }) => {
     const card = byName.get(normalizeImportedName(name));
     if (!card) return;
-    await actions.addCard(card, quantity, zone ?? "main");
+    await actions.addCard(card, { quantity, zone: zone ?? "main" });
     added++;
   });
   return added;

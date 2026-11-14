@@ -141,7 +141,7 @@ export function ImportFromUrlTab({ onSuccess }: ImportFromUrlTabProps) {
     await forEachSequential(rest, async (c) => {
       const card = byName.get(normalizeImportedName(c.name));
       if (card) {
-        await addCard(card, c.quantity, c.zone);
+        await addCard(card, { quantity: c.quantity, zone: c.zone });
         added++;
       } else ignoredNames.push(c.name);
     });
