@@ -28,6 +28,9 @@ const DESTRUCTIVE_ON_PRODUCTION =
 const EXPORT_REQUIRED =
   "Refusing a production schema change until an on-demand export exists. Pass --export-file pointing at a non-empty dump. See docs/engineering/infrastructure.md.";
 
+const UNREADABLE_DATABASE_URL =
+  "Refusing to run: DATABASE_URL is missing or is not a postgres URL. Nothing was changed.";
+
 /** A database host classified for the guard. The hostname is not a secret. */
 export type DatabaseHost = {
   readonly kind: "local" | "production";
@@ -42,7 +45,7 @@ export type SchemaCommandPlan =
   | { readonly outcome: "allow"; readonly argv: readonly string[] }
   | {
       readonly outcome: "refuse";
-      readonly code: "destructive-on-production" | "export-required";
+      readonly code: "destructive-on-production" | "export-required" | "unreadable-database-url";
       readonly message: string;
     };
 
@@ -207,8 +210,16 @@ export function planSchemaCommand(input: {
   readonly exportFileBytes: number | null;
 }): SchemaCommandPlan {
   const host = readDatabaseHost(input.databaseUrl);
+  if (!host.ok) {
+    return {
+      outcome: "refuse",
+      code: "unreadable-database-url",
+      message: UNREADABLE_DATABASE_URL,
+    };
+  }
+
   const command = parseSchemaCommand(input.argv);
-  if (host.ok && host.host.kind === "production" && isDestructiveReset(command)) {
+  if (host.host.kind === "production" && isDestructiveReset(command)) {
     return {
       outcome: "refuse",
       code: "destructive-on-production",
@@ -217,7 +228,7 @@ export function planSchemaCommand(input: {
   }
 
   const exportMissing = input.exportFileBytes === null || input.exportFileBytes <= 0;
-  if (host.ok && host.host.kind === "production" && exportMissing) {
+  if (host.host.kind === "production" && exportMissing) {
     return {
       outcome: "refuse",
       code: "export-required",
