@@ -128,6 +128,18 @@ function notifyGameChangerAdded(cardName: string, newTotal: number): void {
   }
 }
 
+/**
+ * Warns, before the save, when the card being added to `deck` is a Game Changer, with the
+ * deck's Game Changer total once it joins: the deck list's and the commander's.
+ */
+function warnIfGameChangerAdded(deck: Deck, added: DeckCard): void {
+  if (!added.isGameChanger) return;
+  const held =
+    deck.cards.filter((card) => card.isGameChanger).length +
+    (deck.commander?.isGameChanger ? 1 : 0);
+  notifyGameChangerAdded(added.name, held + 1);
+}
+
 function uniqueDeckCards(deck: Pick<Deck, "cards" | "maybeboard">): DeckCard[] {
   return cardsFromZoneSource(deck);
 }
@@ -410,6 +422,14 @@ function hasPendingSaves(): boolean {
   );
 }
 
+/** How {@link DeckStore.addCard} adds a card. Every field has a default. */
+export interface CardAddition {
+  /** Copies to add when the zone does not hold the card yet; one when omitted. */
+  readonly quantity?: number;
+  /** The zone the card goes to; the main deck when omitted. */
+  readonly zone?: DeckZone;
+}
+
 export interface DeckStore {
   // State
   decks: Record<string, Deck>;
@@ -476,11 +496,13 @@ export interface DeckStore {
   clearCommander: () => Promise<void>;
   setPartner: (card: ScryfallCard | null) => Promise<void>;
   setCompanion: (card: ScryfallCard | null) => Promise<void>;
-  addCard: (
-    card: ScryfallCard,
-    quantity?: number,
-    zone?: DeckZone
-  ) => Promise<void>;
+  /**
+   * Adds `card` to the active deck, or one more copy when its zone already holds the card.
+   *
+   * @param card - The card, as search, import or a suggestion found it
+   * @param addition - The copies and the zone; one copy in the main deck when omitted
+   */
+  addCard: (card: ScryfallCard, addition?: CardAddition) => Promise<void>;
   addDeckCard: (card: DeckCard) => Promise<void>;
   removeCard: (cardId: string) => Promise<void>;
   updateCardCategory: (cardId: string, category: CardCategory) => Promise<void>;
@@ -1604,8 +1626,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
 
   addCard: async (
     card: ScryfallCard,
-    quantity?: number,
-    zone: DeckZone = "main"
+    { quantity, zone = "main" }: CardAddition = {}
   ) => {
     const { activeDeckId, decks, gameChangerNames, bannedNames } = get();
     if (!activeDeckId) return;
@@ -1645,14 +1666,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     deckCard.isGameChanger = gameChangerNames.has(selectedCard.name);
     deckCard.isBanned = bannedNames.has(selectedCard.name);
 
-    // Warn user when adding a Game Changer card
-    if (deckCard.isGameChanger) {
-      const { cards: currentCards, commander } = deck;
-      const existingGCCount =
-        currentCards.filter((c) => c.isGameChanger).length +
-        (commander?.isGameChanger ? 1 : 0);
-      notifyGameChangerAdded(selectedCard.name, existingGCCount + 1);
-    }
+    warnIfGameChangerAdded(deck, deckCard);
 
     // Optimistic update
     set((state) => ({

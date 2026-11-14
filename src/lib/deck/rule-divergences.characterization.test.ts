@@ -221,7 +221,7 @@ describe("Game Changer count", () => {
 
     await useDeckStore
       .getState()
-      .addCard(CYCLONIC_RIFT, undefined, "maybeboard");
+      .addCard(CYCLONIC_RIFT, { zone: "maybeboard" });
 
     expect(warningToasts()).toEqual([
       "⚡ Cyclonic Rift is a Game Changer (3/3). Bracket 3 minimum applies.",
