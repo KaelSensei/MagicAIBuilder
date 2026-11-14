@@ -1,5 +1,6 @@
 import { existsSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { BUNDLED_RULES_EFFECTIVE_ON } from "@/modules/rules-reference";
 import { RULES_FILE, loadComprehensiveRules } from "./rules-file";
 
 describe("RULES_FILE", () => {
@@ -16,6 +17,7 @@ describe("loadComprehensiveRules (real file)", () => {
 
   it("reads the effective date of the bundled file", () => {
     expect(rules.effectiveDate).toEqual(new Date(Date.UTC(2026, 7, 7)));
+    expect(rules.effectiveDate?.toISOString().slice(0, 10)).toBe(BUNDLED_RULES_EFFECTIVE_ON);
   });
 
   it("parses all 9 sections", () => {
