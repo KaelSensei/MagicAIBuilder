@@ -108,8 +108,10 @@ type SchemaCommand =
 /**
  * Drops the guard's own flag and a leading `prisma`, leaving the command words.
  *
- * `--export-file` belongs to this guard, not to Prisma. Skipping a leading
- * `prisma` makes `prisma migrate reset` and `migrate reset` the same request.
+ * `--export-file` belongs to this guard, not to Prisma. A lone `--` is the
+ * separator pnpm inserts (`pnpm db:production-schema -- …`) and is not a
+ * flag. Skipping a leading `prisma` makes `prisma migrate reset` and
+ * `migrate reset` the same request.
  *
  * @param argv - Arguments after `pnpm db:production-schema --`.
  * @returns The words that name the Prisma command, flags included.
@@ -123,7 +125,7 @@ function commandWords(argv: readonly string[]): readonly string[] {
       continue;
     }
     if (token.startsWith("--export-file=")) continue;
-    if (token === "prisma" || token === "npx") continue;
+    if (token === "prisma" || token === "npx" || token === "--") continue;
     words.push(token);
   }
   return words;
