@@ -184,6 +184,7 @@ const cardPatchSchema = z.object({
   scryfallId: z.string().optional(),
   imageUri: z.string().optional(),
   artCropUri: z.string().optional(),
+  price: z.number().nullable().optional(),
   ...expectedVersionField,
 });
 
@@ -235,6 +236,8 @@ function patchCard(
       scryfallId: patch.scryfallId,
       imageUri: patch.imageUri,
       artCropUri: patch.artCropUri,
+      // As the route does: an absent price keeps the stored one.
+      ...(patch.price === undefined ? {} : { price: patch.price }),
     });
   throw new DeckApiRefusal(400, "fake deck client: empty card patch");
 }

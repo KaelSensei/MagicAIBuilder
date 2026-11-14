@@ -98,7 +98,9 @@ export const MAX_CARD_NOTES_LENGTH = 1000;
  * Body of PATCH /api/decks/[id]/cards/[cardId]. Each key is optional and the
  * route writes exactly the keys present. Zod drops unlisted keys without an
  * error, so a field the client sends must be listed here or it is silently
- * lost. `notes: null` clears the note.
+ * lost. `notes: null` clears the note. A printing swap sends the new
+ * printing's `price` beside its `scryfallId` and images, `null` when the
+ * printing has no USD price (I-57 requirement 6.1).
  */
 export const patchCardSchema = z.object({
   category: z.enum(CARD_CATEGORIES).optional(),
@@ -107,6 +109,7 @@ export const patchCardSchema = z.object({
   scryfallId: z.string().regex(SCRYFALL_ID_PATTERN, "Invalid Scryfall ID").optional(),
   imageUri: z.url().max(500).optional(),
   artCropUri: z.url().max(500).optional(),
+  price: z.number().min(0).max(100000).nullable().optional(),
   notes: z.string().max(MAX_CARD_NOTES_LENGTH).nullable().optional(),
 });
 
