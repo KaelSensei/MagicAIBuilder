@@ -172,6 +172,22 @@ Slice 1 fixes what players hit today and needs no product decision. Slices 2 to 
 4. **Owned first by default.** It is on, silently, for signed-in players today. Keep it on and make it visible, or off until the player opts in? This spec recommends on.
 5. **The bling order.** Scryfall's `prefer:atypical` does not rank borderless against showcase or extended art, and Archidekt calls its own order subjective [1]. Accept Scryfall's choice in v1, or rank treatments locally from `frame_effects` and `border_color`?
 
+## Fourteenth pass (2026-11-14)
+
+Moxfield feedback 2748, read 2026-11-14, asks to put "switch printing" and "make foil / nonfoil" back on the card's first menu. The poster says those actions now take two clicks, behind an Edit menu, and names them as the most used actions after moving a card to the sideboard or to Considering. The page printed no vote total ([2748](https://moxfield.nolt.io/2748)). This spec owns the printing that gets chosen. I-37 owns the editor chrome. The acceptance lives here so a menu change does not invent a second printing rule.
+
+#### US-57-14-01
+
+As a player changing one card's printing or foil, I want both actions on the card's first menu, so that I do not open an Edit submenu for each card.
+
+**Passing.** The card's first menu contains "Switch printing" and "Foil" or "Nonfoil", in English and French, each one action. Switch printing opens the existing printing chooser. Foil toggles the finish the printing actually has. A printing with no foil does not gain a foil mark. The preference rule in this spec still decides the printing when the player has not pinned one.
+
+**Non-passing.** Either action sits only behind a second menu. A foil toggle that marks a printing Scryfall does not list as foil. A menu that changes the account's printing preference when the player only wanted this card. That preference is a different control, and the card stays pinned to what the player just chose.
+
+**Acceptance.** One menu, two actions, the existing chooser, no new printing rule. The keyboard reaches both actions by name.
+
+**Open question.** The poster also wants the actions back "since the new version". Moxfield's editor redesign is already the open question on I-37 about what shipped on 2026-09-28. This item does not wait on that answer, because the two actions exist in our editor once I-37 records finish. It waits on that finish field, which is I-37 slice 12, and not on Moxfield.
+
 ## Sources
 
 1. Archidekt, [Development Update – Printing Optimization](https://archidekt.com/news/3289648), read 2026-11-10; the only absolute date on the page is a moderator reply edited 2022-09-22.

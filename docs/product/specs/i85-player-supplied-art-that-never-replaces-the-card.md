@@ -208,22 +208,22 @@ Then the player sees an empty state that names what is missing, and the page doe
 
 The player-visible outcome is: a player can attach an image they have the right to use to one deck card, see it themselves, and keep it off the public page and out of every play export unless they opt in.
 
-| State | What the player sees |
-| --- | --- |
-| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
-| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
-| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
-| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
-| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
-| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
-| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
-| English | New controls use the `en` catalogue. |
-| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| State            | What the player sees                                                                                                                                  |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Empty            | A sentence that names what is missing and the next action. No invented row, author, price or score.                                                   |
+| Loading          | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready.                                        |
+| Error            | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there.                                                       |
+| Partial          | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished.                                                 |
+| Stale            | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed.                                             |
+| Guest            | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401.               |
+| Signed-in        | Writes go to that account only. Another player's notes, budget and collection are not in the response.                                                |
+| English          | New controls use the `en` catalogue.                                                                                                                  |
+| French           | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control.                                                         |
 | Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
-| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
-| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
-| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
-| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+| Keyboard         | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes.                         |
+| Screen reader    | Each new control has an accessible name. A status change is announced in words, not only by colour.                                                   |
+| Colour           | A warning and an error differ by text or icon as well as hue, in both themes.                                                                         |
+| Success          | The completed action is confirmed in words. A second identical action does not duplicate the write.                                                   |
 
 ### Alternate paths
 
@@ -259,6 +259,7 @@ Archidekt's feature board, seen 2026-11-11, has "[Builder] Custom card art" at 2
 **User story.** As a player with art I have the right to use, I want it on one card in my deck, so that a public viewer does not see it unless I say so.
 
 **Acceptance.**
+
 - The image is labelled player art.
 - The oracle card, the text and the legality do not change.
 - Exports and I-80's file never include the URL.
@@ -275,9 +276,28 @@ Archidekt's feature board, seen 2026-11-11, has "[Builder] Custom card art" at 2
 
 **Open questions.** The product does not review the image in the first slice. Taking it down is deleting the attachment.
 
+### Fourteenth pass (2026-11-14)
+
+On Archidekt's collection-completion update, Jimnah wrote at 2026-11-12T23:11:27Z: "Has there been any update on custom art for cards? I got a few signed cards recently and would love to be able to see them without doing custom cards so that edhrec and stuff still works" ([news 28409148](https://archidekt.com/news/28409148)). That is this initiative's case. A custom card would be a different object, and the non-goal already excludes it. EDHREC matching the list is the reason the official card must stay.
+
+#### US-85-14-01
+
+As a player with a signed copy, I want my photo on that one deck card, so that the list other sites read is still the printed card.
+
+#### US-85-14-02
+
+As a visitor, I want the public page to show the official card, so that a photo I did not ask to see is not the card.
+
+**Passing.** The owner attaches one image. The row's name, Oracle text, Scryfall id and legality stay the official card's. A text export contains the official name and no image URL. The public page shows the official image until the owner opts in. The opt-in is off by default. The owner's own view shows the photo, labelled "Player art".
+
+**Non-passing.** The attachment creates a card with no Scryfall id. The export writes the player's URL where a client expects a card image. The public page shows the photo with the opt-in off. The photo replaces the official image in the owner's view with no label, so the two cannot be told apart.
+
+**Acceptance.** The three scope lines above still hold. The EDHREC concern is met by keeping the official name in every text export and in the public card list. This product does not promise what EDHREC's importer does with an image. It promises the list of names is unchanged.
+
+**Open question.** A photo of a signed card may include the artist's signature and nothing else, or it may be a photograph of someone else's illustration. The report path on I-38 is still the response. This pass does not add a review step.
+
 ### Definition of done
 
 An owner sees their image on the card, a signed-out viewer does not until the opt-in, and a Cockatrice export of that deck contains no player URL.
 
 ---
-
