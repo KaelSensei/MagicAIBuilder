@@ -8,7 +8,7 @@
 
 | Initiative                                                                                   | Change                                                                                                                                                                                                                                                                                                                                  |
 | -------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [I-03](i03-trustworthy-deck-feedback.md)                                         | Add a remaining-scope item: "Every bracket estimate shows its floors, terms, cards and certainty, links a frozen audit, and states its accuracy against a constant guess (I-77)." I-77 answers "Why is it flagged?" for the estimate. The shipped line "Bracket scoring across six dimensions" becomes "five" once I-28 slice 2 merges. |
+| [I-03](i03-trustworthy-deck-feedback.md)                                                     | Add a remaining-scope item: "Every bracket estimate shows its floors, terms, cards and certainty, links a frozen audit, and states its accuracy against a constant guess (I-77)." I-77 answers "Why is it flagged?" for the estimate. The shipped line "Bracket scoring across six dimensions" becomes "five" once I-28 slice 2 merges. |
 | [I-15](i15-rule-zero-sheets-and-pod-profiles.md)                                             | Line 22: replace "That is the realistic accuracy ceiling…" with "A published calculator matched 77.1%, against 73.9% for always answering Bracket 3 [1]". 1.4 and 3.3: the computed column shows I-77's estimate with its method version and audit link. Slice 2 depends on I-77 slice 1.                                               |
 | [I-34](i34-commander-data-reports.md#6-methods-page-and-open-data)                           | 6.1 gains the anchor `bracket-estimate`: I-77's report, its sets, baseline and method change log. Slice 3 reserves the anchor; I-77 slice 9 fills it.                                                                                                                                                                                   |
 | [I-41](i41-store-commander-nights.md#6-declared-and-estimated-brackets)                      | 6.2: drop "A gap of one is shown without a flag" and its 99.5% basis. A one-bracket gap gets a soft prompt, worded as a question, citing Playgroup's measured cost [11] and I-77's per-bracket figure (8.5). Slice 5 freezes the method version and the audit link with the estimate.                                                   |
@@ -229,6 +229,30 @@ Slice 1 can start once I-28 slice 2 merges; slices 2 to 4 and 6 follow it, and s
 6. **Harm direction.** Does the owner confirm that under-estimates are the harm (9.2)?
 7. **cEDH list licence.** The cEDH Decklist Database shows no licence on its page [17]; storing its lists as fixtures goes to L-25.
 8. **Tournament labels.** Is there a licensed source of organiser-labelled lists like ScrollVault's 1,229 [1]?
+
+## Fourteenth pass (2026-11-14)
+
+Two sources, both read 2026-11-14. Neither adds a slice. The audit already refuses to print a bracket the cards do not support. This pass writes the case players actually brought.
+
+A r/EDH post, "Is this bracket 3?", scored 7 with 46 comments on 2026-11-14 ([thread](https://www.reddit.com/r/EDH/comments/1xw8r3w/is_this_bracket_3/)). The poster was told a deck was a new low Bracket 3 with no counterspells. The commander shown was Lady Octopus, Inspired Inventor. The poster later names a secret commander, Urza, Lord High Artificer, and Thassa's Oracle. The score is low. The shape of the complaint is the one this initiative exists for: a spoken bracket, and cards the speaker did not mention. Arctic Shift returned the post. `reddit.com` returned HTTP 403, so the comment thread beyond the post body was not read.
+
+Mana Grove's Grover page, updated 2026-11-11, says its free bracket checker reports the lowest bracket the cards point to, from 2 to 4, with the cards behind it, and that the check does not use a model ([page](https://themanagrove.com/ai-deck-builder)). It also says Grover builds toward Bracket 3 unless the brief asks otherwise. Scryfall's named-card endpoint, the same day, returned `game_changer: false` for eight cards in the page's Bracket 2 example: Deadly Rollick, Toxic Deluge, Swords to Plowshares, Anguished Unmaking, Damn, Generous Gift, Path to Exile and Feed the Swarm. That does not audit the rest of the list.
+
+#### US-77-14-01
+
+As a player who was told "this is Bracket 3", I want the audit to list the cards that pull the deck up, so that a sentence I was told is not the estimate.
+
+#### US-77-14-02
+
+As a player, I want a floor that can be Bracket 1 and can refuse to name Bracket 5, so that a tool which only answers 2, 3 or 4 is not the whole report.
+
+**Passing.** A deck whose owner has declared Bracket 3, and which contains Thassa's Oracle, shows Oracle in the combo or Game Changer line with the clause that matched, and shows the declared 3 and the computed floor as two fields. The computed field is not overwritten by the declared field.
+
+**Non-passing.** The page prints "Bracket 3" because the owner said so. The page's only answers are 2, 3 and 4, so an Exhibition deck and a cEDH deck are forced into that range. A default of Bracket 3 is applied to a deck the player did not describe. The eight Scryfall checks above are pasted in as proof the example is legal. They are a spot check of eight names, not a verdict on Mana Grove's list.
+
+**Acceptance.** Declared and computed stay separate, which the spec already requires. The computed floor uses the official brackets, including 1 and the refusal to assign 5 from cards alone. The cards behind a floor are listed. A model does not choose the floor.
+
+**Open question.** Mana Grove stops at 4 and starts at 2. This spec's estimate already has five brackets and a separate cEDH path. No change is proposed. The question is only whether the methods page should quote their 2-to-4 range as a competitor's published limit, with the date. Recommended: yes, as their sentence, not as a cap on ours.
 
 ## Sources
 
@@ -521,22 +545,22 @@ Then the unresolved name is shown first and nothing is written until they accept
 
 The player-visible outcome is: every bracket estimate shows the floor each official rule sets apart from the heuristic average, the terms and the cards behind each, which counts are exact and which estimated, and what it cannot see. It links to a frozen audit of that deck version, states on the methods page how often it matches labelled decks against a constant-guess baseline, per bracket and in which direction it errs, and takes challenges to a scoring rule through a published process.
 
-| State | What the player sees |
-| --- | --- |
-| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
-| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
-| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
-| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
-| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
-| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
-| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
-| English | New controls use the `en` catalogue. |
-| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| State            | What the player sees                                                                                                                                  |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Empty            | A sentence that names what is missing and the next action. No invented row, author, price or score.                                                   |
+| Loading          | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready.                                        |
+| Error            | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there.                                                       |
+| Partial          | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished.                                                 |
+| Stale            | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed.                                             |
+| Guest            | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401.               |
+| Signed-in        | Writes go to that account only. Another player's notes, budget and collection are not in the response.                                                |
+| English          | New controls use the `en` catalogue.                                                                                                                  |
+| French           | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control.                                                         |
 | Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
-| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
-| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
-| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
-| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+| Keyboard         | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes.                         |
+| Screen reader    | Each new control has an accessible name. A status change is announced in words, not only by colour.                                                   |
+| Colour           | A warning and an error differ by text or icon as well as hue, in both themes.                                                                         |
+| Success          | The completed action is confirmed in words. A second identical action does not duplicate the write.                                                   |
 
 ### Alternate paths
 
@@ -585,6 +609,7 @@ Nothing in the roadmap entry was dropped. The section below is the initiative te
 **User story.** As a player told a bracket, I want the floors and the cards that tripped them, so that the number is an explanation I can audit.
 
 **Acceptance.**
+
 - Official floors are listed apart from heuristic terms.
 - Each term names the cards.
 - A method change does not ship without the benchmark the spec requires.
@@ -606,4 +631,3 @@ Nothing in the roadmap entry was dropped. The section below is the initiative te
 A pod member opens a frozen audit link and sees why a deck reads Bracket 3: the Game Changer floor with its two cards, the heuristic sum, which counts are exact and which estimated, and what the estimate cannot see; the methods page states how often the estimate matched labelled precons, beside the score of always answering the most common label, in which direction it erred, and which method version produced the figure.
 
 ---
-
