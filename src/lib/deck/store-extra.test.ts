@@ -1332,7 +1332,7 @@ describe("useDeckStore — moveCardToZone", () => {
   });
 
   it("persists a card added directly to a secondary zone", async () => {
-    await useDeckStore.getState().addCard(makeScryfallCard(), 1, "sideboard");
+    await useDeckStore.getState().addCard(makeScryfallCard(), { quantity: 1, zone: "sideboard" });
     const deck = useDeckStore.getState().decks["deck-1"];
     expect(
       deck.cards.find((card) => card.name === "Lightning Bolt")?.zone

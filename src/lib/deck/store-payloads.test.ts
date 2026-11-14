@@ -314,7 +314,7 @@ describe("the add-card request each action sends", () => {
   });
 
   it("addCard sends the quantity and zone it was asked for", async () => {
-    await useDeckStore.getState().addCard(RELENTLESS_RATS, 12, "sideboard");
+    await useDeckStore.getState().addCard(RELENTLESS_RATS, { quantity: 12, zone: "sideboard" });
 
     expect(addCardBodies()).toEqual([
       {
