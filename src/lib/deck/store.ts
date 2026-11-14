@@ -38,6 +38,7 @@ import {
   isDeckStub,
   makeDeckCard,
 } from "./store-factories";
+import { printingColumns } from "./store-card-faces";
 import { cardsFromZoneSource, deckFromZoneCards } from "./zone-source";
 import { withLoadedCardCount } from "./loaded-card-count";
 import {
@@ -2050,25 +2051,20 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       (card) => card.id === cardId
     );
     if (!previousCard) return;
-    const { getCardImageUri } = await import("@/lib/scryfall/images");
-    const imageUri = getCardImageUri(printing, "grid");
-    const artCropUri = getCardImageUri(printing, "art");
+    // The printing, its images and its price change together (I-57 defect 2).
+    const swapped = printingColumns(printing);
     set((state) => ({
       decks: {
         ...state.decks,
         [activeDeckId]: updateDeckCards(state.decks[activeDeckId], (cards) =>
-          cards.map((c) =>
-            c.id === cardId
-              ? { ...c, scryfallId: printing.id, imageUri, artCropUri }
-              : c
-          )
+          cards.map((c) => (c.id === cardId ? { ...c, ...swapped } : c))
         ),
       },
     }));
     set({ isSyncing: true });
     try {
       await deckWrites.send(activeDeckId, (target) =>
-        patchCardRow(target, cardId, { scryfallId: printing.id, imageUri, artCropUri })
+        patchCardRow(target, cardId, swapped)
       );
     } catch (err) {
       logger.error("Unexpected error", "swapCardPrinting", err);
@@ -2081,13 +2077,14 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
             [activeDeckId]: updateDeckCards(deck, (cards) =>
               cards.map((card) =>
                 card.id === cardId &&
-                card.scryfallId === printing.id &&
-                card.imageUri === imageUri
+                card.scryfallId === swapped.scryfallId &&
+                card.imageUri === swapped.imageUri
                   ? {
                       ...card,
                       scryfallId: previousCard.scryfallId,
                       imageUri: previousCard.imageUri,
                       artCropUri: previousCard.artCropUri,
+                      price: previousCard.price,
                     }
                   : card
               )
