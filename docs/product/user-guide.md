@@ -201,7 +201,7 @@ In **List mode**, hover a row, or reach its buttons with Tab, to edit the card i
 
 - **−** and **+** around the count change the number of copies. They appear on cards you may run more than once: basic lands, cards whose text allows any number (Relentless Rats), Seven Dwarves (up to 7) and Nazgûl (up to 9). A card allowed once shows only its count, unless it holds extra copies (from an import, say), where **−** brings it back to one. The count never goes below one: use × to remove the card.
 - The **crown** sets the card as your commander. It appears on cards that can be a commander: a legendary creature, Vehicle or Spacecraft, or a card whose text says it can be your commander. The card leaves the list and replaces your current commander, which leaves the deck. Your partner stays only if the new commander can have one.
-- The **image** icon opens the **printing selector** for that row; the card keeps its count, zone, category and note.
+- The **image** icon opens the **printing selector** for that row; the card keeps its count, zone, category and note, and takes the price of the printing you pick, so deck totals and shopping lists follow it. When the printing you pick has no USD price, its row shows no price.
 - The **note** icon (main deck only) opens a private note on the card. Ctrl+Enter (⌘+Enter on a Mac) or clicking away saves it; Esc cancels. Empty the note and save to delete it.
 
 #### Setting Your Commander

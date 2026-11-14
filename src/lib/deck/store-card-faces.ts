@@ -80,6 +80,33 @@ function usdPrice(usd: string | null | undefined): number | null {
 }
 
 /**
+ * The columns of a deck row that its printing decides: which printing, its
+ * grid and art images, and its USD price. A printing swap writes the four in
+ * one write, so no total read from the row keeps the previous printing's
+ * price (I-57 requirement 6.1).
+ */
+export type PrintingColumns = Readonly<
+  Pick<DeckCard, "imageUri" | "artCropUri" | "price"> & { scryfallId: string }
+>;
+
+/**
+ * The printing columns of a row swapped to `printing`. The price follows the
+ * rule an added card follows (`makeDeckCard`): Scryfall's USD price, or
+ * `null` when Scryfall has none, never 0 and never the previous price.
+ *
+ * @param printing - the printing the player picked
+ * @returns the row's new printing columns
+ */
+export function printingColumns(printing: ScryfallCard): PrintingColumns {
+  return {
+    scryfallId: printing.id,
+    imageUri: getCardImageUri(printing, "grid"),
+    artCropUri: getCardImageUri(printing, "art"),
+    price: usdPrice(printing.prices?.usd),
+  };
+}
+
+/**
  * Turns a Scryfall card into the deck card the store keeps.
  *
  * @param scryfallCard - card returned by Scryfall

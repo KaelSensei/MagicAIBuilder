@@ -44,12 +44,20 @@ import { PATCH } from "./route";
 
 const params = { params: Promise.resolve({ id: "deck-1", cardId: "card-1" }) };
 
-/** A deck row as the database holds it; `notes` is the only column these tests read back. */
+/** A deck row as the database holds it; `notes` and `price` are the columns these tests read back. */
 interface StoredCardRow {
   readonly id: string;
   readonly deckId: string;
   readonly notes: string | null;
+  readonly price?: number | null;
 }
+
+/** The printing fields of a printing swap's body. */
+const SWAPPED_PRINTING = {
+  scryfallId: "123e4567-e89b-12d3-a456-426614174000",
+  imageUri: "https://cards.example/normal.jpg",
+  artCropUri: "https://cards.example/art.jpg",
+};
 
 /** Makes the Prisma update mock merge its data into one stored row and return it. */
 function storeOneRow(initial: StoredCardRow): () => StoredCardRow {
@@ -103,6 +111,37 @@ describe("PATCH /api/decks/[id]/cards/[cardId]", () => {
       },
     });
   });
+
+  // I-57 defect 2: a swap kept the previous printing's price.
+  it("stores the new printing's price with its printing fields", async () => {
+    const storedRow = storeOneRow({
+      id: "card-1",
+      deckId: "deck-1",
+      notes: null,
+      price: 2.5,
+    });
+
+    const response = await PATCH(
+      patchRequest({ ...SWAPPED_PRINTING, price: 4.99 }),
+      params
+    );
+
+    expect(response.status).toBe(200);
+    expect(storedRow().price).toBe(4.99);
+  });
+
+  it.each([-1, 100_001])(
+    "refuses a price of %d, outside what an added card may carry, and writes nothing",
+    async (price) => {
+      const response = await PATCH(
+        patchRequest({ ...SWAPPED_PRINTING, price }),
+        params
+      );
+
+      expect(response.status).toBe(400);
+      expect(mocks.updateCard).not.toHaveBeenCalled();
+    }
+  );
 
   it("persists a valid card quantity", async () => {
     const request = new Request("http://localhost/api/decks/deck-1/cards/card-1", {

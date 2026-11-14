@@ -807,7 +807,7 @@ The earlier 3D spellbook scene (Three.js, React Three Fiber, gsap) was removed f
 ### Edition Picker in Deck List (`feat/import-fix-and-edition-picker`)
 
 - Layers icon on hover in list view → `PrintingSelectorModal` (same modal as search results)
-- `swapCardPrinting(cardId, ScryfallCard)` — updates `scryfallId`, `imageUri`, `artCropUri` optimistically and persists via PATCH
+- `swapCardPrinting(cardId, ScryfallCard)` — updates `scryfallId`, `imageUri`, `artCropUri` and `price` (the printing's USD price, `null` when Scryfall has none; `printingColumns` in `lib/deck/store-card-faces.ts`) optimistically and persists them in one PATCH; a failed save restores all four (I-57 defect 2)
 
 ### Commander in Grid View (`feat/commander-card-in-grid-view`)
 
