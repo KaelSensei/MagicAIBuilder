@@ -8,6 +8,7 @@ import type {
   DeckCard,
   DeckZone,
   CardCategory,
+  PrintingChoice,
 } from "./types";
 import { loadSortPreference, saveSortPreference } from "./sort";
 import type { SortField, SortDirection, GroupBy, SortPreference } from "./sort";
@@ -200,6 +201,21 @@ async function getOwnedPrinting(
   } catch {
     return null;
   }
+}
+
+/** The printing `addCard` adds: the one the player chose, or an owned printing first. */
+async function printingToAdd(
+  card: ScryfallCard,
+  choice: PrintingChoice
+): Promise<ScryfallCard> {
+  switch (choice) {
+    case "explicit":
+      return card;
+    case "owned-first":
+      return (await getOwnedPrinting(card)) ?? card;
+  }
+  const unknownChoice: never = choice;
+  return unknownChoice;
 }
 
 function syncDeckCards(deck: Deck, cards: readonly DeckCard[]): Deck {
@@ -428,6 +444,11 @@ export interface CardAddition {
   readonly quantity?: number;
   /** The zone the card goes to; the main deck when omitted. */
   readonly zone?: DeckZone;
+  /**
+   * Whether the player chose this printing; `owned-first` when omitted. The printing selector
+   * passes `explicit`, so the printing picked there is never replaced (I-57 defect 1).
+   */
+  readonly printing?: PrintingChoice;
 }
 
 export interface DeckStore {
@@ -1626,7 +1647,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
 
   addCard: async (
     card: ScryfallCard,
-    { quantity, zone = "main" }: CardAddition = {}
+    { quantity, zone = "main", printing = "owned-first" }: CardAddition = {}
   ) => {
     const { activeDeckId, decks, gameChangerNames, bannedNames } = get();
     if (!activeDeckId) return;
@@ -1653,8 +1674,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       return;
     }
 
-    const ownedPrinting = await getOwnedPrinting(card);
-    const selectedCard = ownedPrinting ?? card;
+    const selectedCard = await printingToAdd(card, printing);
     const deckCard = makeDeckCard(selectedCard);
     // If a specific quantity is provided (e.g. bulk import of basics), apply it directly
     if (quantity && quantity > 1) {
