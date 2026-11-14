@@ -31,6 +31,12 @@ const EXPORT_REQUIRED =
 const UNREADABLE_DATABASE_URL =
   "Refusing to run: DATABASE_URL is missing or is not a postgres URL. Nothing was changed.";
 
+const UNRECOGNISED_COMMAND =
+  "Refusing to run: the command is not migrate deploy, db push, or migrate reset. Nothing was changed.";
+
+/** Flags this guard understands. Any other flag would be forwarded to Prisma. */
+const KNOWN_FLAGS: ReadonlySet<string> = new Set(["--force-reset", "--force"]);
+
 /** A database host classified for the guard. The hostname is not a secret. */
 export type DatabaseHost = {
   readonly kind: "local" | "production";
@@ -45,7 +51,11 @@ export type SchemaCommandPlan =
   | { readonly outcome: "allow"; readonly argv: readonly string[] }
   | {
       readonly outcome: "refuse";
-      readonly code: "destructive-on-production" | "export-required" | "unreadable-database-url";
+      readonly code:
+        | "destructive-on-production"
+        | "export-required"
+        | "unreadable-database-url"
+        | "unrecognised-command";
       readonly message: string;
     };
 
@@ -127,7 +137,9 @@ function commandWords(argv: readonly string[]): readonly string[] {
  */
 function parseSchemaCommand(argv: readonly string[]): SchemaCommand {
   const words = commandWords(argv);
-  const forceReset = words.includes("--force-reset");
+  const flags = words.filter((word) => word.startsWith("--"));
+  if (flags.some((flag) => !KNOWN_FLAGS.has(flag))) return { name: "unrecognised" };
+  const forceReset = flags.includes("--force-reset");
   const positional = words.filter((word) => !word.startsWith("--"));
   const [first, second] = positional;
   if (positional.length !== 2) return { name: "unrecognised" };
@@ -201,8 +213,9 @@ function prismaArgv(command: Exclude<SchemaCommand, { readonly name: "unrecognis
  * @param input.argv - The operator's arguments.
  * @param input.exportFileBytes - Size of the on-demand export, or null when
  *   the file is missing. Zero is not an export.
- * @returns Refuse for a production reset or a production change with no
- *   export, otherwise the Prisma argv to run.
+ * @returns Refuse for a production reset, a production change with no export,
+ *   an unreadable URL, or a command this guard does not know. Otherwise the
+ *   Prisma argv to run.
  */
 export function planSchemaCommand(input: {
   readonly databaseUrl: string | undefined;
@@ -237,7 +250,11 @@ export function planSchemaCommand(input: {
   }
 
   if (command.name === "unrecognised") {
-    return { outcome: "allow", argv: ["npx", "prisma", "db", "push"] };
+    return {
+      outcome: "refuse",
+      code: "unrecognised-command",
+      message: UNRECOGNISED_COMMAND,
+    };
   }
 
   return { outcome: "allow", argv: prismaArgv(command) };
