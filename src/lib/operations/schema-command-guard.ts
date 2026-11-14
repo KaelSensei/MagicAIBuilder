@@ -157,17 +157,45 @@ function isDestructiveReset(command: SchemaCommand): boolean {
 }
 
 /**
- * Decides whether a reset may run.
+ * The Prisma invocation for an allowed command.
+ *
+ * Built from the parsed command, never from the raw arguments, so a flag the
+ * guard did not accept cannot be forwarded. The database URL stays in the
+ * environment.
+ *
+ * @param command - A command `parseSchemaCommand` recognised.
+ * @returns The argv a shell may execute.
+ */
+function prismaArgv(command: Exclude<SchemaCommand, { readonly name: "unrecognised" }>): readonly string[] {
+  switch (command.name) {
+    case "db-push":
+      return command.forceReset
+        ? ["npx", "prisma", "db", "push", "--force-reset"]
+        : ["npx", "prisma", "db", "push"];
+    case "migrate-deploy":
+      return ["npx", "prisma", "migrate", "deploy"];
+    case "migrate-reset":
+      return ["npx", "prisma", "migrate", "reset", "--force"];
+    default: {
+      const unreachable: never = command;
+      return unreachable;
+    }
+  }
+}
+
+/**
+ * Decides whether a reset may run, and which Prisma argv an allowed command uses.
  *
  * On a production host both `db push --force-reset` and `migrate reset` are
- * refused, including when an export file was passed. Other commands are not
- * decided here yet.
+ * refused, including when an export file was passed. An allowed command's
+ * argv comes from the parsed command. Requiring an export before a production
+ * schema change is not decided here yet.
  *
  * @param input.databaseUrl - The URL to classify. It is not copied into the plan.
  * @param input.argv - The operator's arguments.
  * @param input.exportFileBytes - Present so a later rule can require an export.
  *   This rule ignores it.
- * @returns Refuse for a production reset, otherwise allow a non-reset push.
+ * @returns Refuse for a production reset, otherwise the Prisma argv to run.
  */
 export function planSchemaCommand(input: {
   readonly databaseUrl: string | undefined;
@@ -184,5 +212,9 @@ export function planSchemaCommand(input: {
     };
   }
 
-  return { outcome: "allow", argv: ["npx", "prisma", "db", "push"] };
+  if (command.name === "unrecognised") {
+    return { outcome: "allow", argv: ["npx", "prisma", "db", "push"] };
+  }
+
+  return { outcome: "allow", argv: prismaArgv(command) };
 }
