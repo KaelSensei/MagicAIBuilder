@@ -569,7 +569,7 @@ export default function BuilderPage() {
 
   const handlePrintingSelect = useCallback(
     (card: ScryfallCard) => {
-      void addCard(card, { zone: activeZone });
+      void addCard(card, { zone: activeZone, printing: "explicit" });
       setPrintingCard(null);
     },
     [addCard, activeZone]

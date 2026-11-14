@@ -29,8 +29,17 @@ import { http, HttpResponse, type JsonBodyType } from "msw";
 import type { Session } from "next-auth";
 import { AppRouterContext } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import { PathParamsContext } from "next/dist/shared/lib/hooks-client-context.shared-runtime";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  onTestFinished,
+  vi,
+} from "vitest";
 import { aiCallDenialBody } from "@/lib/ai/usage/denial";
+import { useCollectionStore } from "@/lib/collection/store";
 import type {
   ApiDeck,
   ApiDeckCard,
@@ -38,7 +47,7 @@ import type {
 } from "@/lib/db/deck-api";
 import { GUEST_DECK_ID } from "@/lib/deck/guest-deck";
 import { useDeckStore } from "@/lib/deck/store";
-import { EMPTY_SEARCH_RESPONSE } from "@/lib/scryfall/types";
+import { EMPTY_SEARCH_RESPONSE, type ScryfallCard } from "@/lib/scryfall/types";
 import { useUIStore } from "@/lib/ui/store";
 import { setupMsw } from "@/test/msw";
 import { renderWithProviders } from "@/test/render";
@@ -52,6 +61,7 @@ vi.mock(
 
 const DECK_ID = "deck-1";
 const SCRYFALL_NAMED = "https://api.scryfall.com/cards/named";
+const SCRYFALL_SEARCH = "https://api.scryfall.com/cards/search";
 
 /** A signed-in player who owns the deck under test. */
 const PLAYER: Session = {
@@ -896,6 +906,97 @@ describe("characterization: builder page shell", () => {
       expect(
         screen.queryByRole("button", { name: "Remove Counterspell" })
       ).not.toBeInTheDocument();
+    });
+  });
+
+  describe("adding a card through the printing selector", () => {
+    /** The printing the search finds and the player picks. */
+    const OPT_IXALAN: ScryfallCard = {
+      id: "opt-xln",
+      name: "Opt",
+      cmc: 1,
+      type_line: "Instant",
+      color_identity: ["U"],
+      set: "xln",
+      set_name: "Ixalan",
+    };
+    /** Another printing of Opt, the one the player owns. */
+    const OPT_ELDRAINE: ScryfallCard = {
+      ...OPT_IXALAN,
+      id: "opt-eld",
+      set: "eld",
+      set_name: "Throne of Eldraine",
+    };
+
+    // I-57 defect 1: the pick was swapped for the owned printing before it was saved.
+    it("saves the printing the player picked although they own another printing of the card", async () => {
+      onTestFinished(() =>
+        useCollectionStore.setState(useCollectionStore.getInitialState(), true)
+      );
+      useCollectionStore.getState().hydrateCollection([
+        {
+          id: "collection-row-opt",
+          scryfallId: OPT_ELDRAINE.id,
+          name: "Opt",
+          quantity: 1,
+          foil: false,
+          createdAt: "2026-11-01T00:00:00.000Z",
+        },
+      ]);
+      server.use(
+        http.get("/api/cache/search", async ({ request }) => {
+          await record(request);
+          const query = new URL(request.url).searchParams.get("query") ?? "";
+          const data = query.includes("Opt")
+            ? { ...EMPTY_SEARCH_RESPONSE, total_cards: 1, data: [OPT_IXALAN] }
+            : EMPTY_SEARCH_RESPONSE;
+          return HttpResponse.json({ hit: true, data });
+        }),
+        http.get(SCRYFALL_SEARCH, async ({ request }) => {
+          await record(request);
+          return HttpResponse.json({
+            ...EMPTY_SEARCH_RESPONSE,
+            total_cards: 2,
+            data: [OPT_IXALAN, OPT_ELDRAINE],
+          });
+        }),
+        // Before the fix, the store looked the owned printing up here and saved it instead.
+        http.get("/api/cache/cards", async ({ request }) => {
+          await record(request);
+          return HttpResponse.json({ hit: true, data: OPT_ELDRAINE });
+        }),
+        http.post("/api/decks/:id/cards", async ({ request }) => {
+          await record(request);
+          return HttpResponse.json(
+            row("Opt", { id: "row-opt", scryfallId: "saved-printing" })
+          );
+        })
+      );
+      await openSavedDeck();
+
+      await userEvent.type(
+        screen.getByPlaceholderText("Search cards…"),
+        "Opt"
+      );
+      await userEvent.click(
+        await screen.findByRole("button", { name: "Add Opt to deck" })
+      );
+      await userEvent.click(
+        await screen.findByRole("button", { name: "Opt — Ixalan" })
+      );
+
+      await waitFor(() =>
+        expect(
+          sent.filter(
+            (request) => request.line === `POST /api/decks/${DECK_ID}/cards`
+          )
+        ).toEqual([
+          {
+            line: `POST /api/decks/${DECK_ID}/cards`,
+            body: expect.objectContaining({ scryfallId: OPT_IXALAN.id }),
+          },
+        ])
+      );
     });
   });
 });

@@ -10,7 +10,7 @@
  * request in memory, so the tests run offline.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, onTestFinished } from "vitest";
 import type { Mock } from "vitest";
 
 const collectionState = vi.hoisted(() => ({
@@ -977,6 +977,28 @@ describe("useDeckStore — addCard", () => {
       expect.objectContaining({ scryfallId: "owned-printing" })
     );
     expect(collectionState.collectionCards["owned-printing"]?.quantity).toBe(1);
+  });
+
+  // I-57 defect 1: the printing selector's pick was swapped for any other owned printing.
+  it("keeps the printing the player picked even when they own another printing of that card", async () => {
+    onTestFinished(() => {
+      vi.mocked(scryfallClient.getCardById).mockReset();
+      collectionState.collectionCards = {};
+    });
+    const pickedPrinting = makeScryfallCard({ id: "picked-printing", name: "Lightning Bolt" });
+    collectionState.collectionCards = {
+      "owned-printing": { name: "Lightning Bolt", quantity: 1, scryfallId: "owned-printing" },
+    };
+    vi.mocked(scryfallClient.getCardById).mockResolvedValue(
+      makeScryfallCard({ id: "owned-printing", name: "Lightning Bolt" })
+    );
+
+    await useDeckStore.getState().addCard(pickedPrinting, { printing: "explicit" });
+
+    expect(deckApi.addCard).toHaveBeenCalledWith(
+      { deckId: "deck-1" },
+      expect.objectContaining({ scryfallId: "picked-printing" })
+    );
   });
 
   it("adds a new card to the deck", async () => {
