@@ -1,7 +1,8 @@
 /**
  * `/api/user/profile`: the signed-in account's own profile. GET reads it,
  * PATCH changes the display name or avatar URL, DELETE deletes the account
- * and, through the schema's cascades, everything it owns.
+ * and, through the schema's cascades, everything it owns, then signs the
+ * calling browser out.
  *
  * Identity context. Session only (`requireAuth`); no route reads another
  * account's profile here (the public profile is `/api/users/[username]`).
@@ -10,10 +11,11 @@
  *
  * @module api/user/profile
  */
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { requireAuth } from "@/lib/auth/helpers";
+import { expireSessionCookies } from "@/lib/auth/session-cookies";
 import { logger } from "@/lib/logger";
 import { readJsonBody } from "@/lib/api/json-body";
 import { withRequestLog } from "@/lib/api/route-kit";
@@ -106,15 +108,19 @@ async function updateProfile(request: Request): Promise<NextResponse> {
   }
 }
 
-/** DELETE /api/user/profile — Delete current user's account and all data */
-export async function DELETE() {
+/**
+ * DELETE /api/user/profile — Delete current user's account and all data, and
+ * sign this browser out by expiring its session cookie. A failed deletion
+ * keeps the session: the account still exists.
+ */
+export async function DELETE(request: NextRequest) {
   return withRequestLog(
     { message: COMPLETED, context: "DELETE /api/user/profile" },
-    deleteAccount
+    () => deleteAccount(request)
   );
 }
 
-async function deleteAccount(): Promise<NextResponse> {
+async function deleteAccount(request: NextRequest): Promise<NextResponse> {
   try {
     const result = await requireAuth();
     if (result.error) return result.error;
@@ -123,7 +129,9 @@ async function deleteAccount(): Promise<NextResponse> {
       where: { id: result.session.user.id },
     });
 
-    return NextResponse.json({ success: true });
+    const response = NextResponse.json({ success: true });
+    expireSessionCookies(request, response);
+    return response;
   } catch (error) {
     logger.error(error instanceof Error ? error.message : "unknown", "DELETE /api/user/profile");
     return NextResponse.json({ error: "Failed to delete account" }, { status: 500 });
