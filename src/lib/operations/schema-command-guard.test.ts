@@ -43,4 +43,18 @@ describe("planSchemaCommand", () => {
         "Refusing to reset a production database. This command drops every table, and Supabase Free keeps no backup.",
     });
   });
+
+  it("allows a local reset and runs prisma db push --force-reset", () => {
+    const plan = planSchemaCommand({
+      databaseUrl: "postgresql://app:secret-password@localhost:5432/postgres",
+      argv: ["db", "push", "--force-reset"],
+      exportFileBytes: null,
+    });
+
+    expect(plan).toEqual({
+      outcome: "allow",
+      argv: ["npx", "prisma", "db", "push", "--force-reset"],
+    });
+    expect(JSON.stringify(plan)).not.toContain("secret-password");
+  });
 });
