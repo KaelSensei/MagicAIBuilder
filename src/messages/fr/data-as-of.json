@@ -1,0 +1,9 @@
+{
+  "label": "Données en date du",
+  "rulesDated": "Règles : {date}",
+  "rulesAbsent": "Date des règles : non enregistrée",
+  "pricesStored": "Prix : USD enregistrés avec chaque carte",
+  "pricesDated": "Prix : USD enregistrés le {date}",
+  "cardDataPending": "Données des cartes : pas chargées depuis le fichier quotidien",
+  "cardDataLoaded": "Données des cartes : chargées le {date}"
+}

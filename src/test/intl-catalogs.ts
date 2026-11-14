@@ -15,6 +15,7 @@ import enCard from "@/messages/en/card.json";
 import enCollection from "@/messages/en/collection.json";
 import enCommanderRules from "@/messages/en/commander-rules.json";
 import enCommon from "@/messages/en/common.json";
+import enDataAsOf from "@/messages/en/data-as-of.json";
 import enDeck from "@/messages/en/deck.json";
 import enLanding from "@/messages/en/landing.json";
 import enMetadata from "@/messages/en/metadata.json";
@@ -31,6 +32,7 @@ import frCard from "@/messages/fr/card.json";
 import frCollection from "@/messages/fr/collection.json";
 import frCommanderRules from "@/messages/fr/commander-rules.json";
 import frCommon from "@/messages/fr/common.json";
+import frDataAsOf from "@/messages/fr/data-as-of.json";
 import frDeck from "@/messages/fr/deck.json";
 import frLanding from "@/messages/fr/landing.json";
 import frMetadata from "@/messages/fr/metadata.json";
@@ -55,6 +57,7 @@ const CATALOGS: Readonly<Record<TestLocale, AbstractIntlMessages>> = {
     auth: enAuth,
     builder: enBuilder,
     deck: enDeck,
+    dataAsOf: enDataAsOf,
     landing: enLanding,
     onboarding: enOnboarding,
     search: enSearch,
@@ -73,6 +76,7 @@ const CATALOGS: Readonly<Record<TestLocale, AbstractIntlMessages>> = {
     auth: frAuth,
     builder: frBuilder,
     deck: frDeck,
+    dataAsOf: frDataAsOf,
     landing: frLanding,
     onboarding: frOnboarding,
     search: frSearch,

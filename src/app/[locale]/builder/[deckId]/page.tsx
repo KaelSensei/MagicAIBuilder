@@ -26,6 +26,8 @@ import {
   FileText,
   Pencil,
 } from "lucide-react";
+import { DataAsOfLine } from "@/components/deck/DataAsOfLine";
+import { currentDataAsOfFacts } from "@/lib/deck/data-as-of";
 import { useDeckStore } from "@/lib/deck/store";
 import { isDeckStub } from "@/lib/deck/store-factories";
 import { computeDeckStats } from "@/lib/deck/stats";
@@ -950,6 +952,10 @@ export default function BuilderPage() {
               />
             )}
           </div>
+        </div>
+
+        <div className="mx-3 mt-1 md:mx-4">
+          <DataAsOfLine facts={currentDataAsOfFacts()} />
         </div>
 
         {/* 3-panel layout — desktop: side-by-side, mobile: tabbed */}

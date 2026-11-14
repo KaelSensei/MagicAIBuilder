@@ -26,6 +26,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
   ).default;
   const settings = (await import(`@/messages/${locale}/settings.json`)).default;
   const metadata = (await import(`@/messages/${locale}/metadata.json`)).default;
+  const dataAsOf = (await import(`@/messages/${locale}/data-as-of.json`)).default;
 
   return {
     locale,
@@ -46,6 +47,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
       commanderRules,
       settings,
       metadata,
+      dataAsOf,
     },
   };
 });
