@@ -1,6 +1,6 @@
 # I-95: A Changelog For The Public Read API
 
-**Status:** Next  
+**Status:** Shipped  
 **Priority:** Next  
 **Depth:** Full
 
@@ -208,22 +208,22 @@ Then the player sees an empty state that names what is missing, and the page doe
 
 The player-visible outcome is: a developer can read, in one page, what changed in the public read API since the previous deploy, and a breaking change cannot merge without a dated line.
 
-| State | What the player sees |
-| --- | --- |
-| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
-| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
-| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
-| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
-| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
-| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
-| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
-| English | New controls use the `en` catalogue. |
-| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| State            | What the player sees                                                                                                                                  |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Empty            | A sentence that names what is missing and the next action. No invented row, author, price or score.                                                   |
+| Loading          | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready.                                        |
+| Error            | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there.                                                       |
+| Partial          | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished.                                                 |
+| Stale            | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed.                                             |
+| Guest            | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401.               |
+| Signed-in        | Writes go to that account only. Another player's notes, budget and collection are not in the response.                                                |
+| English          | New controls use the `en` catalogue.                                                                                                                  |
+| French           | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control.                                                         |
 | Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
-| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
-| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
-| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
-| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+| Keyboard         | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes.                         |
+| Screen reader    | Each new control has an accessible name. A status change is announced in words, not only by colour.                                                   |
+| Colour           | A warning and an error differ by text or icon as well as hue, in both themes.                                                                         |
+| Success          | The completed action is confirmed in words. A second identical action does not duplicate the write.                                                   |
 
 ### Alternate paths
 
@@ -250,15 +250,16 @@ Nothing in the roadmap entry was dropped. The section below is the initiative te
 
 ### Scope
 
-- [ ] A public page, in English, listing dated changes to `/api/v1/decks`, `/api/v1/decks/{id}`, `/api/v1/collection` and `/api/v1/openapi`. A compatible change is labelled compatible. A breaking change names the field and the date.
-- [ ] A CI check fails when the OpenAPI document changes and the changelog has no new dated line and no "compatible" label for that change.
-- [ ] The page does not document routes outside `/api/v1`. It does not embed a deck.
+- [x] A public page, in English, listing dated changes to `/api/v1/decks`, `/api/v1/decks/{id}`, `/api/v1/collection` and `/api/v1/openapi`. A compatible change is labelled compatible. A breaking change names the field and the date.
+- [x] A CI check fails when the OpenAPI document changes and the changelog has no new dated line and no "compatible" label for that change.
+- [x] The page does not document routes outside `/api/v1`. It does not embed a deck.
 
 ### Enrichment (2026-11-11)
 
 **User story.** As a developer using the public read API, I want a page that says what changed, so that a breaking change is not silent.
 
 **Acceptance.**
+
 - The page lists the deck routes, the collection route and the OpenAPI route.
 - A change to the OpenAPI document without a dated changelog line fails CI, unless the change is labelled compatible.
 - The page renders signed out and embeds no deck.
@@ -280,4 +281,3 @@ Nothing in the roadmap entry was dropped. The section below is the initiative te
 The page lists the three data routes and the OpenAPI route, a pull request that changes the document without a changelog line fails the check, and the page renders signed out.
 
 ---
-
