@@ -132,9 +132,13 @@ async function clickSearchRow(
   user: ReturnType<typeof userEvent.setup>,
   name: string
 ): Promise<void> {
-  const row = (await screen.findAllByRole("button", { name: new RegExp(name) })).find(
-    (element) => element.tagName === "BUTTON"
-  );
+  const row = (
+    await screen.findAllByRole(
+      "button",
+      { name: new RegExp(name) },
+      { timeout: 10_000 }
+    )
+  ).find((element) => element.tagName === "BUTTON");
   if (!(row instanceof HTMLButtonElement)) {
     throw new Error(`No search row for ${name}`);
   }

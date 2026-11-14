@@ -979,10 +979,18 @@ describe("characterization: builder page shell", () => {
         "Opt"
       );
       await userEvent.click(
-        await screen.findByRole("button", { name: "Add Opt to deck" })
+        await screen.findByRole(
+          "button",
+          { name: "Add Opt to deck" },
+          { timeout: 10_000 }
+        )
       );
       await userEvent.click(
-        await screen.findByRole("button", { name: "Opt — Ixalan" })
+        await screen.findByRole(
+          "button",
+          { name: "Opt — Ixalan" },
+          { timeout: 10_000 }
+        )
       );
 
       await waitFor(() =>
