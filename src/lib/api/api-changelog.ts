@@ -58,6 +58,25 @@ export type ApiChangelogCheck =
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 /**
+ * Dated changes to the public read API, oldest last.
+ *
+ * The first entry records the document as it stood when this page shipped.
+ * A later change adds a line and sets `documentHash` to the new
+ * `currentOpenApiDocumentHash()`. The check fails until that happens.
+ */
+export const API_CHANGELOG: readonly ApiChangelogEntry[] = [
+  {
+    date: "2026-11-14",
+    label: "compatible",
+    summary:
+      "The public read API is documented: the deck list, one deck, the collection, and the OpenAPI document. No field changed.",
+    routes: PUBLIC_READ_ROUTES,
+    field: null,
+    documentHash: "3b9eb8bbdaf924d52c28c3cbc93fc71cc90a42e789f414d80d31c465e4c47306",
+  },
+];
+
+/**
  * SHA-256 of the OpenAPI document, with a fixed server URL.
  *
  * The live route puts the caller's origin in `servers`. That must not change
