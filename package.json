@@ -25,6 +25,7 @@
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
     "db:reset": "prisma migrate reset --force",
+    "db:production-schema": "tsx scripts/production-schema.ts",
     "git:prune": "bash scripts/git-prune.sh",
     "db:seed": "tsx prisma/seed.ts",
     "prepare": "husky",
