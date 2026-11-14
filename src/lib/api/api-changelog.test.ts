@@ -26,4 +26,48 @@ describe("checkApiChangelog", () => {
       })
     ).toEqual({ ok: false, reason: "missing-dated-line" });
   });
+
+  it("accepts a compatible line whose hash is the document", () => {
+    expect(
+      checkApiChangelog({
+        documentHash: PREVIOUS.documentHash,
+        entries: [PREVIOUS],
+      })
+    ).toEqual({ ok: true });
+  });
+
+  it("rejects a breaking line that does not name the field", () => {
+    const breaking: ApiChangelogEntry = {
+      ...PREVIOUS,
+      label: "breaking",
+      field: null,
+    };
+
+    expect(
+      checkApiChangelog({ documentHash: breaking.documentHash, entries: [breaking] })
+    ).toEqual({ ok: false, reason: "breaking-without-field" });
+  });
+
+  it("accepts a breaking line that names the field and the date", () => {
+    const breaking: ApiChangelogEntry = {
+      ...PREVIOUS,
+      label: "breaking",
+      field: "Deck.cards",
+    };
+
+    expect(
+      checkApiChangelog({ documentHash: breaking.documentHash, entries: [breaking] })
+    ).toEqual({ ok: true });
+  });
+
+  it("rejects a route outside /api/v1", () => {
+    const outside: ApiChangelogEntry = {
+      ...PREVIOUS,
+      routes: ["/api/decks"],
+    };
+
+    expect(
+      checkApiChangelog({ documentHash: outside.documentHash, entries: [outside] })
+    ).toEqual({ ok: false, reason: "route-outside-v1" });
+  });
 });
