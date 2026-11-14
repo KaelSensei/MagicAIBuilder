@@ -366,22 +366,22 @@ Then the unresolved name is shown first and nothing is written until they accept
 
 The player-visible outcome is: recommendations combine community patterns and competitive evidence without hiding uncertainty.
 
-| State | What the player sees |
-| --- | --- |
-| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
-| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
-| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
-| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
-| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
-| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
-| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
-| English | New controls use the `en` catalogue. |
-| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| State            | What the player sees                                                                                                                                  |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Empty            | A sentence that names what is missing and the next action. No invented row, author, price or score.                                                   |
+| Loading          | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready.                                        |
+| Error            | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there.                                                       |
+| Partial          | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished.                                                 |
+| Stale            | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed.                                             |
+| Guest            | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401.               |
+| Signed-in        | Writes go to that account only. Another player's notes, budget and collection are not in the response.                                                |
+| English          | New controls use the `en` catalogue.                                                                                                                  |
+| French           | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control.                                                         |
 | Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
-| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
-| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
-| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
-| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+| Keyboard         | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes.                         |
+| Screen reader    | Each new control has an accessible name. A status change is announced in words, not only by colour.                                                   |
+| Colour           | A warning and an error differ by text or icon as well as hue, in both themes.                                                                         |
+| Success          | The completed action is confirmed in words. A second identical action does not duplicate the write.                                                   |
 
 ### Alternate paths
 
@@ -445,6 +445,7 @@ Nothing in the roadmap entry was dropped. The section below is the initiative te
 **User story.** As a player looking at a recommendation, I want inclusion, Lift and a model's suggestion labelled apart, so that a popular card is not presented as a fact about my deck.
 
 **Acceptance.**
+
 - A row from EDHREC says inclusion or Lift, the cohort when the source has it, and the freshness.
 - A missing denominator is said, not treated as zero.
 - A data-sourced cut is not labelled as the copilot's cut.
@@ -461,9 +462,24 @@ Nothing in the roadmap entry was dropped. The section below is the initiative te
 
 **Open questions.** A written clarification from TopDeck is still the only unblocker for match win rates.
 
+### Fourteenth pass (2026-11-14)
+
+Mana Grove's pricing page, read 2026-11-14, includes "combo detections" in the free plan at 10 a month, and unlimited detections from the Starter plan up ([pricing](https://themanagrove.com/pricing)). The one Spellbook lookup per deck that this initiative already shows is evidence about the player's list. I-30 requirement 1.7, added the same day, says that lookup stays free. This section is the case.
+
+#### US-09-14-01
+
+As a player, I want the combos in this deck listed without a remaining-detections count, so that a monthly allowance is not sitting on a fact.
+
+**Passing.** The combo panel renders for a signed-in player and for a guest reading a public deck. It shows the lines the lookup returned, the date of the lookup, and no allowance. A failed lookup says the lookup failed and leaves the last confirmed lines in place.
+
+**Non-passing.** A counter of detections remaining. A panel that hides lines until a plan is paid. A second combo database built to avoid the allowance. Combos still come from Commander Spellbook through the one lookup.
+
+**Acceptance.** No entitlement check on the combo route. The template test fails if the panel's strings include "detections remaining" or "upgrade to see combos".
+
+**Open question.** None beyond I-30's. If Spellbook itself starts requiring a paid key, that is a new source problem for I-67 and I-09, and this pass did not read such a requirement. Commander Spellbook's home page, fetched the same day, returned a title and no changelog.
+
 ### Definition of done
 
 A recommendation is never presented as universal truth: the user can see where it came from, how fresh it is and what its limitations are.
 
 ---
-

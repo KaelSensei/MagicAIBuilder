@@ -537,22 +537,22 @@ Then it does not call the deck fair, unfair, salty, or a win rate unless the mov
 
 The player-visible outcome is: when Wizards changes the Commander banned list, the Game Changers or the brackets, every saved deck is assessed against the dated version in force. The owner sees which decks changed, why, and replacement candidates chosen by a visible rule; anyone, without an account, can read what each announcement changed and check a list against it.
 
-| State | What the player sees |
-| --- | --- |
-| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
-| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
-| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
-| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
-| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
-| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
-| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
-| English | New controls use the `en` catalogue. |
-| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| State            | What the player sees                                                                                                                                  |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Empty            | A sentence that names what is missing and the next action. No invented row, author, price or score.                                                   |
+| Loading          | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready.                                        |
+| Error            | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there.                                                       |
+| Partial          | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished.                                                 |
+| Stale            | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed.                                             |
+| Guest            | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401.               |
+| Signed-in        | Writes go to that account only. Another player's notes, budget and collection are not in the response.                                                |
+| English          | New controls use the `en` catalogue.                                                                                                                  |
+| French           | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control.                                                         |
 | Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
-| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
-| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
-| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
-| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+| Keyboard         | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes.                         |
+| Screen reader    | Each new control has an accessible name. A status change is announced in words, not only by colour.                                                   |
+| Colour           | A warning and an error differ by text or icon as well as hue, in both themes.                                                                         |
+| Success          | The completed action is confirmed in words. A second identical action does not duplicate the write.                                                   |
 
 ### Alternate paths
 
@@ -606,6 +606,7 @@ Wizards now runs the Commander format and changes three lists without a fixed sc
 **User story.** As a player with saved decks, I want to know which of them a Commander announcement changed, so that a stored flag from last year is not the ban list.
 
 **Acceptance.**
+
 - An announcement is a dated rules version.
 - Each affected deck lists the cards and the cause.
 - A visitor can check a pasted list against that page without an account.
@@ -622,9 +623,24 @@ Wizards now runs the Commander format and changes three lists without a fixed sc
 
 **Open questions.** Where the version is published from, the database or a reviewed file, is an owner question.
 
+### Fourteenth pass (2026-11-14)
+
+No new rules version. The check is recorded so the next pass does not repeat it.
+
+Wizards' announcements archive, read 2026-11-14, showed no Commander bracket article and no banned-and-restricted article in the visible list ([archive](https://magic.wizards.com/en/news/announcements)). The banned-and-restricted announcement of 12 October 2026 was fetched again. It prints "Next announcement: November 30, 2026" and "the next banned and restricted announcement will be on November 30, 2026." A search of the fetched text for the word Commander found no match ([announcement](https://magic.wizards.com/en/news/announcements/banned-and-restricted-october-12-2026)). The page was already a source of I-73. It is not a new Commander change.
+
+#### US-48-14-01
+
+As a player opening a deck on 14 November 2026, I want no new "the rules changed" notice, so that a calendar date is not treated as an announcement.
+
+**Passing.** No rules version is published from this pass. Saved decks gain no notice. The next date the October page prints, 30 November 2026, is the date a later pass reads. It is not a version.
+
+**Non-passing.** A notice that says the Commander list changed because the next announcement is scheduled. A bracket definition edited because a third-party preview predicted a change. Those pages were not used as sources.
+
+**Acceptance.** This pass adds no rules version, no card and no migration. I-48's job on 30 November 2026, if Wizards publishes that day, is the job the spec already describes.
+
 ### Definition of done
 
 When a moderator publishes the next announcement, every saved Commander deck it touches shows a dated notice that names each changed card and its cause, the estimate before and after and the declared bracket, with candidates from a visible query; a visitor checks a pasted list against the announcement's page without an account; and no reader trusts a stored flag.
 
 ---
-

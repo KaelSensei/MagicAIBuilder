@@ -100,6 +100,26 @@ Slices 1-2-3 are one chain; slice 4 is independent of 2 and 3 and can run in par
 - Which provider writes the query? Reusing I-02's Claude path keeps one key and one rate limiter, but a smaller model may be enough and cheaper for a one-line translation.
 - Should a generated query be stored on the deck as a saved search? That would make it a shareable artifact, which is appealing but adds a persistence surface this initiative does not currently need.
 
+## Fourteenth pass (2026-11-14)
+
+Mana Grove's Grover page, updated 2026-11-11 and read 2026-11-14, describes Scry as a search that ranks cards by what they do when the player does not know the name ([page](https://themanagrove.com/ai-deck-builder)). The page does not say the player sees the query. Its pricing page says that when the monthly Scry allowance is used up, "search keeps working with keyword results" ([pricing](https://themanagrove.com/pricing)). This initiative's rule is the opposite of a hidden ranking: the player sees one Scryfall query, can edit it, and the results are what that query returns.
+
+#### US-14-14-01
+
+As a player who described a card in a sentence, I want the Scryfall query on screen before any search runs, so that a ranked list I cannot read is not the answer.
+
+#### US-14-14-02
+
+As a player who has used a monthly allowance, I want the syntax search to keep working, so that a cap on a model does not turn search off.
+
+**Passing.** The description "instants that destroy artifacts" produces one query the player can read and edit. Nothing is fetched until the player runs that query. The cards on screen are the query's cards. If a model allowance is exhausted, the query box and the syntax search still work, and the page says the ranked wording is paused.
+
+**Non-passing.** A list of cards with no query. A search that runs before the player has seen the query. A keyword fallback that is a second, hidden ranking. A monthly cap on the syntax search itself. Mana Grove meters Scry and then falls back to keywords. The metered part, if this product ever has one, is the model that writes the query, and I-30 owns that allowance. The search the player runs is free.
+
+**Acceptance.** Slices 1 and 2 already require the query on screen and an explicit run. This pass adds the exhausted-allowance case to the acceptance of slice 2: the query display and the syntax run do not call the model.
+
+**Open question.** Mana Grove's page does not show a worked Scry query, so it is not evidence that they hide one. It is evidence that a ranked plain-language search is being sold beside a deck builder. The question of which model writes our query stays the open question above.
+
 ## Feature contract (Full, 2026-11-11)
 
 The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
@@ -394,22 +414,22 @@ Then the player sees an empty state that names what is missing, and the page doe
 
 The player-visible outcome is: a player can describe a card function in English or French, read the Scryfall query that search will run, edit it, and get the cards that query returns.
 
-| State | What the player sees |
-| --- | --- |
-| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
-| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
-| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
-| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
-| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
-| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
-| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
-| English | New controls use the `en` catalogue. |
-| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| State            | What the player sees                                                                                                                                  |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Empty            | A sentence that names what is missing and the next action. No invented row, author, price or score.                                                   |
+| Loading          | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready.                                        |
+| Error            | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there.                                                       |
+| Partial          | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished.                                                 |
+| Stale            | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed.                                             |
+| Guest            | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401.               |
+| Signed-in        | Writes go to that account only. Another player's notes, budget and collection are not in the response.                                                |
+| English          | New controls use the `en` catalogue.                                                                                                                  |
+| French           | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control.                                                         |
 | Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
-| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
-| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
-| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
-| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+| Keyboard         | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes.                         |
+| Screen reader    | Each new control has an accessible name. A status change is announced in words, not only by colour.                                                   |
+| Colour           | A warning and an error differ by text or icon as well as hue, in both themes.                                                                         |
+| Success          | The completed action is confirmed in words. A second identical action does not duplicate the write.                                                   |
 
 ### Alternate paths
 
@@ -454,6 +474,7 @@ This is search, not a new deck generator. DeckCheck Smart Search and Farseek are
 **User story.** As a player who can describe a card but not Scryfall's syntax, I want to read and edit the query before it runs, so that the search cannot invent a card.
 
 **Acceptance.**
+
 - An English or French description becomes one query the player sees before any search.
 - Editing the query and running it returns only cards that query returns.
 - The deck's format and colour identity stay on the query unless the player removes them.
@@ -475,4 +496,3 @@ This is search, not a new deck generator. DeckCheck Smart Search and Farseek are
 For a fixed description and deck context, the player sees one Scryfall query, can change it, and receives only cards that query returns, with the legality context unchanged.
 
 ---
-

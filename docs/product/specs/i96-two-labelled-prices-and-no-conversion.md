@@ -208,22 +208,22 @@ Then the player sees an empty state that names what is missing, and the page doe
 
 The player-visible outcome is: where Scryfall provides both a dollar amount and a euro amount, the card shows both, each named as Scryfall's figure, and the product never converts one into the other.
 
-| State | What the player sees |
-| --- | --- |
-| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
-| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
-| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
-| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
-| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
-| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
-| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
-| English | New controls use the `en` catalogue. |
-| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| State            | What the player sees                                                                                                                                  |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Empty            | A sentence that names what is missing and the next action. No invented row, author, price or score.                                                   |
+| Loading          | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready.                                        |
+| Error            | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there.                                                       |
+| Partial          | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished.                                                 |
+| Stale            | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed.                                             |
+| Guest            | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401.               |
+| Signed-in        | Writes go to that account only. Another player's notes, budget and collection are not in the response.                                                |
+| English          | New controls use the `en` catalogue.                                                                                                                  |
+| French           | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control.                                                         |
 | Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
-| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
-| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
-| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
-| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+| Keyboard         | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes.                         |
+| Screen reader    | Each new control has an accessible name. A status change is announced in words, not only by colour.                                                   |
+| Colour           | A warning and an error differ by text or icon as well as hue, in both themes.                                                                         |
+| Success          | The completed action is confirmed in words. A second identical action does not duplicate the write.                                                   |
 
 ### Alternate paths
 
@@ -259,6 +259,7 @@ Nothing in the roadmap entry was dropped. The section below is the initiative te
 **User story.** As a player looking at a price, I want the dollar amount and the euro amount when Scryfall sent both, so that nobody converts one into the other for me.
 
 **Acceptance.**
+
 - Both amounts are labelled Scryfall, not a quote.
 - A missing amount says it is missing, not zero.
 - No screen shows a converted figure.
@@ -275,9 +276,22 @@ Nothing in the roadmap entry was dropped. The section below is the initiative te
 
 **Open questions.** Which of the two the acquisition plan uses is unchanged and still I-06 and I-32.
 
+### Fourteenth pass (2026-11-14)
+
+Archidekt's update of 2026-11-12 adds Cardsphere as a price source for decks and collections ([news 28409148](https://archidekt.com/news/28409148)). A third amount is still an amount with a name. It is not a rate into dollars or euros.
+
+#### US-96-14-01
+
+As a player who wants a Cardsphere figure beside Scryfall's, I want each figure's source in the label, so that the two are never added together.
+
+**Passing.** If a later decision allows a Cardsphere amount, the label is "Cardsphere", with the date, and the Scryfall dollar and euro labels are unchanged. No control adds them. A missing Cardsphere amount says it is missing.
+
+**Non-passing.** A single "price" that is the sum or the conversion. A Cardsphere amount shown before the terms are read. I-32's open question records that the terms were not read on 2026-11-14, so the amount is not shown yet. The acceptance is the label rule for the day it is.
+
+**Open question.** Whether to show the third amount at all waits on those terms. This initiative does not fetch Cardsphere.
+
 ### Definition of done
 
 A card ingested with both amounts shows both labels, a card with only dollars shows "no EUR from Scryfall", and no screen contains a converted figure.
 
 ---
-
