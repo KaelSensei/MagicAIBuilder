@@ -23,6 +23,7 @@ export const FIXED_PAGE_NAMESPACES = [
   "rules.gameChangers",
   "settings.apiKeys",
   "settings.notifications",
+  "apiChangelog",
 ] as const;
 
 /** A page whose title and description do not depend on what it shows. */
