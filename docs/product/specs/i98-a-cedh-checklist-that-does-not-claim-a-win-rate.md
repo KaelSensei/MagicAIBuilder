@@ -208,22 +208,22 @@ Then it does not call the deck fair, unfair, salty, or a win rate unless the mov
 
 The player-visible outcome is: a player who wants to submit a competitive list can see which of the database's published requirements this deck already meets, which this product cannot meet, and no win rate.
 
-| State | What the player sees |
-| --- | --- |
-| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
-| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
-| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
-| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
-| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
-| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
-| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
-| English | New controls use the `en` catalogue. |
-| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| State            | What the player sees                                                                                                                                  |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Empty            | A sentence that names what is missing and the next action. No invented row, author, price or score.                                                   |
+| Loading          | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready.                                        |
+| Error            | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there.                                                       |
+| Partial          | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished.                                                 |
+| Stale            | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed.                                             |
+| Guest            | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401.               |
+| Signed-in        | Writes go to that account only. Another player's notes, budget and collection are not in the response.                                                |
+| English          | New controls use the `en` catalogue.                                                                                                                  |
+| French           | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control.                                                         |
 | Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
-| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
-| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
-| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
-| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+| Keyboard         | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes.                         |
+| Screen reader    | Each new control has an accessible name. A status change is announced in words, not only by colour.                                                   |
+| Colour           | A warning and an error differ by text or icon as well as hue, in both themes.                                                                         |
+| Success          | The completed action is confirmed in words. A second identical action does not duplicate the write.                                                   |
 
 ### Alternate paths
 
@@ -259,6 +259,7 @@ The cEDH Decklist Database's submit page, read 2026-11-11, requires a commander-
 **User story.** As a player who might submit a competitive list, I want a checklist of the requirements this product can see, so that I am not shown a win rate or told I would be accepted.
 
 **Acceptance.**
+
 - Legality, the public date, the primer's presence and the combo lines are rows marked met or not met.
 - A fixed row says the database requires Moxfield and this product does not put the list there.
 - The page contains no win rate and no acceptance verdict.
@@ -275,9 +276,32 @@ The cEDH Decklist Database's submit page, read 2026-11-11, requires a commander-
 
 **Open questions.** The database's 25 percent sentence is their requirement. We link to it and do not compute it.
 
+### Fourteenth pass (2026-11-14)
+
+Two r/CompetitiveEDH posts were read from Arctic Shift on 2026-11-14. `reddit.com` returned HTTP 403, so only the post bodies Arctic Shift returned were read.
+
+"B4 to Fringe cEDH to cEDH" (76 points, 149 comments, 2026-11-12) is an argument about whether a deck built as strong and fast as its owner can make it, without aiming at a tournament, is Bracket 4 or already cEDH ([thread](https://www.reddit.com/r/CompetitiveEDH/comments/1xu3orb/b4_to_fringe_cedh_to_cedh/)). The two sides do not agree. This checklist does not settle it.
+
+"How needed are the reserved list mana rocks/lands for a CEDH deck?" (33 points, 76 comments, 2026-11-09) asks whether a K'rrik list will perform without the zero-mana and one-mana rocks a linked Moxfield list runs ([thread](https://www.reddit.com/r/CompetitiveEDH/comments/1xs48i9/how_needed_are_the_reserved_list_mana_rockslands/)). The checklist may name a fast-mana card the list does not contain, as a row that is not met against a quoted staple list. It may not answer the question the title asks.
+
+#### US-98-14-01
+
+As a player arguing with a friend about Bracket 4 and cEDH, I want the page to say what it checked, so that it does not pick a side of that argument.
+
+#### US-98-14-02
+
+As a player pricing a cEDH mana base, I want a missing fast-mana card listed as absent, so that I am not told the deck will perform without it.
+
+**Passing.** The page has no row whose text is "this is cEDH", "this is fringe" or "this is Bracket 4". A fast-mana card that a cited staple list contains and the deck does not is a row marked not met, with the list's name and the date the list was read. The row's verb is "absent", not "needed" and not "performs".
+
+**Non-passing.** Any sentence that says the deck will win, place or perform with or without a reserved-list card. Any sentence that draws the line between Bracket 4 and Bracket 5. The 76-point thread is evidence the line is disputed. It is not a rule.
+
+**Acceptance.** The existing ban on a win rate and on "accepted" gains three more banned phrases in the template test: "fringe", "will perform" and "you need". A staple row quotes its source. It does not compute a result.
+
+**Open question.** Which staple list, if any, may be quoted for fast mana? The cEDH database's licence is already open question 7 on I-77 and L-25. Until that answer, the row says the staple list is not loaded, which is `notChecked`, not "you do not need the card".
+
 ### Definition of done
 
 The checklist for a legal public deck with a primer shows those rows as met, shows the Moxfield row as not something this product does, and the page contains no win rate and no acceptance verdict.
 
 ---
-

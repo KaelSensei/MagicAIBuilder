@@ -32,6 +32,7 @@ All pages were read on 2026-11-09 unless another date is given. Prices are in ea
 | ManaBox                                                   | 2.49 USD/month or 22.99/year, app stores only                                                 | New binders and Pro features; on expiry "no data will be deleted"                                                                                                                               | [16][17]     |
 | MTGGoldfish                                               | 5.99 USD/month or 59.88/year                                                                  | Unlimited price alerts (free users get a few), price history downloads, SuperBrew (search summary; page 403)                                                                                    | [19]         |
 | Game trackers: Playgroup, Rhystic, Lifetap, Pod Companion | Playgroup supporter tiers 4 / 5 / 15 a month; Rhystic premium; Lifetap and Pod Companion free | Playgroup: no ads, themes, unlimited leagues, "supporter revenue is what keeps Playgroup free"; Rhystic: stats and history (search summaries); Lifetap: free game history and win rates by deck | [20][47][48] |
+| Mana Grove, read 2026-11-14                               | Starter 3.99 CAD or 3.99 USD a month before tax, 2.99 EUR or 2.99 GBP a month with VAT; a year is twelve months for the price of ten. Plus, Pro and Unlimited sit above Starter | Free plan: the deck builder, legality checks and mana statistics, 20 Grover messages, 100 Scry searches, 10 Tutor recommendations and 10 combo detections a month, 10 saved decks, a 1,000-card collection. Collection statistics and live collaboration start at Starter. A downgrade does not delete saved decks or cards; it blocks new ones past the limit | [pricing](https://themanagrove.com/pricing) |
 
 **What players say.** No conversion rate, churn figure or subscriber count was found for any MTG tool. The signals are qualitative:
 
@@ -80,6 +81,22 @@ Verified on `dev` on 2026-11-09 (commit `49983a9`).
 1.4 **Nothing free becomes paid.** A feature that shipped free stays free. A paid feature is new or sits above an allowance.
 1.5 **The free product stands without AI.** Every core flow works with AI unavailable or the allowance spent. AI never gates legality, bracket rules or card data, which stay deterministic ([strategic boundaries](../roadmap.md#strategic-boundaries)).
 1.6 **Disclosure before charging for AI.** A public page states which features call a model, which model and provider, what is checked deterministically, and the free allowance. Paid AI output keeps I-02's "checked versus model reasoning" labels. A second public page explains the free and paid line and why: the Fan Content Policy and Scryfall's terms.
+
+1.7 **Added 2026-11-14.** Mana Grove's free plan, read that day, caps saved decks at 10 and the collection at 1,000 cards, and it withholds collection statistics and live collaboration until Starter ([pricing](https://themanagrove.com/pricing)). Requirement 1.2 already forbids a cap on decks, folders, collection cards, packages or snapshots. This requirement adds the cases the page made concrete. A free account can save an eleventh deck and a 1,001st collection card. Collection statistics for the player's own cards are not the paid lever. One deck's combo lookup stays free, because [I-09](i09-meta-and-evidence.md) shows evidence and Mana Grove meters "combo detections" at 10 a month on the free plan. Archidekt's 12 November note sells fifteen colour themes at 2 USD a month or 20 USD a year, with a preview that resets for non-patrons ([news 28409148](https://archidekt.com/news/28409148)). A cosmetic theme may sit in 1.3's supporter line later. It is not proposed here, and a theme that carries meaning by colour alone fails [I-49](i49-colour-vision-and-low-vision-display.md).
+
+#### US-30-14-01
+
+As a player on the free plan, I want to keep every deck and every collection card I save, so that a cap is not the thing I am paying to remove.
+
+#### US-30-14-02
+
+As a player who looks up the combos in one deck, I want that lookup to stay free, so that a monthly detection allowance is not wrapped around evidence.
+
+**Passing.** The eleventh deck saves. The 1,001st collection card saves. The combo panel for one deck renders with no allowance and no upgrade prompt. A model call above the free allowance pauses, and the page says what paused. The deck is still there.
+
+**Non-passing.** A message that names a deck limit or a collection limit. A combo panel that says ten detections remain. Deleting or freezing an existing deck because a plan changed. Mana Grove's downgrade text says existing decks and cards stay. Copying the cap while copying that sentence fails.
+
+**Open question.** Archidekt's theme price is the same band as the ad-removal Patreon already in the table. Whether a supporter cosmetic is worth a line in the price book is the owner's pricing decision, slice 0. This pass does not add the line.
 
 ### 2. Candidate paid features
 

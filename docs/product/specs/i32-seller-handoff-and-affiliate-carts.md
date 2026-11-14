@@ -603,22 +603,22 @@ Then the player sees an empty state that names what is missing, and the page doe
 
 The player-visible outcome is: a player sends the exact printings still missing across their decks, net of owned copies, to a seller's cart or wants list, priced for the market they chose, with any affiliate link labelled where they click.
 
-| State | What the player sees |
-| --- | --- |
-| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
-| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
-| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
-| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
-| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
-| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
-| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
-| English | New controls use the `en` catalogue. |
-| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| State            | What the player sees                                                                                                                                  |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Empty            | A sentence that names what is missing and the next action. No invented row, author, price or score.                                                   |
+| Loading          | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready.                                        |
+| Error            | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there.                                                       |
+| Partial          | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished.                                                 |
+| Stale            | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed.                                             |
+| Guest            | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401.               |
+| Signed-in        | Writes go to that account only. Another player's notes, budget and collection are not in the response.                                                |
+| English          | New controls use the `en` catalogue.                                                                                                                  |
+| French           | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control.                                                         |
 | Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
-| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
-| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
-| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
-| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+| Keyboard         | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes.                         |
+| Screen reader    | Each new control has an accessible name. A status change is announced in words, not only by colour.                                                   |
+| Colour           | A warning and an error differ by text or icon as well as hue, in both themes.                                                                         |
+| Success          | The completed action is confirmed in words. A second identical action does not duplicate the write.                                                   |
 
 ### Alternate paths
 
@@ -671,6 +671,7 @@ I-06 stops one step short of buying: the plan lists missing printings with undat
 **User story.** As a player ready to buy the missing cards, I want the exact printings sent to a seller's cart in the market I chose, so that an affiliate link is labelled where I click it.
 
 **Acceptance.**
+
 - The handoff lists printing, quantity and the market.
 - Copies owned across decks are already subtracted.
 - Any affiliate parameter is visible on the link, not only in a footer.
@@ -687,9 +688,24 @@ I-06 stops one step short of buying: the plan lists missing printings with undat
 
 **Open questions.** Which seller is first, and whether EUR display rights exist, are open. I-96's two labels are not this handoff.
 
+### Fourteenth pass (2026-11-14)
+
+Archidekt's update of 2026-11-12 puts a buy button at the bottom of collection completion. It exports the uncollected cards to the vendor the player chooses. The same note adds Cardsphere as a price source and as an option on the buy or sell menu ([news 28409148](https://archidekt.com/news/28409148)). The goal page itself stays free of a buy verb, which is I-101's rule. This handoff is where the export goes.
+
+#### US-32-14-01
+
+As a collector looking at the cards a goal says are missing, I want to send that list to a seller I choose, so that the goal page never tells me to buy them.
+
+**Passing.** From the acquisition plan, scoped to the goal's missing printings, the player picks a seller. The handoff lists every line as mapped or unmapped. Prices are dated and labelled with the seller's currency. The click leaves for the seller's site. Cardsphere, if offered, is a labelled source of an amount, not a conversion into dollars or euros, and the file the player downloads is I-90's. This product does not send the file.
+
+**Non-passing.** A buy button on the goal page. A checkout. An automatic order. A Cardsphere amount added into the deck's dollar total. A handoff that includes cards the goal's counting rule already calls collected.
+
+**Acceptance.** The goal page has no buy verb. The handoff's lines are the missing slots only. A third price source is labelled with its name and its date, and I-96's ban on conversion still holds.
+
+**Open question.** Cardsphere's price terms were not read. Until they are, Cardsphere is not a selectable source. The Archidekt note is evidence that players are being offered it, not permission to copy the feed.
+
 ### Definition of done
 
 From the acquisition plan, a player picks a market and a seller and reaches that seller's cart or wants list with every line mapped or listed as unmapped, prices dated in the market's currency, and any affiliate relationship labelled at the click and listed on the disclosure page.
 
 ---
-

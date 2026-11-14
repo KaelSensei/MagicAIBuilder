@@ -607,22 +607,22 @@ Then the player sees an empty state that names what is missing, and the page doe
 
 The player-visible outcome is: a player can describe what they want and receive a legal, budget-aware and explainable plan.
 
-| State | What the player sees |
-| --- | --- |
-| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
-| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
-| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
-| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
-| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
-| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
-| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
-| English | New controls use the `en` catalogue. |
-| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| State            | What the player sees                                                                                                                                  |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Empty            | A sentence that names what is missing and the next action. No invented row, author, price or score.                                                   |
+| Loading          | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready.                                        |
+| Error            | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there.                                                       |
+| Partial          | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished.                                                 |
+| Stale            | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed.                                             |
+| Guest            | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401.               |
+| Signed-in        | Writes go to that account only. Another player's notes, budget and collection are not in the response.                                                |
+| English          | New controls use the `en` catalogue.                                                                                                                  |
+| French           | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control.                                                         |
 | Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
-| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
-| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
-| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
-| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+| Keyboard         | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes.                         |
+| Screen reader    | Each new control has an accessible name. A status change is announced in words, not only by colour.                                                   |
+| Colour           | A warning and an error differ by text or icon as well as hue, in both themes.                                                                         |
+| Success          | The completed action is confirmed in words. A second identical action does not duplicate the write.                                                   |
 
 ### Alternate paths
 
@@ -717,6 +717,7 @@ Code facts were read on `dev` on 2026-11-09. Figures marked as estimates are cal
 **User story.** As a player who asked for a deck, I want to see which sentences were checked against card data and which are the model's, so that I can reject a line without trusting the whole reply.
 
 **Acceptance.**
+
 - Every sentence in a suggestion is tagged checked or model.
 - A test fails if a model's sentence is tagged checked.
 - Legality, search and the playtest still work with the copilot switched off.
@@ -735,9 +736,22 @@ Code facts were read on `dev` on 2026-11-09. Figures marked as estimates are cal
 
 **Kill criteria.** Stop adding prompts if a player cannot see which sentences were checked against card data.
 
+### Fourteenth pass (2026-11-14)
+
+Mana Grove's Grover page, updated 2026-11-11 and read 2026-11-14, says a refinement shows the proposed changes before they are applied, that legality checks belong to the deck builder rather than to the assistant, and that a rules answer is a starting point which cites a rule number when it looks one up ([page](https://themanagrove.com/ai-deck-builder)). It also says Grover does not draft from the collection. Those are this product's existing rules. The page is the dated confirmation, not a new behaviour.
+
+#### US-02-14-01
+
+As a player who asked for "more removal", I want the cards that would be added and removed listed before anything is written, so that I can reject the change.
+
+**Passing.** The proposal lists additions and removals. Nothing is written until the player accepts. Legality of the projected deck is computed by the deck's own check, and a failing check is shown beside the proposal. A rules sentence is tagged as the model's and names the rule number it cited, or says it cited none. The collection is not read by the model. Completion from owned cards stays I-76.
+
+**Non-passing.** The deck changes when the reply arrives. A rules sentence tagged as checked because it contains a number. A draft that claims to have used the collection when the route never read it. Mana Grove's published example lists are not fixtures for our tests. Their page dates two snapshots 2026-10-31 and says the same brief can draft a different list today.
+
+**Acceptance.** The diff-first apply already in this enrichment stays the acceptance. The rules sentence is not a ruling. I-47 owns rulings. This pass adds no prompt and no route.
+
 ### Definition of done
 
 For a fixed brief and deck, the copilot produces reproducible structured output that passes deterministic Commander validation, stays within constraints, and explains its recommendations well enough for a player to accept or reject them.
 
 ---
-

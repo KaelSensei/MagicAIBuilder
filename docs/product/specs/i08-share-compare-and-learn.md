@@ -914,22 +914,22 @@ Then the player sees an empty state that names what is missing, and the page doe
 
 The player-visible outcome is: public decks help players learn and improve while owners keep control of their work.
 
-| State | What the player sees |
-| --- | --- |
-| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
-| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
-| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
-| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
-| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
-| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
-| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
-| English | New controls use the `en` catalogue. |
-| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| State            | What the player sees                                                                                                                                  |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Empty            | A sentence that names what is missing and the next action. No invented row, author, price or score.                                                   |
+| Loading          | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready.                                        |
+| Error            | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there.                                                       |
+| Partial          | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished.                                                 |
+| Stale            | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed.                                             |
+| Guest            | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401.               |
+| Signed-in        | Writes go to that account only. Another player's notes, budget and collection are not in the response.                                                |
+| English          | New controls use the `en` catalogue.                                                                                                                  |
+| French           | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control.                                                         |
 | Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
-| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
-| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
-| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
-| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+| Keyboard         | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes.                         |
+| Screen reader    | Each new control has an accessible name. A status change is announced in words, not only by colour.                                                   |
+| Colour           | A warning and an error differ by text or icon as well as hue, in both themes.                                                                         |
+| Success          | The completed action is confirmed in words. A second identical action does not duplicate the write.                                                   |
 
 ### Alternate paths
 
@@ -1000,7 +1000,7 @@ Nothing in the roadmap entry was dropped. The section below is the initiative te
 - [ ] Whether a published [I-79](i79-table-sets.md) table set takes likes and comments is decided here, with I-79 slice 11 (neighbour change from I-79, 2026-11-11).
 - [ ] Once card notes save (I-01), a per-note switch "Show on the public page", off by default. A public note uses the public projection. A private note never does.
 - [ ] Later, and not scheduled: hide the Considering zone on a public deck. Archidekt's board shows that request at 27 points, seen 2026-11-11 ([features](https://archidekt.com/features)). The evidence is thin.
-**Twelfth pass, 2026-11-11:** a primer draft filled from stored reports is [I-83](i83-a-primer-draft-filled-from-the-decks-own-reports.md). It does not write this primer, and it does not raise the 2,000-character cap.
+      **Twelfth pass, 2026-11-11:** a primer draft filled from stored reports is [I-83](i83-a-primer-draft-filled-from-the-decks-own-reports.md). It does not write this primer, and it does not raise the 2,000-character cap.
 
 **2026-11-09:** MagicAIBuilder's social layer is evaluative: stars, votes, reviews, feedback questions and attributed forks. Moxfield's is broadcast: unique view counts, likes, a follow feed and embeddable decks, and TappedOut sells a blog widget. Creators value broadcast features, because a view count and an embed make a deck link worth posting. No embed route exists under `src/app` and the schema has no view counter. Embeds, public view counts, `[[Card]]` links in primers and video in primers are tracked in [I-36](i36-creator-and-embed-toolkit.md); notifications stay in this initiative. Archidekt's deck help requests (July 2026) add an expiry, a browse page and notifications to what "seeking feedback" does here.
 
@@ -1011,6 +1011,7 @@ Nothing in the roadmap entry was dropped. The section below is the initiative te
 **User story.** As a player publishing a deck, I want other people to read, compare and fork it without seeing my notes or my budget, so that sharing is not a leak.
 
 **Acceptance.**
+
 - A public response contains only the public field list.
 - A fork copies the primer only when the owner allowed it.
 - A card note is public only when its own switch is on, and that switch defaults off.
@@ -1027,9 +1028,28 @@ Nothing in the roadmap entry was dropped. The section below is the initiative te
 
 **Open questions.** The primer length cap is still undecided. I-83 will not write the primer until it is.
 
+### Fourteenth pass (2026-11-14)
+
+Archidekt's update of 2026-11-12 says deck comparison gained more export options on each section. A comment by Not_Too_Happy at 2026-11-12T22:37:06Z asks for a colour filter, so the writer does not "wade through all my blue stuff" while stealing from another blink deck ([news 28409148](https://archidekt.com/news/28409148)). Comparison of two decks is already shipped. This pass adds the filter and the export as acceptance on that surface. It adds no slice.
+
+#### US-08-14-01
+
+As a player comparing two blue decks, I want to hide one colour for a moment, so that the cards I am moving are the ones on screen.
+
+#### US-08-14-02
+
+As a player, I want each section of the comparison exported as text, so that I can take the "only in the other deck" list somewhere else without copying by hand.
+
+**Passing.** A colour filter hides rows of the other colours in the comparison view. The hidden count is on screen. Clearing the filter shows every row again. No card is removed from either deck. Each section, "in both", "only in this deck" and "only in the other", has a copy action whose text is the quantity and the name of the rows in that section, and nothing else.
+
+**Non-passing.** The filter deletes cards. The export includes a price, a note or a URL the comparison does not show. The export is a file sent to a seller. That handoff is I-32.
+
+**Acceptance.** The filter is view state. The copy action reads the rows the view has not hidden. English and French labels name the section. A colour filter uses a word as well as a pip, so colour is not the only signal.
+
+**Open question.** The comment asks to filter while "stealing" cards into the open deck. Moving a card from a comparison into the open deck is an add, and I-01's recovery applies. Whether the comparison itself grows an "add this row" control, or the player copies the name into search, stays open. Recommended: copy the text, and let the editor's existing add do the write, so comparison stays read-only.
+
 ### Definition of done
 
 A user can discover, inspect, compare and safely fork a deck without leaking private data or losing attribution.
 
 ---
-
