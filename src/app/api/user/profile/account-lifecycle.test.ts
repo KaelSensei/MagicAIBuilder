@@ -108,6 +108,7 @@ vi.mock(import("@/lib/auth/config"), () => ({ auth: mockAuth }));
 
 // ─── Import after mocks ──────────────────────────────────────────────────────
 
+import { NextRequest } from "next/server";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/db/prisma";
 import { edgeAuthConfig } from "@/lib/auth/edge-config";
@@ -152,6 +153,13 @@ function holdSession(token: JWT): void {
   });
 }
 
+function deleteAccountRequest(): NextRequest {
+  return new NextRequest("http://localhost:3000/api/user/profile", {
+    method: "DELETE",
+    headers: { cookie: "authjs.session-token=device-token" },
+  });
+}
+
 function renameRequest(name: string): Request {
   return new Request("http://localhost:3000/api/user/profile", {
     method: "PATCH",
@@ -183,7 +191,7 @@ describe("account lifecycle across sign-in, deletion and a still-signed-in devic
   it("signs out a token whose account was deleted instead of re-creating the user", async () => {
     holdSession(await signInWithGoogle("kael@test.com", "Kael"));
 
-    expect((await DELETE()).status).toBe(200);
+    expect((await DELETE(deleteAccountRequest())).status).toBe(200);
     expect(users.size).toBe(0);
 
     // Another device still holds the same 7-day token.
