@@ -6,7 +6,13 @@
  * the network.
  */
 import { describe, expect, it } from "vitest";
-import { checkApiChangelog, type ApiChangelogEntry } from "@/lib/api/api-changelog";
+import {
+  API_CHANGELOG,
+  PUBLIC_READ_ROUTES,
+  checkApiChangelog,
+  currentOpenApiDocumentHash,
+  type ApiChangelogEntry,
+} from "@/lib/api/api-changelog";
 
 const PREVIOUS: ApiChangelogEntry = {
   date: "2026-11-01",
@@ -69,5 +75,18 @@ describe("checkApiChangelog", () => {
     expect(
       checkApiChangelog({ documentHash: outside.documentHash, entries: [outside] })
     ).toEqual({ ok: false, reason: "route-outside-v1" });
+  });
+
+  it("ships a dated line for the OpenAPI document and lists only the public read routes", () => {
+    expect(
+      checkApiChangelog({
+        documentHash: currentOpenApiDocumentHash(),
+        entries: API_CHANGELOG,
+      })
+    ).toEqual({ ok: true });
+
+    const routes = API_CHANGELOG.flatMap((entry) => entry.routes);
+    expect(routes).toEqual([...PUBLIC_READ_ROUTES]);
+    expect(routes.every((route) => route.startsWith("/api/v1/"))).toBe(true);
   });
 });
