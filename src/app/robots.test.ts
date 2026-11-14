@@ -59,6 +59,7 @@ const PUBLIC_PAGES = [
   "/u/someone",
   "/commanders/atraxa/decks",
   "/rules/game-changers",
+  "/api-changelog",
 ] as const;
 
 /** `path` at the root and under the prefix of every routed locale. */

@@ -35,6 +35,7 @@ const PUBLIC_PAGE_PREFIXES: readonly string[] = [
 const PUBLIC_EXACT_PAGE_PATHS: ReadonlySet<string> = new Set([
   "/",
   "/builder/guest",
+  "/api-changelog",
 ]);
 
 /**

@@ -1,0 +1,10 @@
+{
+  "title": "Journal de l’API de lecture publique",
+  "description": "Changements datés des routes de lecture publiques. Les seules étiquettes sont compatible et incompatible.",
+  "empty": "Aucun changement daté n’est enregistré.",
+  "compatible": "compatible",
+  "breaking": "incompatible",
+  "field": "Champ : {field}",
+  "routes": "Routes",
+  "date": "Date {date}"
+}
