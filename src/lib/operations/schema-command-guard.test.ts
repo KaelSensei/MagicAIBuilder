@@ -117,6 +117,21 @@ describe("planSchemaCommand", () => {
     });
   });
 
+  it("still sees a reset when pnpm inserts a lone -- before the command", () => {
+    const plan = planSchemaCommand({
+      databaseUrl: PRODUCTION_URL,
+      argv: ["--", "db", "push", "--force-reset"],
+      exportFileBytes: 4_096,
+    });
+
+    expect(plan).toEqual({
+      outcome: "refuse",
+      code: "destructive-on-production",
+      message:
+        "Refusing to reset a production database. This command drops every table, and Supabase Free keeps no backup.",
+    });
+  });
+
   it("refuses a command it does not recognise instead of guessing a push", () => {
     const plan = planSchemaCommand({
       databaseUrl: "postgresql://app:secret-password@localhost:5432/postgres",
