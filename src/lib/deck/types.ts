@@ -49,6 +49,16 @@ export type DeckZone = "main" | "sideboard" | "maybeboard";
 export type { BracketLevel };
 
 /**
+ * How a card added to a deck gets its printing (I-57 requirement 2.1, slice 1).
+ *
+ * - `explicit`: the player chose this printing in this action, in the printing selector. It is
+ *   added as chosen, whatever the collection holds: the first precedence rule of I-57.
+ * - `owned-first`: the card was named, searched, dragged or imported, so its printing is
+ *   incidental. An owned printing of the same name replaces it when the collection holds one.
+ */
+export type PrintingChoice = "explicit" | "owned-first";
+
+/**
  * One face of a two-faced card (CR 712.1), with its own name, mana cost, type line, rules text
  * and images. `DeckCard.cardFaces` holds the front face, then the back face.
  */
