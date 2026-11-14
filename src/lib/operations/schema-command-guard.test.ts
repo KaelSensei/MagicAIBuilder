@@ -57,4 +57,26 @@ describe("planSchemaCommand", () => {
     });
     expect(JSON.stringify(plan)).not.toContain("secret-password");
   });
+
+  it("refuses a production schema change until a non-empty export exists", () => {
+    const missing = planSchemaCommand({
+      databaseUrl: PRODUCTION_URL,
+      argv: ["migrate", "deploy"],
+      exportFileBytes: null,
+    });
+    const empty = planSchemaCommand({
+      databaseUrl: PRODUCTION_URL,
+      argv: ["db", "push"],
+      exportFileBytes: 0,
+    });
+    const refusal = {
+      outcome: "refuse",
+      code: "export-required",
+      message:
+        "Refusing a production schema change until an on-demand export exists. Pass --export-file pointing at a non-empty dump. See docs/engineering/infrastructure.md.",
+    };
+
+    expect(missing).toEqual(refusal);
+    expect(empty).toEqual(refusal);
+  });
 });
