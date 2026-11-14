@@ -82,11 +82,85 @@ export function readDatabaseHost(
   };
 }
 
+/** The schema command the operator asked for, after flags are read off. */
+type SchemaCommand =
+  | { readonly name: "db-push"; readonly forceReset: boolean }
+  | { readonly name: "migrate-deploy" }
+  | { readonly name: "migrate-reset" }
+  | { readonly name: "unrecognised" };
+
 /**
- * Decides whether `db push --force-reset` may run.
+ * Drops the guard's own flag and a leading `prisma`, leaving the command words.
  *
- * On a production host the answer is refuse, including when an export file
- * was passed: an export does not make a reset safe. Other commands are not
+ * `--export-file` belongs to this guard, not to Prisma. Skipping a leading
+ * `prisma` makes `prisma migrate reset` and `migrate reset` the same request.
+ *
+ * @param argv - Arguments after `pnpm db:production-schema --`.
+ * @returns The words that name the Prisma command, flags included.
+ */
+function commandWords(argv: readonly string[]): readonly string[] {
+  const words: string[] = [];
+  for (let index = 0; index < argv.length; index += 1) {
+    const token = argv[index] ?? "";
+    if (token === "--export-file") {
+      index += 1;
+      continue;
+    }
+    if (token.startsWith("--export-file=")) continue;
+    if (token === "prisma" || token === "npx") continue;
+    words.push(token);
+  }
+  return words;
+}
+
+/**
+ * Reads the schema command out of the arguments that follow the script name.
+ *
+ * @param argv - Arguments after `pnpm db:production-schema --`.
+ * @returns The command. Unknown words stay `unrecognised` rather than a guess.
+ */
+function parseSchemaCommand(argv: readonly string[]): SchemaCommand {
+  const words = commandWords(argv);
+  const forceReset = words.includes("--force-reset");
+  const positional = words.filter((word) => !word.startsWith("--"));
+  const [first, second] = positional;
+  if (positional.length !== 2) return { name: "unrecognised" };
+  if (first === "db" && second === "push") return { name: "db-push", forceReset };
+  if (first === "migrate" && second === "deploy") return { name: "migrate-deploy" };
+  if (first === "migrate" && second === "reset") return { name: "migrate-reset" };
+  return { name: "unrecognised" };
+}
+
+/**
+ * Whether this command drops the database.
+ *
+ * `db push` without `--force-reset` does not. An export file does not change
+ * the answer: a reset of production stays a reset.
+ *
+ * @param command - The parsed command.
+ * @returns True for `migrate reset` and `db push --force-reset`.
+ */
+function isDestructiveReset(command: SchemaCommand): boolean {
+  switch (command.name) {
+    case "migrate-reset":
+      return true;
+    case "db-push":
+      return command.forceReset;
+    case "migrate-deploy":
+    case "unrecognised":
+      return false;
+    default: {
+      const unreachable: never = command;
+      return unreachable;
+    }
+  }
+}
+
+/**
+ * Decides whether a reset may run.
+ *
+ * On a production host both `db push --force-reset` and `migrate reset` are
+ * refused, including when an export file was passed. Other commands are not
  * decided here yet.
  *
  * @param input.databaseUrl - The URL to classify. It is not copied into the plan.
@@ -101,8 +175,8 @@ export function planSchemaCommand(input: {
   readonly exportFileBytes: number | null;
 }): SchemaCommandPlan {
   const host = readDatabaseHost(input.databaseUrl);
-  const forceReset = input.argv.includes("--force-reset");
-  if (host.ok && host.host.kind === "production" && forceReset) {
+  const command = parseSchemaCommand(input.argv);
+  if (host.ok && host.host.kind === "production" && isDestructiveReset(command)) {
     return {
       outcome: "refuse",
       code: "destructive-on-production",
