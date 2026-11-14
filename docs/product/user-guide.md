@@ -50,6 +50,8 @@ The builder has three panels:
 - **Center** — Deck editor
 - **Right** — Stats & analysis
 
+Under the deck title, one line names the Comprehensive Rules edition the app ships, says prices are the USD amount stored with each card, and says card data is not loaded from the daily file. A date the product did not store is left out. The same line is on a public deck. It does not look up a price.
+
 #### Searching for Cards
 
 - Use the **Name** tab to search by card name

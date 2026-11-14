@@ -27,6 +27,15 @@ const MONTH_INDEX: ReadonlyMap<string, number> = new Map(
   MONTH_NAMES.map((name, index) => [name, index])
 );
 
+/**
+ * ISO date of the Comprehensive Rules edition this repository ships.
+ *
+ * The file is `MagicCompRules-20260807.txt`. `loadComprehensiveRules` parses
+ * the same day out of that file. The data-as-of line shows this constant so
+ * a client does not read the file and does not fetch.
+ */
+export const BUNDLED_RULES_EFFECTIVE_ON = "2026-08-07";
+
 /** "August 7, 2026": a capitalised English month, the day, a comma, the year. */
 const RULES_DATE_RE = /^([A-Z][a-z]+) (\d{1,2}), (\d{4})$/;
 

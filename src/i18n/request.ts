@@ -27,6 +27,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
   const settings = (await import(`@/messages/${locale}/settings.json`)).default;
   const metadata = (await import(`@/messages/${locale}/metadata.json`)).default;
   const api = (await import(`@/messages/${locale}/api.json`)).default;
+  const dataAsOf = (await import(`@/messages/${locale}/data-as-of.json`)).default;
 
   return {
     locale,
@@ -48,6 +49,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
       settings,
       metadata,
       api,
+      dataAsOf,
     },
   };
 });
