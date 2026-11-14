@@ -8,6 +8,7 @@
  *
  * @module rules-reference
  */
+export { BUNDLED_RULES_EFFECTIVE_ON } from "@/modules/rules-reference/domain/effective-date";
 export {
   searchComprehensiveRules,
   type ComprehensiveRules,
