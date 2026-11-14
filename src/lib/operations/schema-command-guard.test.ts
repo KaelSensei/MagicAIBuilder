@@ -26,5 +26,21 @@ describe("planSchemaCommand", () => {
       message:
         "Refusing to reset a production database. This command drops every table, and Supabase Free keeps no backup.",
     });
+    expect(JSON.stringify(plan)).not.toContain("secret-password");
+  });
+
+  it("refuses migrate reset on a production host even after an export", () => {
+    const plan = planSchemaCommand({
+      databaseUrl: PRODUCTION_URL,
+      argv: ["migrate", "reset"],
+      exportFileBytes: 4_096,
+    });
+
+    expect(plan).toEqual({
+      outcome: "refuse",
+      code: "destructive-on-production",
+      message:
+        "Refusing to reset a production database. This command drops every table, and Supabase Free keeps no backup.",
+    });
   });
 });
