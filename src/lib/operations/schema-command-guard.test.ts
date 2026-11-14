@@ -79,4 +79,27 @@ describe("planSchemaCommand", () => {
     expect(missing).toEqual(refusal);
     expect(empty).toEqual(refusal);
   });
+
+  it("refuses to run when DATABASE_URL is missing or not a postgres URL", () => {
+    const missing = planSchemaCommand({
+      databaseUrl: undefined,
+      argv: ["migrate", "deploy"],
+      exportFileBytes: 4_096,
+    });
+    const notPostgres = planSchemaCommand({
+      databaseUrl: "https://user:secret-password@db.example.supabase.co/postgres",
+      argv: ["migrate", "deploy"],
+      exportFileBytes: 4_096,
+    });
+    const refusal = {
+      outcome: "refuse",
+      code: "unreadable-database-url",
+      message:
+        "Refusing to run: DATABASE_URL is missing or is not a postgres URL. Nothing was changed.",
+    };
+
+    expect(missing).toEqual(refusal);
+    expect(notPostgres).toEqual(refusal);
+    expect(JSON.stringify(notPostgres)).not.toContain("secret-password");
+  });
 });
