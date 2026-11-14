@@ -126,16 +126,17 @@ profile workflows require PostgreSQL to be running and migrated.
 
 ## Prisma Commands
 
-| Command                                 | Description                                |
-| --------------------------------------- | ------------------------------------------ |
-| `pnpm db:up`                            | Start Docker Postgres                      |
-| `pnpm db:down`                          | Stop Docker Postgres                       |
-| `pnpm db:migrate`                       | Run pending migrations & regenerate client |
-| `pnpm db:studio`                        | Open Prisma Studio (visual DB browser)     |
-| `pnpm db:reset`                         | Drop + recreate DB + re-run all migrations |
-| `pnpm prisma generate`                  | Regenerate client only (no migration)      |
-| `pnpm prisma migrate dev --name <name>` | Create a named migration                   |
-| `pnpm prisma migrate deploy`            | Apply migrations in production             |
+| Command                                 | Description                                                           |
+| --------------------------------------- | --------------------------------------------------------------------- |
+| `pnpm db:up`                            | Start Docker Postgres                                                 |
+| `pnpm db:down`                          | Stop Docker Postgres                                                  |
+| `pnpm db:migrate`                       | Run pending migrations & regenerate client                            |
+| `pnpm db:studio`                        | Open Prisma Studio (visual DB browser)                                |
+| `pnpm db:reset`                         | Drop + recreate the **local** DB + re-run all migrations              |
+| `pnpm db:production-schema`             | Change a production schema after an on-demand export. Refuses a reset |
+| `pnpm prisma generate`                  | Regenerate client only (no migration)                                 |
+| `pnpm prisma migrate dev --name <name>` | Create a named migration                                              |
+| `pnpm prisma migrate deploy`            | Apply migrations in production                                        |
 
 ---
 
@@ -388,42 +389,46 @@ Every PR that modifies `prisma/schema.prisma` **must** include:
 1. ✅ Migration SQL file in `prisma/migrations/`
 2. ✅ `prisma generate` passes
 3. ✅ PR description mentions the schema change
-4. ✅ **After merge**: run `db push` or `migrate deploy` on production before the Vercel build goes live
+4. ✅ **After merge**: run `pnpm db:production-schema` (below) before the Vercel build goes live. Do not call Prisma against production by hand.
 5. ✅ Verify auth still works (sign in with Google) — NextAuth uses `User` table heavily
 
 > **Why this matters:** `prisma generate` (which runs during Vercel build) updates the TypeScript client to expect the new columns. If the database doesn't have them yet, **all auth breaks** with `PrismaClientKnownRequestError: The column X does not exist`. This happened on 2026-03-28 when `User.username` was added but not applied to prod DB.
 
 ---
 
-## Resetting the Database
+## Resetting the local database
 
-Use this when you need to **wipe all data** and recreate tables from the Prisma schema (e.g., during development or before launch).
+`pnpm db:reset` drops and recreates the **local** Docker database, re-runs all migrations, and regenerates the Prisma Client. It is for development. The guard below treats `localhost`, `127.0.0.1`, `::1`, `postgres` and `host.docker.internal` as local.
 
-### Local (Docker)
+## Changing a production schema
 
-```bash
-pnpm db:reset
-```
-
-This drops and recreates the local database, re-runs all migrations, and regenerates the Prisma Client.
-
-### Production (Supabase / Neon)
+Production on Supabase Free keeps no backups ([pricing](https://supabase.com/pricing), read 2026-11-10). A reset would drop every table with no way back, so this guide does not give one. Schema changes against a production host go through the guard in `scripts/production-schema.ts`:
 
 ```bash
-npx prisma db push --force-reset
+pnpm db:production-schema -- migrate deploy --export-file ./decks.dump
 ```
 
-This connects to the database defined in `DATABASE_URL` (from `.env`), drops all tables, and recreates them from the schema.
+The guard refuses `db push` with a reset flag, and refuses `migrate reset`, when `DATABASE_URL` is not a local host. It also refuses any other production schema change until `--export-file` points at a non-empty on-demand export. The refusal does not print the URL.
 
-> **Warning:** This is a destructive operation — all data is permanently deleted. Only run this if you are certain the database has no data you need to keep.
-
-To reset a specific remote database without changing `.env`:
+`db push` without a reset flag is the other command the guard will run, for a database that has no migration history. It still requires the export file on a production host:
 
 ```bash
-DATABASE_URL="postgresql://user:password@host:port/dbname" npx prisma db push --force-reset
+pnpm db:production-schema -- db push --export-file ./decks.dump
 ```
 
-After resetting production, redeploy if needed so the app picks up the clean state.
+### On-demand export
+
+Take the export on a machine that can reach the database, and keep the file off this repository (the repository is public). Encryption, off-site retention and the daily job are I-71 slice 2. This command is the copy slice 1 requires before a schema change. The three cache tables are derived and are left out, matching the export slice 2 will schedule.
+
+```bash
+pg_dump "$DATABASE_URL" --format=custom --no-owner --schema=public \
+  --exclude-table=public.\"CardCache\" \
+  --exclude-table=public.\"ScryfallSearchCache\" \
+  --exclude-table=public.\"MetaCache\" \
+  --file=decks.dump
+```
+
+Do not commit `decks.dump`.
 
 ---
 

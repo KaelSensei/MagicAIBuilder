@@ -137,7 +137,7 @@ Verified on `dev` at `72fbfc1` on 2026-11-10.
 | Dependency          | Today on `dev`                                | Required degraded mode                                                                                                             | Owner                                                                                                                                                                           |
 | ------------------- | --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Scryfall            | Errors from the client                        | Reads from local tables; stale data labelled after 72 hours                                                                        | [I-67 §5](i67-one-card-data-pipeline.md#5-failure-and-fallback)                                                                                                                 |
-| Commander Spellbook | 502 or 504, "Combo lookup unavailable"        | The last good result, up to 7 days old, served with its date and a retry; never an empty "no combos"                               | I-71 slice 11, inside [I-09](i09-meta-and-evidence.md)'s integration                                                                                                |
+| Commander Spellbook | 502 or 504, "Combo lookup unavailable"        | The last good result, up to 7 days old, served with its date and a retry; never an empty "no combos"                               | I-71 slice 11, inside [I-09](i09-meta-and-evidence.md)'s integration                                                                                                            |
 | AI provider         | "AI deck build failed"; no switch of provider | An "unavailable" state linking to the status page; deterministic surfaces untouched; no allowance consumed                         | [I-02 6.3](i02-checkable-ai-copilot.md#6-disclosure-of-ai-use), [I-30 4.4](i30-business-model-and-paid-tier.md#4-ai-metering-and-quotas-production-safety-ships-before-billing) |
 | Database            | Error page; edits roll back                   | Static pages keep serving; the editor shows "Saving paused" and disables writes; the guest deck and I-19's cached deck stay usable | I-71 slice 11; [I-19](i19-offline-game-night-viewing.md)                                                                                                                        |
 | Vercel              | Nothing                                       | The status page stays up off the production stack                                                                                  | [I-52 6.2](i52-feedback-loop-players-can-see.md#6-status-line-and-status-page)                                                                                                  |
@@ -540,22 +540,22 @@ Then the player sees an empty state that names what is missing, and the page doe
 
 The player-visible outcome is: if the database were lost tonight, yesterday's decks come back within four hours from an encrypted copy kept off the production stack, by a procedure tested every quarter; the owner's phone rings within 15 minutes of an outage; and each key route has a speed budget, measured on real players or enforced in CI.
 
-| State | What the player sees |
-| --- | --- |
-| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
-| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
-| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
-| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
-| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
-| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
-| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
-| English | New controls use the `en` catalogue. |
-| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| State            | What the player sees                                                                                                                                  |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Empty            | A sentence that names what is missing and the next action. No invented row, author, price or score.                                                   |
+| Loading          | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready.                                        |
+| Error            | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there.                                                       |
+| Partial          | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished.                                                 |
+| Stale            | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed.                                             |
+| Guest            | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401.               |
+| Signed-in        | Writes go to that account only. Another player's notes, budget and collection are not in the response.                                                |
+| English          | New controls use the `en` catalogue.                                                                                                                  |
+| French           | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control.                                                         |
 | Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
-| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
-| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
-| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
-| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+| Keyboard         | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes.                         |
+| Screen reader    | Each new control has an accessible name. A status change is announced in words, not only by colour.                                                   |
+| Colour           | A warning and an error differ by text or icon as well as hue, in both themes.                                                                         |
+| Success          | The completed action is confirmed in words. A second identical action does not duplicate the write.                                                   |
 
 ### Alternate paths
 
@@ -584,7 +584,7 @@ Production runs on Supabase Free, which keeps no backups ([pricing](https://supa
 ### Scope
 
 - [ ] Slice 0, no code: the 99.5% objective, a 24-hour data-loss target and a 4-hour restore target, the export runner (a scheduled GitHub workflow or the VPS) and its storage account, the phone channel, the field-data option, and whether Lighthouse becomes a required check on promotion PRs. Point-in-time recovery is option (f) of [D-04](../owner-decisions.md#d-04-hosting-plans-region-and-budget).
-- [ ] **Owner awareness, now: a production reset with no backup.** `docs/engineering/infrastructure.md` lines 348 to 364 give `npx prisma db push --force-reset` against the production `DATABASE_URL`, while production on Supabase Free keeps no backups and no export exists (verified on `origin/dev` at `72fbfc1`). Slice 1 guards it: a `pnpm` script for production schema changes takes an export first and refuses `--force-reset` and `migrate reset` for a production host, and the "Production" reset section is removed.
+- [x] **Owner awareness, now: a production reset with no backup.** `docs/engineering/infrastructure.md` used to give `npx prisma db push --force-reset` against the production `DATABASE_URL`, while production on Supabase Free keeps no backups (verified on `origin/dev` at `72fbfc1`). Slice 1 guards it: `pnpm db:production-schema` takes an on-demand export first and refuses a reset for a production host, and the production reset section is removed. The encrypted daily export is still slice 2.
 - [ ] A daily export of the `public` schema, all data except the three cache tables, encrypted with the owner's public key before it leaves the runner and never uploaded as a workflow artifact of this public repository, kept 14 daily, 8 weekly and 12 monthly in object storage outside Vercel and Supabase, with a manifest and a heartbeat that alerts on a missing export, a 20% size drop or an empty table (slice 2).
 - [ ] A quarterly restore drill into a scratch database: row counts against the manifest, the schema against `prisma/schema.prisma`, a smoke script, and the restore time recorded in `docs/engineering/restore-drills.md`. Once I-38's deletion tombstone exists, every deletion recorded after the export is re-applied before the database serves players (slice 3).
 - [ ] Alerts: "down" reaches the owner's phone within 15 minutes and never on one failed check, with a page check of `/` beside I-52's `/api/health` monitor, and everything else arrives by email at most once a day (slice 4); a runbook with one section per scenario, an incident record template and the additive-migration rule (slice 5).
@@ -605,6 +605,7 @@ Production runs on Supabase Free, which keeps no backups ([pricing](https://supa
 **User story.** As a player, I want the deck to survive a database mistake, so that a bad command cannot empty production.
 
 **Acceptance.**
+
 - The documented reset command refuses to run against production.
 - A daily encrypted export exists, or the owner has not yet chosen the store and the slice says so.
 - A restore drill has been run on a copy, not only described.
@@ -626,4 +627,3 @@ Production runs on Supabase Free, which keeps no backups ([pricing](https://supa
 A restore from the newest off-site export into a scratch database passes the smoke script within four hours and is recorded; a test alert reaches the owner's phone; no documented command can reset production; and a pull request that pushes a key route's JavaScript or queries past its budget fails CI.
 
 ---
-
