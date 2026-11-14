@@ -143,4 +143,38 @@ describe("processStream", () => {
     expect(result.suggestions).toHaveLength(1);
     expect(result.removals).toEqual([]);
   });
+
+  it.each(["openai", "mock"])(
+    "accepts an analysis from the %s provider",
+    async (provider) => {
+      const { result } = await read([
+        `${JSON.stringify({ type: "analysis", content: "Noted.", provider })}\n`,
+      ]);
+
+      expect(result.analysis).toBe("Noted.");
+      expect(result.provider).toBe(provider);
+    }
+  );
+
+  it("keeps medium and low suggestions in arrival order after a high one", async () => {
+    const medium =
+      '{"type":"suggestion","data":{"name":"Arcane Signet","reason":"Mana.","category":"ramp","priority":"medium"}}';
+    const low =
+      '{"type":"suggestion","data":{"name":"Mind Stone","reason":"Mana.","category":"ramp","priority":"low"}}';
+
+    const { result } = await read([`${SWAN_SONG}\n${medium}\n${low}\n`]);
+
+    expect(result.suggestions.map((card) => [card.name, card.priority])).toEqual([
+      ["Swan Song", "high"],
+      ["Arcane Signet", "medium"],
+      ["Mind Stone", "low"],
+    ]);
+  });
+
+  it("characterization: a suggestion that arrives after done is still kept", async () => {
+    const { result, published } = await read([`${DONE}\n${SWAN_SONG}\n`]);
+
+    expect(published).toHaveLength(1);
+    expect(result.suggestions.map((card) => card.name)).toEqual(["Swan Song"]);
+  });
 });
