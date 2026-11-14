@@ -13,8 +13,9 @@ function exportNames(namespace: object): readonly string[] {
 }
 
 describe("the rules reference entry points", () => {
-  it("index.ts publishes the rules search and nothing else at runtime", async () => {
+  it("index.ts publishes the rules search and the bundled edition date", async () => {
     expect(exportNames(await import("@/modules/rules-reference"))).toEqual([
+      "BUNDLED_RULES_EFFECTIVE_ON",
       "searchComprehensiveRules",
     ]);
   });
