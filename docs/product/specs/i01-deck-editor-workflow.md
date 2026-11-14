@@ -630,22 +630,22 @@ Then it does not call the deck fair, unfair, salty, or a win rate unless the mov
 
 The player-visible outcome is: a player can build, reorganize and refine a deck without losing cards, context or intent.
 
-| State | What the player sees |
-| --- | --- |
-| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
-| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
-| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
-| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
-| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
-| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
-| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
-| English | New controls use the `en` catalogue. |
-| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| State            | What the player sees                                                                                                                                  |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Empty            | A sentence that names what is missing and the next action. No invented row, author, price or score.                                                   |
+| Loading          | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready.                                        |
+| Error            | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there.                                                       |
+| Partial          | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished.                                                 |
+| Stale            | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed.                                             |
+| Guest            | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401.               |
+| Signed-in        | Writes go to that account only. Another player's notes, budget and collection are not in the response.                                                |
+| English          | New controls use the `en` catalogue.                                                                                                                  |
+| French           | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control.                                                         |
 | Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
-| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
-| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
-| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
-| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+| Keyboard         | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes.                         |
+| Screen reader    | Each new control has an accessible name. A status change is announced in words, not only by colour.                                                   |
+| Colour           | A warning and an error differ by text or icon as well as hue, in both themes.                                                                         |
+| Success          | The completed action is confirmed in words. A second identical action does not duplicate the write.                                                   |
 
 ### Alternate paths
 
@@ -761,6 +761,20 @@ Nothing in the roadmap entry was dropped. The section below is the initiative te
 
 **Twelfth pass, 2026-11-11:** Archidekt's feature board, seen that day, still has subcategories at 240 points and non-English printings at 140. Both are already [I-37](i37-editor-depth.md): nesting was added on 2026-11-11, and slice 12 stores language. Custom card art, 207 points, is [I-85](i85-player-supplied-art-that-never-replaces-the-card.md). Cube at 507 points and the separate "Custom cards" item stay non-goals. Concurrent recovery is done when two overlapping writes of different fields each roll back to the last confirmed value for that field.
 
+**Fourteenth pass, 2026-11-14.** Archidekt's update of 2026-11-12 lets a folder name contain a mana symbol typed as `{W}`, `{U}`, `{B}`, `{R}` or `{G}` ([news 28409148](https://archidekt.com/news/28409148)). Folders are this initiative's. The symbol is display, not a colour filter.
+
+- [ ] A folder name may include the five tokens `{W}`, `{U}`, `{B}`, `{R}` and `{G}`. The library renders each as the mana symbol and as the letter, so the name is readable without the symbol. A token the renderer does not know stays as the characters the player typed. The folder's identity is its id, not the name. Added 2026-11-14.
+
+#### US-01-14-01
+
+As a player naming a folder, I want `{U}` to show as a blue mana symbol, so that a folder of blue decks is recognisable in the list.
+
+**Passing.** The stored name is the characters the player typed, including the braces. The library shows the symbol and a text alternative. Search by the folder's words still finds it.
+
+**Non-passing.** The token is the only label, with no text. An unknown token such as `{C}` or `{2}` is deleted. The symbol changes which decks the folder contains. Membership stays an explicit move.
+
+**Open question.** Archidekt names only the five coloured symbols. Hybrid, colourless and numbered symbols are not in their sentence. Recommended: render the five, and leave every other brace pair as text, until a player asks for the rest.
+
 ### Engineering enablers
 
 - One canonical DeckCard.zone model; compatibility mirrors must not become a second source of truth.
@@ -773,6 +787,7 @@ Nothing in the roadmap entry was dropped. The section below is the initiative te
 **User story.** As a player editing a deck, I want a failed save to put the card back where it was, so that a reload never loses or duplicates it.
 
 **Acceptance.**
+
 - Moving a card between Main, Sideboard and Considering, then reloading, shows the same zone and quantity.
 - Two overlapping writes of different fields each roll back to the last confirmed value for that field.
 - A signed-in card note survives reload, or the editor says it did not save.
@@ -796,4 +811,3 @@ Nothing in the roadmap entry was dropped. The section below is the initiative te
 A user can move a card between every legal zone, reload the page, change its printing, undo a move and recover from a failed request without a lost or duplicated card.
 
 ---
-

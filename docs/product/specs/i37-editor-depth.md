@@ -267,6 +267,57 @@ Slices 22 and 23, the command palette that the roadmap added on 2026-11-10, join
 - **Language in the line syntax**, and whether reversing Ctrl+Z in text fields (12.4) needs owner sign-off.
 - **Sequencing with I-13 spec slice 6.** Should I-13 restyle the editor after slices 2, 5 and 8, so it is restyled once?
 
+## Fourteenth pass (2026-11-14)
+
+Archidekt's 12 November note and two Moxfield posts from 14 November ask for editor behaviour this spec already owns in outline. The additions are the failure cases. No slice is added. Folder names with mana symbols are [I-01](i01-deck-editor-workflow.md), which owns folders. Sources: [Archidekt 28409148](https://archidekt.com/news/28409148), the comment by montyjeremy777 on that page at 2026-11-13T17:07:56Z, [Moxfield 2749](https://moxfield.nolt.io/2749).
+
+### User stories
+
+#### US-37-14-01
+
+As a player with two decks open one after the other, I want each deck to keep the sort I set on it, so that sorting one deck by colour does not rewrite the other.
+
+#### US-37-14-02
+
+As a player on a phone, I want a swipe on a list row to reach category, printings and Oracle text, so that I do not open a full card page to do one of those three things.
+
+#### US-37-14-03
+
+As a player who cannot hover, I want the type count and the subtype count as text, so that a ribbon that only appears on mouseover is not the way I read the deck.
+
+### Passing scenario
+
+Given deck A stored with sort "category" and deck B stored with sort "colour", when the player opens A, sorts it by colour, then opens B, then B is still sorted by colour and A's stored sort is colour. Leaving and returning to A shows colour. B was not written.
+
+Given a list row below 768 px, when the player activates the row's overflow or its swipe, then category, all printings and Oracle text are three named actions. Each works from the keyboard. A swipe is not the only path.
+
+Given the editor chrome, when it renders, then the count of cards by type is visible text, and the count by subtype is available without a hover. Requirement 10.2 still makes a click on that count a filter, and the filtered count equals the figure.
+
+### Non-passing scenario
+
+Given the two decks above, when opening B shows colour because A was just sorted by colour, the scenario fails. Requirement 2.2 persists view choices in the browser. This pass adds that group and sort are stored per deck, not as one setting for the account.
+
+Given type counts that appear only while a pointer hovers, the scenario fails. Moxfield's poster described the old ribbon as "subtype on mouseover" and asked for it back before a 1 January 2027 launch. That date is the poster's. The acceptance here is the text, not that date.
+
+Given a primer editor, when it offers alignment and the aligned primer is stored as HTML the public page will render unsafely, the scenario fails. Alignment is a stored mark on a block the primer already allows, and the public render escapes it as it escapes every other primer block.
+
+### Acceptance criteria
+
+- Group and sort are columns of the deck, or of the browser record keyed by deck id. Changing them writes that deck only.
+- The mobile list exposes category, printings and Oracle text as named actions with a 40 px target, in English and French. Oracle text is the stored text, not a second rules engine.
+- Type and subtype counts are text. Colour is not the only difference between two types.
+- The primer editor may align a block left, centre or right. The stored value is one of those three words. The public page uses the same sanitiser as the rest of the primer.
+
+### Open questions
+
+- Archidekt also lets a patron pick one of fifteen colour themes, previewed by everyone and reset on navigation. That is not an editor requirement. It stays out of this spec and is recorded on I-30 as a cosmetic a 2 USD tier sells. A theme that means something by colour alone belongs to I-49, which this pass does not change.
+
+### Tests this pass adds
+
+- Two deck records. Sorting one leaves the other's stored sort unchanged.
+- A list row's three actions are reachable without a pointer, and the Oracle action shows the stored text.
+- A subtype count is in the accessibility tree without a hover.
+
 ## Sources
 
 Read on 2026-11-09 unless dated otherwise. "Snippet" means the page refused automated access and a search engine's summary was read.
@@ -955,22 +1006,22 @@ Then the player sees an empty state that names what is missing, and the page doe
 
 The player-visible outcome is: a player edits a deck with the views, groups, tags, text bulk edit, history and mobile toolbar they expect from Moxfield and Archidekt, and the editor stays measurably fast and stable while they do.
 
-| State | What the player sees |
-| --- | --- |
-| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
-| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
-| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
-| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
-| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
-| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
-| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
-| English | New controls use the `en` catalogue. |
-| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| State            | What the player sees                                                                                                                                  |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Empty            | A sentence that names what is missing and the next action. No invented row, author, price or score.                                                   |
+| Loading          | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready.                                        |
+| Error            | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there.                                                       |
+| Partial          | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished.                                                 |
+| Stale            | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed.                                             |
+| Guest            | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401.               |
+| Signed-in        | Writes go to that account only. Another player's notes, budget and collection are not in the response.                                                |
+| English          | New controls use the `en` catalogue.                                                                                                                  |
+| French           | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control.                                                         |
 | Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
-| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
-| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
-| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
-| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+| Keyboard         | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes.                         |
+| Screen reader    | Each new control has an accessible name. A status change is announced in words, not only by colour.                                                   |
+| Colour           | A warning and an error differ by text or icon as well as hue, in both themes.                                                                         |
+| Success          | The completed action is confirmed in words. A second identical action does not duplicate the write.                                                   |
 
 ### Alternate paths
 
@@ -1041,6 +1092,7 @@ The owner wants an editor "more beautiful and more complete than Moxfield". Arch
 **User story.** As a player coming from Moxfield or Archidekt, I want views, tags and a history that do not reset my printings, so that the editor is as deep without being a copy.
 
 **Acceptance.**
+
 - A bulk edit changes only the lines that differ, and keeps printings on the lines that do not.
 - The previous view remains selectable after a default changes.
 - A 100-card fixture stays inside the latency and layout-shift bars named on this initiative.
@@ -1062,4 +1114,3 @@ The owner wants an editor "more beautiful and more complete than Moxfield". Arch
 On the 100-card fixture, a player switches among five views, collapses groups, tags and filters cards, bulk-edits as text without losing printings or notes, and reverts a change from history, on desktop and at 390 px, within the latency and stability budgets.
 
 ---
-
