@@ -673,22 +673,22 @@ Then the player sees an empty state that names what is missing, and the page doe
 
 The player-visible outcome is: testing a deck teaches the player what to change.
 
-| State | What the player sees |
-| --- | --- |
-| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
-| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
-| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
-| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
-| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
-| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
-| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
-| English | New controls use the `en` catalogue. |
-| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| State            | What the player sees                                                                                                                                  |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Empty            | A sentence that names what is missing and the next action. No invented row, author, price or score.                                                   |
+| Loading          | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready.                                        |
+| Error            | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there.                                                       |
+| Partial          | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished.                                                 |
+| Stale            | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed.                                             |
+| Guest            | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401.               |
+| Signed-in        | Writes go to that account only. Another player's notes, budget and collection are not in the response.                                                |
+| English          | New controls use the `en` catalogue.                                                                                                                  |
+| French           | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control.                                                         |
 | Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
-| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
-| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
-| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
-| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+| Keyboard         | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes.                         |
+| Screen reader    | Each new control has an accessible name. A status change is announced in words, not only by colour.                                                   |
+| Colour           | A warning and an error differ by text or icon as well as hue, in both themes.                                                                         |
+| Success          | The completed action is confirmed in words. A second identical action does not duplicate the write.                                                   |
 
 ### Alternate paths
 
@@ -755,13 +755,35 @@ Nothing in the roadmap entry was dropped. The section below is the initiative te
 - [ ] Under the owner decision on scripted interaction ([D-35](../owner-decisions.md#product-scope-and-non-goals)), an added option: a hot-seat sandbox of up to four decks (the player's and three from I-15 shares, public links or an [I-79](i79-table-sets.md) set), each seat with its opening hand under the free mulligan, every seat moved by the player, no rules engine and no model. TopDecked "Supports up to four decks per simulation on the same device" (version 12.1.0, 2023-11-13, [App Store](https://apps.apple.com/us/app/topdecked-mtg/id1173388234); corrected 2026-11-11 from 13.0.5, which carries only the QR line). Added 2026-11-11.
 - [ ] Track, by the player's own taps, commander damage dealt to up to three imagined opponents, kept separate per commander (CR 903.10a, and the loss at 21 in CR 104.3j and CR 704.6c). The goldfish has a life total and no commander-damage tally. No opponent acts.
 - [ ] Let the player set the designations the checklist in I-19 names and the playtest does not track: the monarch, the initiative, the Ring, day and night, the City's Blessing, and experience, energy and poison counters. The player sets them. The engine does not infer them from Oracle text.
-**Twelfth pass, 2026-11-11:** [Playgroup's Sparring page](https://playgroup.gg/playgroup-live/how-sparring-works), updated 2026-11-06, says its phantom opponents use 21,480 interaction spells from 6,934 of Playgroup's games. Those counts are theirs. They are further evidence for the scripted-interaction decision above. They are not a log this product can replay, and [I-81](i81-a-review-of-the-goldfish-sessions-you-recorded.md) reads only sessions recorded here.
+      **Twelfth pass, 2026-11-11:** [Playgroup's Sparring page](https://playgroup.gg/playgroup-live/how-sparring-works), updated 2026-11-06, says its phantom opponents use 21,480 interaction spells from 6,934 of Playgroup's games. Those counts are theirs. They are further evidence for the scripted-interaction decision above. They are not a log this product can replay, and [I-81](i81-a-review-of-the-goldfish-sessions-you-recorded.md) reads only sessions recorded here.
+
+**Fourteenth pass, 2026-11-14.** Archidekt's update of 2026-11-12 describes three playtester behaviours this list did not name ([news 28409148](https://archidekt.com/news/28409148)). Moxfield's feedback board, the same day this pass was read, listed an undo of the last zone change. The page printed no vote total ([board](https://moxfield.nolt.io/)).
+
+- [ ] **Play card and shuffle** opens an alphabetical list of the deck still in the library, with cards that have a basic land type in their own section at the top. The player picks one card, or several by the multi-select already required above, and those cards move to the battlefield. The rest of the library is not reordered on screen. Added 2026-11-14.
+- [ ] **A snapshot opens in the playtester.** The library dealt is the snapshot's list, and the session record names that snapshot, which #1315 already does for the current deck. Closing the playtester does not write the snapshot back onto the deck. Added 2026-11-14.
+- [ ] **Undo the last zone change.** One action returns the cards moved by the last play, draw or shuffle to the zones they left, and says what it restored. It does not undo a note, a life total or a designation the player set by hand. A second undo restores the change. Added 2026-11-14.
+- [ ] **Mobile controls** for those three actions are named buttons of at least 40 px, in English and French. Archidekt's note says the old phone layout was fiddly and that they moved controls to be easier to press. It does not list the new positions, so this spec does not copy a layout. Added 2026-11-14.
+
+#### US-07-14-01
+
+As a player goldfishing a tutor, I want the library listed in order with basic lands set apart, so that I can put one card onto the battlefield without scrolling a shuffled pile.
+
+#### US-07-14-02
+
+As a player looking at an old version of a deck, I want to goldfish that version, so that the current list is not what I am testing.
+
+**Passing.** The library list is alphabetical. Basics are a separate section. Choosing one card moves only that card, then the playtester returns to the table. Opening a snapshot deals that snapshot's cards. The deck's current rows are unchanged when the playtester closes. Undo restores the last zone change and names the cards.
+
+**Non-passing.** The library list is the shuffled order. Choosing a card shuffles the library as a side effect the player did not ask for. Goldfishing a snapshot writes those cards onto the deck. Undo reverts a life total or a monarch the player set. A control that exists only as an icon with no name.
+
+**Open question.** Archidekt's "Play card & shuffle" puts the chosen card onto the battlefield and, by the menu's name, shuffles. This spec's item shuffles only when the player asks, after the card has moved. Whether the default should shuffle, as their menu name implies, is open. Recommended: do not shuffle unless the player confirms, because an accidental shuffle is the failure the undo item exists to repair.
 
 ### Enrichment (2026-11-11)
 
 **User story.** As a player goldfishing a deck, I want the session to use the deck I built and to be tied to that version, so that two runs can be compared.
 
 **Acceptance.**
+
 - The library is the main deck plus the command zone, not Sideboard or Considering.
 - A recorded session names the snapshot it was played from.
 - Commander damage and the named designations are set by the player and never inferred by a rules engine.
@@ -783,4 +805,3 @@ Nothing in the roadmap entry was dropped. The section below is the initiative te
 A player can test two versions of a deck and see evidence that helps choose between them.
 
 ---
-

@@ -191,6 +191,63 @@ Read on 2026-11-12 unless stated otherwise.
 8. r/magicTCG, "This guy completed every single regularly printed…", 2025-01-16 (mirror; title truncated in the listing). <https://www.reddit.com/r/magicTCG/comments/1i2ql3h/>
 9. r/magicTCG, a comment of February 2026 that completing a set is "now very hard" for completionists because many sets print three versions of each card (mirror snapshot, search summary, 2026-11-12). <https://reddit.sentinel-team.org/posts/1r270dt/snapshots/2026-02-11T22%3A51%3A55.624387Z>
 10. Scryfall API, read with a named User-Agent on 2026-11-12: `/sets` lists 1,067 sets; `!"Lightning Bolt" unique:prints` returns 71 cards and `!"Sol Ring" unique:prints` 140; `is:fetchland` and `is:shockland` return 10 each. <https://scryfall.com/docs/api>
+11. Archidekt, "Development Update - Collection completion & more", created 2026-11-12T21:34:18Z, read 2026-11-14. Up to eight sets, foil status, unique cards against all printings, collected and uncollected searches, pies, a value chart by vendor, and a buy button. <https://archidekt.com/news/28409148>
+12. Comment by Timbob on that update, 2026-11-13T13:53:06Z: a complete Portal set except the alternate Chinese-art printings is shown as 199 of 200 unique cards. The comment is on the same page.
+13. ManaBox US App Store listing, version 4.3.0 of 2026-11-03, re-read 2026-11-14. The URL was already cited. The version note says collector mode no longer clears a search. <https://apps.apple.com/us/app/manabox-mtg/id1460407674>
+
+## Fourteenth pass (2026-11-14)
+
+Archidekt now ships the set goal this initiative already specified. The new facts are the failure a collector hit on the first day, and the controls that must stay switches rather than a hidden default. Nothing here promotes I-101 out of Later, and nothing adds a slice. The buy button is not this initiative's: requirement 3.3 still forbids a buy verb, and [I-32](i32-seller-handoff-and-affiliate-carts.md) owns the handoff.
+
+### User stories
+
+#### US-101-14-01
+
+As a collector who owns one art of a card and not another, I want the goal to say which counting rule produced the total, so that 199 of 200 is a missing printing I can name and not a claim that I lack the card.
+
+#### US-101-14-02
+
+As a collector finishing a set, I want foil and non-foil, and one-of-each-name against every printing, to be switches I set, so that a vendor's default does not decide what "complete" means.
+
+#### US-101-14-03
+
+As a collector searching inside a goal, I want the search I typed to stay when the view refreshes, so that a fix another app shipped is not a bug here.
+
+### Passing scenario
+
+Given a set goal whose rule is `oneOfEachName`, a fixture with one owned printing of a name and a second printing of that same name unowned (the shape of Timbob's Portal report, which names the set and the alternate Chinese art and does not name the card), when progress is computed, then that name is one collected slot, the missing list does not contain it, and the page prints the rule beside the total.
+
+Given the same rows and the rule `everyPrinting`, when progress is computed, then the unowned printing is one missing slot, named with its set and its Scryfall id, and the owned printing is collected.
+
+Given a goal page with a search string, when the collector changes foil, language or the counting rule, then the search string is still in the field.
+
+### Non-passing scenario
+
+Given the Portal-shaped rows and the rule `oneOfEachName`, when the page shows 199 of 200 without naming the rule, the scenario fails.
+
+Given a missing slot, when the goal page renders a control whose label is "buy", "purchase" or "add to cart", the scenario fails. A link labelled as a handoff to I-32, on a different surface, is not that control.
+
+Given Archidekt's cap of eight sets in one analysis [11], when this product refuses a ninth set because eight is the maximum, the scenario fails. Requirement 1.4 still imposes no count limit. Eight is their limit, recorded so a later reader does not copy it.
+
+### Acceptance criteria
+
+- The progress header shows the counting rule, the finish rule, and whether non-English printings are in or out, in the same line as the total.
+- `oneOfEachName` collects a name when any printing of that name is owned. `everyPrinting` collects only the printings that are owned. The two totals are allowed to differ, and the page says they differ when both are available as a switch.
+- Changing a switch or refreshing the catalogue does not clear the search field. ManaBox 4.3.0's note is the failure this avoids [13].
+- A pie, if one is drawn, uses a word as well as a colour for rarity, type and colour, and choosing a slice opens the missing or collected list for that slice. It does not open a public set page.
+- The value of cards the collector already owns is I-06's and I-59's figure, not a second total on the goal. The goal's price block remains "Listed prices of the missing cards".
+
+### Open questions
+
+6. **Non-English printings.** Timbob's missing hundredth card is an alternate Chinese-art printing of a card he owns [12]. Does a set goal exclude non-English printings by default, the way open question 2 excludes subsets? Recommended: out by default, with the switch visible, because a collector who did not ask for a language otherwise sees a hole in a set they have finished in their language.
+7. **Several sets in one goal.** Archidekt analyses up to eight sets together [11]. A list of set codes is already a possible reading of kind `set`. Recommended: one goal may name more than one set code, with no cap of eight, and the progress is the sum, each set still showing its own total so a hole is not hidden in the sum.
+
+### Tests this pass adds
+
+- One name, two printings, one owned: `oneOfEachName` reports collected 1 of 1; `everyPrinting` reports collected 1 of 2 and names the missing Scryfall id.
+- A non-English printing is excluded when the language switch is out and included when it is in.
+- The search string survives a change of the finish switch.
+- The deny-list scan still finds no buy verb on the goal page.
 
 ## Feature contract (Full, 2026-11-12)
 

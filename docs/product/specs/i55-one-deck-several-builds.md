@@ -628,22 +628,22 @@ Then it does not call the deck fair, unfair, salty, or a win rate unless the mov
 
 The player-visible outcome is: a player keeps several builds of one deck, such as a Bracket 2 and a Bracket 3 version or a budget and a "bling" version, as named differences from one main list. Each build shows its legality, bracket estimate and price; a change to the main list never lands silently in a build; and a swap kit says which cards to carry to play any of them.
 
-| State | What the player sees |
-| --- | --- |
-| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
-| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
-| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
-| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
-| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
-| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
-| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
-| English | New controls use the `en` catalogue. |
-| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| State            | What the player sees                                                                                                                                  |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Empty            | A sentence that names what is missing and the next action. No invented row, author, price or score.                                                   |
+| Loading          | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready.                                        |
+| Error            | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there.                                                       |
+| Partial          | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished.                                                 |
+| Stale            | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed.                                             |
+| Guest            | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401.               |
+| Signed-in        | Writes go to that account only. Another player's notes, budget and collection are not in the response.                                                |
+| English          | New controls use the `en` catalogue.                                                                                                                  |
+| French           | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control.                                                         |
 | Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
-| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
-| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
-| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
-| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+| Keyboard         | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes.                         |
+| Screen reader    | Each new control has an accessible name. A status change is announced in words, not only by colour.                                                   |
+| Colour           | A warning and an error differ by text or icon as well as hue, in both themes.                                                                         |
+| Success          | The completed action is confirmed in words. A second identical action does not duplicate the write.                                                   |
 
 ### Alternate paths
 
@@ -699,6 +699,7 @@ Players keep several versions of one deck at the same time, and Wizards' bracket
 **User story.** As a player with a Bracket 2 night and a Bracket 3 night, I want both lists on one deck, so that I am not maintaining two decks that drifted.
 
 **Acceptance.**
+
 - A build is a diff from the main list.
 - Each build has its own legality and bracket estimate.
 - Copies are counted once across builds in the acquisition plan.
@@ -715,9 +716,28 @@ Players keep several versions of one deck at the same time, and Wizards' bracket
 
 **Open questions.** A comment on Moxfield feedback 1440, read 2026-11-11, asks to keep a card and name its replacement. Whether that is a field on a build or only a Considering note is open. It does not become a new initiative.
 
+### Fourteenth pass (2026-11-14)
+
+EDHcheck's Budget Alternatives, 8 November 2026, read 2026-11-14, finds up to six cheaper cards that share Scryfall Tagger tags, stay inside the original card's colour identity and Commander legality, and cost at most 40 percent of the original, at least 2 USD less and no more than 10 USD. Prices are the cheapest paper printing, refreshed every week. Searching one card priced at 3 USD or more is free. Pasting a deck and summing the cheapest swap is Pro ([article](https://edhcheck.com/updates/budget-alternatives/)). The cheaper-card scope line above already requires I-14's visible `otag:` query, a dated price and legality, and forbids a model. This pass adds the failure cases. It does not adopt the 40 percent, 2 USD or 10 USD caps.
+
+#### US-55-14-01
+
+As a player who wants a cheaper build, I want each suggested swap to show the tag query, the price, the price date and the legality, so that I can see why the card was offered and refuse it.
+
+#### US-55-14-02
+
+As a player, I want the swaps I accept to become a build, so that the main list does not change until I promote that build.
+
+**Passing.** A card above the player's threshold produces rows. Each row shows the `otag:` query, the amount, the currency, the date and whether the card is legal in the commander's identity. The player accepts two rows. A new build's diff is those two swaps. The main list is unchanged. The build's bracket estimate sits beside the main list's. The whole list for one deck is free, because building is free under I-30 requirement 1.1. EDHcheck charges Pro for the deck paste. That is their line.
+
+**Non-passing.** A row with a price and no query. A row whose price has no date. A sum labelled "you save" that hides the rows. A swap applied to the main list instead of a build. A model choosing the card. Copying 40 percent, 2 USD or 10 USD into the code without the owner writing them down as this product's rule. Treating EDHcheck's weekly refresh as our price date. I-59 owns the date.
+
+**Acceptance.** The scope line's "done means" stays: every swap row shows its query, price date and legality. The sum, if shown, is the sum of the rows the player ticked, and it says how many rows have no price. An unticked row changes nothing.
+
+**Open question.** Should the panel offer EDHcheck's three caps as optional filters the player can turn on, still showing every row that the query returned, or show the query's full cheaper list and let the player sort by price? Recommended: no hidden cap. A filter the player sets may hide rows, and the hidden count is on screen.
+
 ### Definition of done
 
 A player creates a Bracket 2 build from a Bracket 3 deck, swaps two Game Changers and sees both estimates; adding a Game Changer to the main list flags the Bracket 2 build instead of changing it silently; promoting one change leaves every build's list as it was; and the acquisition plan counts a card shared by the builds once.
 
 ---
-
