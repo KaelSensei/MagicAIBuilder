@@ -6,6 +6,7 @@
  * `prisma db push --force-reset` against that host. These tests pin the
  * guard that replaced that recipe. They do not open a database.
  */
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { planSchemaCommand } from "@/lib/operations/schema-command-guard";
 
@@ -129,5 +130,18 @@ describe("planSchemaCommand", () => {
       message:
         "Refusing to run: the command is not migrate deploy, db push, or migrate reset. Nothing was changed.",
     });
+  });
+});
+
+describe("the production reset recipe", () => {
+  it("is gone from the infrastructure guide, which documents the guard and an on-demand export", () => {
+    const guide = readFileSync("docs/engineering/infrastructure.md", "utf8");
+
+    expect(guide).not.toContain("--force-reset");
+    expect(guide).toContain("pnpm db:production-schema");
+    expect(guide).toContain("pg_dump");
+    expect(guide).toContain("CardCache");
+    expect(guide).toContain("ScryfallSearchCache");
+    expect(guide).toContain("MetaCache");
   });
 });
