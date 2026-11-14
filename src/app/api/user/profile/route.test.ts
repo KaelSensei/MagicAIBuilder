@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { NextRequest } from "next/server";
 
 // ─── Mock Prisma ──────────────────────────────────────────────────────────────
 
@@ -56,6 +57,34 @@ function authed() {
 
 function unauthed() {
   mockAuth.mockResolvedValueOnce(null);
+}
+
+/** A DELETE from a browser holding these cookies (`name=value; …`). */
+function deleteRequest(cookie?: string): NextRequest {
+  return new NextRequest("http://localhost:3000/api/user/profile", {
+    method: "DELETE",
+    headers: cookie ? { cookie } : {},
+  });
+}
+
+interface SetCookie {
+  readonly value: string;
+  /** Lower-cased attributes, such as `max-age=0`, `path=/` or `secure`. */
+  readonly attributes: readonly string[];
+}
+
+/** What each `Set-Cookie` line of a response tells the browser, by cookie name. */
+function setCookies(response: Response): ReadonlyMap<string, SetCookie> {
+  const cookies = new Map<string, SetCookie>();
+  for (const line of response.headers.getSetCookie()) {
+    const [pair = "", ...attributes] = line.split(";").map((part) => part.trim());
+    const separator = pair.indexOf("=");
+    cookies.set(pair.slice(0, separator), {
+      value: pair.slice(separator + 1),
+      attributes: attributes.map((attribute) => attribute.toLowerCase()),
+    });
+  }
+  return cookies;
 }
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
@@ -292,7 +321,7 @@ describe("DELETE /api/user/profile", () => {
 
     mockUserDelete.mockResolvedValueOnce({ id: "user-1" });
 
-    const res = await DELETE();
+    const res = await DELETE(deleteRequest());
 
     expect(res.status).toBe(200);
     const body = await res.json();
@@ -302,13 +331,58 @@ describe("DELETE /api/user/profile", () => {
     });
   });
 
+  it("signs the browser out over HTTPS by expiring its secure session cookie", async () => {
+    authed();
+    mockUserDelete.mockResolvedValueOnce({ id: "user-1" });
+
+    const res = await DELETE(deleteRequest("__Secure-authjs.session-token=jwt"));
+
+    expect(res.status).toBe(200);
+    expect(setCookies(res).get("__Secure-authjs.session-token")).toEqual({
+      value: "",
+      attributes: expect.arrayContaining(["max-age=0", "path=/", "secure"]),
+    });
+  });
+
+  it("signs the browser out over plain HTTP by expiring its session cookie without Secure", async () => {
+    authed();
+    mockUserDelete.mockResolvedValueOnce({ id: "user-1" });
+
+    const res = await DELETE(deleteRequest("authjs.session-token=jwt"));
+
+    const expiry = setCookies(res).get("authjs.session-token");
+    expect(expiry).toEqual({
+      value: "",
+      attributes: expect.arrayContaining(["max-age=0", "path=/"]),
+    });
+    // A browser on plain HTTP ignores a Set-Cookie marked Secure.
+    expect(expiry?.attributes).not.toContain("secure");
+  });
+
+  it("expires every chunk of a session cookie Auth.js had to split", async () => {
+    authed();
+    mockUserDelete.mockResolvedValueOnce({ id: "user-1" });
+
+    const res = await DELETE(
+      deleteRequest("__Secure-authjs.session-token.0=jwt-a; __Secure-authjs.session-token.1=jwt-b")
+    );
+
+    const cookies = setCookies(res);
+    for (const chunk of ["__Secure-authjs.session-token.0", "__Secure-authjs.session-token.1"]) {
+      expect(cookies.get(chunk)).toEqual({
+        value: "",
+        attributes: expect.arrayContaining(["max-age=0", "path=/", "secure"]),
+      });
+    }
+  });
+
   it("records profile deletion latency without account details", async () => {
     const info = vi.spyOn(logger, "info").mockImplementation(() => undefined);
     try {
       authed();
       mockUserDelete.mockResolvedValueOnce({ id: "user-1" });
 
-      const response = await DELETE();
+      const response = await DELETE(deleteRequest());
 
       expect(response.status).toBe(200);
       expect(info).toHaveBeenCalledWith(
@@ -325,7 +399,7 @@ describe("DELETE /api/user/profile", () => {
   it("returns 401 when not authenticated", async () => {
     unauthed();
 
-    const res = await DELETE();
+    const res = await DELETE(deleteRequest());
 
     expect(res.status).toBe(401);
     expect(mockUserDelete).not.toHaveBeenCalled();
@@ -336,8 +410,34 @@ describe("DELETE /api/user/profile", () => {
 
     mockUserDelete.mockRejectedValueOnce(new Error("DB error"));
 
-    const res = await DELETE();
+    const res = await DELETE(deleteRequest());
 
     expect(res.status).toBe(500);
+  });
+
+  it("keeps the session when the deletion fails, because the account still exists", async () => {
+    authed();
+    mockUserDelete.mockRejectedValueOnce(new Error("DB error"));
+
+    const res = await DELETE(deleteRequest("__Secure-authjs.session-token=jwt"));
+
+    expect(res.status).toBe(500);
+    expect(res.headers.getSetCookie()).toEqual([]);
+  });
+
+  it("leaves the browser's other cookies alone when it signs it out", async () => {
+    authed();
+    mockUserDelete.mockResolvedValueOnce({ id: "user-1" });
+
+    const res = await DELETE(
+      deleteRequest(
+        "NEXT_LOCALE=fr; authjs.csrf-token=csrf; authjs.callback-url=%2F; authjs.session-token=jwt"
+      )
+    );
+
+    expect([...setCookies(res).keys()].sort()).toEqual([
+      "__Secure-authjs.session-token",
+      "authjs.session-token",
+    ]);
   });
 });
