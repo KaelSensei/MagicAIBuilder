@@ -41,6 +41,10 @@
       "description": "Browse the official Magic: The Gathering Comprehensive Rules, chapter by chapter, including the full glossary."
     }
   },
+  "apiChangelog": {
+    "title": "Public read API changelog — MagicAIBuilder",
+    "description": "Dated changes to the public read routes under /api/v1."
+  },
   "collection": {
     "title": "My Collection — MagicAIBuilder",
     "description": "Manage your physical MTG card collection"
