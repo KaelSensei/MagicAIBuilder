@@ -1,9 +1,9 @@
 /**
  * The commander slug as a pure function: what `commanderToSlug` makes of a
- * name and what `isCommanderSlug` accepts. Moved here from `fetch.test.ts`
- * when the fetchers moved into `src/modules/meta-insights` (MI-03): the slug
- * belongs to the community context (COM-02) and stays in `src/lib/meta`. The
- * SQL parity of the slug is `commander-slug-parity.test.ts`.
+ * name and what `isCommanderSlug` accepts. Split out of `fetch.test.ts` when
+ * the fetchers moved into `src/modules/meta-insights` (MI-03), then moved with
+ * the slug into the community context (COM-02). The SQL parity of the slug is
+ * `commander-slug-parity.test.ts`.
  */
 import { describe, expect, it } from "vitest";
 import { commanderToSlug, isCommanderSlug } from "./commander-slug";

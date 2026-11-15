@@ -226,5 +226,17 @@
   {
     "from": "src/components/deck/ExternalRecommendationFreshness.test.tsx",
     "to": "src/modules/meta-insights/ui/ExternalRecommendationFreshness.test.tsx"
+  },
+  {
+    "from": "src/lib/meta/commander-slug.ts",
+    "to": "src/lib/community/commander-slug.ts"
+  },
+  {
+    "from": "src/lib/meta/commander-slug.test.ts",
+    "to": "src/lib/community/commander-slug.test.ts"
+  },
+  {
+    "from": "src/lib/meta/commander-slug-parity.test.ts",
+    "to": "src/lib/community/commander-slug-parity.test.ts"
   }
 ]

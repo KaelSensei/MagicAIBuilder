@@ -1,7 +1,7 @@
 /**
  * Letters folded towards ASCII, one step at a time.
  *
- * Shared kernel, pure. The commander slug (`lib/meta/commander-slug.ts`), the
+ * Shared kernel, pure. The commander slug (`lib/community/commander-slug.ts`), the
  * export file stems (`lib/text/slug.ts`) and the MTGTop8 archetype matcher
  * (`modules/meta-insights/infrastructure/mtgtop8.ts`) fold a name the same
  * way, so the rule lives once here. Not responsible for: lowercasing,

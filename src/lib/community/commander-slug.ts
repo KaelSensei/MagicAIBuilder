@@ -1,12 +1,16 @@
 /**
- * The commander slug: the one URL form of a commander's name that EDHREC, the
- * commander pages, the sitemap, the meta cache and the MTGTop8 archetype lookup
+ * The commander slug: the one URL form of a commander's name that the commander
+ * pages, the sitemap, EDHREC, the meta cache and the MTGTop8 archetype lookup
  * share.
  *
- * Lives on its own so the MTGTop8 parser can fold names the same way without
- * importing the fetchers, which import the parser.
+ * Community context (COM-02): the commander decks page and the lookup behind
+ * it (`commander-decks-lookup.ts`, which matches the same slug in SQL) own the
+ * slug; the sitemap lists the pages it names, and the meta-insights context
+ * imports it for its route URLs, cache keys and archetype matching. Kept a
+ * leaf with no community import so that `meta-insights/infrastructure/mtgtop8.ts`
+ * can fold names the same way without reaching the community reads.
  *
- * @module meta/commander-slug
+ * @module community/commander-slug
  */
 import { stripDiacritics } from "@/lib/text/transliterate";
 
