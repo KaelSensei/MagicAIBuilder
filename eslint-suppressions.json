@@ -578,14 +578,6 @@
       "count": 1
     }
   },
-  "src/components/community/DeckRatingPanel.tsx": {
-    "complexity": {
-      "count": 1
-    },
-    "max-lines-per-function": {
-      "count": 1
-    }
-  },
   "src/components/community/DeckReportButton.tsx": {
     "max-lines-per-function": {
       "count": 1
