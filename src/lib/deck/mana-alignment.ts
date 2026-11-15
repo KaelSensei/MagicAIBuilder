@@ -138,10 +138,12 @@ function colorsFromOracleText(oracleText: string): ReadonlySet<PipColor> {
  * also picks up activation costs — so it is only consulted when the first two
  * find nothing.
  *
- * @param card - the land to inspect
+ * @param card - the land to inspect: only its type line, text and colour identity are read
  * @returns the colours it produces, empty for a colourless-only land
  */
-export function colorsProducedBy(card: DeckCard): ReadonlySet<PipColor> {
+export function colorsProducedBy(
+  card: Pick<DeckCard, "typeLine" | "oracleText" | "colorIdentity">
+): ReadonlySet<PipColor> {
   const colors = new Set<PipColor>();
 
   const subtypes = subtypesOf(card.typeLine);

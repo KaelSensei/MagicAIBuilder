@@ -2,9 +2,12 @@
  * Size repair of an AI-generated Commander list, after its illegal cards are gone.
  *
  * A short list is filled with basic lands of the command zone's colours
- * (Wastes when colourless). A long list loses basic lands, largest stack first;
- * it is rejected when its basic lands cannot absorb the excess, because cutting
- * a chosen spell is a deckbuilding decision, not a repair.
+ * (Wastes when colourless), split by Karsten's source targets: each basic goes
+ * to the colour whose sources fall furthest below its target, so the surplus
+ * over the targets ends as even as possible (I-58 requirements 9.1 and 5.2).
+ * A long list loses basic lands, largest stack first; it is rejected when its
+ * basic lands cannot absorb the excess, because cutting a chosen spell is a
+ * deckbuilding decision, not a repair.
  *
  * @module ai/generated-deck-size
  */
@@ -15,6 +18,15 @@ import type { PipColor } from "@/lib/deck/mana-alignment";
 export interface KeptCard {
   readonly card: AICard;
   readonly isBasicLand: boolean;
+  /** Colours the card taps for when it is a land; empty for any other card */
+  readonly producedColours: readonly PipColor[];
+}
+
+/** One colour of the command zone and the sources it needs. */
+export interface SourceNeed {
+  readonly colour: PipColor;
+  /** Karsten's source target for the colour, 0 when no spell sets one */
+  readonly target: number;
 }
 
 /** The list at the exact deck size with the basic lands changed, or why it cannot get there. */
@@ -38,31 +50,70 @@ const BASIC_LAND_FOR: Readonly<Record<PipColor, string>> = {
 /** The basic land a colourless command zone may run. */
 const COLORLESS_BASIC_LAND = "Wastes";
 
-/** Adds `missing` basic lands spread over the colours in WUBRG order, onto existing stacks first. */
-function addBasicLands(
-  cards: readonly AICard[],
+/** The basic lands of one name to add. */
+interface BasicLandsToAdd {
+  readonly name: string;
+  readonly quantity: number;
+}
+
+/** Copies in `kept` of lands that tap for `colour`. */
+function sourcesOf(kept: readonly KeptCard[], colour: PipColor): number {
+  return kept
+    .filter(({ producedColours }) => producedColours.includes(colour))
+    .reduce((sum, { card }) => sum + card.quantity, 0);
+}
+
+/**
+ * Splits `missing` basics over the colours: one at a time, to the colour with
+ * the smallest surplus of sources over its target, the first in `needs` on a
+ * tie. With no target anywhere, this evens the colours' sources.
+ */
+function splitByTargets(
+  kept: readonly KeptCard[],
   missing: number,
-  colors: readonly PipColor[]
+  needs: readonly SourceNeed[]
+): readonly BasicLandsToAdd[] {
+  const tally = needs.map(({ colour, target }) => ({
+    name: BASIC_LAND_FOR[colour],
+    surplus: sourcesOf(kept, colour) - target,
+    quantity: 0,
+  }));
+  const [first, ...others] = tally;
+  if (!first) return [];
+  for (let basic = 0; basic < missing; basic += 1) {
+    const neediest = others.reduce(
+      (lowest, entry) => (entry.surplus < lowest.surplus ? entry : lowest),
+      first
+    );
+    neediest.surplus += 1;
+    neediest.quantity += 1;
+  }
+  return tally;
+}
+
+/** Adds `missing` basic lands split by the colours' source targets, onto existing stacks first. */
+function addBasicLands(
+  kept: readonly KeptCard[],
+  missing: number,
+  needs: readonly SourceNeed[]
 ): SizeRepair {
-  const basics =
-    colors.length > 0
-      ? colors.map((color) => BASIC_LAND_FOR[color])
-      : [COLORLESS_BASIC_LAND];
-  const corrections = basics
-    .map((name, index): DeckCorrection => ({
+  const toAddByName =
+    needs.length > 0
+      ? splitByTargets(kept, missing, needs)
+      : [{ name: COLORLESS_BASIC_LAND, quantity: missing }];
+  const corrections = toAddByName
+    .filter(({ quantity }) => quantity > 0)
+    .map(({ name, quantity }): DeckCorrection => ({
       action: "added",
       name,
-      quantity:
-        Math.floor(missing / basics.length) +
-        (index < missing % basics.length ? 1 : 0),
+      quantity,
       reason: "fill_to_size",
-    }))
-    .filter((correction) => correction.quantity > 0);
+    }));
 
   const toAdd = new Map(
     corrections.map(({ name, quantity }) => [name, quantity])
   );
-  const merged = cards.map((card) => {
+  const merged = kept.map(({ card }) => {
     const extra = toAdd.get(card.name);
     if (extra === undefined) return card;
     toAdd.delete(card.name);
@@ -119,18 +170,21 @@ function trimBasicLands(kept: readonly KeptCard[], excess: number): SizeRepair {
  *
  * @param kept - The legal cards of the model's list, in list order
  * @param size - Copies the list must hold: the deck size minus the command zone
- * @param colors - The command zone's colours in WUBRG order; empty when colourless
+ * @param needs - The command zone's colours in WUBRG order with their source targets; empty when colourless
  * @returns The fitted list with each basic land added or trimmed, or why it cannot fit
  */
 export function fitToDeckSize(
   kept: readonly KeptCard[],
   size: number,
-  colors: readonly PipColor[]
+  needs: readonly SourceNeed[]
 ): SizeRepair {
   const total = kept.reduce((sum, { card }) => sum + card.quantity, 0);
   if (total > size) return trimBasicLands(kept, total - size);
-  const cards = kept.map(({ card }) => card);
   return total < size
-    ? addBasicLands(cards, size - total, colors)
-    : { status: "fitted", cards, corrections: [] };
+    ? addBasicLands(kept, size - total, needs)
+    : {
+        status: "fitted",
+        cards: kept.map(({ card }) => card),
+        corrections: [],
+      };
 }
