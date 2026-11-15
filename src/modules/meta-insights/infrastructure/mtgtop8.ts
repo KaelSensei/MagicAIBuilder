@@ -22,7 +22,7 @@
  * @module meta-insights/infrastructure/mtgtop8
  */
 
-import { commanderToSlug } from "@/lib/meta/commander-slug";
+import { commanderToSlug } from "@/lib/community/commander-slug";
 import { spellOutLigatures } from "@/lib/text/transliterate";
 import type { TournamentDeck } from "@/modules/meta-insights/domain/types";
 

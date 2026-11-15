@@ -12,7 +12,7 @@
 import { useTranslations } from "next-intl";
 import { ExternalLink, Users } from "lucide-react";
 import { Link } from "@/i18n/navigation";
-import { commanderToSlug } from "@/lib/meta/commander-slug";
+import { commanderToSlug } from "@/lib/community/commander-slug";
 
 /** The commander the links are for. */
 export interface CommanderMetaLinksProps {

@@ -6,7 +6,7 @@
  * through `underscoreFileStem`, the older rule they shipped with. Both keep
  * an accented letter as its base letter through `text/transliterate`. Not
  * responsible for: the commander slug, whose URL form lowercases and drops
- * punctuation (`lib/meta/commander-slug.ts`), or the extension, which each
+ * punctuation (`lib/community/commander-slug.ts`), or the extension, which each
  * export adds itself.
  *
  * @module text/slug
