@@ -44,7 +44,16 @@ describe("FocusedFeedbackPanel", () => {
   });
 
   it("lets the owner save a focused request", async () => {
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true });
+    // The deck route answers the deck row; the panel reads none of it.
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          id: "deck-1",
+          seekingFeedback: true,
+          feedbackQuestion: "Is the mana base reliable?",
+        })
+      )
+    );
     vi.stubGlobal("fetch", fetchMock);
     render(
       <FocusedFeedbackPanel
