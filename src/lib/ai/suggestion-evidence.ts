@@ -1,3 +1,4 @@
+import { priceUsdOf } from "@/lib/scryfall/price";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 
 export interface SuggestionEvidenceInput {
@@ -33,12 +34,6 @@ function curveImpact(manaValue: number, averageCmc: number): string {
   return `Near the deck average (${averageCmc.toFixed(2)})`;
 }
 
-function parsePrice(price: string | null | undefined): number | null {
-  if (!price) return null;
-  const parsed = Number.parseFloat(price);
-  return Number.isFinite(parsed) ? parsed : null;
-}
-
 export function buildSuggestionEvidence(
   suggestion: SuggestionEvidenceInput,
   card: ScryfallCard | undefined,
@@ -72,7 +67,7 @@ export function buildSuggestionEvidence(
     ),
     commanderLegal:
       commanderLegality === undefined ? null : commanderLegality === "legal",
-    priceUsd: parsePrice(card.prices?.usd),
+    priceUsd: priceUsdOf(card),
     verified: true,
   };
 }
