@@ -102,3 +102,100 @@ export function landCountTarget(inputs: LandCountInputs): LandCountTarget {
     LAND_FORMULA.perCheapRampOrDraw * cheapRampAndDraw;
   return { kind: "known", lands: toHundredths(lands) };
 }
+
+/**
+ * Karsten's 99-card column [3]: for each number of pips of one colour, the
+ * sources needed, indexed by the generic part of the cost (0 for C, CC…, 1 for
+ * 1C, 1CC…). "Consistent" means at least (89 + M)% on the play to hold the
+ * sources by turn M, given M lands, assuming 41 lands and the free mulligan.
+ */
+const SOURCES_BY_PIPS: ReadonlyMap<number, readonly number[]> = new Map([
+  [1, [19, 19, 18, 16, 15, 14]],
+  [2, [30, 28, 26, 23, 22, 20]],
+  [3, [36, 33, 30, 28, 26]],
+  [4, [39, 36]],
+]);
+
+/** One spell's cost, seen from one colour. */
+export interface ColourCost {
+  /** The spell's mana value */
+  readonly manaValue: number;
+  /** Pips of the colour being checked, such as 2 for {1}{G}{G} and green */
+  readonly pips: number;
+}
+
+/**
+ * Why a cost has no source target:
+ * - `not-a-cost`: a count that is negative or not whole, or more pips than
+ *   the mana value holds.
+ * - `pips-not-in-table`: no pip of the colour, or more pips than the column
+ *   publishes (five and up). Nothing is extrapolated.
+ */
+export type SourceTargetGap = "not-a-cost" | "pips-not-in-table";
+
+/** The sources a colour needs to cast one cost on curve. */
+export type SourceTarget =
+  | {
+      readonly kind: "exact";
+      /** The column entry, such as "1CC" */
+      readonly entry: string;
+      readonly sources: number;
+    }
+  | {
+      readonly kind: "nearest-lower";
+      /** The cost that was asked, such as "6CC" */
+      readonly asked: string;
+      /** The entry used instead: same pips, nearest lower mana value */
+      readonly entry: string;
+      readonly sources: number;
+    }
+  | { readonly kind: "outside-table"; readonly reason: SourceTargetGap };
+
+/**
+ * Writes a cost the way the column does: the generic part, then one C per
+ * pip, such as "2CC".
+ *
+ * @param generic - the generic mana in the cost
+ * @param pips - the pips of one colour
+ */
+function costPattern(generic: number, pips: number): string {
+  const coloured = "C".repeat(pips);
+  return generic === 0 ? coloured : `${generic}${coloured}`;
+}
+
+/**
+ * Karsten's 99-card source target for one cost and one colour [3].
+ *
+ * A cost in the column returns its entry. A cost with more generic mana than
+ * the column lists uses the entry with the same pips and the nearest lower
+ * mana value, and says so, as I-58 requirement 3.1 asks. A gold spell's extra
+ * source per colour is the caller's to add.
+ *
+ * @example
+ * sourceTarget({ manaValue: 3, pips: 2 }); // {1}{G}{G}
+ * // → { kind: "exact", entry: "1CC", sources: 28 }
+ *
+ * @param cost - the mana value and the pips of the colour
+ * @returns the sources, or `outside-table` with the reason there is no number
+ */
+export function sourceTarget(cost: ColourCost): SourceTarget {
+  const { manaValue, pips } = cost;
+  if (!isCardCount(manaValue) || !isCardCount(pips) || pips > manaValue) {
+    return { kind: "outside-table", reason: "not-a-cost" };
+  }
+  const column = SOURCES_BY_PIPS.get(pips) ?? [];
+  const generic = manaValue - pips;
+  const listed = Math.min(generic, column.length - 1);
+  const sources = column[listed];
+  if (sources === undefined) {
+    return { kind: "outside-table", reason: "pips-not-in-table" };
+  }
+  const entry = costPattern(listed, pips);
+  if (listed === generic) return { kind: "exact", entry, sources };
+  return {
+    kind: "nearest-lower",
+    asked: costPattern(generic, pips),
+    entry,
+    sources,
+  };
+}
