@@ -55,7 +55,11 @@ describe("DeckReportButton", () => {
   });
 
   it("submits the selected reason and confirms success", async () => {
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true });
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(
+        new Response(JSON.stringify({ status: "pending" }), { status: 201 })
+      );
     vi.stubGlobal("fetch", fetchMock);
     renderWithIntl(<DeckReportButton deckId="deck-1" isSignedIn isOwner={false} />);
 
@@ -71,7 +75,14 @@ describe("DeckReportButton", () => {
   });
 
   it("keeps the dialog open when submission fails", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false }));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ error: "Failed to submit report" }), {
+          status: 500,
+        })
+      )
+    );
     renderWithIntl(<DeckReportButton deckId="deck-1" isSignedIn isOwner={false} />);
     fireEvent.click(screen.getByRole("button", { name: /report deck/i }));
     fireEvent.click(screen.getByRole("button", { name: /submit report/i }));
