@@ -11,7 +11,7 @@
  * will fix.
  */
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { PublicDeckPrimer } from "./PublicDeckPrimer";
 
 /** An author's link to another site: no opener, no referrer, and not endorsed for search. */
@@ -206,5 +206,26 @@ describe("PublicDeckPrimer blocks (characterization)", () => {
     renderPrimer("## Plan\n\nWin.");
 
     expect(screen.queryByRole("navigation")).toBeNull();
+  });
+
+  it("renders repeated list items and repeated link labels each once, without a React key warning", () => {
+    const consoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
+
+    try {
+      renderPrimer("- Ramp\n- Ramp\n- [guide](/a) or [guide](/b)");
+      expect(consoleError).not.toHaveBeenCalled();
+    } finally {
+      consoleError.mockRestore();
+    }
+    expect(
+      screen.getAllByRole("listitem").map((item) => item.textContent)
+    ).toEqual(["Ramp", "Ramp", "guide or guide"]);
+    expect(
+      screen
+        .getAllByRole("link", { name: "guide" })
+        .map((link) => link.getAttribute("href"))
+    ).toEqual(["/a", "/b"]);
   });
 });

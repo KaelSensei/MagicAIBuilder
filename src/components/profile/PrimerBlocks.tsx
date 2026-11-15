@@ -12,9 +12,11 @@
  * @module profile/PrimerBlocks
  */
 import type { ReactNode } from "react";
-import type {
-  PrimerBlock,
-  PrimerInline,
+import {
+  keyPrimerSiblings,
+  primerInlineText,
+  type PrimerBlock,
+  type PrimerInline,
 } from "@/lib/community/primer-markdown";
 import type { UserLink } from "@/lib/community/user-link";
 
@@ -75,13 +77,18 @@ function PrimerInlines({
 }: {
   readonly content: readonly PrimerInline[];
 }): ReactNode {
-  return content.map((node, index) =>
+  return keyPrimerSiblings(content, inlineContent).map(({ key, node }) =>
     node.kind === "text" ? (
       node.text
     ) : (
-      <PrimerLink key={`link-${index}`} label={node.label} link={node.link} />
+      <PrimerLink key={key} label={node.label} link={node.link} />
     )
   );
+}
+
+/** What one inline node says, for its sibling key. */
+function inlineContent(node: PrimerInline): string {
+  return primerInlineText([node]);
 }
 
 /** One block of the primer as its element: `h2`/`h3`, `ol`/`ul` with its items, or `p`. */
@@ -107,11 +114,13 @@ export function PrimerBlockView({
         <List
           className={`my-2 space-y-1 pl-5 text-sm text-[var(--text-secondary)] ${block.ordered ? "list-decimal" : "list-disc"}`}
         >
-          {block.items.map((item, index) => (
-            <li key={index}>
-              <PrimerInlines content={item} />
-            </li>
-          ))}
+          {keyPrimerSiblings(block.items, primerInlineText).map(
+            ({ key, node }) => (
+              <li key={key}>
+                <PrimerInlines content={node} />
+              </li>
+            )
+          )}
         </List>
       );
     }
