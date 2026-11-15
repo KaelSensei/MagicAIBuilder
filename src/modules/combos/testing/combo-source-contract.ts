@@ -141,10 +141,11 @@ export interface ComboSourceContractCase {
  * test names stay the same across the move to a case table.
  */
 function describeFailure(failure: DeckCombosFailure): string {
-  const fields = Object.entries(failure).map(
-    ([key, value]) =>
-      `${key}: ${typeof value === "string" ? `'${value}'` : String(value)}`
-  );
+  const fields = Object.entries(failure).map(([key, value]) => {
+    // `%o` quotes strings with single quotes and prints numbers and null bare.
+    const printed = typeof value === "string" ? `'${value}'` : String(value);
+    return `${key}: ${printed}`;
+  });
   return `{ ${fields.join(", ")} }`;
 }
 
