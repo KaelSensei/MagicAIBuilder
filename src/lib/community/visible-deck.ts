@@ -9,6 +9,9 @@
  * `decideDeckView` serves `findDeckForViewer` (`@/lib/deck/deck-for-viewer`),
  * which reads a different shape for the owner and for a reader.
  *
+ * `prismaDeckVisibilityReader` serves the vote and rating use cases, which
+ * read the same facts and decide for themselves (`canActOnDeck`).
+ *
  * Not responsible for: a deck opened through its share link, which
  * `@/lib/deck/shared-deck-lookup` reads by token.
  *
@@ -17,10 +20,12 @@
 import "server-only";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
+import type { DeckVisibilityReader } from "@/lib/community/deck-interaction-ports";
 import {
   canViewDeck,
   DECK_ACCESS_BY_ID,
   type DeckViewDecision,
+  type DeckVisibilityFacts,
 } from "@/lib/community/deck-visibility-policy";
 
 /** The columns the visibility rule reads, and the id the callers act on. */
@@ -44,21 +49,33 @@ function readDeckVisibility(deckId: string): Promise<VisibleDeck | null> {
   });
 }
 
+/** The row's columns under the names the policies read. */
+function toVisibilityFacts(deck: VisibleDeck): DeckVisibilityFacts {
+  return {
+    ownerId: deck.userId,
+    isPublic: deck.isPublic,
+    shareEnabled: deck.shareEnabled,
+  };
+}
+
 /** The policy's decision for a deck opened by id. */
 function decideById(
   deck: VisibleDeck,
   viewerId: string | null
 ): DeckViewDecision {
-  return canViewDeck(
-    {
-      ownerId: deck.userId,
-      isPublic: deck.isPublic,
-      shareEnabled: deck.shareEnabled,
-    },
-    viewerId,
-    DECK_ACCESS_BY_ID
-  );
+  return canViewDeck(toVisibilityFacts(deck), viewerId, DECK_ACCESS_BY_ID);
 }
+
+/**
+ * The `DeckVisibilityReader` port over the shared Prisma client: the facts
+ * only, for use cases that take the decision themselves.
+ */
+export const prismaDeckVisibilityReader: DeckVisibilityReader = {
+  async readVisibility(deckId) {
+    const deck = await readDeckVisibility(deckId);
+    return deck ? toVisibilityFacts(deck) : null;
+  },
+};
 
 /**
  * Loads a deck and confirms the viewer may see it.
