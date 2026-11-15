@@ -61,7 +61,10 @@ function cacheKey(
  * The stand-in for `unstable_cache`: the same read, answered from the `Map`
  * when an entry exists for the key, otherwise run and kept.
  */
-export const unstable_cache: UnstableCache = (read, keyParts = [], options) => {
+export const unstable_cache: UnstableCache = (read, givenKeyParts, options) => {
+  // Next's own default when the caller omits them. A default parameter would
+  // sit before `options`, which a caller cannot then skip.
+  const keyParts = givenKeyParts ?? [];
   state.wraps.push({ keyParts, options });
   return new Proxy(read, {
     apply: async (target, thisArg, args: unknown[]) => {
