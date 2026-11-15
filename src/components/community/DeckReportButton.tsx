@@ -1,10 +1,26 @@
 "use client";
-
+/**
+ * The "report deck" control of a public deck page: a native modal dialog
+ * where the viewer picks one reason from the shared catalog and sends the
+ * report.
+ *
+ * Community context (UI). The report goes through the community client; a
+ * sent report replaces the control with a confirmation, a rejection keeps the
+ * dialog open with one failure line. The dialog wraps backward Tab inside
+ * itself and gives focus back to the trigger when it closes. Hidden from
+ * visitors and from the deck's owner. Not responsible for: the reasons
+ * themselves (`REPORT_REASONS`, `lib/community/community-contracts.ts`) and
+ * the request wire format (`lib/community/community-client.ts`).
+ */
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { Flag, X } from "lucide-react";
 import { useTranslations } from "next-intl";
-
-type ReportReason = "spam" | "harassment" | "illegal_content" | "other";
+import { reportDeck } from "@/lib/community/community-client";
+import {
+  isReportReason,
+  REPORT_REASONS,
+  type ReportReason,
+} from "@/lib/community/community-contracts";
 
 interface DeckReportButtonProps {
   readonly deckId: string;
@@ -12,6 +28,7 @@ interface DeckReportButtonProps {
   readonly isOwner: boolean;
 }
 
+/** Lets a signed-in viewer report someone else's public deck to a moderator. */
 export function DeckReportButton({ deckId, isSignedIn, isOwner }: DeckReportButtonProps) {
   const t = useTranslations("deck.report");
   const [open, setOpen] = useState(false);
@@ -47,16 +64,17 @@ export function DeckReportButton({ deckId, isSignedIn, isOwner }: DeckReportButt
   const submit = async () => {
     setStatus("submitting");
     try {
-      const response = await fetch(`/api/community/decks/${deckId}/reports`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reason }),
-      });
-      setStatus(response.ok ? "sent" : "error");
-      if (response.ok) setOpen(false);
+      await reportDeck(deckId, reason);
+      setStatus("sent");
+      setOpen(false);
     } catch {
       setStatus("error");
     }
+  };
+
+  /** The `<select>` only offers catalog reasons; anything else is ignored. */
+  const chooseReason = (value: string) => {
+    if (isReportReason(value)) setReason(value);
   };
 
   if (status === "sent") {
@@ -84,8 +102,8 @@ export function DeckReportButton({ deckId, isSignedIn, isOwner }: DeckReportButt
             </div>
             <label className="mb-4 block text-sm text-[var(--text-secondary)]">
               {t("reason")}
-              <select value={reason} onChange={(event) => setReason(event.target.value as ReportReason)} className="mt-2 w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-[var(--text-primary)]">
-                {(["spam", "harassment", "illegal_content", "other"] as const).map((value) => (
+              <select value={reason} onChange={(event) => chooseReason(event.target.value)} className="mt-2 w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-[var(--text-primary)]">
+                {REPORT_REASONS.map((value) => (
                   <option key={value} value={value}>{t(`reasons.${value}`)}</option>
                 ))}
               </select>
