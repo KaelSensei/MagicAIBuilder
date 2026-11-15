@@ -1,8 +1,18 @@
-import { screen, waitFor } from "@testing-library/react";
+import { act, cleanup, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { http, HttpResponse } from "msw";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { useCollectionStore } from "@/lib/collection/store";
+import type { AddToCollectionInput } from "@/lib/collection/types";
+import type { ScryfallCard } from "@/lib/scryfall/types";
+import { aScryfallCard } from "@/test/builders/scryfall";
+import { setupMsw } from "@/test/msw";
 import { renderWithIntl, type TestLocale } from "@/test/render-with-intl";
 import { AddToCollectionDialog } from "./AddToCollectionDialog";
+
+// The dialog searches through the shared Scryfall cache the browser reads; each
+// add-flow test serves its one card from there, so nothing reaches Scryfall.
+const server = setupMsw();
 
 async function openDialog(locale: TestLocale = "en") {
   const user = userEvent.setup();
@@ -66,5 +76,80 @@ describe("AddToCollectionDialog", () => {
     expect(
       screen.getByRole("textbox", { name: "Search for a card…" })
     ).toHaveFocus();
+  });
+});
+
+describe("AddToCollectionDialog add flow", () => {
+  // The store's real action posts to /api/collection. The dialog's own job ends
+  // at the input it hands over, so that handover is what these tests observe.
+  // The promise stays pending until the test settles it inside `act`, as the
+  // store would once its POST answered.
+  const realAddToCollection = useCollectionStore.getState().addToCollection;
+  let settleAdd: () => void = () => {};
+  const addToCollection = vi.fn<(input: AddToCollectionInput) => Promise<void>>(
+    () =>
+      new Promise<void>((resolve) => {
+        settleAdd = resolve;
+      })
+  );
+
+  afterEach(() => {
+    addToCollection.mockClear();
+    // Unmount before the store changes, or the subscription re-renders the
+    // dialog outside act.
+    cleanup();
+    useCollectionStore.setState({ addToCollection: realAddToCollection });
+  });
+
+  function serveSearchHit(card: ScryfallCard) {
+    server.use(
+      http.get("/api/cache/search", () =>
+        HttpResponse.json({
+          hit: true,
+          data: {
+            object: "list",
+            total_cards: 1,
+            has_more: false,
+            data: [card],
+          },
+        })
+      )
+    );
+  }
+
+  /** Searches, picks the one result, submits; returns the result row as it was listed. */
+  async function addThroughTheDialog(usd: string) {
+    useCollectionStore.setState({ addToCollection, isSyncing: false });
+    serveSearchHit(aScryfallCard({ name: "Lightning Bolt", prices: { usd } }));
+    const { user } = await openDialog();
+
+    await user.type(
+      screen.getByRole("textbox", { name: "Search for a card…" }),
+      "bolt"
+    );
+    const row = await screen.findByRole("button", { name: /Lightning Bolt/ });
+    await user.click(row);
+    await user.click(screen.getByRole("button", { name: "Add to Collection" }));
+    await act(async () => settleAdd());
+    expect(screen.getByRole("button", { name: /Added!/ })).toBeInTheDocument();
+    return row;
+  }
+
+  it("lists the result with its USD price and adds the card with that price as a number", async () => {
+    const row = await addThroughTheDialog("0.25");
+
+    expect(row).toHaveTextContent("$0.25");
+    expect(addToCollection).toHaveBeenCalledWith(
+      expect.objectContaining({ name: "Lightning Bolt", price: 0.25 })
+    );
+  });
+
+  it("lists no price and adds the card without one, not NaN, when Scryfall's price string is not a number", async () => {
+    const row = await addThroughTheDialog("N/A");
+
+    expect(row).not.toHaveTextContent("NaN");
+    expect(addToCollection).toHaveBeenCalledWith(
+      expect.objectContaining({ price: null })
+    );
   });
 });

@@ -30,6 +30,7 @@ import { CardImage } from "@/components/card/CardImage";
 import { PrintingSelectorModal } from "@/components/card/PrintingSelectorModal";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import { getCardImageUri } from "@/lib/scryfall/images";
+import { priceUsdOf } from "@/lib/scryfall/price";
 import { CollectionCardTooltip } from "@/components/collection/CollectionCardTooltip";
 import { CollectionQuantityControl } from "@/components/collection/CollectionQuantityControl";
 import { AcquisitionPlanPanel } from "@/components/collection/AcquisitionPlanPanel";
@@ -133,9 +134,7 @@ export function CollectionPageClient() {
         scryfallId: printing.id,
         name: printing.name,
         imageUri: getCardImageUri(printing, "grid"),
-        price: printing.prices?.usd
-          ? Number.parseFloat(printing.prices.usd)
-          : null,
+        price: priceUsdOf(printing),
       });
       setPrintingsCard(null);
       setPrintingsTarget(null);
