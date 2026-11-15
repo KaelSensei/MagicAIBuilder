@@ -1,8 +1,17 @@
 "use client";
-// Follow / unfollow toggle with optimistic state, shown on public profiles.
+/**
+ * Follow / unfollow toggle with optimistic state, shown on public profiles.
+ *
+ * Community context (UI). The toggle flips at once, sends the write through
+ * the community client, then adopts the state and the follower count the
+ * route answers; any rejection rolls the flip back and shows one failure
+ * line. Not responsible for: the request wire format
+ * (`lib/community/community-client.ts`).
+ */
 import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { UserPlus, UserCheck } from "lucide-react";
+import { followUser, unfollowUser } from "@/lib/community/community-client";
 
 interface FollowButtonProps {
   readonly username: string;
@@ -33,13 +42,9 @@ export function FollowButton({
     setFailed(false);
 
     try {
-      const res = await fetch(
-        `/api/community/users/${encodeURIComponent(username)}/follow`,
-        { method: nextFollowing ? "POST" : "DELETE" }
-      );
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-      const data: { following: boolean; followerCount: number } = await res.json();
+      const data = nextFollowing
+        ? await followUser(username)
+        : await unfollowUser(username);
       setFollowing(data.following);
       setFollowerCount(data.followerCount);
     } catch {
