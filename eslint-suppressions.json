@@ -620,9 +620,6 @@
     }
   },
   "src/components/community/VoteButtons.tsx": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    },
     "max-lines-per-function": {
       "count": 1
     }
