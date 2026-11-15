@@ -611,6 +611,7 @@ Nothing in the roadmap entry was dropped. The section below is the initiative te
 - [ ] After I-30's decision: a paid entitlement for slice 12 (slice 14).
 - [ ] A filter "can include card X": colour identity contains X's, X is legal, and X's Game Changer status fits the chosen bracket. Pokémon TCG Pocket builds theme decks around a "highlight card" ([Serebii](https://serebii.net/tcgpocket/themedecks.shtml), seen 2026-11-10). Added 2026-11-11.
 - [ ] Added 2026-11-12 (thirteenth pass): slice 4's complexity formula becomes one `cardComplexity(card)` in the shared deck-analysis module, read here for the commander and by [I-99](i99-a-pilot-sheet-and-how-heavy-this-deck-is-to-pilot.md) slice 8 for every card of a deck; the formula, its factors and its owner-labelled fixture stay this initiative's.
+- [ ] Added 2026-11-15 (fifteenth pass): typal stays a play style here. [I-102](i102-a-theme-you-can-measure.md) reads a creature type only as one theme handle among others and defines no second typal style; the finder may later filter commanders by an I-102 handle (an artist, a plane) as one more filter with its evidence line.
 
 ### Engineering enablers
 
