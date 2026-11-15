@@ -220,16 +220,6 @@
       "count": 1
     }
   },
-  "src/app/api/community/decks/[id]/comments/[commentId]/route.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    }
-  },
-  "src/app/api/community/decks/[id]/comments/route.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 2
-    }
-  },
   "src/app/api/community/decks/[id]/save/route.test.ts": {
     "no-restricted-syntax": {
       "count": 1
@@ -916,19 +906,6 @@
       "count": 1
     }
   },
-  "src/modules/meta-insights/ui/MetaPanel.test.tsx": {
-    "no-restricted-syntax": {
-      "count": 3
-    }
-  },
-  "src/modules/meta-insights/ui/MetaTrendsView.test.tsx": {
-    "no-restricted-syntax": {
-      "count": 1
-    },
-    "vitest/prefer-import-in-mock": {
-      "count": 1
-    }
-  },
   "src/components/deck/MoxfieldProfileImport.tsx": {
     "max-lines": {
       "count": 1
@@ -1144,19 +1121,6 @@
       "count": 1
     }
   },
-  "src/modules/rules-reference/ui/ComprehensiveRulesView.test.tsx": {
-    "no-restricted-syntax": {
-      "count": 1
-    },
-    "vitest/prefer-import-in-mock": {
-      "count": 1
-    }
-  },
-  "src/modules/rules-reference/ui/ComprehensiveRulesView.tsx": {
-    "max-lines-per-function": {
-      "count": 1
-    }
-  },
   "src/components/search/SearchBar.tsx": {
     "max-lines-per-function": {
       "count": 1
@@ -1287,11 +1251,6 @@
   },
   "src/hooks/useLocalizedDeckIndex.test.tsx": {
     "no-restricted-syntax": {
-      "count": 1
-    }
-  },
-  "src/modules/meta-insights/client/useMetaShifts.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
       "count": 1
     }
   },
@@ -1631,11 +1590,6 @@
       "count": 1
     }
   },
-  "src/modules/meta-insights/infrastructure/snapshots.test.ts": {
-    "no-restricted-syntax": {
-      "count": 1
-    }
-  },
   "src/lib/playtest/engine/action-log.ts": {
     "@typescript-eslint/max-params": {
       "count": 1
@@ -1733,6 +1687,42 @@
     "complexity": {
       "count": 1
     },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/modules/meta-insights/client/useMetaShifts.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
+  "src/modules/meta-insights/infrastructure/snapshots.test.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "src/modules/meta-insights/ui/MetaPanel.test.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "src/modules/meta-insights/ui/MetaTrendsView.test.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    },
+    "vitest/prefer-import-in-mock": {
+      "count": 1
+    }
+  },
+  "src/modules/rules-reference/ui/ComprehensiveRulesView.test.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    },
+    "vitest/prefer-import-in-mock": {
+      "count": 1
+    }
+  },
+  "src/modules/rules-reference/ui/ComprehensiveRulesView.tsx": {
     "max-lines-per-function": {
       "count": 1
     }
