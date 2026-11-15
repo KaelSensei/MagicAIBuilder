@@ -329,6 +329,15 @@ export const REPORT_REASONS = [
 /** One of {@link REPORT_REASONS}. */
 export type ReportReason = (typeof REPORT_REASONS)[number];
 
+/**
+ * Whether a value is one of {@link REPORT_REASONS}. The report dialog reads
+ * its `<select>` through this, so a reason outside the catalog never reaches
+ * the route.
+ */
+export function isReportReason(value: unknown): value is ReportReason {
+  return REPORT_REASONS.some((reason) => reason === value);
+}
+
 /** Body of `POST /api/community/decks/[id]/reports`. */
 export interface ReportRequest {
   readonly reason: ReportReason;

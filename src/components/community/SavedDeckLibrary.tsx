@@ -1,12 +1,27 @@
 "use client";
-
+/**
+ * The viewer's saved-deck library: their folders, each with its saved decks,
+ * the unfiled saved decks, and the folder tools (create, rename, delete, move
+ * a deck).
+ *
+ * Community context (UI). Every write goes through the community client and
+ * is followed by a reload of the whole library, so the page shows what the
+ * server holds; any rejection shows one failure banner with a retry. Not
+ * responsible for: the request wire format
+ * (`lib/community/community-client.ts`) and the reading of one library entry
+ * (`lib/community/deck-folders.ts`).
+ */
 import { useCallback, useEffect, useState } from "react";
 import { Folder, FolderPlus, Loader2, Pencil, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import {
-  readSavedDeckFolders,
-  type SavedDeckFoldersResponse,
-} from "@/lib/community/deck-folders";
+  createSavedDeckFolder,
+  deleteSavedDeckFolder,
+  fetchSavedDeckLibrary,
+  renameSavedDeckFolder,
+  savePublicDeck,
+} from "@/lib/community/community-client";
+import type { SavedDeckFoldersResponse } from "@/lib/community/deck-folders";
 import { SavedDeckCard } from "./SavedDeckCard";
 
 const EMPTY: SavedDeckFoldersResponse = { folders: [], unfiled: [] };
@@ -21,9 +36,7 @@ export function SavedDeckLibrary() {
   const load = useCallback(async () => {
     setState("loading");
     try {
-      const response = await fetch("/api/community/deck-folders");
-      if (!response.ok) return setState("error");
-      setData(readSavedDeckFolders(await response.json()));
+      setData(await fetchSavedDeckLibrary());
       setState("ready");
     } catch {
       setState("error");
@@ -34,51 +47,44 @@ export function SavedDeckLibrary() {
     void load();
   }, [load]);
 
+  /** Runs one library write, then reloads; a rejection shows the failure banner. */
+  const writeThenReload = useCallback(
+    async (write: () => Promise<unknown>, afterWrite?: () => void) => {
+      try {
+        await write();
+      } catch {
+        return setState("error");
+      }
+      afterWrite?.();
+      await load();
+    },
+    [load]
+  );
+
   const createFolder = async () => {
     const trimmed = name.trim();
     if (!trimmed) return;
-    const response = await fetch("/api/community/deck-folders", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: trimmed }),
-    });
-    if (!response.ok) return setState("error");
-    setName("");
-    await load();
+    await writeThenReload(
+      () => createSavedDeckFolder(trimmed),
+      () => setName("")
+    );
   };
 
   const renameFolder = async (id: string, currentName: string) => {
     const nextName = window.prompt(t("renamePrompt"), currentName)?.trim();
     if (!nextName || nextName === currentName) return;
-    const response = await fetch(`/api/community/deck-folders/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: nextName }),
-    });
-    if (response.ok) await load();
-    else setState("error");
+    await writeThenReload(() => renameSavedDeckFolder(id, nextName));
   };
 
   const deleteFolder = async (id: string) => {
     if (!window.confirm(t("deleteConfirm"))) return;
-    const response = await fetch(`/api/community/deck-folders/${id}`, {
-      method: "DELETE",
-    });
-    if (response.ok) await load();
-    else setState("error");
+    await writeThenReload(() => deleteSavedDeckFolder(id));
   };
 
   const moveDeck = useCallback(
-    async (deckId: string, folderId: string) => {
-      const response = await fetch(`/api/community/decks/${deckId}/save`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ folderId: folderId || null }),
-      });
-      if (response.ok) await load();
-      else setState("error");
-    },
-    [load]
+    (deckId: string, folderId: string) =>
+      writeThenReload(() => savePublicDeck(deckId, folderId || null)),
+    [writeThenReload]
   );
 
   if (state === "loading")

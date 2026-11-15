@@ -32,7 +32,11 @@ describe("SavedDeckLibrary", () => {
           })
         )
       )
-      .mockResolvedValueOnce(new Response(JSON.stringify({ saved: true })))
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ saved: true, folderId: "folder-1" }), {
+          status: 201,
+        })
+      )
       .mockResolvedValueOnce(
         new Response(
           JSON.stringify({
