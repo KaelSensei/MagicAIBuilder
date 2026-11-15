@@ -22,7 +22,7 @@
  * @module meta-insights/client/useMetaAnalysis
  */
 import { useCallback, useRef, useState } from "react";
-import { commanderToSlug } from "@/lib/meta/commander-slug";
+import { commanderToSlug } from "@/lib/community/commander-slug";
 import {
   isMetaApiResponse,
   metaErrorMessage,

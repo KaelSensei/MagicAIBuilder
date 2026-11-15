@@ -8,7 +8,7 @@
  * Edge middleware. The fetchers and the snapshot store are in `server.ts`; the
  * panel, the trends view and the provenance badges are imported by path under
  * `ui/`. The commander slug is not published here: it belongs to the community
- * context and stays at `@/lib/meta/commander-slug` until COM-02 moves it.
+ * context, at `@/lib/community/commander-slug` (COM-02).
  *
  * @module meta-insights
  */
