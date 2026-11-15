@@ -8,6 +8,7 @@ import { CARD_CONDITIONS, type CardCondition } from "@/lib/collection/types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import { searchCards } from "@/lib/scryfall/client";
 import { getCardImageUri } from "@/lib/scryfall/images";
+import { priceUsdOf } from "@/lib/scryfall/price";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Modal, ModalTitle } from "@/components/ui/Modal";
@@ -49,6 +50,14 @@ export function AddToCollectionDialog() {
     }, 400);
   }, []);
 
+  /** The price column of a result row; empty when Scryfall has no usable price. */
+  const listedPrice = (card: ScryfallCard): string => {
+    const usd = priceUsdOf(card);
+    return usd === null
+      ? ""
+      : format.number(usd, { style: "currency", currency: "USD" });
+  };
+
   const handleSelect = (card: ScryfallCard) => {
     setSelected(card);
     setResults([]);
@@ -63,9 +72,7 @@ export function AddToCollectionDialog() {
       quantity,
       foil,
       condition,
-      price: selected.prices?.usd
-        ? Number.parseFloat(selected.prices.usd)
-        : null,
+      price: priceUsdOf(selected),
       imageUri: getCardImageUri(selected, "grid"),
     });
     setAdded(true);
@@ -138,12 +145,7 @@ export function AddToCollectionDialog() {
                   {card.name}
                 </span>
                 <span className="text-xs text-[var(--text-secondary)] shrink-0">
-                  {card.prices?.usd
-                    ? format.number(Number.parseFloat(card.prices.usd), {
-                        style: "currency",
-                        currency: "USD",
-                      })
-                    : ""}
+                  {listedPrice(card)}
                 </span>
               </button>
             ))}

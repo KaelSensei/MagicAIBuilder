@@ -5,7 +5,8 @@
  * Card catalog context, infrastructure side (ADR 0004). It parses with
  * `scryfallCardSchema` (`schema.ts`), then renames into the product's words and
  * derives what Scryfall only gives raw: image URLs as WebP (through
- * `getListedImageUri`, the one home of that rule) and the price as a number.
+ * `getListedImageUri`, the one home of that rule) and the price as a number
+ * (through `priceUsdOf`, `price.ts`).
  * No code calls it yet; consumers move over one at a time
  * (docs/architecture/target-structure.md, step 8).
  *
@@ -20,6 +21,7 @@ import {
   type FormatLegality,
 } from "./catalog-card";
 import { getListedImageUri } from "./images";
+import { priceUsdOf } from "./price";
 import {
   scryfallCardSchema,
   type ParsedImageUris,
@@ -67,7 +69,7 @@ function toCard(card: ParsedScryfallCard): CatalogCard {
     toughness: card.toughness,
     keywords: card.keywords,
     legalities: knownLegalities(card.legalities),
-    priceUsd: toUsd(card.prices?.usd ?? null),
+    priceUsd: priceUsdOf(card),
     setCode: card.set,
     setName: card.set_name,
     images: toImages(card.image_uris),
@@ -128,13 +130,6 @@ function knownLegalities(
     if (isFormatLegality(status)) known[format] = status;
   }
   return known;
-}
-
-/** Scryfall sends prices as decimal strings, such as "0.28". */
-function toUsd(raw: string | null): number | null {
-  if (raw === null) return null;
-  const usd = Number.parseFloat(raw);
-  return Number.isFinite(usd) ? usd : null;
 }
 
 function describeIssues(error: z.ZodError): string {

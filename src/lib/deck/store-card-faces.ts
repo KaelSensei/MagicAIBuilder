@@ -10,6 +10,7 @@ import {
   getListedImageUri,
   buildScryfallImageUrl,
 } from "@/lib/scryfall/images";
+import { priceUsdOf } from "@/lib/scryfall/price";
 
 /**
  * Maps one Scryfall face onto the deck face shape.
@@ -69,17 +70,6 @@ function printedStat(
 }
 
 /**
- * Parses a Scryfall USD price string.
- *
- * @param usd - price string from Scryfall
- * @returns the number, or null when Scryfall has no price
- */
-function usdPrice(usd: string | null | undefined): number | null {
-  if (!usd) return null;
-  return Number.parseFloat(usd);
-}
-
-/**
  * The columns of a deck row that its printing decides: which printing, its
  * grid and art images, and its USD price. A printing swap writes the four in
  * one write, so no total read from the row keeps the previous printing's
@@ -91,8 +81,9 @@ export type PrintingColumns = Readonly<
 
 /**
  * The printing columns of a row swapped to `printing`. The price follows the
- * rule an added card follows (`makeDeckCard`): Scryfall's USD price, or
- * `null` when Scryfall has none, never 0 and never the previous price.
+ * rule an added card follows (`makeDeckCard`): Scryfall's USD price read
+ * through `priceUsdOf`, or `null` when Scryfall has none or sends a string
+ * that is not a price, never 0, `NaN` or the previous price.
  *
  * @param printing - the printing the player picked
  * @returns the row's new printing columns
@@ -102,7 +93,7 @@ export function printingColumns(printing: ScryfallCard): PrintingColumns {
     scryfallId: printing.id,
     imageUri: getCardImageUri(printing, "grid"),
     artCropUri: getCardImageUri(printing, "art"),
-    price: usdPrice(printing.prices?.usd),
+    price: priceUsdOf(printing),
   };
 }
 
@@ -126,7 +117,7 @@ export function makeDeckCard(scryfallCard: ScryfallCard): DeckCard {
     colorIdentity: scryfallCard.color_identity,
     isGameChanger: false,
     isBanned: false,
-    price: usdPrice(scryfallCard.prices?.usd),
+    price: priceUsdOf(scryfallCard),
     imageUri: cardFaces?.[0].imageUri ?? getCardImageUri(scryfallCard, "grid"),
     artCropUri:
       cardFaces?.[0].artCropUri ?? getCardImageUri(scryfallCard, "art"),

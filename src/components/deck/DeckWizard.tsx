@@ -37,6 +37,7 @@ import { useDeckStore } from "@/lib/deck/store";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import { categorizeCard } from "@/lib/deck/categories";
 import { getCardImageUri, getListedImageUri } from "@/lib/scryfall/images";
+import { priceUsdOf } from "@/lib/scryfall/price";
 import type { BracketLevel, CardCategory, DeckCard } from "@/lib/deck/types";
 import { createDeckPlan } from "@/lib/ai/deck-plan";
 import type { BuildRequest, DeckCorrection } from "@/app/api/ai/build/types";
@@ -744,7 +745,7 @@ async function importCardsInBatches(
           colorIdentity: sc.color_identity,
           isGameChanger: false,
           isBanned: false,
-          price: sc.prices?.usd ? Number.parseFloat(sc.prices.usd) : null,
+          price: priceUsdOf(sc),
           imageUri: getCardImageUri(sc, "grid"),
           artCropUri: getCardImageUri(sc, "art"),
           category: isDeckCategory(entry?.category)

@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { makeDeckCard, rebuildCardFaces } from "./store-card-faces";
+import {
+  makeDeckCard,
+  printingColumns,
+  rebuildCardFaces,
+} from "./store-card-faces";
 import type { ScryfallCard, ScryfallImageUris } from "@/lib/scryfall/types";
 
 const CDN = "https://cards.scryfall.io";
@@ -83,6 +87,45 @@ describe("makeDeckCard images", () => {
     );
     expect(card.cardFaces?.[1].artCropUri).toBe(
       `${CDN}/art/back/6/9/${DELVER_ID}.webp?1783908173`
+    );
+  });
+});
+
+describe("makeDeckCard price", () => {
+  it("keeps Scryfall's USD price as the number the deck totals sum", () => {
+    const card = makeDeckCard({ ...solRing, prices: { usd: "1.25" } });
+
+    expect(card.price).toBe(1.25);
+  });
+
+  it("stores no price when Scryfall has none for the printing", () => {
+    expect(
+      makeDeckCard({ ...solRing, prices: { usd: null } }).price
+    ).toBeNull();
+    expect(makeDeckCard(solRing).price).toBeNull();
+  });
+
+  // A deck card's price is summed into the deck total and persisted with the
+  // deck, so a string that is not a price must become "no price", not NaN.
+  it("stores no price, not NaN, when Scryfall's price string is not a number", () => {
+    const card = makeDeckCard({ ...solRing, prices: { usd: "N/A" } });
+
+    expect(card.price).toBeNull();
+  });
+});
+
+describe("printingColumns price", () => {
+  // A printing swap writes the row's price with the new printing (I-57), and
+  // the row is summed into the deck total, so it follows makeDeckCard's rule.
+  it("stores no price, not NaN, when the new printing's price string is not a number", () => {
+    const columns = printingColumns({ ...solRing, prices: { usd: "N/A" } });
+
+    expect(columns.price).toBeNull();
+  });
+
+  it("keeps the new printing's USD price as a number", () => {
+    expect(printingColumns({ ...solRing, prices: { usd: "1.25" } }).price).toBe(
+      1.25
     );
   });
 });
