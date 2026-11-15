@@ -6,9 +6,13 @@
  * - **Production server**: one JSON line per event via Pino — `level`, `time`
  *   (ISO), `msg`, `context` (route or function), `meta`, and `err` with a
  *   serialised stack. This is what makes Vercel logs searchable after the
- *   fact; a console `printf` line is not.
- * - **Development and the browser**: the readable `[context] message` console
- *   form. JSON lines in a devtools console or a dev terminal are noise.
+ *   fact; a console `printf` line is not. The Pino sink lives in
+ *   `logger-json-sink.ts` and is loaded only on the Node runtime (see
+ *   `jsonSink`), so this module can be imported from a `"use client"`
+ *   component without shipping pino to the browser.
+ * - **Development, the browser and the edge runtime**: the readable
+ *   `[context] message` console form. JSON lines in a devtools console or a
+ *   dev terminal are noise.
  *
  * `logger.error` additionally forwards to Sentry in both modes. Routing every
  * error through this one function is what makes server-side failures visible:
@@ -18,55 +22,47 @@
  * @module logger
  */
 
-import pino from "pino";
 import { captureException } from "@sentry/nextjs";
+import { toLogPayload, type LogSink } from "./logger-sink";
+
+export { toLogPayload, type LogPayload } from "./logger-sink";
 
 /* eslint-disable no-console -- logger is the ONE place allowed to touch console */
 
-/** Everything that rides alongside `level` / `time` / `msg` on a JSON line. */
-export interface LogPayload {
-  readonly context?: string;
-  readonly meta?: readonly unknown[];
-  readonly err?: Error;
-}
+/** The JSON sink, created on the first structured line and kept for the process. */
+let cachedJsonSink: LogSink | undefined;
 
 /**
- * Builds the structured payload for one log event.
+ * The structured sink of this runtime, or `undefined` where console lines are
+ * wanted.
  *
- * Keys with nothing to say are omitted rather than emitted empty, and an
- * `Error` promoted to `err` (the key Pino's serialiser reads stacks from) is
- * removed from `meta` so it is not serialised twice.
+ * Only the Node runtime of a production build gets a sink. The condition is
+ * written on `process.env.NEXT_RUNTIME`, which Next.js inlines per compile
+ * target (`"nodejs"`, `"edge"`, or `""` for the browser; next 15.5.29
+ * `dist/build/define-env.js:78`, read 2026-11-13), so in the client and edge
+ * bundles the whole `if` body is a constant-false branch that webpack drops
+ * before it records dependencies. That is what keeps pino out of the client
+ * chunks: a static import, or a check on `typeof window`, which Next does not
+ * inline, would pull it back in.
  *
- * @param context - originating route or function, e.g. `"GET /api/decks"`
- * @param meta - extra values passed by the call site
- * @param err - the error being reported, if any
- * @returns the payload object, possibly empty
+ * @returns the JSON sink on the production Node server; `undefined` elsewhere
  */
-export function toLogPayload(
-  context: string | undefined,
-  meta: readonly unknown[],
-  err?: Error
-): LogPayload {
-  const rest = err === undefined ? meta : meta.filter((value) => value !== err);
-  return {
-    ...(context !== undefined && { context }),
-    ...(rest.length > 0 && { meta: rest }),
-    ...(err !== undefined && { err }),
-  };
-}
-
-/** JSON logger for the production server — never used in the browser. */
-const jsonLogger = pino({
-  timestamp: pino.stdTimeFunctions.isoTime,
-  // pid/hostname say nothing on serverless — every invocation differs.
-  base: undefined,
-  formatters: { level: (label) => ({ level: label }) },
-  serializers: { err: pino.stdSerializers.err },
-});
-
-/** @returns whether events should be emitted as JSON lines */
-function emitsJson(): boolean {
-  return typeof window === "undefined" && process.env.NODE_ENV === "production";
+function jsonSink(): LogSink | undefined {
+  if (
+    process.env.NEXT_RUNTIME === "nodejs" &&
+    process.env.NODE_ENV === "production"
+  ) {
+    if (cachedJsonSink === undefined) {
+      // A synchronous `require` is the only way to load the sink lazily while
+      // keeping every `logger.*` call synchronous: an `import()` would make
+      // the first lines of a cold start race the module load.
+      // eslint-disable-next-line @typescript-eslint/no-require-imports -- see above
+      const sinkModule: typeof import("./logger-json-sink") = require("./logger-json-sink");
+      cachedJsonSink = sinkModule.createJsonSink();
+    }
+    return cachedJsonSink;
+  }
+  return undefined;
 }
 
 /** @returns formatted prefix `[context]` or empty string */
@@ -119,8 +115,9 @@ function reportToSentry(
 export const logger = {
   /** Informational messages. */
   info(message: string, context?: string, ...meta: unknown[]): void {
-    if (emitsJson()) {
-      jsonLogger.info(toLogPayload(context, meta), message);
+    const sink = jsonSink();
+    if (sink) {
+      sink.info(toLogPayload(context, meta), message);
     } else {
       console.info(fmtCtx(context), message, ...meta);
     }
@@ -128,8 +125,9 @@ export const logger = {
 
   /** Non-critical warnings. */
   warn(message: string, context?: string, ...meta: unknown[]): void {
-    if (emitsJson()) {
-      jsonLogger.warn(toLogPayload(context, meta), message);
+    const sink = jsonSink();
+    if (sink) {
+      sink.warn(toLogPayload(context, meta), message);
     } else {
       console.warn(fmtCtx(context), message, ...meta);
     }
@@ -152,8 +150,9 @@ export const logger = {
     const cause =
       (isError ? messageOrError : findError(meta)) ?? new Error(message);
 
-    if (emitsJson()) {
-      jsonLogger.error(toLogPayload(context, meta, cause), message);
+    const sink = jsonSink();
+    if (sink) {
+      sink.error(toLogPayload(context, meta, cause), message);
     } else {
       console.error(fmtCtx(context), message, ...meta);
     }
