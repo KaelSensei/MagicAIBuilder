@@ -6,7 +6,10 @@ import type {
   DeckRemovalReason,
 } from "@/app/api/ai/build/types";
 import { buildScryfallNameIndex } from "@/lib/scryfall/name-index";
-import { ALL_GENERATED_DECK_CARDS } from "./fixtures/generated-deck-cards";
+import {
+  ALL_GENERATED_DECK_CARDS,
+  GENERATED_DECK_CARDS,
+} from "./fixtures/generated-deck-cards";
 import {
   checkGeneratedDeckLegality,
   type GeneratedDeckVerdict,
@@ -327,7 +330,7 @@ describe("checkGeneratedDeckLegality", () => {
     ]);
   });
 
-  it("spreads added basics over the command zone's colours in WUBRG order", () => {
+  it("gives added basics to the colours with the fewest sources when no spell sets a target", () => {
     const verdict = checkGeneratedDeckLegality(
       reply({ ...TYMNA_AND_THRASIOS, size: 93 }),
       CARD_DATA
@@ -337,9 +340,50 @@ describe("checkGeneratedDeckLegality", () => {
       expect.objectContaining({
         corrections: [
           added("Plains", 2),
-          added("Island", 1),
-          added("Swamp", 1),
+          added("Swamp", 2),
           added("Forest", 1),
+        ],
+      })
+    );
+  });
+
+  it("splits added basics by the source targets the commanders and the spells set", () => {
+    const { tymna, thrasios } = GENERATED_DECK_CARDS;
+    const wrathOfGod = {
+      id: "wrath-of-god",
+      cmc: 4,
+      name: "Wrath of God",
+      mana_cost: "{2}{W}{W}",
+      type_line: "Sorcery",
+      color_identity: ["W"],
+      legalities: { commander: "legal" },
+    };
+    const cardData = buildScryfallNameIndex([
+      ...ALL_GENERATED_DECK_CARDS,
+      { ...tymna, mana_cost: "{1}{W}{B}" },
+      { ...thrasios, mana_cost: "{G}{U}" },
+      wrathOfGod,
+    ]);
+
+    const verdict = checkGeneratedDeckLegality(
+      reply({
+        ...TYMNA_AND_THRASIOS,
+        entries: [["Wrath of God", 1]],
+        size: 21,
+      }),
+      cardData
+    );
+
+    // Targets: white 26 ({2}{W}{W}), blue and green 20 and black 19 (gold
+    // commanders, one extra source each). Twenty Islands already serve blue;
+    // the 77 basics leave every colour three sources over its target.
+    expect(verdict).toEqual(
+      expect.objectContaining({
+        corrections: [
+          added("Plains", 29),
+          added("Island", 3),
+          added("Swamp", 22),
+          added("Forest", 23),
         ],
       })
     );
