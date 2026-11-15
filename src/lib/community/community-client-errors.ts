@@ -32,8 +32,13 @@ export class CommunityApiError extends Error {
     readonly status: number,
     readonly detail = ""
   ) {
-    super(`[${operation}] HTTP ${status}${detail ? `: ${detail}` : ""}`);
+    super(`[${operation}] HTTP ${status}${detailSuffix(detail)}`);
   }
+}
+
+/** `: <detail>` after the status, or nothing when the route sent no text. */
+function detailSuffix(detail: string): string {
+  return detail ? `: ${detail}` : "";
 }
 
 /**

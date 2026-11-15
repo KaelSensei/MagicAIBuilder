@@ -17,7 +17,6 @@
 import { isRecord } from "@/lib/guards";
 import type { DeckComment, DeckCommentThread } from "@/lib/community/comments";
 import { isValidVoteValue, type VoteValue } from "@/lib/community/votes";
-import type { SavedDeckFoldersResponse } from "@/lib/community/deck-folders";
 import type { QualityBadge, RatingHistogram } from "@/lib/ratings/ratings";
 
 /** Narrows an untrusted answer body to one contract. */
@@ -314,7 +313,7 @@ export function isSavedDeckLibraryBody(
   );
 }
 
-export type { SavedDeckFoldersResponse };
+export type { SavedDeckFoldersResponse } from "@/lib/community/deck-folders";
 
 // ─── Reports ──────────────────────────────────────────────────────────────────
 
@@ -330,12 +329,18 @@ export const REPORT_REASONS = [
 export type ReportReason = (typeof REPORT_REASONS)[number];
 
 /**
+ * {@link REPORT_REASONS} widened for lookup: a tuple of literals only accepts
+ * one of its own members in `.includes`, and the guard below tests `unknown`.
+ */
+const REPORT_REASON_VALUES: readonly unknown[] = REPORT_REASONS;
+
+/**
  * Whether a value is one of {@link REPORT_REASONS}. The report dialog reads
  * its `<select>` through this, so a reason outside the catalog never reaches
  * the route.
  */
 export function isReportReason(value: unknown): value is ReportReason {
-  return REPORT_REASONS.some((reason) => reason === value);
+  return REPORT_REASON_VALUES.includes(value);
 }
 
 /** Body of `POST /api/community/decks/[id]/reports`. */

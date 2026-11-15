@@ -69,7 +69,7 @@ export async function findDeckForViewer(
   viewerId: string | null
 ): Promise<DeckForViewer | null> {
   const decision = await decideDeckView(id, viewerId);
-  if (decision === null || !decision.allowed) return null;
+  if (!decision?.allowed) return null;
 
   switch (decision.view) {
     case "owner": {
