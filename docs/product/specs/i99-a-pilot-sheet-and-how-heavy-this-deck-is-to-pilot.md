@@ -514,6 +514,7 @@ Wizards made game length part of the brackets: Exhibition games "are likely to g
 - [ ] The builder panel "Piloting this deck" and the owner's deck page (slice 4); the pilot sheet on screen and on one printed page with its version footer, I-19's pieces when present, no image (slice 5).
 - [ ] The pilot line in I-15's calculated column with "copy into my sheet" (slice 6); the authored question in I-88's script with the line as its hint (slice 7); `cardComplexity` shared with I-54 (slice 8).
 - [ ] After the owner's decisions: the labelled fixture and the methods-page rows with the floor rule (slice 9); the norms by declared bracket with n and an interval (slice 10); logged game length against the band, no causal claim (slice 11); the public switch, the read route and the public sheet page (slice 12); the sheet or the line on I-19, I-93, I-79 and I-94 (slice 13).
+- [ ] Added 2026-11-15 (fifteenth pass): Attraction "visit" triggers join the timing blocks once [I-103](i103-planar-scheme-and-attraction-decks-beside-the-commander-deck.md) stores an Attraction deck; planes and schemes add no pilot class in version 1 (I-103 slice 10).
 
 ### Engineering enablers
 

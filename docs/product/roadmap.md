@@ -1,6 +1,6 @@
 # MagicAIBuilder: Product Roadmap
 
-> **Updated:** 2026-11-14 (fourteenth pass: no new initiative; collection counting, the editor, the mana base, prices and the bracket floor gained scenarios)
+> **Updated:** 2026-11-15 (fifteenth pass: I-102 a theme you can measure, I-103 planar, scheme and Attraction decks). Before it, 2026-11-14 (fourteenth pass: no new initiative; collection counting, the editor, the mana base, prices and the bracket floor gained scenarios)
 
 > **North star:** help a Commander player go from an idea to a legal, explainable, testable and enjoyable deck.
 
@@ -10,24 +10,24 @@ This roadmap is the index. The user stories, scenarios and scope for each initia
 
 The initiatives group into the jobs a Commander player actually has. I-80 to I-98, added on 2026-11-11, and I-99 to I-101, added on 2026-11-12, are marked. The fourteenth pass, on 2026-11-14, added no initiative. Placement and the impact table are in [Impact and effort](#twelfth-pass-impact-effort-and-placement). Personas, the dependency graph, the quarter sequence and the risks are in [Planning Views](#planning-views).
 
-| Theme | Already on the roadmap | Added 2026-11-11 | Added 2026-11-12 |
+| Theme | Already on the roadmap | Added 2026-11-11 | Added 2026-11-12 and 15 |
 | --- | --- | --- | --- |
 | AI coaching and explainability | I-02, I-14, I-22, I-70 | I-83, I-91 | — |
-| Game night and pods | I-15, I-23, I-35, I-41, I-79 | I-88, I-94 | I-99 |
+| Game night and pods | I-15, I-23, I-35, I-41, I-79 | I-88, I-94 | I-99, I-103 |
 | Playtesting and goldfish | I-07, I-21, I-31 | I-81, I-82, I-87, I-97 | — |
 | Budget, price and proxies | I-06, I-32, I-45, I-55, I-59 | I-80, I-84, I-96 | — |
 | Collection and import | I-16, I-26, I-43, I-62, I-76 | I-89, I-90 | I-101 |
 | Sharing, creators and search | I-08, I-34, I-36, I-46, I-75 | I-92, I-95 | — |
 | Phone, offline and reading | I-11, I-19, I-24, I-25, I-40, I-49 | I-93 | — |
-| Trust, data and competitive lists | I-09, I-38, I-67, I-77 | I-86, I-98 | I-100 |
+| Trust, data and competitive lists | I-09, I-38, I-67, I-77 | I-86, I-98 | I-100, I-102 |
 | Money and growth | I-30, I-39, I-66, I-72 | — | — |
 | Platform | I-05, I-69, I-71, I-74 | I-95 | — |
 
-I-85, player-supplied art, sits with the editor and is not a custom card. Cube, a life counter and a custom-card creator stay non-goals. I-99 has no timer and I-101 no registry; I-100 sits with the checkable analyses beside I-77.
+I-85, player-supplied art, sits with the editor and is not a custom card. Cube, a life counter and a custom-card creator stay non-goals. I-99 has no timer and I-101 no registry; I-100 sits with the checkable analyses beside I-77. I-102 measures a theme the owner chose and never grades it; I-103 keeps side decks and simulates no planar die.
 
 ## Roadmap At A Glance
 
-One row per initiative, in numeric order, generated on 2026-11-11 by the script behind the [dependency page](specs/dependency-graph.md). State is the initiative's `Status` line. Priority is Now, Next, Later or Parked. The slice column names the lowest-numbered slice that can start now. Every initiative has a spec file. Regenerate it with the dependency page; do not edit rows by hand. The generator must keep every row's spec link, including I-80 to I-101. The rows for I-99 to I-101 were written by hand on 2026-11-12, as the I-80 to I-98 rows were. [I-74](specs/i74-a-roadmap-agents-can-execute.md) slice 4 moves its generation into the repository, behind a CI check.
+One row per initiative, in numeric order, generated on 2026-11-11 by the script behind the [dependency page](specs/dependency-graph.md). State is the initiative's `Status` line. Priority is Now, Next, Later or Parked. The slice column names the lowest-numbered slice that can start now. Every initiative has a spec file. Regenerate it with the dependency page; do not edit rows by hand. The generator must keep every row's spec link, including I-80 to I-103. The rows for I-99 to I-101 were written by hand on 2026-11-12, and those for I-102 and I-103 on 2026-11-15, as the I-80 to I-98 rows were. [I-74](specs/i74-a-roadmap-agents-can-execute.md) slice 4 moves its generation into the repository, behind a CI check.
 
 <!-- glance:start -->
 
@@ -134,6 +134,8 @@ One row per initiative, in numeric order, generated on 2026-11-11 by the script 
 | [I-99](specs/i99-a-pilot-sheet-and-how-heavy-this-deck-is-to-pilot.md)                    | Pilot sheet              | Next     | Next         | — (slice 1 waits for I-65 slice 1)                                      |  [spec](specs/i99-a-pilot-sheet-and-how-heavy-this-deck-is-to-pilot.md)    |
 | [I-100](specs/i100-cards-that-work-against-each-other.md)                                 | Deck coherence           | Next     | Next         | — (slice 1 waits for I-65 slice 1 and I-78 slice 1)                     |  [spec](specs/i100-cards-that-work-against-each-other.md)                 |
 | [I-101](specs/i101-collecting-goals-beyond-a-set.md)                                      | Collecting goals         | Later    | Later (2027) | — (slice 1 waits for I-67 slice 2; the rest for gate C and D-98)        |  [spec](specs/i101-collecting-goals-beyond-a-set.md)                      |
+| [I-102](specs/i102-a-theme-you-can-measure.md)                                           | Theme coverage           | Next     | Next         | 1: Handles on stored fields, `matchTheme`, `themeCoverage`              |  [spec](specs/i102-a-theme-you-can-measure.md)                            |
+| [I-103](specs/i103-planar-scheme-and-attraction-decks-beside-the-commander-deck.md)       | Side decks               | Next     | Next         | 1: One shared `DeckZone` with the three side zones (+2 more)            |  [spec](specs/i103-planar-scheme-and-attraction-decks-beside-the-commander-deck.md) |
 <!-- glance:end -->
 
 ---
@@ -192,6 +194,17 @@ Added 2026-11-14. No new initiative number, so no glance row. The rows below sco
 | I-77 Bracket audit     | A spoken Bracket 3 that hid cards, and a checker that reports a floor from 2 to 4                               | High   | Small  | Medium | Next, unchanged  | Medium     | The audit already separates floors from the owner's words. The r/EDH post is 7 points |
 | I-30 Paid tier         | A competitor that meters saved decks and collection size, dated 2026-11-14                                      | High   | Small  | High   | Next, unchanged  | High       | Requirement 1.2 already forbids that paywall. The row is evidence, not a new price    |
 
+### Fifteenth pass: impact, effort and placement
+
+Added 2026-11-15, with the twelfth pass's labels. I-102 and I-103 are Next and sit after the numbered Next band, as the twelfth and thirteenth passes' Next items do. Both have a first slice that can start now, which no earlier pass's new initiative had.
+
+| ID | Impact | Effort | Risk | Place | Confidence | Why it is not sooner |
+| --- | --- | --- | --- | --- | --- | --- |
+| I-102 Theme coverage | Medium | Medium | Low | Next | High | Wizards' update of 2025-10-21 makes Bracket 1 "all about theme over function", and r/EDH theme threads reach 157 and 173 comments. Slice 1 reads stored fields and needs nothing; artist and plane wait for I-67. |
+| I-103 Side decks | Medium | Small | Low | Next | High | Wizards ships 90 planes and 40 schemes inside Commander precons since 2023 and writes CR 904.13; the builder's search hides every one. Slices 1, 2 and 5 need no migration; the board waits for D-100. |
+
+The fifteenth pass also folded a monthly upgrade budget into I-06 and the Archenemy Commander option into I-42; see [What the fifteenth pass checked](#what-the-fifteenth-pass-checked-and-did-not-promote).
+
 ---
 
 ## Planning Views
@@ -200,7 +213,7 @@ Added 2026-11-11. These views order work that already has an initiative. They ar
 
 ### How to read an enrichment
 
-Every Now item, every Next item, and I-80 through I-101 has an enrichment block in front of its definition of done. The block is the player contract. The spec, where one exists, remains the engineering contract. Do not copy a slice table into the block.
+Every Now item, every Next item, and I-80 through I-103 has an enrichment block in front of its definition of done. The block is the player contract. The spec, where one exists, remains the engineering contract. Do not copy a slice table into the block.
 
 Telemetry names are reserved for I-39's event store. Nothing is emitted until that store exists. A row holds counts and enums only: no email, name, username, deck name, card name, list, search text or URL, the same bar as I-39 requirement 8.3. A notice to a player goes through I-63, not through the event.
 
@@ -212,11 +225,11 @@ A person can be more than one of these. The table says which initiatives are for
 
 | Persona | What they are trying to do | Initiatives |
 | --- | --- | --- |
-| Casual pod player | Sit down with friends, say what the deck does, and play | I-01, I-07, I-15, I-17, I-19, I-28, I-88, I-93, I-94, I-99, I-100 |
-| Bracket-focused player | Match the table without a fake score | I-03, I-15, I-28, I-48, I-77, I-78, I-88, I-99, I-100 |
+| Casual pod player | Sit down with friends, say what the deck does, and play | I-01, I-07, I-15, I-17, I-19, I-28, I-88, I-93, I-94, I-99, I-100, I-102, I-103 |
+| Bracket-focused player | Match the table without a fake score | I-03, I-15, I-28, I-48, I-77, I-78, I-88, I-99, I-100, I-102 |
 | cEDH player | Check legality, combos and a primer, and not a win rate | I-09, I-21, I-31, I-42, I-50, I-65, I-98, I-99 |
-| Collector and budget player | Know what they own, what it costs, and what they can proxy | I-06, I-16, I-32, I-45, I-55, I-57, I-59, I-76, I-80, I-84, I-89, I-90, I-96, I-101 |
-| Content creator | Publish a list people can read, embed and trust | I-08, I-34, I-36, I-46, I-72, I-75, I-83, I-92, I-95, I-99 |
+| Collector and budget player | Know what they own, what it costs, and what they can proxy | I-06, I-16, I-32, I-45, I-55, I-57, I-59, I-76, I-80, I-84, I-89, I-90, I-96, I-101, I-103 |
+| Content creator | Publish a list people can read, embed and trust | I-08, I-34, I-36, I-46, I-72, I-75, I-83, I-92, I-95, I-99, I-102 |
 
 ### Dependencies
 
@@ -258,6 +271,10 @@ flowchart TD
   I78 --> I100
   I67 --> I101["I-101 Collecting goals"]
   I26["I-26 Collection import"] --> I101
+  I15 --> I102l["I-102 Theme line"]
+  I67 --> I102a["I-102 Artist and plane handles"]
+  I17["I-17 Precons"] --> I103p["I-103 Precon side lists"]
+  I42["I-42 Variants"] --> I103o["I-103 Archenemy Commander option"]
 ```
 
 | Initiative | Waits on | Unblocks |
@@ -284,6 +301,10 @@ flowchart TD
 | I-100 slice 1 | I-65 slice 1; I-78 slice 1's symmetric scopes | Findings, private |
 | I-101 slice 1 | I-67 slice 2's set and printing tables | Goal progress over fixtures |
 | I-101 slice 2 and later | Gate C, D-98 and I-26 slice 4 | Goals a collector can create |
+| I-102 slices 1, 3 and 4 | Nothing that is not already on `dev` | Theme coverage and on-theme alternatives on stored fields |
+| I-102 slice 6 | I-67 slice 2's printings | Artist, plane, watermark and flavour handles |
+| I-103 slices 1, 2 and 5 | Nothing that is not already on `dev` | Side zones, their checks, text export and import |
+| I-103 slice 4 | D-100 | The side-deck board players see |
 
 I-21 as a whole stays Later. Only the seeded slices I-31 needs move ahead, which the portfolio already says. That is not a promotion of the bench.
 
@@ -295,8 +316,8 @@ Buckets follow Now, then Next, then Later. A bucket is an order. It is not a pro
 | --- | --- | --- |
 | 2026 Q4 | The Now band: I-01 recovery, I-02's visible verdict and card-data repair, I-03's sourced warnings, I-04's focus and typing undo, I-05's WebP path, deletion session and rate limit. Beside them, the Next slices that protect the product and need nothing: I-71's command guard, I-61's password fix, I-67's reader, I-39's public-page and replay fixes, I-49's contrast measure | Billing, new locales, a marketplace, any Later initiative |
 | 2027 Q1 | Next work that other Next work waits on: I-67, I-14, I-15, I-63, I-70, I-30's metering and disclosure with no charge, I-34's index policy, I-57's printing defects, I-42's format picker, I-46's previews, I-50's export contract, I-86, I-95, I-96, I-97 | I-30's charge, I-91's model wording, I-80's art |
-| 2027 Q2 | The rest of Next: I-06, I-07, I-08, I-09, I-13 with I-37, I-16, I-17, I-19, I-28, I-31, I-32 without an affiliate code until the lawyer says yes, I-38's remaining safety floor, I-47, I-48, I-52, I-54, I-55, I-56, I-58, I-60, I-62, I-64, I-65, I-66, I-68, I-69, I-72, I-73, I-74, I-75, I-76, I-77, I-78, I-88, I-91's deterministic mode, I-92, then I-99 slices 0 to 8 and I-100 slices 0 to 4 once I-65 slice 1 and I-78 slice 1 have shipped | The 2027 horizon, the Later rows of I-80 to I-98, I-99 slices 9 to 13, I-100 slices 5 to 10 and I-101 |
-| 2027 Q3 and after | Later, one at a time, after the wait in the table above is met: I-18, I-20, I-21, I-22 to I-27, I-29, I-35, I-36's remainder, I-40, I-41, I-43 to I-45, I-51, I-53, I-59, I-79, I-80, I-81, I-82, I-83's insert, I-84, I-85's upload, I-87, I-89, I-90, I-93, I-94, I-98, I-99 slices 9 to 13, I-100 slices 5 to 10 and I-101 behind gate C. I-33 stays parked until the owner picks a rung | A date for any of these |
+| 2027 Q2 | The rest of Next: I-06, I-07, I-08, I-09, I-13 with I-37, I-16, I-17, I-19, I-28, I-31, I-32 without an affiliate code until the lawyer says yes, I-38's remaining safety floor, I-47, I-48, I-52, I-54, I-55, I-56, I-58, I-60, I-62, I-64, I-65, I-66, I-68, I-69, I-72, I-73, I-74, I-75, I-76, I-77, I-78, I-88, I-91's deterministic mode, I-92, then I-99 slices 0 to 8 and I-100 slices 0 to 4 once I-65 slice 1 and I-78 slice 1 have shipped, and I-102 slices 0 to 5 and I-103 slices 0 to 5 | The 2027 horizon, the Later rows of I-80 to I-98, I-99 slices 9 to 13, I-100 slices 5 to 10 and I-101 |
+| 2027 Q3 and after | Later, one at a time, after the wait in the table above is met: I-18, I-20, I-21, I-22 to I-27, I-29, I-35, I-36's remainder, I-40, I-41, I-43 to I-45, I-51, I-53, I-59, I-79, I-80, I-81, I-82, I-83's insert, I-84, I-85's upload, I-87, I-89, I-90, I-93, I-94, I-98, I-99 slices 9 to 13, I-100 slices 5 to 10, I-101 behind gate C, I-102 slices 6 to 10 and I-103 slices 6 to 10. I-33 stays parked until the owner picks a rung | A date for any of these |
 
 ### Risks and mitigations
 
@@ -310,6 +331,7 @@ Buckets follow Now, then Next, then Later. A bucket is an order. It is not a pro
 | Guest work disappears | A signed-out deck is the first run | I-39 keeps it at sign-up. Guest features in the enrichments are read or local until an account exists |
 | The roadmap grows faster than the product | Agents pick a Later initiative because it has a story | The glance priority and this sequence are the pick order. A story is not a promotion |
 | Colour and language | A new view is English-only or colour-only | Enrichments name English and French, and a second channel. I-49 and I-24 stay the owners |
+| A side card counted as a main card | A plane or a scheme changes the deck's count, curve, price or bracket | I-103 slice 1 gives one shared zone type and a sociable test on every reader of the main zone |
 | A load band or a finding read as a verdict | Players treat "demanding" or a coherence question as a judgement on a deck or a person | I-99 shows every factor beside the band and bans the pejoratives; I-100 asks a question, keeps findings private and lets the owner answer "I mean it"; both measure precision on an owner-labelled fixture before any public surface |
 
 ### Kill criteria for Now
@@ -355,6 +377,15 @@ Read on 2026-11-14. No new initiative number. The review is [section 15 of the l
 - EDHcheck's updates index also lists a collection import, deck-page printings, a Turn Clock and a pack simulator. Those article bodies were not opened. The index lines sit on I-26, I-57, I-21 and the draft non-goal. They are not new work.
 - A 1-point r/EDH post about kitchen-table 1v1 and sideboards does not open a format beside I-42.
 - r/EDH after 2026-11-12, fifty posts from Arctic Shift, topped out at 21 points. `reddit.com` itself returned HTTP 403.
+
+### What the fifteenth pass checked and did not promote
+
+Read on 2026-11-15. Two new initiative numbers, I-102 and I-103; the rest went to the initiative that already owns the job, each with its dated source in [section 16 of the landscape](competitive-landscape.md#16-a-fifteenth-pass-themes-and-side-decks-2026-11-15).
+
+- The Archenemy Commander option (CR 904.13: the archenemy at 60 life, the opposing team sharing 60) is a declared option in I-42's variant configuration. I-103 checks the scheme deck; I-42 states the life totals.
+- A monthly upgrade budget across decks ("$20 a month") is a line on I-06's acquisition plan: an order by the owner's own priority and a monthly cap, with no buy verb. The evidence is one forum thread and the budget series of MTGGoldfish and EDHREC, so it is a scope line, not a number.
+- Contraptions are not Commander-legal (Scryfall returns none for `t:contraption f:commander`) and stay out of I-103.
+- A planar deck shared by a whole table (CR 901.15) is an open question on I-79, not new work.
 
 ---
 
