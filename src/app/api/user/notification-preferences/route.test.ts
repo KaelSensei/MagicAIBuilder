@@ -79,6 +79,49 @@ describe("notification preferences API", () => {
     );
   });
 
+  // Characterization (master plan ID-01, server audit §1.2 and §6.9): neither
+  // handler catches a database failure, so the error leaves the route instead
+  // of becoming a logged 500. B2-13 flips both of these.
+  describe("when the database fails", () => {
+    it("currently lets a failed read escape the GET handler instead of answering 500 (pinned; see B2-13)", async () => {
+      authed();
+      mockUpsert.mockRejectedValueOnce(new Error("connection refused"));
+
+      await expect(GET()).rejects.toThrow("connection refused");
+    });
+
+    it("currently lets a failed write escape the PATCH handler instead of answering 500 (pinned; see B2-13)", async () => {
+      authed();
+      mockUpsert.mockRejectedValueOnce(new Error("connection refused"));
+
+      await expect(
+        PATCH(
+          new Request(
+            "http://localhost:3000/api/user/notification-preferences",
+            {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ follows: false }),
+            }
+          )
+        )
+      ).rejects.toThrow("connection refused");
+    });
+
+    it("currently writes on a read: GET upserts the defaults for a player who has no row yet (pinned; see B2-13)", async () => {
+      authed();
+      mockUpsert.mockResolvedValueOnce(DEFAULTS);
+
+      await GET();
+
+      expect(mockUpsert).toHaveBeenCalledTimes(1);
+      expect(mockUpsert.mock.calls[0][0]).toMatchObject({
+        update: {},
+        create: { userId: "user-1", ...DEFAULTS },
+      });
+    });
+  });
+
   it("rejects an empty preference update", async () => {
     authed();
 
