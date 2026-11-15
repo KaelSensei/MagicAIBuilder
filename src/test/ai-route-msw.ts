@@ -144,7 +144,7 @@ export interface TimedEvent {
  *
  * The caller fakes `setTimeout` and `Date` (`vi.useFakeTimers({ toFake:
  * ["setTimeout", "Date"] })`) before it posts the request. Between reads the
- * loop yields one real macrotask, so network work served by MSW completes,
+ * reader yields one real macrotask, so network work served by MSW completes,
  * then fires the next fake timer. It gives up after five real seconds.
  *
  * @param response - the route's streamed response
@@ -176,19 +176,35 @@ export async function readNdjsonOnFakeClock(response: Response): Promise<{
     finished = true;
   })();
 
-  const deadline = performance.now() + 5_000;
-  // The two awaits stay sequential, in a loop (SonarCloud S9382 notwithstanding):
-  // each turn first yields a macrotask so the route's pending I/O and `pump`
-  // can run, then fires the next fake timer. Running them in parallel, or
-  // advancing every timer at once, would fire a pacing timer before the chunk
-  // it paces was read, and the recorded arrival times would be wrong.
-  while (!finished) {
-    if (performance.now() > deadline) {
-      throw new Error("The stream did not end within five real seconds.");
-    }
-    await new Promise<void>((resolve) => setImmediate(resolve));
-    await vi.advanceTimersToNextTimerAsync();
-  }
+  await turnFakeClockUntil(() => finished, performance.now() + 5_000);
   await pump;
   return { body, events };
+}
+
+/**
+ * Turns the fake clock one timer at a time until `isFinished` holds, each
+ * turn on its own call rather than in a loop.
+ *
+ * The turns stay sequential, as the `while` loop they replace was (SonarCloud
+ * S9382 flagged its awaits): each one first yields a real macrotask so the
+ * route's pending I/O and the stream reader can run, then fires the next fake
+ * timer, so a pacing timer cannot fire before the chunk it paces was read.
+ * Each turn awaits its two steps and then the next turn; the stack does not
+ * grow, as every call resumes from the event loop.
+ *
+ * @param isFinished - true once the stream has ended
+ * @param deadline - the `performance.now()` after which the stream counts as stuck
+ * @throws Error when the stream has not ended by `deadline`
+ */
+async function turnFakeClockUntil(
+  isFinished: () => boolean,
+  deadline: number
+): Promise<void> {
+  if (isFinished()) return;
+  if (performance.now() > deadline) {
+    throw new Error("The stream did not end within five real seconds.");
+  }
+  await new Promise<void>((resolve) => setImmediate(resolve));
+  await vi.advanceTimersToNextTimerAsync();
+  return turnFakeClockUntil(isFinished, deadline);
 }
