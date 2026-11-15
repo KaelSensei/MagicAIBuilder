@@ -26,6 +26,13 @@ export const SESSION_DIFFICULTIES = ["budget", "mid-range", "cedh"] as const;
 /** One of {@link SESSION_DIFFICULTIES}. */
 export type SessionDifficulty = (typeof SESSION_DIFFICULTIES)[number];
 
+/*
+ * The two sets widened for lookup: a tuple of literals only accepts one of
+ * its own members in `.includes`, and the guards below test `unknown`.
+ */
+const RESULT_VALUES: readonly unknown[] = SESSION_RESULTS;
+const DIFFICULTY_VALUES: readonly unknown[] = SESSION_DIFFICULTIES;
+
 /**
  * Narrows an unknown value, from a request body or a stored row, to a
  * {@link SessionResult}. Case-sensitive: `"Win"` is refused.
@@ -33,7 +40,7 @@ export type SessionDifficulty = (typeof SESSION_DIFFICULTIES)[number];
  * @param value - anything; non-strings are refused rather than coerced
  */
 export function isSessionResult(value: unknown): value is SessionResult {
-  return SESSION_RESULTS.some((result) => result === value);
+  return RESULT_VALUES.includes(value);
 }
 
 /**
@@ -46,5 +53,5 @@ export function isSessionResult(value: unknown): value is SessionResult {
 export function isSessionDifficulty(
   value: unknown
 ): value is SessionDifficulty {
-  return SESSION_DIFFICULTIES.some((difficulty) => difficulty === value);
+  return DIFFICULTY_VALUES.includes(value);
 }

@@ -96,6 +96,11 @@ it("tells a signed-in stranger who arrives after the owner that the deck is not 
   expect(await ownershipShownTo(STRANGER)).toBe(false);
 });
 
+it("answers nothing, to the owner or anyone else, for a deck id that does not exist", async () => {
+  expect(await findDeckForViewer("missing-deck", OWNER)).toBeNull();
+  expect(await findDeckForViewer("missing-deck", ANONYMOUS)).toBeNull();
+});
+
 it("asks the database on every read and never keeps an answer in the data cache", async () => {
   // Each read must reach the database. How many queries one read costs is the
   // visibility policy's business (COM-11 reads the deck's facts, then its
