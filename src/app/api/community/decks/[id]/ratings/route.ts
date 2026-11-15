@@ -1,10 +1,13 @@
 /**
- * Community deck ratings & reviews.
+ * Community deck ratings & reviews: `/api/community/decks/[id]/ratings`.
  *
- * GET    — public aggregate for a deck (no session required)
- * POST   — upsert the caller's own rating / review
+ * GET    — the aggregate and the written reviews of a deck the viewer may see
+ *          (no session required)
+ * POST   — rate or re-rate the deck, with an optional written review
  * DELETE — remove the caller's own rating
  *
+ * HTTP only: session, body parsing and the status for each outcome. The
+ * rules live in the use cases of `@/lib/community/deck-rating-use-cases`.
  * Mounted under /api/community so the edge auth allowlist can expose GET
  * without opening the protected /api/decks tree. POST and DELETE enforce
  * authentication here.
@@ -12,19 +15,17 @@
 
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { prisma } from "@/lib/db/prisma";
-import { findVisibleDeck } from "@/lib/community/visible-deck";
 import { auth } from "@/lib/auth/config";
 import { requireAuth } from "@/lib/auth/helpers";
 import { logger } from "@/lib/logger";
-import {
-  buildRatingHistogram,
-  calculateAverageRating,
-  getDeckQualityBadge,
-  validateReview,
-} from "@/lib/ratings/ratings";
-import { toDeckRating, toDeckReview, type DeckRatingRow } from "@/lib/ratings/mappers";
 import { readJsonBody } from "@/lib/api/json-body";
+import { ratingUseCasePorts } from "@/lib/community/deck-interaction-server";
+import {
+  rateDeck,
+  readDeckRatings,
+  removeRating,
+  type RateDeckResult,
+} from "@/lib/community/deck-rating-use-cases";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -34,26 +35,33 @@ const RatingSchema = z.object({
   body: z.string().optional(),
 });
 
-/** Author fields joined onto each review for display. */
-interface RatingAuthor {
-  readonly name: string | null;
-  readonly username: string | null;
-  readonly image: string | null;
+const NOT_FOUND = { error: "Deck not found" };
+
+function rateDeckResponse(result: RateDeckResult) {
+  switch (result.kind) {
+    case "ok":
+      return NextResponse.json(result.rating, { status: 201 });
+    case "invalid":
+      return NextResponse.json({ error: result.errors }, { status: 400 });
+    case "not-found":
+      return NextResponse.json(NOT_FOUND, { status: 404 });
+    case "own-deck":
+      return NextResponse.json(
+        { error: "You cannot rate your own deck" },
+        { status: 403 }
+      );
+    default: {
+      const unreachable: never = result;
+      return unreachable;
+    }
+  }
 }
 
-type RatingRowWithAuthor = DeckRatingRow & { readonly user: RatingAuthor };
-
-const RATING_SELECT = {
-  id: true,
-  userId: true,
-  deckId: true,
-  rating: true,
-  title: true,
-  body: true,
-  helpfulCount: true,
-  createdAt: true,
-  user: { select: { name: true, username: true, image: true } },
-} as const;
+function logFailure(route: string, error: unknown, id: string) {
+  logger.error(error instanceof Error ? error.message : "unknown", route, {
+    id: id.slice(0, 50),
+  });
+}
 
 // GET /api/community/decks/[id]/ratings
 export async function GET(_req: Request, { params }: Params) {
@@ -63,38 +71,20 @@ export async function GET(_req: Request, { params }: Params) {
     const session = await auth();
     const viewerId = session?.user?.id ?? null;
 
-    const deck = await findVisibleDeck(id, viewerId);
-    if (!deck) {
-      return NextResponse.json({ error: "Deck not found" }, { status: 404 });
-    }
-
-    const rows = (await prisma.deckRating.findMany({
-      where: { deckId: id },
-      orderBy: { createdAt: "desc" },
-      select: RATING_SELECT,
-    })) as RatingRowWithAuthor[];
-
-    const ratings = rows.map(toDeckRating);
-    const reviews = rows.flatMap((row) => {
-      const review = toDeckReview(row);
-      return review ? [{ ...review, author: row.user }] : [];
-    });
-
-    return NextResponse.json({
-      average: calculateAverageRating(ratings),
-      count: ratings.length,
-      histogram: buildRatingHistogram(ratings),
-      badge: getDeckQualityBadge(ratings),
-      reviews,
-      viewerRating: ratings.find((r) => r.userId === viewerId)?.rating ?? null,
-    });
-  } catch (error) {
-    logger.error(
-      error instanceof Error ? error.message : "unknown",
-      "GET /api/community/decks/:id/ratings",
-      { id: id.slice(0, 50) }
+    const result = await readDeckRatings(
+      { deckId: id, viewerId },
+      ratingUseCasePorts
     );
-    return NextResponse.json({ error: "Failed to fetch ratings" }, { status: 500 });
+    if (result.kind === "not-found") {
+      return NextResponse.json(NOT_FOUND, { status: 404 });
+    }
+    return NextResponse.json(result.summary);
+  } catch (error) {
+    logFailure("GET /api/community/decks/:id/ratings", error, id);
+    return NextResponse.json(
+      { error: "Failed to fetch ratings" },
+      { status: 500 }
+    );
   }
 }
 
@@ -105,7 +95,7 @@ export async function POST(request: Request, { params }: Params) {
   try {
     const authResult = await requireAuth();
     if (authResult.error) return authResult.error;
-    const userId = authResult.session.user.id;
+    const raterId = authResult.session.user.id;
 
     const jsonBody = await readJsonBody(request);
     if (!jsonBody.ok) return jsonBody.response;
@@ -116,42 +106,15 @@ export async function POST(request: Request, { params }: Params) {
         { status: 400 }
       );
     }
-    const { rating, title, body } = parsed.data;
 
-    // A written review must satisfy the shared domain rules; a bare star need not.
-    const isReview = title !== undefined || body !== undefined;
-    if (isReview) {
-      const validation = validateReview({ title: title ?? "", body: body ?? "", rating });
-      if (!validation.valid) {
-        return NextResponse.json({ error: validation.errors }, { status: 400 });
-      }
-    }
-
-    const deck = await findVisibleDeck(id, userId);
-    if (!deck) {
-      return NextResponse.json({ error: "Deck not found" }, { status: 404 });
-    }
-    if (deck.userId === userId) {
-      return NextResponse.json({ error: "You cannot rate your own deck" }, { status: 403 });
-    }
-
-    const values = { rating, title: title ?? null, body: body ?? null };
-
-    const saved = await prisma.deckRating.upsert({
-      where: { userId_deckId: { userId, deckId: id } },
-      update: values,
-      create: { ...values, userId, deckId: id },
-      select: RATING_SELECT,
-    });
-
-    return NextResponse.json(saved, { status: 201 });
+    const command = { deckId: id, raterId, ...parsed.data };
+    return rateDeckResponse(await rateDeck(command, ratingUseCasePorts));
   } catch (error) {
-    logger.error(
-      error instanceof Error ? error.message : "unknown",
-      "POST /api/community/decks/:id/ratings",
-      { id: id.slice(0, 50) }
+    logFailure("POST /api/community/decks/:id/ratings", error, id);
+    return NextResponse.json(
+      { error: "Failed to save rating" },
+      { status: 500 }
     );
-    return NextResponse.json({ error: "Failed to save rating" }, { status: 500 });
   }
 }
 
@@ -162,19 +125,16 @@ export async function DELETE(_req: Request, { params }: Params) {
   try {
     const authResult = await requireAuth();
     if (authResult.error) return authResult.error;
+    const raterId = authResult.session.user.id;
 
-    // deleteMany keeps this idempotent when no rating exists.
-    const { count } = await prisma.deckRating.deleteMany({
-      where: { userId: authResult.session.user.id, deckId: id },
-    });
-
-    return NextResponse.json({ deleted: count });
-  } catch (error) {
-    logger.error(
-      error instanceof Error ? error.message : "unknown",
-      "DELETE /api/community/decks/:id/ratings",
-      { id: id.slice(0, 50) }
+    return NextResponse.json(
+      await removeRating({ deckId: id, raterId }, ratingUseCasePorts)
     );
-    return NextResponse.json({ error: "Failed to delete rating" }, { status: 500 });
+  } catch (error) {
+    logFailure("DELETE /api/community/decks/:id/ratings", error, id);
+    return NextResponse.json(
+      { error: "Failed to delete rating" },
+      { status: 500 }
+    );
   }
 }

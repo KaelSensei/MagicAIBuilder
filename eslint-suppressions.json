@@ -233,18 +233,8 @@
       "count": 2
     }
   },
-  "src/app/api/community/decks/[id]/ratings/route.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    }
-  },
   "src/app/api/community/decks/[id]/save/route.test.ts": {
     "no-restricted-syntax": {
-      "count": 1
-    }
-  },
-  "src/app/api/community/decks/[id]/vote/route.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
       "count": 1
     }
   },
