@@ -40,7 +40,18 @@ export interface ScryfallCard {
   lang?: string;
   /** Text as printed on a non-English card; the fields above stay oracle (English) */
   printed_name?: string; printed_type_line?: string; printed_text?: string;
+  /**
+   * Release date of this printing's set, "YYYY-MM-DD". Scryfall always sends it; card JSON
+   * cached before 2026-11-15 lacks it (https://scryfall.com/docs/api/cards, read 2026-11-15).
+   */
+  released_at?: string;
+  /** True when this card was printed before, in another set (same source) */
+  reprint?: boolean;
+  /** Present on a card a partner or Wizards revealed before release (same source) */
+  preview?: ScryfallPreview;
 }
+/** Who revealed a preview card, and when ("YYYY-MM-DD"), as Scryfall records it */
+export interface ScryfallPreview { previewed_at?: string; source?: string; source_uri?: string; }
 export interface ScryfallSearchResponse { object: "list"; total_cards: number; has_more: boolean; next_page?: string; data: ScryfallCard[]; }
 /** Empty search response — Scryfall answers 404 when a valid query matches nothing */
 export const EMPTY_SEARCH_RESPONSE: ScryfallSearchResponse = { object: "list", total_cards: 0, has_more: false, data: [] };
