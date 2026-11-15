@@ -3,7 +3,7 @@
 // Built on Radix Dialog for the dialog role, focus trap, focus return and an
 // Escape that closes only the topmost dialog.
 import { useTranslations } from "next-intl";
-import type { ReactNode } from "react";
+import type { KeyboardEvent, ReactNode } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 import { motion } from "framer-motion";
@@ -25,6 +25,11 @@ interface ModalProps {
   readonly children: ReactNode;
   /** Show X close button in top-right corner (default true) */
   readonly showClose?: boolean;
+  /**
+   * Reads every key press made inside the dialog: the focus trap keeps focus there, so each one
+   * bubbles to the dialog element. Escape still closes the dialog whatever this does.
+   */
+  readonly onKeyDown?: (event: KeyboardEvent<HTMLDivElement>) => void;
 }
 
 /**
@@ -48,6 +53,7 @@ export function Modal({
   className,
   children,
   showClose = true,
+  onKeyDown,
 }: ModalProps) {
   const t = useTranslations("common");
   const focusReturn = useDialogFocusReturn();
@@ -66,7 +72,7 @@ export function Modal({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >
-            <Dialog.Content asChild {...focusReturn}>
+            <Dialog.Content asChild {...focusReturn} onKeyDown={onKeyDown}>
               <motion.div
                 className={cn(
                   cardSurfaceClassName,
