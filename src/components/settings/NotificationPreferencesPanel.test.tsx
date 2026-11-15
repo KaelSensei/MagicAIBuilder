@@ -36,4 +36,40 @@ describe("NotificationPreferencesPanel", () => {
     });
     expect(replies).not.toBeChecked();
   });
+
+  // B2-13: the route now answers a JSON 500 instead of Next's HTML page when
+  // the database fails. The panel treats that body like any failed load.
+  it("shows the alert with a retry and disabled controls when the route answers its JSON 500", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({ error: "Failed to load notification preferences" }),
+          {
+            status: 500,
+            headers: { "Content-Type": "application/json" },
+          }
+        )
+      )
+    );
+
+    renderWithIntl(<NotificationPreferencesPanel />);
+
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent(
+      "Your notification preferences could not be saved."
+    );
+    expect(screen.getByRole("button", { name: "Retry" })).toBeInTheDocument();
+    expect(
+      screen.queryByText("Failed to load notification preferences")
+    ).not.toBeInTheDocument();
+    for (const name of [
+      "Replies",
+      "Mentions",
+      "New followers",
+      "Watched decks",
+    ]) {
+      expect(screen.getByRole("checkbox", { name })).toBeDisabled();
+    }
+  });
 });
