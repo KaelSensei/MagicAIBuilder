@@ -589,6 +589,7 @@ Nothing fills the remaining slots of the player's own deck. No file under `src/a
 - [ ] Free copies first and a "free copies only" pool (slice 11); a per-card cap and a budget to acquire (slice 12); "owned first" and "any card" pools from I-67's catalogue, with guest and pasted proposals (slice 13); printings through I-57 (slice 14); "Another proposal" with a visible seed (slice 15); EDHREC inclusion as a labelled column with its sample, never the order (slice 16).
 - [ ] Later: count-only acceptance events through I-39 (slice 17); measured norms in place of ranges after the owner approves them (slice 18); model rewording of reasons with a post-check (slice 19); an AI mode that picks numbered cards from the legal pool, re-checked by code and scored on I-70's bench (slice 20); the collection-wide allocation of owned copies across decks, a paid candidate (slice 21).
 - [ ] Added 2026-11-12 (thirteenth pass): each completion candidate carries the [I-100](i100-cards-that-work-against-each-other.md) findings it would create, as a labelled, sortable column and never as a hidden filter (I-100 slice 8, after slice 5).
+- [ ] Added 2026-11-15 (fifteenth pass): when the deck has an [I-102](i102-a-theme-you-can-measure.md) theme, candidates may be sorted "on theme first" as an option the player picks; the default order does not change (I-102 slice 7).
 
 ### Engineering enablers
 

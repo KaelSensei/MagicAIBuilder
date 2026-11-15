@@ -211,7 +211,7 @@ Scryfall: "You may not simply repackage, republish, or proxy Scryfall data. Your
 
 Scryfall's bulk data includes an "Oracle Tags" file "sourced from Tagger": 4,617 tags on 36,453 Oracle IDs in the file of 2026-11-09. Scryfall calls the tags "community-maintained", and no licence was found. May the product show card roles and play styles derived from them, with attribution? Without them, definitions fall back to less precise Oracle-text patterns. Scryfall should be asked in writing. Added 2026-11-11: I-78's table-effect classes (symmetrical, group-slug, punisher, pillowfort, monarch-matters and others) are another use, and the punisher class has no Oracle-text definition without them.
 
-- **Unblocks:** I-37 slice 18; I-54's play styles (slice 2); I-65 slice 8, which is blocked for release; I-78 slice 8, blocked for release on the same answer.
+- **Unblocks:** I-37 slice 18; I-54's play styles (slice 2); I-65 slice 8, which is blocked for release; I-78 slice 8, blocked for release on the same answer; I-102 slice 10, art tags as a theme handle (added 2026-11-15).
 - **Raised in / sources:** [I-30 7.2](specs/i30-business-model-and-paid-tier.md#7-the-legal-gate), [I-54](specs/i54-find-your-next-commander.md#open-questions), [I-65](specs/i65-how-this-deck-wins.md#open-questions), [I-37](specs/i37-editor-depth.md#open-questions). Scryfall, [bulk data](https://scryfall.com/docs/api/bulk-data) (files dated 2026-11-09).
 
 ### L-23: Commander Spellbook's combo data

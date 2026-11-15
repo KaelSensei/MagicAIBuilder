@@ -212,6 +212,15 @@ Three specs from a thirteenth pass on 2026-11-12, written the same way: dated re
 | [Cards in this deck that work against each other](i100-cards-that-work-against-each-other.md)                  | I-100      | Next for slices 0–4; never paid                  | Spellbook says which cards win together; one competitor claims anti-synergy flags without a method; nothing counts a symmetric card against its owner's own list                          |
 | [Collecting goals beyond a set](i101-collecting-goals-beyond-a-set.md)                                         | I-101      | Later (2027), behind I-26 and gate C; never paid | Every collection tool tracks a set's percentage; none lets a collector name a cycle, every printing of a card or an artist, with a stated counting rule and a cost from owned cards first |
 
+## Themes and side decks — added 2026-11-15
+
+Two specs from a fifteenth pass on 2026-11-15, written the same way: dated research that is not committed, every external fact linked to its own source, and legal points as research, not legal advice. The pass asked what a Commander player builds that the product cannot yet measure or represent. Its review is [section 16 of the competitive landscape](../competitive-landscape.md#16-a-fifteenth-pass-themes-and-side-decks-2026-11-15). Both sit after the numbered Next band, and each has a first slice that can start now. Owner decisions D-99 and D-100 join [`owner-decisions.md`](../owner-decisions.md); L-22 gains I-102 slice 10 among what it unblocks.
+
+| Spec | Initiative | Status | The one-line reason it exists |
+| --- | --- | --- | --- |
+| [A theme you can measure](i102-a-theme-you-can-measure.md) | I-102 | Next for slices 0–5; never paid | Wizards made Bracket 1 "all about theme over function"; EDHREC's themes are curated by popularity, and no tool measures a player's own list against the theme they chose |
+| [Planar, scheme and Attraction decks](i103-planar-scheme-and-attraction-decks-beside-the-commander-deck.md) | I-103 | Next for slices 0–5; never paid | Wizards ships 90 planes and 40 schemes inside Commander precons and writes an Archenemy Commander option; the builder's search hides them and no tool checks a side deck against its rule |
+
 ## Discipline
 
 A spec is a plan, not a record. It does not mark anything shipped — the roadmap's `Status` and its scope checkboxes remain the only source of truth for what exists. Competitor rows are claims read from public pages on a stated date, not evidence; revalidate before a row justifies implementation.
@@ -256,5 +265,7 @@ New files this pass:
 - [`i98-a-cedh-checklist-that-does-not-claim-a-win-rate.md`](i98-a-cedh-checklist-that-does-not-claim-a-win-rate.md)
 
 The thirteenth pass (2026-11-12) added [`i99-a-pilot-sheet-and-how-heavy-this-deck-is-to-pilot.md`](i99-a-pilot-sheet-and-how-heavy-this-deck-is-to-pilot.md), [`i100-cards-that-work-against-each-other.md`](i100-cards-that-work-against-each-other.md) and [`i101-collecting-goals-beyond-a-set.md`](i101-collecting-goals-beyond-a-set.md), each in the research shape with a slice table, the feature contract and a roadmap record written in the file from the start, so nothing was moved from the roadmap for them.
+
+The fifteenth pass (2026-11-15) added [`i102-a-theme-you-can-measure.md`](i102-a-theme-you-can-measure.md) and [`i103-planar-scheme-and-attraction-decks-beside-the-commander-deck.md`](i103-planar-scheme-and-attraction-decks-beside-the-commander-deck.md) in the same shape.
 
 The fourteenth pass (2026-11-14) added no file. It extended the specs that already owned the jobs, each with a "Fourteenth pass" section: I-01, I-07, I-08, I-09, I-14, I-30, I-32, I-37, I-48, I-55, I-57, I-58, I-77, I-85, I-90, I-96, I-98 and I-101. The review is [section 15 of the competitive landscape](../competitive-landscape.md#15-a-fourteenth-pass-notes-that-landed-after-the-thirteenth-2026-11-14).
