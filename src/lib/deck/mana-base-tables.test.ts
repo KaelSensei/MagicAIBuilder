@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { landCountTarget, sourceTarget } from "./mana-base-tables";
+import {
+  KARSTEN_PARTIAL_SOURCES,
+  landCountTarget,
+  mdfcWeights,
+  sourceTarget,
+} from "./mana-base-tables";
 
 /** Karsten publishes his coefficients to two decimal places. */
 const TWO_DECIMALS = 2;
@@ -99,6 +104,30 @@ describe("sourceTarget", () => {
     expect(sourceTarget({ manaValue: 1, pips: 2 })).toEqual({
       kind: "outside-table",
       reason: "not-a-cost",
+    });
+  });
+});
+
+describe("mdfcWeights", () => {
+  it("counts a non-mythic spell with a land back as 0.38 of a land and 0.8 of a source", () => {
+    expect(mdfcWeights("non-mythic")).toEqual({ land: 0.38, source: 0.8 });
+  });
+
+  it("counts a mythic spell with a land back as 0.74 of a land and a full source", () => {
+    expect(mdfcWeights("mythic")).toEqual({ land: 0.74, source: 1 });
+  });
+});
+
+describe("KARSTEN_PARTIAL_SOURCES", () => {
+  it("holds Karsten's published partial-source weights, each with the spells it counts for", () => {
+    expect(KARSTEN_PARTIAL_SOURCES).toEqual({
+      fetchLand: { weight: 1, countsFor: "any-spell", dependsOnOpponents: false },
+      signet: { weight: 0.75, countsFor: "mana-value-3-or-more", dependsOnOpponents: false },
+      manaDork: { weight: 0.5, countsFor: "any-spell", dependsOnOpponents: false },
+      twoManaLandRamp: { weight: 0.75, countsFor: "mana-value-3-or-more", dependsOnOpponents: false },
+      treasureMaker: { weight: 0.25, countsFor: "any-spell", dependsOnOpponents: false },
+      exoticOrchard: { weight: 0.75, countsFor: "any-spell", dependsOnOpponents: true },
+      fellwarStone: { weight: 0.5, countsFor: "any-spell", dependsOnOpponents: true },
     });
   });
 });

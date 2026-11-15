@@ -199,3 +199,90 @@ export function sourceTarget(cost: ColourCost): SourceTarget {
     sources,
   };
 }
+
+/** Whether a modal double-faced card is mythic: its weights depend on it. */
+export type MdfcRarity = "mythic" | "non-mythic";
+
+/** What a spell with a land on its back counts for. */
+export interface MdfcWeights {
+  /** Share of a land in the land count [2] */
+  readonly land: number;
+  /** Share of a coloured source in the source count [3] */
+  readonly source: number;
+}
+
+/**
+ * Karsten's weights for a modal double-faced card whose back is a land, such
+ * as Shatterskull Smashing: a spell that can be a land, neither a full land
+ * nor zero (I-58 requirements 2.2 and 2.7). A card that transforms into a land
+ * later, such as Treasure Map, is a spell and takes no weight here.
+ *
+ * @param rarity - whether the card is mythic
+ * @returns its share of a land [2] and of a source [3]
+ */
+export function mdfcWeights(rarity: MdfcRarity): MdfcWeights {
+  switch (rarity) {
+    case "mythic":
+      return { land: 0.74, source: 1 };
+    case "non-mythic":
+      return { land: 0.38, source: 0.8 };
+  }
+  const exhaustive: never = rarity;
+  return exhaustive;
+}
+
+/** A card kind Karsten counts as part of a coloured source [3]. */
+export type PartialSourceKind =
+  | "fetchLand"
+  | "signet"
+  | "manaDork"
+  | "twoManaLandRamp"
+  | "treasureMaker"
+  | "exoticOrchard"
+  | "fellwarStone";
+
+/** How much one card of a partial-source kind counts, and when. */
+export interface PartialSource {
+  /** Share of a source of each colour it can make */
+  readonly weight: number;
+  /** The spells it counts for: some ramp only helps cast three-drops and up */
+  readonly countsFor: "any-spell" | "mana-value-3-or-more";
+  /** True when the colours depend on the opponents' decks, unknown here */
+  readonly dependsOnOpponents: boolean;
+}
+
+/**
+ * Karsten's partial-source weights [3]. A fetch land is a full source of each
+ * colour it can find; Karsten lowers that to about two-thirds for Fabled
+ * Passage-type fetches in heavy three-plus-colour decks, a choice I-58 leaves
+ * open (open question 6). Exotic Orchard and Fellwar Stone count only when the
+ * opponents' colours are unknown, so they carry the "depends on opponents"
+ * flag. Modal double-faced lands are in `mdfcWeights`.
+ */
+export const KARSTEN_PARTIAL_SOURCES: Readonly<
+  Record<PartialSourceKind, PartialSource>
+> = {
+  fetchLand: { weight: 1, countsFor: "any-spell", dependsOnOpponents: false },
+  signet: {
+    weight: 0.75,
+    countsFor: "mana-value-3-or-more",
+    dependsOnOpponents: false,
+  },
+  manaDork: { weight: 0.5, countsFor: "any-spell", dependsOnOpponents: false },
+  twoManaLandRamp: {
+    weight: 0.75,
+    countsFor: "mana-value-3-or-more",
+    dependsOnOpponents: false,
+  },
+  treasureMaker: {
+    weight: 0.25,
+    countsFor: "any-spell",
+    dependsOnOpponents: false,
+  },
+  exoticOrchard: {
+    weight: 0.75,
+    countsFor: "any-spell",
+    dependsOnOpponents: true,
+  },
+  fellwarStone: { weight: 0.5, countsFor: "any-spell", dependsOnOpponents: true },
+};
