@@ -1,84 +1,78 @@
 /**
- * Follow / unfollow another builder.
+ * Follow / unfollow another builder: `/api/community/users/[username]/follow`.
  *
  * POST   — follow the user behind :username
  * DELETE — unfollow them
  *
- * Both require a session. Username matching mirrors /api/users/[username]:
- * case-insensitive, since profile slugs are stored lowercase but linked to
- * with any casing.
+ * HTTP only: session, the username check and the status for each outcome.
+ * The rules live in the use cases of `@/lib/social/follow-use-cases`. The
+ * username rule is `isUsername`, shared with `/api/users/[username]`; the
+ * match itself is case-insensitive, since profile slugs are stored lowercase
+ * but linked to with any casing.
  */
 
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db/prisma";
 import { requireAuth } from "@/lib/auth/helpers";
 import { logger } from "@/lib/logger";
+import { followUseCasePorts } from "@/lib/social/follow-server";
+import {
+  followUser,
+  unfollowUser,
+  type FollowResult,
+  type FollowUseCasePorts,
+} from "@/lib/social/follow-use-cases";
+import { isUsername } from "@/lib/social/public-profile";
 
 type Params = { params: Promise<{ username: string }> };
 
-const USERNAME_PATTERN = /^[a-zA-Z0-9_-]+$/;
-const USERNAME_MAX_LENGTH = 50;
+/** How many characters of a bad username the error log keeps. */
+const LOGGED_USERNAME_LENGTH = 50;
 
-/**
- * Validates a username slug from the route.
- *
- * @param username Raw route segment.
- * @returns True when the slug is well-formed.
- */
-function isValidUsername(username: string): boolean {
-  return (
-    username.length > 0 &&
-    username.length <= USERNAME_MAX_LENGTH &&
-    USERNAME_PATTERN.test(username)
-  );
+type FollowUseCase = (
+  command: { readonly followerId: string; readonly username: string },
+  ports: FollowUseCasePorts
+) => Promise<FollowResult>;
+
+/** The follow state and count as the body, or the 400 / 404 the rules earn. */
+function followResponse(result: FollowResult, following: boolean) {
+  switch (result.kind) {
+    case "ok":
+      return NextResponse.json(
+        { following, followerCount: result.followerCount },
+        { status: following ? 201 : 200 }
+      );
+    case "user-not-found":
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    case "self-follow":
+      return NextResponse.json(
+        { error: "You cannot follow yourself" },
+        { status: 400 }
+      );
+    default: {
+      const unreachable: never = result;
+      return unreachable;
+    }
+  }
 }
 
 /**
- * Resolves the follow target and the signed-in follower.
- *
- * @param username Target profile slug.
- * @returns The follower and target ids, or an error response.
+ * Runs one follow use case for the signed-in caller. Both verbs share the
+ * session check, the username check and the response mapping.
  */
-async function resolveFollowPair(
-  username: string
-): Promise<
-  | { followerId: string; targetId: string; error?: never }
-  | { followerId?: never; targetId?: never; error: NextResponse }
-> {
+async function changeFollow(
+  username: string,
+  run: FollowUseCase,
+  following: boolean
+) {
   const authResult = await requireAuth();
-  if (authResult.error) return { error: authResult.error };
+  if (authResult.error) return authResult.error;
 
-  if (!isValidUsername(username)) {
-    return { error: NextResponse.json({ error: "Invalid username" }, { status: 400 }) };
+  if (!isUsername(username)) {
+    return NextResponse.json({ error: "Invalid username" }, { status: 400 });
   }
 
-  const target = await prisma.user.findFirst({
-    where: { username: { equals: username, mode: "insensitive" } },
-    select: { id: true },
-  });
-
-  if (!target) {
-    return { error: NextResponse.json({ error: "User not found" }, { status: 404 }) };
-  }
-
-  const followerId = authResult.session.user.id;
-  if (followerId === target.id) {
-    return {
-      error: NextResponse.json({ error: "You cannot follow yourself" }, { status: 400 }),
-    };
-  }
-
-  return { followerId, targetId: target.id };
-}
-
-/**
- * Counts how many users follow a given profile.
- *
- * @param userId Profile owner id.
- * @returns The follower total.
- */
-function countFollowers(userId: string): Promise<number> {
-  return prisma.userFollow.count({ where: { followingId: userId } });
+  const command = { followerId: authResult.session.user.id, username };
+  return followResponse(await run(command, followUseCasePorts), following);
 }
 
 // POST /api/community/users/[username]/follow
@@ -86,29 +80,17 @@ export async function POST(_req: Request, { params }: Params) {
   const { username } = await params;
 
   try {
-    const pair = await resolveFollowPair(username);
-    if (pair.error) return pair.error;
-
-    const { followerId, targetId } = pair;
-
-    // upsert keeps a repeated follow idempotent rather than a unique-constraint error.
-    await prisma.userFollow.upsert({
-      where: { followerId_followingId: { followerId, followingId: targetId } },
-      update: {},
-      create: { followerId, followingId: targetId },
-    });
-
-    return NextResponse.json(
-      { following: true, followerCount: await countFollowers(targetId) },
-      { status: 201 }
-    );
+    return await changeFollow(username, followUser, true);
   } catch (error) {
     logger.error(
       error instanceof Error ? error.message : "unknown",
       "POST /api/community/users/:username/follow",
-      { username: username.slice(0, USERNAME_MAX_LENGTH) }
+      { username: username.slice(0, LOGGED_USERNAME_LENGTH) }
     );
-    return NextResponse.json({ error: "Failed to follow user" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to follow user" },
+      { status: 500 }
+    );
   }
 }
 
@@ -117,25 +99,16 @@ export async function DELETE(_req: Request, { params }: Params) {
   const { username } = await params;
 
   try {
-    const pair = await resolveFollowPair(username);
-    if (pair.error) return pair.error;
-
-    const { followerId, targetId } = pair;
-
-    await prisma.userFollow.deleteMany({
-      where: { followerId, followingId: targetId },
-    });
-
-    return NextResponse.json({
-      following: false,
-      followerCount: await countFollowers(targetId),
-    });
+    return await changeFollow(username, unfollowUser, false);
   } catch (error) {
     logger.error(
       error instanceof Error ? error.message : "unknown",
       "DELETE /api/community/users/:username/follow",
-      { username: username.slice(0, USERNAME_MAX_LENGTH) }
+      { username: username.slice(0, LOGGED_USERNAME_LENGTH) }
     );
-    return NextResponse.json({ error: "Failed to unfollow user" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to unfollow user" },
+      { status: 500 }
+    );
   }
 }
