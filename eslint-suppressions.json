@@ -54,9 +54,6 @@
     }
   },
   "src/app/[locale]/decks/page.tsx": {
-    "complexity": {
-      "count": 1
-    },
     "max-lines": {
       "count": 1
     },
