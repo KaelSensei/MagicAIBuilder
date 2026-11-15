@@ -1,6 +1,6 @@
 # MTG Competitive Landscape
 
-> **Last updated:** 12 November 2026 (section 14; sections 1 to 13 unchanged except this header and the method line)
+> **Last updated:** 15 November 2026 (section 16; sections 1 to 15 unchanged except this header and the method line)
 > **Purpose:** Product strategy reference for MagicAIBuilder
 > **Method:** Public product pages, help pages and vendor changelogs reviewed on 8 November 2026 (Europe/Paris), plus the `dev` roadmap and README. This was not a signed-in test of every product. Vendor claims are not independent measurements. Reddit threads cited below are dated testimony, not a survey. **Not established** means not verified on the surfaces reviewed, not proven absent. A second pass on 9 November 2026 covered traffic, monetization, the marketplace path, editor depth, analytics, game tracking, AI economics and player demand; its findings and corrections are in [section 10](#10-additions-from-the-9-november-2026-pass). Traffic figures there are third-party modelled estimates. Reddit scores in that section come from the Arctic Shift archive, because Reddit refused automated reads. A third pass that evening, for the I-38 to I-46 specs, covered trust and user rights, store tools, Commander variants, storage, trading, selling, scanning and chat apps; its facts are in [section 11](#11-physical-card-tools-stores-and-trust-2026-11-09). A fourth pass, read on 10 and 11 November 2026, looked at deckbuilding in other card games and re-checked several Magic entries; its findings are in [section 12](#12-deckbuilding-across-card-games-2026-11-11), and its corrections are marked "Corrected 2026-11-11" or "Added 2026-11-11" where they apply. A further pass on 11 November 2026, the roadmap's twelfth, looked for Commander jobs that pass had not owned. It is [section 13](#13-a-twelfth-pass-on-commander-tools-2026-11-11). A pass on 12 November 2026, the roadmap's thirteenth, asked which jobs a player and a collector still do on paper: remembering what a deck asks at each step, finding the cards in a list that undo each other, and tracking a collecting goal that is not a set. It is [section 14](#14-a-thirteenth-pass-piloting-coherence-and-collecting-2026-11-12).
 
@@ -625,6 +625,32 @@ The fourteenth pass adds no initiative number. Every job in the notes already ha
 
 ---
 
+## 16. A fifteenth pass: themes and side decks (2026-11-15)
+
+Read on 15 November 2026, on `dev` at `d3f27c0d` (#1511). The pass asked what a Commander player builds that the product cannot yet represent or measure: a deck whose point is its theme, and the supplementary decks Wizards now sells inside Commander precons. It did not sign in to any site. Reddit posts are dated testimony; "search summary" marks a page known only from a search engine's summary.
+
+### What was checked
+
+- Wizards' update of 21 October 2025 says the panel wants "to double down on Exhibition's intent being all about theme over function", and lists "Decks to prioritize a goal, theme, or idea over power" among what Bracket 1 players expect ([update](https://magic.wizards.com/en/news/announcements/commander-brackets-beta-update-october-21-2025)). EDHREC's Bracket 1 articles of 12 May and 27 August 2025 build decks by letter, artist, era and story ([adapting](https://edhrec.com/articles/adapting-your-decks-to-the-exhibition-bracket-1), [five ideas](https://edhrec.com/articles/5-fun-ideas-for-building-a-bracket-1-deck)). EDHREC's own themes are "manually implemented" and ordered by popularity ([themes](https://edhrec.com/articles/news-new-edhrec-feature-themes), 2017). No tool read measures a player's own list against a theme the player chose. That is [I-102](specs/i102-a-theme-you-can-measure.md).
+- Scryfall can express every theme handle as an operator: 427 Commander-legal Dragons, 155 cards that name Dragon without being one, 112 that mention Ravnica in flavour text, 100 Orzhov watermarks, 163 cards by Rebecca Guay, 1,112 Tagger art tags "dragon" (computed, 15 November 2026).
+- Planes, phenomena and schemes by product (computed from Scryfall's printings): Planechase 2009 (40), Planechase 2012 (40), Planechase Anthology 2016 (86), March of the Machine Commander 2023 (50), Doctor Who 2023 (40), Secret Lair Showcase Planes 2025 (10); Archenemy 2010 (45), Archenemy: Nicol Bolas 2017 (20), Duskmourn Commander 2024 (40). The Comprehensive Rules served by the product define a planar deck (CR 901.3), a communal planar deck (901.15a), a scheme deck (904.3), Supervillain Rumble (904.12), the Archenemy Commander option (904.13) and an Attraction deck (717.2a). 22 of 50 Attractions are Commander-legal; no Contraption is.
+- Archidekt's moderator: planes "can already be added", then moved out of "In Deck" by hand; "Attractions already do this by default" ([forum](https://archidekt.com/forum/thread/4264342)). Moxfield users keep planar decks as separate lists (search summaries). r/EDH: twelve Planechase titles since 2025, among them "What planes/phenomena and schemes would you recommend for my deck…" (14 March 2026). The side decks, their checks and their export are [I-103](specs/i103-planar-scheme-and-attraction-decks-beside-the-commander-deck.md).
+
+### Where the new initiatives sit
+
+I-102 and I-103 are Next after the numbered Next band. Unlike the twelfth and thirteenth passes' Next items, each has a first slice that can start now: I-102 slice 1 reads fields every deck card stores, and I-103 slices 1, 2 and 5 need no migration because `DeckCard.zone` is a string column. Neither is a score, a game engine or a paid feature.
+
+### Folded back into an existing initiative
+
+| Finding | Where it went |
+| --- | --- |
+| The Archenemy Commander option (CR 904.13) | I-42's variant configuration, as a declared option with its life totals |
+| A monthly upgrade budget across decks, from an MTGNexus thread of a $20-a-month build and the budget series of MTGGoldfish and EDHREC ([thread](https://www.mtgnexus.com/viewtopic.php?p=96138), search summary) | I-06's acquisition plan |
+| A planar deck shared by the table (CR 901.15) | An open question on I-79 |
+| Contraptions | Not promoted: none is Commander-legal |
+
+---
+
 ## Sources
 
 Primary pages and announcements:
@@ -1005,3 +1031,30 @@ Read on 14 November 2026 unless another date is given. Section 15 is the review.
 - r/CompetitiveEDH, "B4 to Fringe cEDH to cEDH", 76 points, 149 comments, 2026-11-12, via Arctic Shift: <https://www.reddit.com/r/CompetitiveEDH/comments/1xu3orb/b4_to_fringe_cedh_to_cedh/>
 - r/CompetitiveEDH, reserved-list mana rocks, 33 points, 76 comments, 2026-11-09, via Arctic Shift: <https://www.reddit.com/r/CompetitiveEDH/comments/1xs48i9/how_needed_are_the_reserved_list_mana_rockslands/>
 - Commander Spellbook, home (title and preview image only): <https://commanderspellbook.com/>
+
+### Added 15 November 2026
+
+Read on 15 November 2026 unless another date is given.
+
+Section 16, themes (I-102):
+
+- Wizards of the Coast, Commander Brackets Beta Update, 21 October 2025: <https://magic.wizards.com/en/news/announcements/commander-brackets-beta-update-october-21-2025>
+- Wizards of the Coast, Introducing Commander Brackets Beta, 11 February 2025: <https://magic.wizards.com/en/news/announcements/introducing-commander-brackets-beta>
+- EDHREC, Jeff Girten, "Adapting Your Decks to the Exhibition Bracket (1)", 12 May 2025: <https://edhrec.com/articles/adapting-your-decks-to-the-exhibition-bracket-1>
+- EDHREC, Nicholas Lucchesi, "5 Fun Ideas for Building a Bracket 1 Deck", 27 August 2025: <https://edhrec.com/articles/5-fun-ideas-for-building-a-bracket-1-deck>
+- EDHREC, Christopher Russell, "NEWS — New EDHREC Feature! Themes!", 10 September 2017: <https://edhrec.com/articles/news-new-edhrec-feature-themes>
+- r/EDH, "Is it really that bad not to build your deck around a theme?", 21 January 2026 (171 points, 173 comments): <https://www.reddit.com/r/EDH/comments/1qj2tim/>
+- r/EDH, "How much do you care about a deck's theme or aesthetic?", 1 September 2026 (72 points, 157 comments): <https://www.reddit.com/r/EDH/comments/1w4u0yd/>
+- r/EDH, "Card ideas needed for Bracket 1/2 deck around an insult theme", 29 October 2026 (30 points, 83 comments): <https://www.reddit.com/r/EDH/comments/1xikh9f/>
+- Scryfall syntax guide (the operators each handle uses): <https://scryfall.com/docs/syntax>
+
+Section 16, side decks (I-103):
+
+- Wizards of the Coast, Comprehensive Rules (rules 717, 901, 904): <https://magic.wizards.com/en/rules>
+- Archidekt forum, "Planechase Deck Option": <https://archidekt.com/forum/thread/4264342>
+- Moxfield, public planar decks (search summaries): <https://moxfield.com/decks/83V1aPoY602YgyE0Mp-F7A>, <https://moxfield.com/decks/ZtPgc8poZEC52JfHnOp9EA>
+- r/EDH, "Why is planechase so overpriced", 12 June 2025 (110 points, 92 comments): <https://www.reddit.com/r/EDH/comments/1l9zs13/>
+- r/EDH, "Would it be weird to bring planechase cards to a casual commander meeting?", 15 August 2026 (13 points, 22 comments): <https://www.reddit.com/r/EDH/comments/1vp8xt3/>
+- r/EDH, "What planes/phenomena and schemes would you recommend for my deck when playing Planechase/…", 14 March 2026: <https://www.reddit.com/r/EDH/comments/1rt4beu/>
+- Sportskeeda, March of the Machine Commander decks and their Planechase cards (search summary): <https://sportskeeda.com/esports/news-magic-the-gathering-s-march-machine-commander-decks-contain-new-classic-planechase-cards>
+- MTGNexus, a Commander deck built on $20 a month (search summary): <https://www.mtgnexus.com/viewtopic.php?p=96138>

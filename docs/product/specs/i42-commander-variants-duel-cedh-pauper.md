@@ -589,6 +589,7 @@ The roadmap lists nine formats as a completed foundation, but no screen lets a p
   - The ban notices on saved decks (slice 11) should reuse [I-48](i48-official-changes-reach-every-deck.md) slice 5's notice and dated report rather than build a second notice.
   - #1334 shipped the per-session multiplayer choice in the playtest (2026-11-10), part of 4.3.
 - [ ] Correct the Brawl row (2026-11-11) and record Arena's Competitive Brawl: ten banned commanders, deck composition "not a factor for matchmaking", and "There is no free mulligan in Competitive Brawl" ([Wizards](https://magic.wizards.com/en/news/mtg-arena/introducing-ranked-brawl), 2026-06-08). Wizards' own article dates Ranked Brawl to an event "From June 2–15" and Competitive Brawl to "June 23"; it never mentions 2023, and no source for a 2023 ranked Brawl was found. Requirement 4.3 sets the free mulligan by player count, which cannot model Arena's two-player Competitive Brawl. Added 2026-11-11.
+- [ ] Added 2026-11-15 (fifteenth pass): the Archenemy Commander option (CR 904.13: the archenemy starts at 60 life; the opposing team shares a life total of 60; poison counters are not shared) and Supervillain Rumble (CR 904.12) as declared options of the variant configuration, with no game engine. [I-103](i103-planar-scheme-and-attraction-decks-beside-the-commander-deck.md) checks the scheme deck; this initiative states the life totals (I-103 slice 7).
 
 ### Engineering enablers
 
