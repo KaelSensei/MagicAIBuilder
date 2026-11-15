@@ -32,9 +32,17 @@ import {
   isCommanderEligible,
 } from "@/lib/deck/commander-eligibility";
 import { getFormatConfig } from "@/lib/deck/formats";
-import { PIP_COLORS } from "@/lib/deck/mana-alignment";
+import {
+  colorsProducedBy,
+  PIP_COLORS,
+  type PipColor,
+} from "@/lib/deck/mana-alignment";
 import { maxQuantity } from "@/lib/deck/multiples";
 import { canPairCommanders, pairingCardOf } from "@/lib/deck/pairing";
+import {
+  sourceTargetsByColour,
+  type SpellCost,
+} from "@/lib/deck/source-targets";
 import {
   buildScryfallNameIndex,
   normalizeImportedName,
@@ -42,7 +50,11 @@ import {
 } from "@/lib/scryfall/name-index";
 import { isBasicLand } from "@/lib/scryfall/type-line";
 import type { ScryfallCard } from "@/lib/scryfall/types";
-import { fitToDeckSize, type KeptCard } from "./generated-deck-size";
+import {
+  fitToDeckSize,
+  type KeptCard,
+  type SourceNeed,
+} from "./generated-deck-size";
 
 /** The outcome of checking a generated deck against card data. */
 export type GeneratedDeckVerdict =
@@ -172,6 +184,45 @@ function removalReason(
   return null;
 }
 
+/** The cost of the face a player casts first: the front face of a card with faces. */
+function frontFaceCost(card: ScryfallCard): SpellCost {
+  return {
+    name: card.name,
+    manaCost: card.card_faces?.[0]?.mana_cost ?? card.mana_cost ?? "",
+  };
+}
+
+/** The colours a card taps for when its front face is a land; empty otherwise. */
+function producedColoursOf(card: ScryfallCard): readonly PipColor[] {
+  const [frontTypeLine = ""] = card.type_line.split("//", 1);
+  if (!/\bLand\b/.test(frontTypeLine)) return [];
+  return [
+    ...colorsProducedBy({
+      typeLine: card.type_line,
+      oracleText: card.oracle_text ?? "",
+      colorIdentity: card.color_identity,
+    }),
+  ];
+}
+
+/**
+ * Each colour of the command zone with its source target, set by the most
+ * demanding of the commanders' and the kept cards' costs (I-58 requirement 3).
+ */
+function sourceNeeds(
+  commandZone: readonly ScryfallCard[],
+  kept: readonly ScryfallCard[]
+): readonly SourceNeed[] {
+  const identity = new Set(commandZone.flatMap((card) => card.color_identity));
+  const targets = sourceTargetsByColour(
+    [...commandZone, ...kept].map(frontFaceCost)
+  );
+  return PIP_COLORS.filter((colour) => identity.has(colour)).map((colour) => ({
+    colour,
+    target: targets.get(colour)?.sources ?? 0,
+  }));
+}
+
 /** Keeps the legal copies of each listed card and records every copy removed. */
 function filterListedCards(
   entries: readonly AICard[],
@@ -179,6 +230,8 @@ function filterListedCards(
   resolve: Resolve
 ): {
   readonly kept: readonly KeptCard[];
+  /** The card data of each kept entry, in list order */
+  readonly keptCards: readonly ScryfallCard[];
   readonly corrections: readonly DeckCorrection[];
 } {
   const identity: ReadonlySet<string> = new Set(
@@ -189,6 +242,7 @@ function filterListedCards(
   );
   const copiesByName = new Map<string, number>();
   const kept: KeptCard[] = [];
+  const keptCards: ScryfallCard[] = [];
   const corrections: DeckCorrection[] = [];
 
   for (const entry of entries) {
@@ -229,10 +283,12 @@ function filterListedCards(
         category: entry.category,
       },
       isBasicLand: isBasicLand(card.type_line),
+      producedColours: producedColoursOf(card),
     });
+    keptCards.push(card);
   }
 
-  return { kept, corrections };
+  return { kept, keptCards, corrections };
 }
 
 /**
@@ -253,11 +309,10 @@ export function checkGeneratedDeckLegality(
   const { commander, partner } = commandZone;
   const commandCards = partner ? [commander, partner] : [commander];
   const listed = filterListedCards(deck.cards, commandCards, resolve);
-  const identity = new Set(commandCards.flatMap((card) => card.color_identity));
   const sized = fitToDeckSize(
     listed.kept,
     COMMANDER_DECK_SIZE - commandCards.length,
-    PIP_COLORS.filter((color) => identity.has(color))
+    sourceNeeds(commandCards, listed.keptCards)
   );
   if (sized.status === "rejected") return sized;
 
