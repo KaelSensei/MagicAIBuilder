@@ -45,4 +45,9 @@ describe("isSessionDifficulty", () => {
     expect(isSessionDifficulty(undefined)).toBe(false);
     expect(isSessionDifficulty(null)).toBe(false);
   });
+
+  it("refuses anything else that is not a string", () => {
+    expect(isSessionDifficulty(1)).toBe(false);
+    expect(isSessionDifficulty(["cedh"])).toBe(false);
+  });
 });

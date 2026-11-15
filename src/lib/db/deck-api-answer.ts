@@ -25,9 +25,14 @@ export class DeckApiError extends Error {
     readonly status: number,
     detail = ""
   ) {
-    super(`[${operation}] HTTP ${status}${detail ? `: ${detail}` : ""}`);
+    super(`[${operation}] HTTP ${status}${detailSuffix(detail)}`);
     this.name = "DeckApiError";
   }
+}
+
+/** `: <detail>` after the status, or nothing when the route sent no text. */
+function detailSuffix(detail: string): string {
+  return detail ? `: ${detail}` : "";
 }
 
 /**

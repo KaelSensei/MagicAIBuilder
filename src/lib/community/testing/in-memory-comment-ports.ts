@@ -131,7 +131,7 @@ export function inMemoryCommentStore(): InMemoryCommentStore {
     },
     async updateBodyOfAuthored(ref: AuthoredCommentRef, body: string) {
       const row = rows.get(ref.commentId);
-      if (!row || row.deckId !== ref.deckId || row.userId !== ref.authorId) {
+      if (row?.deckId !== ref.deckId || row.userId !== ref.authorId) {
         return false;
       }
       rows.set(ref.commentId, { ...row, body, updatedAt: nextStamp() });
