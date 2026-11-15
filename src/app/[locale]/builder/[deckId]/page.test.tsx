@@ -63,6 +63,20 @@ const DECK_ID = "deck-1";
 const SCRYFALL_NAMED = "https://api.scryfall.com/cards/named";
 const SCRYFALL_SEARCH = "https://api.scryfall.com/cards/search";
 
+/**
+ * How long one search-result wait may take under the coverage run in CI,
+ * where the debounced search and the row's render took more than a second.
+ */
+const SEARCH_ROW_WAIT_MS = 10_000;
+
+/**
+ * The limit for a test that waits for search rows. Vitest's default of 5
+ * seconds is shorter than a single {@link SEARCH_ROW_WAIT_MS} wait, so on a
+ * slow run the test failed with "Test timed out in 5000ms" before its own
+ * waits could expire (CI runs 43684999921 and 43693127796, 2026-11-15).
+ */
+const SEARCH_TEST_TIMEOUT_MS = 30_000;
+
 /** A signed-in player who owns the deck under test. */
 const PLAYER: Session = {
   user: { id: "player-1", name: "Kael" },
@@ -982,14 +996,14 @@ describe("characterization: builder page shell", () => {
         await screen.findByRole(
           "button",
           { name: "Add Opt to deck" },
-          { timeout: 10_000 }
+          { timeout: SEARCH_ROW_WAIT_MS }
         )
       );
       await userEvent.click(
         await screen.findByRole(
           "button",
           { name: "Opt — Ixalan" },
-          { timeout: 10_000 }
+          { timeout: SEARCH_ROW_WAIT_MS }
         )
       );
 
@@ -1005,6 +1019,6 @@ describe("characterization: builder page shell", () => {
           },
         ])
       );
-    });
+    }, SEARCH_TEST_TIMEOUT_MS);
   });
 });
