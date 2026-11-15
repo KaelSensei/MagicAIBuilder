@@ -4,6 +4,7 @@ import {
   KARSTEN_PARTIAL_SOURCES,
   landCountTarget,
   mdfcWeights,
+  ruleOfThumbLands,
   sourceTarget,
 } from "./mana-base-tables";
 
@@ -129,5 +130,33 @@ describe("KARSTEN_PARTIAL_SOURCES", () => {
       exoticOrchard: { weight: 0.75, countsFor: "any-spell", dependsOnOpponents: true },
       fellwarStone: { weight: 0.5, countsFor: "any-spell", dependsOnOpponents: true },
     });
+  });
+});
+
+describe("ruleOfThumbLands", () => {
+  it("starts at 42 lands with a Sol Ring and nothing else to cut for", () => {
+    expect(
+      ruleOfThumbLands({ additionalManaRocks: 0, cheapCantripsAndDorks: 0 })
+    ).toEqual({ kind: "known", fewest: 42, most: 42 });
+  });
+
+  it("cuts a land per two or three additional rocks and per three or four cheap cantrips or dorks", () => {
+    // Six rocks cut 3 (every two) or 2 (every three); eight cheap pieces cut
+    // 2 (every three, rounded down) or 2 (every four).
+    expect(
+      ruleOfThumbLands({ additionalManaRocks: 6, cheapCantripsAndDorks: 8 })
+    ).toEqual({ kind: "known", fewest: 37, most: 38 });
+  });
+
+  it("never goes below 37 lands", () => {
+    expect(
+      ruleOfThumbLands({ additionalManaRocks: 12, cheapCantripsAndDorks: 12 })
+    ).toEqual({ kind: "known", fewest: 37, most: 37 });
+  });
+
+  it("names a count that is not a whole number of cards instead of answering", () => {
+    expect(
+      ruleOfThumbLands({ additionalManaRocks: -1, cheapCantripsAndDorks: 0 })
+    ).toEqual({ kind: "unknown", reason: "not-a-card-count" });
   });
 });

@@ -286,3 +286,80 @@ export const KARSTEN_PARTIAL_SOURCES: Readonly<
   },
   fellwarStone: { weight: 0.5, countsFor: "any-spell", dependsOnOpponents: true },
 };
+
+/**
+ * Karsten's rule of thumb [1]: "Start with 42 lands plus a Sol Ring, then cut
+ * a land for every two or three additional mana rocks", one for every three or
+ * four cheap cantrips or mana dorks, and "try not to go below 37 lands" for
+ * medium-power midrange decks.
+ */
+const RULE_OF_THUMB = {
+  startWithSolRing: 42,
+  rocksPerCut: { fewest: 2, most: 3 },
+  cheapPiecesPerCut: { fewest: 3, most: 4 },
+  floor: 37,
+} as const;
+
+/** The deck figures the rule of thumb reads. */
+export interface RuleOfThumbInputs {
+  /** Mana rocks besides Sol Ring */
+  readonly additionalManaRocks: number;
+  /** Cheap cantrips and mana dorks */
+  readonly cheapCantripsAndDorks: number;
+}
+
+/** The rule of thumb's land range, or why there is none. */
+export type RuleOfThumbLands =
+  | {
+      readonly kind: "known";
+      /** Lands when a land is cut as often as the rule allows */
+      readonly fewest: number;
+      /** Lands when a land is cut as rarely as the rule allows */
+      readonly most: number;
+    }
+  | { readonly kind: "unknown"; readonly reason: "not-a-card-count" };
+
+/**
+ * Lands left after the rule's cuts, never under its floor.
+ *
+ * @param inputs - the rocks and the cheap pieces
+ * @param pace - cut as often (`fewest` lands) or as rarely (`most`) as allowed
+ */
+function landsAfterCuts(
+  inputs: RuleOfThumbInputs,
+  pace: "fewest" | "most"
+): number {
+  const cuts =
+    Math.floor(inputs.additionalManaRocks / RULE_OF_THUMB.rocksPerCut[pace]) +
+    Math.floor(
+      inputs.cheapCantripsAndDorks / RULE_OF_THUMB.cheapPiecesPerCut[pace]
+    );
+  return Math.max(RULE_OF_THUMB.floor, RULE_OF_THUMB.startWithSolRing - cuts);
+}
+
+/**
+ * Karsten's rule-of-thumb land range for a Commander deck [1], a reference
+ * line beside the formula (I-58 requirement 2.3). The rule gives a pace of
+ * cuts, not one number, so the answer is a range; a partial group of rocks or
+ * cheap pieces cuts nothing.
+ *
+ * @example
+ * ruleOfThumbLands({ additionalManaRocks: 6, cheapCantripsAndDorks: 8 });
+ * // → { kind: "known", fewest: 37, most: 38 }
+ *
+ * @param inputs - mana rocks besides Sol Ring, and cheap cantrips and dorks
+ * @returns the range, or `unknown` when a count is not a number of cards
+ */
+export function ruleOfThumbLands(inputs: RuleOfThumbInputs): RuleOfThumbLands {
+  if (
+    !isCardCount(inputs.additionalManaRocks) ||
+    !isCardCount(inputs.cheapCantripsAndDorks)
+  ) {
+    return { kind: "unknown", reason: "not-a-card-count" };
+  }
+  return {
+    kind: "known",
+    fewest: landsAfterCuts(inputs, "fewest"),
+    most: landsAfterCuts(inputs, "most"),
+  };
+}
