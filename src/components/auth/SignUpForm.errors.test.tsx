@@ -1,6 +1,7 @@
 /**
  * Characterization of what the sign-up form shows when `POST /api/auth/signup`
- * refuses (master plan ID-01; server audit §6.10 and S3.19). The callback-URL
+ * refuses (master plan ID-01) and what it shows when the answer cannot be read
+ * as JSON (B2-14; server audit §6.10 and S3.19). The callback-URL
  * and Google paths live in `AuthCallbackUrl.test.tsx` and
  * `GoogleSignInFailure.test.tsx`.
  *
@@ -13,16 +14,15 @@
  * component test uses the shared typed stub (`src/test/i18n-navigation-stub.tsx`).
  * Inlining next-intl in the Vitest config would remove this seam.
  *
- * The form reads every error body with `res.json()` and nothing catches a
- * failure of that read, so a non-JSON answer (a proxy's HTML 502) or a network
- * error leaves the handler as an unhandled rejection and the button stuck on
- * "Creating account...". B2-14 flips those two tests; until then they pin the
- * defect, and `escapedRejectionsDuring` keeps the escaped rejection from
- * failing the run so the test can assert it.
+ * Before B2-14 the form read every error body with `res.json()` and nothing
+ * caught a failure of that read, so a proxy's HTML 502 or a network error
+ * escaped the submit handler as an unhandled rejection and left the button
+ * stuck on "Creating account...". `escapedRejectionsDuring` collects what
+ * escapes one submit, so each test can assert that nothing does.
  */
-import { act, screen } from "@testing-library/react";
+import { act, fireEvent, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { http, HttpResponse } from "msw";
+import { delay, http, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { setupMsw } from "@/test/msw";
 import { renderWithProviders } from "@/test/render";
@@ -44,6 +44,10 @@ vi.mock(
 
 const ENDPOINT = "/api/auth/signup";
 const GENERIC_ERROR = "Failed to create account";
+const UNAVAILABLE_EN =
+  "We could not create your account. Try again in a moment.";
+const UNAVAILABLE_FR =
+  "Nous n'avons pas pu créer votre compte. Réessayez dans un instant.";
 
 const server = setupMsw(
   http.post(ENDPOINT, () =>
@@ -58,20 +62,20 @@ beforeEach(() => {
   signIn.mockReset();
 });
 
-/** Fills the three fields with a valid account and submits. */
-async function submitValidAccount() {
+/** Fills the three fields with a valid account (English labels). */
+async function fillValidAccount() {
   await userEvent.type(screen.getByLabelText("Name"), "Ada");
   await userEvent.type(screen.getByLabelText("Email"), "ada@example.test");
   await userEvent.type(
     screen.getByLabelText("Password"),
     "correct horse battery"
   );
-  await userEvent.click(screen.getByRole("button", { name: "Create Account" }));
 }
 
-/** The error banner `AuthPageShell` renders under the subtitle; `null` when absent. */
-function banner(container: HTMLElement): Element | null {
-  return container.querySelector(".text-red-400");
+/** Fills the three fields with a valid account and submits. */
+async function submitValidAccount() {
+  await fillValidAccount();
+  await userEvent.click(screen.getByRole("button", { name: "Create Account" }));
 }
 
 /**
@@ -218,43 +222,80 @@ describe("SignUpForm — JSON error answers", () => {
 });
 
 describe("SignUpForm — answers that are not JSON", () => {
-  it("currently shows no error and leaves the button stuck on a proxy's HTML 502 (pinned; see B2-14)", async () => {
+  it("shows a localized error and lets the player try again on a proxy's HTML 502", async () => {
     server.use(
       http.post(ENDPOINT, () =>
         HttpResponse.html(
           "<html><body><h1>502 Bad Gateway</h1></body></html>",
-          {
-            status: 502,
-          }
+          { status: 502 }
         )
       )
     );
-    const { container } = renderWithProviders(<SignUpForm />);
+    renderWithProviders(<SignUpForm />);
 
     const escaped = await escapedRejectionsDuring(submitValidAccount);
 
-    expect(escaped).toHaveLength(1);
-    expect(escaped[0]).toBeInstanceOf(SyntaxError);
-    expect(banner(container)).toBeNull();
-    expect(screen.queryByText(GENERIC_ERROR)).not.toBeInTheDocument();
+    expect(escaped).toEqual([]);
+    expect(await screen.findByText(UNAVAILABLE_EN)).toBeVisible();
     expect(
-      screen.getByRole("button", { name: "Creating account..." })
-    ).toBeDisabled();
+      screen.getByRole("button", { name: "Create Account" })
+    ).toBeEnabled();
+    expect(screen.getByLabelText("Name")).toHaveValue("Ada");
+    expect(screen.getByLabelText("Email")).toHaveValue("ada@example.test");
+    expect(screen.getByLabelText("Password")).toHaveValue(
+      "correct horse battery"
+    );
     expect(signIn).not.toHaveBeenCalled();
   });
 
-  it("currently shows no error and leaves the button stuck when the network fails (pinned; see B2-14)", async () => {
+  it("shows a localized error and lets the player try again when the network fails", async () => {
     server.use(http.post(ENDPOINT, () => HttpResponse.error()));
-    const { container } = renderWithProviders(<SignUpForm />);
+    renderWithProviders(<SignUpForm />, { locale: "fr" });
+    await userEvent.type(screen.getByLabelText("Nom"), "Ada");
+    await userEvent.type(screen.getByLabelText("E-mail"), "ada@example.test");
+    await userEvent.type(
+      screen.getByLabelText("Mot de passe"),
+      "correct horse battery"
+    );
 
-    const escaped = await escapedRejectionsDuring(submitValidAccount);
+    const escaped = await escapedRejectionsDuring(() =>
+      userEvent.click(screen.getByRole("button", { name: "Créer un compte" }))
+    );
 
-    expect(escaped).toHaveLength(1);
-    expect(escaped[0]).toBeInstanceOf(TypeError);
-    expect(banner(container)).toBeNull();
-    expect(screen.queryByText(GENERIC_ERROR)).not.toBeInTheDocument();
+    expect(escaped).toEqual([]);
+    expect(await screen.findByText(UNAVAILABLE_FR)).toBeVisible();
     expect(
-      screen.getByRole("button", { name: "Creating account..." })
-    ).toBeDisabled();
+      screen.getByRole("button", { name: "Créer un compte" })
+    ).toBeEnabled();
+    expect(signIn).not.toHaveBeenCalled();
+  });
+
+  it("gives up on a sign-up that stalls for fifteen seconds and lets the player try again", async () => {
+    server.use(
+      http.post(ENDPOINT, async () => {
+        await delay("infinite");
+        return HttpResponse.json({}, { status: 201 });
+      })
+    );
+    renderWithProviders(<SignUpForm />);
+    await fillValidAccount();
+
+    vi.useFakeTimers();
+    try {
+      fireEvent.click(screen.getByRole("button", { name: "Create Account" }));
+      // The abort lands inside the advanced timers, and with it the form's
+      // state updates, so the advance runs under act.
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(15_000);
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+
+    expect(await screen.findByText(UNAVAILABLE_EN)).toBeVisible();
+    expect(
+      screen.getByRole("button", { name: "Create Account" })
+    ).toBeEnabled();
+    expect(signIn).not.toHaveBeenCalled();
   });
 });

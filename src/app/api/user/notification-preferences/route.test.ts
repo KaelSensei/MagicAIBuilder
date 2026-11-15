@@ -17,6 +17,7 @@ const { mockAuth } = vi.hoisted(() => ({ mockAuth: vi.fn() }));
 
 vi.mock(import("@/lib/auth/config"), () => ({ auth: mockAuth }));
 
+import { logger } from "@/lib/logger";
 import { GET, PATCH } from "./route";
 
 const DEFAULTS = {
@@ -27,7 +28,9 @@ const DEFAULTS = {
 };
 
 function authed() {
-  mockAuth.mockResolvedValueOnce({ user: { id: "user-1", email: "user@example.test" } });
+  mockAuth.mockResolvedValueOnce({
+    user: { id: "user-1", email: "user@example.test" },
+  });
   mockUserFindUnique.mockResolvedValueOnce({
     id: "user-1",
     name: null,
@@ -70,7 +73,10 @@ describe("notification preferences API", () => {
     );
 
     expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toEqual({ ...DEFAULTS, mentions: false });
+    await expect(response.json()).resolves.toEqual({
+      ...DEFAULTS,
+      mentions: false,
+    });
     expect(mockUpsert).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { userId: "user-1" },
@@ -79,33 +85,56 @@ describe("notification preferences API", () => {
     );
   });
 
-  // Characterization (master plan ID-01, server audit §1.2 and §6.9): neither
-  // handler catches a database failure, so the error leaves the route instead
-  // of becoming a logged 500. B2-13 flips both of these.
+  // B2-13 (server audit §1.2 and §6.9): a database failure used to leave both
+  // handlers uncaught and reach the browser as Next's HTML 500 page. Each
+  // handler now answers the standard JSON 500 and logs under its own name.
+  // The read still writes the defaults for a player with no row; ID-01 pins
+  // that last test until B2-13's follow-up decides it.
   describe("when the database fails", () => {
-    it("currently lets a failed read escape the GET handler instead of answering 500 (pinned; see B2-13)", async () => {
+    it("answers 500 with the standard error body and logs the failed read under the route's name", async () => {
       authed();
-      mockUpsert.mockRejectedValueOnce(new Error("connection refused"));
+      const failure = new Error("connection refused");
+      mockUpsert.mockRejectedValueOnce(failure);
+      const logged = vi
+        .spyOn(logger, "error")
+        .mockImplementation(() => undefined);
 
-      await expect(GET()).rejects.toThrow("connection refused");
+      const response = await GET();
+
+      expect(response.status).toBe(500);
+      await expect(response.json()).resolves.toEqual({
+        error: "Failed to load notification preferences",
+      });
+      expect(logged).toHaveBeenCalledWith(
+        failure,
+        "GET /api/user/notification-preferences"
+      );
     });
 
-    it("currently lets a failed write escape the PATCH handler instead of answering 500 (pinned; see B2-13)", async () => {
+    it("answers 500 with the standard error body and logs the failed write under the route's name", async () => {
       authed();
-      mockUpsert.mockRejectedValueOnce(new Error("connection refused"));
+      const failure = new Error("connection refused");
+      mockUpsert.mockRejectedValueOnce(failure);
+      const logged = vi
+        .spyOn(logger, "error")
+        .mockImplementation(() => undefined);
 
-      await expect(
-        PATCH(
-          new Request(
-            "http://localhost:3000/api/user/notification-preferences",
-            {
-              method: "PATCH",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ follows: false }),
-            }
-          )
-        )
-      ).rejects.toThrow("connection refused");
+      const response = await PATCH(
+        new Request("http://localhost:3000/api/user/notification-preferences", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ follows: false }),
+        })
+      );
+
+      expect(response.status).toBe(500);
+      await expect(response.json()).resolves.toEqual({
+        error: "Failed to save notification preferences",
+      });
+      expect(logged).toHaveBeenCalledWith(
+        failure,
+        "PATCH /api/user/notification-preferences"
+      );
     });
 
     it("currently writes on a read: GET upserts the defaults for a player who has no row yet (pinned; see B2-13)", async () => {
