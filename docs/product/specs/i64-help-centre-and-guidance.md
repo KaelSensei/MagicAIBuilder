@@ -685,6 +685,7 @@ None of the 16 page routes is a help, FAQ, glossary or about page, and the produ
 - [ ] Subscription articles and a test that maps every I-30 entitlement to an article, in the same release as I-30's billing (slice 13).
 - [ ] Later: a help row above builder card search results (slice 10), the `title=` ratchet (slice 11), the owner's measurement view (slice 12) and glossary links from I-28, I-47 and I-27 (slice 14). Only if the owner decides: a model that maps a question to article identifiers and writes nothing (slice 15).
 - [ ] Added 2026-11-12 (thirteenth pass): glossary terms for [I-99](i99-a-pilot-sheet-and-how-heavy-this-deck-is-to-pilot.md) (upkeep, trigger, replacement effect, optional trigger, pilot load) and [I-100](i100-cards-that-work-against-each-other.md) (symmetric effect, payoff, enabler), each reached from the info button beside the class, in English and French.
+- [ ] Added 2026-11-15 (fifteenth pass): glossary terms for [I-102](i102-a-theme-you-can-measure.md) (theme, handle, on theme) and [I-103](i103-planar-scheme-and-attraction-decks-beside-the-commander-deck.md) (planar deck, phenomenon, scheme deck, Attraction deck), in English and French.
 
 ### Engineering enablers
 

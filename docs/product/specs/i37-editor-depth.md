@@ -1077,6 +1077,7 @@ The owner wants an editor "more beautiful and more complete than Moxfield". Arch
 - [ ] Add to the open deck from card, rules and public-deck pages, not only from the editor's search. Scryfall's "Add to Deck" tray works across its site ([FAQ](https://scryfall.com/docs/faqs/where-did-the-deck-tray-or-add-to-deck-button-go-19), seen 2026-11-10). Added 2026-11-11.
 - [ ] Low: a custom mana value per card for the curve (X spells, cost reducers), as ManaBox ([FAQ](https://manabox.app/guides/decks/faq/), seen 2026-11-10) and Archidekt (about 2022) offer. Added 2026-11-11.
 - [ ] **Owner decision, 2026-11-10:** the deck's tags are among the orphaned deck fields to re-mount (see I-01).
+- [ ] Added 2026-11-15 (fifteenth pass): every view shows [I-103](i103-planar-scheme-and-attraction-decks-beside-the-commander-deck.md)'s side-deck board below Considering, folded, with its counts and checks; Attractions, which Archidekt already moves out of the deck automatically, follow the same board.
 
 ### Engineering enablers
 
