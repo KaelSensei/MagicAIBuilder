@@ -1,10 +1,23 @@
 "use client";
-
+/**
+ * Up/down vote control for a public deck: shows the tally, sends the viewer's
+ * vote through the community client and adopts the tally the route answers.
+ *
+ * Community context (UI). A failed vote leaves the tally as it was and is only
+ * logged: the control has no error surface of its own. Not responsible for:
+ * the vote rules (`lib/community/votes.ts`) and the request wire format
+ * (`lib/community/community-client.ts`).
+ */
 import { useCallback, useState } from "react";
 import { ChevronUp, ChevronDown } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { cn } from "@/components/ui/utils";
 import { logger } from "@/lib/logger";
+import {
+  castVote,
+  clearVote,
+  CommunityApiError,
+} from "@/lib/community/community-client";
 import type { VoteValue } from "@/lib/community/votes";
 
 interface VoteButtonsProps {
@@ -14,11 +27,6 @@ interface VoteButtonsProps {
   /** False for anonymous visitors — the buttons render but prompt to sign in */
   readonly canVote: boolean;
   readonly className?: string;
-}
-
-interface TallyResponse {
-  readonly score: number;
-  readonly viewerVote: VoteValue | null;
 }
 
 /**
@@ -46,21 +54,18 @@ export function VoteButtons({
       const clearing = tally.viewerVote === value;
 
       try {
-        const response = await fetch(`/api/community/decks/${deckId}/vote`, {
-          method: clearing ? "DELETE" : "POST",
-          headers: { "Content-Type": "application/json" },
-          body: clearing ? undefined : JSON.stringify({ value }),
-        });
-
-        if (!response.ok) {
-          logger.warn(`vote failed: ${response.status}`, "VoteButtons");
-          return;
-        }
-
-        const next = (await response.json()) as TallyResponse;
+        const next = clearing
+          ? await clearVote(deckId)
+          : await castVote(deckId, value);
         setTally({ score: next.score, viewerVote: next.viewerVote });
       } catch (error) {
-        logger.error("Unexpected error", "VoteButtons", error);
+        // A refusal is the route's answer, so a warning; anything else (the
+        // network, a malformed answer) is unexpected and logged as an error.
+        if (error instanceof CommunityApiError) {
+          logger.warn(`vote failed: ${error.status}`, "VoteButtons");
+        } else {
+          logger.error("Unexpected error", "VoteButtons", error);
+        }
       } finally {
         setIsPending(false);
       }
