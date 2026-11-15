@@ -28,20 +28,37 @@
  * Least time between the starts of any two requests, in milliseconds: the
  * 10-per-second limit of the methods `ENDPOINT_SPACING_MS` does not name.
  */
-const MIN_DELAY_MS = 100;
+export const MIN_DELAY_MS = 100;
 
 /**
  * Least time between two requests to the same endpoint, in milliseconds, for
  * the endpoints Scryfall limits more strictly; keyed by URL path. Only these
  * endpoints are tracked, so card-by-id paths never pile up in memory.
  */
-const ENDPOINT_SPACING_MS: ReadonlyMap<string, number> = new Map([
+export const ENDPOINT_SPACING_MS: ReadonlyMap<string, number> = new Map([
   ["/cards/search", 500],
   ["/cards/named", 500],
   ["/cards/random", 500],
   ["/cards/collection", 500],
   ["/cards/manifest", 6_000],
 ]);
+
+/**
+ * The time a queue reads and the waits it takes: its only contact with real
+ * time, so a test can drive the spacing without timers or real waiting.
+ */
+export interface QueueClock {
+  /** The current time in milliseconds, on the same scale as `Date.now()`. */
+  readonly now: () => number;
+  /** Resolves once `ms` milliseconds have passed; `ms` is always positive. */
+  readonly sleep: (ms: number) => Promise<void>;
+}
+
+/** The wall clock, `Date.now` and `setTimeout`: what a queue uses unless told otherwise. */
+export const WALL_CLOCK: QueueClock = {
+  now: () => Date.now(),
+  sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+};
 
 /** A line of Scryfall requests, each started in its turn. */
 export interface ScryfallQueue {
@@ -58,19 +75,21 @@ export interface ScryfallQueue {
 }
 
 /**
- * Builds an empty queue.
+ * Builds an empty queue that paces its requests on `clock`.
  *
- * @param options.paced - false skips the waits and keeps only the one-at-a-time
- *   order; the runtime queue sets it under Vitest (see `isTestMode`)
+ * A clock whose `sleep` returns at once gives a queue that keeps only the
+ * one-at-a-time order, which is what the test suites' runtime queue runs on.
+ *
+ * @param clock - the wall clock unless a test injects its own
  */
-export function createScryfallQueue(options: {
-  readonly paced: boolean;
-}): ScryfallQueue {
+export function createScryfallQueue(
+  clock: QueueClock = WALL_CLOCK
+): ScryfallQueue {
   let lastStart = 0;
   const lastStartByEndpoint = new Map<string, number>();
   let queue: Promise<void> = Promise.resolve();
 
-  /** Earliest time a request to `endpoint` may start, as a `Date.now()` value. */
+  /** Earliest time a request to `endpoint` may start, on the clock's scale. */
   function earliestStart(endpoint: string): number {
     const anyRequest = lastStart + MIN_DELAY_MS;
     const spacing = ENDPOINT_SPACING_MS.get(endpoint);
@@ -82,11 +101,9 @@ export function createScryfallQueue(options: {
   function schedule<T>(url: string, request: () => Promise<T>): Promise<T> {
     const run = queue.then(async () => {
       const endpoint = new URL(url).pathname;
-      const wait = earliestStart(endpoint) - Date.now();
-      if (wait > 0 && options.paced) {
-        await new Promise<void>((resolve) => setTimeout(resolve, wait));
-      }
-      lastStart = Date.now();
+      const wait = earliestStart(endpoint) - clock.now();
+      if (wait > 0) await clock.sleep(wait);
+      lastStart = clock.now();
       if (ENDPOINT_SPACING_MS.has(endpoint)) {
         lastStartByEndpoint.set(endpoint, lastStart);
       }
@@ -120,19 +137,30 @@ export function createScryfallQueue(options: {
   return { schedule, reset };
 }
 
-// Detect if we're in a test environment (vitest sets globalThis.vi)
-function isTestMode(): boolean {
-  return typeof globalThis !== "undefined" && "vi" in globalThis;
-}
-
-// The runtime's queue skips its waits under Vitest, where most suites call the
-// Scryfall client without fake timers; pacing is tested on a queue of its own.
-// CC-02 replaces this switch with an injected clock.
-const runtimeQueue = createScryfallQueue({ paced: !isTestMode() });
+// One instance per runtime: a module is evaluated once per browser tab and once
+// per server function instance, so every caller of the two functions below
+// waits in the same line.
+let runtimeQueue = createScryfallQueue();
 
 /**
- * Reset the queue (for tests only)
+ * Rebuilds the runtime's queue on `clock`, forgetting its line and its last
+ * start times.
+ *
+ * The seam the Vitest setup (`src/test/unpaced-scryfall-queue.ts`) uses to put
+ * the runtime's queue on a clock that never waits, so suites that call the
+ * Scryfall client for real stay fast while this module carries no test-mode
+ * branch of its own. Nothing in production calls it.
+ *
  * @internal
+ */
+export function setScryfallQueueClock(clock: QueueClock): void {
+  runtimeQueue = createScryfallQueue(clock);
+}
+
+/**
+ * Forgets the runtime queue's line and last start times, keeping its clock.
+ *
+ * @internal for tests, between two cases that share the runtime queue
  */
 export function resetScryfallQueue(): void {
   runtimeQueue.reset();
