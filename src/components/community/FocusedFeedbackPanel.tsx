@@ -1,7 +1,18 @@
 "use client";
-
+/**
+ * The focused-feedback request above a public deck's discussion: the owner
+ * turns it on and writes one question; a visitor reads the question.
+ *
+ * Community context (UI), writing to a deck-building row. The request is two
+ * fields of the deck (`seekingFeedback`, `feedbackQuestion`), so the save goes
+ * through the deck client's `updateDeck`, not the community client; a
+ * rejection shows the error label in place of the hint. Not responsible for:
+ * the labels, which the server page passes in, and the request wire format
+ * (`lib/db/deck-api.ts`).
+ */
 import { useState } from "react";
 import { MessageCircleQuestion } from "lucide-react";
+import { updateDeck } from "@/lib/db/deck-api";
 
 interface FocusedFeedbackLabels {
   readonly title: string;
@@ -41,15 +52,10 @@ export function FocusedFeedbackPanel({
     setSaving(true);
     setFailed(false);
     try {
-      const response = await fetch(`/api/decks/${deckId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          seekingFeedback: enabled,
-          feedbackQuestion: question.trim() || null,
-        }),
+      await updateDeck(deckId, {
+        seekingFeedback: enabled,
+        feedbackQuestion: question.trim() || null,
       });
-      if (!response.ok) setFailed(true);
     } catch {
       setFailed(true);
     } finally {

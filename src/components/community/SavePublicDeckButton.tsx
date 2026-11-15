@@ -1,13 +1,24 @@
 "use client";
-
+/**
+ * The "save deck" control of a public deck page: opens a small panel that
+ * lists the viewer's folders, then bookmarks the deck in the chosen one or
+ * unfiled.
+ *
+ * Community context (UI). Both the folder read and the save go through the
+ * community client; any rejection shows one failure line in the panel and
+ * leaves the choice in place. Hidden from visitors and from the deck's owner.
+ * Not responsible for: the request wire format
+ * (`lib/community/community-client.ts`).
+ */
 import { useState } from "react";
 import { Bookmark, Check, Loader2, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import {
-  readSavedDeckFolders,
-  type SavedDeckFolder,
-} from "@/lib/community/deck-folders";
+  fetchSavedDeckLibrary,
+  savePublicDeck,
+} from "@/lib/community/community-client";
+import type { SavedDeckFolder } from "@/lib/community/deck-folders";
 
 interface Props {
   readonly deckId: string;
@@ -31,9 +42,8 @@ export function SavePublicDeckButton({ deckId, isSignedIn, isOwner }: Props) {
     setOpen(true);
     setStatus("loading");
     try {
-      const response = await fetch("/api/community/deck-folders");
-      if (!response.ok) return setStatus("error");
-      setFolders(readSavedDeckFolders(await response.json()).folders);
+      const library = await fetchSavedDeckLibrary();
+      setFolders(library.folders);
       setStatus("idle");
     } catch {
       setStatus("error");
@@ -43,12 +53,8 @@ export function SavePublicDeckButton({ deckId, isSignedIn, isOwner }: Props) {
   const save = async () => {
     setStatus("saving");
     try {
-      const response = await fetch(`/api/community/decks/${deckId}/save`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ folderId: folderId || null }),
-      });
-      setStatus(response.ok ? "saved" : "error");
+      await savePublicDeck(deckId, folderId || null);
+      setStatus("saved");
     } catch {
       setStatus("error");
     }

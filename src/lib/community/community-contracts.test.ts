@@ -9,6 +9,7 @@ import {
   isDeckCommentsResponse,
   isDeckRatingsResponse,
   isFollowResponse,
+  isReportReason,
   isSavedDeckLibraryBody,
   isVoteTallyResponse,
   REPORT_REASONS,
@@ -170,5 +171,20 @@ describe("REPORT_REASONS", () => {
       "illegal_content",
       "other",
     ]);
+  });
+});
+
+describe("isReportReason", () => {
+  it("accepts each reason of the catalog", () => {
+    for (const reason of REPORT_REASONS) {
+      expect(isReportReason(reason)).toBe(true);
+    }
+  });
+
+  it("refuses a reason outside the catalog, whatever its type", () => {
+    expect(isReportReason("rude")).toBe(false);
+    expect(isReportReason("")).toBe(false);
+    expect(isReportReason(0)).toBe(false);
+    expect(isReportReason(null)).toBe(false);
   });
 });
