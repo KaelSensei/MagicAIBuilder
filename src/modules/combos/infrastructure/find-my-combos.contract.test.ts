@@ -10,7 +10,7 @@
  * The node environment matches where the adapter runs: it is `server-only`
  * and is called by `POST /api/combos`.
  */
-import { afterEach, describe, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { http, HttpResponse } from "msw";
 
 import type { DeckCombosFailure } from "@/modules/combos/application/ports";
@@ -79,7 +79,11 @@ describe("Spellbook adapter — ComboSource contract", () => {
 
   describe("ComboSource contract", () => {
     for (const contractCase of COMBO_SOURCE_CONTRACT_CASES) {
-      it(contractCase.name, () => contractCase.run(spellbookHarness()));
+      it(contractCase.name, async () => {
+        await expect(
+          contractCase.run(spellbookHarness())
+        ).resolves.toBeUndefined();
+      });
     }
   });
 });

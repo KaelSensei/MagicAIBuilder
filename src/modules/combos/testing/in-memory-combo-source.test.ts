@@ -36,7 +36,11 @@ function inMemoryHarness(): ComboSourceHarness {
 describe("in-memory combo source — ComboSource contract", () => {
   describe("ComboSource contract", () => {
     for (const contractCase of COMBO_SOURCE_CONTRACT_CASES) {
-      it(contractCase.name, () => contractCase.run(inMemoryHarness()));
+      it(contractCase.name, async () => {
+        await expect(
+          contractCase.run(inMemoryHarness())
+        ).resolves.toBeUndefined();
+      });
     }
   });
 
