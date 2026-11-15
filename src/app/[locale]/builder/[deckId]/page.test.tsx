@@ -296,6 +296,18 @@ function searchMode(name: string): HTMLElement {
   return screen.getByRole("button", { name, description: "" });
 }
 
+/** The inline width of the search panel: the nearest ancestor of its mode buttons that sets one. */
+function searchPanelWidth(): string {
+  for (
+    let node: HTMLElement | null = searchMode("By Set");
+    node;
+    node = node.parentElement
+  ) {
+    if (node.style.width) return node.style.width;
+  }
+  return "";
+}
+
 beforeEach(() => {
   sent = [];
   localStorage.clear();
@@ -752,15 +764,37 @@ describe("characterization: builder page shell", () => {
 
     it("resizes the search panel from the keyboard in 10-pixel steps and remembers the width", async () => {
       await openSavedDeck();
-      const handle = screen.getByRole("separator", {
+      const handle = screen.getByRole("button", {
         name: "Search panel width",
       });
-      expect(handle).toHaveAttribute("aria-valuenow", "300");
+      expect(searchPanelWidth()).toBe("300px");
 
       fireEvent.keyDown(handle, { key: "ArrowRight" });
 
-      expect(handle).toHaveAttribute("aria-valuenow", "310");
+      expect(searchPanelWidth()).toBe("310px");
       expect(localStorage.getItem("builder-search-panel-width")).toBe("310");
+
+      fireEvent.keyDown(handle, { key: "ArrowLeft" });
+      fireEvent.keyDown(handle, { key: "ArrowLeft" });
+
+      expect(searchPanelWidth()).toBe("290px");
+    });
+
+    it("resizes the search panel by dragging its resize button, within 220 and 520 pixels", async () => {
+      await openSavedDeck();
+      const handle = screen.getByRole("button", {
+        name: "Search panel width",
+      });
+
+      fireEvent.mouseDown(handle, { clientX: 300 });
+      fireEvent.mouseMove(globalThis.window, { clientX: 340 });
+      expect(searchPanelWidth()).toBe("340px");
+
+      fireEvent.mouseMove(globalThis.window, { clientX: 900 });
+      fireEvent.mouseUp(globalThis.window);
+
+      expect(searchPanelWidth()).toBe("520px");
+      expect(localStorage.getItem("builder-search-panel-width")).toBe("520");
     });
 
     it("shows one panel at a time below the lg breakpoint, the deck first, chosen from the bottom tab bar", async () => {

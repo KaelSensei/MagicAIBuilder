@@ -1098,21 +1098,17 @@ export default function BuilderPage() {
             </div>
           </motion.div>
 
-          {/* Resize handle between panel 1 and 2 — hidden on mobile. A focusable
-              <hr> with a value is the WAI-ARIA window splitter: the native
-              separator, valued by the panel width it moves. The classes undo the
-              user-agent rule (`height: 0`, a top border, `overflow: hidden`) and
-              the `before:` box widens the 4px line into an 8px grab area. */}
-          <hr
+          {/* Resize handle between panel 1 and 2 — hidden on mobile. A native
+              button: jsx-a11y 6.10 (and Sonar S6845/S6847) count a focusable
+              separator as non-interactive, so the WAI-ARIA window splitter
+              cannot carry the drag and arrow-key listeners. The `before:` box
+              widens the 4px line into an 8px grab area. */}
+          <button
+            type="button"
             aria-label={t("actions.resizePanel")}
-            aria-orientation="vertical"
-            aria-valuemin={220}
-            aria-valuemax={520}
-            aria-valuenow={searchPanelWidth}
-            tabIndex={0}
             onMouseDown={handleSearchResize}
             onKeyDown={handleSearchResizeKeyDown}
-            className="hidden lg:block relative z-10 h-auto w-1 shrink-0 self-stretch overflow-visible border-0 cursor-col-resize transition-colors hover:bg-[var(--accent)]/40 active:bg-[var(--accent)]/60 before:absolute before:inset-y-0 before:-left-0.5 before:-right-0.5"
+            className="hidden lg:block relative z-10 h-auto w-1 shrink-0 self-stretch overflow-visible border-0 p-0 cursor-col-resize transition-colors hover:bg-[var(--accent)]/40 active:bg-[var(--accent)]/60 before:absolute before:inset-y-0 before:-left-0.5 before:-right-0.5"
             title={t("actions.resizeHint")}
           />
 
