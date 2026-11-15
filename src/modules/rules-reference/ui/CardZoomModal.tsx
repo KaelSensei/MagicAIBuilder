@@ -132,8 +132,9 @@ function ZoomedCardPanel({
  * ArrowLeft and ArrowRight step through `cards` and stop at both ends; Escape,
  * the close button and a press on the backdrop close it. Focus lands on the
  * close button when it opens and goes back to the element that opened it when
- * it closes. The arrow keys are read on the dialog content rather than the
- * window: the focus trap keeps every key press inside it.
+ * it closes. The arrow keys are read on the dialog element, through `Modal`'s
+ * `onKeyDown`, rather than the window: the focus trap keeps every key press
+ * inside it.
  */
 export function CardZoomModal({
   card,
@@ -160,15 +161,12 @@ export function CardZoomModal({
       showClose={false}
       maxWidth="max-w-none"
       className="mx-0 h-full w-full rounded-none border-0 bg-transparent p-4 shadow-none"
+      onKeyDown={handleKeyDown}
     >
       <ModalTitle className="sr-only">
         {`${resolveLocalizedText(card).name} — zoom`}
       </ModalTitle>
-      {/* The trap keeps focus inside, so every key press bubbles through here. */}
-      <div
-        className="relative flex h-full w-full items-center justify-center"
-        onKeyDown={handleKeyDown}
-      >
+      <div className="relative flex h-full w-full items-center justify-center">
         <ZoomedCardPanel
           card={card}
           position={{ current: currentIndex + 1, total: cards.length }}

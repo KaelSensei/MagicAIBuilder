@@ -9,10 +9,12 @@
  */
 import { describe, expect, it } from "vitest";
 import {
+  keyPrimerSiblings,
   parseInline,
   parsePrimer,
   primerHeadingId,
   primerHeadings,
+  primerInlineText,
   type PrimerBlock,
   type PrimerInline,
 } from "./primer-markdown";
@@ -338,6 +340,51 @@ describe("primerHeadingId", () => {
     ["Ramp²", "primer-ramp2"],
   ])("gives %j the id %s", (heading, id) => {
     expect(primerHeadingId(heading)).toBe(id);
+  });
+});
+
+describe("keyPrimerSiblings", () => {
+  const listItems = (description: string) => {
+    const [block] = parsePrimer(description);
+    return block?.kind === "list" ? block.items : [];
+  };
+  const itemKeys = (description: string) =>
+    keyPrimerSiblings(listItems(description), primerInlineText).map(
+      ({ key }) => key
+    );
+
+  it("gives two list items with the same text distinct keys", () => {
+    expect(itemKeys("- Ramp\n- Ramp\n- Draw")).toEqual([
+      "Ramp#1",
+      "Ramp#2",
+      "Draw#1",
+    ]);
+  });
+
+  it("keeps an item's key when another item is inserted before it", () => {
+    const [draw] = itemKeys("- Draw");
+    const [, drawAfterRamp] = itemKeys("- Ramp\n- Draw");
+
+    expect(drawAfterRamp).toBe(draw);
+  });
+
+  it("keys two links with the same label in one line apart, and keeps each node", () => {
+    const nodes = parseInline("[guide](/a) or [guide](/b)");
+
+    const keyed = keyPrimerSiblings(nodes, (node) => primerInlineText([node]));
+
+    expect(keyed.map(({ key }) => key)).toEqual([
+      "guide#1",
+      " or #1",
+      "guide#2",
+    ]);
+    expect(keyed.map(({ node }) => node)).toEqual(nodes);
+  });
+
+  it("reads a run of inline nodes as its text runs and link labels", () => {
+    expect(
+      primerInlineText(parseInline("See [the guide](https://example.com) now"))
+    ).toBe("See the guide now");
   });
 });
 

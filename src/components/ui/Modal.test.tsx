@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { renderWithIntl, type TestLocale } from "@/test/render-with-intl";
 import { Modal, ModalTitle } from "./Modal";
 
@@ -104,5 +104,27 @@ describe("Modal", () => {
 
     await user.tab({ shift: true });
     expect(screen.getByRole("button", { name: "Last option" })).toHaveFocus();
+  });
+
+  it("hands the key presses made inside the dialog to onKeyDown, and still closes on Escape", async () => {
+    const user = userEvent.setup();
+    const keys: string[] = [];
+    const onClose = vi.fn();
+    renderWithIntl(
+      <Modal
+        open
+        onClose={onClose}
+        title="Settings"
+        onKeyDown={(event) => keys.push(event.key)}
+      >
+        <button type="button">First option</button>
+      </Modal>
+    );
+
+    await user.keyboard("{ArrowRight}{ArrowLeft}");
+    expect(keys).toEqual(["ArrowRight", "ArrowLeft"]);
+
+    await user.keyboard("{Escape}");
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 });
