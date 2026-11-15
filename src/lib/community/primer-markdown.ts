@@ -117,6 +117,45 @@ function parseHeading(markerLength: number, text: string): PrimerHeading {
   };
 }
 
+/** A node of the tree with a key that no sibling shares. */
+export interface KeyedPrimerNode<T> {
+  readonly key: string;
+  readonly node: T;
+}
+
+/**
+ * Keys siblings by what they say: the content, `#`, then its occurrence among the siblings that
+ * say the same, so two `Ramp` items are `Ramp#1` and `Ramp#2`.
+ *
+ * A renderer needs one key per sibling. The array index is not one: a node inserted before
+ * another shifts every later index, while a content key stays put. The occurrence number is all
+ * digits and comes after the last `#`, so two different (content, occurrence) pairs never give
+ * the same key, whatever the content holds.
+ *
+ * @param nodes - the siblings, in document order
+ * @param contentOf - what a sibling says; equal strings mean equal content
+ * @returns each sibling with its key, in the order given
+ */
+export function keyPrimerSiblings<T>(
+  nodes: readonly T[],
+  contentOf: (node: T) => string
+): readonly KeyedPrimerNode<T>[] {
+  const occurrences = new Map<string, number>();
+  return nodes.map((node) => {
+    const content = contentOf(node);
+    const occurrence = (occurrences.get(content) ?? 0) + 1;
+    occurrences.set(content, occurrence);
+    return { key: `${content}#${occurrence}`, node };
+  });
+}
+
+/** What a run of inline nodes reads as: its text runs and link labels, in order. */
+export function primerInlineText(content: readonly PrimerInline[]): string {
+  return content
+    .map((node) => (node.kind === "text" ? node.text : node.label))
+    .join("");
+}
+
 /** The headings of `blocks`, in document order: what the contents bar lists. */
 export function primerHeadings(
   blocks: readonly PrimerBlock[]
