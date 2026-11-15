@@ -4,212 +4,80 @@
  * paragraphs and links, with a contents bar and copy and download actions.
  *
  * Community context, mounted by `PublicDeckView`. The owner writes the text and every visitor
- * reads it, so it is never parsed as HTML, and every link goes through `classifyUserLink`
- * before it gets an `href`.
- * Not responsible for: the link policy itself, which lives in `lib/community/user-link.ts`.
+ * reads it, so it is never parsed as HTML: `lib/community/primer-markdown` parses it into a tree
+ * whose links are already classified, and `PrimerBlocks` renders that tree.
+ * Not responsible for: the Markdown subset or the link policy, which live in `lib/community`.
  *
  * @module profile/PublicDeckPrimer
  */
 import { useCallback, useMemo, useState, type ReactNode } from "react";
 import { Check, Copy, Download } from "lucide-react";
-import { classifyUserLink, type UserLink } from "@/lib/community/user-link";
+import {
+  parsePrimer,
+  primerHeadings,
+  type PrimerHeading,
+} from "@/lib/community/primer-markdown";
+import { PrimerBlockView } from "./PrimerBlocks";
+
+interface PrimerLabels {
+  readonly contents: string;
+  readonly copy: string;
+  readonly copied: string;
+  readonly download: string;
+}
 
 interface PublicDeckPrimerProps {
   readonly description: string;
-  readonly labels?: {
-    readonly contents: string;
-    readonly copy: string;
-    readonly copied: string;
-    readonly download: string;
-  };
+  readonly labels?: PrimerLabels;
 }
 
-type PrimerBlock =
-  | { readonly kind: "heading"; readonly level: number; readonly text: string }
-  | { readonly kind: "paragraph"; readonly text: string }
-  | {
-      readonly kind: "list";
-      readonly ordered: boolean;
-      readonly items: readonly string[];
-    };
+const DEFAULT_LABELS: PrimerLabels = {
+  contents: "Primer contents",
+  copy: "Copy primer",
+  copied: "Primer copied",
+  download: "Download primer",
+};
 
-const PRIMER_LINK_CLASS =
-  "font-medium text-[var(--accent-text)] underline underline-offset-2";
+const ACTION_CLASS =
+  "rounded-md p-1.5 text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]";
 
 /**
- * `rel` of an author's link to another site. `noopener` and `noreferrer` keep the new tab from
- * reaching back into this page and from learning its URL. `ugc` and `nofollow` tell search
- * engines the deck owner wrote the link and the site does not vouch for it: Google recommends
- * `ugc` for user-generated links and accepts several values together.
- * Source: https://developers.google.com/search/docs/crawling-indexing/qualify-outbound-links
- * (read 2026-11-11).
+ * The contents bar: one anchor per heading, labelled with the heading as written. Shown only
+ * when there is something to navigate between, so a one-heading primer gets an empty slot that
+ * keeps the actions on the right.
  */
-const EXTERNAL_LINK_REL = "noopener noreferrer nofollow ugc";
-
-function destinationEndings(text: string): readonly number[] {
-  // Precompute destination endings so malformed nested links cannot rescan
-  // the remaining text for every opening bracket.
-  const destinationEnds: number[] = [];
-  let end = text.length;
-  for (let index = text.length - 1; index >= 0; index -= 1) {
-    if (text[index] === ")" || /\s/.test(text[index])) end = index;
-    destinationEnds[index] = end;
-  }
-  return destinationEnds;
-}
-
-function* primerLinks(text: string) {
-  const destinationEnds = destinationEndings(text);
-  let cursor = 0;
-  while (cursor < text.length) {
-    const start = text.indexOf("[", cursor);
-    if (start < 0) return;
-    const labelEnd = text.indexOf("]", start + 1);
-    if (labelEnd < 0) return;
-    cursor = labelEnd + 1;
-    if (labelEnd === start + 1 || text[cursor] !== "(") continue;
-    const destinationStart = cursor + 1;
-    const destinationEnd = destinationEnds[destinationStart] ?? text.length;
-    if (destinationEnd === destinationStart || text[destinationEnd] !== ")") continue;
-    cursor = destinationEnd + 1;
-    yield {
-      index: start,
-      end: cursor,
-      label: text.slice(start + 1, labelEnd),
-      url: text.slice(destinationStart, destinationEnd),
-    };
-  }
-}
-
-function headingId(text: string): string {
-  const slug = text
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
-  return `primer-${slug || "section"}`;
-}
-
-/** An author's link, rendered as far as {@link classifyUserLink} allows it to lead. */
-function PrimerLink({
+function PrimerContents({
+  headings,
   label,
-  link,
 }: {
+  readonly headings: readonly PrimerHeading[];
   readonly label: string;
-  readonly link: UserLink;
 }): ReactNode {
-  switch (link.kind) {
-    case "external":
-      return (
+  if (headings.length <= 1) return <span />;
+  return (
+    <nav aria-label={label} className="flex flex-wrap gap-x-3 gap-y-1">
+      {headings.map((heading) => (
         <a
-          href={link.href}
-          target="_blank"
-          rel={EXTERNAL_LINK_REL}
-          className={PRIMER_LINK_CLASS}
+          key={heading.id}
+          href={`#${heading.id}`}
+          className="text-xs text-[var(--text-secondary)] hover:text-[var(--accent-text)]"
         >
-          {label}
+          {heading.text}
         </a>
-      );
-    case "same-site":
-      return (
-        <a href={link.href} className={PRIMER_LINK_CLASS}>
-          {label}
-        </a>
-      );
-    case "refused":
-      return <span>{label}</span>;
-    default: {
-      const unhandled: never = link;
-      return unhandled;
-    }
-  }
-}
-
-function parsePrimer(description: string): readonly PrimerBlock[] {
-  const blocks: PrimerBlock[] = [];
-  const lines = description.split("\n");
-  let paragraph: string[] = [];
-  let listItems: string[] = [];
-  let ordered = false;
-
-  const flushParagraph = () => {
-    if (paragraph.length > 0)
-      blocks.push({ kind: "paragraph", text: paragraph.join(" ") });
-    paragraph = [];
-  };
-  const flushList = () => {
-    if (listItems.length > 0)
-      blocks.push({ kind: "list", ordered, items: listItems });
-    listItems = [];
-  };
-
-  for (const rawLine of lines) {
-    const line = rawLine.trim();
-    const heading = /^(#{1,3})\s(.+)$/.exec(line);
-    const listItem = /^(?:([-*])|(\d+)\.)\s(.+)$/.exec(line);
-    if (heading) {
-      flushParagraph();
-      flushList();
-      blocks.push({
-        kind: "heading",
-        level: heading[1].length,
-        text: heading[2].trimStart(),
-      });
-    } else if (listItem) {
-      flushParagraph();
-      const nextOrdered = listItem[2] !== undefined;
-      if (listItems.length > 0 && ordered !== nextOrdered) flushList();
-      ordered = nextOrdered;
-      listItems.push(listItem[3].trimStart());
-    } else if (line === "") {
-      flushParagraph();
-      flushList();
-    } else {
-      flushList();
-      paragraph.push(line);
-    }
-  }
-  flushParagraph();
-  flushList();
-  return blocks;
-}
-
-function renderInline(text: string): readonly ReactNode[] {
-  const nodes: ReactNode[] = [];
-  let cursor = 0;
-  for (const match of primerLinks(text)) {
-    const index = match.index;
-    if (index > cursor) nodes.push(text.slice(cursor, index));
-    nodes.push(
-      <PrimerLink
-        key={`link-${index}`}
-        label={match.label}
-        link={classifyUserLink(match.url)}
-      />
-    );
-    cursor = match.end;
-  }
-  if (cursor < text.length) nodes.push(text.slice(cursor));
-  return nodes;
-}
-
-/** Render a public deck primer with a safe, focused Markdown subset. */
-export function PublicDeckPrimer({
-  description,
-  labels = {
-    contents: "Primer contents",
-    copy: "Copy primer",
-    copied: "Primer copied",
-    download: "Download primer",
-  },
-}: PublicDeckPrimerProps) {
-  const [copied, setCopied] = useState(false);
-  const blocks = useMemo(() => parsePrimer(description), [description]);
-  const headings = useMemo(
-    () => blocks.filter((block) => block.kind === "heading"),
-    [blocks]
+      ))}
+    </nav>
   );
+}
+
+/** Copy the original Markdown to the clipboard, or download it as `deck-primer.md`. */
+function PrimerActions({
+  description,
+  labels,
+}: {
+  readonly description: string;
+  readonly labels: PrimerLabels;
+}): ReactNode {
+  const [copied, setCopied] = useState(false);
   const downloadHref = useMemo(
     () => `data:text/markdown;charset=utf-8,${encodeURIComponent(description)}`,
     [description]
@@ -220,94 +88,44 @@ export function PublicDeckPrimer({
   }, [description]);
 
   return (
+    <div className="ml-auto flex items-center gap-2">
+      <button
+        type="button"
+        onClick={() => void copyPrimer()}
+        aria-label={copied ? labels.copied : labels.copy}
+        className={ACTION_CLASS}
+      >
+        {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+      </button>
+      <a
+        href={downloadHref}
+        download="deck-primer.md"
+        aria-label={labels.download}
+        className={ACTION_CLASS}
+      >
+        <Download className="h-4 w-4" />
+      </a>
+    </div>
+  );
+}
+
+/** Render a public deck primer with a safe, focused Markdown subset. */
+export function PublicDeckPrimer({
+  description,
+  labels = DEFAULT_LABELS,
+}: PublicDeckPrimerProps) {
+  const blocks = useMemo(() => parsePrimer(description), [description]);
+  const headings = useMemo(() => primerHeadings(blocks), [blocks]);
+
+  return (
     <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)]/60 px-4 py-4 sm:px-5">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)] pb-3">
-        {headings.length > 1 ? (
-          <nav
-            aria-label={labels.contents}
-            className="flex flex-wrap gap-x-3 gap-y-1"
-          >
-            {headings.map((heading) => (
-              <a
-                key={headingId(heading.text)}
-                href={`#${headingId(heading.text)}`}
-                className="text-xs text-[var(--text-secondary)] hover:text-[var(--accent-text)]"
-              >
-                {heading.text}
-              </a>
-            ))}
-          </nav>
-        ) : (
-          <span />
-        )}
-        <div className="ml-auto flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => void copyPrimer()}
-            aria-label={copied ? labels.copied : labels.copy}
-            className="rounded-md p-1.5 text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]"
-          >
-            {copied ? (
-              <Check className="h-4 w-4" />
-            ) : (
-              <Copy className="h-4 w-4" />
-            )}
-          </button>
-          <a
-            href={downloadHref}
-            download="deck-primer.md"
-            aria-label={labels.download}
-            className="rounded-md p-1.5 text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]"
-          >
-            <Download className="h-4 w-4" />
-          </a>
-        </div>
+        <PrimerContents headings={headings} label={labels.contents} />
+        <PrimerActions description={description} labels={labels} />
       </div>
-      {blocks.map((block, index) => {
-        const key = `${block.kind}-${index}`;
-        if (block.kind === "heading") {
-          const className =
-            "mb-2 mt-5 first:mt-0 font-semibold text-[var(--text-primary)]";
-          return block.level >= 3 ? (
-            <h3
-              id={headingId(block.text)}
-              key={key}
-              className={`${className} scroll-mt-20 text-sm`}
-            >
-              {renderInline(block.text)}
-            </h3>
-          ) : (
-            <h2
-              id={headingId(block.text)}
-              key={key}
-              className={`${className} scroll-mt-20 text-base`}
-            >
-              {renderInline(block.text)}
-            </h2>
-          );
-        }
-        if (block.kind === "list") {
-          const List = block.ordered ? "ol" : "ul";
-          return (
-            <List
-              key={key}
-              className={`my-2 space-y-1 pl-5 text-sm text-[var(--text-secondary)] ${block.ordered ? "list-decimal" : "list-disc"}`}
-            >
-              {block.items.map((item, itemIndex) => (
-                <li key={`${item}-${itemIndex}`}>{renderInline(item)}</li>
-              ))}
-            </List>
-          );
-        }
-        return (
-          <p
-            key={key}
-            className="my-2 text-sm leading-6 text-[var(--text-secondary)]"
-          >
-            {renderInline(block.text)}
-          </p>
-        );
-      })}
+      {blocks.map((block, index) => (
+        <PrimerBlockView key={`${block.kind}-${index}`} block={block} />
+      ))}
     </section>
   );
 }

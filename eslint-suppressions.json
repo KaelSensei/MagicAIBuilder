@@ -1121,14 +1121,6 @@
       "count": 1
     }
   },
-  "src/components/profile/PublicDeckPrimer.tsx": {
-    "max-lines": {
-      "count": 1
-    },
-    "max-lines-per-function": {
-      "count": 1
-    }
-  },
   "src/components/profile/PublicDeckView.test.tsx": {
     "no-restricted-syntax": {
       "count": 7
