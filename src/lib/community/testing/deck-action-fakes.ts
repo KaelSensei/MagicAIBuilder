@@ -62,7 +62,7 @@ export function inMemoryDeckReportStore(
     },
     replacePendingReason: (report) => {
       const stored = rows.get(reporterKey(report));
-      if (!stored || stored.status !== "pending") return Promise.resolve(false);
+      if (stored?.status !== "pending") return Promise.resolve(false);
       rows.set(reporterKey(report), { ...stored, reason: report.reason });
       return Promise.resolve(true);
     },
