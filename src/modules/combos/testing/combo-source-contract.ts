@@ -1,6 +1,8 @@
 /**
  * The shared contract suite of the `ComboSource` port (ADR 0005: one suite
- * per owned port, run against the in-memory fake and the real adapter).
+ * per owned port, run against the in-memory fake and the real adapter). It is
+ * a table of named cases, {@link COMBO_SOURCE_CONTRACT_CASES}; each caller
+ * registers one `it` per case.
  *
  * It pins what every `ComboSource` must do for the use case that calls it: a
  * list the upstream knows combos for comes back `found` with those combos
@@ -25,7 +27,7 @@
  *
  * @module combos/testing/combo-source-contract
  */
-import { beforeEach, describe, expect, it } from "vitest";
+import { expect } from "vitest";
 
 import type {
   ComboSource,
@@ -123,51 +125,80 @@ export const UPSTREAM_FAILURES: readonly DeckCombosFailure[] = [
 ];
 
 /**
- * Registers the contract cases against the harness `makeHarness` builds
- * before each of them.
- *
- * @param makeHarness - builds a fresh harness; the suite shares nothing between cases
+ * One expectation of the contract: a behaviour sentence, and the check that
+ * proves it against a fresh harness.
  */
-export function describeComboSourceContract(
-  makeHarness: () => ComboSourceHarness
-): void {
-  let harness: ComboSourceHarness;
+export interface ComboSourceContractCase {
+  /** The test name each contract test file registers the case under. */
+  readonly name: string;
+  /** Arranges the harness's upstream, calls the source and asserts; rejects on a broken contract. */
+  readonly run: (harness: ComboSourceHarness) => Promise<void>;
+}
 
-  beforeEach(() => {
-    harness = makeHarness();
-  });
+/**
+ * A failure written the way Vitest's `%o` printed it when the failure cases
+ * were an `it.each` table, e.g. `{ kind: 'failed', status: 500 }`, so the
+ * test names stay the same across the move to a case table.
+ */
+function describeFailure(failure: DeckCombosFailure): string {
+  const fields = Object.entries(failure).map(
+    ([key, value]) =>
+      `${key}: ${typeof value === "string" ? `'${value}'` : String(value)}`
+  );
+  return `{ ${fields.join(", ")} }`;
+}
 
-  describe("ComboSource contract", () => {
-    it("lists the combos a deck holds, each mapped to its id, cards, effects, infinity and prerequisites", async () => {
+/** @returns the case that pins how the source reports `failure` */
+function reportsFailureAsValue(
+  failure: DeckCombosFailure
+): ComboSourceContractCase {
+  return {
+    name: `reports an upstream failure as the value ${describeFailure(failure)}, never as a thrown error`,
+    run: async (harness) => {
+      harness.upstreamFails(failure);
+
+      await expect(harness.source.findCombos(RECORDED_DECK)).resolves.toEqual(
+        failure
+      );
+    },
+  };
+}
+
+/**
+ * Every case of the contract, in the order the test files register them.
+ *
+ * Each `*.contract.test.ts` (and the fake's test file) declares its own `it`
+ * per case, building a fresh harness for each, so the tests are visible in
+ * the file that runs them: SonarCloud (S2187) and a reader both see a test
+ * file with tests, not a single call into a shared `describe`.
+ */
+export const COMBO_SOURCE_CONTRACT_CASES: readonly ComboSourceContractCase[] = [
+  {
+    name: "lists the combos a deck holds, each mapped to its id, cards, effects, infinity and prerequisites",
+    run: async (harness) => {
       harness.upstreamListsTheRecordedCombos();
 
       const result = await harness.source.findCombos(RECORDED_DECK);
 
       expect(result.kind).toBe("found");
       expect(result).toMatchObject({ combos: RECORDED_DECK_COMBOS });
-    });
-
-    it("answers a deck that holds no known combo as found, with none", async () => {
+    },
+  },
+  {
+    name: "answers a deck that holds no known combo as found, with none",
+    run: async (harness) => {
       harness.upstreamListsNoCombo();
 
       expect(await harness.source.findCombos(COMBOLESS_DECK)).toEqual({
         kind: "found",
         combos: [],
       });
-    });
-
-    it.each(UPSTREAM_FAILURES)(
-      "reports an upstream failure as the value %o, never as a thrown error",
-      async (failure) => {
-        harness.upstreamFails(failure);
-
-        await expect(harness.source.findCombos(RECORDED_DECK)).resolves.toEqual(
-          failure
-        );
-      }
-    );
-
-    it("lists the combos again once the upstream has recovered: a failure is not remembered", async () => {
+    },
+  },
+  ...UPSTREAM_FAILURES.map(reportsFailureAsValue),
+  {
+    name: "lists the combos again once the upstream has recovered: a failure is not remembered",
+    run: async (harness) => {
       harness.upstreamFails({ kind: "timeout" });
       await harness.source.findCombos(RECORDED_DECK);
 
@@ -176,6 +207,6 @@ export function describeComboSourceContract(
 
       expect(recovered.kind).toBe("found");
       expect(recovered).toMatchObject({ combos: RECORDED_DECK_COMBOS });
-    });
-  });
-}
+    },
+  },
+];

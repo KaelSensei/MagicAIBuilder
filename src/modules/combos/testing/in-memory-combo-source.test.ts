@@ -7,8 +7,8 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  COMBO_SOURCE_CONTRACT_CASES,
   COMBOLESS_DECK,
-  describeComboSourceContract,
   RECORDED_DECK,
   RECORDED_DECK_COMBOS,
   type ComboSourceHarness,
@@ -34,7 +34,11 @@ function inMemoryHarness(): ComboSourceHarness {
 }
 
 describe("in-memory combo source — ComboSource contract", () => {
-  describeComboSourceContract(inMemoryHarness);
+  describe("ComboSource contract", () => {
+    for (const contractCase of COMBO_SOURCE_CONTRACT_CASES) {
+      it(contractCase.name, () => contractCase.run(inMemoryHarness()));
+    }
+  });
 
   it("records every list it was asked for, in order and as given", async () => {
     const source = inMemoryComboSource();
