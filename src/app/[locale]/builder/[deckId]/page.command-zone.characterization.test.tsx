@@ -122,6 +122,20 @@ function renderOpenDeck(deck: Deck): void {
 }
 
 /**
+ * How long one search-result wait may take under the coverage run in CI,
+ * where the debounced search and the row's render took more than a second.
+ */
+const SEARCH_ROW_WAIT_MS = 10_000;
+
+/**
+ * The limit for a test that waits for search rows. Vitest's default of 5
+ * seconds is shorter than a single {@link SEARCH_ROW_WAIT_MS} wait, so on a
+ * slow run the test failed with "Test timed out in 5000ms" before its own
+ * waits could expire (CI runs 43684999921 and 43693127796, 2026-11-15).
+ */
+const SEARCH_TEST_TIMEOUT_MS = 30_000;
+
+/**
  * Clicks the search row for `name`. The draggable wrapper is also a button
  * with that name, so the click lands on the row itself.
  *
@@ -136,7 +150,7 @@ async function clickSearchRow(
     await screen.findAllByRole(
       "button",
       { name: new RegExp(name) },
-      { timeout: 10_000 }
+      { timeout: SEARCH_ROW_WAIT_MS }
     )
   ).find((element) => element.tagName === "BUTTON");
   if (!(row instanceof HTMLButtonElement)) {
@@ -215,7 +229,7 @@ describe("characterization: choosing the command zone from the builder", () => {
         }),
       }),
     ]);
-  });
+  }, SEARCH_TEST_TIMEOUT_MS);
 
   it("characterization: partner search seats a card the commander can pair with", async () => {
     const user = userEvent.setup({ delay: null });
@@ -248,5 +262,5 @@ describe("characterization: choosing the command zone from the builder", () => {
         }),
       }),
     ]);
-  });
+  }, SEARCH_TEST_TIMEOUT_MS);
 });
