@@ -8,22 +8,23 @@
  * without opening the protected /api/decks tree. Unlike ratings and votes,
  * the deck owner is allowed to post — a stream where the author cannot
  * answer questions would be half a conversation.
+ *
+ * HTTP concerns only: the session, the JSON body and its schema, and the
+ * mapping of each use-case outcome to a status code. The rules live in
+ * `@/lib/community/comment-use-cases` (COM-13).
  */
 
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { prisma } from "@/lib/db/prisma";
-import { findVisibleDeck } from "@/lib/community/visible-deck";
-import { COMMENT_SELECT } from "@/lib/community/comment-select";
+import { deckComments } from "@/lib/community/comment-use-cases.server";
+import type {
+  ListCommentsResult,
+  PostCommentResult,
+} from "@/lib/community/comment-use-cases";
 import { auth } from "@/lib/auth/config";
 import { requireAuth } from "@/lib/auth/helpers";
 import { logger } from "@/lib/logger";
-import { buildCommentTree, validateCommentBody } from "@/lib/community/comments";
 import { readJsonBody } from "@/lib/api/json-body";
-import {
-  toDeckComment,
-  type DeckCommentRow,
-} from "@/lib/community/comment-mappers";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -31,6 +32,45 @@ const CommentSchema = z.object({
   body: z.string(),
   parentId: z.string().optional(),
 });
+
+/** 404 for a missing deck and for a deck the caller may not see alike. */
+const DECK_NOT_FOUND = { error: "Deck not found" };
+
+function listResponse(result: ListCommentsResult): NextResponse {
+  switch (result.status) {
+    case "ok":
+      return NextResponse.json({
+        comments: result.comments,
+        count: result.count,
+      });
+    case "deck-not-found":
+      return NextResponse.json(DECK_NOT_FOUND, { status: 404 });
+    default: {
+      const exhaustive: never = result;
+      return exhaustive;
+    }
+  }
+}
+
+function postResponse(result: PostCommentResult): NextResponse {
+  switch (result.status) {
+    case "created":
+      return NextResponse.json(result.comment, { status: 201 });
+    case "deck-not-found":
+      return NextResponse.json(DECK_NOT_FOUND, { status: 404 });
+    case "invalid-body":
+      return NextResponse.json({ error: result.errors }, { status: 400 });
+    case "parent-not-found":
+      return NextResponse.json(
+        { error: "Parent comment not found" },
+        { status: 400 }
+      );
+    default: {
+      const exhaustive: never = result;
+      return exhaustive;
+    }
+  }
+}
 
 // GET /api/community/decks/[id]/comments
 export async function GET(_req: Request, { params }: Params) {
@@ -40,23 +80,8 @@ export async function GET(_req: Request, { params }: Params) {
     const session = await auth();
     const viewerId = session?.user?.id ?? null;
 
-    const deck = await findVisibleDeck(id, viewerId);
-    if (!deck) {
-      return NextResponse.json({ error: "Deck not found" }, { status: 404 });
-    }
-
-    const rows = (await prisma.deckComment.findMany({
-      where: { deckId: id },
-      orderBy: { createdAt: "asc" },
-      select: COMMENT_SELECT,
-    })) as DeckCommentRow[];
-
-    const comments = rows.map((row) => toDeckComment(row, deck.userId, viewerId));
-
-    return NextResponse.json({
-      comments: buildCommentTree(comments),
-      count: comments.length,
-    });
+    const result = await deckComments.listComments({ deckId: id, viewerId });
+    return listResponse(result);
   } catch (error) {
     logger.error(
       error instanceof Error ? error.message : "unknown",
@@ -79,11 +104,6 @@ export async function POST(request: Request, { params }: Params) {
     if (authResult.error) return authResult.error;
     const userId = authResult.session.user.id;
 
-    const deck = await findVisibleDeck(id, userId);
-    if (!deck) {
-      return NextResponse.json({ error: "Deck not found" }, { status: 404 });
-    }
-
     const jsonBody = await readJsonBody(request);
     if (!jsonBody.ok) return jsonBody.response;
     const parsed = CommentSchema.safeParse(jsonBody.value);
@@ -94,39 +114,13 @@ export async function POST(request: Request, { params }: Params) {
       );
     }
 
-    const validation = validateCommentBody(parsed.data.body);
-    if (!validation.valid) {
-      return NextResponse.json({ error: validation.errors }, { status: 400 });
-    }
-
-    // A reply must answer a comment on this same deck — a parentId pointing
-    // anywhere else would thread two decks' streams together.
-    if (parsed.data.parentId !== undefined) {
-      const parent = await prisma.deckComment.findUnique({
-        where: { id: parsed.data.parentId },
-        select: { deckId: true },
-      });
-      if (parent?.deckId !== id) {
-        return NextResponse.json(
-          { error: "Parent comment not found" },
-          { status: 400 }
-        );
-      }
-    }
-
-    const row = (await prisma.deckComment.create({
-      data: {
-        deckId: id,
-        userId,
-        parentId: parsed.data.parentId ?? null,
-        body: parsed.data.body.trim(),
-      },
-      select: COMMENT_SELECT,
-    })) as DeckCommentRow;
-
-    return NextResponse.json(toDeckComment(row, deck.userId, userId), {
-      status: 201,
+    const result = await deckComments.postComment({
+      deckId: id,
+      viewerId: userId,
+      body: parsed.data.body,
+      parentId: parsed.data.parentId,
     });
+    return postResponse(result);
   } catch (error) {
     logger.error(
       error instanceof Error ? error.message : "unknown",
