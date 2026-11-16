@@ -462,7 +462,8 @@ describe("characterization: builder page shell", () => {
       expect(deckApiLines()).toContain(`POST /api/decks/${DECK_ID}/duplicate`);
     });
 
-    it("currently counts a Standard deck against 100 cards although Standard asks for 60 (pinned)", async () => {
+    // CR 100.2a: a constructed deck holds 60 cards, not Commander's 100.
+    it("counts a Standard deck of 60 cards out of 60 in the title bar and, as a full deck, in the editor", async () => {
       server.use(
         http.get("/api/decks/:id", () =>
           HttpResponse.json(
@@ -470,7 +471,7 @@ describe("characterization: builder page shell", () => {
               format: "standard",
               commanderId: null,
               commanderName: null,
-              cards: [COUNTERSPELL, ISLANDS],
+              cards: [{ ...ISLANDS, quantity: 60 }],
             })
           )
         )
@@ -479,10 +480,11 @@ describe("characterization: builder page shell", () => {
       renderBuilder(DECK_ID, PLAYER);
       await screen.findByRole("heading", { level: 1, name: "Talrand Spells" });
 
-      expect(screen.getByText("11 / 100")).toBeInTheDocument();
-      expect(screen.getByText("11/100")).toBeInTheDocument();
-      // The stats panel's deck checks already count against the format's size.
-      expect(screen.getByText("11/60")).toBeInTheDocument();
+      expect(screen.getByText("60 / 60")).toBeInTheDocument();
+      const editorToolbar = screen.getByRole("toolbar", { name: "Deck view" });
+      expect(within(editorToolbar).getByText("60/60")).toHaveClass(
+        "text-green-500"
+      );
     });
 
     it("lists commander-legal cards in the search panel before anything is typed", async () => {
