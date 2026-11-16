@@ -132,7 +132,7 @@ Decks and their contents. Context folder: `deck-building`. Today: most of `lib/d
 ## Deck analysis
 
 Read-only evaluation of a decklist. Context folder: `deck-analysis`. Today:
-`lib/deck/{stats,bracket,mana-alignment,mana-base-tables,source-targets,turn-one,draw-odds,draw-odds-library,cards-drawn,themes,format-stats,commander-rules-check}.ts`.
+`lib/deck/{stats,bracket,mana-alignment,mana-base-tables,source-targets,turn-one,draw-odds,draw-odds-library,cards-drawn,themes,theme-match,theme-coverage,format-stats,commander-rules-check}.ts`.
 
 | Term                      | Meaning                                                                                                                                                                                              | Source                          | Code today                                                                                |
 | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- | ----------------------------------------------------------------------------------------- |
@@ -152,6 +152,8 @@ Read-only evaluation of a decklist. Context folder: `deck-analysis`. Today:
 | **Manual bracket**        | The player's override of the bracket estimate.                                                                                                                                                       | Product                         | `Deck.manualBracket`                                                                      |
 | **Commander rules check** | Main-deck cards whose rules text cannot work with this commander, such as cards needing coloured mana under a colourless commander.                                                                  | CR 903.4, 106.5 (cited in code) | `getCommanderRuleIssues`, `CommanderRuleIssue` in `lib/deck/commander-rules-check.ts`     |
 | **Theme**                 | A strategy the deck's cards point to (tokens, aristocrats, …).                                                                                                                                       | Product heuristic               | `DetectedTheme`, `detectThemes` in `lib/deck/themes.ts`                                   |
+| **Theme handle**          | One rule of the owner's own theme, read from a stored card field: a creature type, a word in the name or the text, a first letter, a card type. The owner names it; the product never infers it.     | I-102                           | `ThemeHandle`, `DeckTheme`, `matchTheme` in `lib/deck/theme-match.ts`                     |
+| **Theme coverage**        | The copies on the owner's theme over the copies counted: command zone and main deck, basics only if the owner counts them. A count, never a grade.                                                   | I-102                           | `themeCoverage`, `ThemeCoverage` in `lib/deck/theme-coverage.ts`                          |
 | **Format stats**          | For formats without brackets: curve, threat density and interaction ratio, against heuristic bands.                                                                                                  | Product                         | `FormatStats`, `buildFormatStats` in `lib/deck/format-stats.ts`                           |
 
 ## Playtest
