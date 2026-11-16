@@ -18,7 +18,7 @@ import {
   isIdentityExempt,
   type RulebreakerException,
 } from "@/modules/format-rules";
-import type { Deck, DeckCard } from "./types";
+import type { Deck } from "./types";
 
 export interface ColorIdentityViolation {
   readonly cardId: string;
@@ -58,6 +58,13 @@ export function commanderNameExceptions(
   return deckConstructionExceptions(names.map((name) => ({ oracleId: null, name })));
 }
 
+/** What the identity rule reads of a card: a deck row, a package card or a Scryfall card. */
+export interface IdentityCard {
+  readonly colorIdentity: readonly string[];
+  readonly typeLine: string;
+  readonly cmc: number;
+}
+
 /** The colours a deck's command zone allows and its rulebreaker exceptions. */
 export interface DeckIdentityRule {
   readonly colors: ReadonlySet<string>;
@@ -75,7 +82,7 @@ export interface DeckIdentityRule {
  */
 export function isOutsideDeckIdentity(
   rule: DeckIdentityRule,
-  card: Pick<DeckCard, "colorIdentity" | "typeLine" | "cmc">
+  card: IdentityCard
 ): boolean {
   return (
     isCardOutsideColorIdentity(rule.colors, card) &&
@@ -122,7 +129,7 @@ export function getColorIdentityViolations(deck: Deck): readonly ColorIdentityVi
  */
 export function isCardOutsideColorIdentity(
   commanderIdentity: ReadonlySet<string>,
-  card: Pick<DeckCard, "colorIdentity">
+  card: Pick<IdentityCard, "colorIdentity">
 ): boolean {
   return card.colorIdentity.some((color) => !commanderIdentity.has(color));
 }

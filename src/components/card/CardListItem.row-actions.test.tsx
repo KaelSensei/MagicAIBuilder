@@ -282,7 +282,10 @@ describe("quantity stepper on a deck row", () => {
       typeLine: "Legendary Creature — Homunculus",
       colorIdentity: ["U", "W"],
     });
-    const talrand = deckRow({ id: "row-talrand", name: "Talrand, Sky Summoner" });
+    const talrand = deckRow({
+      id: "row-talrand",
+      name: "Talrand, Sky Summoner",
+    });
     const openUnder = (commander: DeckCard) =>
       useDeckStore.setState({
         decks: {
