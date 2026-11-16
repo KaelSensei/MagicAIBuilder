@@ -98,6 +98,27 @@ describe("POST /api/community/card-packages/[packageId]/apply", () => {
     expect(mockCreateMany).not.toHaveBeenCalled();
   });
 
+  // CR 903.5e: Seluma admits Angels of any identity. The deck reads the stored
+  // row's type line, so the row keeps Scryfall's, or the Angel is reported later.
+  it("adds an off-colour Angel to a Seluma deck with its type line and mana value", async () => {
+    mockDeckFindFirst.mockResolvedValue({ format: "commander", cards: [
+      { name: "Seluma, Light of Aysen", quantity: 1, isCommander: true, isPartner: false, typeLine: "Legendary Creature — Angel", colorIdentity: ["W", "B"] },
+    ] });
+    mockPackageFindFirst.mockResolvedValue({ cards: [
+      { scryfallId: "ready", name: "Sigarda, Host of Herons", quantity: 1, colorIdentity: ["G", "W"], isBanned: false, isBasicLand: false, imageUri: "sigarda.jpg" },
+    ] });
+    mockGetCardCollection.mockResolvedValue({ data: [
+      { id: "ready", name: "Sigarda, Host of Herons", cmc: 5, color_identity: ["G", "W"], type_line: "Legendary Creature — Angel", legalities: { commander: "legal" }, image_uris: {} },
+    ], not_found: [] });
+
+    const response = await POST(request(), context);
+
+    expect(await response.json()).toEqual({ addedCount: 1, blockedCount: 0 });
+    expect(mockCreateMany).toHaveBeenCalledWith({ data: [expect.objectContaining({
+      name: "Sigarda, Host of Herons", typeLine: "Legendary Creature — Angel", cmc: 5,
+    })] });
+  });
+
   it("refuses a deck whose stored format this build does not support", async () => {
     mockDeckFindFirst.mockResolvedValue({ format: "historic", cards: [] });
     const response = await POST(request(), context);

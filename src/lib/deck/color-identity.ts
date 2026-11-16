@@ -18,7 +18,7 @@ import {
   isIdentityExempt,
   type RulebreakerException,
 } from "@/modules/format-rules";
-import type { Deck, DeckCard } from "./types";
+import type { Deck } from "./types";
 
 export interface ColorIdentityViolation {
   readonly cardId: string;
@@ -39,22 +39,60 @@ function buildCommanderIdentitySet(deck: Deck): ReadonlySet<string> {
 export function commandZoneExceptions(
   deck: Pick<Deck, "commander" | "partner">
 ): readonly RulebreakerException[] {
-  const commandZone = [deck.commander, deck.partner].flatMap((card) =>
-    card ? [{ oracleId: null, name: card.name }] : []
+  return commanderNameExceptions(
+    [deck.commander, deck.partner].flatMap((card) => (card ? [card.name] : []))
   );
-  return deckConstructionExceptions(commandZone);
 }
 
-/** Whether the card's identity leaves the commander's and no rulebreaker exception admits it. */
-function isOutside(
-  commanderIdentity: ReadonlySet<string>,
-  exceptions: readonly RulebreakerException[],
-  card: Pick<DeckCard, "colorIdentity" | "typeLine" | "cmc">
+/**
+ * The exceptions of command-zone cards known only by name (CR 903.5e): a
+ * stored card, or a name a request sent, has no Oracle id, so the table
+ * matches the exact Oracle name.
+ *
+ * @param names - The commander's and the partner's names; never a card of the 99
+ * @returns The rulebreaker exceptions, empty when no name is a rulebreaker's
+ */
+export function commanderNameExceptions(
+  names: readonly string[]
+): readonly RulebreakerException[] {
+  return deckConstructionExceptions(names.map((name) => ({ oracleId: null, name })));
+}
+
+/** What the identity rule reads of a card: a deck row, a package card or a Scryfall card. */
+export interface IdentityCard {
+  readonly colorIdentity: readonly string[];
+  readonly typeLine: string;
+  readonly cmc: number;
+}
+
+/** The colours a deck's command zone allows and its rulebreaker exceptions. */
+export interface DeckIdentityRule {
+  readonly colors: ReadonlySet<string>;
+  readonly exceptions: readonly RulebreakerException[];
+}
+
+/**
+ * Whether the card's identity leaves the command zone's (CR 903.5c) and no
+ * rulebreaker exception admits it (CR 903.5e). Every identity reader asks
+ * this one question; legality is not read (CR 113.6n).
+ *
+ * @param rule - The command zone's colours and exceptions
+ * @param card - The card's identity letters, type line and mana value
+ * @returns True when the card is outside the deck's colour identity
+ */
+export function isOutsideDeckIdentity(
+  rule: DeckIdentityRule,
+  card: IdentityCard
 ): boolean {
   return (
-    isCardOutsideColorIdentity(commanderIdentity, card) &&
-    !isIdentityExempt({ typeLine: card.typeLine, manaValue: card.cmc }, exceptions)
+    isCardOutsideColorIdentity(rule.colors, card) &&
+    !isIdentityExempt({ typeLine: card.typeLine, manaValue: card.cmc }, rule.exceptions)
   );
+}
+
+/** The identity rule of a stored deck's commander and partner. */
+function deckIdentityRule(deck: Deck): DeckIdentityRule {
+  return { colors: buildCommanderIdentitySet(deck), exceptions: commandZoneExceptions(deck) };
 }
 
 /**
@@ -66,13 +104,12 @@ function isOutside(
  */
 export function getColorIdentityViolations(deck: Deck): readonly ColorIdentityViolation[] {
   if (!deck.commander) return [];
-  const commanderIdentity = buildCommanderIdentitySet(deck);
-  const exceptions = commandZoneExceptions(deck);
+  const rule = deckIdentityRule(deck);
   const mainCards = deck.cards.filter((c) => c.zone === "main");
 
   const violations: ColorIdentityViolation[] = [];
   for (const c of mainCards) {
-    if (!isOutside(commanderIdentity, exceptions, c)) continue;
+    if (!isOutsideDeckIdentity(rule, c)) continue;
     violations.push({ cardId: c.id, cardName: c.name });
   }
   return violations.sort((a, b) => {
@@ -92,7 +129,7 @@ export function getColorIdentityViolations(deck: Deck): readonly ColorIdentityVi
  */
 export function isCardOutsideColorIdentity(
   commanderIdentity: ReadonlySet<string>,
-  card: Pick<DeckCard, "colorIdentity">
+  card: Pick<IdentityCard, "colorIdentity">
 ): boolean {
   return card.colorIdentity.some((color) => !commanderIdentity.has(color));
 }
@@ -106,5 +143,5 @@ export function isCardOutsideColorIdentity(
  */
 export function isCompanionOutsideColorIdentity(deck: Deck): boolean {
   if (!deck.commander || !deck.companion) return false;
-  return isOutside(buildCommanderIdentitySet(deck), commandZoneExceptions(deck), deck.companion);
+  return isOutsideDeckIdentity(deckIdentityRule(deck), deck.companion);
 }
