@@ -148,6 +148,7 @@ function searchContext(input: NaturalLanguageSearchRequest): NaturalLanguageSear
     format: input.format,
     enforceColorIdentity: input.enforceColorIdentity,
     colorIdentity: input.colorIdentity,
+    commandZoneNames: input.commandZoneNames,
     applyContext: input.applyContext,
   };
 }

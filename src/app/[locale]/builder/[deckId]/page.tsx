@@ -496,6 +496,10 @@ export default function BuilderPage() {
         commanderColorIdentity: deck?.commander?.colorIdentity ?? [],
         partnerColorIdentity: deck?.partner?.colorIdentity ?? [],
         hasCommander: deck?.commander != null,
+        // CR 903.5e: only the command zone's rulebreaker widens the search.
+        commandZoneNames: [deck?.commander?.name, deck?.partner?.name].filter(
+          (name): name is string => name !== undefined
+        ),
       }),
     [deck?.format, deck?.commander, deck?.partner]
   );

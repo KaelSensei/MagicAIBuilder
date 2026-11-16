@@ -102,3 +102,42 @@ describe("previewCardPackage", () => {
     expect(preview.cards[0]?.issues[0]?.kind).toBe("singleton");
   });
 });
+
+describe("previewCardPackage under a rulebreaker commander (CR 903.5e)", () => {
+  const sigarda = {
+    scryfallId: "sigarda", name: "Sigarda, Host of Herons", quantity: 1, colorIdentity: ["G", "W"],
+    isBanned: false, isBasicLand: false, typeLine: "Legendary Creature — Angel", manaValue: 5,
+  };
+  const selumaDeck = { ...context, commanderColorIdentity: ["W", "B"], existingCards: [] };
+
+  it("blocks an off-colour Angel when Seluma is in the 99, not the command zone", () => {
+    const preview = previewCardPackage([sigarda], { ...selumaDeck, commandZoneNames: ["Talrand, Sky Summoner"] });
+
+    expect(preview.cards[0]?.issues).toContainEqual(expect.objectContaining({ kind: "colorIdentity" }));
+  });
+
+  it("still blocks a banned Angel under Seluma: an exception never changes legality (CR 113.6n)", () => {
+    const preview = previewCardPackage([{ ...sigarda, isBanned: true }], {
+      ...selumaDeck, commandZoneNames: ["Seluma, Light of Aysen"],
+    });
+
+    expect(preview.cards[0]?.issues.map((issue) => issue.kind)).toEqual(["banned"]);
+  });
+
+  it("lets a Whtz deck take a hundredth Relentless Rats, and still one Sol Ring (CR 903.5b)", () => {
+    const whtzDeck = {
+      ...context, commanderColorIdentity: ["W", "U"], commandZoneNames: ["Whtz, the Bibliophile"],
+      existingCards: [
+        { name: "Relentless Rats", quantity: 99, isBasicLand: false },
+        { name: "Sol Ring", quantity: 1, isBasicLand: false },
+      ],
+    };
+    const preview = previewCardPackage([
+      { scryfallId: "rats", name: "Relentless Rats", quantity: 1, colorIdentity: [], isBanned: false, isBasicLand: false,
+        oracleText: "A deck can have any number of cards named Relentless Rats." },
+      { scryfallId: "ring", name: "Sol Ring", quantity: 1, colorIdentity: [], isBanned: false, isBasicLand: false },
+    ], whtzDeck);
+
+    expect(preview.cards.map((row) => row.status)).toEqual(["ready", "blocked"]);
+  });
+});
