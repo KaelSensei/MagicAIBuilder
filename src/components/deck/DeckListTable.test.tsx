@@ -2,6 +2,7 @@ import React from "react";
 import { screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { Deck, DeckCard } from "@/lib/deck/types";
+import { renderWithProviders } from "@/test/render";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { DeckListTable } from "./DeckListTable";
 
@@ -94,5 +95,43 @@ describe("DeckListTable mana symbols", () => {
     expect(
       screen.getByRole("img", { name: "Colorless mana symbol" })
     ).toBeInTheDocument();
+  });
+});
+
+describe("DeckListTable card count", () => {
+  // CR 100.2a: a constructed deck holds 60 cards, not Commander's 100.
+  it("counts a Standard deck of 60 cards out of 60", () => {
+    renderWithProviders(
+      <DeckListTable
+        decks={[
+          {
+            ...makeDeck([]),
+            format: "standard",
+            commander: null,
+            cardCount: 60,
+          },
+        ]}
+        deletingId={null}
+        duplicatingId={null}
+        onDelete={vi.fn()}
+        onDuplicate={vi.fn()}
+      />
+    );
+
+    expect(screen.getByRole("cell", { name: "60 / 60" })).toBeInTheDocument();
+  });
+
+  it("counts a Commander deck out of 100", () => {
+    renderWithProviders(
+      <DeckListTable
+        decks={[{ ...makeDeck(["U"]), cardCount: 100 }]}
+        deletingId={null}
+        duplicatingId={null}
+        onDelete={vi.fn()}
+        onDuplicate={vi.fn()}
+      />
+    );
+
+    expect(screen.getByRole("cell", { name: "100 / 100" })).toBeInTheDocument();
   });
 });
