@@ -110,6 +110,25 @@ export const GENERATED_DECK_CARDS = {
     color_identity: [],
     legalities: { commander: "not_legal" },
   }),
+  // A preview card: its set releases on 5 February 2027, and Scryfall marks
+  // it not legal until shortly before (I-73 requirement 3.1).
+  tidewaterPreview: card({
+    name: "Tidewater Oracle",
+    type_line: "Creature — Merfolk Wizard",
+    oracle_text: "When Tidewater Oracle enters, draw a card.",
+    color_identity: ["U"],
+    legalities: { commander: "not_legal" },
+    released_at: "2027-02-05",
+  }),
+  // A preview commander from the same set.
+  tidewaterAdmiral: card({
+    name: "Tidewater Admiral",
+    type_line: "Legendary Creature — Merfolk Pirate",
+    oracle_text: "Flying",
+    color_identity: ["U"],
+    legalities: { commander: "not_legal" },
+    released_at: "2027-02-05",
+  }),
   persistentPetitioners: card({
     name: "Persistent Petitioners",
     type_line: "Creature — Human Advisor",

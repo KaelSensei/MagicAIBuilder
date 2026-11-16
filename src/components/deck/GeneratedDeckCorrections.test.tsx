@@ -64,6 +64,42 @@ describe("GeneratedDeckCorrections", () => {
     );
   });
 
+  describe("a preview card removed from the list (I-73 3.5)", () => {
+    const PREVIEW: readonly DeckCorrection[] = [
+      {
+        action: "removed",
+        name: "Tidewater Oracle",
+        quantity: 1,
+        reason: "preview",
+        releasesOn: "2027-02-05",
+      },
+    ];
+
+    it.each([
+      {
+        locale: "en",
+        text: "Removed Tidewater Oracle: a preview card, legal in Commander from February 5, 2027",
+      },
+      {
+        locale: "fr",
+        text: "Retrait de Tidewater Oracle : une carte en avant-première, légale en Commander à partir du 5 février 2027",
+      },
+    ] as const)(
+      "names it a preview with its release day, never 'not legal' ($locale)",
+      ({ locale, text }) => {
+        renderWithIntl(
+          <GeneratedDeckCorrections
+            corrections={PREVIEW}
+            onOpenDeck={vi.fn()}
+          />,
+          { locale }
+        );
+
+        expect(screen.getByRole("listitem")).toHaveTextContent(text);
+      }
+    );
+  });
+
   it("opens the deck only when the player asks", () => {
     const onOpenDeck = vi.fn();
     renderWithIntl(

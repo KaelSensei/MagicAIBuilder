@@ -12,7 +12,8 @@
  *   a deckbuilding decision, not a repair.
  * - An illegal card in the list is removed: unknown name, banned or not legal,
  *   outside the colour identity, a copy beyond the card's limit, or the
- *   commander repeated in the list.
+ *   commander repeated in the list. A card not legal only because its set is
+ *   not out yet is named a preview, with its release day (I-73 3.5).
  * - The list is then brought to the exact deck size with basic lands
  *   (`generated-deck-size.ts`).
  * - Every change is returned as a correction so the player sees it.
@@ -23,6 +24,7 @@ import type {
   AICard,
   AIDeckResponse,
   DeckCorrection,
+  DeckRemovalCause,
   DeckRemovalReason,
 } from "@/app/api/ai/build/types";
 import { fetchInBatches } from "@/lib/deck/batch-fetch";
@@ -51,6 +53,10 @@ import {
 import { isBasicLand } from "@/lib/scryfall/type-line";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import {
+  commanderLegalityProblem,
+  describeLegalityProblem,
+} from "./commander-legality-problem";
+import {
   fitToDeckSize,
   type KeptCard,
   type SourceNeed,
@@ -77,6 +83,13 @@ interface CommandZone {
 }
 type Resolve = (name: string) => ScryfallCard | undefined;
 
+/** The card data a generated deck is checked against, and the day it is read on. */
+interface CardData {
+  readonly resolve: Resolve;
+  /** Today: whether a not-yet-legal card is a preview depends on it (I-73 3.1) */
+  readonly today: Date;
+}
+
 const COMMANDER_DECK_SIZE = getFormatConfig("commander").deckSize;
 
 function rejected(reason: string): Rejected {
@@ -89,18 +102,6 @@ function removal(
   reason: DeckRemovalReason
 ): DeckCorrection {
   return { action: "removed", name, quantity, reason };
-}
-
-function commanderLegalityProblem(
-  card: ScryfallCard
-): "banned" | "not_legal" | null {
-  const legality = card.legalities?.commander;
-  if (legality === "legal") return null;
-  return legality === "banned" ? "banned" : "not_legal";
-}
-
-function describeLegalityProblem(problem: "banned" | "not_legal"): string {
-  return problem === "banned" ? "banned" : "not legal";
 }
 
 /**
@@ -118,35 +119,38 @@ function canShareCommandZone(
   );
 }
 
+/** Why a command-zone card is not legal, or null when it is. */
+function legalitySentence(card: ScryfallCard, today: Date): string | null {
+  const problem = commanderLegalityProblem(card, today);
+  return problem
+    ? `${card.name} is ${describeLegalityProblem(problem)}.`
+    : null;
+}
+
 /** Why a resolved commander cannot lead the deck, or null when it can. */
-function commanderProblem(commander: ScryfallCard): string | null {
+function commanderProblem(commander: ScryfallCard, today: Date): string | null {
   if (!isCommanderEligible(commander)) {
     return `${commander.name} cannot be a commander.`;
   }
-  const problem = commanderLegalityProblem(commander);
-  return problem
-    ? `${commander.name} is ${describeLegalityProblem(problem)} in Commander.`
-    : null;
+  return legalitySentence(commander, today);
 }
 
 /** Why a resolved partner cannot join the commander, or null when it can. */
 function partnerProblem(
   partner: ScryfallCard,
-  commander: ScryfallCard
+  commander: ScryfallCard,
+  today: Date
 ): string | null {
   if (!canShareCommandZone(commander, partner)) {
     return `${partner.name} cannot share the command zone with ${commander.name}.`;
   }
-  const problem = commanderLegalityProblem(partner);
-  return problem
-    ? `${partner.name} is ${describeLegalityProblem(problem)} in Commander.`
-    : null;
+  return legalitySentence(partner, today);
 }
 
 /** Resolves the commander and partner, or rejects a command zone no repair can fix. */
 function resolveCommandZone(
   deck: AIDeckResponse,
-  resolve: Resolve
+  { resolve, today }: CardData
 ): CommandZone | Rejected {
   const commander = resolve(deck.commander);
   if (!commander) {
@@ -154,7 +158,7 @@ function resolveCommandZone(
       `The commander ${deck.commander.trim()} is not a known card.`
     );
   }
-  const commanderIssue = commanderProblem(commander);
+  const commanderIssue = commanderProblem(commander, today);
   if (commanderIssue) return rejected(commanderIssue);
 
   const partnerName = deck.partner?.trim();
@@ -163,23 +167,29 @@ function resolveCommandZone(
   if (!partner) {
     return rejected(`The partner ${partnerName} is not a known card.`);
   }
-  const partnerIssue = partnerProblem(partner, commander);
+  const partnerIssue = partnerProblem(partner, commander, today);
   if (partnerIssue) return rejected(partnerIssue);
   return { status: "resolved", commander, partner };
 }
 
-function removalReason(
+/** What a listed card is checked against: the command zone and the day. */
+interface ListRules {
+  readonly identity: ReadonlySet<string>;
+  readonly commandZoneNames: ReadonlySet<string>;
+  readonly today: Date;
+}
+
+function removalCause(
   card: ScryfallCard,
-  identity: ReadonlySet<string>,
-  commandZoneNames: ReadonlySet<string>
-): DeckRemovalReason | null {
-  if (commandZoneNames.has(card.name)) return "commander_in_list";
-  const problem = commanderLegalityProblem(card);
+  { identity, commandZoneNames, today }: ListRules
+): DeckRemovalCause | null {
+  if (commandZoneNames.has(card.name)) return { reason: "commander_in_list" };
+  const problem = commanderLegalityProblem(card, today);
   if (problem) return problem;
   if (
     isCardOutsideColorIdentity(identity, { colorIdentity: card.color_identity })
   ) {
-    return "outside_color_identity";
+    return { reason: "outside_color_identity" };
   }
   return null;
 }
@@ -227,19 +237,18 @@ function sourceNeeds(
 function filterListedCards(
   entries: readonly AICard[],
   commandZone: readonly ScryfallCard[],
-  resolve: Resolve
+  { resolve, today }: CardData
 ): {
   readonly kept: readonly KeptCard[];
   /** The card data of each kept entry, in list order */
   readonly keptCards: readonly ScryfallCard[];
   readonly corrections: readonly DeckCorrection[];
 } {
-  const identity: ReadonlySet<string> = new Set(
-    commandZone.flatMap((card) => card.color_identity)
-  );
-  const commandZoneNames: ReadonlySet<string> = new Set(
-    commandZone.map((card) => card.name)
-  );
+  const rules: ListRules = {
+    identity: new Set(commandZone.flatMap((card) => card.color_identity)),
+    commandZoneNames: new Set(commandZone.map((card) => card.name)),
+    today,
+  };
   const copiesByName = new Map<string, number>();
   const kept: KeptCard[] = [];
   const keptCards: ScryfallCard[] = [];
@@ -253,9 +262,14 @@ function filterListedCards(
       );
       continue;
     }
-    const reason = removalReason(card, identity, commandZoneNames);
-    if (reason) {
-      corrections.push(removal(card.name, entry.quantity, reason));
+    const cause = removalCause(card, rules);
+    if (cause) {
+      corrections.push({
+        action: "removed",
+        name: card.name,
+        quantity: entry.quantity,
+        ...cause,
+      });
       continue;
     }
 
@@ -296,19 +310,26 @@ function filterListedCards(
  *
  * @param deck - The model's reply, already past the shape check of `validateGeneratedDeck`
  * @param cardData - Scryfall cards indexed by `buildScryfallNameIndex`
+ * @param today - Now, read as its UTC day: a card Scryfall does not mark legal
+ *   whose set releases later is removed as a `preview` with its release day,
+ *   not as `not_legal` (I-73 3.5)
  * @returns The repaired deck with every correction made, or the reasons it cannot be repaired
  */
 export function checkGeneratedDeckLegality(
   deck: AIDeckResponse,
-  cardData: ReadonlyMap<string, ScryfallCard>
+  cardData: ReadonlyMap<string, ScryfallCard>,
+  today: Date
 ): GeneratedDeckVerdict {
-  const resolve: Resolve = (name) => cardData.get(normalizeImportedName(name));
-  const commandZone = resolveCommandZone(deck, resolve);
+  const data: CardData = {
+    resolve: (name) => cardData.get(normalizeImportedName(name)),
+    today,
+  };
+  const commandZone = resolveCommandZone(deck, data);
   if (commandZone.status === "rejected") return commandZone;
 
   const { commander, partner } = commandZone;
   const commandCards = partner ? [commander, partner] : [commander];
-  const listed = filterListedCards(deck.cards, commandCards, resolve);
+  const listed = filterListedCards(deck.cards, commandCards, data);
   const sized = fitToDeckSize(
     listed.kept,
     COMMANDER_DECK_SIZE - commandCards.length,
@@ -332,11 +353,13 @@ export function checkGeneratedDeckLegality(
  * endpoint, in batches of 75 names, then checks the deck against that data.
  *
  * @param deck - The model's reply, already past the shape check of `validateGeneratedDeck`
+ * @param today - Now; the day a preview card's status is read on
  * @returns The verdict of `checkGeneratedDeckLegality`
  * @throws When Scryfall cannot be reached: a deck that was not checked is never accepted
  */
 export async function verifyGeneratedDeck(
-  deck: AIDeckResponse
+  deck: AIDeckResponse,
+  today: Date = new Date()
 ): Promise<GeneratedDeckVerdict> {
   const names = new Set(
     [deck.commander, deck.partner ?? "", ...deck.cards.map((card) => card.name)]
@@ -344,5 +367,5 @@ export async function verifyGeneratedDeck(
       .filter((name) => name.length > 0)
   );
   const cards = await fetchInBatches([...names].map((name) => ({ name })));
-  return checkGeneratedDeckLegality(deck, buildScryfallNameIndex(cards));
+  return checkGeneratedDeckLegality(deck, buildScryfallNameIndex(cards), today);
 }
