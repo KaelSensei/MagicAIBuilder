@@ -8,6 +8,7 @@ import { buildScryfallNameIndex } from "@/lib/scryfall/name-index";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 
 const CARD_DATA = buildScryfallNameIndex(ALL_GENERATED_DECK_CARDS);
+const TODAY = new Date("2026-11-16T12:00:00Z");
 
 const GENERATED_DECK_CASES: readonly {
   readonly label: string;
@@ -63,17 +64,35 @@ const RECOMMENDATION_CASES: readonly {
   readonly label: string;
   readonly card: ScryfallCard | undefined;
   readonly colors: readonly string[];
-  readonly expected: { readonly verified: boolean; readonly colorCompatible: boolean | null; readonly commanderLegal: boolean | null };
+  readonly expected: {
+    readonly verified: boolean;
+    readonly colorCompatible: boolean | null;
+    readonly commanderLegal: boolean | null;
+  };
 }[] = [
   {
     label: "a verified legal card inside the deck colors",
-    card: { id: "signet", name: "Arcane Signet", cmc: 2, type_line: "Artifact", color_identity: [], legalities: { commander: "legal" } },
+    card: {
+      id: "signet",
+      name: "Arcane Signet",
+      cmc: 2,
+      type_line: "Artifact",
+      color_identity: [],
+      legalities: { commander: "legal" },
+    },
     colors: ["W", "U"],
     expected: { verified: true, colorCompatible: true, commanderLegal: true },
   },
   {
     label: "a verified off-color card",
-    card: { id: "red", name: "Red Card", cmc: 3, type_line: "Sorcery", color_identity: ["R"], legalities: { commander: "legal" } },
+    card: {
+      id: "red",
+      name: "Red Card",
+      cmc: 3,
+      type_line: "Sorcery",
+      color_identity: ["R"],
+      legalities: { commander: "legal" },
+    },
     colors: ["W", "U"],
     expected: { verified: true, colorCompatible: false, commanderLegal: true },
   },
@@ -89,7 +108,9 @@ describe("AI golden evaluation", () => {
   for (const sample of GENERATED_DECK_CASES) {
     it(`checks ${sample.label} against card data`, () => {
       expect(validateGeneratedDeck(sample.response)).toEqual([]);
-      expect(checkGeneratedDeckLegality(sample.response, CARD_DATA)).toEqual(
+      expect(
+        checkGeneratedDeckLegality(sample.response, CARD_DATA, TODAY)
+      ).toEqual(
         expect.objectContaining({
           status: "accepted",
           corrections: sample.expectedCorrections,
@@ -101,7 +122,11 @@ describe("AI golden evaluation", () => {
   for (const sample of RECOMMENDATION_CASES) {
     it(`grounds ${sample.label}`, () => {
       const evidence = buildSuggestionEvidence(
-        { name: sample.card?.name ?? "Unknown Card", reason: "Supports the game plan.", category: "support" },
+        {
+          name: sample.card?.name ?? "Unknown Card",
+          reason: "Supports the game plan.",
+          category: "support",
+        },
         sample.card,
         { deckColors: sample.colors, averageCmc: 3 }
       );
