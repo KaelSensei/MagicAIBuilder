@@ -1,12 +1,36 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import type { DeckCorrection } from "@/app/api/ai/build/types";
 
 type Translate = ReturnType<typeof useTranslations>;
+type Format = ReturnType<typeof useFormatter>;
+
+/**
+ * A release day, "YYYY-MM-DD", in the player's language. Read in UTC, the
+ * convention of `releaseDayOf`, so no time zone moves it a day.
+ */
+function releaseDayText(format: Format, releasesOn: string): string {
+  return format.dateTime(new Date(`${releasesOn}T00:00:00Z`), {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+}
 
 /** The player-facing rule behind one correction. */
-function reasonText(t: Translate, reason: DeckCorrection["reason"]): string {
+function reasonText(
+  t: Translate,
+  format: Format,
+  correction: DeckCorrection
+): string {
+  if (correction.reason === "preview") {
+    return t("wizard.correctionReasonPreview", {
+      date: releaseDayText(format, correction.releasesOn),
+    });
+  }
+  const { reason } = correction;
   switch (reason) {
     case "unknown_card":
       return t("wizard.correctionReasonUnknownCard");
@@ -46,6 +70,7 @@ export function GeneratedDeckCorrections({
   readonly onOpenDeck: () => void;
 }) {
   const t = useTranslations("deck");
+  const format = useFormatter();
 
   return (
     <section
@@ -74,7 +99,7 @@ export function GeneratedDeckCorrections({
               {
                 name: correction.name,
                 quantity: correction.quantity,
-                reason: reasonText(t, correction.reason),
+                reason: reasonText(t, format, correction),
               }
             )}
           </li>
