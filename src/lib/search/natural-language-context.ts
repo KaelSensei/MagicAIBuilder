@@ -1,5 +1,7 @@
+import { commanderNameExceptions } from "@/lib/deck/color-identity";
 import { PIP_COLORS, type PipColor } from "@/lib/deck/mana-alignment";
 import { getFormatConfig, type DeckFormat } from "@/lib/deck/formats";
+import { identityScopeClause } from "./rulebreaker-scope";
 import { removeLegalityClause } from "./scryfall-query-syntax";
 
 /** Deck constraints shown on a generated query and checked after an edit. */
@@ -7,6 +9,11 @@ export interface NaturalLanguageSearchContext {
   readonly format: DeckFormat;
   readonly enforceColorIdentity: boolean;
   readonly colorIdentity: readonly PipColor[];
+  /**
+   * The commander's and partner's names, never a card of the 99: a rulebreaker
+   * among them widens the identity clause (CR 903.5e).
+   */
+  readonly commandZoneNames: readonly string[];
   /** When false, legality and color identity are left off the generated query. */
   readonly applyContext: boolean;
 }
@@ -55,8 +62,10 @@ function identityClause(context: NaturalLanguageSearchContext): string {
   if (!context.enforceColorIdentity) return "";
   if (!getFormatConfig(context.format).hasColorIdentity) return "";
   const colors = orderedColors(context.colorIdentity);
-  if (colors.length === 0) return "id<=c";
-  return `id<=${colors.join("")}`;
+  return identityScopeClause(
+    colors.length === 0 ? "c" : colors.join(""),
+    commanderNameExceptions(context.commandZoneNames)
+  );
 }
 
 function orderedColors(colors: readonly string[]): readonly PipColor[] {

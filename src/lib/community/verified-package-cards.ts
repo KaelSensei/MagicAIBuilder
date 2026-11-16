@@ -24,6 +24,10 @@ export interface VerifiedPackageCard extends StoredPackageCard {
   readonly imageUri: string;
   readonly oracleText: string;
   readonly isRestricted: boolean;
+  /** Scryfall's type line; a rulebreaker commander's exceptions read it (CR 903.5e) */
+  readonly typeLine: string;
+  /** Scryfall's mana value (CR 202.3), read by Maular's exception */
+  readonly manaValue: number;
 }
 
 /** Resolve legality from Scryfall at review time; stored package metadata is user input. */
@@ -50,6 +54,8 @@ export async function verifyPackageCards(
         isBanned: legality !== "legal" && legality !== "restricted",
         isRestricted: legality === "restricted",
         isBasicLand: isBasicLand(card.type_line),
+        typeLine: card.type_line,
+        manaValue: card.cmc,
         imageUri:
           getListedImageUri(card.image_uris, "grid") ??
           getListedImageUri(card.card_faces?.[0]?.image_uris, "grid") ??

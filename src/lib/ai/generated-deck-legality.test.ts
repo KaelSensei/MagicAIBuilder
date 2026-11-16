@@ -570,8 +570,6 @@ describe("checkGeneratedDeckLegality", () => {
       );
     });
 
-    // Each basic stays under 99 copies: maxQuantity still caps a stack at 99
-    // whatever the commander (follow-up).
     it("keeps a Whtz list of 150 cards whole: the deck has no maximum size", () => {
       const modelReply = reply({
         commander: whtz.name,
@@ -581,6 +579,23 @@ describe("checkGeneratedDeckLegality", () => {
           ["Plains", 74],
         ],
         size: 149,
+      });
+
+      expect(checkGeneratedDeckLegality(modelReply, cardData, TODAY)).toEqual({
+        status: "accepted",
+        deck: modelReply,
+        corrections: [],
+      });
+    });
+
+    // CR 903.5b caps no basic land; the 99 was the room of a 100-card deck,
+    // which Whtz's "no maximum deck size" lifts (CR 903.5e).
+    it("keeps 120 Islands in a Whtz list: a basic land has no copy cap there", () => {
+      const modelReply = reply({
+        commander: whtz.name,
+        basic: "Island",
+        entries: [["Plains", 79]],
+        size: 199,
       });
 
       expect(checkGeneratedDeckLegality(modelReply, cardData, TODAY)).toEqual({

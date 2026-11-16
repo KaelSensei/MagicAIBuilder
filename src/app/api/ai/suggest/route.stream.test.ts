@@ -610,4 +610,33 @@ describe("POST /api/ai/suggest event stream", () => {
       }
     );
   });
+
+  describe("evidence under a rulebreaker commander (CR 903.5e)", () => {
+    const colourFitOf = async (commanderName: string) => {
+      const { events } = await streamFor({
+        ...TALRAND_SUGGEST_REQUEST,
+        commanderName,
+        colorIdentity: ["R", "G"],
+      });
+      return new Map(
+        suggestionsOf(events).map(({ name, evidence }) => [
+          name,
+          evidence.colorCompatible,
+        ])
+      );
+    };
+
+    it("marks a blue land as fitting a red-green Grizzlegom deck, which can have any land, but not a blue instant", async () => {
+      const fit = await colourFitOf("Grizzlegom, Hurloon Hero");
+
+      expect(fit.get("Mystic Sanctuary")).toBe(true);
+      expect(fit.get("Swan Song")).toBe(false);
+    });
+
+    it("still marks that land as outside a red-green deck whose commander is no rulebreaker", async () => {
+      const fit = await colourFitOf("Klothys, God of Destiny");
+
+      expect(fit.get("Mystic Sanctuary")).toBe(false);
+    });
+  });
 });

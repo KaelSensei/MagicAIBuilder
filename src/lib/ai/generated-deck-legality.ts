@@ -41,7 +41,7 @@ import {
   PIP_COLORS,
   type PipColor,
 } from "@/lib/deck/mana-alignment";
-import { maxQuantity } from "@/lib/deck/multiples";
+import { deckCopyLimit } from "@/lib/deck/multiples";
 import { canPairCommanders, pairingCardOf } from "@/lib/deck/pairing";
 import {
   sourceTargetsByColour,
@@ -282,11 +282,13 @@ function filterListedCards(
     }
 
     const copiesSoFar = copiesByName.get(card.name) ?? 0;
-    const limit = maxQuantity(
-      card.name,
-      card.type_line,
-      card.oracle_text ?? "",
-      "commander"
+    const limit = deckCopyLimit(
+      {
+        name: card.name,
+        typeLine: card.type_line,
+        oracleText: card.oracle_text,
+      },
+      { format: "commander", exceptions: rules.identity.exceptions }
     );
     const quantity = Math.min(entry.quantity, Math.max(0, limit - copiesSoFar));
     if (quantity < entry.quantity) {

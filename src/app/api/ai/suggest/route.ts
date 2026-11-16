@@ -20,6 +20,7 @@ import {
 } from "@/lib/ai/deck-brief";
 import { getCardCollection } from "@/lib/scryfall/client";
 import { buildSuggestionEvidence } from "@/lib/ai/suggestion-evidence";
+import { isNonEmptyString } from "@/lib/guards";
 import type { SuggestionEvidence } from "@/lib/ai/suggestion-evidence";
 import {
   formatDeckQuestionTask,
@@ -512,6 +513,14 @@ async function enrichSuggestionEvidence(
     );
   }
 
+  // CR 903.5e: only the command zone's rulebreaker widens the colour fit.
+  const deck = {
+    deckColors: req.colorIdentity,
+    averageCmc: req.avgCmc,
+    commandZoneNames: [req.commanderName, req.partnerName].filter(
+      isNonEmptyString
+    ),
+  };
   return {
     ...result,
     suggestions: result.suggestions.map((suggestion) => ({
@@ -519,14 +528,14 @@ async function enrichSuggestionEvidence(
       evidence: buildSuggestionEvidence(
         suggestion,
         cardsByName.get(suggestion.name.toLowerCase()),
-        { deckColors: req.colorIdentity, averageCmc: req.avgCmc }
+        deck
       ),
       alternatives: suggestion.alternatives?.map((alternative) => ({
         ...alternative,
         evidence: buildSuggestionEvidence(
           { ...alternative, category: suggestion.category },
           cardsByName.get(alternative.name.toLowerCase()),
-          { deckColors: req.colorIdentity, averageCmc: req.avgCmc }
+          deck
         ),
       })),
     })),

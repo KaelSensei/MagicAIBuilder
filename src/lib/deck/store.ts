@@ -16,7 +16,8 @@ import { detectPairingType, pairCommanders } from "./pairing";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import { getCardById } from "@/lib/scryfall/client";
 import { isBasicLand } from "@/lib/scryfall/type-line";
-import { maxQuantity } from "@/lib/deck/multiples";
+import { commandZoneExceptions } from "@/lib/deck/color-identity";
+import { deckCopyLimit, type CopyLimitCard } from "@/lib/deck/multiples";
 import * as deckApi from "@/lib/db/deck-api";
 import {
   DeckApiError,
@@ -150,13 +151,14 @@ function uniqueDeckCards(deck: Pick<Deck, "cards" | "maybeboard">): DeckCard[] {
  * The copies of `card` this deck may hold: four in a constructed deck
  * (CR 100.2a), one in a singleton deck (CR 903.5b), with the exemptions
  * `maxQuantity` grants basic lands and the cards whose own text allows more.
- * The limit is the deck's stored format, never a fixed Commander one.
+ * The limit is the deck's stored format, never a fixed Commander one, and a
+ * commander with no maximum deck size lifts the size cap (CR 903.5e).
  */
 function copyLimit(
-  deck: Pick<Deck, "format">,
-  card: { readonly name: string; readonly typeLine: string; readonly oracleText?: string }
+  deck: Pick<Deck, "format" | "commander" | "partner">,
+  card: CopyLimitCard
 ): number {
-  return maxQuantity(card.name, card.typeLine, card.oracleText ?? "", deck.format);
+  return deckCopyLimit(card, { format: deck.format, exceptions: commandZoneExceptions(deck) });
 }
 
 /**
