@@ -426,6 +426,7 @@ Wizards' update of 2025-10-21 made Bracket 1 "all about theme over function" [1]
 - [ ] `Deck.theme` and its owner-only route (slice 2); the builder panel with coverage, on-theme by handle and off-theme by category, English and French, verdict-word test (slice 3).
 - [ ] On-theme alternatives for a role from a visible Scryfall query, ordered by mana value (slice 4); the theme line on the Rule 0 sheet and the guide's Exhibition link (slice 5).
 - [ ] Later: artist, plane or set, watermark and flavour from I-67 (slice 6); I-76's roles and "on theme first" (slice 7); the public switches (slice 8); I-53 rule types (slice 9); art tags after L-22 (slice 10).
+- [ ] Added 2026-11-16 (sixteenth pass): under a rulebreaker commander, the alternatives query reads [I-03](i03-trustworthy-deck-feedback.md)'s exception table, so a Seluma, Light of Aysen deck themed on Angels searches Angels of every colour identity, and Valko Indorian's deck Phyrexians of every identity (CR 903.5e, whose own example is Seluma's Angels). The theme stays the owner's handle; the rulebreaker only widens the identity the query uses. An r/EDH thread, "Thoughts on Rulebreaker vs '5 color mush'?", quotes a creator who prefers rulebreakers because they let decks be thematic while "staying committed to the bit" (38 points, 63 comments, 2026-09-16, [thread](https://www.reddit.com/r/EDH/comments/1whzaex/)).
 
 ### Engineering enablers
 
