@@ -13,6 +13,12 @@ import { DeckZoneTab } from "@/components/deck/DeckZoneTab";
 import { SortGroupToolbar } from "@/components/deck/SortGroupToolbar";
 import { cn } from "@/components/ui/utils";
 import { getColorIdentityViolations } from "@/lib/deck/color-identity";
+import {
+  COMMANDER_DECK_SIZE,
+  deckSizeRuleOf,
+  formatDeckCount,
+} from "@/lib/deck/deck-size";
+import { deckSizeStatus } from "@/modules/format-rules";
 import { ACTIVE_SURFACE_ID } from "@/lib/deck/drop-targets";
 import { cardsFromZoneSource } from "@/lib/deck/zone-source";
 import { supportsPartner, partnerSlotLabel } from "@/lib/deck/pairing";
@@ -95,6 +101,7 @@ export function DeckEditor({
     mainCards.reduce((sum, c) => sum + c.quantity, 0) +
     (deck.commander ? 1 : 0) +
     (deck.partner ? 1 : 0);
+  const sizeRule = deckSizeRuleOf(deck, COMMANDER_DECK_SIZE);
 
   // Whether we have a partner to show alongside the commander
   const hasPartner =
@@ -203,12 +210,12 @@ export function DeckEditor({
             <p
               className={cn(
                 "text-xs font-medium mr-1",
-                totalCards === 100
+                deckSizeStatus(totalCards, sizeRule) === "legal"
                   ? "text-green-500"
                   : "text-[var(--text-secondary)]"
               )}
             >
-              {totalCards}/100
+              {formatDeckCount(totalCards, sizeRule, "/")}
             </p>
             {/* List view */}
             <button

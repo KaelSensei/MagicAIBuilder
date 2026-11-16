@@ -6,6 +6,13 @@ import type { BracketLevel, DeckCard } from "@/lib/deck/types";
 import type { DeckStats } from "@/lib/deck/analysis-types";
 import type { DeckFormat } from "@/lib/deck/formats";
 import { getFormatConfig } from "@/lib/deck/formats";
+import { formatDeckCount } from "@/lib/deck/deck-size";
+import {
+  deckSizeRule,
+  deckSizeStatus,
+  type DeckSizeRule,
+  type DeckSizeStatus,
+} from "@/modules/format-rules";
 import type { BenchmarkStatus, FormatStats } from "@/lib/deck/format-stats";
 import type { AlignmentStatus, ManaAlignment } from "@/lib/deck/mana-alignment";
 import type { TurnOnePlayability } from "@/lib/deck/turn-one";
@@ -19,6 +26,8 @@ import { CheckCircle2, AlertTriangle } from "lucide-react";
 interface DeckStatsProps {
   readonly stats: DeckStats | null;
   readonly format: DeckFormat;
+  /** The deck's size rule (`deckSizeRuleOf`); the format's exact size when absent */
+  readonly sizeRule?: DeckSizeRule;
   readonly cards?: readonly DeckCard[];
   readonly targetBracket?: BracketLevel;
   readonly className?: string;
@@ -37,6 +46,15 @@ const BRACKET_TARGETS: Record<
   // removal is undercounted there, so removal keeps Bracket 4's target.
   // docs/product/guides/commander-deckbuilding-by-bracket.md, "What decks look like"
   5: { ramp: 20, draw: 9, removal: 10, lands: 28 },
+};
+
+/** The total-cards row's colour for each deck size status: a short deck warns, an oversized one errs. */
+const CARD_COUNT_STATUS: Readonly<
+  Record<DeckSizeStatus, "ok" | "warn" | "error">
+> = {
+  legal: "ok",
+  short: "warn",
+  over: "error",
 };
 
 function pct(value: number, target: number) {
@@ -280,6 +298,7 @@ function TurnOnePanel({
 export function DeckStats({
   stats,
   format,
+  sizeRule,
   cards = [],
   targetBracket = 3,
   className,
@@ -301,15 +320,9 @@ export function DeckStats({
 
   // Sizes and bracket targets are Commander's; a 60-card deck was being shown
   // "60/100" and "target for B3" before this was gated on the format.
-  const { deckSize } = config;
-  let cardCountStatus: "ok" | "warn" | "error";
-  if (stats.totalCards === deckSize) {
-    cardCountStatus = "ok";
-  } else if (stats.totalCards > deckSize) {
-    cardCountStatus = "error";
-  } else {
-    cardCountStatus = "warn";
-  }
+  const deckSize = sizeRule ?? deckSizeRule(config.deckSize);
+  const cardCountStatus =
+    CARD_COUNT_STATUS[deckSizeStatus(stats.totalCards, deckSize)];
 
   return (
     <div className={cn("space-y-3", className)}>
@@ -334,7 +347,7 @@ export function DeckStats({
         <div className="divide-y divide-[var(--border)]">
           <StatRow
             label={t("stats.totalCards")}
-            value={`${stats.totalCards}/${deckSize}`}
+            value={formatDeckCount(stats.totalCards, deckSize, "/")}
             status={cardCountStatus}
           />
           {config.hasBracketScoring && (

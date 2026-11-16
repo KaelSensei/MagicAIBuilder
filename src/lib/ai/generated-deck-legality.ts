@@ -33,7 +33,8 @@ import {
   isBackground,
   isCommanderEligible,
 } from "@/lib/deck/commander-eligibility";
-import { getFormatConfig } from "@/lib/deck/formats";
+import { COMMANDER_DECK_SIZE } from "@/lib/deck/deck-size";
+import { deckSizeRule, type DeckSizeRule } from "@/modules/format-rules";
 import {
   colorsProducedBy,
   PIP_COLORS,
@@ -90,7 +91,13 @@ interface CardData {
   readonly today: Date;
 }
 
-const COMMANDER_DECK_SIZE = getFormatConfig("commander").deckSize;
+/**
+ * The copies the listed cards must come to once repaired: the size rule's
+ * maximum less the command zone.
+ */
+function listSize(rule: DeckSizeRule, commandZoneSize: number): number {
+  return rule.maximum - commandZoneSize;
+}
 
 function rejected(reason: string): Rejected {
   return { status: "rejected", reasons: [reason] };
@@ -332,7 +339,7 @@ export function checkGeneratedDeckLegality(
   const listed = filterListedCards(deck.cards, commandCards, data);
   const sized = fitToDeckSize(
     listed.kept,
-    COMMANDER_DECK_SIZE - commandCards.length,
+    listSize(deckSizeRule(COMMANDER_DECK_SIZE), commandCards.length),
     sourceNeeds(commandCards, listed.keptCards)
   );
   if (sized.status === "rejected") return sized;

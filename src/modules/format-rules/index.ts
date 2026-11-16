@@ -3,11 +3,18 @@
  *
  * The Commander and format rules the server and the browser share, as pure
  * functions from `domain/` that report and never refuse (ADR 0009). Today it
- * holds the side-deck construction checks (I-103); the Commander deck's own
- * rules still live under `src/lib/deck/` until they move here.
+ * holds the side-deck construction checks (I-103) and the deck size rule; the
+ * Commander deck's other rules still live under `src/lib/deck/` until they
+ * move here.
  *
  * @module format-rules
  */
+export {
+  deckSizeRule,
+  deckSizeStatus,
+  type DeckSizeRule,
+  type DeckSizeStatus,
+} from "@/modules/format-rules/domain/deck-size";
 export {
   checkSideDeck,
   type CommunalPlayerCount,

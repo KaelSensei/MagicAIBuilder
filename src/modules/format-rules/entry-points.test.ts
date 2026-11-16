@@ -12,9 +12,11 @@ function exportNames(namespace: object): readonly string[] {
 }
 
 describe("the format rules entry points", () => {
-  it("index.ts publishes the side-deck check", async () => {
+  it("index.ts publishes the side-deck check and the deck size rule", async () => {
     expect(exportNames(await import("@/modules/format-rules"))).toEqual([
       "checkSideDeck",
+      "deckSizeRule",
+      "deckSizeStatus",
     ]);
   });
 });

@@ -31,6 +31,12 @@ import { currentDataAsOfFacts } from "@/lib/deck/data-as-of";
 import { useDeckStore } from "@/lib/deck/store";
 import { isDeckStub } from "@/lib/deck/store-factories";
 import { computeDeckStats } from "@/lib/deck/stats";
+import {
+  COMMANDER_DECK_SIZE,
+  deckSizeRuleOf,
+  formatDeckCount,
+} from "@/lib/deck/deck-size";
+import { getFormatConfig } from "@/lib/deck/formats";
 import { addNamedCardToZone } from "@/lib/deck/ai-add-card";
 import { logger } from "@/lib/logger";
 import { useUIStore } from "@/lib/ui/store";
@@ -866,12 +872,15 @@ export default function BuilderPage() {
             </span>
           )}
           <span className="text-xs text-[var(--text-secondary)]">
-            {deck.cards
-              .filter((c) => c.zone === "main")
-              .reduce((s, c) => s + c.quantity, 0) +
-              (deck.commander ? 1 : 0) +
-              (deck.partner ? 1 : 0)}{" "}
-            / 100
+            {formatDeckCount(
+              deck.cards
+                .filter((c) => c.zone === "main")
+                .reduce((s, c) => s + c.quantity, 0) +
+                (deck.commander ? 1 : 0) +
+                (deck.partner ? 1 : 0),
+              deckSizeRuleOf(deck, COMMANDER_DECK_SIZE),
+              " / "
+            )}
           </span>
           <DeckSaveIndicator saving={isSyncing} label={t("saving")} />
           <div className="ml-auto flex items-center gap-1 md:gap-2">
@@ -1238,6 +1247,10 @@ export default function BuilderPage() {
             <DeckStats
               stats={stats}
               format={deck.format}
+              sizeRule={deckSizeRuleOf(
+                deck,
+                getFormatConfig(deck.format).deckSize
+              )}
               cards={deckAnalysisCards}
               targetBracket={deck.targetBracket}
             />
