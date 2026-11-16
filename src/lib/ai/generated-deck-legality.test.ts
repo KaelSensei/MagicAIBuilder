@@ -6,6 +6,12 @@ import type {
   DeckRemovalReason,
 } from "@/app/api/ai/build/types";
 import { buildScryfallNameIndex } from "@/lib/scryfall/name-index";
+import type { ScryfallCard } from "@/lib/scryfall/types";
+import {
+  RECORDED_RULEBREAKER_CARDS,
+  type RecordedRulebreakerCard,
+} from "@/modules/format-rules/domain/fixtures/rulebreaker-cards-v1";
+import { aScryfallCard } from "@/test/builders/scryfall";
 import {
   ALL_GENERATED_DECK_CARDS,
   GENERATED_DECK_CARDS,
@@ -497,4 +503,110 @@ describe("checkGeneratedDeckLegality", () => {
       );
     });
   });
+
+  // CR 903.5e: a rulebreaker commander changes how its deck is built;
+  // CR 113.6n: never a card's legality. Commanders recorded from Scryfall.
+  describe("under a rulebreaker commander", () => {
+    const { seluma, whtz } = RECORDED_RULEBREAKER_CARDS;
+    /** Fallen Angel, a mono-black Angel ({3}{B}{B}). */
+    const fallenAngel = aScryfallCard({
+      id: "00000000-0000-4000-8000-0000000000a1",
+      oracle_id: "00000000-0000-4000-8000-0000000000a2",
+      name: "Fallen Angel",
+      cmc: 5,
+      type_line: "Creature — Angel",
+      color_identity: ["B"],
+      legalities: { commander: "legal" },
+    });
+    const cardData = buildScryfallNameIndex([
+      ...ALL_GENERATED_DECK_CARDS,
+      asScryfallCard(seluma),
+      asScryfallCard(whtz),
+      fallenAngel,
+    ]);
+
+    it("keeps an off-colour Angel and an off-colour basic in a Seluma deck", () => {
+      const modelReply = reply({
+        commander: seluma.name,
+        basic: "Island",
+        entries: [[fallenAngel.name, 1]],
+      });
+
+      expect(checkGeneratedDeckLegality(modelReply, cardData, TODAY)).toEqual({
+        status: "accepted",
+        deck: modelReply,
+        corrections: [],
+      });
+    });
+
+    it("still removes a banned Angel from a Seluma deck (CR 113.6n)", () => {
+      const bannedAngel = {
+        ...fallenAngel,
+        legalities: { commander: "banned" },
+      };
+      const modelReply = reply({
+        commander: seluma.name,
+        basic: "Plains",
+        entries: [[bannedAngel.name, 1]],
+      });
+
+      expect(
+        checkGeneratedDeckLegality(
+          modelReply,
+          buildScryfallNameIndex([
+            asScryfallCard(seluma),
+            bannedAngel,
+            ...ALL_GENERATED_DECK_CARDS,
+          ]),
+          TODAY
+        )
+      ).toEqual(
+        expect.objectContaining({
+          corrections: [
+            removed("Fallen Angel", 1, "banned"),
+            added("Plains", 1),
+          ],
+        })
+      );
+    });
+
+    // Each basic stays under 99 copies: maxQuantity still caps a stack at 99
+    // whatever the commander (follow-up).
+    it("keeps a Whtz list of 150 cards whole: the deck has no maximum size", () => {
+      const modelReply = reply({
+        commander: whtz.name,
+        basic: "Island",
+        entries: [
+          ["Sol Ring", 1],
+          ["Plains", 74],
+        ],
+        size: 149,
+      });
+
+      expect(checkGeneratedDeckLegality(modelReply, cardData, TODAY)).toEqual({
+        status: "accepted",
+        deck: modelReply,
+        corrections: [],
+      });
+    });
+
+    it("still fills a short Whtz list to 100 cards", () => {
+      const verdict = checkGeneratedDeckLegality(
+        reply({ commander: whtz.name, basic: "Island", size: 90 }),
+        cardData,
+        TODAY
+      );
+
+      expect(copies(acceptedDeck(verdict))).toBe(99);
+    });
+  });
 });
+
+/** A recorded rulebreaker as Scryfall's collection endpoint returns it. */
+function asScryfallCard(card: RecordedRulebreakerCard): ScryfallCard {
+  return aScryfallCard({
+    ...card,
+    color_identity: [...card.color_identity],
+    legalities: { ...card.legalities },
+  });
+}

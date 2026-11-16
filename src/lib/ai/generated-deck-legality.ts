@@ -16,6 +16,10 @@
  *   not out yet is named a preview, with its release day (I-73 3.5).
  * - The list is then brought to the exact deck size with basic lands
  *   (`generated-deck-size.ts`).
+ * - A rulebreaker commander's exceptions apply (CR 903.5e): a card one admits
+ *   stays whatever its colour identity, and a deck with no maximum size keeps
+ *   a list longer than 100. Legality is checked first and no exception
+ *   reaches it (CR 113.6n).
  * - Every change is returned as a correction so the player sees it.
  *
  * @module ai/generated-deck-legality
@@ -28,13 +32,10 @@ import type {
   DeckRemovalReason,
 } from "@/app/api/ai/build/types";
 import { fetchInBatches } from "@/lib/deck/batch-fetch";
-import { isCardOutsideColorIdentity } from "@/lib/deck/color-identity";
 import {
   isBackground,
   isCommanderEligible,
 } from "@/lib/deck/commander-eligibility";
-import { COMMANDER_DECK_SIZE } from "@/lib/deck/deck-size";
-import { deckSizeRule, type DeckSizeRule } from "@/modules/format-rules";
 import {
   colorsProducedBy,
   PIP_COLORS,
@@ -57,6 +58,12 @@ import {
   commanderLegalityProblem,
   describeLegalityProblem,
 } from "./commander-legality-problem";
+import {
+  commandZoneIdentityOf,
+  isOutsideCommandZoneIdentity,
+  repairedListSize,
+  type CommandZoneIdentity,
+} from "./generated-deck-construction";
 import {
   fitToDeckSize,
   type KeptCard,
@@ -89,14 +96,6 @@ interface CardData {
   readonly resolve: Resolve;
   /** Today: whether a not-yet-legal card is a preview depends on it (I-73 3.1) */
   readonly today: Date;
-}
-
-/**
- * The copies the listed cards must come to once repaired: the size rule's
- * maximum, or its minimum when it has none, less the command zone.
- */
-function listSize(rule: DeckSizeRule, commandZoneSize: number): number {
-  return (rule.maximum ?? rule.minimum) - commandZoneSize;
 }
 
 function rejected(reason: string): Rejected {
@@ -179,13 +178,17 @@ function resolveCommandZone(
   return { status: "resolved", commander, partner };
 }
 
-/** What a listed card is checked against: the command zone and the day. */
+/**
+ * What a listed card is checked against: the command zone's identity and
+ * rulebreaker exceptions (CR 903.5e), its names, and the day.
+ */
 interface ListRules {
-  readonly identity: ReadonlySet<string>;
+  readonly identity: CommandZoneIdentity;
   readonly commandZoneNames: ReadonlySet<string>;
   readonly today: Date;
 }
 
+// Legality is checked before identity and no exception reaches it (CR 113.6n).
 function removalCause(
   card: ScryfallCard,
   { identity, commandZoneNames, today }: ListRules
@@ -193,9 +196,7 @@ function removalCause(
   if (commandZoneNames.has(card.name)) return { reason: "commander_in_list" };
   const problem = commanderLegalityProblem(card, today);
   if (problem) return problem;
-  if (
-    isCardOutsideColorIdentity(identity, { colorIdentity: card.color_identity })
-  ) {
+  if (isOutsideCommandZoneIdentity(card, identity)) {
     return { reason: "outside_color_identity" };
   }
   return null;
@@ -252,7 +253,7 @@ function filterListedCards(
   readonly corrections: readonly DeckCorrection[];
 } {
   const rules: ListRules = {
-    identity: new Set(commandZone.flatMap((card) => card.color_identity)),
+    identity: commandZoneIdentityOf(commandZone),
     commandZoneNames: new Set(commandZone.map((card) => card.name)),
     today,
   };
@@ -339,7 +340,7 @@ export function checkGeneratedDeckLegality(
   const listed = filterListedCards(deck.cards, commandCards, data);
   const sized = fitToDeckSize(
     listed.kept,
-    listSize(deckSizeRule(COMMANDER_DECK_SIZE, []), commandCards.length),
+    repairedListSize(commandCards, listed.kept),
     sourceNeeds(commandCards, listed.keptCards)
   );
   if (sized.status === "rejected") return sized;
