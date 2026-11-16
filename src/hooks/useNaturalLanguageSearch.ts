@@ -57,6 +57,7 @@ async function requestScryfallQuery(input: {
       locale: input.locale,
       format: input.context.format,
       colorIdentity: input.context.colorIdentity,
+      commandZoneNames: input.context.commandZoneNames,
       enforceColorIdentity: input.context.enforceColorIdentity,
       applyContext: input.context.applyContext,
     }),

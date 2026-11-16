@@ -12,13 +12,12 @@
  *
  * @module ai/generated-deck-construction
  */
-import { isCardOutsideColorIdentity } from "@/lib/deck/color-identity";
+import { isOutsideDeckIdentity } from "@/lib/deck/color-identity";
 import { COMMANDER_DECK_SIZE } from "@/lib/deck/deck-size";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import {
   deckConstructionExceptions,
   deckSizeRule,
-  isIdentityExempt,
   type RulebreakerException,
 } from "@/modules/format-rules";
 import type { KeptCard } from "./generated-deck-size";
@@ -68,14 +67,13 @@ export function isOutsideCommandZoneIdentity(
   card: ScryfallCard,
   { identity, exceptions }: CommandZoneIdentity
 ): boolean {
-  return (
-    isCardOutsideColorIdentity(identity, {
+  return isOutsideDeckIdentity(
+    { colors: identity, exceptions },
+    {
       colorIdentity: card.color_identity,
-    }) &&
-    !isIdentityExempt(
-      { typeLine: card.type_line, manaValue: card.cmc },
-      exceptions
-    )
+      typeLine: card.type_line,
+      cmc: card.cmc,
+    }
   );
 }
 

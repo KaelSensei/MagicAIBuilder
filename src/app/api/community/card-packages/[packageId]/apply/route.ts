@@ -7,7 +7,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { readJsonBody } from "@/lib/api/json-body";
 import { requireAuth } from "@/lib/auth/helpers";
-import { previewCardPackage } from "@/lib/community/card-package-preview";
+import { commandZoneNamesOf, previewCardPackage } from "@/lib/community/card-package-preview";
 import { verifyPackageCards } from "@/lib/community/verified-package-cards";
 import { prisma } from "@/lib/db/prisma";
 import { ALL_FORMATS } from "@/lib/deck/formats";
@@ -83,6 +83,7 @@ export async function POST(request: Request, context: RouteContext) {
     const preview = previewCardPackage(acceptedCards, {
       format: format.data,
       commanderColorIdentity: [...commanderColors],
+      commandZoneNames: commandZoneNamesOf(deck.cards),
       existingCards: deck.cards.map((card) => ({
         name: card.name,
         quantity: card.quantity,
@@ -106,7 +107,9 @@ export async function POST(request: Request, context: RouteContext) {
           colorIdentity: [...card.colorIdentity],
           isBanned: card.isBanned,
           imageUri: card.imageUri,
-          typeLine: card.isBasicLand ? "Basic Land" : "",
+          // Scryfall's, which the deck's identity check reads (CR 903.5e).
+          typeLine: card.typeLine,
+          cmc: card.manaValue,
           category: card.isBasicLand ? "land" : "other",
           zone: "main",
         })),

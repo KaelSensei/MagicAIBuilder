@@ -21,7 +21,8 @@ import { CardNoteInline } from "@/components/card/CardNoteInline";
 import { PrintingSelectorModal } from "@/components/card/PrintingSelectorModal";
 import { cn } from "@/components/ui/utils";
 import { isCommanderEligible } from "@/lib/deck/commander-eligibility";
-import { maxQuantity } from "@/lib/deck/multiples";
+import { commandZoneExceptions } from "@/lib/deck/color-identity";
+import { deckCopyLimit } from "@/lib/deck/multiples";
 import { useDeckStore } from "@/lib/deck/store";
 import type { DeckCard } from "@/lib/deck/types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
@@ -79,10 +80,23 @@ export function CardQuantityStepper({ card }: { readonly card: DeckCard }) {
   const format = useDeckStore((s) =>
     s.activeDeckId ? s.decks[s.activeDeckId]?.format : undefined
   );
+  const commander = useDeckStore((s) =>
+    s.activeDeckId ? s.decks[s.activeDeckId]?.commander : undefined
+  );
+  const partner = useDeckStore((s) =>
+    s.activeDeckId ? s.decks[s.activeDeckId]?.partner : undefined
+  );
   // CR 100.2a: four copies of a card in a constructed deck; CR 903.5b: one in
   // a singleton deck, basic lands aside. A card whose own text allows more
-  // wins over either rule (CR 101.1): "any number", or Seven Dwarves.
-  const limit = maxQuantity(card.name, card.typeLine, card.oracleText, format);
+  // wins over either rule (CR 101.1): "any number", or Seven Dwarves. A
+  // commander with no maximum deck size lifts the 99 cap (CR 903.5e).
+  const limit = deckCopyLimit(card, {
+    format,
+    exceptions: commandZoneExceptions({
+      commander: commander ?? null,
+      partner: partner ?? null,
+    }),
+  });
   const count = (
     <span className="text-xs text-[var(--text-secondary)] w-4 text-center shrink-0">
       {card.quantity}

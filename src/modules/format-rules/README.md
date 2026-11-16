@@ -24,14 +24,19 @@ lists their move. The side zones belong to `deck-building` (I-103 slice 1).
 
 ## Public API
 
-| Export                                                        | Entry      | Purpose                                                         | Used by                                                               |
-| ------------------------------------------------------------- | ---------- | --------------------------------------------------------------- | --------------------------------------------------------------------- |
-| `checkSideDeck`                                               | `index.ts` | Checks one side deck against every rule of its kind             | Nothing yet                                                           |
-| `SideDeck`, `SideDeckReport`…                                 | `index.ts` | The side deck, its option, and the report's rule lines          | Nothing yet                                                           |
-| `RULEBREAKERS`, `RULEBREAKERS_VERSION`, `RULEBREAKERS_SOURCE` | `index.ts` | The rulebreaker table, its version and where it was read        | Tests                                                                 |
-| `deckConstructionExceptions`                                  | `index.ts` | The exceptions a command zone's rulebreakers grant              | `lib/deck/color-identity.ts`, `lib/ai/generated-deck-construction.ts` |
-| `isIdentityExempt`, `liftsMaximumDeckSize`                    | `index.ts` | Whether an exception admits a card, or lifts the maximum size   | The same, and `deckSizeRule`                                          |
-| `deckSizeRule`, `deckSizeStatus`                              | `index.ts` | A deck's size rule, and whether a count is short, legal or over | `lib/deck/deck-size.ts`, `DeckStats`, the AI deck check               |
+| Export                                                        | Entry      | Purpose                                                       | Used by                                                               |
+| ------------------------------------------------------------- | ---------- | ------------------------------------------------------------- | --------------------------------------------------------------------- |
+| `checkSideDeck`                                               | `index.ts` | Checks one side deck against every rule of its kind           | Nothing yet                                                           |
+| `SideDeck`, `SideDeckReport`…                                 | `index.ts` | The side deck, its option, and the report's rule lines        | Nothing yet                                                           |
+| `RULEBREAKERS`, `RULEBREAKERS_VERSION`, `RULEBREAKERS_SOURCE` | `index.ts` | The rulebreaker table, its version and where it was read      | Tests                                                                 |
+| `deckConstructionExceptions`                                  | `index.ts` | The exceptions a command zone's rulebreakers grant            | `lib/deck/color-identity.ts`, `lib/ai/generated-deck-construction.ts` |
+| `isIdentityExempt`, `liftsMaximumDeckSize`                    | `index.ts` | Whether an exception admits a card, or lifts the maximum size | The same, `deckSizeRule`, and `deckCopyLimit` (`lib/deck/multiples`)  |
+| `RulebreakerException`, `RulebreakerCardTest`                 | `index.ts` | The exceptions' shapes                                        | `lib/search/rulebreaker-scope.ts` (the search's identity clause)      |
+
+Every colour-identity reader (the deck's violations and companion, the AI deck check, the AI
+suggestion evidence, the card package preview) asks one question, `isOutsideDeckIdentity` in
+`lib/deck/color-identity.ts`, which reads these exceptions.
+| `deckSizeRule`, `deckSizeStatus` | `index.ts` | A deck's size rule, and whether a count is short, legal or over | `lib/deck/deck-size.ts`, `DeckStats`, the AI deck check |
 
 ## Invariants
 
@@ -47,6 +52,8 @@ lists their move. The side zones belong to `deck-building` (I-103 slice 1).
 | Every table entry matches its recorded Oracle text (basic lands, lands, size, identity) | CR 903.5e           | `domain/rulebreakers.test.ts`                                                       |
 | No exception changes legality or banned status                                          | CR 113.6n           | `lib/deck/rulebreaker-commanders.test.ts`, `lib/ai/generated-deck-legality.test.ts` |
 | A deck with no maximum size keeps its minimum                                           | CR 903.5a, 903.5e   | `domain/deck-size.test.ts`                                                          |
+| No maximum size lifts the 99 cap on basics and "any number" cards, never the singleton  | CR 903.5b, 903.5e   | `lib/deck/rulebreaker-copy-limit.test.ts`                                           |
+| The described search's identity clause admits what the commander admits                 | CR 903.5e           | `lib/search/rulebreaker-search-scope.test.ts`                                       |
 
 ## Persistence and providers
 
@@ -68,3 +75,6 @@ public API.
   (`chosen-colour-for`) but never applied: a deck stores no such choice.
 - A changeling card is every creature type, but the table reads the type line only, so Seluma
   and Valko do not admit an off-colour changeling.
+- The search's `t:` term matches either face of a double-faced card, where the table reads the
+  front face (CR 712.8a): a card whose back face alone is an Angel can show under Seluma and then
+  be reported by the deck.

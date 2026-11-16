@@ -131,6 +131,7 @@ describe("verifyPackageCards", () => {
       oracleText: "",
       isRestricted: false,
       colorIdentity: ["R"], isBanned: true, isBasicLand: false,
+      typeLine: "Sorcery",
       imageUri: "https://cards.scryfall.io/red.jpg",
     }]);
   });
