@@ -1,6 +1,6 @@
 # MagicAIBuilder: Product Roadmap
 
-> **Updated:** 2026-11-15 (fifteenth pass: I-102 a theme you can measure, I-103 planar, scheme and Attraction decks). Before it, 2026-11-14 (fourteenth pass: no new initiative; collection counting, the editor, the mana base, prices and the bracket floor gained scenarios)
+> **Updated:** 2026-11-16 (sixteenth pass: no new initiative; rulebreaker commanders, a release-day check, Commander Box League and Two-Headed Giant Commander nights went to I-03, I-73, I-102, I-42 and I-41). Before it, 2026-11-15 (fifteenth pass: I-102 a theme you can measure, I-103 planar, scheme and Attraction decks), and 2026-11-14 (fourteenth pass: no new initiative; collection counting, the editor, the mana base, prices and the bracket floor gained scenarios)
 
 > **North star:** help a Commander player go from an idea to a legal, explainable, testable and enjoyable deck.
 
@@ -8,7 +8,7 @@ This roadmap is the index. The user stories, scenarios and scope for each initia
 
 ## Themes
 
-The initiatives group into the jobs a Commander player actually has. I-80 to I-98, added on 2026-11-11, and I-99 to I-101, added on 2026-11-12, are marked. The fourteenth pass, on 2026-11-14, added no initiative. Placement and the impact table are in [Impact and effort](#twelfth-pass-impact-effort-and-placement). Personas, the dependency graph, the quarter sequence and the risks are in [Planning Views](#planning-views).
+The initiatives group into the jobs a Commander player actually has. I-80 to I-98, added on 2026-11-11, and I-99 to I-101, added on 2026-11-12, are marked. The fourteenth pass, on 2026-11-14, and the sixteenth, on 2026-11-16, added no initiative. Placement and the impact table are in [Impact and effort](#twelfth-pass-impact-effort-and-placement). Personas, the dependency graph, the quarter sequence and the risks are in [Planning Views](#planning-views).
 
 | Theme | Already on the roadmap | Added 2026-11-11 | Added 2026-11-12 and 15 |
 | --- | --- | --- | --- |
@@ -205,6 +205,18 @@ Added 2026-11-15, with the twelfth pass's labels. I-102 and I-103 are Next and s
 
 The fifteenth pass also folded a monthly upgrade budget into I-06 and the Archenemy Commander option into I-42; see [What the fifteenth pass checked](#what-the-fifteenth-pass-checked-and-did-not-promote).
 
+### Sixteenth pass: impact, effort and placement
+
+Added 2026-11-16. No new initiative number, so no glance row. As in the fourteenth pass, the rows score the scope this pass attached to an id that already exists; they do not change that id's place in Now, Next or Later, and Effort is the addition, not the whole initiative. Confidence uses the twelfth pass's words.
+
+| Existing id | What was added | Impact | Effort | Risk | Place | Confidence | Why it is not a new number |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| I-03 Deck feedback | Commanders that change deck construction (CR 903.5e): rulebreaker exceptions to colour identity, basic lands and deck size, in one table every identity and size check reads | High | Small | Medium | Now, unchanged | High | I-03 already owns colour identity and commander mechanics. Eight legal cards since 2026-10-19 get a false violation today |
+| I-73 Set releases | A playbook row listing new cards that modify deck construction, products outside numbered sets included | Medium | Small | Low | Next, unchanged | High | The playbook already checks every release. Mystery Booster Commander Edition is in none of its tables |
+| I-102 Theme coverage | Under a rulebreaker, the alternatives query searches the identity the rulebreaker allows | Medium | Small | Low | Next, unchanged | High | Slice 4 already builds the query; only its identity input changes |
+| I-42 Variants | Commander Sealed, the Commander Box League deck, as an owner question against the casual-variant non-goal | Low | Small | Low | Later, unchanged | Medium | I-42 owns variant rules as data. The format is official; r/EDH threads about it stay under 10 points in 2025 and 2026 |
+| I-41 Store nights | Two-Headed Giant Commander Night teams kept whole, and one sealed deck kept across a Prerelease week | Low | Small | Low | Later, unchanged | High | `formPods` and check-in are already slices 1 and 5 |
+
 ---
 
 ## Planning Views
@@ -386,6 +398,20 @@ Read on 2026-11-15. Two new initiative numbers, I-102 and I-103; the rest went t
 - A monthly upgrade budget across decks ("$20 a month") is a line on I-06's acquisition plan: an order by the owner's own priority and a monthly cap, with no buy verb. The evidence is one forum thread and the budget series of MTGGoldfish and EDHREC, so it is a scope line, not a number.
 - Contraptions are not Commander-legal (Scryfall returns none for `t:contraption f:commander`) and stay out of I-103.
 - A planar deck shared by a whole table (CR 901.15) is an open question on I-79, not new work.
+
+### What the sixteenth pass checked and did not promote
+
+Read on 2026-11-16. No new initiative number; every finding went to the initiative that already owns the job, each with its dated source in [section 17 of the landscape](competitive-landscape.md#17-a-sixteenth-pass-deck-construction-a-card-or-a-store-changes-2026-11-16).
+
+- Rulebreaker commanders (CR 903.5e, Mystery Booster Commander Edition, 2026-10-19) are a defect in the legality check I-03 already owns, not a new job. The release-day row is I-73's, and the widened theme query is I-102's.
+- Commander Box League, Wizards' sealed Commander event, is an owner question on I-42, because its non-goals keep casual variants out; it simulates no pack, so the draft non-goal is not reopened. Two-Headed Giant Commander Night and the Box League week are I-41's nights.
+- The Star Trek update bulletin of 2026-11-06 (three new keywords, 43 creature types, Werewolf Pack Leader's Oracle change) needs nothing new: I-47 owns the rules import and already records that 903.5e changed meaning, I-73 already cites the 6 November edition, I-102 reads type lines, and I-48 carries Oracle changes.
+- Competitive Brawl's bans of 2026-10-12 are banned-as-commander entries I-42 already maps from Scryfall's `restricted`. Patch notes 2026.62.0 answered HTTP 403 and are not used.
+- No Commander banned-and-restricted article appeared; 30 November 2026 remains the next date.
+- EDHREC's changelog, Scryfall's blog and Archidekt's news hold nothing after the fourteenth and fifteenth passes' reads. Searches found no November note for Moxfield, ManaBox, Commander Spellbook or SpellTable.
+- r/Moxfield requests since 2026-10-01 (7 points at most beside a 38-point "Visual grid") are I-13, I-16, I-40, I-57, I-60, I-75, I-76 and I-80. A 245-point r/EDH thread about a friend who quit over removal is I-15, I-88 and I-78. A 268-point r/magicTCG complaint about 2027 product tiers is not a product job.
+- The under-covered areas in this pass's brief (accessibility, offline use, store tools, Discord and SpellTable, exports, data portability, a developer API, teaching, other Commander formats) each already have an owner, listed in section 17.
+- Drafting Mystery Booster Commander Edition stays inside the draft non-goal.
 
 ---
 

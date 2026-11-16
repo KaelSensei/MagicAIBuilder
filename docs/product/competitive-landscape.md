@@ -651,6 +651,42 @@ I-102 and I-103 are Next after the numbered Next band. Unlike the twelfth and th
 
 ---
 
+## 17. A sixteenth pass: deck construction a card or a store changes (2026-11-16)
+
+Read on 16 November 2026, on `dev` at `105cccc8` (#1540). The pass looked for what changed since the fifteenth pass and in the six weeks before it: Wizards' rules, products and store events, the competitors' changelogs, and player threads. It did not sign in to any site. Reddit posts are dated testimony returned by Arctic Shift; "search summary" marks a page known only from a search engine's summary. Pages were fetched with the User-Agent `MagicAIBuilder/1.0 (+https://magic-ai-builder.vercel.app)`.
+
+### What was checked
+
+- **Rulebreaker.** Wizards' Mystery Booster Commander Edition update bulletin of 19 October 2026 adds CR 903.5e, which "governs how rulebreaker abilities work", and adds rulebreaker to the ability words (207.2c) ([bulletin](https://magic.wizards.com/en/news/announcements/mystery-booster-commander-edition-update-bulletin)). The rules text effective 6 November 2026, downloaded from the [rules page](https://magic.wizards.com/en/rules), reads: "Some cards have abilities that modify the rules for deck construction and apply only if that card is designated as a deck's commander. These abilities function before the game begins." Its example is Seluma, Light of Aysen, whose deck "may include any cards with the Angel creature type regardless of their color identity". CR 113.6n adds that such an ability "can't affect the format legality of a card". Scryfall, read 2026-11-16: set `mbc` was released on 2026-10-19 with 80 cards, 70 of them legal in Commander; `o:rulebreaker` returns eight cards, all legal in Commander. They are Grizzlegom, Hurloon Hero (any land card), Maular, the Next Evolution (creatures of mana value 7 or more), Seluma (Angels), The Everforger (artifact creatures and Equipment), The Unluckiest Planeswalker (Auras), Tolabow, Loch Rascal (one chosen colour more for instants and sorceries), Valko Indorian (Phyrexians) and Whtz, the Bibliophile (no maximum deck size). Every one but Grizzlegom and Whtz also allows any basic land. The product's colour-identity check compares each card with the commander and partner only (`src/lib/deck/color-identity.ts`), and its size checks assume 100. r/magicTCG's "[MBC] Whtz, the Bibliophile" drew 5,535 points and 643 comments (2026-08-03); r/EDH's "Full Mystery Booster Commander Edition new Cards are out!" 199 points and 177 comments (2026-08-03); "Speculation/Prediction of Other Cards with Rulebreaker" 101 points and 95 comments (2026-07-17); "Who's building a Rulebreaker deck?" 13 points and 90 comments (2026-08-28). No competitor page read says how its legality check treats a rulebreaker; Moxfield refuses automated reads, and a search found no Archidekt note. The exceptions go to [I-03](specs/i03-trustworthy-deck-feedback.md), the release-day row to [I-73](specs/i73-every-set-release-ready-on-day-one.md) and the widened theme query to [I-102](specs/i102-a-theme-you-can-measure.md).
+- **The Star Trek update bulletin** of 6 November 2026: new rules 700.17, 701.72 and 702.196 (face a dilemma, assimilate, beam me up), a new 508.4e for Kira Nerys, Firebrand, an updated 208.3, 43 new creature types, the ability word "federation", and Werewolf Pack Leader's Oracle text now making it a Werewolf instead of removing Human ([bulletin](https://magic.wizards.com/en/news/announcements/star-trek-update-bulletin)). The app still serves the edition of 2026-08-07. I-47 already plans the import of the 2026-11-06 edition and records that 903.5e changed meaning, and I-73 already cites the 6 November link. I-102 matches type lines, so new creature types need no list. Oracle changes reach saved decks through I-48. Nothing new follows.
+- **Two Commander events Wizards runs in stores.** Commander Box League, "a Sealed event in which players open a Play Booster box, build a 60-card Commander deck", with multiple copies allowed, any legal commander opened, the colour identity rule ignored except where a card refers to it, and changes between games from the same box ([format page](https://magic.wizards.com/en/formats/commander-limited); [WPN, Teenage Mutant Ninja Turtles](https://wpn.wizards.com/event/commander-box-league-teenage-mutant-ninja-turtles); [WPN, Lorwyn Eclipsed](https://wpn.wizards.com/en/event/commander-box-league-lorwyn-eclipsed), 16–22 January 2026). Two-Headed Giant Commander Night, a monthly event of two-player teams. Both started with Edge of Eternities ([Wizards](https://magic.wizards.com/en/news/announcements/commander-play-featuring-sealed-and-two-headed-giant), [WPN](https://wpn.wizards.com/en/news/get-ready-for-two-new-ways-to-play-commander), 20 June 2025). The Magic site's navigation still listed Commander Box League under Play Events on 16 November 2026; guessed WPN URLs for later sets answered 404, so no 2026 set after Teenage Mutant Ninja Turtles was confirmed by its own page. Arctic Shift, r/EDH titles with "box league": the highest score is 20 (2020), and the 2026 threads score 3, 2 and 0; r/mtg's highest in 2026 is 4. The Commander Party pages for Star Trek (20–26 November 2026 and 15–21 January 2027) are search summaries; their rules sit on a play aid. The construction rules go to [I-42](specs/i42-commander-variants-duel-cedh-pauper.md) as an owner question, and the night kinds to [I-41](specs/i41-store-commander-nights.md).
+- **MTG Arena.** The announcement of 12 October 2026 bans Yuriko, the Tiger's Shadow, Spider-Man 2099 and Light-Paws, Emperor's Voice as commanders in Competitive Brawl, and moves Ajani, Nacatl Pariah, Nadu, Winged Wisdom, Oko, Thief of Crowns, Old Stickfingers and Ragavan, Nimble Pilferer to banned as commander only ([announcement](https://magic.wizards.com/en/news/mtg-arena/announcements-october-12-2026)). I-42 already maps Scryfall's `restricted` to "banned as commander" in `competitivebrawl`. Patch notes 2026.62.0, which a search summary says extend banned-as-commander to Brawl and Standard Brawl, answered HTTP 403, so that claim is not repeated as fact.
+- **Banned and restricted.** A search found no Commander announcement after the fifteenth pass. The 30 November 2026 date printed on the 12 October announcement still stands; I-48 gains no rules version.
+- **Changelogs.** EDHREC's changelog category still ends on 6 November 2026; the same page links set pages for Star Trek (13 November) and Mystery Booster Commander Edition (19 October). Scryfall's blog still ends on 14 October 2026. Archidekt's news index still leads with the development update of 12 November, then the November deckbuilding contest. Searches found no November note for Moxfield, ManaBox, Commander Spellbook or SpellTable. TopDeck.gg's tournament operations redesign of 24 July 2026 (search summary) is organiser tooling beside I-41.
+- **r/Moxfield since 2026-10-01**, highest first: "Visual grid" (38 points, 24 comments), already I-13; a Firefox extension, "Lemfield", with deck targets, printing selection and a 300 DPI proxy sheet (7 points, 2026-11-12), the jobs of I-76, I-57 and I-80; a default to the original printing (7 points), I-57; "see what cards you play the most across decks" to pin printings (5 points, 5 comments, 2026-11-05), I-60's cards used most with I-57's pins; "sort public decks by amount of cards available" from a collection (4 points, 2026-11-01), I-16 and I-75; card scanning into a collection (4 points, 9 comments), I-40.
+- **r/EDH since 2026-11-14:** "Friend refuses to play because of removal" (245 points, 262 comments, 2026-11-16), a school pod of upgraded precons. The talk before the game is I-15 and I-88, and the count of answers on the sheet is I-78. A booster-box question (97 points, 112 comments) is not a tool job.
+- **r/magicTCG since 2026-11-13:** a complaint about premium Commander product tiers in 2027 (268 points, 178 comments, 2026-11-15) is not a product job; I-17 already owns the precon catalogue.
+- **The under-covered areas named in the brief**, each already owned: accessibility (I-24, I-49), offline and installable use (I-19, I-40, I-87, I-93), store tooling (I-41), Discord and SpellTable (I-46, I-50), exports to Cockatrice, Forge, XMage, MTGO and Arena (I-10, I-50), account data portability (I-38), a public developer API (I-95), teaching new players (I-27, I-64), and Oathbreaker, Pauper Commander, Duel Commander and Canadian Highlander (I-42).
+
+### Where the new initiatives sit
+
+The sixteenth pass adds no initiative number. Every finding has an owner. No glance row was added and no hard dependency changed: I-73's row and I-102's query read I-03's exception table when it exists, and neither waits for it.
+
+### Folded back into an existing initiative
+
+| Finding | Where it went |
+| --- | --- |
+| Rulebreaker commanders (CR 903.5e, 113.6n): exceptions to colour identity, basic lands and deck size | I-03, beside commander and partner mechanics |
+| A release-day list of new cards that modify deck construction, products outside numbered sets included | I-73's playbook |
+| Seluma's Angels and Valko's Phyrexians in an on-theme search | I-102 slice 4's query |
+| Commander Sealed, the Commander Box League deck | I-42, as an open question against its casual-variant non-goal |
+| Two-Headed Giant Commander Night teams, and one sealed deck across a Prerelease week | I-41 |
+| Competitive Brawl's banned-as-commander list | Already I-42 |
+| The 2026-10-19 and 2026-11-06 rules editions | Already I-47 and I-73 |
+| Drafting Mystery Booster Commander Edition (Scryfall set type `draft_innovation`); Commander Draft | Not promoted: the draft non-goal stands |
+
+---
+
 ## Sources
 
 Primary pages and announcements:
@@ -1058,3 +1094,44 @@ Section 16, side decks (I-103):
 - r/EDH, "What planes/phenomena and schemes would you recommend for my deck when playing Planechase/…", 14 March 2026: <https://www.reddit.com/r/EDH/comments/1rt4beu/>
 - Sportskeeda, March of the Machine Commander decks and their Planechase cards (search summary): <https://sportskeeda.com/esports/news-magic-the-gathering-s-march-machine-commander-decks-contain-new-classic-planechase-cards>
 - MTGNexus, a Commander deck built on $20 a month (search summary): <https://www.mtgnexus.com/viewtopic.php?p=96138>
+
+### Added 16 November 2026
+
+Read on 16 November 2026 unless another date is given. Section 17 is the review. A page already cited by an earlier pass is not repeated here.
+
+Rules and products:
+
+- Wizards of the Coast, Eric Levine, "Mystery Booster Commander Edition Update Bulletin", 19 October 2026: <https://magic.wizards.com/en/news/announcements/mystery-booster-commander-edition-update-bulletin>
+- Wizards of the Coast, Eric Levine, "Magic: The Gathering | Star Trek Update Bulletin", 6 November 2026: <https://magic.wizards.com/en/news/announcements/star-trek-update-bulletin>
+- Wizards of the Coast, Comprehensive Rules effective 6 November 2026 (rules 113.6n, 207.2c, 903.5a–f), the TXT linked from the rules page: <https://media.wizards.com/2026/downloads/MagicCompRules%2020261106.txt>
+- Scryfall API, sets list (`mbc`, released 2026-10-19, 80 cards) and card search (`e:mbc f:commander` 70; `o:rulebreaker` 8), read with a named User-Agent: <https://api.scryfall.com/sets>
+- Wizards of the Coast, MTG Arena Announcements, 12 October 2026 (Competitive Brawl bans): <https://magic.wizards.com/en/news/mtg-arena/announcements-october-12-2026>
+- MTG Arena, Patch Notes 2026.62.0 (HTTP 403; search summary only): <https://mtgarena-support.wizards.com/hc/en-us/articles/52601349064852-Patch-Notes-2026-62-0>
+
+Store events:
+
+- Wizards of the Coast, Commander Limited format page (Commander Draft, Commander Box League): <https://magic.wizards.com/en/formats/commander-limited>
+- Wizards of the Coast, "Announcing Commander Play Events: Featuring Sealed and Two-Headed Giant!", 20 June 2025: <https://magic.wizards.com/en/news/announcements/commander-play-featuring-sealed-and-two-headed-giant>
+- Wizards Play Network, "Get Ready for Two New Ways to Play Commander", 20 June 2025: <https://wpn.wizards.com/en/news/get-ready-for-two-new-ways-to-play-commander>
+- Wizards Play Network, Commander Box League, Teenage Mutant Ninja Turtles: <https://wpn.wizards.com/event/commander-box-league-teenage-mutant-ninja-turtles>
+- Wizards Play Network, Commander Box League, Lorwyn Eclipsed (16–22 January 2026): <https://wpn.wizards.com/en/event/commander-box-league-lorwyn-eclipsed>
+- Wizards Play Network, Commander Party, Star Trek (search summary): <https://wpn.wizards.com/en/event/commander-party-star-trek>
+- TopDeck.gg, "Tournament operations workspace redesign", 24 July 2026 (search summary): <https://topdeck.gg/blog/tournament-operations-workspace-redesign-20260724>
+
+Player threads, via Arctic Shift:
+
+- r/magicTCG, "[MBC] Whtz, the Bibliophile", 2026-08-03, 5,535 points, 643 comments: <https://www.reddit.com/r/magicTCG/comments/1veg2fj/>
+- r/EDH, "Full Mystery Booster Commander Edition new Cards are out! Thoughts on Potential Commanders?", 2026-08-03, 199 points, 177 comments: <https://www.reddit.com/r/EDH/comments/1vegsq3/>
+- r/EDH, "Speculation/Prediction of Other Cards with Rulebreaker", 2026-07-17, 101 points, 95 comments: <https://www.reddit.com/r/EDH/comments/1uz7rjp/>
+- r/EDH, "Who's building a Rulebreaker deck?", 2026-08-28, 13 points, 90 comments: <https://www.reddit.com/r/EDH/comments/1w0qfvx/>
+- r/EDH, "Thoughts on Rulebreaker vs '5 color mush'?", 2026-09-16, 38 points, 63 comments: <https://www.reddit.com/r/EDH/comments/1whzaex/>
+- r/EDH, "Commander sealed booster box league", 2020-09-24, 20 points, 16 comments: <https://www.reddit.com/r/EDH/comments/iz0my3/>
+- r/EDH, "Friend refuses to play because of removal", 2026-11-16, 245 points, 262 comments: <https://www.reddit.com/r/EDH/comments/1xxf50b/>
+- r/Moxfield, "Visual grid", 2026-10-23, 38 points, 24 comments: <https://www.reddit.com/r/Moxfield/comments/1xdtnlo/>
+- r/Moxfield, "Lemfield - An extension for Moxfield Deckbuilding", 2026-11-12, 7 points: <https://www.reddit.com/r/Moxfield/comments/1xulmim/>
+- r/Moxfield, "feature suggestion" (original printing by default), 2026-11-01, 7 points: <https://www.reddit.com/r/Moxfield/comments/1xks3i7/>
+- r/Moxfield, "Is there a way to see what cards you play the most across decks", 2026-11-05, 5 points, 5 comments: <https://www.reddit.com/r/Moxfield/comments/1xo89pf/>
+- r/Moxfield, "Feature suggestion around public decks", 2026-11-01, 4 points, 5 comments: <https://www.reddit.com/r/Moxfield/comments/1xl4te2/>
+- r/Moxfield, "Card scanning tools?", 2026-11-06, 4 points, 9 comments: <https://www.reddit.com/r/Moxfield/comments/1xpjfz1/>
+- r/magicTCG, "Why isn't there more outrage about the Shrinkflation happening in 2027?", 2026-11-15, 268 points, 178 comments: <https://www.reddit.com/r/magicTCG/comments/1xwvbo2/>
+- Arctic Shift, the Reddit archive used for every thread above (`reddit.com` itself was not fetched): <https://arctic-shift.photon-reddit.com/>
