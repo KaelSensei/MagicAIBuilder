@@ -265,6 +265,26 @@ describe("characterization: DeckEditor commands", () => {
       expect(screen.getByText("11/100")).toBeInTheDocument();
     });
 
+    // CR 903.5e: Whtz, the Bibliophile's deck has no maximum size.
+    it("counts a Whtz deck of 200 cards without a maximum, as a full deck", () => {
+      const whtz = deckCard("Whtz, the Bibliophile", {
+        typeLine: "Legendary Creature — Homunculus",
+        colorIdentity: ["U", "W"],
+        category: "commander",
+      });
+      renderEditor(
+        talrandDeck({
+          commander: whtz,
+          cards: [{ ...ISLANDS, quantity: 199 }],
+          maybeboard: [],
+        })
+      );
+
+      const toolbar = screen.getByRole("toolbar", { name: "Deck view" });
+      expect(within(toolbar).getByText("200")).toHaveClass("text-green-500");
+      expect(screen.queryByText("200/100")).toBeNull();
+    });
+
     it("shows the chosen zone's cards, tells its parent, and keeps the view and sort controls to the main zone", async () => {
       const { onActiveZoneChange } = renderEditor(talrandDeck());
 

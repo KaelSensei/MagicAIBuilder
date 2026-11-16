@@ -94,6 +94,20 @@ describe("DeckStats", () => {
       expect(screen.getByText("100/100")).toBeDefined();
     });
 
+    // CR 903.5e: Whtz, the Bibliophile's deck has no maximum size.
+    it("shows the bare count of a deck whose commander lifts the maximum", () => {
+      renderWithIntl(
+        <DeckStats
+          stats={makeStats({ totalCards: 200 })}
+          format="commander"
+          sizeRule={{ minimum: 100, maximum: null }}
+          targetBracket={3}
+        />
+      );
+      expect(screen.getByText("200")).toBeDefined();
+      expect(screen.queryByText("200/100")).toBeNull();
+    });
+
     it("shows the bracket benchmarks", () => {
       renderStats(makeStats());
       expect(screen.getByText("Ramp")).toBeDefined();

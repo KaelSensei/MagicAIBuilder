@@ -738,9 +738,6 @@
     }
   },
   "src/components/deck/DeckStats.tsx": {
-    "complexity": {
-      "count": 1
-    },
     "max-lines": {
       "count": 1
     },
