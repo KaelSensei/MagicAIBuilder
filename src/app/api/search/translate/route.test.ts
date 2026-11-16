@@ -118,6 +118,18 @@ describe("POST /api/search/translate", () => {
     await expect(response.json()).resolves.toEqual({ code: "invalid_query" });
   });
 
+  it("widens the identity clause to what a rulebreaker commander admits (CR 903.5e)", async () => {
+    mocks.modelText = '{"query":"t:angel"}';
+    const response = await POST(
+      post({ ...BODY, colorIdentity: ["W", "B"], commandZoneNames: ["Seluma, Light of Aysen"] })
+    );
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({
+      query: "t:angel (id<=WB OR t:angel OR t:basic) legal:commander",
+      context: { format: "commander", colorIdentity: ["W", "B"] },
+    });
+  });
+
   it("rate limits repeated descriptions", async () => {
     mocks.checkRateLimit.mockReturnValueOnce({ allowed: false, retryAfterMs: 1500 });
     const response = await POST(post());

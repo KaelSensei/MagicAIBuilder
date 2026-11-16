@@ -39,10 +39,23 @@ function buildCommanderIdentitySet(deck: Deck): ReadonlySet<string> {
 export function commandZoneExceptions(
   deck: Pick<Deck, "commander" | "partner">
 ): readonly RulebreakerException[] {
-  const commandZone = [deck.commander, deck.partner].flatMap((card) =>
-    card ? [{ oracleId: null, name: card.name }] : []
+  return commanderNameExceptions(
+    [deck.commander, deck.partner].flatMap((card) => (card ? [card.name] : []))
   );
-  return deckConstructionExceptions(commandZone);
+}
+
+/**
+ * The exceptions of command-zone cards known only by name (CR 903.5e): a
+ * stored card, or a name a request sent, has no Oracle id, so the table
+ * matches the exact Oracle name.
+ *
+ * @param names - The commander's and the partner's names; never a card of the 99
+ * @returns The rulebreaker exceptions, empty when no name is a rulebreaker's
+ */
+export function commanderNameExceptions(
+  names: readonly string[]
+): readonly RulebreakerException[] {
+  return deckConstructionExceptions(names.map((name) => ({ oracleId: null, name })));
 }
 
 /** Whether the card's identity leaves the commander's and no rulebreaker exception admits it. */
