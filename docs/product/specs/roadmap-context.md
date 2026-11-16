@@ -147,6 +147,8 @@ A fifteenth pass, on 2026-11-15, asked what a Commander player builds that the p
 - [I-102](i102-a-theme-you-can-measure.md) lets a player name a deck's theme as one to three handles and shows which of their own cards hold it, with the field that decided, the coverage as a count and on-theme alternatives for a role from a visible query, never a grade (goal 1).
 - [I-103](i103-planar-scheme-and-attraction-decks-beside-the-commander-deck.md) keeps a planar deck, a scheme deck and an Attraction deck beside a Commander deck, finds their cards with no legality filter, checks each against its rule and exports them as named sections, without simulating a planar die (goal 1).
 
+A sixteenth pass, on 2026-11-16, read what Wizards and the competitors published in the six weeks before it and what players asked since the fifteenth. Its review is [section 17 of the competitive landscape](../competitive-landscape.md#17-a-sixteenth-pass-deck-construction-a-card-or-a-store-changes-2026-11-16). It added no initiative. Eight rulebreaker commanders, legal since 2026-10-19 under CR 903.5e, get a false colour-identity or size verdict today; that defect is [I-03](i03-trustworthy-deck-feedback.md)'s, with a release-day row on [I-73](i73-every-set-release-ready-on-day-one.md) and a wider theme query on [I-102](i102-a-theme-you-can-measure.md). Wizards' Commander Box League and Two-Headed Giant Commander Night went to [I-42](i42-commander-variants-duel-cedh-pauper.md), as an owner question, and to [I-41](i41-store-commander-nights.md). No Commander banned-and-restricted article appeared, and 30 November 2026 is still the next date.
+
 ### Strategic boundaries
 
 - Do not become a generic card database; Scryfall already owns that job.
@@ -213,6 +215,8 @@ The thirteenth pass's initiatives touch this part too, without changing it. [I-9
 The fourteenth pass touches this part too, without changing it. Archidekt's card page and EDHcheck's land encyclopaedia, named only on an updates index whose article was not opened, do not become a card database. Archidekt's colour themes do not become a second visual system, and a theme that carries meaning by colour alone still fails [I-49](i49-colour-vision-and-low-vision-display.md). Mana Grove's cap on saved decks and on collection size is the capacity paywall this section already refuses. A pack simulator stays inside the draft non-goal. Custom cards stay out.
 
 The fifteenth pass touches this part too, without changing it. [I-102](i102-a-theme-you-can-measure.md) builds no artist or plane page and no popularity order: alternatives come from a visible Scryfall query ordered by mana value. [I-103](i103-planar-scheme-and-attraction-decks-beside-the-commander-deck.md) adds no rules engine: no planar die, no scheme turn, no game state.
+
+The sixteenth pass touches this part too, without changing it. Commander Box League builds from cards a player opened; nothing simulates a pack, so the draft non-goal stands, and [I-42](i42-commander-variants-duel-cedh-pauper.md) asks the owner before Commander Sealed becomes a variant. A rulebreaker exception never changes a card's format legality or banned status (CR 113.6n), so [I-03](i03-trustworthy-deck-feedback.md)'s table widens no banlist.
 
 Sources are listed in [`competitive-landscape.md`](./competitive-landscape.md). Revalidate a competitor's behavior before implementation. Capabilities change.
 
