@@ -273,6 +273,44 @@ describe("quantity stepper on a deck row", () => {
     ).toBeEnabled();
   });
 
+  // CR 903.5e: Whtz's deck "has no maximum deck size", so a basic land's 99
+  // cap, the room a 100-card deck leaves, goes; CR 903.5b never capped it.
+  it("offers a hundredth basic land under Whtz, the Bibliophile, and not under a commander that is no rulebreaker", () => {
+    const whtz = deckRow({
+      id: "row-whtz",
+      name: "Whtz, the Bibliophile",
+      typeLine: "Legendary Creature — Homunculus",
+      colorIdentity: ["U", "W"],
+    });
+    const talrand = deckRow({ id: "row-talrand", name: "Talrand, Sky Summoner" });
+    const openUnder = (commander: DeckCard) =>
+      useDeckStore.setState({
+        decks: {
+          [DECK_ID]: {
+            ...createGuestDeck(),
+            id: DECK_ID,
+            commander,
+            cards: [forest(99)],
+          },
+        },
+        activeDeckId: DECK_ID,
+        isSyncing: false,
+      });
+
+    openUnder(whtz);
+    const { unmount } = renderWithIntl(<CardListItem card={forest(99)} />);
+    expect(
+      screen.getByRole("button", { name: "Add a copy of Forest" })
+    ).toBeEnabled();
+    unmount();
+
+    openUnder(talrand);
+    renderWithIntl(<CardListItem card={forest(99)} />);
+    expect(
+      screen.getByRole("button", { name: "Add a copy of Forest" })
+    ).toBeDisabled();
+  });
+
   it("lets a card that allows any number of copies go past four (CR 101.1)", async () => {
     const user = userEvent.setup();
     const rats = deckRow({
