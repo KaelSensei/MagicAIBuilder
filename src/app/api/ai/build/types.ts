@@ -40,16 +40,29 @@ export type DeckRemovalReason =
   | "over_size";
 
 /**
+ * Why copies were removed, with the facts its sentence needs. A preview card
+ * carries the day its set releases, so the player reads "a preview card,
+ * legal in Commander from <date>", never "not legal" alone (I-73 3.2, 3.5).
+ */
+export type DeckRemovalCause =
+  | { readonly reason: DeckRemovalReason }
+  | {
+      /** Scryfall does not mark the card legal yet because its set is not out (I-73 3.1). */
+      readonly reason: "preview";
+      /** The set's release day, "YYYY-MM-DD" */
+      readonly releasesOn: string;
+    };
+
+/**
  * One change the server made to the model's list after checking it against
  * card data. Basic lands are only ever added to bring the list to the deck size.
  */
 export type DeckCorrection =
-  | {
+  | ({
       readonly action: "removed";
       readonly name: string;
       readonly quantity: number;
-      readonly reason: DeckRemovalReason;
-    }
+    } & DeckRemovalCause)
   | {
       readonly action: "added";
       readonly name: string;

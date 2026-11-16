@@ -16,6 +16,8 @@ import {
 } from "./generated-deck-legality";
 
 const CARD_DATA = buildScryfallNameIndex(ALL_GENERATED_DECK_CARDS);
+/** The check's "today": the preview fixtures release on 2027-02-05, later. */
+const TODAY = new Date("2026-11-16T12:00:00Z");
 
 type Entry = readonly [name: string, quantity: number];
 
@@ -160,6 +162,20 @@ const REPAIRED_CASES: readonly {
     corrections: [removed("Mox Lotus", 1, "not_legal"), added("Island", 1)],
   },
   {
+    label: "a preview card, with the day its set releases",
+    reply: reply({ ...TALRAND, entries: [["Tidewater Oracle", 1]] }),
+    corrections: [
+      {
+        action: "removed",
+        name: "Tidewater Oracle",
+        quantity: 1,
+        reason: "preview",
+        releasesOn: "2027-02-05",
+      },
+      added("Island", 1),
+    ],
+  },
+  {
     label: "a name that matches no card",
     reply: reply({ ...TALRAND, entries: [["Totally Real Card", 1]] }),
     corrections: [
@@ -250,6 +266,12 @@ const REJECTED_CASES: readonly {
     reason: /Leovold, Emissary of Trest is banned in Commander/,
   },
   {
+    label: "a preview commander, with the day its set releases",
+    reply: reply({ commander: "Tidewater Admiral", basic: "Island" }),
+    reason:
+      /^Tidewater Admiral is a preview card, legal in Commander from 2027-02-05\.$/,
+  },
+  {
     label: "a partner that cannot pair with the commander",
     reply: reply({ ...TALRAND, partner: "Thrasios, Triton Hero" }),
     reason:
@@ -285,7 +307,7 @@ describe("checkGeneratedDeckLegality", () => {
   it.each(REPAIRED_CASES)(
     "repairs $label and reports each change",
     ({ reply: modelReply, corrections }) => {
-      const verdict = checkGeneratedDeckLegality(modelReply, CARD_DATA);
+      const verdict = checkGeneratedDeckLegality(modelReply, CARD_DATA, TODAY);
 
       expect(verdict).toEqual(
         expect.objectContaining({ status: "accepted", corrections })
@@ -293,7 +315,7 @@ describe("checkGeneratedDeckLegality", () => {
       const deck = acceptedDeck(verdict);
       expect(copies(deck)).toBe(modelReply.partner ? 98 : 99);
       // The repaired list passes the same check without a further change.
-      expect(checkGeneratedDeckLegality(deck, CARD_DATA)).toEqual({
+      expect(checkGeneratedDeckLegality(deck, CARD_DATA, TODAY)).toEqual({
         status: "accepted",
         deck,
         corrections: [],
@@ -302,12 +324,31 @@ describe("checkGeneratedDeckLegality", () => {
   );
 
   it.each(REJECTED_CASES)("rejects $label", ({ reply: modelReply, reason }) => {
-    const verdict = checkGeneratedDeckLegality(modelReply, CARD_DATA);
+    const verdict = checkGeneratedDeckLegality(modelReply, CARD_DATA, TODAY);
 
     expect(verdict).toEqual({
       status: "rejected",
       reasons: [expect.stringMatching(reason)],
     });
+  });
+
+  it("keeps Scryfall's not-legal verdict once the preview card's set is out", () => {
+    const releaseDay = new Date("2027-02-05T00:00:00Z");
+
+    const verdict = checkGeneratedDeckLegality(
+      reply({ ...TALRAND, entries: [["Tidewater Oracle", 1]] }),
+      CARD_DATA,
+      releaseDay
+    );
+
+    expect(verdict).toEqual(
+      expect.objectContaining({
+        corrections: [
+          removed("Tidewater Oracle", 1, "not_legal"),
+          added("Island", 1),
+        ],
+      })
+    );
   });
 
   it("drops the removed card from the list and adds the basic to the existing stack", () => {
@@ -320,7 +361,8 @@ describe("checkGeneratedDeckLegality", () => {
             ["Sol Ring", 1],
           ],
         }),
-        CARD_DATA
+        CARD_DATA,
+        TODAY
       )
     );
 
@@ -333,7 +375,8 @@ describe("checkGeneratedDeckLegality", () => {
   it("gives added basics to the colours with the fewest sources when no spell sets a target", () => {
     const verdict = checkGeneratedDeckLegality(
       reply({ ...TYMNA_AND_THRASIOS, size: 93 }),
-      CARD_DATA
+      CARD_DATA,
+      TODAY
     );
 
     expect(verdict).toEqual(
@@ -371,7 +414,8 @@ describe("checkGeneratedDeckLegality", () => {
         entries: [["Wrath of God", 1]],
         size: 21,
       }),
-      cardData
+      cardData,
+      TODAY
     );
 
     // Targets: white 26 ({2}{W}{W}), blue and green 20 and black 19 (gold
@@ -404,7 +448,8 @@ describe("checkGeneratedDeckLegality", () => {
         partner: null,
         cards: [{ name: "Sol Ring", quantity: 1, category: "ramp" }],
       },
-      buildScryfallNameIndex([...ALL_GENERATED_DECK_CARDS, kozilek])
+      buildScryfallNameIndex([...ALL_GENERATED_DECK_CARDS, kozilek]),
+      TODAY
     );
 
     expect(verdict).toEqual(
@@ -429,7 +474,7 @@ describe("checkGeneratedDeckLegality", () => {
     it("keeps a stack of them as basic lands", () => {
       const modelReply = reply({ ...TALRAND, basic: snowIsland.name });
 
-      expect(checkGeneratedDeckLegality(modelReply, cardData)).toEqual({
+      expect(checkGeneratedDeckLegality(modelReply, cardData, TODAY)).toEqual({
         status: "accepted",
         deck: modelReply,
         corrections: [],
@@ -444,7 +489,7 @@ describe("checkGeneratedDeckLegality", () => {
         size: 100,
       });
 
-      expect(checkGeneratedDeckLegality(modelReply, cardData)).toEqual(
+      expect(checkGeneratedDeckLegality(modelReply, cardData, TODAY)).toEqual(
         expect.objectContaining({
           status: "accepted",
           corrections: [removed(snowIsland.name, 1, "over_size")],
