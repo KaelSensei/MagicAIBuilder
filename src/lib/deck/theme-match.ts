@@ -49,6 +49,8 @@ export interface DeckTheme {
     | readonly [ThemeHandle, ThemeHandle]
     | readonly [ThemeHandle, ThemeHandle, ThemeHandle];
   readonly match: "any" | "all";
+  /** Count basic lands in the coverage; off unless the owner switches it on (requirement 2.3) */
+  readonly countBasics?: boolean;
 }
 
 /** The stored card field a handle read. */
@@ -243,7 +245,7 @@ function creatureTypeEvidence(
   creatureType: string,
   handleIndex: number
 ): ThemeEvidence | undefined {
-  const wanted = creatureType.toLowerCase();
+  const wanted = creatureType.trim().toLowerCase();
   const typeLine = faceValues(card, "typeLine").find((line) =>
     subtypesOf(line).includes(wanted)
   );

@@ -191,6 +191,15 @@ describe("matchTheme", () => {
     });
   });
 
+  it("reads a creature type without the spaces typed around it", () => {
+    const spacedDragon: DeckTheme = {
+      handles: [{ kind: "creatureType", value: " dragon " }],
+      match: "any",
+    };
+
+    expect(matchTheme(SHIVAN_DRAGON, spacedDragon).onTheme).toBe(true);
+  });
+
   it("puts no card on a handle whose word is blank", () => {
     const blankWords: DeckTheme = {
       handles: [
