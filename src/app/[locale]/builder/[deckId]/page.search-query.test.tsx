@@ -27,6 +27,7 @@ import { AppRouterContext } from "next/dist/shared/lib/app-router-context.shared
 import { PathParamsContext } from "next/dist/shared/lib/hooks-client-context.shared-runtime";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useCollectionStore } from "@/lib/collection/store";
+import { isRecord } from "@/lib/guards";
 import type { ApiDeck, ApiDeckCard } from "@/lib/db/deck-api";
 import { useDeckStore } from "@/lib/deck/store";
 import {
@@ -256,7 +257,7 @@ afterEach(() => {
 });
 
 describe("characterization: the builder's name search with a plain-language query", () => {
-  setupMsw(
+  const server = setupMsw(
     http.get("/api/decks/:id", () => HttpResponse.json(DECK)),
     http.get("/api/decks", () =>
       HttpResponse.json({
@@ -356,5 +357,36 @@ describe("characterization: the builder's name search with a plain-language quer
 
     await searchesSince(sent, ["name:/brain/ id<=WB legal:commander"]);
     expect(screen.queryByText(/^Query: /)).toBeNull();
+  });
+
+  it("sends the translation only the command zone's names: Seluma in the 99 widens nothing (CR 903.5e)", async () => {
+    const seluma: ApiDeckCard = {
+      ...TALRAND,
+      id: "row-seluma",
+      scryfallId: "scryfall-seluma",
+      name: "Seluma, Light of Aysen",
+      typeLine: "Legendary Creature — Angel",
+      colorIdentity: ["W", "B"],
+      isCommander: false,
+    };
+    const sentNames: unknown[] = [];
+    server.use(
+      http.get("/api/decks/:id", () =>
+        HttpResponse.json({ ...DECK, cards: [TALRAND, seluma] })
+      ),
+      http.post("/api/search/translate", async ({ request }) => {
+        const body: unknown = await request.json();
+        sentNames.push(isRecord(body) ? body.commandZoneNames : undefined);
+        return HttpResponse.json({
+          query: TRANSLATED,
+          context: { format: "commander", colorIdentity: ["U"] },
+        });
+      })
+    );
+    const user = await openBuilderWithFilters();
+
+    await runPlainLanguageQuery(user);
+
+    expect(sentNames).toEqual([["Talrand, Sky Summoner"]]);
   });
 });

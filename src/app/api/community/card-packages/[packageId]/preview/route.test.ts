@@ -84,6 +84,34 @@ describe("POST /api/community/card-packages/[packageId]/preview", () => {
     });
   });
 
+  // CR 903.5e: Seluma's deck "can have Angel cards of any color identity".
+  it("previews an off-colour Angel as ready under Seluma, and a green card that is no Angel as blocked", async () => {
+    mockDeckFindFirst.mockResolvedValue({
+      format: "commander",
+      cards: [
+        { name: "Seluma, Light of Aysen", quantity: 1, isCommander: true, isPartner: false, typeLine: "Legendary Creature — Angel", colorIdentity: ["W", "B"] },
+      ],
+    });
+    mockPackageFindFirst.mockResolvedValue({ cards: [
+      { scryfallId: "sigarda", name: "Sigarda, Host of Herons", quantity: 1, colorIdentity: ["G", "W"], isBanned: false, isBasicLand: false },
+      { scryfallId: "cultivate", name: "Cultivate", quantity: 1, colorIdentity: ["G"], isBanned: false, isBasicLand: false },
+    ] });
+    mockGetCardCollection.mockResolvedValue({ data: [
+      { id: "sigarda", name: "Sigarda, Host of Herons", cmc: 5, color_identity: ["G", "W"], type_line: "Legendary Creature — Angel", legalities: { commander: "legal" }, image_uris: {} },
+      { id: "cultivate", name: "Cultivate", cmc: 3, color_identity: ["G"], type_line: "Sorcery", legalities: { commander: "legal" }, image_uris: {} },
+    ], not_found: [] });
+
+    const response = await POST(makeRequest(), context);
+
+    expect(await response.json()).toMatchObject({
+      readyCount: 1, blockedCount: 1,
+      cards: [
+        { name: "Sigarda, Host of Herons", status: "ready", issues: [] },
+        { name: "Cultivate", status: "blocked", issues: [{ kind: "colorIdentity" }] },
+      ],
+    });
+  });
+
   it("refuses a deck whose stored format this build does not support", async () => {
     mockDeckFindFirst.mockResolvedValue({ format: "historic", cards: [] });
     const response = await POST(makeRequest(), context);

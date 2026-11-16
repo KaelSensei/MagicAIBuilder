@@ -17,6 +17,9 @@ export { isAcceptableScryfallQuery } from "./scryfall-query-syntax";
 /** Player descriptions longer than this never reach the model. */
 const MAX_CARD_DESCRIPTION_LENGTH = 400;
 
+/** A commander's name is read against the rulebreaker table, never longer than this. */
+const MAX_CARD_NAME_LENGTH = 200;
+
 /** A card function needs more than a couple of characters. */
 export const MIN_CARD_DESCRIPTION_LENGTH = 3;
 
@@ -67,6 +70,8 @@ export const naturalLanguageSearchRequestSchema = z.object({
   locale: z.enum(["en", "fr"]),
   format: z.enum(ALL_FORMATS),
   colorIdentity: z.array(z.enum(FIVE_COLORS)).max(5),
+  // The commander and a partner at most (CR 702.124); an older client sends none.
+  commandZoneNames: z.array(z.string().trim().min(1).max(MAX_CARD_NAME_LENGTH)).max(2).default([]),
   enforceColorIdentity: z.boolean(),
   applyContext: z.boolean(),
 });
@@ -123,6 +128,8 @@ export function buildNaturalLanguageSearchContext(input: {
   readonly commanderColorIdentity: readonly string[];
   readonly partnerColorIdentity: readonly string[];
   readonly hasCommander: boolean;
+  /** The commander's and partner's names, for a rulebreaker's exceptions (CR 903.5e) */
+  readonly commandZoneNames?: readonly string[];
 }): NaturalLanguageSearchContext {
   const formatConfig = getFormatConfig(input.format);
   return {
@@ -132,6 +139,7 @@ export function buildNaturalLanguageSearchContext(input: {
       ...input.commanderColorIdentity,
       ...input.partnerColorIdentity,
     ]),
+    commandZoneNames: input.commandZoneNames ?? [],
     applyContext: true,
   };
 }
