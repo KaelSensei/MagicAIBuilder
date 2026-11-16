@@ -320,7 +320,7 @@ export function DeckStats({
 
   // Sizes and bracket targets are Commander's; a 60-card deck was being shown
   // "60/100" and "target for B3" before this was gated on the format.
-  const deckSize = sizeRule ?? deckSizeRule(config.deckSize);
+  const deckSize = sizeRule ?? deckSizeRule(config.deckSize, []);
   const cardCountStatus =
     CARD_COUNT_STATUS[deckSizeStatus(stats.totalCards, deckSize)];
 

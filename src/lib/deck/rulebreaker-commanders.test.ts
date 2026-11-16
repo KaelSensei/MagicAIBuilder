@@ -19,6 +19,12 @@ import {
   getColorIdentityViolations,
   isCompanionOutsideColorIdentity,
 } from "./color-identity";
+import { deckSizeStatus } from "@/modules/format-rules";
+import {
+  COMMANDER_DECK_SIZE,
+  deckSizeRuleOf,
+  formatDeckCount,
+} from "./deck-size";
 import { computeDeckStats } from "./stats";
 import type { DeckCard } from "./types";
 
@@ -313,5 +319,60 @@ describe("the companion under a rulebreaker commander (CR 903.5e)", () => {
     const deck = aDeck({ commander: asCommander(maular), companion: gyruda });
 
     expect(isCompanionOutsideColorIdentity(deck)).toBe(false);
+  });
+});
+
+describe("the deck size under a rulebreaker commander (CR 903.5e)", () => {
+  const whtz = asCommander(RECORDED_RULEBREAKER_CARDS.whtz);
+
+  it("reads a 200-card Whtz deck as legal: the deck has no maximum size", () => {
+    const rule = deckSizeRuleOf(
+      aDeck({ commander: whtz }),
+      COMMANDER_DECK_SIZE
+    );
+
+    expect(deckSizeStatus(200, rule)).toBe("legal");
+  });
+
+  it("shows a Whtz deck's count without a maximum, and still reads 99 cards as short", () => {
+    const rule = deckSizeRuleOf(
+      aDeck({ commander: whtz }),
+      COMMANDER_DECK_SIZE
+    );
+
+    expect(formatDeckCount(200, rule, "/")).toBe("200");
+    expect(deckSizeStatus(99, rule)).toBe("short");
+  });
+
+  it("keeps the 100-card maximum when Whtz is in the 99 rather than the command zone", () => {
+    const commander = aDeckCard({
+      id: "commander",
+      name: "Talrand, Sky Summoner",
+      category: "commander",
+    });
+    const rule = deckSizeRuleOf(
+      aDeck({
+        commander,
+        cards: [{ ...whtz, id: "whtz-99", category: "creature" }],
+      }),
+      COMMANDER_DECK_SIZE
+    );
+
+    expect(deckSizeStatus(200, rule)).toBe("over");
+    expect(formatDeckCount(200, rule, " / ")).toBe("200 / 100");
+  });
+
+  it("lifts the maximum for Whtz as the second commander too", () => {
+    const commander = aDeckCard({
+      id: "commander",
+      name: "Thrasios, Triton Hero",
+      category: "commander",
+    });
+    const rule = deckSizeRuleOf(
+      aDeck({ commander, partner: whtz }),
+      COMMANDER_DECK_SIZE
+    );
+
+    expect(rule.maximum).toBeNull();
   });
 });

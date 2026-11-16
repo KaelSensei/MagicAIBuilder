@@ -93,10 +93,10 @@ interface CardData {
 
 /**
  * The copies the listed cards must come to once repaired: the size rule's
- * maximum less the command zone.
+ * maximum, or its minimum when it has none, less the command zone.
  */
 function listSize(rule: DeckSizeRule, commandZoneSize: number): number {
-  return rule.maximum - commandZoneSize;
+  return (rule.maximum ?? rule.minimum) - commandZoneSize;
 }
 
 function rejected(reason: string): Rejected {
@@ -339,7 +339,7 @@ export function checkGeneratedDeckLegality(
   const listed = filterListedCards(deck.cards, commandCards, data);
   const sized = fitToDeckSize(
     listed.kept,
-    listSize(deckSizeRule(COMMANDER_DECK_SIZE), commandCards.length),
+    listSize(deckSizeRule(COMMANDER_DECK_SIZE, []), commandCards.length),
     sourceNeeds(commandCards, listed.keptCards)
   );
   if (sized.status === "rejected") return sized;

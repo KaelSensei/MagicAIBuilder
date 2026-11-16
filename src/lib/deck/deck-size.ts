@@ -4,11 +4,13 @@
  * checks panel).
  *
  * Format-rules context, read by deck building; the rule itself is
- * `deckSizeRule` in `modules/format-rules`.
+ * `deckSizeRule` in `modules/format-rules`. CR 903.5e: a rulebreaker
+ * commander (Whtz, the Bibliophile) may lift the deck's maximum size.
  *
  * @module deck/deck-size
  */
 import { deckSizeRule, type DeckSizeRule } from "@/modules/format-rules";
+import { commandZoneExceptions } from "./color-identity";
 import { getFormatConfig } from "./formats";
 import type { Deck } from "./types";
 
@@ -20,22 +22,24 @@ import type { Deck } from "./types";
 export const COMMANDER_DECK_SIZE = getFormatConfig("commander").deckSize;
 
 /**
- * The size rule of `deck` when its format sets `formatSize`.
+ * The size rule of `deck` when its format sets `formatSize`, with its
+ * commander's rulebreaker exceptions applied (CR 903.5e).
  *
- * @param _deck - The deck whose command zone may change the rule
+ * @param deck - The deck whose commander and partner may lift the maximum
  * @param formatSize - The size the reader holds the deck to: its format's
  *   `deckSize`, or {@link COMMANDER_DECK_SIZE} for the readers that show "/100"
  * @returns The deck's size rule
  */
 export function deckSizeRuleOf(
-  _deck: Pick<Deck, "commander" | "partner">,
+  deck: Pick<Deck, "commander" | "partner">,
   formatSize: number
 ): DeckSizeRule {
-  return deckSizeRule(formatSize);
+  return deckSizeRule(formatSize, commandZoneExceptions(deck));
 }
 
 /**
- * A deck's card count as a counter shows it: "99/100" against the maximum.
+ * A deck's card count as a counter shows it: "99/100" against a maximum, or the
+ * bare count when the deck has none.
  *
  * @param cardCount - The cards the deck holds, its command zone included
  * @param rule - The deck's size rule
@@ -47,5 +51,7 @@ export function formatDeckCount(
   rule: DeckSizeRule,
   separator: string
 ): string {
-  return `${cardCount}${separator}${rule.maximum}`;
+  return rule.maximum === null
+    ? String(cardCount)
+    : `${cardCount}${separator}${rule.maximum}`;
 }
