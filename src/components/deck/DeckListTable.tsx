@@ -5,6 +5,11 @@ import { Link } from "@/i18n/navigation";
 import { useMemo } from "react";
 import { useFormatter, useTranslations } from "next-intl";
 import { Clock, Copy, Loader2, Trash2 } from "lucide-react";
+import {
+  COMMANDER_DECK_SIZE,
+  deckSizeRuleOf,
+  formatDeckCount,
+} from "@/lib/deck/deck-size";
 import type { Deck } from "@/lib/deck/types";
 import { getDeckPresentationManaColors } from "./HomeDeckCard";
 
@@ -142,7 +147,11 @@ function DeckListRow({
       </td>
 
       <td className="min-w-[90px] text-[var(--text-secondary)]">
-        {deck.cardCount} / 100
+        {formatDeckCount(
+          deck.cardCount,
+          deckSizeRuleOf(deck, COMMANDER_DECK_SIZE),
+          " / "
+        )}
       </td>
 
       <td className="min-w-[120px] text-[var(--text-secondary)]">
