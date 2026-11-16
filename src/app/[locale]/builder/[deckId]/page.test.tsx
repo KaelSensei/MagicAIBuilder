@@ -462,7 +462,7 @@ describe("characterization: builder page shell", () => {
       expect(deckApiLines()).toContain(`POST /api/decks/${DECK_ID}/duplicate`);
     });
 
-    it("currently counts a Standard deck against 100 cards although Standard asks for 60 (pinned)", async () => {
+    it("currently counts a Standard deck against 100 cards in the title bar although Standard asks for 60 (pinned)", async () => {
       server.use(
         http.get("/api/decks/:id", () =>
           HttpResponse.json(
@@ -480,9 +480,8 @@ describe("characterization: builder page shell", () => {
       await screen.findByRole("heading", { level: 1, name: "Talrand Spells" });
 
       expect(screen.getByText("11 / 100")).toBeInTheDocument();
-      expect(screen.getByText("11/100")).toBeInTheDocument();
-      // The stats panel's deck checks already count against the format's size.
-      expect(screen.getByText("11/60")).toBeInTheDocument();
+      // The deck editor and the stats panel's deck checks count against the format's size.
+      expect(screen.getAllByText("11/60")).toHaveLength(2);
     });
 
     it("lists commander-legal cards in the search panel before anything is typed", async () => {
