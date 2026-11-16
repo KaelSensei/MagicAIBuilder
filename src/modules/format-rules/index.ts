@@ -16,6 +16,19 @@ export {
   type DeckSizeStatus,
 } from "@/modules/format-rules/domain/deck-size";
 export {
+  deckConstructionExceptions,
+  isIdentityExempt,
+  liftsMaximumDeckSize,
+  RULEBREAKERS,
+  RULEBREAKERS_SOURCE,
+  RULEBREAKERS_VERSION,
+  type CommandZoneCard,
+  type ConstructionCard,
+  type Rulebreaker,
+  type RulebreakerCardTest,
+  type RulebreakerException,
+} from "@/modules/format-rules/domain/rulebreakers";
+export {
   checkSideDeck,
   type CommunalPlayerCount,
   type PlanarDeckOption,
