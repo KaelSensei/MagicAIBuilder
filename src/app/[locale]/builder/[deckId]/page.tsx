@@ -31,12 +31,7 @@ import { currentDataAsOfFacts } from "@/lib/deck/data-as-of";
 import { useDeckStore } from "@/lib/deck/store";
 import { isDeckStub } from "@/lib/deck/store-factories";
 import { computeDeckStats } from "@/lib/deck/stats";
-import {
-  COMMANDER_DECK_SIZE,
-  deckSizeRuleOf,
-  formatDeckCount,
-} from "@/lib/deck/deck-size";
-import { getFormatConfig } from "@/lib/deck/formats";
+import { deckSizeRuleInFormat, formatDeckCount } from "@/lib/deck/deck-size";
 import { addNamedCardToZone } from "@/lib/deck/ai-add-card";
 import { logger } from "@/lib/logger";
 import { useUIStore } from "@/lib/ui/store";
@@ -878,7 +873,7 @@ export default function BuilderPage() {
                 .reduce((s, c) => s + c.quantity, 0) +
                 (deck.commander ? 1 : 0) +
                 (deck.partner ? 1 : 0),
-              deckSizeRuleOf(deck, COMMANDER_DECK_SIZE),
+              deckSizeRuleInFormat(deck),
               " / "
             )}
           </span>
@@ -1247,10 +1242,7 @@ export default function BuilderPage() {
             <DeckStats
               stats={stats}
               format={deck.format}
-              sizeRule={deckSizeRuleOf(
-                deck,
-                getFormatConfig(deck.format).deckSize
-              )}
+              sizeRule={deckSizeRuleInFormat(deck)}
               cards={deckAnalysisCards}
               targetBracket={deck.targetBracket}
             />

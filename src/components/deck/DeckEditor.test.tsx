@@ -285,6 +285,21 @@ describe("characterization: DeckEditor commands", () => {
       expect(screen.queryByText("200/100")).toBeNull();
     });
 
+    // CR 100.2a: a constructed deck holds 60 cards, not Commander's 100.
+    it("counts a Standard deck of 60 cards out of 60, as a full deck", () => {
+      renderEditor(
+        talrandDeck({
+          format: "standard",
+          commander: null,
+          cards: [{ ...ISLANDS, quantity: 60 }],
+          maybeboard: [],
+        })
+      );
+
+      const toolbar = screen.getByRole("toolbar", { name: "Deck view" });
+      expect(within(toolbar).getByText("60/60")).toHaveClass("text-green-500");
+    });
+
     it("shows the chosen zone's cards, tells its parent, and keeps the view and sort controls to the main zone", async () => {
       const { onActiveZoneChange } = renderEditor(talrandDeck());
 

@@ -15,9 +15,8 @@ import { getFormatConfig } from "./formats";
 import type { Deck } from "./types";
 
 /**
- * Commander's deck size, 100 (CR 903.5a). The editor counter, the deck list and
- * the builder header hold every deck to it, whatever its format; a 60-card deck
- * still reads "/100" there (follow-up: hold each deck to its format's size).
+ * Commander's deck size, 100 (CR 903.5a), for a reader with no stored deck to
+ * take a format from, such as the AI deck check of a Commander build.
  */
 export const COMMANDER_DECK_SIZE = getFormatConfig("commander").deckSize;
 
@@ -26,8 +25,8 @@ export const COMMANDER_DECK_SIZE = getFormatConfig("commander").deckSize;
  * commander's rulebreaker exceptions applied (CR 903.5e).
  *
  * @param deck - The deck whose commander and partner may lift the maximum
- * @param formatSize - The size the reader holds the deck to: its format's
- *   `deckSize`, or {@link COMMANDER_DECK_SIZE} for the readers that show "/100"
+ * @param formatSize - The size the reader holds the deck to, such as its
+ *   format's `deckSize` or {@link COMMANDER_DECK_SIZE}
  * @returns The deck's size rule
  */
 export function deckSizeRuleOf(
@@ -35,6 +34,23 @@ export function deckSizeRuleOf(
   formatSize: number
 ): DeckSizeRule {
   return deckSizeRule(formatSize, commandZoneExceptions(deck));
+}
+
+/**
+ * The size rule of `deck` in its own format: the format's `deckSize` (60 for a
+ * constructed format, CR 100.2a; 100 for Commander, CR 903.5a), held as exact
+ * as `DeckStats` holds it, with its commander's rulebreaker exceptions applied
+ * (CR 903.5e). Every deck counter reads it.
+ *
+ * @param deck - The deck whose format sets the size and whose commander and
+ *   partner may lift the maximum; an unknown format reads as Commander
+ *   (`getFormatConfig`)
+ * @returns The deck's size rule
+ */
+export function deckSizeRuleInFormat(
+  deck: Pick<Deck, "format" | "commander" | "partner">
+): DeckSizeRule {
+  return deckSizeRuleOf(deck, getFormatConfig(deck.format).deckSize);
 }
 
 /**
