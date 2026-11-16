@@ -12,9 +12,17 @@ function exportNames(namespace: object): readonly string[] {
 }
 
 describe("the format rules entry points", () => {
-  it("index.ts publishes the side-deck check", async () => {
+  it("index.ts publishes the side-deck check, the deck size rule and the rulebreaker table", async () => {
     expect(exportNames(await import("@/modules/format-rules"))).toEqual([
       "checkSideDeck",
+      "deckConstructionExceptions",
+      "deckSizeRule",
+      "deckSizeStatus",
+      "isIdentityExempt",
+      "liftsMaximumDeckSize",
+      "RULEBREAKERS",
+      "RULEBREAKERS_SOURCE",
+      "RULEBREAKERS_VERSION",
     ]);
   });
 });
