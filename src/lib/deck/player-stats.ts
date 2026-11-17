@@ -152,39 +152,21 @@ export function countPlayerStats(
   decks: readonly PlayerStatsDeck[],
   window: StatsWindow
 ): PlayerStats {
-  const activeDecks: PlayerStatsDeck[] = [];
-  const addedDeckIds: string[] = [];
-  const changedDeckIds: string[] = [];
-  for (const deck of decks) {
-    const added = isInWindow(deck.createdAt, window);
-    const savedSinceCreation = deck.updatedAt.getTime() > deck.createdAt.getTime();
-    const changed =
-      (savedSinceCreation && isInWindow(deck.updatedAt, window)) ||
-      deck.snapshotDates.some((taken) => isInWindow(taken, window));
-    if (added) addedDeckIds.push(deck.deckId);
-    if (changed) changedDeckIds.push(deck.deckId);
-    if (added || changed) activeDecks.push(deck);
-  }
-  const formats = ALL_FORMATS.flatMap((format) => {
-    const deckIds = activeDecks
-      .filter((deck) => deck.format === format)
-      .map((deck) => deck.deckId);
-    return deckIds.length > 0 ? [{ format, deckIds }] : [];
-  });
+  const addedDecks = decks.filter((deck) => isAddedIn(deck, window));
+  const changedDecks = decks.filter((deck) => isChangedIn(deck, window));
+  const activeDecks = decks.filter((deck) => isAddedIn(deck, window) || isChangedIn(deck, window));
   const commanderDecks = activeDecks.filter((deck) => FORMAT_CONFIG[deck.format].hasCommander);
   const cards = countCards(commanderDecks);
   const shared = cards.filter((card) => card.deckIds.length >= 2);
   return {
-    activeDeckIds: activeDecks.map((deck) => deck.deckId),
-    addedDeckIds,
-    changedDeckIds,
-    formats,
-    commanderDeckIds: commanderDecks.map((deck) => deck.deckId),
+    activeDeckIds: idsOf(activeDecks),
+    addedDeckIds: idsOf(addedDecks),
+    changedDeckIds: idsOf(changedDecks),
+    formats: countFormats(activeDecks),
+    commanderDeckIds: idsOf(commanderDecks),
     colors: IDENTITY_COLORS.map((color) => ({
       color,
-      deckIds: commanderDecks
-        .filter((deck) => deck.colorIdentity.includes(color))
-        .map((deck) => deck.deckId),
+      deckIds: idsOf(commanderDecks.filter((deck) => deck.colorIdentity.includes(color))),
     })),
     colorIdentities: countColorIdentities(commanderDecks),
     commanders: countCommanders(commanderDecks, decks, window),
@@ -192,14 +174,47 @@ export function countPlayerStats(
     sharedCards: { count: shared.length, mostShared: shared.slice(0, MOST_SHARED_LISTED) },
     brackets: BRACKET_LEVELS.map((bracket) => ({
       bracket,
-      computedDeckIds: commanderDecks
-        .filter((deck) => deck.computedBracket === bracket)
-        .map((deck) => deck.deckId),
-      targetDeckIds: commanderDecks
-        .filter((deck) => deck.targetBracket === bracket)
-        .map((deck) => deck.deckId),
+      computedDeckIds: idsOf(commanderDecks.filter((deck) => deck.computedBracket === bracket)),
+      targetDeckIds: idsOf(commanderDecks.filter((deck) => deck.targetBracket === bracket)),
     })),
   };
+}
+
+/** Whether the deck was created in the window (requirement 3.4). */
+function isAddedIn(deck: PlayerStatsDeck, window: StatsWindow): boolean {
+  return isInWindow(deck.createdAt, window);
+}
+
+/**
+ * Whether the deck changed in the window: a snapshot taken in it, or a save
+ * in it after the deck's creation. `updatedAt` keeps only the last save, so
+ * this is a floor, never an exact count (requirement 3.5).
+ */
+function isChangedIn(deck: PlayerStatsDeck, window: StatsWindow): boolean {
+  const savedSinceCreation = deck.updatedAt.getTime() > deck.createdAt.getTime();
+  return (
+    (savedSinceCreation && isInWindow(deck.updatedAt, window)) ||
+    deck.snapshotDates.some((taken) => isInWindow(taken, window))
+  );
+}
+
+/** Whether a moment falls in the window: from its start, before its cut-off. */
+function isInWindow(moment: Date, window: StatsWindow): boolean {
+  const time = moment.getTime();
+  return time >= window.start.getTime() && time < window.end.getTime();
+}
+
+/** The ids of the decks, in their order. */
+function idsOf(decks: readonly PlayerStatsDeck[]): readonly string[] {
+  return decks.map((deck) => deck.deckId);
+}
+
+/** Active decks per format, leaving out formats with none, in the order formats are listed. */
+function countFormats(decks: readonly PlayerStatsDeck[]): readonly FormatCount[] {
+  return ALL_FORMATS.flatMap((format) => {
+    const deckIds = idsOf(decks.filter((deck) => deck.format === format));
+    return deckIds.length > 0 ? [{ format, deckIds }] : [];
+  });
 }
 
 /** A value decks share, keyed by a string, with the decks that have it. */
@@ -247,7 +262,7 @@ function countCards(decks: readonly PlayerStatsDeck[]): readonly CardCount[] {
   return groupDecks(decks, (deck) =>
     deck.mainCards
       .filter((card) => !isBasicLand(card.typeLine))
-      .map((card) => [card.name, card.name] as const)
+      .map((card): readonly [string, string] => [card.name, card.name])
   ).map(({ value, deckIds }) => ({ name: value, deckIds }));
 }
 
@@ -277,9 +292,4 @@ function countCommanders(
     deckIds,
     isNew: !earlierKeys.has(key),
   }));
-}
-
-/** Whether a moment falls in the window: from its start, before its cut-off. */
-function isInWindow(moment: Date, window: StatsWindow): boolean {
-  return moment >= window.start && moment < window.end;
 }
