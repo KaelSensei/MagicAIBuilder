@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { parseDeckSearchQuery, serializeDeckSearchQuery } from "./deck-search-query";
+import {
+  parseDeckSearchQuery,
+  serializeDeckSearchQuery,
+} from "./deck-search-query";
 
 /** Parses a query string the way a page receives it. */
 function parse(search: string) {
@@ -59,9 +62,15 @@ describe("the deck search URL", () => {
   });
 
   it("keeps declared brackets 1 to 5 once each, in ascending order", () => {
-    expect(parse("bracket=4&bracket=2&bracket=4").declaredBrackets).toEqual([2, 4]);
-    expect(canonical("bracket=4&bracket=2&bracket=4")).toBe("bracket=2&bracket=4");
-    expect(canonical("bracket=0&bracket=6&bracket=2.5&bracket=x&bracket=")).toBe("");
+    expect(parse("bracket=4&bracket=2&bracket=4").declaredBrackets).toEqual([
+      2, 4,
+    ]);
+    expect(canonical("bracket=4&bracket=2&bracket=4")).toBe(
+      "bracket=2&bracket=4"
+    );
+    expect(
+      canonical("bracket=0&bracket=6&bracket=2.5&bracket=x&bracket=")
+    ).toBe("");
   });
 
   it("keeps each card list trimmed, without duplicates, in name order", () => {
@@ -81,13 +90,24 @@ describe("the deck search URL", () => {
   it("keeps the first ten distinct cards of a list and drops the rest", () => {
     const typed = ["Z", "Y", "X", "W", "V", "U", "T", "S", "R", "Q", "P", "O"];
     const search = typed.map((name) => `no-card=${name}`).join("&");
-    expect(parse(search).cards.none).toEqual(["Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]);
+    expect(parse(search).cards.none).toEqual([
+      "Q",
+      "R",
+      "S",
+      "T",
+      "U",
+      "V",
+      "W",
+      "X",
+      "Y",
+      "Z",
+    ]);
   });
 
   it("drops a card name longer than 200 characters, which no card has", () => {
-    expect(parse(`card=${"a".repeat(201)}&card=${"b".repeat(200)}`).cards.all).toEqual([
-      "b".repeat(200),
-    ]);
+    expect(
+      parse(`card=${"a".repeat(201)}&card=${"b".repeat(200)}`).cards.all
+    ).toEqual(["b".repeat(200)]);
   });
 
   it("keeps the deck name text trimmed and drops it when blank or too long", () => {
@@ -105,23 +125,29 @@ describe("the deck search URL", () => {
   });
 
   it("keeps a commander slug only when a commander's name could produce it", () => {
-    expect(parse("commander=atraxa-grand-unifier").commander).toBe("atraxa-grand-unifier");
-    expect(canonical("commander=atraxa-grand-unifier")).toBe("commander=atraxa-grand-unifier");
+    expect(parse("commander=atraxa-grand-unifier").commander).toBe(
+      "atraxa-grand-unifier"
+    );
+    expect(canonical("commander=atraxa-grand-unifier")).toBe(
+      "commander=atraxa-grand-unifier"
+    );
     expect(canonical("commander=Atraxa%2C+Grand+Unifier")).toBe("");
     expect(canonical("commander=---")).toBe("");
   });
 
   it("writes a commander pair in name order, so either order is one search", () => {
-    expect(parse("commander=tymna-the-weaver&partner=thrasios-triton-hero")).toMatchObject({
+    expect(
+      parse("commander=tymna-the-weaver&partner=thrasios-triton-hero")
+    ).toMatchObject({
       commander: "thrasios-triton-hero",
       partner: "tymna-the-weaver",
     });
-    expect(canonical("partner=tymna-the-weaver&commander=thrasios-triton-hero")).toBe(
-      "commander=thrasios-triton-hero&partner=tymna-the-weaver"
-    );
-    expect(canonical("commander=tymna-the-weaver&partner=tymna-the-weaver")).toBe(
-      "commander=tymna-the-weaver"
-    );
+    expect(
+      canonical("partner=tymna-the-weaver&commander=thrasios-triton-hero")
+    ).toBe("commander=thrasios-triton-hero&partner=tymna-the-weaver");
+    expect(
+      canonical("commander=tymna-the-weaver&partner=tymna-the-weaver")
+    ).toBe("commander=tymna-the-weaver");
   });
 
   it("drops a partner named without a commander", () => {
@@ -136,7 +162,10 @@ describe("the deck search URL", () => {
     });
     expect(canonical("colors=GwUg")).toBe("colors=wug");
     expect(canonical("colors=c")).toBe("colors=c");
-    expect(parse("colors=C").colorIdentity).toEqual({ match: "exactly", colors: [] });
+    expect(parse("colors=C").colorIdentity).toEqual({
+      match: "exactly",
+      colors: [],
+    });
   });
 
   it("drops a colour identity with an unknown letter, or colourless mixed with colours", () => {
@@ -150,7 +179,9 @@ describe("the deck search URL", () => {
       match: "within",
       colors: ["W", "U"],
     });
-    expect(canonical("match=including&colors=g")).toBe("colors=g&match=including");
+    expect(canonical("match=including&colors=g")).toBe(
+      "colors=g&match=including"
+    );
     expect(canonical("colors=g&match=exactly")).toBe("colors=g");
     expect(canonical("colors=g&match=most")).toBe("colors=g");
     expect(canonical("match=within")).toBe("");
@@ -172,7 +203,9 @@ describe("the deck search URL", () => {
 
   it("keeps a listed-since day only when it is a calendar date", () => {
     expect(parse("listed-since=2026-02-28").listedSince).toBe("2026-02-28");
-    expect(canonical("listed-since=2024-02-29")).toBe("listed-since=2024-02-29");
+    expect(canonical("listed-since=2024-02-29")).toBe(
+      "listed-since=2024-02-29"
+    );
     expect(canonical("listed-since=2026-02-29")).toBe("");
     expect(canonical("listed-since=2026-2-3")).toBe("");
     expect(canonical("listed-since=2026-11-17T00%3A00%3A00Z")).toBe("");
@@ -180,8 +213,12 @@ describe("the deck search URL", () => {
 
   it("keeps a price range in whole US dollars, either bound alone, low bound first", () => {
     expect(parse("price-max=150").priceUsd).toEqual({ max: 150 });
-    expect(canonical("price-min=0&price-max=150")).toBe("price-min=0&price-max=150");
-    expect(canonical("price-min=300&price-max=150")).toBe("price-min=150&price-max=300");
+    expect(canonical("price-min=0&price-max=150")).toBe(
+      "price-min=0&price-max=150"
+    );
+    expect(canonical("price-min=300&price-max=150")).toBe(
+      "price-min=150&price-max=300"
+    );
     expect(canonical("price-min=-5&price-max=12.50")).toBe("");
     expect(canonical("price-max=1e3&price-min=")).toBe("");
   });
@@ -218,6 +255,8 @@ describe("the canonical deck search URL", () => {
   });
 
   it("reads the first value of a key that takes one value", () => {
-    expect(canonical("sort=votes&sort=listed&q=Esper&q=Grixis")).toBe("q=Esper&sort=votes");
+    expect(canonical("sort=votes&sort=listed&q=Esper&q=Grixis")).toBe(
+      "q=Esper&sort=votes"
+    );
   });
 });
