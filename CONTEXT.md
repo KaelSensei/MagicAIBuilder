@@ -135,7 +135,7 @@ Decks and their contents. Context folder: `deck-building`. Today: most of `lib/d
 ## Deck analysis
 
 Read-only evaluation of a decklist. Context folder: `deck-analysis`. Today:
-`lib/deck/{stats,bracket,mana-alignment,mana-base-tables,source-targets,turn-one,draw-odds,draw-odds-library,cards-drawn,themes,theme-match,theme-coverage,format-stats,commander-rules-check}.ts`.
+`lib/deck/{stats,bracket,mana-alignment,mana-base-tables,source-targets,turn-one,draw-odds,draw-odds-library,cards-drawn,themes,theme-match,theme-coverage,format-stats,commander-rules-check,player-stats}.ts`.
 
 | Term                      | Meaning                                                                                                                                                                                              | Source                          | Code today                                                                                |
 | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- | ----------------------------------------------------------------------------------------- |
@@ -158,6 +158,8 @@ Read-only evaluation of a decklist. Context folder: `deck-analysis`. Today:
 | **Theme handle**          | One rule of the owner's own theme, read from a stored card field: a creature type, a word in the name or the text, a first letter, a card type. The owner names it; the product never infers it.     | I-102                           | `ThemeHandle`, `DeckTheme`, `matchTheme` in `lib/deck/theme-match.ts`                     |
 | **Theme coverage**        | The copies on the owner's theme over the copies counted: command zone and main deck, basics only if the owner counts them. A count, never a grade.                                                   | I-102                           | `themeCoverage`, `ThemeCoverage` in `lib/deck/theme-coverage.ts`                          |
 | **Format stats**          | For formats without brackets: curve, threat density and interaction ratio, against heuristic bands.                                                                                                  | Product                         | `FormatStats`, `buildFormatStats` in `lib/deck/format-stats.ts`                           |
+| **Active deck**           | A deck the player still has that was created, snapshotted or saved again within a window. The denominator of the player's statistics.                                                                | I-60                            | `PlayerStats.activeDeckIds` in `lib/deck/player-stats.ts`                                 |
+| **Player stats**          | Counts across the player's own active decks: formats, colours, commanders, cards used most and shared, brackets, decks added and changed. Each figure lists the decks behind it.                     | I-60                            | `countPlayerStats`, `PlayerStats` in `lib/deck/player-stats.ts`                           |
 
 ## Playtest
 
