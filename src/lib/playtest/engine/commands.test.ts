@@ -734,6 +734,25 @@ describe("the store's methods and the reducer agree", () => {
     });
   });
 
+  it("dispatch applies a command to the current game", () => {
+    const state = baseState();
+    const store = createPlaytestStore(deps);
+    store.setState({ engine: state, isActive: true });
+
+    store.getState().dispatch({ type: "heal", amount: 2 });
+
+    expect(store.getState().engine).toEqual(applyHeal(state, 2, deps));
+  });
+
+  it("dispatch changes nothing when no game is running", () => {
+    const store = createPlaytestStore(deps);
+
+    store.getState().dispatch({ type: "draw" });
+
+    expect(store.getState().engine).toBeNull();
+    expect(store.getState().isActive).toBe(false);
+  });
+
   it("generates ids from Web Crypto when the store is built without an id source", () => {
     stubWebCryptoBytes();
     const state = baseState();
