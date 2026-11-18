@@ -43,11 +43,20 @@ export interface PricedCard {
  * @param raw - the `prices.usd` field as Scryfall sent it
  */
 export function toUsdPrice(raw: string | null | undefined): number | null {
+  return toScryfallAmount(raw);
+}
+
+/**
+ * The amount a Scryfall price string denotes, in whatever currency the field
+ * it came from is in. The parsing rule `toUsdPrice` documents, shared by every
+ * currency because Scryfall writes them all the same way.
+ */
+function toScryfallAmount(raw: string | null | undefined): number | null {
   if (raw === null || raw === undefined || !SCRYFALL_PRICE.test(raw)) {
     return null;
   }
-  const usd = Number(raw);
-  return Number.isFinite(usd) ? usd : null;
+  const amount = Number(raw);
+  return Number.isFinite(amount) ? amount : null;
 }
 
 /**
