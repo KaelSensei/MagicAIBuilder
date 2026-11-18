@@ -19,6 +19,10 @@
   "printingsAvailable": "{count, plural, one {# édition disponible} other {# éditions disponibles}}",
   "ownedPrintingsOnly": "Éditions possédées uniquement",
   "noOwnedPrintings": "Aucune édition possédée pour cette carte.",
+  "scryfallPrices": {
+    "label": "Prix Scryfall",
+    "missing": "Aucun prix en {currency} chez Scryfall"
+  },
   "rulings": {
     "show": "Afficher les rulings",
     "loading": "Chargement des rulings…",

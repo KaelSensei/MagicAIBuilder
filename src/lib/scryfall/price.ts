@@ -23,11 +23,15 @@
 const SCRYFALL_PRICE = /^\d+(?:\.\d+)?$/;
 
 /**
- * The card fields `priceUsdOf` reads. Structural on purpose: both the wire
- * type (`ScryfallCard`) and the Zod-parsed card (`ParsedScryfallCard`) fit.
+ * The card fields `priceUsdOf` and `priceEurOf` read. Structural on purpose:
+ * both the wire type (`ScryfallCard`) and the Zod-parsed card
+ * (`ParsedScryfallCard`) fit.
  */
 export interface PricedCard {
-  readonly prices?: { readonly usd?: string | null } | null;
+  readonly prices?: {
+    readonly usd?: string | null;
+    readonly eur?: string | null;
+  } | null;
 }
 
 /**
@@ -70,4 +74,19 @@ function toScryfallAmount(raw: string | null | undefined): number | null {
  */
 export function priceUsdOf(card: PricedCard): number | null {
   return toUsdPrice(card.prices?.usd);
+}
+
+/**
+ * The non-foil euro amount Scryfall sent for a card, as a number of euros.
+ *
+ * I-96: the euro amount is Scryfall's own `prices.eur` figure, shown beside
+ * the dollar one. It is never derived from `prices.usd`, and the
+ * dollar amount is never derived from it: a card Scryfall sent without a
+ * euro amount has none here. The string is read by the same rule as
+ * `toUsdPrice`, since Scryfall writes both currencies the same way.
+ *
+ * @param card - a card as Scryfall sent it, parsed or not
+ */
+export function priceEurOf(card: PricedCard): number | null {
+  return toScryfallAmount(card.prices?.eur);
 }

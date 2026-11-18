@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { fireEvent, screen } from "@testing-library/react";
+import { fireEvent, screen, within } from "@testing-library/react";
 
 import { aScryfallCard } from "@/test/builders/scryfall";
 import { renderWithIntl, type TestLocale } from "@/test/render-with-intl";
@@ -88,6 +88,41 @@ describe("PrintingSelectorModal", () => {
     renderModal(makeCard({ prices: { usd: "12.50" } }), () => {}, "fr");
 
     expect(screen.getByText(/12,50\s+USD/u)).toBeDefined();
+  });
+
+  describe("Scryfall's two prices (I-96)", () => {
+    it("shows the dollar and the euro amount side by side, each named as Scryfall's", () => {
+      renderModal(makeCard({ prices: { usd: "12.50", eur: "11.20" } }));
+
+      const prices = within(screen.getByRole("region", { name: "Scryfall prices" }));
+      expect(prices.getByText(/^USD\s12\.50$/u)).toBeDefined();
+      expect(prices.getByText(/^EUR\s11\.20$/u)).toBeDefined();
+    });
+
+    it("says Scryfall sent no euro amount instead of showing a zero or a converted one", () => {
+      renderModal(makeCard({ prices: { usd: "12.50", eur: null } }));
+
+      const prices = within(screen.getByRole("region", { name: "Scryfall prices" }));
+      expect(prices.getByText(/^USD\s12\.50$/u)).toBeDefined();
+      expect(prices.getByText("No EUR from Scryfall")).toBeDefined();
+      expect(prices.queryByText(/EUR\s\d/u)).toBeNull();
+    });
+
+    it("says which amount is missing when Scryfall sent neither", () => {
+      renderModal(makeCard({ prices: { usd: null, eur: null } }));
+
+      const prices = within(screen.getByRole("region", { name: "Scryfall prices" }));
+      expect(prices.getByText("No USD from Scryfall")).toBeDefined();
+      expect(prices.getByText("No EUR from Scryfall")).toBeDefined();
+    });
+
+    it("uses the French catalogue strings and number format in French", () => {
+      renderModal(makeCard({ prices: { usd: null, eur: "11.20" } }), () => {}, "fr");
+
+      const prices = within(screen.getByRole("region", { name: "Prix Scryfall" }));
+      expect(prices.getByText(/^11,20\sEUR$/u)).toBeDefined();
+      expect(prices.getByText("Aucun prix en USD chez Scryfall")).toBeDefined();
+    });
   });
 
   it("shows the printed text when the previewed printing is localised", () => {
