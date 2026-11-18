@@ -201,5 +201,13 @@
     },
     "ascending": "(ascending)",
     "descending": "(descending)"
+  },
+  "rulebreakerAdmission": {
+    "note": "Allowed by {commander}",
+    "reason": {
+      "identity": "{card} is outside your commander's color identity. As your commander, {commander} lets your deck include it in any color (rule 903.5e).",
+      "anyLand": "{card} is outside your commander's color identity. As your commander, {commander} lets your deck include any land, whatever its colors (rule 903.5e).",
+      "anyBasicLand": "{card} is outside your commander's color identity. As your commander, {commander} lets your deck include any basic land, whatever its colors (rule 903.5e)."
+    }
   }
 }

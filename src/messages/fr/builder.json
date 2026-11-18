@@ -201,5 +201,13 @@
     },
     "ascending": "(croissant)",
     "descending": "(décroissant)"
+  },
+  "rulebreakerAdmission": {
+    "note": "Autorisée par {commander}",
+    "reason": {
+      "identity": "{card} est hors de l’identité couleur de votre commandant. En tant que commandant, {commander} permet à votre deck de l’inclure quelle que soit sa couleur (règle 903.5e).",
+      "anyLand": "{card} est hors de l’identité couleur de votre commandant. En tant que commandant, {commander} permet à votre deck d’inclure n’importe quel terrain, quelles que soient ses couleurs (règle 903.5e).",
+      "anyBasicLand": "{card} est hors de l’identité couleur de votre commandant. En tant que commandant, {commander} permet à votre deck d’inclure n’importe quel terrain de base, quelles que soient ses couleurs (règle 903.5e)."
+    }
   }
 }
