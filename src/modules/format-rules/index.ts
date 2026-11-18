@@ -22,9 +22,12 @@ export {
   RULEBREAKERS,
   RULEBREAKERS_SOURCE,
   RULEBREAKERS_VERSION,
+  rulebreakerAdmission,
+  type AdmittingExceptionKind,
   type CommandZoneCard,
   type ConstructionCard,
   type Rulebreaker,
+  type RulebreakerAdmission,
   type RulebreakerCardTest,
   type RulebreakerException,
 } from "@/modules/format-rules/domain/rulebreakers";
