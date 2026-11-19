@@ -285,7 +285,7 @@ describe("characterization: DeckEditor commands", () => {
       expect(screen.queryByText("200/100")).toBeNull();
     });
 
-    // CR 100.2a: a constructed deck holds 60 cards, not Commander's 100.
+    // CR 100.2a: a constructed deck holds at least 60 cards, not Commander's 100.
     it("counts a Standard deck of 60 cards out of 60, as a full deck", () => {
       renderEditor(
         talrandDeck({
@@ -297,7 +297,25 @@ describe("characterization: DeckEditor commands", () => {
       );
 
       const toolbar = screen.getByRole("toolbar", { name: "Deck view" });
-      expect(within(toolbar).getByText("60/60")).toHaveClass("text-green-500");
+      expect(within(toolbar).getByText("60/60+")).toHaveClass("text-green-500");
+    });
+
+    // CR 100.2a: a constructed deck has a minimum size of 60 and no maximum,
+    // so three cards past 60 keep a Modern deck complete, not over.
+    it("announces a 63-card Modern deck as complete, against its 60-card minimum", () => {
+      renderEditor(
+        talrandDeck({
+          format: "modern",
+          commander: null,
+          cards: [{ ...ISLANDS, quantity: 63 }],
+          maybeboard: [],
+        })
+      );
+
+      const toolbar = screen.getByRole("toolbar", { name: "Deck view" });
+      const counter = within(toolbar).getByText("63/60+");
+      expect(counter).toHaveTextContent("63/60+ (complete)");
+      expect(counter).toHaveClass("text-green-500");
     });
 
     // The deck list and the title bar say the deck's state in words; the
@@ -313,8 +331,8 @@ describe("characterization: DeckEditor commands", () => {
       );
 
       const toolbar = screen.getByRole("toolbar", { name: "Deck view" });
-      expect(within(toolbar).getByText("60/60")).toHaveTextContent(
-        "60/60 (complete)"
+      expect(within(toolbar).getByText("60/60+")).toHaveTextContent(
+        "60/60+ (complete)"
       );
     });
 

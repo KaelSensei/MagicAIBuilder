@@ -101,7 +101,7 @@ describe("DeckListTable mana symbols", () => {
 });
 
 describe("DeckListTable card count", () => {
-  // CR 100.2a: a constructed deck holds 60 cards, not Commander's 100.
+  // CR 100.2a: a constructed deck holds at least 60 cards, not Commander's 100.
   it("counts a Standard deck of 60 cards out of 60", () => {
     renderWithProviders(
       <DeckListTable
@@ -121,7 +121,7 @@ describe("DeckListTable card count", () => {
     );
 
     expect(
-      screen.getByRole("cell", { name: "60 / 60 (complete)" })
+      screen.getByRole("cell", { name: "60 / 60+ (complete)" })
     ).toBeInTheDocument();
   });
 

@@ -462,7 +462,7 @@ describe("characterization: builder page shell", () => {
       expect(deckApiLines()).toContain(`POST /api/decks/${DECK_ID}/duplicate`);
     });
 
-    // CR 100.2a: a constructed deck holds 60 cards, not Commander's 100.
+    // CR 100.2a: a constructed deck holds at least 60 cards, not Commander's 100.
     it("counts a Standard deck of 60 cards out of 60 in the title bar and, as a full deck, in the editor", async () => {
       server.use(
         http.get("/api/decks/:id", () =>
@@ -480,9 +480,9 @@ describe("characterization: builder page shell", () => {
       renderBuilder(DECK_ID, PLAYER);
       await screen.findByRole("heading", { level: 1, name: "Talrand Spells" });
 
-      expect(screen.getByText("60 / 60")).toBeInTheDocument();
+      expect(screen.getByText("60 / 60+")).toBeInTheDocument();
       const editorToolbar = screen.getByRole("toolbar", { name: "Deck view" });
-      expect(within(editorToolbar).getByText("60/60")).toHaveClass(
+      expect(within(editorToolbar).getByText("60/60+")).toHaveClass(
         "text-green-500"
       );
     });
