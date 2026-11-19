@@ -23,6 +23,7 @@ import {
 } from "@/lib/ai/fixtures/provider-envelopes-v1";
 import { TALRAND_BUILD_REQUEST } from "@/lib/ai/fixtures/talrand-requests";
 import { logger } from "@/lib/logger";
+import { BLUE_GAME_CHANGERS } from "@/lib/scryfall/fixtures/game-changers-v1";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import {
   modelProviderServes,
@@ -278,6 +279,53 @@ describe("POST /api/ai/build event stream", () => {
       expect(events).toContainEqual({
         type: "status",
         message: "Building card list…",
+      });
+    });
+  });
+
+  describe("the requested bracket", () => {
+    it("removes the Game Changer a Bracket 2 build cannot hold and reports it with the bracket and its limit", async () => {
+      server.use(
+        anthropicAnswers(
+          JSON.stringify({
+            commander: "Talrand, Sky Summoner",
+            partner: null,
+            cards: [
+              { name: "Rhystic Study", quantity: 1, category: "draw" },
+              { name: "Island", quantity: 98, category: "land" },
+            ],
+          })
+        ),
+        scryfallCollectionServes([
+          ...ALL_GENERATED_DECK_CARDS,
+          ...BLUE_GAME_CHANGERS,
+        ])
+      );
+
+      const events = await readNdjsonEvents(
+        await POST(buildRequest({ ...TALRAND_BUILD_REQUEST, bracket: 2 }))
+      );
+
+      expect(events.at(-1)).toEqual({
+        type: "done",
+        totalCards: 99,
+        source: "ai",
+        corrections: [
+          {
+            action: "removed",
+            name: "Rhystic Study",
+            quantity: 1,
+            reason: "game_changer",
+            bracket: 2,
+            limit: 0,
+          },
+          {
+            action: "added",
+            name: "Island",
+            quantity: 1,
+            reason: "fill_to_size",
+          },
+        ],
       });
     });
   });
