@@ -133,7 +133,6 @@ export interface PlaytestEngine {
   // Life
   readonly lifeTotal: number;
   readonly lifeHistory: readonly LifeHistoryEntry[];
-  readonly isGameOver: boolean;
 
   // Zones
   readonly hand: readonly DeckCard[];
