@@ -90,13 +90,13 @@ const GIADA = aDeckCard({
   category: "commander",
 });
 
-/** Opens `deck` in the store, in the list view, and renders the editor on it. */
-function renderList(deck: Deck, locale: TestLocale = "en") {
+/** Opens `deck` in the store, in `view`, and renders the editor on it. */
+function renderEditor(deck: Deck, view: "list" | "grid", locale: TestLocale) {
   useDeckStore.setState({
     decks: { [deck.id]: deck },
     activeDeckId: deck.id,
     isSyncing: false,
-    deckViewMode: "list",
+    deckViewMode: view,
   });
   renderWithProviders(
     <DndContext>
@@ -104,6 +104,16 @@ function renderList(deck: Deck, locale: TestLocale = "en") {
     </DndContext>,
     { locale }
   );
+}
+
+/** Renders the editor on `deck` in the list view. */
+function renderList(deck: Deck, locale: TestLocale = "en") {
+  renderEditor(deck, "list", locale);
+}
+
+/** Renders the editor on `deck` in the grid view, in English. */
+function renderGrid(deck: Deck) {
+  renderEditor(deck, "grid", "en");
 }
 
 beforeEach(() => {
@@ -206,5 +216,73 @@ describe("the editor list names the rulebreaker that admits an off-identity card
     ).toHaveAccessibleDescription(
       "Fallen Angel est hors de l’identité couleur de votre commandant. En tant que commandant, Seluma, Light of Aysen permet à votre deck de l’inclure quelle que soit sa couleur (règle 903.5e)."
     );
+  });
+});
+
+describe("the editor grid names the rulebreaker that admits an off-identity card", () => {
+  setupMsw(
+    http.get("/api/cache/search", () =>
+      HttpResponse.json({ hit: true, data: EMPTY_SEARCH_RESPONSE })
+    )
+  );
+
+  it("shows 'Allowed by Seluma, Light of Aysen' on a mono-black Angel's tile, with the rule in plain words", () => {
+    renderGrid(
+      aDeck({ commander: asCommander(seluma), cards: [FALLEN_ANGEL] })
+    );
+
+    const note = screen.getByText("Allowed by Seluma, Light of Aysen");
+    expect(note).toHaveAccessibleName("Allowed by Seluma, Light of Aysen");
+    expect(note).toHaveAccessibleDescription(
+      "Fallen Angel is outside your commander's color identity. As your commander, Seluma, Light of Aysen lets your deck include it in any color (rule 903.5e)."
+    );
+  });
+
+  it("opens the reason from the keyboard-reachable note, which sits in no button of the tile", async () => {
+    renderGrid(
+      aDeck({ commander: asCommander(seluma), cards: [FALLEN_ANGEL] })
+    );
+    const tile = screen.getByRole("button", {
+      name: "Remove Fallen Angel",
+    }).parentElement;
+    const note = screen.getByText("Allowed by Seluma, Light of Aysen");
+    const reason = screen.getByRole("note", { hidden: true });
+
+    expect(tile).toContainElement(note);
+    expect(note.closest("button")).toBeNull();
+    act(() => note.focus());
+    expect(note).toHaveFocus();
+    expect(reason).not.toBeVisible();
+
+    await userEvent.click(note);
+
+    expect(reason).toBeVisible();
+  });
+
+  it("shows no note on a tile whose card the commander's colours already allow", () => {
+    renderGrid(
+      aDeck({
+        commander: asCommander(seluma),
+        cards: [FALLEN_ANGEL, SERRA_ANGEL, PLAINS],
+      })
+    );
+
+    expect(screen.getAllByText(/^Allowed by/)).toHaveLength(1);
+  });
+
+  it("shows no note under a commander that is no rulebreaker, even with Seluma in the 99", () => {
+    const selumaInThe99 = {
+      ...asCommander(seluma),
+      id: "seluma-99",
+      category: "creature" as const,
+    };
+    renderGrid(
+      aDeck({ commander: GIADA, cards: [selumaInThe99, FALLEN_ANGEL, SWAMP] })
+    );
+
+    expect(
+      screen.getByRole("button", { name: "Remove Fallen Angel" })
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/^Allowed by/)).not.toBeInTheDocument();
   });
 });
