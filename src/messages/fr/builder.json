@@ -30,7 +30,23 @@
     "targetBracketOption": "Bracket {level} : {name}",
     "budget": "Budget par carte",
     "budgetHint": "En dollars US. Laissez le champ vide pour ne fixer aucune limite.",
-    "budgetInvalid": "Saisissez un montant supérieur à zéro, ou laissez le champ vide pour ne fixer aucune limite."
+    "budgetInvalid": "Saisissez un montant supérieur à zéro, ou laissez le champ vide pour ne fixer aucune limite.",
+    "format": "Format",
+    "formatSaveFailed": "Le format n’a pas pu être enregistré. Le deck est revenu en {format}.",
+    "formatSwitch": {
+      "title": "Passer en {format} ?",
+      "size": "Taille du deck : {count}, {state}",
+      "copies": "Plus d’exemplaires que {format} n’en autorise : {cards}",
+      "copyItem": "{name} ({copies}, {limit, plural, one {# autorisé} other {# autorisés}})",
+      "colorIdentity": "Hors de l’identité couleur du commandant : {cards}",
+      "banned": "Bannies en {format} : {cards}",
+      "banListLoading": "Vérification de la liste des cartes bannies en {format}…",
+      "banListFailed": "La liste des cartes bannies en {format} n’a pas pu être chargée : les cartes bannies ne sont pas listées.",
+      "nothingBreaks": "Rien ne casse : en {format}, le deck respecte déjà toutes les règles.",
+      "keepsCards": "Aucune carte n’est retirée. L’éditeur continue de signaler ces problèmes jusqu’à ce que vous les corrigiez.",
+      "confirm": "Passer en {format}",
+      "cancel": "Annuler"
+    }
   },
   "searchCommander": "Recherchez un commandant ci-dessus",
   "searchPartner": "Recherchez un {partnerLabel}",

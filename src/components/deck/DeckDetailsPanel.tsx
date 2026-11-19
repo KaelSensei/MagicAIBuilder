@@ -9,6 +9,9 @@
  * save. These actions were tested but had no reachable UI until owner decision
  * OD-01 (2026-11-10) brought them back.
  *
+ * The format picker (I-42 slice 1) reads the whole deck: before a switch is
+ * saved it lists what the cards would break under the new format.
+ *
  * Not responsible for: the manual bracket override, which lives in
  * `BracketIndicator`.
  *
@@ -21,22 +24,18 @@ import { useDeckStore } from "@/lib/deck/store";
 import type { Deck } from "@/lib/deck/types";
 import { DeckBudgetInput } from "./DeckBudgetInput";
 import { DeckDescriptionEditor } from "./DeckDescriptionEditor";
+import { DeckFormatPicker } from "./DeckFormatPicker";
 import { DeckTagsEditor } from "./DeckTagsEditor";
 import { DeckTargetBracketPicker } from "./DeckTargetBracketPicker";
-
-/** The deck fields this panel shows and edits. */
-export type DeckDetails = Pick<
-  Deck,
-  "id" | "format" | "description" | "tags" | "targetBracket" | "budget"
->;
 
 interface DeckDetailsPanelProps {
   /**
    * The store's active deck, as the store holds it: a failed save then shows
-   * the restored value. It must be the active deck because `setTargetBracket`
-   * and `setBudget` write to the active deck rather than to a deck id.
+   * the restored value. It must be the active deck because `setTargetBracket`,
+   * `setBudget` and `setFormat` write to the active deck rather than to a deck
+   * id.
    */
-  readonly deck: DeckDetails;
+  readonly deck: Deck;
 }
 
 /** Shows and edits the details of one deck. */
@@ -57,6 +56,7 @@ export function DeckDetailsPanel({ deck }: DeckDetailsPanelProps) {
       >
         {t("title")}
       </h2>
+      <DeckFormatPicker deck={deck} />
       <DeckDescriptionEditor deckId={deck.id} description={deck.description} />
       <DeckTagsEditor deckId={deck.id} tags={deck.tags} />
       {/* Brackets are a Commander scale; the other formats have none. */}

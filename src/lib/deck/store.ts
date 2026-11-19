@@ -10,6 +10,7 @@ import type {
   CardCategory,
   PrintingChoice,
 } from "./types";
+import type { DeckFormat } from "./formats";
 import { loadSortPreference, saveSortPreference } from "./sort";
 import type { SortField, SortDirection, GroupBy, SortPreference } from "./sort";
 import { detectPairingType, pairCommanders } from "./pairing";
@@ -287,6 +288,7 @@ const pendingCategoryWrites = new Map<string, PendingCategoryWrite>();
 
 let pendingManualBracketWrites = 0;
 let pendingBudgetWrites = 0;
+let pendingFormatWrites = 0;
 let pendingBulkRemovals = 0;
 let pendingCardAdditionsAndRemovals = 0;
 let pendingRenameWrites = 0;
@@ -439,6 +441,7 @@ function hasPendingSaves(): boolean {
     pendingCategoryWrites.size > 0 ||
     pendingManualBracketWrites > 0 ||
     pendingBudgetWrites > 0 ||
+    pendingFormatWrites > 0 ||
     pendingBulkRemovals > 0 ||
     pendingCardAdditionsAndRemovals > 0 ||
     pendingRenameWrites > 0
@@ -579,6 +582,16 @@ export interface DeckStore {
   setTargetBracket: (bracket: BracketLevel) => Promise<void>;
   setManualBracket: (bracket: BracketLevel | null) => Promise<void>;
   setBudget: (budget: number | null) => Promise<void>;
+  /**
+   * Switches the active deck to `format` and keeps every card (I-42
+   * requirement 4.2). Optimistic, as `setBudget`: a failed save puts the
+   * previous format back. A guest deck keeps the format in this browser.
+   *
+   * @param format - The format to switch to
+   * @returns true once saved; false when there was no deck to switch or the
+   *   save failed and the previous format is back
+   */
+  setFormat: (format: DeckFormat) => Promise<boolean>;
 
   // Computed getters
   getActiveDeck: () => Deck | null;
@@ -732,6 +745,56 @@ function commanderCardOf(
 interface StoreAccess {
   readonly set: StoreApi<DeckStore>["setState"];
   readonly get: () => DeckStore;
+}
+
+/** A format save: the format written, and the one to restore if it fails. */
+interface FormatChange {
+  readonly deckId: string;
+  readonly attempted: DeckFormat;
+  readonly previous: DeckFormat;
+}
+
+/**
+ * Puts the previous format back on a deck whose format save failed, unless a
+ * later switch has already replaced the attempted one.
+ */
+function restoreFormat(
+  set: StoreAccess["set"],
+  { deckId, attempted, previous }: FormatChange
+): void {
+  set((state) => {
+    const deck = state.decks[deckId];
+    if (deck?.format !== attempted) return state;
+    return {
+      decks: { ...state.decks, [deckId]: { ...deck, format: previous } },
+    };
+  });
+}
+
+/**
+ * Saves a format the store already shows, and restores the previous one when
+ * the save fails. The cards are never touched: a switch only re-reads them
+ * (I-42 requirement 4.2).
+ *
+ * @returns true once the server, or this browser for a guest deck, holds it
+ */
+async function saveFormat(
+  { set }: StoreAccess,
+  change: FormatChange
+): Promise<boolean> {
+  pendingFormatWrites += 1;
+  set({ isSyncing: true });
+  try {
+    await deckApi.updateDeck(change.deckId, { format: change.attempted });
+    return true;
+  } catch (err) {
+    logger.error("Unexpected error", "setFormat", err);
+    restoreFormat(set, change);
+    return false;
+  } finally {
+    pendingFormatWrites -= 1;
+    set({ isSyncing: hasPendingSaves() });
+  }
 }
 
 /** A commander to seat, and the deck-list card it was promoted from, if any. */
@@ -2475,6 +2538,23 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       pendingBudgetWrites -= 1;
       set({ isSyncing: hasPendingSaves() });
     }
+  },
+
+  setFormat: async (format) => {
+    const { activeDeckId } = get();
+    const deck = activeDeckId ? get().decks[activeDeckId] : undefined;
+    if (!activeDeckId || !deck) return false;
+
+    set((state) => ({
+      decks: {
+        ...state.decks,
+        [activeDeckId]: { ...deck, format, updatedAt: new Date() },
+      },
+    }));
+    return saveFormat(
+      { set, get },
+      { deckId: activeDeckId, attempted: format, previous: deck.format }
+    );
   },
 
   addToMaybeboard: async (card: ScryfallCard) => {
