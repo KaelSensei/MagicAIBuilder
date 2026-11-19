@@ -18,6 +18,10 @@
   "printingsAvailable": "{count, plural, one {# printing available} other {# printings available}}",
   "ownedPrintingsOnly": "Owned only",
   "noOwnedPrintings": "No owned printings for this card.",
+  "scryfallPrices": {
+    "label": "Scryfall prices",
+    "missing": "No {currency} from Scryfall"
+  },
   "rulings": {
     "show": "Show rulings",
     "loading": "Loading rulings…",
