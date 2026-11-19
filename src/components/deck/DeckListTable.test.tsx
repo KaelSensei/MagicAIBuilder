@@ -2,6 +2,8 @@ import React from "react";
 import { screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { Deck, DeckCard } from "@/lib/deck/types";
+import { aDeckCard } from "@/test/builders/card";
+import { aDeck } from "@/test/builders/deck";
 import { renderWithProviders } from "@/test/render";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { DeckListTable } from "./DeckListTable";
@@ -118,7 +120,9 @@ describe("DeckListTable card count", () => {
       />
     );
 
-    expect(screen.getByRole("cell", { name: "60 / 60" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("cell", { name: "60 / 60 (complete)" })
+    ).toBeInTheDocument();
   });
 
   it("counts a Commander deck out of 100", () => {
@@ -132,6 +136,34 @@ describe("DeckListTable card count", () => {
       />
     );
 
-    expect(screen.getByRole("cell", { name: "100 / 100" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("cell", { name: "100 / 100 (complete)" })
+    ).toBeInTheDocument();
+  });
+});
+
+// A finished deck looked the same as an unfinished one in the list: the count
+// now says, in words, whether the deck meets its size rule (CR 903.5a, 100.2a).
+describe("DeckListTable deck size state", () => {
+  function renderDeckList(deck: Deck): void {
+    renderWithProviders(
+      <DeckListTable
+        decks={[deck]}
+        deletingId={null}
+        duplicatingId={null}
+        onDelete={vi.fn()}
+        onDuplicate={vi.fn()}
+      />
+    );
+  }
+
+  it("announces a 100-card Commander deck in the deck list as complete", () => {
+    renderDeckList(
+      aDeck({ commander: aDeckCard({ name: "Talrand, Sky Summoner" }), cardCount: 100 })
+    );
+
+    expect(
+      screen.getByRole("cell", { name: "100 / 100 (complete)" })
+    ).toBeInTheDocument();
   });
 });

@@ -175,6 +175,11 @@
     "updated": "Updated",
     "actions": "Actions"
   },
+  "sizeState": {
+    "complete": "complete",
+    "short": "{count, plural, one {# card short} other {# cards short}}",
+    "over": "{count, plural, one {# card over} other {# cards over}}"
+  },
   "export": {
     "title": "Export Options",
     "deckList": "Deck List — {count} cards",
