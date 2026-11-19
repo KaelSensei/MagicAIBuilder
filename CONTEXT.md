@@ -135,7 +135,8 @@ Decks and their contents. Context folder: `deck-building`. Today: most of `lib/d
 ## Deck analysis
 
 Read-only evaluation of a decklist. Context folder: `deck-analysis`. Today:
-`lib/deck/{stats,bracket,explain-bracket,bracket-assessment,bracket-terms,bracket-card-placement,mana-alignment,mana-base-tables,source-targets,turn-one,draw-odds,draw-odds-library,cards-drawn,themes,theme-match,theme-coverage,format-stats,commander-rules-check,player-stats}.ts`.
+`lib/deck/{stats,bracket,explain-bracket,bracket-assessment,bracket-terms,bracket-card-placement,mana-alignment,mana-base-tables,source-targets,turn-one,draw-odds,draw-odds-library,cards-drawn,themes,theme-match,theme-coverage,format-stats,commander-rules-check,player-stats}.ts`,
+and Deck Lab in `lib/deck-lab/`.
 
 | Term                      | Meaning                                                                                                                                                                                              | Source                          | Code today                                                                                |
 | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- | ----------------------------------------------------------------------------------------- |
@@ -164,6 +165,9 @@ Read-only evaluation of a decklist. Context folder: `deck-analysis`. Today:
 | **Format stats**          | For formats without brackets: curve, threat density and interaction ratio, against heuristic bands.                                                                                                  | Product                         | `FormatStats`, `buildFormatStats` in `lib/deck/format-stats.ts`                           |
 | **Active deck**           | A deck the player still has that was created, snapshotted or saved again within a window. The denominator of the player's statistics.                                                                | I-60                            | `PlayerStats.activeDeckIds` in `lib/deck/player-stats.ts`                                 |
 | **Player stats**          | Counts across the player's own active decks: formats, colours, commanders, cards used most and shared, brackets, decks added and changed. Each figure lists the decks behind it.                     | I-60                            | `countPlayerStats`, `PlayerStats` in `lib/deck/player-stats.ts`                           |
+| **Lab card**              | One copy of a card as Deck Lab plays it: its lab kind, cost, coloured pips, the mana it makes and the rule that classified it. The player can override its fields per deck.                          | I-31 requirement 2              | `LabCard` in `lib/deck-lab/types.ts`, `classifyDeck` in `lib/deck-lab/classify-deck.ts`   |
+| **Lab kind**              | What the goldfish model does with a card: untapped or tapped land, fetch land, MDFC, rock, dork, land ramp, burst draw, draw engine or spell. A card no rule matches is a spell.                     | I-31; research model            | `LabKind`, `LAB_KINDS` in `lib/deck-lab/types.ts`                                         |
+| **Classification rule**   | The rule that gave a lab card its kind, shown next to it, such as `fetch-land` or `spell-fallback`. An override keeps it.                                                                            | I-31 requirement 2.2            | `LabRuleId` in `lib/deck-lab/types.ts`                                                    |
 
 ## Playtest
 
