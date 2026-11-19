@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
+  copiesWithinLimit,
   oracleAllowsMultiples,
   maxQuantity,
   CAPPED_MULTIPLES,
@@ -79,5 +80,27 @@ describe("maxQuantity", () => {
   it("returns 1 for regular cards", () => {
     expect(maxQuantity("Sol Ring", "Artifact", "")).toBe(1);
     expect(maxQuantity("Counterspell", "Instant", "Counter target spell.")).toBe(1);
+  });
+});
+
+describe("copiesWithinLimit", () => {
+  it("keeps the copies asked for when the limit allows them", () => {
+    expect(copiesWithinLimit(3, 4)).toBe(3);
+  });
+
+  it("lowers the copies asked for to the limit", () => {
+    expect(copiesWithinLimit(3, 1)).toBe(1);
+  });
+
+  it("writes one copy when none, zero or fewer are asked for", () => {
+    const asked = [undefined, 0, -2];
+
+    expect(asked.map((requested) => copiesWithinLimit(requested, 4))).toEqual([
+      1, 1, 1,
+    ]);
+  });
+
+  it("keeps any number under a limit that caps nothing", () => {
+    expect(copiesWithinLimit(250, Number.POSITIVE_INFINITY)).toBe(250);
   });
 });
