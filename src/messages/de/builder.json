@@ -35,7 +35,23 @@
     "targetBracketOption": "Bracket {level}: {name}",
     "budget": "Budget per card",
     "budgetHint": "In US dollars. Leave the field empty for no limit.",
-    "budgetInvalid": "Enter an amount above zero, or leave the field empty for no limit."
+    "budgetInvalid": "Enter an amount above zero, or leave the field empty for no limit.",
+    "format": "Format",
+    "formatSaveFailed": "The format could not be saved. The deck is back to {format}.",
+    "formatSwitch": {
+      "title": "Switch to {format}?",
+      "size": "Deck size: {count}, {state}",
+      "copies": "More copies than {format} allows: {cards}",
+      "copyItem": "{name} ({copies}, {limit} allowed)",
+      "colorIdentity": "Outside the commander's color identity: {cards}",
+      "banned": "Banned in {format}: {cards}",
+      "banListLoading": "Checking the {format} ban list…",
+      "banListFailed": "The {format} ban list could not be loaded, so banned cards are not listed.",
+      "nothingBreaks": "Nothing breaks: the deck already follows the rules of {format}.",
+      "keepsCards": "No card is removed. The editor keeps reporting these problems until you fix them.",
+      "confirm": "Switch to {format}",
+      "cancel": "Cancel"
+    }
   },
   "searchCommander": "Search for a commander above",
   "searchPartner": "Search for a {partnerLabel}",

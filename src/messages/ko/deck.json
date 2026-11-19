@@ -92,6 +92,7 @@
     "createDeck": "Create Deck",
     "newDeck": "New Deck",
     "newDeckName": "New Deck {index}",
+    "newDeckFormat": "New deck format",
     "deleteConfirm": "Delete this deck? This cannot be undone.",
     "loadFailedTitle": "덱을 불러오지 못했습니다",
     "loadFailedDescription": "서버가 요청을 거부하여 이 목록이 불완전할 수 있습니다. 덱은 사라지지 않았습니다 — 잠시 후 다시 시도하세요.",
@@ -900,5 +901,22 @@
   },
   "sync": {
     "conflictReloaded": "This deck was changed elsewhere (another tab or device). It has been reloaded; redo your last change if you still want it."
+  },
+  "format": {
+    "name": {
+      "commander": "Commander",
+      "brawl": "Brawl",
+      "oathbreaker": "Oathbreaker",
+      "standard": "Standard",
+      "pioneer": "Pioneer",
+      "modern": "Modern",
+      "legacy": "Legacy",
+      "vintage": "Vintage",
+      "pauper": "Pauper"
+    },
+    "group": {
+      "commanderVariants": "Commander variants",
+      "constructed": "Constructed formats"
+    }
   }
 }
