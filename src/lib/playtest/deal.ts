@@ -6,7 +6,8 @@
  * (CR 903.6), and the session rules the table size decides: the starting life total
  * (CR 103.4c, 903.12f), the free first mulligan (CR 103.5c) and the first-turn draw
  * (CR 103.8a, 103.8c). `dealFrom` shuffles that setup and draws the opening hand of seven
- * (CR 103.5, 903.7) through the engine's `createPlaytestState`. The store keeps the setup so a
+ * (CR 103.5, 903.7) through the engine's `createPlaytestState`. It also settles how many
+ * imagined opponents the commander-damage tally offers (CR 903.10a, 903.12h). The store keeps the setup so a
  * reset deals the same deck again, with the choices the session started with.
  *
  * Pure: the shuffle's random source comes in through `deps`, so a test deals a replayable
@@ -18,9 +19,9 @@
  */
 
 import type { Deck, DeckCard } from "@/lib/deck/types";
-import { getFormatConfig } from "@/lib/deck/formats";
+import { getFormatConfig, type DeckFormat } from "@/lib/deck/formats";
 import type { PlaytestDeps, PlaytestEngine } from "./engine";
-import { createPlaytestState } from "./engine";
+import { createPlaytestState, MAX_IMAGINED_OPPONENTS } from "./engine";
 import { isFirstMulliganFree, isMultiplayerByDefault } from "./free-mulligan";
 
 /** The deck as dealt at the start, so a reset does not depend on live zones. */
@@ -38,6 +39,23 @@ export interface PlaytestSetup {
   readonly multiplayer: boolean;
   /** Settled when the session starts, so a restart keeps the player's choice. */
   readonly firstMulliganFree: boolean;
+  /** The imagined opponents the commander-damage tally offers; 0 when the format has none. */
+  readonly commanderDamageOpponents: number;
+}
+
+/**
+ * How many imagined opponents the commander-damage tally offers in a game of `format`.
+ *
+ * Only Commander uses the 21-damage rule (CR 903.10a, 704.6c): Brawl does not (CR 903.12h), and
+ * neither Oathbreaker nor the constructed formats are in CR 903.10. A duel has one opponent; a
+ * multiplayer table offers `MAX_IMAGINED_OPPONENTS`, since the app stores no pod size.
+ */
+function commanderDamageOpponents(
+  format: DeckFormat,
+  multiplayer: boolean
+): number {
+  if (format !== "commander") return 0;
+  return multiplayer ? MAX_IMAGINED_OPPONENTS : 1;
 }
 
 /** What the player chooses before the opening hand is dealt. */
@@ -96,7 +114,15 @@ export function buildSetup(
     ? lifeByTable.multiplayer
     : lifeByTable.twoPlayer;
   const firstMulliganFree = isFirstMulliganFree(deck.format, multiplayer);
-  const rules = { startingLife, multiplayer, firstMulliganFree };
+  const rules = {
+    startingLife,
+    multiplayer,
+    firstMulliganFree,
+    commanderDamageOpponents: commanderDamageOpponents(
+      deck.format,
+      multiplayer
+    ),
+  };
   const commanders = [deck.commander, deck.partner].filter(
     (card): card is DeckCard => card !== null
   );
@@ -130,6 +156,7 @@ export function dealFrom(
       lifeTotal: setup.startingLife,
       multiplayer: setup.multiplayer,
       firstMulliganFree: setup.firstMulliganFree,
+      commanderDamageOpponents: setup.commanderDamageOpponents,
       commandZone: setup.commandZone,
     },
     deps
