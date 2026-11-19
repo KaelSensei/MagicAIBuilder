@@ -1,5 +1,8 @@
 import { sanitizeForPrompt } from "@/lib/validation/ai";
-import type { SessionDifficulty, SessionResult } from "./session-enums";
+import type {
+  SessionDifficulty,
+  SessionResult,
+} from "@/lib/playtest/session-enums";
 
 const MAX_AI_EVIDENCE_TEXT_LENGTH = 500;
 
