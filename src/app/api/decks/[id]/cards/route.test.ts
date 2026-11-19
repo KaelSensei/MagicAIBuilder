@@ -52,13 +52,16 @@ function signedInAsOwner(): void {
   mockUserFindUnique.mockResolvedValue({ id: OWNER, name: "Owner", email: "o@test.com", image: null });
 }
 
-/** The ownership lookup runs first; the command-slot lookup follows it. */
+/**
+ * The ownership lookup runs first and also reads the copy limit's facts (the
+ * format and the command zone's names); the command-slot lookup follows it.
+ */
 function deckWithSlots(slots: { commanderId: string | null; partnerId: string | null }): void {
-  mockDeckFindUnique.mockImplementation(({ select }: { select: Record<string, boolean> }) =>
+  mockDeckFindUnique.mockImplementation(({ select }: { select: Record<string, unknown> }) =>
     Promise.resolve(
       select.commanderId === true
         ? slots
-        : { id: "deck-1", userId: OWNER }
+        : { id: "deck-1", userId: OWNER, format: "commander", cards: [] }
     )
   );
 }
