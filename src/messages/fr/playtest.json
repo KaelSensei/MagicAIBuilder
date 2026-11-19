@@ -82,6 +82,16 @@
     "castCard": "Lancer {name}",
     "empty": "Vide. Renvoyez votre commandant depuis le cimetière ou l'exil."
   },
+  "commanderDamage": {
+    "title": "Blessures de commandant",
+    "hint": "Note les blessures de combat que chacun de tes commandants inflige à chaque adversaire imaginaire. 21 blessures d’un même commandant lui font perdre la partie.",
+    "amount": "Blessures de combat",
+    "opponent": "Adversaire {number}",
+    "fromCommander": "{damage} de {commander}",
+    "record": "Enregistrer",
+    "recordFrom": "Enregistrer les blessures de {commander} infligées à l’adversaire {number}",
+    "lost": "A perdu par blessures de commandant (CR 903.10a, CR 704.6c)"
+  },
   "dice": {
     "title": "Dés",
     "roll": "Lancer un d{sides}",

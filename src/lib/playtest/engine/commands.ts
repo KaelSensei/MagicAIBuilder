@@ -31,6 +31,10 @@ import {
   applyTap,
   applyUntapAll,
 } from "./battlefield";
+import {
+  applyCommanderDamage,
+  type CommanderDamageHit,
+} from "./commander-damage";
 import { applyRollDie } from "./dice";
 import { applyUndo } from "./history";
 import { applyDamage, applyHeal } from "./life";
@@ -64,6 +68,11 @@ export type PlaytestCommand =
     }
   /** Gain `amount` life (CR 119.3). */
   | { readonly type: "heal"; readonly amount: number }
+  /**
+   * Record `amount` combat damage from one commander to one imagined opponent (CR 903.10a);
+   * the player's own life does not change.
+   */
+  | ({ readonly type: "commanderDamage" } & CommanderDamageHit)
   /** Toggle one permanent between tapped and untapped. */
   | { readonly type: "tap"; readonly cardId: string }
   /** Untap every permanent at once (CR 502.3). */
@@ -160,6 +169,8 @@ export function reducePlaytest(
       return applyDamage(state, command.amount, command.description, deps);
     case "heal":
       return applyHeal(state, command.amount, deps);
+    case "commanderDamage":
+      return applyCommanderDamage(state, command, deps);
     case "tap":
       return applyTap(state, command.cardId, deps);
     case "untapAll":
