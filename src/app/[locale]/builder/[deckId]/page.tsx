@@ -62,7 +62,7 @@ import {
 import { SetAutocomplete } from "@/components/search/SetAutocomplete";
 import type { SearchFilters as Filters } from "@/lib/scryfall/search-types";
 import type { DeckCard, CardCategory, DeckZone } from "@/lib/deck/types";
-import type { DeckFormat } from "@/lib/deck/formats";
+import { getFormatConfig, type DeckFormat } from "@/lib/deck/formats";
 import type { PairingCard } from "@/lib/deck/partner-abilities";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 
@@ -165,7 +165,7 @@ function descriptionSearchIsActive(describing: boolean, allowed: boolean): boole
 
 /** Build Scryfall search query based on current mode and filters */
 function buildSearchQueryFromMode(p: BuildSearchQueryFromModeParams): string {
-  const fmt = p.format ?? "commander";
+  const legality = getFormatConfig(p.format ?? "commander").scryfallLegality;
   if (p.commanderMode) {
     return buildCommanderSearchQuery(p.searchText, p.filters);
   }
@@ -174,23 +174,23 @@ function buildSearchQueryFromMode(p: BuildSearchQueryFromModeParams): string {
       p.deckCommander,
       p.searchText,
       p.filters,
-      fmt
+      legality
     );
   }
   if (p.companionMode) {
-    return buildCompanionSearchQuery(p.searchText, p.filters, fmt);
+    return buildCompanionSearchQuery(p.searchText, p.filters, legality);
   }
   switch (p.mode) {
     case "set":
       return p.selectedSet
-        ? buildSetSearchQuery(p.selectedSet, p.colorFilter, fmt)
+        ? buildSetSearchQuery(p.selectedSet, p.colorFilter, legality)
         : "";
     case "color":
       return p.colorFilter.length > 0 || p.searchText
-        ? buildColorSearchQuery(p.colorFilter, p.searchText, false, fmt)
+        ? buildColorSearchQuery(p.colorFilter, p.searchText, false, legality)
         : "";
     default:
-      return buildSearchQuery(p.searchText, p.filters, fmt);
+      return buildSearchQuery(p.searchText, p.filters, legality);
   }
 }
 

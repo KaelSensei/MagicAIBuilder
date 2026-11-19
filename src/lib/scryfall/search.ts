@@ -1,12 +1,24 @@
-// Scryfall search query builder
+/**
+ * Scryfall query builders: they turn the player's search text, filters and mode into one
+ * Scryfall query-language string (https://scryfall.com/docs/syntax).
+ *
+ * Context: Card catalog. Builders that scope results to a format take Scryfall's legality key
+ * (the value of `legal:`), not the app's `DeckFormat`: the caller maps its format with
+ * `getFormatConfig(format).scryfallLegality`, so the catalog does not read the deck formats.
+ * The partner search still reads the commander pairing rules from `lib/deck/pairing`.
+ */
 import type { ColorMode, InteractionType, SearchFilters } from "./search-types";
-import { getFormatConfig } from "@/lib/deck/formats";
-import type { DeckFormat } from "@/lib/deck/formats";
 import {
   partnerRequirements,
   type PartnerRequirement,
 } from "@/lib/deck/pairing";
 import type { PairingCard } from "@/lib/deck/partner-abilities";
+
+/**
+ * The legality key a builder uses when its caller passes none: Commander's, the app's default
+ * format. It equals `getFormatConfig("commander").scryfallLegality`.
+ */
+const DEFAULT_LEGALITY = "commander";
 
 // ─── Interaction helpers ──────────────────────────────────────────────────────
 
@@ -160,12 +172,15 @@ function freeTextTerm(value: string): string | null {
  *  - toughnessMin/Max     → tou>=N / tou<=N
  *  - interactionType      → oracle-text fragments (see buildInteractionQuery)
  *
- * Appends `legal:{format}` to scope results to format-legal cards.
+ * Appends `legal:{legality}` to scope results to format-legal cards.
+ *
+ * @param legality - Scryfall's legality key for the deck's format, such as `commander` or
+ *   `brawl` (`getFormatConfig(format).scryfallLegality`)
  */
 export function buildSearchQuery(
   text: string,
   filters: Partial<SearchFilters> = {},
-  format: DeckFormat = "commander"
+  legality: string = DEFAULT_LEGALITY
 ): string {
   const parts: string[] = [];
 
@@ -201,7 +216,7 @@ export function buildSearchQuery(
 
   if (filters.interactionType) parts.push(buildInteractionQuery(filters.interactionType));
 
-  parts.push(`legal:${getFormatConfig(format).scryfallLegality}`);
+  parts.push(`legal:${legality}`);
 
   return parts.join(" ");
 }
@@ -225,12 +240,12 @@ export function buildCommanderSearchQuery(
  * commander (CR 702.124).
  *
  * @param requirement - one way the commander can pair
- * @param format - the deck's format, for the Background legality filter
+ * @param legality - Scryfall's legality key for the deck's format, for the Background filter
  * @returns a query fragment without name or colour filters
  */
 function partnerRequirementQuery(
   requirement: PartnerRequirement,
-  format: DeckFormat
+  legality: string
 ): string {
   switch (requirement.kind) {
     case "partner":
@@ -241,7 +256,7 @@ function partnerRequirementQuery(
       return `!"${requirement.name}"`;
     case "background":
       // Backgrounds are not commanders; they are legendary enchantments with subtype Background.
-      return `t:background legal:${getFormatConfig(format).scryfallLegality}`;
+      return `t:background legal:${legality}`;
     case "backgroundChooser":
       return 'is:commander o:"Choose a Background"';
     case "timeLordDoctor":
@@ -270,14 +285,15 @@ function anyOf(queries: readonly string[]): string {
  * @param commander - the deck's commander, or null before one is chosen
  * @param text - the name the player typed
  * @param filters - the search filters; only the colours apply here
- * @param format - the deck's format
+ * @param legality - Scryfall's legality key for the deck's format
+ *   (`getFormatConfig(format).scryfallLegality`)
  * @returns the Scryfall query
  */
 export function buildPartnerSearchQuery(
   commander: PairingCard | null,
   text: string,
   filters: Partial<SearchFilters> = {},
-  format: DeckFormat = "commander"
+  legality: string = DEFAULT_LEGALITY
 ): string {
   const name = text.trim();
   const namePart = name ? ` name:/${name}/` : "";
@@ -287,18 +303,21 @@ export function buildPartnerSearchQuery(
       : "";
   const requirements = commander ? partnerRequirements(commander) : [];
   const queries = requirements.map((requirement) =>
-    partnerRequirementQuery(requirement, format)
+    partnerRequirementQuery(requirement, legality)
   );
   return `${anyOf(queries)}${namePart}${colorPart}`;
 }
 
-/** Companion search — cards with the Companion keyword, format-legal */
+/**
+ * Companion search: cards with the Companion keyword (CR 702.139), legal in the format whose
+ * Scryfall legality key is `legality`.
+ */
 export function buildCompanionSearchQuery(
   text: string,
   filters: Partial<SearchFilters> = {},
-  format: DeckFormat = "commander"
+  legality: string = DEFAULT_LEGALITY
 ): string {
-  const parts: string[] = ["keyword:companion", `legal:${getFormatConfig(format).scryfallLegality}`];
+  const parts: string[] = ["keyword:companion", `legal:${legality}`];
   const name = text.trim();
   if (name) parts.push(`name:/${name}/`);
   if (filters.colors && filters.colors.length > 0) {
@@ -307,25 +326,31 @@ export function buildCompanionSearchQuery(
   return parts.join(" ");
 }
 
-/** Build a query for browsing cards from a specific set */
+/**
+ * Browse one set's cards that are legal in the format whose Scryfall legality key is
+ * `legality`.
+ */
 export function buildSetSearchQuery(
   setCode: string,
   colorFilter: string[] = [],
-  format: DeckFormat = "commander"
+  legality: string = DEFAULT_LEGALITY
 ): string {
-  const parts: string[] = [`set:${setCode}`, `legal:${getFormatConfig(format).scryfallLegality}`];
+  const parts: string[] = [`set:${setCode}`, `legal:${legality}`];
   if (colorFilter.length > 0) parts.push(`id<=${colorFilter.join("")}`);
   return parts.join(" ");
 }
 
-/** Build a query for filtering by color */
+/**
+ * Filter by colour among the cards legal in the format whose Scryfall legality key is
+ * `legality`.
+ */
 export function buildColorSearchQuery(
   colors: string[],
   text: string = "",
   exact = false,
-  format: DeckFormat = "commander"
+  legality: string = DEFAULT_LEGALITY
 ): string {
-  const parts: string[] = [`legal:${getFormatConfig(format).scryfallLegality}`];
+  const parts: string[] = [`legal:${legality}`];
   if (text.trim()) parts.push(`name:/${text.trim()}/`);
   if (colors.length > 0) {
     parts.push(exact ? `c=${colors.join("")}` : `id<=${colors.join("")}`);
