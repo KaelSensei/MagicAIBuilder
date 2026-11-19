@@ -20,6 +20,7 @@ import { ModalTitle } from "@/components/ui/Modal";
 import { PlaytestDialog } from "@/components/playtest/PlaytestDialog";
 import { PhaseTracker } from "@/components/playtest/PhaseTracker";
 import { LifeTracker } from "@/components/playtest/LifeTracker";
+import { CommanderDamageTally } from "@/components/playtest/CommanderDamageTally";
 import { HandZone } from "@/components/playtest/HandZone";
 import { BattlefieldZone } from "@/components/playtest/BattlefieldZone";
 import { GraveyardZone } from "@/components/playtest/GraveyardZone";
@@ -121,6 +122,7 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
   const editLogEntry = usePlaytestStore((s) => s.editLogEntry);
   const removeLogEntry = usePlaytestStore((s) => s.removeLogEntry);
   const undo = usePlaytestStore((s) => s.undo);
+  const dispatch = usePlaytestStore((s) => s.dispatch);
 
   // The store outlives the modal, so a stale session would otherwise reappear
   // the next time it opens.
@@ -303,6 +305,7 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
                     onHeal={heal}
                     onUndo={undo}
                   />
+                  <CommanderDamageTally engine={engine} onDispatch={dispatch} />
                 </fieldset>
               </aside>
 

@@ -14,6 +14,7 @@ import {
   applyAddActionLogEntry,
   applyAddCounter,
   applyBottomCards,
+  applyCommanderDamage,
   applyCreateCardCopy,
   applyCreateToken,
   applyDamage,
@@ -85,6 +86,12 @@ const SOLDIER = {
   colors: ["white"],
   kind: "token",
 } as const;
+const KENRITH_HITS_OPPONENT_ONE = {
+  type: "commanderDamage",
+  opponent: 1,
+  commanderId: "kenrith",
+  amount: 7,
+} as const;
 
 /** A duel just dealt: no move made yet, so nothing to undo. */
 function dealtState(): PlaytestEngine {
@@ -109,6 +116,11 @@ function baseState(): PlaytestEngine {
     deps
   );
   return applyRecordMana(withPermanent, 2, deps);
+}
+
+/** The base game at a multiplayer Commander table, which offers the commander-damage tally. */
+function tallyState(): PlaytestEngine {
+  return { ...baseState(), commanderDamageOpponents: 3 };
 }
 
 /** The base game after a mulligan: one card to put on the bottom. */
@@ -197,6 +209,13 @@ const ROWS: readonly ReducerRow[] = [
     type: "heal",
     command: () => ({ type: "heal", amount: 2 }),
     expected: (s) => applyHeal(s, 2, deps),
+  },
+  {
+    label: "commanderDamage tallies a commander's combat damage to an opponent",
+    type: "commanderDamage",
+    from: tallyState,
+    command: () => KENRITH_HITS_OPPONENT_ONE,
+    expected: (s) => applyCommanderDamage(s, KENRITH_HITS_OPPONENT_ONE, deps),
   },
   {
     label: "tap toggles a permanent",
@@ -428,14 +447,31 @@ function blockedScenario(
             command: { type: "createCardCopy", cardId: permanentId(base) },
           };
     case "not-a-commander":
+      return type === "commanderDamage"
+        ? {
+            state: tallyState(),
+            command: { ...KENRITH_HITS_OPPONENT_ONE, commanderId: "c1" },
+          }
+        : {
+            state: base,
+            command: {
+              type: "moveToZone",
+              cardId: handId(base),
+              from: "hand",
+              to: "command",
+            },
+          };
+    case "no-commander-damage":
+      return { state: base, command: KENRITH_HITS_OPPONENT_ONE };
+    case "unknown-opponent":
       return {
-        state: base,
-        command: {
-          type: "moveToZone",
-          cardId: handId(base),
-          from: "hand",
-          to: "command",
-        },
+        state: tallyState(),
+        command: { ...KENRITH_HITS_OPPONENT_ONE, opponent: 4 },
+      };
+    case "bad-commander-damage":
+      return {
+        state: tallyState(),
+        command: { ...KENRITH_HITS_OPPONENT_ONE, amount: 0 },
       };
     case "not-in-zone":
       return {
