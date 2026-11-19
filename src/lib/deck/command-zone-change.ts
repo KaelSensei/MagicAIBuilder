@@ -13,7 +13,11 @@
  */
 import type { ApiDeckCard, CommandZoneChangeRequest } from "@/lib/db/deck-api";
 
-import type { CommandSlot, CommandZonePatch } from "./bulk-edit-command-zone";
+import {
+  commandSlotOf,
+  type CommandSlot,
+  type CommandZonePatch,
+} from "./bulk-edit-command-zone";
 import { commandCardPayload } from "./store-factories";
 import type { DeckCard } from "./types";
 
@@ -55,7 +59,7 @@ export function commandZoneRequest(
 
 /**
  * The saved row of each slot a change filled, read from the rows the server
- * answered by the same role flags the deck loader uses.
+ * answered by `commandSlotOf`, the rule the deck loader uses.
  *
  * @param cards - the rows the change added
  * @returns the row per filled slot
@@ -65,9 +69,8 @@ export function savedRowsBySlot(
 ): Partial<Record<CommandSlot, ApiDeckCard>> {
   const rows: Partial<Record<CommandSlot, ApiDeckCard>> = {};
   for (const row of cards) {
-    if (row.isPartner) rows.partner = row;
-    else if (row.isCommander) rows.commander = row;
-    else if (row.category === "companion") rows.companion = row;
+    const slot = commandSlotOf(row);
+    if (slot) rows[slot] = row;
   }
   return rows;
 }

@@ -12,6 +12,7 @@ import { getTranslations } from "next-intl/server";
 import { Header } from "@/components/layout/Header";
 import { PublicDeckView } from "@/components/profile/PublicDeckView";
 import { findDeckForViewer } from "@/lib/deck/deck-for-viewer";
+import { commandSlotOf } from "@/lib/deck/bulk-edit-command-zone";
 import { auth } from "@/lib/auth/config";
 
 interface Params {
@@ -39,10 +40,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 
   if (!deck) return { title: t("notFound") };
 
-  const commander = deck.cards?.find(
-    (c: { isCommander: boolean; isPartner: boolean }) =>
-      c.isCommander && !c.isPartner
-  );
+  const commander = deck.cards?.find((c) => commandSlotOf(c) === "commander");
   const byline = {
     name: deck.name,
     author: deck.user?.name ?? deck.user?.username ?? t("unknownAuthor"),
