@@ -35,7 +35,13 @@ const BREYA = "22222222-2222-4222-8222-222222222222";
 const BREYA_REPRINT = "33333333-3333-4333-8333-333333333333";
 const TYMNA = "44444444-4444-4444-8444-444444444444";
 
-const FOREST_ROW = deckCard("Forest", { id: "forest-row", quantity: 10 });
+// A basic land: the route clamps every resize to the copy limit, which
+// exempts basic lands by their type line (CR 903.5b).
+const FOREST_ROW = deckCard("Forest", {
+  id: "forest-row",
+  quantity: 10,
+  typeLine: "Basic Land — Forest",
+});
 const SIGNET_ROW = deckCard("Arcane Signet", {
   id: "signet-row",
   notes: "fixes",
