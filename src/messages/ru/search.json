@@ -12,6 +12,12 @@
   "noSetsFound": "No sets found for \"{query}\"",
   "clearSet": "Clear selected set",
   "setsAvailable": "{count, plural, one {# set available} other {# sets available}} — type to search",
+  "identityScope": {
+    "scoped": "Only cards in your commander's colors",
+    "widened": "Cards of every color",
+    "widen": "Show every color",
+    "narrow": "Only my commander's colors"
+  },
   "collectionOnly": {
     "signedOut": "Sign in and add cards to your collection to see only the cards you own.",
     "emptyCollection": "Your collection is empty. Add cards to it, and this filter will show only the cards you own.",

@@ -175,8 +175,8 @@ function findButton(name: string): Promise<HTMLElement> {
   return waitFor(() => button(name));
 }
 
-/** Opens the saved deck at `/en/builder/deck-1`, shows the filters and waits for the first search. */
-async function openBuilderWithFilters() {
+/** The builder page at `/en/builder/<deckId>`, inside the router contexts Next gives it. */
+function builderAt(deckId: string) {
   const router = {
     back: vi.fn(),
     forward: vi.fn(),
@@ -185,18 +185,29 @@ async function openBuilderWithFilters() {
     replace: vi.fn(),
     prefetch: vi.fn(),
   };
-  renderWithProviders(
+  return (
     <AppRouterContext.Provider value={router}>
-      <PathParamsContext.Provider value={{ locale: "en", deckId: DECK_ID }}>
+      <PathParamsContext.Provider value={{ locale: "en", deckId }}>
         <BuilderPage />
       </PathParamsContext.Provider>
-    </AppRouterContext.Provider>,
-    { session: PLAYER }
+    </AppRouterContext.Provider>
   );
+}
+
+/** Opens the saved deck at `/en/builder/deck-1` and waits for its title. */
+async function openBuilder(deckName: string = DECK.name) {
+  const view = renderWithProviders(builderAt(DECK_ID), { session: PLAYER });
   const user = userEvent.setup();
-  await screen.findByRole("heading", { level: 1, name: "Talrand Spells" });
+  await screen.findByRole("heading", { level: 1, name: deckName });
+  return { user, view };
+}
+
+/** Opens the saved deck at `/en/builder/deck-1`, shows the filters and waits for the first search. */
+async function openBuilderWithFilters() {
+  const { user } = await openBuilder();
   await user.click(button("Show filters"));
-  await lastSearchIs("legal:commander");
+  // Talrand leads the deck, so the name search stays inside blue (I-01, AC-01-160).
+  await lastSearchIs("legal:commander id<=U");
   return user;
 }
 
@@ -256,46 +267,47 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe("characterization: the builder's name search with a plain-language query", () => {
-  const server = setupMsw(
-    http.get("/api/decks/:id", () => HttpResponse.json(DECK)),
-    http.get("/api/decks", () =>
-      HttpResponse.json({
-        decks: [{ ...DECK, _count: { cards: DECK.cards.length } }],
-        total: 1,
-        page: 0,
-        limit: 20,
-      })
-    ),
-    // Game Changers and the banlist read the same cache; their queries never match `TRANSLATED`.
-    http.get("/api/cache/search", ({ request }) => {
-      const query = new URL(request.url).searchParams.get("query") ?? "";
-      if (query !== "is:gamechanger" && query !== "banned:commander") {
-        searched.push(query);
-      }
-      return HttpResponse.json({
-        hit: true,
-        data: query === TRANSLATED ? translatedPage : EMPTY_SEARCH_RESPONSE,
-      });
-    }),
-    http.get("/api/search/translate", () =>
-      HttpResponse.json({ available: true })
-    ),
-    http.post("/api/search/translate", () =>
-      HttpResponse.json({
-        query: TRANSLATED,
-        context: { format: "commander", colorIdentity: ["U"] },
-      })
-    ),
-    http.get("/api/meta/:slug/history", () =>
-      HttpResponse.json({ report: null, snapshotCount: 0, windowDays: 90 })
-    )
-  );
+// One server for the whole file: `setupMsw` is called once per file (its header says why).
+const server = setupMsw(
+  http.get("/api/decks/:id", () => HttpResponse.json(DECK)),
+  http.get("/api/decks", () =>
+    HttpResponse.json({
+      decks: [{ ...DECK, _count: { cards: DECK.cards.length } }],
+      total: 1,
+      page: 0,
+      limit: 20,
+    })
+  ),
+  // Game Changers and the banlist read the same cache; their queries never match `TRANSLATED`.
+  http.get("/api/cache/search", ({ request }) => {
+    const query = new URL(request.url).searchParams.get("query") ?? "";
+    if (query !== "is:gamechanger" && query !== "banned:commander") {
+      searched.push(query);
+    }
+    return HttpResponse.json({
+      hit: true,
+      data: query === TRANSLATED ? translatedPage : EMPTY_SEARCH_RESPONSE,
+    });
+  }),
+  http.get("/api/search/translate", () =>
+    HttpResponse.json({ available: true })
+  ),
+  http.post("/api/search/translate", () =>
+    HttpResponse.json({
+      query: TRANSLATED,
+      context: { format: "commander", colorIdentity: ["U"] },
+    })
+  ),
+  http.get("/api/meta/:slug/history", () =>
+    HttpResponse.json({ report: null, snapshotCount: 0, windowDays: 90 })
+  )
+);
 
+describe("characterization: the builder's name search with a plain-language query", () => {
   it("runs the confirmed query exactly as shown, without the filters chosen before it", async () => {
     const user = await openBuilderWithFilters();
     await user.click(button("White"));
-    await lastSearchIs("id<=W legal:commander");
+    await lastSearchIs("id<=W legal:commander id<=U");
 
     await runPlainLanguageQuery(user);
 
@@ -355,7 +367,7 @@ describe("characterization: the builder's name search with a plain-language quer
 
     await user.type(screen.getByPlaceholderText("Search cards…"), "brain");
 
-    await searchesSince(sent, ["name:/brain/ id<=WB legal:commander"]);
+    await searchesSince(sent, ["name:/brain/ id<=WB legal:commander id<=U"]);
     expect(screen.queryByText(/^Query: /)).toBeNull();
   });
 
@@ -388,5 +400,205 @@ describe("characterization: the builder's name search with a plain-language quer
     await runPlainLanguageQuery(user);
 
     expect(sentNames).toEqual([["Talrand, Sky Summoner"]]);
+  });
+});
+
+/** A command-zone row of the deck under test, built on Talrand's. */
+function commandZoneCard(
+  name: string,
+  colorIdentity: readonly string[],
+  slot: { readonly isPartner: boolean } = { isPartner: false }
+): ApiDeckCard {
+  return {
+    ...TALRAND,
+    id: `row-${name}`,
+    scryfallId: `scryfall-${name}`,
+    name,
+    typeLine: "Legendary Creature",
+    colorIdentity: [...colorIdentity],
+    isCommander: !slot.isPartner,
+    isPartner: slot.isPartner,
+  };
+}
+
+/** Serves the deck under test led by `commander`, with `partner` beside it when given. */
+function serveDeckLedBy(commander: ApiDeckCard, partner?: ApiDeckCard): void {
+  server.use(
+    http.get("/api/decks/:id", () =>
+      HttpResponse.json({
+        ...DECK,
+        commanderId: commander.scryfallId,
+        commanderName: commander.name,
+        partnerId: partner?.scryfallId ?? null,
+        pairingType: partner ? "partner" : "none",
+        cards: partner ? [commander, partner] : [commander],
+      })
+    )
+  );
+}
+
+/** Teysa Karlov: a white and black commander with no rulebreaker exception. */
+const TEYSA = commandZoneCard("Teysa Karlov", ["W", "B"]);
+
+describe("the builder's name search inside the commander's colour identity (I-01, AC-01-160 to AC-01-162)", () => {
+  it("searches inside the commander's colour identity once a commander is set", async () => {
+    serveDeckLedBy(TEYSA);
+    const { user } = await openBuilder();
+
+    await user.type(screen.getByPlaceholderText("Search cards…"), "Sol");
+
+    await lastSearchIs("name:/Sol/ legal:commander id<=WB");
+    expect(
+      screen.getByText("Only cards in your commander's colors")
+    ).toBeDefined();
+  });
+
+  it("widens to every colour on the chip's one action, keeps legal:commander, and offers to narrow again", async () => {
+    serveDeckLedBy(TEYSA);
+    const { user } = await openBuilder();
+    await user.type(screen.getByPlaceholderText("Search cards…"), "Sol");
+    await lastSearchIs("name:/Sol/ legal:commander id<=WB");
+
+    await user.click(button("Show every color"));
+
+    await lastSearchIs("name:/Sol/ legal:commander");
+    expect(screen.getByText("Cards of every color")).toBeDefined();
+    await user.click(button("Only my commander's colors"));
+    expect(
+      await screen.findByText("Only cards in your commander's colors")
+    ).toBeDefined();
+  });
+
+  it("widens from the keyboard: the chip's action is a focusable native button", async () => {
+    serveDeckLedBy(TEYSA);
+    const { user } = await openBuilder();
+    // A name makes the widened query new: an empty one was cached before the deck loaded.
+    await user.type(screen.getByPlaceholderText("Search cards…"), "Sol");
+    await lastSearchIs("name:/Sol/ legal:commander id<=WB");
+
+    button("Show every color").focus();
+    await user.keyboard("{Enter}");
+
+    await lastSearchIs("name:/Sol/ legal:commander");
+    expect(button("Only my commander's colors")).toHaveFocus();
+  });
+
+  it("scopes a rulebreaker commander with the clause the described search writes: Seluma admits Angels and basics (CR 903.5e)", async () => {
+    serveDeckLedBy(commandZoneCard("Seluma, Light of Aysen", ["W", "B"]));
+
+    await openBuilder();
+
+    await lastSearchIs("legal:commander (id<=WB OR t:angel OR t:basic)");
+  });
+
+  it("scopes a partner pair to their combined identity, in WUBRG order (CR 702.124)", async () => {
+    serveDeckLedBy(
+      commandZoneCard("Thrasios, Triton Hero", ["G", "U"]),
+      commandZoneCard("Tymna the Weaver", ["W", "B"], { isPartner: true })
+    );
+
+    await openBuilder();
+
+    await lastSearchIs("legal:commander id<=WUBG");
+  });
+
+  it("scopes a colourless commander to colourless cards (CR 903.4)", async () => {
+    serveDeckLedBy(commandZoneCard("Kozilek, the Great Distortion", []));
+
+    await openBuilder();
+
+    await lastSearchIs("legal:commander id<=c");
+  });
+
+  it("adds no scope and shows no chip before a commander is set", async () => {
+    server.use(
+      http.get("/api/decks/:id", () =>
+        HttpResponse.json({
+          ...DECK,
+          commanderId: null,
+          commanderName: null,
+          cards: [],
+        })
+      )
+    );
+    const { user } = await openBuilder();
+
+    await user.type(screen.getByPlaceholderText("Search cards…"), "Sol");
+
+    await lastSearchIs("name:/Sol/ legal:commander");
+    expect(
+      screen.queryByText("Only cards in your commander's colors")
+    ).toBeNull();
+  });
+
+  it("adds no scope and shows no chip in a format without colour identity", async () => {
+    server.use(
+      http.get("/api/decks/:id", () =>
+        HttpResponse.json({
+          ...DECK,
+          format: "modern",
+          commanderId: TEYSA.scryfallId,
+          commanderName: TEYSA.name,
+          cards: [TEYSA],
+        })
+      )
+    );
+    const { user } = await openBuilder();
+
+    await user.type(screen.getByPlaceholderText("Search cards…"), "Sol");
+
+    await lastSearchIs("name:/Sol/ legal:modern");
+    expect(
+      screen.queryByText("Only cards in your commander's colors")
+    ).toBeNull();
+  });
+
+  it("keeps the player's own colour filter: it narrows inside the commander's scope", async () => {
+    serveDeckLedBy(TEYSA);
+    const { user } = await openBuilder();
+    await user.click(button("Show filters"));
+
+    await user.click(button("White"));
+
+    await lastSearchIs("id<=W legal:commander id<=WB");
+  });
+
+  it("scopes the search again when the player opens another deck after widening it", async () => {
+    const teysaDeck = {
+      ...DECK,
+      commanderId: TEYSA.scryfallId,
+      commanderName: TEYSA.name,
+      cards: [TEYSA],
+    };
+    const otherDeck = { ...DECK, id: "deck-2", name: "Talrand Tempo" };
+    server.use(
+      http.get("/api/decks/:id", ({ params }) =>
+        HttpResponse.json(params.id === otherDeck.id ? otherDeck : teysaDeck)
+      ),
+      // Opening a deck missing from the store reloads the list, which must hold both decks.
+      http.get("/api/decks", () =>
+        HttpResponse.json({
+          decks: [teysaDeck, otherDeck].map((listed) => ({
+            ...listed,
+            _count: { cards: listed.cards.length },
+          })),
+          total: 2,
+          page: 0,
+          limit: 20,
+        })
+      )
+    );
+    const { user, view } = await openBuilder();
+    await user.type(screen.getByPlaceholderText("Search cards…"), "Sol");
+    await user.click(await findButton("Show every color"));
+    await lastSearchIs("name:/Sol/ legal:commander");
+
+    view.rerender(builderAt(otherDeck.id));
+
+    await screen.findByRole("heading", { level: 1, name: otherDeck.name });
+    await lastSearchIs("name:/Sol/ legal:commander id<=U");
+    expect(
+      screen.getByText("Only cards in your commander's colors")
+    ).toBeDefined();
   });
 });
