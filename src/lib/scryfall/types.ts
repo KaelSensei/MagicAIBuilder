@@ -49,6 +49,13 @@ export interface ScryfallCard {
   reprint?: boolean;
   /** Present on a card a partner or Wizards revealed before release (same source) */
   preview?: ScryfallPreview;
+  /**
+   * True when the card is on the official Game Changers list, false otherwise. Scryfall sends it
+   * on every card object, collection answers included (recorded 2026-11-19 in
+   * `fixtures/game-changers-v1.ts`); optional because card JSON built by hand or cached elsewhere
+   * may lack it.
+   */
+  game_changer?: boolean;
 }
 /** Who revealed a preview card, and when ("YYYY-MM-DD"), as Scryfall records it */
 export interface ScryfallPreview { previewed_at?: string; source?: string; source_uri?: string; }

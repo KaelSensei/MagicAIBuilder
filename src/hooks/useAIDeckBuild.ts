@@ -16,6 +16,7 @@ import {
   type AiCallDenial,
 } from "@/lib/ai/usage/denial";
 import { readNdjsonEvents } from "@/lib/async/ndjson-lines";
+import { parseBracketLevel } from "@/lib/constants/brackets";
 import { isRecord } from "@/lib/guards";
 
 // ---------------------------------------------------------------------------
@@ -144,6 +145,15 @@ function isBuildEvent(value: unknown): value is ReceivedBuildEvent {
   }
 }
 
+/** A Game Changer removal names an official bracket and that bracket's limit (I-02 5.1). */
+function isGameChangerRemoval(value: Readonly<Record<string, unknown>>) {
+  return (
+    typeof value.bracket === "number" &&
+    parseBracketLevel(value.bracket) !== null &&
+    typeof value.limit === "number"
+  );
+}
+
 /**
  * True when a correction is one the wizard can explain to the player.
  *
@@ -157,6 +167,7 @@ function isDeckCorrection(value: unknown): value is DeckCorrection {
   if (value.action === "added") return value.reason === "fill_to_size";
   if (value.action !== "removed") return false;
   if (value.reason === "preview") return typeof value.releasesOn === "string";
+  if (value.reason === "game_changer") return isGameChangerRemoval(value);
   return (
     typeof value.reason === "string" &&
     Object.hasOwn(REMOVAL_REASONS, value.reason)

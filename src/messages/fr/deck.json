@@ -765,6 +765,7 @@
     "correctionReasonBanned": "bannie en Commander",
     "correctionReasonNotLegal": "non légale en Commander",
     "correctionReasonPreview": "une carte en avant-première, légale en Commander à partir du {date}",
+    "correctionReasonGameChanger": "un Game Changer, et le Bracket {bracket} ({name}) n’en autorise {limit, plural, =0 {aucun} other {pas plus de #}}",
     "correctionReasonExtraCopies": "plus d’exemplaires que le Commander n’en autorise",
     "correctionReasonCommanderInList": "déjà dans la zone de commandement",
     "correctionReasonOverSize": "la liste dépassait 100 cartes",
