@@ -31,6 +31,7 @@ lists their move. The side zones belong to `deck-building` (I-103 slice 1).
 | `RULEBREAKERS`, `RULEBREAKERS_VERSION`, `RULEBREAKERS_SOURCE` | `index.ts` | The rulebreaker table, its version and where it was read      | Tests                                                                 |
 | `deckConstructionExceptions`                                  | `index.ts` | The exceptions a command zone's rulebreakers grant            | `lib/deck/color-identity.ts`, `lib/ai/generated-deck-construction.ts` |
 | `isIdentityExempt`, `liftsMaximumDeckSize`                    | `index.ts` | Whether an exception admits a card, or lifts the maximum size | The same, `deckSizeRule`, and `deckCopyLimit` (`lib/deck/multiples`)  |
+| `rulebreakerAdmission`, `RulebreakerAdmission`                | `index.ts` | Which rulebreaker admits a card, and through which exception  | `admittedByRulebreaker` (`lib/deck/color-identity.ts`), the editor    |
 | `RulebreakerException`, `RulebreakerCardTest`                 | `index.ts` | The exceptions' shapes                                        | `lib/search/rulebreaker-scope.ts` (the search's identity clause)      |
 
 Every colour-identity reader (the deck's violations and companion, the AI deck check, the AI
@@ -54,6 +55,7 @@ suggestion evidence, the card package preview) asks one question, `isOutsideDeck
 | A deck with no maximum size keeps its minimum                                           | CR 903.5a, 903.5e   | `domain/deck-size.test.ts`                                                          |
 | No maximum size lifts the 99 cap on basics and "any number" cards, never the singleton  | CR 903.5b, 903.5e   | `lib/deck/rulebreaker-copy-limit.test.ts`                                           |
 | The described search's identity clause admits what the commander admits                 | CR 903.5e           | `lib/search/rulebreaker-search-scope.test.ts`                                       |
+| An admission names the rulebreaker only for an off-identity card that it exempts        | CR 903.5c, 903.5e   | `domain/rulebreaker-admission.test.ts`, `lib/deck/rulebreaker-admission.test.ts`    |
 
 ## Persistence and providers
 
