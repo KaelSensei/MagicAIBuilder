@@ -16,6 +16,19 @@ const usdPriceFormatters = {
   }),
 } satisfies Record<"en" | "fr", Intl.NumberFormat>;
 
+const eurPriceFormatters = {
+  en: new Intl.NumberFormat("en", {
+    style: "currency",
+    currency: "EUR",
+    currencyDisplay: "code",
+  }),
+  fr: new Intl.NumberFormat("fr", {
+    style: "currency",
+    currency: "EUR",
+    currencyDisplay: "code",
+  }),
+} satisfies Record<"en" | "fr", Intl.NumberFormat>;
+
 const localizedDateFormatters = {
   en: new Intl.DateTimeFormat("en", { dateStyle: "medium", timeZone: "UTC" }),
   fr: new Intl.DateTimeFormat("fr", { dateStyle: "medium", timeZone: "UTC" }),
@@ -97,4 +110,17 @@ export function formatManaSymbols(value: string): string {
  */
 export function formatUsdPrice(locale: string, value: number): string {
   return usdPriceFormatters[servedLocale(locale)].format(value);
+}
+
+/**
+ * Formats a Scryfall EUR amount without converting its underlying value. The
+ * currency is written as its code, as `formatUsdPrice` writes USD, so the two
+ * amounts read as two currencies and never as one figure (I-96).
+ *
+ * @param locale Requested application locale.
+ * @param value EUR value to format.
+ * @returns A localized EUR amount.
+ */
+export function formatEurPrice(locale: string, value: number): string {
+  return eurPriceFormatters[servedLocale(locale)].format(value);
 }
