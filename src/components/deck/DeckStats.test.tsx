@@ -100,7 +100,7 @@ describe("DeckStats", () => {
         <DeckStats
           stats={makeStats({ totalCards: 200 })}
           format="commander"
-          sizeRule={{ minimum: 100, maximum: null }}
+          sizeRule={{ minimum: 100, maximum: null, formatBound: "exact" }}
           targetBracket={3}
         />
       );
@@ -121,9 +121,10 @@ describe("DeckStats", () => {
   });
 
   describe("non-Commander formats", () => {
+    // CR 100.2a: a constructed deck holds at least 60 cards, not Commander's 100.
     it("counts cards against the format's deck size, not Commander's 100", () => {
       renderStats(makeStats({ totalCards: 60 }), "modern");
-      expect(screen.getByText("60/60")).toBeDefined();
+      expect(screen.getByText("60/60+")).toBeDefined();
     });
 
     // Bracket targets are Commander's; a Modern deck was showing "target for B3".
