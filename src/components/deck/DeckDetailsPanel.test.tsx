@@ -175,8 +175,10 @@ describe("DeckDetailsPanel", () => {
       await user.click(
         within(details).getByRole("button", { name: "Edit description" })
       );
+      // The primer editor opens in a dialog, outside the panel's region.
+      const editor = screen.getByRole("dialog", { name: "Edit description" });
       await user.type(
-        within(details).getByRole("textbox"),
+        within(editor).getByRole("textbox"),
         "Go wide, then sacrifice the tokens."
       );
       await user.keyboard("{Control>}{Enter}{/Control}");
@@ -198,8 +200,9 @@ describe("DeckDetailsPanel", () => {
       await user.click(
         within(details).getByRole("button", { name: "Edit description" })
       );
-      await user.type(within(details).getByRole("textbox"), "Aristocrats.");
-      await user.click(within(details).getByRole("button", { name: "Save" }));
+      const editor = screen.getByRole("dialog", { name: "Edit description" });
+      await user.type(within(editor).getByRole("textbox"), "Aristocrats.");
+      await user.click(within(editor).getByRole("button", { name: "Save" }));
 
       expect(deckPatches()).toEqual([{ description: "Aristocrats." }]);
     });
