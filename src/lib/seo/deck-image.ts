@@ -4,6 +4,7 @@
  * Prisma to build a URL.
  */
 import { compareCodeUnits } from "@/lib/text/code-unit-order";
+import { isCommanderRow } from "@/lib/deck/bulk-edit-command-zone";
 
 /** Open Graph's recommended size, which X's large summary card also uses. */
 export const DECK_IMAGE_SIZE = { width: 1200, height: 630 } as const;
@@ -43,7 +44,7 @@ export function deckImageVersion(deck: DeckImageSource): string {
   // Code-unit order, not `localeCompare`: the token must not change with the
   // locale or ICU data of the server that builds the page.
   const commanders = deck.cards
-    .filter((card) => card.isCommander || card.isPartner)
+    .filter(isCommanderRow)
     .map((card) => [
       card.name,
       card.isPartner,
