@@ -286,23 +286,34 @@ function passes(
   }
 }
 
-function allows(
+/** The exceptions that can admit a card whatever its colour identity. */
+export type AdmittingExceptionKind = Extract<
+  RulebreakerException["kind"],
+  "ignore-identity-for" | "any-land" | "any-basic-land"
+>;
+
+/** The exception's kind when it admits the card, else null. */
+function admits(
   exception: RulebreakerException,
   words: TypeWords,
   manaValue: number
-): boolean {
+): AdmittingExceptionKind | null {
   switch (exception.kind) {
     case "ignore-identity-for":
-      return exception.anyOf.some((test) => passes(test, words, manaValue));
+      return exception.anyOf.some((test) => passes(test, words, manaValue))
+        ? exception.kind
+        : null;
     case "any-land":
-      return words.types.has("Land");
+      return words.types.has("Land") ? exception.kind : null;
     case "any-basic-land":
-      return words.types.has("Basic") && words.types.has("Land");
+      return words.types.has("Basic") && words.types.has("Land")
+        ? exception.kind
+        : null;
     // Tolabow: the deck stores no chosen colour, so its instants and sorceries
     // are reported as before (follow-up: a deck field and an owner decision).
     case "chosen-colour-for":
     case "no-maximum-deck-size":
-      return false;
+      return null;
     default: {
       const unreachable: never = exception;
       return unreachable;
@@ -324,9 +335,43 @@ export function isIdentityExempt(
 ): boolean {
   if (exceptions.length === 0) return false;
   const words = frontTypeWordsOf(card.typeLine);
-  return exceptions.some((exception) =>
-    allows(exception, words, card.manaValue)
+  return exceptions.some(
+    (exception) => admits(exception, words, card.manaValue) !== null
   );
+}
+
+/** The commander whose exception admits a card, and which exception it is. */
+export interface RulebreakerAdmission {
+  /** The rulebreaker's exact Oracle name, as the table holds it */
+  readonly rulebreaker: string;
+  readonly exception: AdmittingExceptionKind;
+}
+
+/**
+ * Which command-zone rulebreaker admits `card` whatever its colour identity,
+ * and through which exception (CR 903.5e): the first in command-zone order,
+ * then in the order of the card's Oracle text. It answers the same question
+ * as {@link isIdentityExempt}, with the reason; it does not check whether the
+ * card's identity needed the exception, and never reads legality (CR 113.6n).
+ *
+ * @param commandZone - The commander and the partner; a card of the 99 grants nothing
+ * @param card - The card's front-face type line and mana value
+ * @returns The admission, or undefined when no exception admits the card
+ */
+export function rulebreakerAdmission(
+  commandZone: readonly CommandZoneCard[],
+  card: ConstructionCard
+): RulebreakerAdmission | undefined {
+  const words = frontTypeWordsOf(card.typeLine);
+  for (const zoneCard of commandZone) {
+    const entry = rulebreakerFor(zoneCard);
+    if (entry === null) continue;
+    for (const exception of entry.exceptions) {
+      const kind = admits(exception, words, card.manaValue);
+      if (kind !== null) return { rulebreaker: entry.name, exception: kind };
+    }
+  }
+  return undefined;
 }
 
 /**
