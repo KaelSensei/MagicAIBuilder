@@ -320,6 +320,9 @@ describe("DecksPage states (characterization)", () => {
     fireEvent.click(screen.getByRole("button", { name: "home.newDeck" }));
 
     await waitFor(() => expect(push).toHaveBeenCalledWith("/builder/deck-new"));
-    expect(createDeck).toHaveBeenCalledWith("home.newDeckName");
+    // I-42 slice 1: the call carries the format picked on the page.
+    expect(createDeck).toHaveBeenCalledWith("home.newDeckName", {
+      format: "commander",
+    });
   });
 });

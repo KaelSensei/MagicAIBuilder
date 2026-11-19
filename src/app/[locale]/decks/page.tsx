@@ -26,9 +26,11 @@ import { DeckComparisonPanel } from "@/components/deck/DeckComparisonPanel";
 import { DeckFolderControls } from "@/components/deck/DeckFolderControls";
 import { DeckListRefreshNotice } from "@/components/deck/DeckListRefreshNotice";
 import { GuestDeckClaimOffer } from "@/components/deck/GuestDeckClaimOffer";
+import { NewDeckFormatSelect } from "@/components/deck/NewDeckFormatSelect";
 import { LibraryCardSkeleton } from "@/components/layout/RouteSkeleton";
 import { Input } from "@/components/ui/Input";
 import { deriveLibraryView } from "@/lib/deck/deck-library-view";
+import type { DeckFormat } from "@/lib/deck/formats";
 import type { Deck } from "@/lib/deck/types";
 import {
   filterDecksByQuery,
@@ -62,6 +64,7 @@ export default function DecksPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [newDeckFormat, setNewDeckFormat] = useState<DeckFormat>("commander");
   const [wizardOpen, setWizardOpen] = useState(false);
   const [viewMode, setViewMode] = useState<DecksViewMode>("grid");
   const [sortKey, setSortKey] = useState<DecksSortKey>("updatedAt");
@@ -140,7 +143,7 @@ export default function DecksPage() {
     try {
       // Stored once, in the creator's locale; renaming stays the user's call.
       const name = t("home.newDeckName", { index: deckList.length + 1 });
-      const id = await createDeck(name);
+      const id = await createDeck(name, { format: newDeckFormat });
       router.push(`/builder/${id}`);
     } catch (error) {
       // Logging alone made the button look inert: it spun, the request 500'd,
@@ -154,7 +157,15 @@ export default function DecksPage() {
       );
       setIsCreating(false);
     }
-  }, [createDeck, deckList.length, isCreating, router, t, addToast]);
+  }, [
+    createDeck,
+    deckList.length,
+    isCreating,
+    newDeckFormat,
+    router,
+    t,
+    addToast,
+  ]);
 
   const handleGuestDeckSaved = useCallback(() => {
     void loadDecks();
@@ -367,6 +378,10 @@ export default function DecksPage() {
               />
             </div>
           )}
+          <NewDeckFormatSelect
+            value={newDeckFormat}
+            onChange={setNewDeckFormat}
+          />
           <DecksHomeControls
             viewMode={viewMode}
             sortKey={sortKey}

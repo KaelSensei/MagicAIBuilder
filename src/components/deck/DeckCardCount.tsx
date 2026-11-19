@@ -63,8 +63,16 @@ export function DeckCardCount({
   );
 }
 
-/** The words of a size state; "short" and "over" say by how many cards. */
-function useDeckSizeStateLabel(
+/**
+ * The words of a size state; "short" and "over" say by how many cards. The
+ * format switch preview reads it too, so a size reads the same there.
+ *
+ * @param status - The state `deckSizeStatus` gave for `cardCount` and `rule`
+ * @param cardCount - The cards the deck holds, its command zone included
+ * @param rule - The size rule the state was read against
+ * @returns "complete", "3 cards short" or "2 cards over", localized
+ */
+export function useDeckSizeStateLabel(
   status: DeckSizeStatus,
   cardCount: number,
   rule: DeckSizeRule
