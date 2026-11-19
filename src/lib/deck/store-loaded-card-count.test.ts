@@ -1,10 +1,10 @@
 /**
- * `cardCount` after an edit of a loaded deck.
+ * `cardRowCount` after an edit of a loaded deck.
  *
  * The listing (`GET /api/decks`) sends the command zone and a row count, so
- * `isDeckStub` compares the rows the store holds with `cardCount` to know
+ * `isDeckStub` compares the rows the store holds with `cardRowCount` to know
  * whether the full deck is still to be fetched. Once the rows are loaded, every
- * edit of those rows must keep `cardCount` in step: a count left behind made
+ * edit of those rows must keep `cardRowCount` in step: a count left behind made
  * the builder read a deck a card lighter as "half loaded" and show
  * "Loading deck…" for good (found by the P1-12 journeys, 2026-11-12).
  *
@@ -19,7 +19,7 @@ import type { ScryfallCard } from "@/lib/scryfall/types";
 import { installFakeDeckClient } from "@/test/fake-deck-client";
 import { recordToasts } from "@/test/toast-recorder";
 import { useDeckStore } from "./store";
-import { isDeckStub } from "./store-factories";
+import { deckCardCount, isDeckStub } from "./store-factories";
 import type { Deck } from "./types";
 
 const api = installFakeDeckClient();
@@ -152,17 +152,17 @@ function loadedRows(deck: Deck): number {
 /** The count and the stub reading together, so a failure shows both. */
 function countReading(deck: Deck) {
   return {
-    cardCount: deck.cardCount,
+    cardRowCount: deck.cardRowCount,
     loaded: loadedRows(deck),
     stub: isDeckStub(deck),
   };
 }
 
 function inStep(deck: Deck) {
-  return { cardCount: loadedRows(deck), loaded: loadedRows(deck), stub: false };
+  return { cardRowCount: loadedRows(deck), loaded: loadedRows(deck), stub: false };
 }
 
-describe("deck store — cardCount follows the loaded rows", () => {
+describe("deck store — cardRowCount follows the loaded rows", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     useDeckStore.setState({
@@ -203,7 +203,7 @@ describe("deck store — cardCount follows the loaded rows", () => {
     const deck = activeDeck();
     expect(deck.cards.find((card) => card.id === ISLANDS.id)?.quantity).toBe(4);
     expect(countReading(deck)).toEqual({
-      cardCount: 2,
+      cardRowCount: 2,
       loaded: 2,
       stub: false,
     });
@@ -219,7 +219,7 @@ describe("deck store — cardCount follows the loaded rows", () => {
       "sideboard"
     );
     expect(countReading(deck)).toEqual({
-      cardCount: 2,
+      cardRowCount: 2,
       loaded: 2,
       stub: false,
     });
@@ -234,7 +234,7 @@ describe("deck store — cardCount follows the loaded rows", () => {
     const deck = activeDeck();
     expect(deck.cards).toHaveLength(2);
     expect(countReading(deck)).toEqual({
-      cardCount: 2,
+      cardRowCount: 2,
       loaded: 2,
       stub: false,
     });
@@ -288,7 +288,33 @@ describe("deck store — cardCount follows the loaded rows", () => {
 
     await useDeckStore.getState().loadDecks();
 
-    expect(activeDeck().cardCount).toBe(1);
+    expect(activeDeck().cardRowCount).toBe(1);
+  });
+
+  it("lists a saved deck whose 30 Forests are one row as 100 cards", async () => {
+    const forests = apiRow("row-forest", "Forest", {
+      typeLine: "Basic Land — Forest",
+      category: "land",
+      quantity: 30,
+    });
+    const spells = Array.from({ length: 69 }, (_, index) =>
+      apiRow(`row-spell-${index}`, `Spell ${index}`)
+    );
+    api.seedDeck(apiDeck([COMMANDER, forests, ...spells]));
+
+    await useDeckStore.getState().loadDecks();
+
+    const listed = activeDeck();
+    expect(isDeckStub(listed)).toBe(true);
+    expect(listed.cardRowCount).toBe(71);
+    expect(deckCardCount(listed)).toBe(100);
+  });
+
+  it("counts a loaded deck's copies once its rows arrive", async () => {
+    const forests = apiRow("row-forest", "Forest", { category: "land", quantity: 30 });
+    await openSavedDeck(apiDeck([COMMANDER, forests, SOL_RING]));
+
+    expect(deckCardCount(activeDeck())).toBe(32);
   });
 
   it("still reads a deck from the listing as a stub until its rows arrive", async () => {
@@ -299,7 +325,7 @@ describe("deck store — cardCount follows the loaded rows", () => {
     const listed = activeDeck();
     expect(listed.cards).toEqual([]);
     expect(countReading(listed)).toEqual({
-      cardCount: 2,
+      cardRowCount: 2,
       loaded: 0,
       stub: true,
     });

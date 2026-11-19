@@ -84,7 +84,7 @@ function commanderDeck(): Deck {
     cards: [],
     maybeboard: [],
     format: "commander",
-    cardCount: 0,
+    cardRowCount: 0,
     targetBracket: 1,
     manualBracket: null,
     budget: null,

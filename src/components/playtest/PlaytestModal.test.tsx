@@ -31,7 +31,7 @@ function makeDeck(format: Deck["format"] = "commander"): Deck {
     format,
     commander: makeCard("cmd"),
     cards: Array.from({ length: 40 }, (_, i) => makeCard(`c${i}`)),
-    cardCount: 41,
+    cardRowCount: 41,
     createdAt: new Date("2026-01-01"),
     updatedAt: new Date("2026-01-01"),
   });

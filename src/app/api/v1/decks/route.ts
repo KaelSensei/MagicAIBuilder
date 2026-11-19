@@ -17,6 +17,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { logger } from "@/lib/logger";
 import { apiError, requireApiScope } from "@/lib/api/authenticate";
+import { countDeckCardCopies } from "@/lib/deck/prisma-deck-card-copies";
 
 const MAX_PAGE_SIZE = 100;
 const DEFAULT_PAGE_SIZE = 25;
@@ -62,6 +63,11 @@ export async function GET(request: Request) {
       }),
       prisma.deck.count({ where: { userId: auth.caller.userId } }),
     ]);
+    // One grouped query for the page, never one per deck.
+    const copies = await countDeckCardCopies(
+      prisma,
+      decks.map((deck) => deck.id)
+    );
 
     return NextResponse.json({
       data: decks.map((deck) => ({
@@ -71,7 +77,10 @@ export async function GET(request: Request) {
         commanderName: deck.commanderName,
         targetBracket: deck.targetBracket,
         isPublic: deck.isPublic,
+        // Rows, as this field has always meant; a public field keeps its meaning.
         cardCount: deck._count.cards,
+        // Copies, as the editor counts them: main deck, commander and partner.
+        cardCopyCount: copies.get(deck.id) ?? 0,
         createdAt: deck.createdAt.toISOString(),
         updatedAt: deck.updatedAt.toISOString(),
       })),

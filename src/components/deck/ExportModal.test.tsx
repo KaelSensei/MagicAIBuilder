@@ -38,7 +38,7 @@ const DECK: Deck = {
   cards: [SOL_RING],
   maybeboard: [],
   format: "commander",
-  cardCount: 1,
+  cardRowCount: 1,
   targetBracket: 2,
   manualBracket: null,
   budget: null,

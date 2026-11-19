@@ -67,7 +67,7 @@ describe("aDeck", () => {
       pairingType: "none",
       cards: [],
       maybeboard: [],
-      cardCount: 0,
+      cardRowCount: 0,
       targetBracket: 3,
       manualBracket: null,
       budget: null,
@@ -82,11 +82,11 @@ describe("aDeck", () => {
     });
   });
 
-  it("takes any field from the overrides, and leaves cardCount to the caller", () => {
+  it("takes any field from the overrides, and leaves cardRowCount to the caller", () => {
     const commander = aDeckCard({ id: "cmd", category: "commander" });
     const deck = aDeck({ commander, cards: [aDeckCard()], format: "brawl" });
 
-    expect(deck).toMatchObject({ commander, format: "brawl", cardCount: 0 });
+    expect(deck).toMatchObject({ commander, format: "brawl", cardRowCount: 0 });
     expect(deck.cards).toHaveLength(1);
   });
 

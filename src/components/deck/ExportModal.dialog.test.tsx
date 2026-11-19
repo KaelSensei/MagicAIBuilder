@@ -29,7 +29,7 @@ const DECK: Deck = aDeck({
   name: "Kenrith Goodstuff",
   commander: makeCard("cmd"),
   cards: [makeCard("c1"), makeCard("c2")],
-  cardCount: 3,
+  cardRowCount: 3,
   createdAt: new Date("2026-01-01"),
   updatedAt: new Date("2026-01-01"),
 });

@@ -71,7 +71,7 @@ function deck({ cards, partner, companion }: DeckShape): Deck {
     pairingType: partner ? "partner" : "none",
     cards: [...cards],
     maybeboard: cards.filter((entry) => entry.zone === "maybeboard"),
-    cardCount: cards.length,
+    cardRowCount: cards.length,
   });
 }
 

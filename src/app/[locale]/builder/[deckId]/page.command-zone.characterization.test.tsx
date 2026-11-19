@@ -203,7 +203,7 @@ describe("characterization: choosing the command zone from the builder", () => {
         colorIdentity: ["U"],
       }),
       cards: [BARAL],
-      cardCount: 2,
+      cardRowCount: 2,
     };
     renderOpenDeck(deck);
 
@@ -240,7 +240,7 @@ describe("characterization: choosing the command zone from the builder", () => {
       commander: TYMNA_ROW,
       pairingType: "partner",
       cards: [],
-      cardCount: 1,
+      cardRowCount: 1,
     };
     renderOpenDeck(deck);
 
