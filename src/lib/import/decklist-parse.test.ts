@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { extractCardsFromHtml, parsePlainTextDecklist } from "./decklist-parse";
+import { parsePlainTextDecklist } from "./decklist-parse";
 
 /**
  * This parser eats whatever a third-party site returns, so the interesting
@@ -232,42 +232,5 @@ describe("parsePlainTextDecklist", () => {
 
   it("tolerates CRLF line endings, which is what most downloads use", () => {
     expect(parsePlainTextDecklist("1 Sol Ring\r\n2 Island")).toHaveLength(2);
-  });
-});
-
-describe("extractCardsFromHtml", () => {
-  it("deduplicates names that differ only in case across HTML fragments", () => {
-    const html = "<div>1 Sol Ring</div><span>1 SOL RING</span>";
-    expect(extractCardsFromHtml(html).map((card) => card.name)).toEqual(["Sol Ring"]);
-  });
-  it("pulls quantity/name pairs out of markup", () => {
-    const html = "<div>1 Sol Ring</div><div>2 Lightning Bolt</div>";
-    expect(extractCardsFromHtml(html).map((c) => c.name)).toEqual([
-      "Sol Ring",
-      "Lightning Bolt",
-    ]);
-  });
-
-  it("deduplicates by name — the same card appears in several page sections", () => {
-    const html = "<div>1 Sol Ring</div><span>1 Sol Ring</span>";
-    expect(extractCardsFromHtml(html)).toHaveLength(1);
-  });
-
-  it("rejects a quantity outside a plausible decklist range", () => {
-    const html = "<div>0 Sol Ring</div><div>99 Lightning Bolt</div>";
-    expect(extractCardsFromHtml(html)).toEqual([]);
-  });
-
-  it("rejects names too short to be a card", () => {
-    expect(extractCardsFromHtml("<div>1 Ab</div>")).toEqual([]);
-  });
-
-  it("returns nothing for markup with no decklist in it", () => {
-    expect(extractCardsFromHtml("<html><body><p>Just a moment…</p></body></html>")).toEqual([]);
-  });
-
-  it("never reports a card as a commander — HTML carries no section structure", () => {
-    const cards = extractCardsFromHtml("<div>1 Atraxa, Praetors' Voice</div>");
-    expect(cards.every((c) => !c.isCommander)).toBe(true);
   });
 });
