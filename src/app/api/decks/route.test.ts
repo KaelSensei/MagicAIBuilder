@@ -1,7 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 import { logger } from "@/lib/logger";
-import { deckCardGroupByFake } from "@/test/deck-card-group-by-fake";
+import {
+  deckCardGroupByFake,
+  storedHundredCardDeck,
+} from "@/test/deck-card-group-by-fake";
 import { deckCard, type FakeDeckCard } from "@/test/playtest-db-fake";
 
 const {
@@ -211,21 +214,6 @@ describe("GET /api/decks card copies", () => {
     return deckCard(name, { deckId, ...overrides });
   }
 
-  /**
-   * A 100-card Commander deck as stored: its commander, one row of 30 Forests
-   * and 69 single cards, plus a sideboard, a maybeboard and a companion row.
-   */
-  function storedCommanderDeck(deckId: string): FakeDeckCard[] {
-    return [
-      row(deckId, "Talrand, Sky Summoner", { isCommander: true, category: "commander" }),
-      row(deckId, "Forest", { quantity: 30, category: "land" }),
-      ...Array.from({ length: 69 }, (_, index) => row(deckId, `Spell ${index + 1}`)),
-      row(deckId, "Negate", { zone: "sideboard", quantity: 3 }),
-      row(deckId, "Counterspell", { zone: "maybeboard", quantity: 2 }),
-      row(deckId, "Lutri, the Spellchaser", { category: "companion" }),
-    ];
-  }
-
   /** @returns the deck as the listing's `findMany` reads it: command zone rows and the row count */
   function listedDeck(deckId: string, rows: readonly FakeDeckCard[]) {
     const deckRows = rows.filter((stored) => stored.deckId === deckId);
@@ -255,7 +243,7 @@ describe("GET /api/decks card copies", () => {
   });
 
   it("lists a deck with one row of 30 Forests and 70 other cards as 100 cards", async () => {
-    storeRows(["deck-1"], storedCommanderDeck("deck-1"));
+    storeRows(["deck-1"], storedHundredCardDeck("deck-1"));
 
     const response = await GET(listRequest());
 
@@ -289,7 +277,7 @@ describe("GET /api/decks card copies", () => {
 
   it("reads the copies of a whole page in one grouped query, not one per deck", async () => {
     const deckIds = ["deck-1", "deck-2", "deck-3"];
-    const rows = deckIds.flatMap(storedCommanderDeck);
+    const rows = deckIds.flatMap(storedHundredCardDeck);
     const fake = storeRows(deckIds, rows);
 
     const response = await GET(listRequest());

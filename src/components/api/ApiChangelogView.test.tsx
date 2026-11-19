@@ -17,11 +17,13 @@ describe("ApiChangelogView", () => {
     expect(
       screen.getByRole("heading", { name: "Public read API changelog" })
     ).toBeInTheDocument();
-    expect(screen.getByText("/api/v1/decks")).toBeInTheDocument();
+    // Later lines may name a route again and carry their own label, so the
+    // deck list and "compatible" can appear more than once.
+    expect(screen.getAllByText("/api/v1/decks").length).toBeGreaterThan(0);
     expect(screen.getByText("/api/v1/decks/{id}")).toBeInTheDocument();
     expect(screen.getByText("/api/v1/collection")).toBeInTheDocument();
     expect(screen.getByText("/api/v1/openapi")).toBeInTheDocument();
-    expect(screen.getByText("compatible")).toBeInTheDocument();
+    expect(screen.getAllByText("compatible").length).toBeGreaterThan(0);
     expect(screen.queryByRole("link")).not.toBeInTheDocument();
   });
 

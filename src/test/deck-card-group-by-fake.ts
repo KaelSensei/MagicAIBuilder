@@ -13,7 +13,28 @@
  *
  * @module test/deck-card-group-by-fake
  */
-import type { FakeDeckCard } from "@/test/playtest-db-fake";
+import { deckCard, type FakeDeckCard } from "@/test/playtest-db-fake";
+
+/**
+ * A 100-card Commander deck as stored, in 74 rows: its commander, one row of
+ * 30 Forests and 69 single cards, plus a sideboard row of 3, a maybeboard row
+ * of 2 and a companion, none of which count toward the 100.
+ *
+ * @param deckId - the deck the rows belong to
+ * @returns the deck's rows
+ */
+export function storedHundredCardDeck(deckId: string): FakeDeckCard[] {
+  const row = (name: string, overrides: Partial<FakeDeckCard> = {}) =>
+    deckCard(name, { deckId, ...overrides });
+  return [
+    row("Talrand, Sky Summoner", { isCommander: true, category: "commander" }),
+    row("Forest", { quantity: 30, category: "land" }),
+    ...Array.from({ length: 69 }, (_, index) => row(`Spell ${index + 1}`)),
+    row("Negate", { zone: "sideboard", quantity: 3 }),
+    row("Counterspell", { zone: "maybeboard", quantity: 2 }),
+    row("Lutri, the Spellchaser", { category: "companion" }),
+  ];
+}
 
 /** The `groupBy` arguments the fake reads. */
 export interface DeckCardGroupByArgs {
