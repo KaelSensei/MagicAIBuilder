@@ -25,6 +25,7 @@ import {
   AETHERHUB_COMMANDER_ONLY_URL,
   AETHERHUB_CONSTRUCTED_DECK_URL,
   AETHERHUB_EMPTY_URL,
+  AETHERHUB_INVALID_PAIR_URL,
   AETHERHUB_PARTNER_PAIR_URL,
 } from "./fixtures/aetherhub-builder-urls-v1";
 import {
@@ -65,6 +66,11 @@ function commanderCard(name: string): UrlImportCard {
   };
 }
 
+/** The second commander of a pair as the adapters build it. */
+function partnerCard(name: string): UrlImportCard {
+  return { ...commanderCard(name), isCommander: false, isPartner: true };
+}
+
 describe("AetherHub builder URLs", () => {
   it("imports the main deck, then the commander, without sending a request", async () => {
     await expect(importFromUrl(AETHERHUB_COMMANDER_DECK_URL)).resolves.toEqual({
@@ -86,15 +92,26 @@ describe("AetherHub builder URLs", () => {
     expect(imported.cards).toEqual([commanderCard("Atraxa, Praetors' Voice")]);
   });
 
-  it("currently imports the second half of a partner pair as a main-deck card (pinned; see follow-up DI-01-F3)", async () => {
+  it("imports both halves of a partner pair, as commander and partner", async () => {
     const imported = await importFromUrl(AETHERHUB_PARTNER_PAIR_URL);
 
-    // CR 702.124a: partner lets a deck have two commanders. The adapter files `sb` under one
-    // "Commander" heading, and the plain-text parser leaves that section after its first card.
+    // CR 702.124a: two commanders with partner can both be a deck's commanders.
     expect(imported.cards).toEqual([
       mainCard("Sol Ring"),
       commanderCard("Thrasios, Triton Hero"),
-      mainCard("Tymna the Weaver"),
+      partnerCard("Tymna the Weaver"),
+    ]);
+  });
+
+  it("files a second commander without partner as the partner, for the command zone to refuse", async () => {
+    const imported = await importFromUrl(AETHERHUB_INVALID_PAIR_URL);
+
+    // Like the Moxfield and Archidekt adapters, the importer does not judge the pair: the deck
+    // store's `setPartner` refuses it with a warning (CR 702.124), as it does for theirs.
+    expect(imported.cards).toEqual([
+      mainCard("Sol Ring"),
+      commanderCard("Atraxa, Praetors' Voice"),
+      partnerCard("Edgar Markov"),
     ]);
   });
 
