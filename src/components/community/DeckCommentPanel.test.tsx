@@ -5,9 +5,16 @@
  * recorded, so a test asserts what was sent without spying on `fetch`.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { act, fireEvent, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import { delay, http, HttpResponse } from "msw";
-import type { DeckCommentThread } from "@/lib/community/comments";
+import { z } from "zod";
+import type { DeckComment, DeckCommentThread } from "@/lib/community/comments";
 import { COMMUNITY_READ_TIMEOUT_MS } from "@/lib/community/community-client";
 import { setupMsw } from "@/test/msw";
 import { renderWithProviders } from "@/test/render";
@@ -21,6 +28,8 @@ import { DeckCommentPanel } from "./DeckCommentPanel";
 
 const COMMENTS_ROUTE = "/api/community/decks/:deckId/comments";
 const COMMENT_ROUTE = "/api/community/decks/:deckId/comments/:commentId";
+/** The comment stream of the deck most tests render. */
+const DECK_COMMENTS = "/api/community/decks/deck-1/comments";
 
 function thread(overrides: Partial<DeckCommentThread> = {}): DeckCommentThread {
   return {
@@ -62,22 +71,93 @@ async function record(request: Request): Promise<void> {
   });
 }
 
+/** Every request the routes received, in order, as `METHOD path`. */
+function sentRoutes(): readonly string[] {
+  return sent.map(({ method, path }) => `${method} ${path}`);
+}
+
 /** The writes the routes received, in order. */
 function sentWrites(): readonly SentRequest[] {
   return sent.filter((request) => request.method !== "GET");
 }
 
-/** The routes serving `threads` as the stream of every deck, and accepting every write. */
+/** The body the post route accepts (`CommentRequest`). */
+const CommentRequestBody = z.object({
+  body: z.string(),
+  parentId: z.string().optional(),
+});
+
+/** The signed-in player who posts in these tests. */
+const VIEWER = { name: "Ben", username: "ben", image: null };
+
+/**
+ * The comment the post route saves and answers with 201: the request's body
+ * and parent, a fresh id, the viewer as its author (`toDeckComment`).
+ */
+function savedComment(
+  deckId: string,
+  request: z.infer<typeof CommentRequestBody>
+): DeckComment {
+  return {
+    id: `saved-${sent.length}`,
+    deckId,
+    parentId: request.parentId ?? null,
+    body: request.body,
+    createdAt: "2026-08-19T09:00:00.000Z",
+    updatedAt: "2026-08-19T09:00:00.000Z",
+    author: VIEWER,
+    isDeckOwner: false,
+    isAuthor: true,
+  };
+}
+
+/** `threads` with `comment` placed as the stream serves it: a top-level comment first, a reply last under its parent. */
+function withComment(
+  threads: readonly DeckCommentThread[],
+  comment: DeckComment
+): readonly DeckCommentThread[] {
+  const saved: DeckCommentThread = { ...comment, replies: [] };
+  if (comment.parentId === null) return [saved, ...threads];
+  return threads.map((parent) =>
+    parent.id === comment.parentId
+      ? { ...parent, replies: [...parent.replies, saved] }
+      : { ...parent, replies: withComment(parent.replies, comment) }
+  );
+}
+
+/** How many comments `threads` hold, replies included, as the route counts them. */
+function countComments(threads: readonly DeckCommentThread[]): number {
+  return threads.reduce(
+    (total, parent) => total + 1 + countComments(parent.replies),
+    0
+  );
+}
+
+/**
+ * The routes serving `threads` as the stream of every deck. A posted comment
+ * is saved into the stream, so the next read serves it, as the real route
+ * does; a delete is accepted.
+ */
 function serveStream(threads: readonly DeckCommentThread[]) {
+  let stream = threads;
   server.use(
     http.get(COMMENTS_ROUTE, async ({ request }) => {
       await record(request);
-      return HttpResponse.json({ comments: threads, count: threads.length });
+      return HttpResponse.json({
+        comments: stream,
+        count: countComments(stream),
+      });
     }),
-    http.post(COMMENTS_ROUTE, async ({ request }) => {
-      await record(request);
-      return HttpResponse.json({}, { status: 201 });
-    }),
+    http.post<{ deckId: string }>(
+      COMMENTS_ROUTE,
+      async ({ request, params }) => {
+        await record(request);
+        const body = CommentRequestBody.parse(await request.json());
+        const comment = savedComment(params.deckId, body);
+        stream = withComment(stream, comment);
+        return HttpResponse.json(comment, { status: 201 });
+      }
+    ),
     http.delete(COMMENT_ROUTE, async ({ request }) => {
       await record(request);
       return HttpResponse.json({ deleted: true });
@@ -149,23 +229,25 @@ describe("DeckCommentPanel", () => {
     expect(screen.queryByRole("button", { name: /post/i })).toBeNull();
   });
 
-  it("posts a comment and reloads the stream", async () => {
-    serveStream([]);
+  it("posts a comment and shows it once the stream has reloaded", async () => {
+    serveStream([thread()]);
     renderPanel({ isSignedIn: true });
 
     const textarea = await screen.findByPlaceholderText(/ask a question/i);
     fireEvent.change(textarea, { target: { value: "Nice curve!" } });
     fireEvent.click(screen.getByRole("button", { name: /post/i }));
 
-    await waitFor(() =>
-      expect(sentWrites()).toEqual([
-        {
-          method: "POST",
-          path: "/api/community/decks/deck-1/comments",
-          body: { body: "Nice curve!" },
-        },
-      ])
-    );
+    const stream = screen.getByRole("list");
+    expect(await within(stream).findByText("Nice curve!")).toBeInTheDocument();
+    expect(screen.getByText("2 comments")).toBeInTheDocument();
+    expect(sentRoutes()).toEqual([
+      `GET ${DECK_COMMENTS}`,
+      `POST ${DECK_COMMENTS}`,
+      `GET ${DECK_COMMENTS}`,
+    ]);
+    expect(sentWrites()).toEqual([
+      { method: "POST", path: DECK_COMMENTS, body: { body: "Nice curve!" } },
+    ]);
   });
 
   it("offers edit and delete only on the viewer's own comments", async () => {
@@ -189,7 +271,7 @@ describe("DeckCommentPanel", () => {
     expect(screen.queryByRole("button", { name: /edit/i })).toBeNull();
   });
 
-  it("sends a reply with the parent id", async () => {
+  it("sends a reply with the parent id and shows it under its parent once the stream has reloaded", async () => {
     serveStream([thread()]);
     renderPanel({ isSignedIn: true });
 
@@ -199,15 +281,21 @@ describe("DeckCommentPanel", () => {
     const replySubmits = screen.getAllByRole("button", { name: /reply/i });
     fireEvent.click(replySubmits[replySubmits.length - 1]);
 
-    await waitFor(() =>
-      expect(sentWrites()).toEqual([
-        {
-          method: "POST",
-          path: "/api/community/decks/deck-1/comments",
-          body: { body: "Budget.", parentId: "c1" },
-        },
-      ])
-    );
+    const [parent] = screen.getAllByRole("listitem");
+    const replies = await within(parent).findByRole("list");
+    expect(within(replies).getByText("Budget.")).toBeInTheDocument();
+    expect(sentRoutes()).toEqual([
+      `GET ${DECK_COMMENTS}`,
+      `POST ${DECK_COMMENTS}`,
+      `GET ${DECK_COMMENTS}`,
+    ]);
+    expect(sentWrites()).toEqual([
+      {
+        method: "POST",
+        path: DECK_COMMENTS,
+        body: { body: "Budget.", parentId: "c1" },
+      },
+    ]);
   });
 
   it("keeps the newer deck's comments when an older request resolves last", async () => {
