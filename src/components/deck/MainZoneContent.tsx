@@ -15,16 +15,21 @@ import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { ChevronDown, ChevronRight, GripVertical, Layers } from "lucide-react";
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { CardImage } from "@/components/card/CardImage";
 import { CardListItem } from "@/components/card/CardListItem";
 import { GridZoneCard } from "@/components/deck/GridZoneCard";
+import { RulebreakerAdmissionNote } from "@/components/deck/RulebreakerAdmissionNote";
 import { gridColsClass } from "@/components/deck/grid-cols";
 import { cn } from "@/components/ui/utils";
-import { isCompanionOutsideColorIdentity } from "@/lib/deck/color-identity";
+import {
+  isCompanionOutsideColorIdentity,
+  rulebreakerAdmissions,
+} from "@/lib/deck/color-identity";
 import type { CardGroup } from "@/lib/deck/sort";
 import type { Deck, DeckCard, CardCategory } from "@/lib/deck/types";
+import type { RulebreakerAdmission } from "@/modules/format-rules";
 
 const CARD_CATEGORIES: readonly CardCategory[] = [
   "creature", "instant", "sorcery", "artifact", "enchantment", "planeswalker",
@@ -40,6 +45,13 @@ interface CategorySectionProps {
   readonly onChangeCategory?: (id: string, category: CardCategory) => void;
 }
 
+/** What a list row shows of its card's colour identity, by row id. */
+interface RowIdentityProps {
+  readonly violationCardIds: ReadonlySet<string>;
+  /** The off-identity cards a rulebreaker commander admits (CR 903.5e) */
+  readonly admissions: ReadonlyMap<string, RulebreakerAdmission>;
+}
+
 // Draggable card list item (for intra-deck category drag)
 function DraggableDeckCard({
   card,
@@ -48,6 +60,7 @@ function DraggableDeckCard({
   onMoveToSideboard,
   onChangeCategory,
   isColorIdentityViolation = false,
+  admission,
 }: {
   readonly card: DeckCard;
   readonly onRemove: (id: string) => void;
@@ -55,6 +68,7 @@ function DraggableDeckCard({
   readonly onMoveToSideboard?: (id: string) => void;
   readonly onChangeCategory?: (id: string, category: CardCategory) => void;
   readonly isColorIdentityViolation?: boolean;
+  readonly admission?: RulebreakerAdmission;
 }) {
   const t = useTranslations("builder");
   const {
@@ -135,6 +149,7 @@ function DraggableDeckCard({
           )}
         />
       </div>
+      <RulebreakerAdmissionNote admission={admission} cardName={card.name} />
     </div>
   );
 }
@@ -148,14 +163,14 @@ function GenericGroup({
   onMoveToSideboard,
   onChangeCategory,
   violationCardIds,
-}: {
+  admissions,
+}: RowIdentityProps & {
   readonly label: string;
   readonly cards: Deck["cards"];
   readonly onRemoveCard: (id: string) => void;
   readonly onMoveToMaybeboard?: (id: string) => void;
   readonly onMoveToSideboard?: (id: string) => void;
   readonly onChangeCategory?: (id: string, category: CardCategory) => void;
-  readonly violationCardIds: ReadonlySet<string>;
 }) {
   const [collapsed, setCollapsed] = useState(false);
   return (
@@ -188,6 +203,7 @@ function GenericGroup({
               onMoveToSideboard={onMoveToSideboard}
               onChangeCategory={onChangeCategory}
               isColorIdentityViolation={violationCardIds.has(card.id)}
+              admission={admissions.get(card.id)}
             />
           ))}
         </div>
@@ -213,7 +229,8 @@ function DroppableCategory({
   onMoveToSideboard,
   onChangeCategory,
   violationCardIds,
-}: CategorySectionProps & { readonly violationCardIds: ReadonlySet<string> }) {
+  admissions,
+}: CategorySectionProps & RowIdentityProps) {
   const t = useTranslations("builder");
   const [collapsed, setCollapsed] = useState(false);
   const { setNodeRef, isOver } = useDroppable({
@@ -267,6 +284,7 @@ function DroppableCategory({
                 onMoveToSideboard={onMoveToSideboard}
                 onChangeCategory={onChangeCategory}
                 isColorIdentityViolation={violationCardIds.has(card.id)}
+                admission={admissions.get(card.id)}
               />
             ))}
           </SortableContext>
@@ -325,6 +343,7 @@ export function MainZoneContent({
   onChangeCategory,
 }: MainZoneContentProps) {
   const t = useTranslations("builder");
+  const admissions = useMemo(() => rulebreakerAdmissions(deck), [deck]);
   if (viewMode === "grid") {
     return (
       <div className={gridColsClass(gridCols)}>
@@ -470,6 +489,7 @@ export function MainZoneContent({
               onMoveToSideboard={onMoveToSideboard}
               onChangeCategory={onChangeCategory}
               violationCardIds={violationCardIds}
+              admissions={admissions}
             />
           );
         }
@@ -483,6 +503,7 @@ export function MainZoneContent({
             onMoveToSideboard={onMoveToSideboard}
             onChangeCategory={onChangeCategory}
             violationCardIds={violationCardIds}
+            admissions={admissions}
           />
         );
       })}
