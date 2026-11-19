@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { priceUsdOf, toUsdPrice } from "./price";
+import { priceEurOf, priceUsdOf, toUsdPrice } from "./price";
 import { aScryfallCard } from "@/test/builders/scryfall";
 
 describe("toUsdPrice", () => {
@@ -52,5 +52,23 @@ describe("priceUsdOf", () => {
 
   it("has no price when Scryfall's price string is not a number", () => {
     expect(priceUsdOf(aScryfallCard({ prices: { usd: "N/A" } }))).toBeNull();
+  });
+});
+
+describe("priceEurOf", () => {
+  it("reads the euro amount Scryfall sent, as sent, without converting the dollar one", () => {
+    const card = aScryfallCard({ prices: { usd: "1.25", eur: "1.11" } });
+
+    expect(priceEurOf(card)).toBe(1.11);
+  });
+
+  it("has no euro amount when Scryfall sent only dollars, rather than deriving one", () => {
+    expect(priceEurOf(aScryfallCard({ prices: { usd: "1.25", eur: null } }))).toBeNull();
+    expect(priceEurOf(aScryfallCard({ prices: { usd: "1.25" } }))).toBeNull();
+    expect(priceEurOf(aScryfallCard())).toBeNull();
+  });
+
+  it("has no euro amount when Scryfall's string is not a price", () => {
+    expect(priceEurOf(aScryfallCard({ prices: { eur: "1,11" } }))).toBeNull();
   });
 });

@@ -23,11 +23,15 @@
 const SCRYFALL_PRICE = /^\d+(?:\.\d+)?$/;
 
 /**
- * The card fields `priceUsdOf` reads. Structural on purpose: both the wire
- * type (`ScryfallCard`) and the Zod-parsed card (`ParsedScryfallCard`) fit.
+ * The card fields `priceUsdOf` and `priceEurOf` read. Structural on purpose:
+ * both the wire type (`ScryfallCard`) and the Zod-parsed card
+ * (`ParsedScryfallCard`) fit.
  */
 export interface PricedCard {
-  readonly prices?: { readonly usd?: string | null } | null;
+  readonly prices?: {
+    readonly usd?: string | null;
+    readonly eur?: string | null;
+  } | null;
 }
 
 /**
@@ -43,11 +47,20 @@ export interface PricedCard {
  * @param raw - the `prices.usd` field as Scryfall sent it
  */
 export function toUsdPrice(raw: string | null | undefined): number | null {
+  return toScryfallAmount(raw);
+}
+
+/**
+ * The amount a Scryfall price string denotes, in whatever currency the field
+ * it came from is in. The parsing rule `toUsdPrice` documents, shared by every
+ * currency because Scryfall writes them all the same way.
+ */
+function toScryfallAmount(raw: string | null | undefined): number | null {
   if (raw === null || raw === undefined || !SCRYFALL_PRICE.test(raw)) {
     return null;
   }
-  const usd = Number(raw);
-  return Number.isFinite(usd) ? usd : null;
+  const amount = Number(raw);
+  return Number.isFinite(amount) ? amount : null;
 }
 
 /**
@@ -61,4 +74,19 @@ export function toUsdPrice(raw: string | null | undefined): number | null {
  */
 export function priceUsdOf(card: PricedCard): number | null {
   return toUsdPrice(card.prices?.usd);
+}
+
+/**
+ * The non-foil euro amount Scryfall sent for a card, as a number of euros.
+ *
+ * I-96: the euro amount is Scryfall's own `prices.eur` figure, shown beside
+ * the dollar one. It is never derived from `prices.usd`, and the
+ * dollar amount is never derived from it: a card Scryfall sent without a
+ * euro amount has none here. The string is read by the same rule as
+ * `toUsdPrice`, since Scryfall writes both currencies the same way.
+ *
+ * @param card - a card as Scryfall sent it, parsed or not
+ */
+export function priceEurOf(card: PricedCard): number | null {
+  return toScryfallAmount(card.prices?.eur);
 }
