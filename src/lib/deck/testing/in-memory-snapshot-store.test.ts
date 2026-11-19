@@ -3,11 +3,11 @@
  * use-case tests that rely on it rely on the same promises as the Prisma
  * adapter keeps.
  */
-import { describe } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import {
-  describeDeckVersionStoreContract,
-  describeSnapshotStoreContract,
+  DECK_VERSION_STORE_CONTRACT_CASES,
+  SNAPSHOT_STORE_CONTRACT_CASES,
   type SnapshotStoreHarness,
 } from "@/lib/deck/testing/snapshot-store-contract";
 import { inMemorySnapshotStore } from "@/lib/deck/testing/in-memory-snapshot-store";
@@ -26,6 +26,23 @@ function harness(cards: readonly FakeDeckCard[]): SnapshotStoreHarness {
 }
 
 describe("in-memory snapshot store", () => {
-  describeSnapshotStoreContract(harness);
-  describeDeckVersionStoreContract(harness);
+  describe("SnapshotStore contract", () => {
+    for (const contractCase of SNAPSHOT_STORE_CONTRACT_CASES) {
+      it(contractCase.name, async () => {
+        await expect(
+          contractCase.run(harness(contractCase.deckCards))
+        ).resolves.toBeUndefined();
+      });
+    }
+  });
+
+  describe("DeckVersionStore contract", () => {
+    for (const contractCase of DECK_VERSION_STORE_CONTRACT_CASES) {
+      it(contractCase.name, async () => {
+        await expect(
+          contractCase.run(harness(contractCase.deckCards))
+        ).resolves.toBeUndefined();
+      });
+    }
+  });
 });

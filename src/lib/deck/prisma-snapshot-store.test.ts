@@ -7,7 +7,7 @@
  * route tests build it, so the adapters run on the real client type with no
  * `vi.mock`. The routes' suites pin the exact Prisma arguments.
  */
-import { describe } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { prisma } from "@/lib/db/prisma";
 import {
@@ -15,8 +15,8 @@ import {
   prismaSnapshotStore,
 } from "@/lib/deck/prisma-snapshot-store";
 import {
-  describeDeckVersionStoreContract,
-  describeSnapshotStoreContract,
+  DECK_VERSION_STORE_CONTRACT_CASES,
+  SNAPSHOT_STORE_CONTRACT_CASES,
   type SnapshotStoreHarness,
 } from "@/lib/deck/testing/snapshot-store-contract";
 import {
@@ -38,6 +38,23 @@ function harness(cards: readonly FakeDeckCard[]): SnapshotStoreHarness {
 }
 
 describe("Prisma snapshot store", () => {
-  describeSnapshotStoreContract(harness);
-  describeDeckVersionStoreContract(harness);
+  describe("SnapshotStore contract", () => {
+    for (const contractCase of SNAPSHOT_STORE_CONTRACT_CASES) {
+      it(contractCase.name, async () => {
+        await expect(
+          contractCase.run(harness(contractCase.deckCards))
+        ).resolves.toBeUndefined();
+      });
+    }
+  });
+
+  describe("DeckVersionStore contract", () => {
+    for (const contractCase of DECK_VERSION_STORE_CONTRACT_CASES) {
+      it(contractCase.name, async () => {
+        await expect(
+          contractCase.run(harness(contractCase.deckCards))
+        ).resolves.toBeUndefined();
+      });
+    }
+  });
 });
