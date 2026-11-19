@@ -1,97 +1,36 @@
-// Bracket scoring engine
-import type { Deck, BracketLevel } from "./types";
+/**
+ * The bracket score the builder shows (`useBracketScore`, `BracketIndicator`)
+ * and the warnings beside it: a projection of `explainBracket`, which owns the
+ * floors, the terms and the estimate (I-77 slice 1). This module adds only the
+ * English warnings, unchanged.
+ *
+ * @module deck/bracket
+ */
+import type { Deck } from "./types";
 import type { DeckStats, BracketScore } from "./analysis-types";
-import { isTwoCardInfiniteCombo, type Combo } from "@/modules/combos";
-import { parseBracketLevel } from "@/lib/constants/brackets";
+import type { Combo } from "@/modules/combos";
+import type { BracketAssessment } from "./bracket-assessment";
 import { minimumBracket } from "./bracket-floor";
 import { getCompanionDeckWarnings } from "./companion";
-import { getFormatConfig } from "./formats";
+import {
+  explainBracket,
+  heuristicReading,
+  termScores,
+} from "./explain-bracket";
 import { sortedUniqueNames } from "./sorted-unique-names";
-
-/**
- * The highest bracket a deck list is scored at. Brackets 4 and 5 share one rule
- * set; only the cEDH metagame separates them, and no list signal shows it.
- */
-const ESTIMATE_CEILING = 4;
-
-function clamp(value: number, min: number, max: number): number {
-  return Math.max(min, Math.min(max, value));
-}
 
 function average(values: number[]): number {
   if (values.length === 0) return 1;
   return values.reduce((a, b) => a + b, 0) / values.length;
 }
 
-/** Rounds a score to the bracket it reads as, from Bracket 1 to the estimate ceiling. */
-function toEstimatedBracket(score: number): BracketLevel {
-  return parseBracketLevel(clamp(Math.round(score), 1, ESTIMATE_CEILING)) ?? 1;
-}
-
-/** Score 1–4 based on a value and thresholds */
-function scoreLinear(
-  value: number,
-  thresholds: [number, number, number] // bracket 2 threshold, bracket 3 threshold, bracket 4 threshold
+/** The count of a checked floor row, 0 when the row was not checked. */
+function floorCount(
+  assessment: BracketAssessment,
+  rule: "gameChangers" | "twoCardCombos"
 ): number {
-  if (value <= thresholds[0]) return 1;
-  if (value <= thresholds[1]) return 2;
-  if (value <= thresholds[2]) return 3;
-  return 4;
-}
-
-function cmcToScore(avgCmc: number): number {
-  if (avgCmc <= 2.5) return 4;
-  if (avgCmc <= 3) return 3;
-  if (avgCmc <= 3.5) return 2;
-  return 1;
-}
-
-function scoreRamp(rampCount: number, avgCmc: number): number {
-  // High ramp + low avg cmc = higher bracket
-  const rampScore = scoreLinear(rampCount, [5, 8, 12]);
-  return Math.round((rampScore + cmcToScore(avgCmc)) / 2);
-}
-
-function scoreDraw(drawCount: number): number {
-  return scoreLinear(drawCount, [4, 8, 12]);
-}
-
-function scoreRemoval(removalCount: number, boardWipes: number): number {
-  const total = removalCount + boardWipes * 1.5;
-  return scoreLinear(total, [4, 7, 10]);
-}
-
-function scoreWinSpeed(cards: Deck["cards"], avgCmc: number): number {
-  const winCons = cards.filter((c) => c.category === "winCondition").length;
-  const fastWins = cards.filter((c) => {
-    const text = c.oracleText.toLowerCase();
-    return (
-      text.includes("win the game") ||
-      text.includes("storm") ||
-      text.includes("infinite") ||
-      (c.colorIdentity.length === 0 && c.cmc <= 2 && winCons > 0)
-    );
-  }).length;
-
-  let speed: number;
-  if (fastWins > 3) { speed = 4; }
-  else if (fastWins > 1) { speed = 3; }
-  else if (winCons > 2) { speed = 2; }
-  else { speed = 1; }
-  const cmcFactor = avgCmc <= 2.5 ? 1 : 0;
-  return Math.min(4, speed + cmcFactor);
-}
-
-function scoreCmc(avgCmc: number): number {
-  // Lower avg cmc = higher bracket (faster decks)
-  if (avgCmc <= 2) return 4;
-  if (avgCmc <= 2.5) return 3;
-  if (avgCmc <= 3.2) return 2;
-  return 1;
-}
-
-function countTwoCardInfiniteCombos(combos: readonly Combo[]): number {
-  return combos.filter(isTwoCardInfiniteCombo).length;
+  const row = assessment.floors.find((floorRow) => floorRow.rule === rule);
+  return row?.status === "checked" ? row.count : 0;
 }
 
 function warningCardNames(names: readonly string[]): string {
@@ -192,40 +131,38 @@ function generateWarnings(
   ];
 }
 
-/** Score a deck and return its bracket with dimension breakdown */
-export function scoreBracket(deck: Deck, stats: DeckStats, combos: readonly Combo[] = []): BracketScore | null {
-  // Bracket scoring only applies to Commander
-  if (!getFormatConfig(deck.format).hasBracketScoring) return null;
-
-  // Only score main-zone cards (sideboard/maybeboard don't affect bracket)
-  const mainCards = deck.cards.filter((c) => c.zone === "main");
-  // Tutors are not scored: Wizards removed the tutor restriction on 2025-10-21
-  // and relies on the Game Changers list to catch the efficient ones.
-  const dimensions = {
-    ramp: scoreRamp(stats.ramp, stats.avgCmc),
-    draw: scoreDraw(stats.draw),
-    removal: scoreRemoval(stats.removal, stats.boardWipes),
-    winSpeed: scoreWinSpeed(mainCards, stats.avgCmc),
-    avgCmc: scoreCmc(stats.avgCmc),
-  };
-
-  // The official restrictions set a floor: the lowest bracket whose rules admit
-  // the deck's Game Changers and two-card combos.
-  const twoCardInfiniteCombos = countTwoCardInfiniteCombos(combos);
-  const floor = minimumBracket({
-    gameChangers: stats.gameChangersCount,
-    twoCardCombos: twoCardInfiniteCombos,
+/**
+ * Scores a deck: its bracket with the five term scores and the warnings.
+ *
+ * The projection of `explainBracket` with the combos Spellbook found, so the
+ * builder and the audit read one computation. `overall` is the heuristic
+ * reading at every deck size: on a list under 60 cards the audit's estimate
+ * is the floor alone, a gap slice 2 closes by showing the estimate.
+ *
+ * @param deck - the deck; only Commander formats are scored
+ * @param stats - the stats `computeDeckStats` gives that deck
+ * @param combos - the combos Spellbook found; none when the lookup failed
+ * @returns the score, or null for a format without bracket scoring
+ */
+export function scoreBracket(
+  deck: Deck,
+  stats: DeckStats,
+  combos: readonly Combo[] = []
+): BracketScore | null {
+  const assessment = explainBracket({
+    deck,
+    stats,
+    comboData: { kind: "found", combos, fetchedAt: null },
   });
+  if (assessment === null) return null;
 
-  const warnings = generateWarnings(deck, stats, dimensions, twoCardInfiniteCombos);
-
+  const dimensions = termScores(assessment);
+  const twoCardInfiniteCombos = floorCount(assessment, "twoCardCombos");
   return {
-    overall: toEstimatedBracket(
-      Math.max(average(Object.values(dimensions)), floor)
-    ),
+    overall: heuristicReading(assessment),
     dimensions,
-    gameChangers: stats.gameChangersCount,
+    gameChangers: floorCount(assessment, "gameChangers"),
     twoCardInfiniteCombos,
-    warnings,
+    warnings: generateWarnings(deck, stats, dimensions, twoCardInfiniteCombos),
   };
 }
