@@ -408,3 +408,141 @@ describe("useAIDeckBuild", () => {
     vi.unstubAllGlobals();
   });
 });
+
+describe("useAIDeckBuild with lines outside the build event contract", () => {
+  const SOL_RING = {
+    type: "card",
+    name: "Sol Ring",
+    category: "ramp",
+    quantity: 1,
+  };
+  const DONE = { type: "done", totalCards: 1, source: "ai" };
+
+  /** Streams `lines` as the build response body and runs one build. */
+  async function buildFrom(lines: readonly string[]) {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({ ok: true, body: makeStream([...lines]) })
+    );
+    const { result } = renderHook(() => useAIDeckBuild());
+    let built: BuildResult | null = null;
+    await act(async () => {
+      built = await result.current.build({
+        colors: ["U"],
+        strategy: "control",
+        bracket: 2,
+        commanderName: null,
+        budget: null,
+      });
+    });
+    vi.unstubAllGlobals();
+    return { state: result.current.state, built };
+  }
+
+  it("ignores blank lines, lines that are not JSON and events of an unknown type", async () => {
+    const { state, built } = await buildFrom([
+      "",
+      "   ",
+      "not json",
+      JSON.stringify({ type: "progress", percent: 50 }),
+      JSON.stringify(SOL_RING),
+      JSON.stringify(DONE),
+    ]);
+
+    expect(state.error).toBeNull();
+    expect(built).toEqual(
+      expect.objectContaining({
+        cards: [{ name: "Sol Ring", category: "ramp", quantity: 1 }],
+      })
+    );
+  });
+
+  it("skips a card event whose name is not text instead of adding it to the deck", async () => {
+    const { built } = await buildFrom([
+      JSON.stringify({ type: "card", name: 42, category: "ramp", quantity: 1 }),
+      JSON.stringify(SOL_RING),
+      JSON.stringify(DONE),
+    ]);
+
+    expect(built).toEqual(
+      expect.objectContaining({
+        cards: [{ name: "Sol Ring", category: "ramp", quantity: 1 }],
+      })
+    );
+  });
+
+  it("skips a status event that carries no message", async () => {
+    const { state } = await buildFrom([
+      JSON.stringify({ type: "status" }),
+      JSON.stringify({ type: "status", message: "Choosing the lands..." }),
+      JSON.stringify(SOL_RING),
+      JSON.stringify(DONE),
+    ]);
+
+    expect(state.statusMessages).toEqual(["Choosing the lands..."]);
+  });
+
+  it("reports a stream whose only error event has no message as ended early", async () => {
+    const { state, built } = await buildFrom([
+      JSON.stringify(SOL_RING),
+      JSON.stringify({ type: "error" }),
+    ]);
+
+    expect(built).toBeNull();
+    expect(state.error).toBe("The AI build ended early");
+  });
+
+  it("keeps only the corrections that name a card, a count and a reason it can show", async () => {
+    const preview = {
+      action: "removed",
+      name: "Unreleased Dragon",
+      quantity: 1,
+      reason: "preview",
+      releasesOn: "2026-12-04",
+    };
+    const fill = {
+      action: "added",
+      name: "Island",
+      quantity: 2,
+      reason: "fill_to_size",
+    };
+    const { built } = await buildFrom([
+      JSON.stringify(SOL_RING),
+      JSON.stringify({
+        ...DONE,
+        corrections: [
+          preview,
+          { action: "removed", name: "Opt", quantity: 1, reason: "too_spicy" },
+          { action: "removed", name: "Opt", quantity: "1", reason: "banned" },
+          { action: "removed", name: "Opt", quantity: 1, reason: "preview" },
+          { action: "swapped", name: "Opt", quantity: 1, reason: "banned" },
+          { action: "added", name: "Island", quantity: 1, reason: "banned" },
+          "Opt",
+          fill,
+        ],
+      }),
+    ]);
+
+    expect(built).toEqual(
+      expect.objectContaining({ corrections: [preview, fill] })
+    );
+  });
+
+  it("completes the build with fallbacks when the done event's fields cannot be read", async () => {
+    const { state, built } = await buildFrom([
+      JSON.stringify({ ...SOL_RING, quantity: 3 }),
+      JSON.stringify({
+        type: "done",
+        totalCards: "3",
+        source: "beta",
+        corrections: "none",
+      }),
+    ]);
+
+    expect(state.error).toBeNull();
+    expect(state.totalCards).toBe(3);
+    expect(built).toEqual(
+      expect.objectContaining({ source: "ai", corrections: [] })
+    );
+  });
+});
