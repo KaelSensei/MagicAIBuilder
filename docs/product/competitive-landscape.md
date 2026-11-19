@@ -685,6 +685,134 @@ The sixteenth pass adds no initiative number. Every finding has an owner. No gla
 | The 2026-10-19 and 2026-11-06 rules editions | Already I-47 and I-73 |
 | Drafting Mystery Booster Commander Edition (Scryfall set type `draft_innovation`); Commander Draft | Not promoted: the draft non-goal stands |
 
+## 18. A seventeenth pass: a feature matrix, player demand and the platform (2026-11-19)
+
+Read on 19 November 2026, on `dev` at `a394d03d`, in two research angles: a competitor feature matrix with ranked player demand, and the platform (paid tier, growth, integrations, mobile, accessibility, law and operations). Pages were fetched with the User-Agent `MagicAIBuilder/1.0 (+https://magic-ai-builder.vercel.app)`. Reddit was read through the Arctic Shift archive, whose scores are snapshots and can differ from live Reddit; on the platform angle the archive refused every query, so that angle has no Reddit figures. "Search summary" marks a page known only from a search engine's summary. Refused or unreadable that day: `moxfield.nolt.io`, `aetherhub.com`, `commanderpowermeter.com`, `mythichub.com/blog`, `patreon.com/moxfield` and `mtggoldfish.com/premium` (HTTP 403), `eur-lex.europa.eu` (HTTP 202 with no body) and `legifrance.gouv.fr` (HTTP 403).
+
+The full matrix, 60 features across 21 products, is a separate page: [`competitor-feature-matrix.md`](competitor-feature-matrix.md).
+
+### What was checked
+
+- **EDHcheck shipped an AI builder and an AI rules judge on 17 November 2026**, both sold by credits and both "checked before you see it" ([announcement](https://edhcheck.com/updates/edhcheck-ai/)). The builder starts from cards legal in the commander's identity and within the bracket, lets the model pick from a scored shortlist, re-runs EDHcheck's own bracket, power and combo analysis, and "takes out a card that pushes it up and checks again" when the result reads above the requested bracket; a failed build refunds its credits. The judge answers from the rules effective 6 November 2026 and shows an answer only if every rule number it cites exists and was among the rules it was given, and every card it names was looked up. The same post adds card and commander statistics "from more than 136,000 decks analysed on EDHcheck", never "a number from fewer than 10 decks", with a per-account opt-out.
+- **EDHcheck's paid tier** ([pricing](https://edhcheck.com/pricing)): Premium at "$5.83/month, billed $35 every 6 months", with 75 AI credits a month, the full Turn Clock ("win curve, typical game, card impact, Deep Draw"), Deck Compare and Pod Checker, a 10,000-card collection and "No ads, ever". Free keeps the bracket, the Turn Clock headline, a 2,500-card collection, three rules questions a day and pod lobbies. Its iOS app is version 1.0.0 of 11 November 2026, with Premium sold in the app (iTunes Search API).
+- **Playgroup.gg** now ships a deck builder that needs no account, with staples ordered by win-rate delta from "790,000+ tracked games", a no-account tester for Moxfield and Archidekt links, and a card scanner inside the web page: "point the camera at a fan of cards … Scanning is free while it is in beta", and "Once it's out of beta it will be part of the supporter plans" ([deck builder](https://playgroup.gg/commander/deck-builder)).
+- **ManaBox 4.4.0** (16 November 2026) improves its scanner and adds saved filters for PRO; Sync became generally available to Pro users only on 16 June 2026, and the team named proxy support, sealed product and a desktop app "three of the most requested features" on 8 July 2026. Its subscriptions guide says a lapsed plan deletes no data.
+- **Untapped.gg** marks new Historic Brawl Commanders, Mana Base and Combos pages on its Premium page, still 7.99 USD a month, and lists CSV export and two years of history as Premium.
+- **MTG Agents** advertises that "every card clears a deterministic legality gate before it can be proposed". With EDHcheck, two vendors now sell the verification posture this roadmap was built on.
+- **Desktop clients** moved: Cockatrice 3.2.0-beta.3 (10 November), Forge 2.0.16 (11 November), XMage 1.4.63V2 (17 November).
+- **Player demand**, 2025-01-01 to 2026-11-19, ranked by Arctic Shift points: 42 rows across r/EDH, r/Moxfield, r/magicTCG, r/CompetitiveEDH, r/mtgfinance, r/ManaBoxApp, r/archidekt and r/mtgproxies. The condensed ranking is below.
+- **Platform:** paid-tier pages (Untapped, ManaBox, Scryfall, Archidekt and EDHREC FAQs), creator and referral programmes, the TCGplayer WPN filter, TopDeck.gg's Discord bot and Convoke's partner page, store app versions, EN 301 549 v4.1.1, France's décret 2026-816, the AI Act Omnibus and the marking Code of Practice, the data Omnibus, the DSA transparency template, Vercel's rate-limit and deployment-check docs, the Next.js CSP guide, Prisma's drift exit codes, flaky-test quarantine practice, and GitHub's withdrawn Dependabot alerts.
+
+### Where the product is missing or behind
+
+Condensed from the matrix to the rows where a competitor ships and the product does not, or does less.
+
+| Id | Feature | Who ships it | Ours after this pass |
+| --- | --- | --- | --- |
+| F16 | Simulated speed: the turn the deck wins | EDHcheck Turn Clock (headline free, full Premium); Deckstats first-turn analysis (paid) | Scope line on I-31: a speed variant for a declared route only |
+| F38 | Several decks on one goldfish board | XMage (up to 10 players), Forge (automated); players open tabs at Moxfield and Archidekt | Evidence for D-35 option (d) on I-07 |
+| F52 | Native or installable app | ManaBox, EDHcheck, Playgroup, TopDeck.gg, TCGplayer; none from Moxfield, Archidekt or EDHREC | I-40; slices 1–5 proposed for Next |
+| F54 | Camera scanning | ManaBox, TCGplayer, DeckCheck; Playgroup in the browser, in beta | Non-goal pending D-34; evidence that a browser can do it |
+| F25 | Collection import from another app's file | Moxfield, Archidekt, ManaBox, EDHcheck (free to 2,500 cards) | I-26 Later, I-62; ManaBox and Moxfield presets proposed earlier on I-62 |
+| F05 | Search by a non-English card name | ManaBox (seven languages), Scryfall `lang:` | Scope line on I-11, after I-67 slice 14 |
+| F33, F55 | Price history and alerts | MTGGoldfish (free alerts), MythicHub (50 alerts), Grimoria | I-59 Later; the paid line is a count of watches, not the first one |
+| F32 | Several vendors and currencies | Archidekt (four vendors), ManaBox (four markets, converts), EDHREC (Cardmarket for the EU) | I-96 labels EUR beside USD and converts nothing, by design |
+| F04, F53 | Offline search and use | ManaBox; XMage on its own server | I-19 caches one deck to read, by design |
+| F02 | Function tags while building | Archidekt (Oracle tags as categories), a Moxfield extension | I-37 4.6, waits on I-67 slice 7 |
+| F46 | Pods | EDHcheck lobbies (free) and Pod Checker (paid), Playgroup, TopDeck.gg leagues | I-15, I-23, D-40; a third precedent for I-30's pod pass |
+| F22 | Rules answers | EDHcheck Rules Judge (credits), Mana Grove, ManaBox's rule book | I-47 verbatim answers; D-39 gains EDHcheck's citation check as the bar |
+| F40 | Game tracking | TopDeck.gg, Playgroup (790,000 games), Untapped (paid) | Playtest records; I-35, I-60 |
+| F12 | Co-authors | Moxfield, Archidekt | I-20 (D-36, D-91), unchanged |
+| F28, F30 | Binders and trades | ManaBox, Moxfield binders, Cardsphere | I-43, I-44, unchanged |
+
+Where the product is level or ahead: legality, bracket floors, combos, draw odds, snapshots, comparison, packages, imports and exports, a documented public read API, and no advertising. No competitor read documents screen-reader support, a DSA contact, a full account export, or an outcome figure with its interval.
+
+### Player demand, condensed
+
+Ranked by Arctic Shift points; scores are snapshots read on 19 November 2026.
+
+| Request or complaint | Points / comments | Date | Owner or verdict |
+| --- | --- | --- | --- |
+| r/EDH, "Can we ban AI-slop, vibe-coded apps from bring solicited on here?" | 1,840 / 336 | 2026-04-03 | A positioning risk: roadmap risks table, I-02 and I-30 |
+| r/EDH, "Scryfall cheat sheet …" | 909 / 181 | 2025-04-16 | I-14: demand for learning the syntax |
+| r/EDH, "Nuh Uh! Manabox Says It's A 3!" | 797 / 687 | 2025-03-05 | I-77, I-22 |
+| r/EDH, BlueprintMTG, a solo builder | 742 and 585 / 439 | 2026-07, 2026-08-27 | Landscape §10 |
+| r/magicTCG, Moxfield's bracket identifier changes after feedback | 609 / 98 | 2025-02-13 | I-77 |
+| r/EDH, five Tarkir precons playtested against each other | 452 / 85 | 2025-03-27 | D-35 option (d), I-07 |
+| r/EDH, EDHREC's combo section | 407 / 383 | 2026-08-18 | I-09 reads Commander Spellbook; I-77 |
+| r/EDH, a free multiplayer goldfish app | 305 / 75 | 2026-01-18 | D-35 option (d), I-07 |
+| r/magicTCG, EDHREC's redesign ("The ad scripts crashed Chrome") | 291 / 219 | 2026-10-13 | No ads; I-04 |
+| r/EDH, "What is the deal with decks on moxfield?" | 275 / 183 | 2026-04-15 | I-75 slice 6's price filter |
+| r/EDH, "Seriously Rogue ads on EDHREC" | 250 / 71 | 2025-07-02 | No ads |
+| r/Moxfield, "Regarding Recent Problematic Ads" | 244 / 31 | 2025-12-16 | No ads; I-30's pricing page |
+| r/EDH, "EDHREC should really add a nonbo tag" | 228 / 262 | 2026-02-26 | I-100 |
+| r/mtgfinance, a decklist cart optimiser | 221 / 124 | 2026-08-20 | Declined by I-32 6.2 |
+| r/EDH, a price check across 190+ Canadian stores | 177 / 49 | 2026-08-31 | Declined by I-32 6.2 |
+| r/EDH, "EDHLAB released a mobile Commander app" | 120 / 55 | 2026-11-03 | I-40, I-62 |
+| r/EDH, "Shortfall: Your (non-AI) helper to track missing cards" | 98 / 28 | 2026-03-05 | I-16, I-76; a non-AI label as positioning |
+| r/EDH, "AI-generated primers?" | 97 / 34 | 2026-02-14 | I-34 and I-29: generated decks excluded |
+| r/CompetitiveEDH, per-card cEDH win rates | 95 / 11 and 93 / 31 | 2025-08-12, 2026-01-05 | Context on I-98; not promoted |
+| r/EDH, MoxTags, Scryfall tags in Moxfield | 84 / 14 | 2026-06-03 | I-37 4.6, already cited |
+| r/EDH, "Ads make Archidekt annoying and unusable" | 47 / 56 | 2025-08-05 | No ads; I-30 |
+
+The loudest signal is hostility to AI tools on r/EDH, and the second is distrust of automatic bracket verdicts. The demand a product can act on is narrower: play several decks against each other, affordable public decks, tags while building, a phone app that imports what players already have, and no ads.
+
+### Verified facts and corrections
+
+Each load-bearing fact was fetched once more on 19 November 2026 with the User-Agent above.
+
+- **DSA transparency template.** The citation flagged as possibly wrong is right: Commission Implementing Regulation (EU) 2024/2835 of 4 November 2024 "laying down templates concerning the transparency reporting obligations of providers of intermediary services and of providers of online platforms", published in the Official Journal on 5 November 2024. EUR-Lex answered HTTP 202, so the title and dates come from the Publications Office's metadata for CELEX 32024R2835.
+- **AI Act Omnibus.** Regulation (EU) 2026/1744 of 8 July 2026, "Digital Omnibus on AI", published in the Official Journal (L series) on 24 July 2026 and in force on 27 July 2026, from the same metadata for CELEX 32026R1744. The new Art. 111(4) and the rewritten Art. 4 rest on secondary sources.
+- **Marking Code of Practice.** The Commission's page reads "Publication 10 June 2026" and "the final Code of Practice on marking and labelling of AI-generated content".
+- **EN 301 549 v4.1.1.** ETSI's delivery server lists the published folder `04.01.01_60`, dated 2 September 2026. That it rests on WCAG 2.2 and awaits an Official Journal citation is reported by Deque and DWT.
+- **Décret 2026-816.** Landot avocats (26 August 2026): "décret n° 2026-816 du 24 août 2026 modifiant le décret n° 2019-768 du 24 juillet 2019 relatif à l'accessibilité aux personnes handicapées des services de communication au public en ligne", in force the day after publication. Légifrance answered HTTP 403; the date in the Journal officiel is not confirmed.
+- **EDHcheck's Pod Checker and Turn Clock**, confirmed on its pricing page.
+- **Playgroup's browser scanner**, confirmed on its deck-builder page, including the beta and the move to supporter plans.
+- **r/EDH's anti-AI thread**: 1,840 points and 336 comments, posted 3 April 2026, from Arctic Shift's record for post `1sba53j`.
+- **Corrections.** I-31's "no willingness-to-pay data exists for probability analytics" now has a price anchor (EDHcheck Premium). The specs README's "Generation is commoditised; verification is not" is contested by two vendors; the remaining difference is the verdict per claim and a published check (I-22). L-40's "they disagree on whether the Omnibus text is formally adopted" is superseded.
+
+### Where the new initiatives sit
+
+The seventeenth pass adds no initiative number. Every finding has an owner, including the two engineering lines that had none in the research notes: migrations applied by the deploy after a drift check and synthetic journeys went to I-71, and a strict script policy, the shared limiter's registry, an advisory policy and a flaky-test quarantine question went to I-05. No glance row was added and no hard dependency changed.
+
+### Folded back into an existing initiative
+
+| Finding | Where it went |
+| --- | --- |
+| A speed variant for a declared route, with seed, n and interval; EDHcheck's price as an anchor | I-31 |
+| Several decks on one board; precon against precon first | D-35 option (d), I-07 |
+| A generated deck re-assessed against the bracket floors before it is shown | I-02, with I-77 |
+| A failed AI call never costs the player | Already I-30 4.4; evidence added |
+| A citation check as the bar for any model-worded rules answer | D-39, I-47 |
+| "Verification is not commoditised" contested | I-22 |
+| Installable app slices 1–5 proposed for Next | I-40 |
+| Browser scanning, and version picking still unsolved for near-identical reprints | D-34, I-40 |
+| ManaBox and Moxfield collection files earlier | I-62, with I-26 |
+| An opt-out from aggregate statistics | I-34, I-29 |
+| Generated decks kept out of every aggregate | I-34, I-29 |
+| Which page families rank for "<commander> deck" | I-34, with I-92 |
+| Search by a French card name | I-11, after I-67 slice 14 |
+| Price alerts free within a cap elsewhere | I-59 |
+| Pod Checker, refunds, lapse, export and no ads | I-30 |
+| The reader's own view on another player's public deck | I-37 |
+| A 275-point thread about unaffordable public decks | I-75 |
+| Per-card cEDH win rates | Context on I-98 |
+| The nonbo thread | I-100 |
+| A WPN-store filter on a TCGplayer handoff; cross-store carts | I-32 |
+| A game-night table link for SpellTable or Convoke | I-46 |
+| Convoke's public partner page | I-50 |
+| A creator-programme eligibility bar and perks that cost no cash | I-72 |
+| An accessibility statement that names EN 301 549 v4.1.1 | I-49, L-36 |
+| Neither large builder documents a public API | I-95 |
+| AI Act Omnibus adopted, the Code of Practice final, Art. 4 rewritten | L-40, I-02 |
+| The data Omnibus is a Council mandate, not law | L-13 |
+| The DSA transparency template | L-37 |
+| Migrations applied by the deploy after a drift check; synthetic journeys | I-71 |
+| A strict script policy; the limiter's registry; an advisory policy; a flaky-test quarantine question | I-05 |
+| Hostility to AI tools on r/EDH | The roadmap's risks table, I-02 and I-30 |
+
+The candidates read and not promoted are listed in the roadmap's [seventeenth-pass section](roadmap.md#what-the-seventeenth-pass-checked-and-did-not-promote).
+
 ---
 
 ## Sources
@@ -1135,3 +1263,91 @@ Player threads, via Arctic Shift:
 - r/Moxfield, "Card scanning tools?", 2026-11-06, 4 points, 9 comments: <https://www.reddit.com/r/Moxfield/comments/1xpjfz1/>
 - r/magicTCG, "Why isn't there more outrage about the Shrinkflation happening in 2027?", 2026-11-15, 268 points, 178 comments: <https://www.reddit.com/r/magicTCG/comments/1xwvbo2/>
 - Arctic Shift, the Reddit archive used for every thread above (`reddit.com` itself was not fetched): <https://arctic-shift.photon-reddit.com/>
+
+### Added 19 November 2026
+
+Read on 19 November 2026 unless another date is given. Section 18 is the review and [`competitor-feature-matrix.md`](competitor-feature-matrix.md) the matrix. A page already cited by an earlier pass is not repeated here.
+
+Competitors and their products:
+
+- EDHcheck, "EDHcheck AI" (AI deck builder, Rules Judge, card statistics), 17 November 2026: <https://edhcheck.com/updates/edhcheck-ai/>
+- EDHcheck, pricing (Premium, Pod Checker, Turn Clock): <https://edhcheck.com/pricing>
+- Playgroup.gg, Commander deck builder (no account, scanner in beta): <https://playgroup.gg/commander/deck-builder>
+- Playgroup.gg, playtest: <https://playgroup.gg/playtest>
+- MTG Agents, Commander deck builder: <https://mtg-agents.com/commander-deck-builder>
+- r/ManaBoxApp, the team's Sync post, 2026-06-16, 77 points: <https://www.reddit.com/r/ManaBoxApp/comments/1u7n0vo/>
+- r/ManaBoxApp, "three of the most requested features", 2026-07-08, 97 points: <https://www.reddit.com/r/ManaBoxApp/comments/1uquzau/>
+- Archidekt, app page ("no plans" for a native app): <https://archidekt.com/app>
+- Archidekt forum, the read API (search summary): <https://archidekt.com/forum/thread/40353>
+- Moxfield public issues (#102, #143): <https://github.com/moxfield/moxfield-public/issues>
+- moxfield-api, an unofficial client: <https://github.com/MarioMH8/moxfield-api>
+- Card Kingdom, "Deck Builder: Craft Your Next Deck", 2025-02-07, updated 2025-08-21: <https://blog.cardkingdom.com/deck-builder-craft-your-next-deck/>
+- Cockatrice, importing decks (search summary): <https://cockatrice.github.io/docs/db/d91/importing_decks.html>
+- Forge README (release 2.0.16, 2026-11-11): <https://github.com/Card-Forge/forge>
+- XMage README (release 1.4.63V2, 2026-11-17): <https://github.com/magefree/mage>
+- MythicHub, price alerts help (search summary): <https://mythichub.com/help/price-alerts>
+- Scryfall, donate: <https://scryfall.com/donate>
+
+Integrations and growth:
+
+- TopDeck.gg, Convoke support in the Discord bot, 4 April 2026: <https://topdeck.gg/blog/convoke-support-discord-bot-20260404>
+- Convoke, partners: <https://convoke.games/en/partners>
+- Mana Pool, sponsored creators: <https://manapool.com/sponsored-creators>
+- AetherHub, content creators (search summary): <https://aetherhub.com/home/contentcreators>
+- MTGO, Creator Program 2025 (search summary): <https://mtgo.com/news/mtgo-creator-program-04012025>
+- Wizards Play Network, TCGplayer as Preferred Marketplace Partner, 12 November 2025 (search summary): <https://wpn.wizards.com/news/tcgplayer-preferred-marketplace-partner-wpn>
+- TCGplayer help, Certified Hobby Shop (search summary): <https://help.tcgplayer.com/hc/en-us/articles/31800035963671>
+
+Player threads, via Arctic Shift (scores are snapshots):
+
+- r/EDH, "Can we ban AI-slop, vibe-coded apps from bring solicited on here?", 2026-04-03, 1,840 points, 336 comments: <https://www.reddit.com/r/EDH/comments/1sba53j/>
+- r/EDH, "Shortfall: Your (non-AI) helper to track missing cards", 2026-03-05, 98 points: <https://www.reddit.com/r/EDH/comments/1rls7tx/>
+- r/EDH, "Firemind - an AI powered EDH deck analysis tool", 2026-11-07: <https://www.reddit.com/r/EDH/comments/1xqhire/>
+- r/magicTCG, "Changes to Moxfield's Bracket Identifier", 2025-02-13, 609 points: <https://www.reddit.com/r/magicTCG/comments/1iolvus/>
+- r/EDH, "Playtested the 5 tarkir precons against eachother on moxfield", 2025-03-27, 452 points: <https://www.reddit.com/r/EDH/comments/1jktvj5/>
+- r/magicTCG, "AI Deck-builder Won't Stop Adding Counterplay for Carpenter Bees", 2026-09-17, 427 points: <https://www.reddit.com/r/magicTCG/comments/1wj0vvq/>
+- r/EDH, "I got tired of multiple Archidekt/Moxfield tabs and made a free multiplayer playtest/goldfishing app", 2026-01-18, 305 points: <https://www.reddit.com/r/EDH/comments/1qgadl8/>
+- r/EDH, "What is the deal with decks on moxfield?", 2026-04-15, 275 points: <https://www.reddit.com/r/EDH/comments/1sm7vwh/>
+- r/EDH, "Seriously Rogue ads on EDHREC", 2025-07-02, 250 points: <https://www.reddit.com/r/EDH/comments/1lq06ea/>
+- r/Moxfield, "Regarding Recent Problematic Ads", 2025-12-16, 244 points: <https://www.reddit.com/r/Moxfield/comments/1pofucy/>
+- r/EDH, "EDHREC should really add a nonbo tag (PSA about Zada)", 2026-02-26, 228 points: <https://www.reddit.com/r/EDH/comments/1rfc8x7/>
+- r/mtgfinance, "After sharing my $1.7M buylisting tool, I fixed decklist cart optimizers.", 2026-08-20, 221 points: <https://www.reddit.com/r/mtgfinance/comments/1vtlydu/>
+- r/EDH, a price check across 190+ Canadian stores, 2026-08-31, 177 points: <https://www.reddit.com/r/EDH/comments/1w3u0gb/>
+- r/EDH, "EDHLAB released a mobile Commander app", 2026-11-03, 120 points: <https://www.reddit.com/r/EDH/comments/1xmsp8o/>
+- r/EDH, "AI-generated primers?", 2026-02-14, 97 points: <https://www.reddit.com/r/EDH/comments/1r4vk61/>
+- r/CompetitiveEDH, a free cEDH analytics tool, 2025-08-12, 95 points: <https://www.reddit.com/r/CompetitiveEDH/comments/1mof66n/>
+- r/CompetitiveEDH, "I couldn't find the cEDH deckbuilding tool I wanted, so I built it", 2026-01-05, 93 points: <https://www.reddit.com/r/CompetitiveEDH/comments/1q4pc3i/>
+- r/EDH, "Archidekt or Moxfield? Which is better?", 2025-04-02, 140 points, 307 comments: <https://www.reddit.com/r/EDH/comments/1jpnurr/>
+- r/EDH, "Non-Moxfield/Archidekt users: what's your pick, and why?", 2026-07-05, 21 points: <https://www.reddit.com/r/EDH/comments/1uo72kh/>
+- r/Moxfield, a Moxfield app, 2026-05-31, 9 points: <https://www.reddit.com/r/Moxfield/comments/1tssuoc/>
+- r/Moxfield, filter decks by collection, 2026-05-21, 10 points: <https://www.reddit.com/r/Moxfield/comments/1tjblso/>
+
+Accessibility and law (research, not legal advice):
+
+- Publications Office of the EU, Regulation (EU) 2026/1744 (Digital Omnibus on AI), metadata for CELEX 32026R1744: <http://data.europa.eu/eli/reg/2026/1744/oj>
+- Publications Office of the EU, Commission Implementing Regulation (EU) 2024/2835 (DSA transparency templates), metadata for CELEX 32024R2835: <http://data.europa.eu/eli/reg_impl/2024/2835/oj>
+- Publications Office of the EU, SPARQL endpoint used for both records: <https://publications.europa.eu/webapi/rdf/sparql>
+- NicFab, the Digital Omnibus on AI in the Official Journal: <https://www.nicfab.eu/en/posts/digital-omnibus-ai-official-journal/>
+- Cuatrecasas, "Digital Omnibus on AI has been published": <https://www.cuatrecasas.com/en/spain/intellectual-property/art/digital-omnibus-ai-has-been-published>
+- European Commission, "Commission publishes Code of Practice on marking and labelling AI-generated content", 10 June 2026: <https://digital-strategy.ec.europa.eu/en/news/commission-publishes-code-practice-marking-and-labelling-ai-generated-content>
+- Jones Day, on the final Code of Practice, June 2026 (search summary): <https://www.jonesday.com/en/insights/2026/06/european-commission-publishes-final-code-of-practice-on-marking-and-labelling-aigenerated-content>
+- PPC Land, the Council's mandate on the data Omnibus (search summary): <https://ppc.land/eu-council-agrees-4-month-cookie-re-ask-wait-for-digital-omnibus-talks/>
+- IAPP, member states' negotiating stance (search summary): <https://iapp.org/news/a/eu-member-states-finalize-digital-omnibus-negotiating-stance>
+- ETSI, EN 301 549 v4.1.1, published folder dated 2 September 2026: <https://www.etsi.org/deliver/etsi_en/301500_301599/301549/04.01.01_60/>
+- Deque, on EN 301 549 v4.1.1 (search summary): <https://www.deque.com/fr/blog/en-301-549-v4-1-1-is-final-what-changed-what-it-means-and-what-you-should-do/>
+- DWT, European Accessibility Act ICT standards update, September 2026 (search summary): <https://www.dwt.com/insights/2026/09/european-accessibility-act-ict-standards-update>
+- Landot avocats, décret n° 2026-816, 26 August 2026: <https://blog.landot-avocats.net/2026/08/26/evolution-des-regles-daccessibilite-des-personnes-en-situation-de-handicap-aux-services-de-communication-au-public-en-ligne/>
+- CCPC (Ireland), European Accessibility Act guidelines for microenterprises: <https://www.ccpc.ie/business/enforcement/accessibility/european-accessibility-act-guidelines-for-microenterprises/>
+
+Engineering and operations:
+
+- Prisma, `migrate diff`: <https://docs.prisma.io/docs/cli/migrate/diff>
+- Vercel, Deployment Checks: <https://vercel.com/docs/deployment-checks>
+- Vercel changelog, blocking promotions with GitHub Actions: <https://vercel.com/changelog/block-vercel-deployment-promotions-with-github-actions>
+- Vercel, firewall rate limiting (search summary): <https://vercel.com/docs/security/vercel-waf/rate-limiting>
+- Next.js, Content Security Policy guide: <https://nextjs.org/docs/app/guides/content-security-policy>
+- Martin Fowler, "Eradicating Non-Determinism in Tests": <https://www.martinfowler.com/articles/nonDeterminism.html>
+- Arkency, "Weekly quarantine": <https://blog.arkency.com/weekly-quarantine/>
+- GitHub changelog, improved detection for withdrawn Dependabot alerts, 13 October 2026: <https://github.blog/changelog/2026-10-13-improved-detection-for-withdrawn-dependabot-alerts>
+- GitHub Docs, controlling the dependencies updated (search summary): <https://docs.github.com/en/code-security/how-tos/secure-your-supply-chain/manage-your-dependency-security/controlling-dependencies-updated>
+- Costbench, Checkly's free plan (search summary): <https://costbench.com/software/browser-testing/checkly/free-plan/>

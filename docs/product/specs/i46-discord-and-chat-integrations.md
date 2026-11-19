@@ -590,6 +590,7 @@ Playgroups, stores and creators organise Commander on Discord, and the reference
 - [ ] A pure chat formatter from the public projection, then deck-update feeds by channel webhook on an explicit "Publish update", at most one post per deck an hour, with the webhook URL stored encrypted (slices 4–5).
 - [ ] The Discord app: a signed interactions endpoint with no Gateway connection and no `MESSAGE_CONTENT`, server settings, shared rate limits, then `/deck`, `/bracket-check`, `/combo`, `/lineup`, `/gamenight` and `/card` (slices 6–13).
 - [ ] Install and command counters for I-39, then verification and a public install link once I-38's privacy policy and terms exist (slices 14–15).
+- [ ] Added 2026-11-19 (seventeenth pass), Later: once `/gamenight`'s poll has closed, the command can post a table link for the webcam platform the server chose in its settings, SpellTable or Convoke, with none as the default. TopDeck.gg's bot does this for tournaments and Looking-For-Game lobbies: server admins choose "SpellTable, Convoke, or Off", and "each table gets a Convoke game link" ([blog](https://topdeck.gg/blog/convoke-support-discord-bot-20260404), 2026-04-04, read 2026-11-19). The link is the only output: the command stores no game state, so the non-goal on online play holds.
 
 ### Engineering enablers
 

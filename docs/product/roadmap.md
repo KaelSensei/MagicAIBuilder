@@ -1,6 +1,6 @@
 # MagicAIBuilder: Product Roadmap
 
-> **Updated:** 2026-11-16 (sixteenth pass: no new initiative; rulebreaker commanders, a release-day check, Commander Box League and Two-Headed Giant Commander nights went to I-03, I-73, I-102, I-42 and I-41). Before it, 2026-11-15 (fifteenth pass: I-102 a theme you can measure, I-103 planar, scheme and Attraction decks), and 2026-11-14 (fourteenth pass: no new initiative; collection counting, the editor, the mana base, prices and the bracket floor gained scenarios)
+> **Updated:** 2026-11-19 (seventeenth pass: no new initiative; a competitor feature matrix, ranked player demand and the platform went to 24 existing specs, four legal questions and three owner decisions, and r/EDH's hostility to AI tools became a positioning risk). Before it, 2026-11-16 (sixteenth pass: no new initiative; rulebreaker commanders, a release-day check, Commander Box League and Two-Headed Giant Commander nights went to I-03, I-73, I-102, I-42 and I-41), 2026-11-15 (fifteenth pass: I-102 a theme you can measure, I-103 planar, scheme and Attraction decks), and 2026-11-14 (fourteenth pass: no new initiative; collection counting, the editor, the mana base, prices and the bracket floor gained scenarios)
 
 > **North star:** help a Commander player go from an idea to a legal, explainable, testable and enjoyable deck.
 
@@ -8,7 +8,7 @@ This roadmap is the index. The user stories, scenarios and scope for each initia
 
 ## Themes
 
-The initiatives group into the jobs a Commander player actually has. I-80 to I-98, added on 2026-11-11, and I-99 to I-101, added on 2026-11-12, are marked. The fourteenth pass, on 2026-11-14, and the sixteenth, on 2026-11-16, added no initiative. Placement and the impact table are in [Impact and effort](#twelfth-pass-impact-effort-and-placement). Personas, the dependency graph, the quarter sequence and the risks are in [Planning Views](#planning-views).
+The initiatives group into the jobs a Commander player actually has. I-80 to I-98, added on 2026-11-11, and I-99 to I-101, added on 2026-11-12, are marked. The fourteenth pass, on 2026-11-14, the sixteenth, on 2026-11-16, and the seventeenth, on 2026-11-19, added no initiative. Placement and the impact table are in [Impact and effort](#twelfth-pass-impact-effort-and-placement). Personas, the dependency graph, the quarter sequence and the risks are in [Planning Views](#planning-views).
 
 | Theme | Already on the roadmap | Added 2026-11-11 | Added 2026-11-12 and 15 |
 | --- | --- | --- | --- |
@@ -217,6 +217,39 @@ Added 2026-11-16. No new initiative number, so no glance row. As in the fourteen
 | I-42 Variants | Commander Sealed, the Commander Box League deck, as an owner question against the casual-variant non-goal | Low | Small | Low | Later, unchanged | Medium | I-42 owns variant rules as data. The format is official; r/EDH threads about it stay under 10 points in 2025 and 2026 |
 | I-41 Store nights | Two-Headed Giant Commander Night teams kept whole, and one sealed deck kept across a Prerelease week | Low | Small | Low | Later, unchanged | High | `formPods` and check-in are already slices 1 and 5 |
 
+### Seventeenth pass: impact, effort and placement
+
+Added 2026-11-19. No new initiative number, so no glance row. As in the fourteenth and sixteenth passes, the rows score the scope this pass attached to an id that already exists; they do not change that id's place in Now, Next or Later, and Effort is the addition, not the whole initiative. Two rows propose a change of place to the owner (I-40's slices 1 to 5, I-62's collection presets); the glance table stays as it is until the owner decides. Confidence uses the twelfth pass's words. The feature matrix behind the competitor rows is [`competitor-feature-matrix.md`](competitor-feature-matrix.md), and the review is [section 18 of the landscape](competitive-landscape.md#18-a-seventeenth-pass-a-feature-matrix-player-demand-and-the-platform-2026-11-19).
+
+| Existing id | What was added | Impact | Effort | Risk | Place | Confidence | Why it is not a new number |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| I-02 AI copilot | A generated deck re-assessed against I-77's floors before it is shown, every removal listed with its floor; the Code of Practice as the reference for the `ai` export field; the r/EDH anti-AI positioning risk for the launch copy | High | Small | High | Now, unchanged | High | Requirement 2.2 already shows each rejection with its rule. EDHcheck shipped the same loop on 2026-11-17 |
+| I-05 Production safety | The shared limiter stays primary over an edge rule, with a route registry; a strict script policy by nonce or hash; an advisory policy; a flaky-test quarantine as an owner question | High | Medium | Medium | Now, unchanged | High | I-05 owns the rate-limit store, the security posture and the gates that must not be bypassed silently |
+| I-71 Uptime and recovery | Migrations applied by the deploy after a drift check, as a required deployment check (proposed 4.13); synthetic journeys counted against the objective (proposed 3.8) | High | Medium | Medium | Next, unchanged | High | §4 already owns the guarded schema script and the additive rule; §3 owns the objective and its checks |
+| I-62 Switching sites | ManaBox and Moxfield collection presets proposed ahead of slice 15, with I-26 keeping reconciliation | High | Small | Medium | Next, unchanged; the order is the owner's | High | Slice 15 already reads collection files through I-26. EDHcheck imports them free |
+| I-31 Deck Lab | A speed variant for one declared route, with seed, n and interval and no bracket named; the paid-tier line corrected against EDHcheck's price | Medium | Medium | High | Next, unchanged | High | Deck Lab already owns seeded runs and their limits; I-65 owns the route |
+| I-07 Playtest | Evidence for D-35 option (d), with precon against precon as the first scenario | Medium | Medium | Low | Next, unchanged; (d) waits on D-35 | High | Option (d) is already written into the spec. Posts of 305 and 452 points |
+| I-40 Installable app | Slices 1–5 proposed for Next; browser scanning as evidence for D-34 | Medium | Small | Low | Later, unchanged; promotion is the owner's | High | The slices and the scanning gate already exist. No Moxfield, Archidekt or EDHREC app; two small competitors went native in November |
+| I-34 Data reports | An account opt-out from aggregates; generated decks counted in no aggregate; the page families that rank | Medium | Small | Low | Next, unchanged | Medium | Requirements 4.2 and 4.3 already own thresholds and the index policy |
+| I-29 Deck index | The corpus honours the opt-out and the generated-deck rule | Medium | Small | Low | Later (2027), unchanged | Medium | Publishing statistics only from indexed decks is already scope |
+| I-30 Paid tier | Pod Checker as a third pod-pass precedent; refunds, a lapse that deletes nothing, a free export and no ads as evidence | Medium | Small | Low | Next, unchanged | High | Requirements 4.4, 5.3 and the pod pass already say it |
+| I-47 Rules answers | A citation check as the bar for any model-worded answer | Medium | Small | Medium | Next, unchanged | High | Slice 14 is already D-39's decision |
+| I-11 Localization | Search by a printed French card name, read side only | Medium | Small | Low | Later, unchanged | Medium | Waits on I-67 slice 14's names, already planned |
+| I-59 Price history | Alerts free elsewhere within a cap; the paid line is the count of watches, not the first one | Medium | Small | Low | Later, unchanged | Medium | Slice 13 already owns the paid line |
+| I-37 Editor depth | Another player's public deck opens in the reader's own view and grouping | Medium | Small | Low | Next, unchanged | Medium | Slices 19–21 already put read-only views on public pages |
+| I-75 Deck search | A 275-point thread as dated voice for the price filter | Medium | Small | Low | Next, unchanged | Medium | Slice 6 already plans the price with its basis and date |
+| I-100 Deck coherence | A 228-point nonbo thread as the player voice the 2026-11-12 search could not read | Medium | Small | Low | Next, unchanged | Medium | Evidence only |
+| I-22 Public verification | "Verification is not commoditised" contested; the verdict per claim stays the difference | Medium | Small | Low | Later (2027), unchanged | High | Evidence and wording only |
+| I-49 Colour and low vision | The accessibility statement names EN 301 549 v4.1.1 and the version the Official Journal cites | Medium | Small | Low | Next, unchanged | Medium | The voluntary statement is already scope |
+| I-72 Growth loops | A creator eligibility bar ("15 in 90 days") and perks that cost no cash | Medium | Small | Low | Next, unchanged | Medium | Requirement 5 already asks for a published criterion |
+| I-95 API changelog | Positioning: neither large builder documents a public API | Medium | Small | Low | Next, unchanged | Medium | Evidence only; no new route |
+| I-32 Seller handoff | A WPN-store filter as an open question; cross-store demand recorded and still declined | Low | Small | Low | Next, unchanged | Medium | Requirement 6.2 already declines a cross-seller split |
+| I-46 Discord | Later: a game-night table link for SpellTable or Convoke | Low | Small | Low | Next, unchanged | High | `/gamenight` is already slice 12 |
+| I-50 Play online | Convoke's public partner page lowers the cost of open question 2 | Low | Small | Low | Next, unchanged | High | Slice 12 already plans a partner import |
+| I-98 cEDH checklist | Per-card cEDH win-rate demand recorded as context; the refusal stands | Low | Small | Low | Later, unchanged | High | Evidence only |
+
+The pass also added four legal questions ([L-13](legal-questions.md#l-13-audience-measurement-error-replay-and-device-reads), [L-36](legal-questions.md#l-36-the-european-accessibility-act), [L-37](legal-questions.md#l-37-platform-status-and-the-micro-enterprise-floor), [L-40](legal-questions.md#l-40-the-ai-acts-transparency-duties-art-50)) and dated evidence to [D-34, D-35 and D-39](owner-decisions.md#product-scope-and-non-goals); see [What the seventeenth pass checked](#what-the-seventeenth-pass-checked-and-did-not-promote).
+
 ---
 
 ## Planning Views
@@ -345,6 +378,7 @@ Buckets follow Now, then Next, then Later. A bucket is an order. It is not a pro
 | Colour and language | A new view is English-only or colour-only | Enrichments name English and French, and a second channel. I-49 and I-24 stay the owners |
 | A side card counted as a main card | A plane or a scheme changes the deck's count, curve, price or bracket | I-103 slice 1 gives one shared zone type and a sociable test on every reader of the main zone |
 | A load band or a finding read as a verdict | Players treat "demanding" or a coherence question as a judgement on a deck or a person | I-99 shows every factor beside the band and bans the pejoratives; I-100 asks a question, keeps findings private and lets the owner answer "I mean it"; both measure precision on an owner-labelled fixture before any public surface |
+| An "AI" product launched into a forum hostile to AI tools | r/EDH's "Can we ban AI-slop, vibe-coded apps from bring solicited on here?" drew 1,840 points and 336 comments (2026-04-03, Arctic Shift snapshot read 2026-11-19), and every AI-tool launch found there since sits at 0 or 1 point. A launch post that leads with the model is dismissed before anyone reads the checks | Added 2026-11-19. Positioning, not a feature: the landing copy, the pricing page and the first public posts lead with the checks and the tools that call no model, and link I-30 slice 5's disclosure page ([I-02](specs/i02-checkable-ai-copilot.md), [I-30](specs/i30-business-model-and-paid-tier.md)). Legality stays usable with the copilot off |
 
 ### Kill criteria for Now
 
@@ -412,6 +446,34 @@ Read on 2026-11-16. No new initiative number; every finding went to the initiati
 - r/Moxfield requests since 2026-10-01 (7 points at most beside a 38-point "Visual grid") are I-13, I-16, I-40, I-57, I-60, I-75, I-76 and I-80. A 245-point r/EDH thread about a friend who quit over removal is I-15, I-88 and I-78. A 268-point r/magicTCG complaint about 2027 product tiers is not a product job.
 - The under-covered areas in this pass's brief (accessibility, offline use, store tools, Discord and SpellTable, exports, data portability, a developer API, teaching, other Commander formats) each already have an owner, listed in section 17.
 - Drafting Mystery Booster Commander Edition stays inside the draft non-goal.
+
+### What the seventeenth pass checked and did not promote
+
+Read on 2026-11-19. No new initiative number; every valid candidate went to the initiative that already owns the job, to a legal question or to an owner decision, each with its dated source in [section 18 of the landscape](competitive-landscape.md#18-a-seventeenth-pass-a-feature-matrix-player-demand-and-the-platform-2026-11-19). The two engineering lines the research found without an owner fit existing ones: migrations in the deploy and synthetic journeys went to I-71, the script policy and the quarantine question to I-05. These were read and not promoted:
+
+- **A 1–10 power score** (EDHcheck, ArcMind, Playgroup): rejected. The product follows Wizards' brackets and I-77's floors, and a 1–10 scale is the "fake score" the north star avoids.
+- **Staples ordered by win-rate delta** (Playgroup's "+6.5 pp" from 790,000 tracked games): rejected as a recommendation order. A delta from self-logged casual games is confounded by the pilot and the pod, I-34 owns outcome conventions, and the product has no such data.
+- **Per-card cEDH win rates** from tournament data (95 and 93 points on r/CompetitiveEDH): real demand, recorded as context on I-98. I-09's block is a licence block and I-98 refuses a win rate.
+- **A cheapest split across many shops** (177 points on r/EDH for 190+ Canadian stores; 221 on r/mtgfinance for a US cart optimiser): I-32 requirement 6.2 already declines it, because listing-level prices are not granted.
+- **Online play, a rules engine, AI opponents** (Cockatrice, Forge, XMage, Playgroup Live, Arena, a 165-point browser tabletop): non-goals unchanged; I-50 owns the exports. A general damage simulator for C1's speed figure is rejected for the same reason; I-31's variant reads a declared route only.
+- **Tournament software** (TopDeck.gg at $12 a month): non-goal unchanged; I-41 builds no tournament manager.
+- **Sealed product tracking** (ManaBox, in progress) and **matching decks with boosters** (300 points, 2025-03-09): a collector's job outside Commander deckbuilding.
+- **Currency conversion** (ManaBox): rejected; I-96 labels two prices and converts nothing, by design.
+- **A desktop app** (ManaBox's beta, by the end of 2026): the web app already runs on the desktop.
+- **A feed of followed builders**: no competitor feed was found; follows exist at Moxfield, Archidekt and EDHcheck. I-63 would carry the events if it is ever wanted.
+- **A mulligan and goldfish trainer** (21 points on r/CompetitiveEDH): players criticised it for requiring an account. The no-account lesson is I-39's; the keep table is I-31's.
+- **A refund for failed AI work** (EDHcheck): already I-30 requirement 4.4; recorded as evidence on I-30.
+- **Scryfall's donations and seller partnership**: no new work; I-30 slice 12 and L-17 already consider a supporter page with nothing gated.
+- **Moxfield, MTGGoldfish, 17lands, Archidekt and EDHREC tiers**: nothing new; Moxfield's Patreon and MTGGoldfish Premium answered HTTP 403, and Archidekt and EDHREC still sell ad removal at 2 USD. The 3–8 USD band stands.
+- **Which features convert**: volume, history depth, convenience on the player's own data, price tools and early access. No paid product found sells reference data, which confirms I-30's "content free, tools paid"; the Fan Content Policy still reads "Last Updated: November 15, 2017".
+- **Referral programmes**: none found for any MTG deckbuilder or collection app. The two-sided month with a yearly cap is already the shape I-72 §4 can adopt.
+- **SpellTable deck import**: no 2026 source confirms one. **Exports to MTGO, Arena, Cockatrice, Forge and XMage**: nothing beyond what I-50 records. **TCGplayer and Cardmarket APIs**: both still closed to new users, so I-32's mass-entry and file approach stands.
+- **A life counter, a timer and turn tracking**: non-goals unchanged. Lifetap is free and averages 4.94 from 2,181 ratings; its game-history export of 2026-10-05 confirms that I-35 slice 10 has a real source file.
+- **Screen-reader card names, colour-blind mana symbols and keyboard-only building**: no new outside source; I-24, I-49 §2 and I-04 with I-37 own them.
+- **Content moderation at scale**: nothing beyond I-38 and I-69.
+- **Backups with restore drills** (I-71 §4), **cost monitoring for AI tokens and image proxying** (I-66) and **a build that fails when the site URL is unset** (I-66 requirement 5.4, with I-05's owner action on the domain): already owned; nothing to add.
+- **Player threads with an owner and no new scope:** the 909-point Scryfall syntax cheat sheet (I-14); distrust of automatic bracket verdicts at 797, 609 and 131 points (I-77, I-22); EDHREC's combo section at 407 points (I-09 reads Commander Spellbook); a layers explainer at 165 points (I-27, I-47); Archidekt's monthly contest at 162 points (I-53); 19 months of playgroup statistics at 185 points (I-23); portfolio and price trackers (I-59); a hypergeometric calculator at 43 points (shipped); cheaper lands at 11 points (I-58, I-55); ManaBox's proxy request (I-80); and r/Moxfield's small requests (I-37, I-16, I-40, I-57, I-08).
+- **Searched with nothing found:** Moxfield's feature-request vote totals (403) and the contents of its editor redesign; a TCGplayer or Cardmarket deck builder; a 2026 Historic Brawl builder change; price, reprint or ban alerts at Moxfield, Archidekt or EDHREC; embeds at Moxfield or Archidekt; accessibility complaints about deckbuilders; new changelog entries at Archidekt, EDHREC or Cardsphere; any r/EDHrec post in 2025–2026; a request for an AI builder among 11 r/EDH posts titled "chatgpt", all at 0 points; tool requests among r/mtgproxies' and r/archidekt's posts.
 
 ---
 
