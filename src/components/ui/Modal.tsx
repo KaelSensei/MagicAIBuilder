@@ -30,6 +30,24 @@ interface ModalProps {
    * bubbles to the dialog element. Escape still closes the dialog whatever this does.
    */
   readonly onKeyDown?: (event: KeyboardEvent<HTMLDivElement>) => void;
+  /**
+   * Handles Escape instead of `onClose`, for a dialog where Escape and a press outside mean
+   * different things (the primer editor drops its draft on Escape and saves it on a press
+   * outside). Radix calls `onClose` for both, before any child sees the key. Left out, Escape
+   * calls `onClose`.
+   */
+  readonly onEscape?: () => void;
+}
+
+/** Radix's Escape handler for `onEscape`: run it and keep Radix from closing through `onClose`. */
+function escapeHandler(
+  onEscape: (() => void) | undefined
+): ((event: globalThis.KeyboardEvent) => void) | undefined {
+  if (!onEscape) return undefined;
+  return (event) => {
+    event.preventDefault();
+    onEscape();
+  };
 }
 
 /**
@@ -54,6 +72,7 @@ export function Modal({
   children,
   showClose = true,
   onKeyDown,
+  onEscape,
 }: ModalProps) {
   const t = useTranslations("common");
   const focusReturn = useDialogFocusReturn();
@@ -72,7 +91,12 @@ export function Modal({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >
-            <Dialog.Content asChild {...focusReturn} onKeyDown={onKeyDown}>
+            <Dialog.Content
+              asChild
+              {...focusReturn}
+              onKeyDown={onKeyDown}
+              onEscapeKeyDown={escapeHandler(onEscape)}
+            >
               <motion.div
                 className={cn(
                   cardSurfaceClassName,

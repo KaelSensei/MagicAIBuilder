@@ -127,4 +127,20 @@ describe("Modal", () => {
     await user.keyboard("{Escape}");
     expect(onClose).toHaveBeenCalledTimes(1);
   });
+
+  it("hands Escape to onEscape instead of onClose when the caller sets it", async () => {
+    const user = userEvent.setup();
+    const onClose = vi.fn();
+    const onEscape = vi.fn();
+    renderWithIntl(
+      <Modal open onClose={onClose} onEscape={onEscape} title="Settings">
+        <button type="button">First option</button>
+      </Modal>
+    );
+
+    await user.keyboard("{Escape}");
+
+    expect(onEscape).toHaveBeenCalledTimes(1);
+    expect(onClose).not.toHaveBeenCalled();
+  });
 });
