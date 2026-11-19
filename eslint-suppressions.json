@@ -1622,11 +1622,6 @@
       "count": 1
     }
   },
-  "src/lib/playtest/store.ts": {
-    "max-lines-per-function": {
-      "count": 2
-    }
-  },
   "src/lib/ratings/ratings.ts": {
     "@typescript-eslint/consistent-type-assertions": {
       "count": 1
