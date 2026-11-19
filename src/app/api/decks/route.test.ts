@@ -672,7 +672,9 @@ describe("POST /api/decks with cards — copy limit", () => {
   function createdCopies(name: string): readonly number[] {
     const stored: readonly { name: string; quantity: number }[] =
       mockCreate.mock.lastCall?.[0].data.cards.create ?? [];
-    return stored.filter((card) => card.name === name).map((card) => card.quantity);
+    return stored
+      .filter((card) => card.name === name)
+      .map((card) => card.quantity);
   }
 
   it("stores one Sol Ring when a Commander deck is created with three", async () => {

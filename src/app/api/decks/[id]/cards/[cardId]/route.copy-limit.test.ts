@@ -100,7 +100,9 @@ describe("PATCH /api/decks/[id]/cards/[cardId] — copy limit", () => {
   it("leaves the stored copies alone when the edit names no quantity", async () => {
     deckCardsDb.reset([{ ...SOL_RING_ROW, quantity: 3 }]);
 
-    const response = await editRow(SOL_RING_ROW.id, { notes: "From the precon" });
+    const response = await editRow(SOL_RING_ROW.id, {
+      notes: "From the precon",
+    });
 
     expect(response.status).toBe(200);
     expect(storedCopies("Sol Ring")).toEqual([3]);
@@ -118,7 +120,11 @@ describe("PATCH /api/decks/[id]/cards/[cardId] — who may write", () => {
   });
 
   it("answers 404 for a deck that does not exist", async () => {
-    const response = await editRow(SOL_RING_ROW.id, { quantity: 1 }, "no-such-deck");
+    const response = await editRow(
+      SOL_RING_ROW.id,
+      { quantity: 1 },
+      "no-such-deck"
+    );
 
     expect(response.status).toBe(404);
     expect(deckCardsDb.deck().version).toBe(CARDS_DECK.version);

@@ -75,11 +75,9 @@ export function cardWithinCopyLimit<Card extends CopiesWrite>(
  * @param deck - The deck's copy-limit facts, from {@link storedCopyLimitDeck}
  * @returns The same edit, with `quantity` from 1 to the card's limit when present
  */
-export function editWithinCopyLimit<Edit extends { readonly quantity?: number }>(
-  edit: Edit,
-  card: CopyLimitCard,
-  deck: CopyLimitDeck
-): Edit {
+export function editWithinCopyLimit<
+  Edit extends { readonly quantity?: number },
+>(edit: Edit, card: CopyLimitCard, deck: CopyLimitDeck): Edit {
   if (edit.quantity === undefined) return edit;
   return {
     ...edit,
