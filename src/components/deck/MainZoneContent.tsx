@@ -19,6 +19,7 @@ import React, { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { CardImage } from "@/components/card/CardImage";
 import { CardListItem } from "@/components/card/CardListItem";
+import { ColorIdentityViolationLabel } from "@/components/deck/ColorIdentityViolationLabel";
 import { GridZoneCard } from "@/components/deck/GridZoneCard";
 import { RulebreakerAdmissionNote } from "@/components/deck/RulebreakerAdmissionNote";
 import { gridColsClass } from "@/components/deck/grid-cols";
@@ -149,6 +150,10 @@ function DraggableDeckCard({
           )}
         />
       </div>
+      <ColorIdentityViolationLabel
+        isViolation={isColorIdentityViolation}
+        className="block max-w-36 shrink-0"
+      />
       <RulebreakerAdmissionNote admission={admission} cardName={card.name} />
     </div>
   );
@@ -451,6 +456,7 @@ export function MainZoneContent({
             key={card.id}
             card={card}
             isViolation={violationCardIds.has(card.id)}
+            admission={admissions.get(card.id)}
             onRemoveCard={onRemoveCard}
             onCardClick={onCardClick}
             onMoveToMaybeboard={onMoveToMaybeboard}
