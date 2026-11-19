@@ -3,8 +3,8 @@
  * its commander's colour identity, widened by the commander's rulebreaker
  * exceptions.
  *
- * Search context; read by the described search's deck context
- * (`natural-language-context.ts`). Rules: CR 903.5c (a card's identity must sit
+ * Search context; read by the deck identity scope (`deck-identity-scope.ts`),
+ * which the name search and the described search share. Rules: CR 903.5c (a card's identity must sit
  * inside the commander's), CR 903.5e (a rulebreaker commander admits some cards
  * whatever their identity; the format-rules rulebreaker table lists them).
  * Scryfall syntax (https://scryfall.com/docs/syntax, read 2026-11-16): `id<=`
