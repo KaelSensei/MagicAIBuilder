@@ -274,6 +274,14 @@ describe("applyDamage / applyHeal", () => {
     expect(next.lifeHistory.at(-1)?.delta).toBe(-3);
   });
 
+  it("keeps life on damage of 0 and still records the change, as it always has", () => {
+    const state = makeState();
+    const next = applyDamage(state, 0);
+    expect(next.lifeTotal).toBe(state.lifeTotal);
+    expect(next.lifeHistory).toHaveLength(state.lifeHistory.length + 1);
+    expect(next.history).toHaveLength(state.history.length + 1);
+  });
+
   it("increases life by amount", () => {
     const state = { ...makeState(), lifeTotal: 30 };
     const next = applyHeal(state, 5);
