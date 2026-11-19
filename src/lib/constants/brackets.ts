@@ -16,6 +16,13 @@
  * @module constants/brackets
  */
 
+/**
+ * The rules state `BRACKET_DEFINITIONS` encodes, named by the date of
+ * Wizards' bracket text it follows (see the header). A dated constant until
+ * I-48 gives rules versions their own ids; change it with the table.
+ */
+export const BRACKET_RULES_VERSION = "wotc-brackets-2025-10-21";
+
 /** The official bracket levels, from 1 (Exhibition) to 5 (cEDH). */
 export const BRACKET_LEVELS = [1, 2, 3, 4, 5] as const;
 
