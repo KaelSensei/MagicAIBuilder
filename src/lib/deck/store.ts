@@ -501,9 +501,18 @@ export interface DeckStore {
   setSortPreference: (pref: SortPreference) => void;
 
   // Deck management
+  /**
+   * Creates an account deck and makes it the active deck. A guest opens the
+   * guest deck instead.
+   *
+   * @param name - The deck's name
+   * @param opts - `format`, Commander when left out; `isAIGenerated`
+   * @returns The id of the deck now active
+   * @throws When the server refuses or fails the creation
+   */
   createDeck: (
     name: string,
-    opts?: { isAIGenerated?: boolean }
+    opts?: { isAIGenerated?: boolean; format?: DeckFormat }
   ) => Promise<string>;
   duplicateDeck: (id: string) => Promise<string>;
   deleteDeck: (id: string) => Promise<void>;
@@ -1310,7 +1319,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     }
   },
 
-  createDeck: async (name: string, opts?: { isAIGenerated?: boolean }) => {
+  createDeck: async (name, opts) => {
     if (isGuestDeckId(get().activeDeckId ?? "")) {
       await get().setActiveDeck(GUEST_DECK_ID);
       return GUEST_DECK_ID;
@@ -1320,8 +1329,9 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     try {
       const apiDeck = await deckApi.createDeck(name, {
         isAIGenerated: opts?.isAIGenerated,
+        format: opts?.format,
       });
-      const deck = createEmptyDeck(apiDeck.id, apiDeck.name);
+      const deck = createEmptyDeck(apiDeck.id, apiDeck.name, opts?.format);
       deck.createdAt = new Date(apiDeck.createdAt);
       deck.updatedAt = new Date(apiDeck.updatedAt);
       deck.isAIGenerated = apiDeck.isAIGenerated ?? false;

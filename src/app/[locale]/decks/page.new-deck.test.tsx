@@ -7,6 +7,7 @@
  * off its deck store mock.
  */
 import { fireEvent, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { useDeckStore } from "@/lib/deck/store";
@@ -106,4 +107,35 @@ it("names a new deck in the creator's locale", async () => {
       expect.objectContaining({ name: "Nouveau deck 1" }),
     ])
   );
+});
+
+it("creates a Commander deck when the player keeps the default format", async () => {
+  const user = userEvent.setup();
+  renderWithIntl(<DecksPage />);
+
+  expect(
+    screen.getByRole("combobox", { name: "New deck format" })
+  ).toHaveDisplayValue("Commander");
+  await user.click(screen.getByRole("button", { name: "Create Deck" }));
+
+  await waitFor(() =>
+    expect(creations).toEqual([{ name: "New Deck 1", format: "commander" }])
+  );
+});
+
+it("creates a Brawl deck when the player picks Brawl", async () => {
+  const user = userEvent.setup();
+  renderWithIntl(<DecksPage />);
+
+  await user.selectOptions(
+    screen.getByRole("combobox", { name: "New deck format" }),
+    "Brawl"
+  );
+  await user.click(screen.getByRole("button", { name: "Create Deck" }));
+
+  await waitFor(() =>
+    expect(push).toHaveBeenCalledWith(`/builder/${NEW_DECK_ID}`)
+  );
+  expect(creations).toEqual([{ name: "New Deck 1", format: "brawl" }]);
+  expect(useDeckStore.getState().decks[NEW_DECK_ID]?.format).toBe("brawl");
 });
