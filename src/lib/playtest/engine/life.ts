@@ -54,11 +54,23 @@ export function hasLostOnLife(
 
 // ─── Damage / heal ────────────────────────────────────────────────────────
 /**
+ * True for a damage amount the rules cannot deal: below 0. CR 107.1b: you can't "deal
+ * negative damage"; CR 120.8: a source that would deal 0 damage deals none, so 0 is lawful.
+ *
+ * Pure; `applyDamage` and the command guard table share it so they cannot disagree.
+ */
+export function isNegativeDamage(amount: number): boolean {
+  return amount < 0;
+}
+
+/**
  * Takes `amount` off the life total (CR 119.3) and records the loss in the life history.
  *
- * Returns the same state while a bottom choice is pending. `amount` is not validated: a
- * negative amount gains life.
+ * Returns the same state while a bottom choice is pending, and for a negative `amount`: no
+ * rule deals negative damage (CR 107.1b), so it must not become a life gain that skips
+ * `applyHeal`. Damage of 0 is still recorded, as it always was.
  *
+ * @param amount - the life lost; below 0 changes nothing
  * @param description - what caused the loss, kept in the history and the log line
  * @param deps - `clock` stamps the history entry and the undo entry
  */
@@ -69,6 +81,7 @@ export function applyDamage(
   deps: PlaytestDeps = defaultPlaytestDeps
 ): PlaytestEngine {
   if (isChoosingBottom(state)) return state;
+  if (isNegativeDamage(amount)) return state;
   const newLife = state.lifeTotal - amount;
   const entry = lifeEntry(state, deps.clock, { delta: -amount, description });
 
