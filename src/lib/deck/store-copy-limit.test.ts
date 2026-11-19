@@ -6,7 +6,9 @@
  * deck (Commander, Brawl, Oathbreaker) holds one (CR 903.5b). Basic lands and
  * cards whose own text allows more are exempt in every format (CR 100.2a,
  * CR 903.5b, CR 101.1). Every store entry point that adds a copy applies the
- * same limit: `addCard`, `addDeckCard` and `updateCardQuantity`.
+ * same limit: `addCard`, `addDeckCard` and `updateCardQuantity`. The first
+ * add of a card is the exception today: it keeps the quantity it is given
+ * (pinned below, before FR-03 moves the limit to `format-rules`).
  *
  * Sociable: the real store and deck client run; the fake deck API
  * (`src/test/fake-deck-client.ts`) answers the requests in memory.
@@ -213,5 +215,74 @@ describe("stepping a card's quantity (updateCardQuantity)", () => {
 
     await updateCardQuantity("row-Seven Dwarves", 1);
     expect(copiesOf("Seven Dwarves")).toBe(7);
+  });
+
+  it("keeps a one-copy row at one when stepped down, and sends nothing", async () => {
+    openDeck("commander", solRing(1));
+
+    await useDeckStore.getState().updateCardQuantity("row-Sol Ring", -1);
+
+    expect(copiesOf("Sol Ring")).toBe(1);
+    expect(deckApi.updateCardQuantity).not.toHaveBeenCalled();
+  });
+});
+
+// Today's clamps that the copy-limit module (master plan FR-03) must keep or
+// consciously change. Each test below says whether it pins a rule or a gap.
+describe("the quantity clamps the store applies today", () => {
+  it("currently ignores a search result for a basic land the deck already holds (pinned)", async () => {
+    // The store skips it: the caller passes the wanted count on the first add.
+    openDeck("commander", mountain(10));
+
+    await useDeckStore.getState().addCard(searchResult(mountain(1)));
+
+    expect(copiesOf("Mountain")).toBe(10);
+    expect(deckApi.updateCardQuantity).not.toHaveBeenCalled();
+    expect(deckApi.addCard).not.toHaveBeenCalled();
+  });
+
+  it("currently keeps the quantity a first addCard asks for, past the copy limit (pinned; no B2 row yet)", async () => {
+    // CR 903.5b allows one Sol Ring; the first add does not apply copyLimit.
+    openDeck("commander");
+
+    await useDeckStore
+      .getState()
+      .addCard(searchResult(solRing(1)), { quantity: 3 });
+
+    expect(copiesOf("Sol Ring")).toBe(3);
+    expect(deckApi.addCard).toHaveBeenCalledWith(
+      { deckId: DECK_ID },
+      expect.objectContaining({ quantity: 3 })
+    );
+  });
+
+  it("currently keeps the quantity a first addDeckCard row carries, past the copy limit (pinned; no B2 row yet)", async () => {
+    openDeck("commander");
+
+    await useDeckStore.getState().addDeckCard(solRing(3));
+
+    expect(copiesOf("Sol Ring")).toBe(3);
+    expect(deckApi.addCard).toHaveBeenCalledWith(
+      { deckId: DECK_ID },
+      expect.objectContaining({ quantity: 3 })
+    );
+  });
+
+  it("counts copies per zone: a Commander deck takes a Sol Ring in the sideboard beside the main-deck one", async () => {
+    // CR 903.5b limits the deck; the sideboard row is matched separately.
+    openDeck("commander", solRing(1));
+
+    await useDeckStore
+      .getState()
+      .addCard(searchResult(solRing(1)), { zone: "sideboard" });
+
+    const rows = useDeckStore
+      .getState()
+      .decks[DECK_ID]?.cards.filter((card) => card.name === "Sol Ring")
+      .map((card) => [card.zone, card.quantity]);
+    expect(rows).toEqual([
+      ["main", 1],
+      ["sideboard", 1],
+    ]);
   });
 });
