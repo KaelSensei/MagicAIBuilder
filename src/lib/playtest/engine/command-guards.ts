@@ -8,7 +8,7 @@
  * the checks the engine does not make today (`PLAYTEST_COMMAND_KNOWN_GAPS`), which a structural
  * change must keep not making until their own fix lands.
  * Rules: the London mulligan waits for its bottom cards (CR 103.5) and has a limit (CR 103.5);
- * only a commander enters the command zone (CR 903.9).
+ * only a commander enters the command zone (CR 903.9); damage is never negative (CR 107.1b).
  * Not responsible for: applying a command (`commands.ts`).
  *
  * @module playtest/engine/command-guards
@@ -21,6 +21,7 @@ import {
   type PlaytestCommand,
   type PlaytestCommandType,
 } from "./commands";
+import { isNegativeDamage } from "./life";
 import { isChoosingBottom, maxMulligans } from "./mulligan";
 import { defaultPlaytestCommandDeps, type PlaytestCommandDeps } from "./ports";
 import type { CardZone, PlaytestEngine } from "./types";
@@ -35,6 +36,7 @@ export type PlaytestGuardReason =
   | "bottom-duplicate"
   | "bottom-not-in-hand"
   | "library-empty"
+  | "negative-damage"
   | "not-on-battlefield"
   | "id-taken"
   | "not-a-commander"
@@ -170,7 +172,13 @@ export const PLAYTEST_COMMAND_GUARDS: Readonly<
   ],
   nextPhase: [whileChoosingBottom],
   nextTurn: [whileChoosingBottom],
-  damage: [whileChoosingBottom],
+  damage: [
+    whileChoosingBottom,
+    // CR 107.1b: no one deals negative damage, so it must not become a life gain.
+    guard("damage", "negative-damage", (_state, { amount }) =>
+      isNegativeDamage(amount)
+    ),
+  ],
   heal: [whileChoosingBottom],
   tap: [
     whileChoosingBottom,
@@ -297,12 +305,7 @@ export interface PlaytestCommandKnownGap {
 /**
  * The checks the engine does not make today, pinned by `commands.test.ts` and
  * `engine.characterization.test.ts`. A structural change keeps them; each has its own fix.
+ * Empty today: the last gap, negative damage, became the `negative-damage` guard.
  */
-export const PLAYTEST_COMMAND_KNOWN_GAPS: readonly PlaytestCommandKnownGap[] = [
-  {
-    type: "damage",
-    behaviour:
-      "a negative amount is accepted and gains life; CR 119.3 knows no negative loss",
-    followUp: "validate the amount in its own fix (noted by PT-03)",
-  },
-];
+export const PLAYTEST_COMMAND_KNOWN_GAPS: readonly PlaytestCommandKnownGap[] =
+  [];

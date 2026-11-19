@@ -274,6 +274,16 @@ describe("applyDamage / applyHeal", () => {
     expect(next.lifeHistory.at(-1)?.delta).toBe(-3);
   });
 
+  // CR 107.1b: no one deals negative damage, so a negative amount is refused rather than
+  // turned into a life gain that skips the heal path.
+  it("leaves life unchanged on damage of -3", () => {
+    const state = makeState();
+    const next = applyDamage(state, -3);
+    expect(next.lifeTotal).toBe(state.lifeTotal);
+    expect(next.history).toHaveLength(state.history.length);
+    expect(next).toBe(state);
+  });
+
   it("keeps life on damage of 0 and still records the change, as it always has", () => {
     const state = makeState();
     const next = applyDamage(state, 0);
