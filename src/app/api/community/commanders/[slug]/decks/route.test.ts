@@ -2,15 +2,17 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // ─── Mock Prisma ──────────────────────────────────────────────────────────────
 
-const { mockDeckFindMany, mockQueryRaw } = vi.hoisted(() => ({
+const { mockDeckFindMany, mockQueryRaw, mockGroupBy } = vi.hoisted(() => ({
   mockDeckFindMany: vi.fn(),
   mockQueryRaw: vi.fn(),
+  mockGroupBy: vi.fn(),
 }));
 
 vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
   const { stubPrisma } = await import("@/test/prisma-stub");
   return stubPrisma(await importOriginal(), {
     deck: { findMany: mockDeckFindMany },
+    deckCard: { groupBy: mockGroupBy },
     $queryRaw: mockQueryRaw,
   });
 });
@@ -22,6 +24,10 @@ vi.mock(import("@/lib/auth/config"), () => ({ auth: mockAuth }));
 
 // ─── Import after mocks ───────────────────────────────────────────────────────
 
+import {
+  deckCardGroupByFake,
+  storedHundredCardDeck,
+} from "@/test/deck-card-group-by-fake";
 import { GET } from "./route";
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
@@ -65,7 +71,6 @@ function deckRow({
       helpfulCount: 0,
       createdAt: new Date("2026-01-01"),
     })),
-    _count: { cards: 100 },
   };
 }
 
@@ -77,16 +82,24 @@ async function get(slug: string) {
   return (await GET(new Request("http://localhost"), params(slug))).json();
 }
 
-/** Wires both mocks: the id query finds these rows, the hydration returns them. */
+/**
+ * Wires the three reads: the id query finds these rows, the hydration returns
+ * them, and each is stored as a 100-card deck whose 30 Forests are one row.
+ */
 function stubMatch(rows: ReturnType<typeof deckRow>[]) {
   mockQueryRaw.mockResolvedValue(rows.map((row) => ({ id: row.id })));
   mockDeckFindMany.mockResolvedValue(rows);
+  mockGroupBy.mockImplementation(
+    deckCardGroupByFake(rows.flatMap((row) => storedHundredCardDeck(row.id)))
+      .groupBy
+  );
 }
 
 describe("GET /api/community/commanders/[slug]/decks", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockAuth.mockResolvedValue(null);
+    mockGroupBy.mockImplementation(deckCardGroupByFake([]).groupBy);
   });
 
   it("hydrates exactly the decks the SQL slug match returned", async () => {

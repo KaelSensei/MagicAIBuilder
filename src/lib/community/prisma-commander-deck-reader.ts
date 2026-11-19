@@ -5,11 +5,12 @@
  *
  * Community context, commander discovery. Implements
  * `commander-discovery-port.ts` for `listCommanderDecks`; wired by
- * `commander-decks-lookup.ts`. Two reads, the ones the lookup made before
- * COM-10, with the same SQL and the same `select`: a raw id query, because
- * Prisma cannot filter on an expression, then a `findMany` that hydrates the
- * matching rows. The reader loads every match; the listing caps them after
- * ranking (`COMMANDER_DECKS_LIMIT`).
+ * `commander-decks-lookup.ts`. Three queries whatever the number of matches:
+ * a raw id query, because Prisma cannot filter on an expression, then, side
+ * by side, a `findMany` that hydrates the matching rows and one
+ * `deckCard.groupBy` that sums their card copies (`countDeckCardCopies`, the
+ * deck list's count). The reader loads every match; the listing caps them
+ * after ranking (`COMMANDER_DECKS_LIMIT`).
  *
  * @module community/prisma-commander-deck-reader
  */
@@ -21,6 +22,7 @@ import type {
   DiscoveryDeckRecord,
 } from "@/lib/community/commander-discovery-port";
 import { isValidVoteValue, type DeckVote } from "@/lib/community/votes";
+import { countDeckCardCopies } from "@/lib/deck/prisma-deck-card-copies";
 import { toDeckRating } from "@/lib/ratings/mappers";
 
 /** What a discovery row renders, plus the votes and ratings it is scored from. */
@@ -49,7 +51,6 @@ const DISCOVERY_DECK_SELECT = {
       createdAt: true,
     },
   },
-  _count: { select: { cards: true } },
 } as const satisfies Prisma.DeckSelect;
 
 type DiscoveryDeckRow = Prisma.DeckGetPayload<{
@@ -65,15 +66,21 @@ function isDeckVote(vote: DiscoveryDeckRow["votes"][number]): vote is DeckVote {
   return isValidVoteValue(vote.value);
 }
 
-/** The row in the port's shape. `.at(0)` keeps a missing commander card visible to `tsc`. */
-function toDiscoveryDeckRecord(deck: DiscoveryDeckRow): DiscoveryDeckRecord {
+/**
+ * The row in the port's shape, with the card copies `countDeckCardCopies`
+ * summed for it. `.at(0)` keeps a missing commander card visible to `tsc`.
+ */
+function toDiscoveryDeckRecord(
+  deck: DiscoveryDeckRow,
+  cardCount: number
+): DiscoveryDeckRecord {
   return {
     id: deck.id,
     name: deck.name,
     format: deck.format,
     commanderName: deck.commanderName,
     updatedAt: deck.updatedAt,
-    cardCount: deck._count.cards,
+    cardCount,
     commanderCard: deck.cards.at(0) ?? null,
     author: deck.user,
     votes: deck.votes.filter(isDeckVote),
@@ -125,11 +132,16 @@ export function prismaCommanderDeckReader(
   return {
     async listPublicDecksByCommanderSlug(slug) {
       const matchingIds = await findPublicDeckIdsByCommanderSlug(slug);
-      const decks = await client.deck.findMany({
-        where: { id: { in: matchingIds } },
-        select: DISCOVERY_DECK_SELECT,
-      });
-      return decks.map(toDiscoveryDeckRecord);
+      const [decks, cardCounts] = await Promise.all([
+        client.deck.findMany({
+          where: { id: { in: matchingIds } },
+          select: DISCOVERY_DECK_SELECT,
+        }),
+        countDeckCardCopies(client, matchingIds),
+      ]);
+      return decks.map((deck) =>
+        toDiscoveryDeckRecord(deck, cardCounts.get(deck.id) ?? 0)
+      );
     },
   };
 }
