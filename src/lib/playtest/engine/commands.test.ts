@@ -410,6 +410,8 @@ function blockedScenario(
       };
     case "library-empty":
       return { state: { ...base, library: [] }, command: { type: "draw" } };
+    case "negative-damage":
+      return { state: base, command: { type: "damage", amount: -3 } };
     case "not-on-battlefield":
       return {
         state: base,
@@ -550,20 +552,32 @@ function command_type(type: string): PlaytestCommandType {
 
 // ─── Known gaps, pinned ───────────────────────────────────────────────────
 describe("known gaps (pinned, not fixed here)", () => {
-  it("lists the one gap the guard table carries", () => {
-    expect(PLAYTEST_COMMAND_KNOWN_GAPS.map((gap) => gap.type)).toEqual([
-      "damage",
-    ]);
+  it("lists no gap now that negative damage is a guard", () => {
+    expect(PLAYTEST_COMMAND_KNOWN_GAPS).toEqual([]);
   });
+});
 
-  it("currently gains life on a negative damage amount (pinned; see PLAYTEST_COMMAND_KNOWN_GAPS)", () => {
+// CR 107.1b: damage is never negative; damage of 0 is still applied as before (CR 120.8).
+describe("damage amounts through the reducer", () => {
+  it("refuses a negative damage amount: same state, no life gained", () => {
     const state = baseState();
 
     const result = reducePlaytest(state, { type: "damage", amount: -5 }, deps);
 
-    expect(result.lifeTotal).toBe(state.lifeTotal + 5);
+    expect(result).toBe(state);
     expect(
       playtestCommandBlockReason(state, { type: "damage", amount: -5 }, deps)
+    ).toBe("negative-damage");
+  });
+
+  it("applies damage of 0 as the transition always has", () => {
+    const state = baseState();
+
+    const result = reducePlaytest(state, { type: "damage", amount: 0 }, deps);
+
+    expect(result).toEqual(applyDamage(state, 0, "damage", deps));
+    expect(
+      playtestCommandBlockReason(state, { type: "damage", amount: 0 }, deps)
     ).toBeNull();
   });
 });
