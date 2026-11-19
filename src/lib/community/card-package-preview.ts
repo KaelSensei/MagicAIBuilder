@@ -17,6 +17,7 @@ import {
 import type { DeckFormat } from "@/lib/deck/formats";
 import { getFormatConfig } from "@/lib/deck/formats";
 import { deckCopyLimit } from "@/lib/deck/multiples";
+import { isCommanderRow } from "@/lib/deck/bulk-edit-command-zone";
 
 export interface PackagePreviewCard {
   readonly scryfallId: string;
@@ -112,7 +113,7 @@ function previewCardIssues(
 export function commandZoneNamesOf(
   cards: readonly { readonly name: string; readonly isCommander: boolean; readonly isPartner: boolean }[]
 ): readonly string[] {
-  return cards.filter((card) => card.isCommander || card.isPartner).map((card) => card.name);
+  return cards.filter(isCommanderRow).map((card) => card.name);
 }
 
 export function previewCardPackage(

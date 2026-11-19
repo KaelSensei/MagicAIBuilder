@@ -18,6 +18,10 @@ import { cn } from "@/components/ui/utils";
 import { PublicDeckCards } from "./PublicDeckCards";
 import { DataAsOfLine } from "@/components/deck/DataAsOfLine";
 import { currentDataAsOfFacts } from "@/lib/deck/data-as-of";
+import {
+  commandSlotOf,
+  isCommanderRow,
+} from "@/lib/deck/bulk-edit-command-zone";
 import { normalizeScryfallImageUrl } from "@/lib/scryfall/images";
 
 interface PublicDeckViewProps {
@@ -37,17 +41,15 @@ const BRACKET_COLORS: Record<number, string> = {
 export function PublicDeckView({ deck, isSignedIn }: PublicDeckViewProps) {
   const t = useTranslations("deck");
   const [copied, setCopied] = useState(false);
-  const commander = deck.cards.find((c) => c.isCommander && !c.isPartner);
+  const commander = deck.cards.find((c) => commandSlotOf(c) === "commander");
 
   const handleCopyLink = async () => {
     await navigator.clipboard.writeText(window.location.href);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
-  const partner = deck.cards.find((c) => c.isPartner);
-  const nonCommanderCards = deck.cards.filter(
-    (c) => !c.isCommander && !c.isPartner
-  );
+  const partner = deck.cards.find((c) => commandSlotOf(c) === "partner");
+  const nonCommanderCards = deck.cards.filter((c) => !isCommanderRow(c));
   const authorName =
     deck.user?.name ?? deck.user?.username ?? t("community.anonymous");
   const authorUsername = deck.user?.username;

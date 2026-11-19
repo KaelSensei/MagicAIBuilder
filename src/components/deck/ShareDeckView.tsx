@@ -24,6 +24,10 @@ import { filterCardsByCategory } from "@/lib/deck/deck-preview";
 import { CategoryFilter, DeckCardStrip } from "./DeckPreviewChrome";
 import type { CardCategory } from "@/lib/deck/types";
 import { CATEGORY_LABELS, CATEGORY_ORDER } from "@/lib/deck/categories";
+import {
+  commandSlotOf,
+  isCommanderRow,
+} from "@/lib/deck/bulk-edit-command-zone";
 import { logger } from "@/lib/logger";
 import type { ApiCard, ApiSharedDeck } from "@/lib/deck/share-types";
 import { normalizeScryfallImageUrl } from "@/lib/scryfall/images";
@@ -60,7 +64,7 @@ function computeColorDistribution(cards: ApiCard[]): Record<string, number> {
 
 function computeAvgCmc(cards: ApiCard[]): number {
   const nonLands = cards.filter(
-    (c) => c.category !== "land" && !c.isCommander && !c.isPartner
+    (c) => c.category !== "land" && !isCommanderRow(c)
   );
   if (nonLands.length === 0) return 0;
   const total = nonLands.reduce((sum, c) => sum + c.cmc * c.quantity, 0);
@@ -119,14 +123,12 @@ export function ShareDeckView({ deck }: ShareDeckViewProps) {
   const [imported, setImported] = useState(false);
   const [category, setCategory] = useState("all");
 
-  const commander = deck.cards.find((c) => c.isCommander && !c.isPartner);
-  const partner = deck.cards.find((c) => c.isPartner);
+  const commander = deck.cards.find((c) => commandSlotOf(c) === "commander");
+  const partner = deck.cards.find((c) => commandSlotOf(c) === "partner");
   const companion = deck.cards.find(
     (c) => c.category === "companion" && !c.isCommander
   );
-  const mainCards = deck.cards.filter(
-    (c) => !c.isCommander && !c.isPartner && c.category !== "companion"
-  );
+  const mainCards = deck.cards.filter((c) => commandSlotOf(c) === null);
 
   // Group by category
   const cardsByCategory = useMemo(() => {
