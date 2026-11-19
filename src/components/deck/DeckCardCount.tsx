@@ -54,9 +54,7 @@ export function DeckCardCount({
     <span
       className={cn(
         className,
-        status === "legal"
-          ? "text-green-500"
-          : "text-[var(--text-secondary)]"
+        status === "legal" ? "text-green-500" : "text-[var(--text-secondary)]"
       )}
     >
       {formatDeckCount(cardCount, rule, separator)}{" "}
