@@ -35,10 +35,17 @@ export const AETHERHUB_COMMANDER_DECK_URL = builderUrl({
   t: "cmd",
 });
 
-/** A Commander deck led by a partner pair: both halves in `sb`, under the one heading. */
+/** A Commander deck led by a partner pair: both halves in `sb`, one per line. */
 export const AETHERHUB_PARTNER_PAIR_URL = builderUrl({
   m: "1 Sol Ring",
   sb: "1 Thrasios, Triton Hero\n1 Tymna the Weaver",
+  t: "cmd",
+});
+
+/** A Commander deck naming two commanders in `sb` when neither has partner. */
+export const AETHERHUB_INVALID_PAIR_URL = builderUrl({
+  m: "1 Sol Ring",
+  sb: "1 Atraxa, Praetors' Voice\n1 Edgar Markov",
   t: "cmd",
 });
 

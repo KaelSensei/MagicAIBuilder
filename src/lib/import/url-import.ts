@@ -148,6 +148,30 @@ function moxfieldEntries(
   return Object.values(fallback ?? {});
 }
 
+/** The command-zone flags of an imported card. */
+type CommandZoneRole = Pick<UrlImportCard, "isCommander" | "isPartner">;
+
+/** The flags of a card outside the command zone. */
+const NO_COMMAND_ZONE_ROLE: CommandZoneRole = {
+  isCommander: false,
+  isPartner: false,
+};
+
+/**
+ * The role of the card at `position` in a source's list of commanders.
+ *
+ * CR 702.124a: two commanders with partner can both be a deck's commanders, so the second card
+ * listed is filed as the partner. The importer does not judge the pair: the deck store's
+ * `setPartner` refuses one that cannot share the command zone (CR 702.124). A third card gets no
+ * role and joins the main deck.
+ *
+ * @param position - zero-based index of the card in the source's commander list
+ * @returns the commander flags that card imports with
+ */
+function commandZoneRole(position: number): CommandZoneRole {
+  return { isCommander: position === 0, isPartner: position === 1 };
+}
+
 interface MoxfieldAppendOptions {
   readonly commandZone?: boolean;
   readonly companion?: boolean;
@@ -171,8 +195,9 @@ function appendMoxfieldCards(
     const imported: UrlImportCard = {
       name: entry.card.name,
       quantity: entry.quantity,
-      isCommander: options?.commandZone === true && index === 0,
-      isPartner: options?.commandZone === true && index === 1,
+      ...(options?.commandZone === true
+        ? commandZoneRole(index)
+        : NO_COMMAND_ZONE_ROLE),
       zone,
     };
     cards.push(options?.companion === true ? { ...imported, isCompanion: true } : imported);
@@ -377,17 +402,36 @@ async function importMtgDecks(deckPath: string, slug: string): Promise<UrlImport
   return { name: `MTGDecks: ${slug}`, source: "mtgdecks", cards, ignored: [] };
 }
 
-/** Import AetherHub's documented URL payload without scraping a public page. */
+/**
+ * Files the `sb` list of a Commander builder URL into the command zone, in AetherHub's order.
+ *
+ * @param text - the `sb` parameter, one "N Card Name" per line
+ * @returns the commander, then the partner when `sb` names a second card
+ */
+function aetherHubCommandZone(text: string): UrlImportCard[] {
+  return parsePlainTextDecklist(text).map((card, position) => ({
+    ...card,
+    ...commandZoneRole(position),
+  }));
+}
+
+/**
+ * Imports AetherHub's documented builder-URL payload without scraping a public page.
+ *
+ * `m` is the main deck; `sb` is the command zone when `t=cmd`, and the sideboard otherwise.
+ *
+ * @param url - a detected `aetherhub.com/Deck/Builder` URL
+ * @returns the deck's cards, with a format warning when it is not marked as Commander
+ * @throws Error "AetherHub URL does not contain any cards" when `m` and `sb` list no card
+ */
 function importAetherHub(url: string): UrlImportResult {
   const params = new URL(url).searchParams;
   const main = parsePlainTextDecklist(params.get("m") ?? "");
   const sideboardText = params.get("sb") ?? "";
   const isCommander = params.get("t") === "cmd";
-  const sideboardHeader = isCommander ? "Commander" : "Sideboard";
-  const sideboardPayload = sideboardText
-    ? `${sideboardHeader}\n${sideboardText}`
-    : "";
-  const sideboard = parsePlainTextDecklist(sideboardPayload);
+  const sideboard = isCommander
+    ? aetherHubCommandZone(sideboardText)
+    : parsePlainTextDecklist(`Sideboard\n${sideboardText}`);
 
   if (main.length === 0 && sideboard.length === 0) {
     throw new Error("AetherHub URL does not contain any cards");
