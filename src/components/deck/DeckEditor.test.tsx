@@ -300,6 +300,24 @@ describe("characterization: DeckEditor commands", () => {
       expect(within(toolbar).getByText("60/60")).toHaveClass("text-green-500");
     });
 
+    // The deck list and the title bar say the deck's state in words; the
+    // editor counter said it in colour alone.
+    it("announces a full Standard deck as complete, in words as well as in colour", () => {
+      renderEditor(
+        talrandDeck({
+          format: "standard",
+          commander: null,
+          cards: [{ ...ISLANDS, quantity: 60 }],
+          maybeboard: [],
+        })
+      );
+
+      const toolbar = screen.getByRole("toolbar", { name: "Deck view" });
+      expect(within(toolbar).getByText("60/60")).toHaveTextContent(
+        "60/60 (complete)"
+      );
+    });
+
     it("shows the chosen zone's cards, tells its parent, and keeps the view and sort controls to the main zone", async () => {
       const { onActiveZoneChange } = renderEditor(talrandDeck());
 
