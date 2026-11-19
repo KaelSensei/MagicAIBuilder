@@ -19,9 +19,13 @@ import {
   normalizeDeckBrief,
 } from "@/lib/ai/deck-brief";
 import { getCardCollection } from "@/lib/scryfall/client";
-import { buildSuggestionEvidence } from "@/lib/ai/suggestion-evidence";
+import {
+  attachSuggestionEvidence,
+  suggestionLookupNames,
+  type SuggestionEvidence,
+} from "@/lib/ai/suggestion-evidence";
+import type { ScryfallCard } from "@/lib/scryfall/types";
 import { isNonEmptyString } from "@/lib/guards";
-import type { SuggestionEvidence } from "@/lib/ai/suggestion-evidence";
 import {
   formatDeckQuestionTask,
   readDeckQuestion,
@@ -490,21 +494,12 @@ async function enrichSuggestionEvidence(
 ): Promise<SuggestResponse> {
   if (result.suggestions.length === 0) return result;
 
-  let cardsByName = new Map<
-    string,
-    Awaited<ReturnType<typeof getCardCollection>>["data"][number]
-  >();
+  let cards: readonly ScryfallCard[] = [];
   try {
-    const names = result.suggestions.flatMap((suggestion) => [
-      suggestion.name,
-      ...(suggestion.alternatives ?? []).map(({ name }) => name),
-    ]);
     const collection = await getCardCollection(
-      [...new Set(names)].map((name) => ({ name }))
+      suggestionLookupNames(result.suggestions).map((name) => ({ name }))
     );
-    cardsByName = new Map(
-      collection.data.map((card) => [card.name.toLowerCase(), card])
-    );
+    cards = collection.data;
   } catch (error) {
     logger.error(
       "Suggestion evidence unavailable",
@@ -523,22 +518,7 @@ async function enrichSuggestionEvidence(
   };
   return {
     ...result,
-    suggestions: result.suggestions.map((suggestion) => ({
-      ...suggestion,
-      evidence: buildSuggestionEvidence(
-        suggestion,
-        cardsByName.get(suggestion.name.toLowerCase()),
-        deck
-      ),
-      alternatives: suggestion.alternatives?.map((alternative) => ({
-        ...alternative,
-        evidence: buildSuggestionEvidence(
-          { ...alternative, category: suggestion.category },
-          cardsByName.get(alternative.name.toLowerCase()),
-          deck
-        ),
-      })),
-    })),
+    suggestions: attachSuggestionEvidence(result.suggestions, cards, deck),
   };
 }
 
