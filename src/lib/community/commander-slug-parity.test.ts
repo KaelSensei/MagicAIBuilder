@@ -6,7 +6,7 @@
  *
  * - `commanderToSlug` (`src/lib/community/commander-slug.ts`) builds the slug in JavaScript. The sitemap
  *   (`src/app/sitemap.ts`) lists `/commanders/<slug>/decks` from it, and the EDHREC lookup uses it.
- * - The commander decks lookup (`src/lib/community/commander-decks-lookup.ts`, behind
+ * - The commander deck reader (`src/lib/community/prisma-commander-deck-reader.ts`, behind
  *   `GET /api/community/commanders/[slug]/decks` and the commander decks page) matches
  *   the slug in SQL against `Deck.commanderName`, with the expression the partial index
  *   `Deck_commanderSlug_v2_public_idx` covers (migration
@@ -210,9 +210,10 @@ describe("the SQL twin of commanderToSlug", () => {
       "\\\\"
     );
 
-    expect(sourceOf("src/lib/community/commander-decks-lookup.ts")).toContain(
-      `${asWrittenInTheLookup} = \${slug}`
-    );
+    // COM-10 moved the query from commander-decks-lookup.ts into the reader.
+    expect(
+      sourceOf("src/lib/community/prisma-commander-deck-reader.ts")
+    ).toContain(`${asWrittenInTheLookup} = \${slug}`);
   });
 
   it("is the recorded expression in the index the lookup's query relies on", () => {
