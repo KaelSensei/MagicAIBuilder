@@ -109,7 +109,7 @@ function makeActiveDeck(overrides: Partial<Deck> = {}): Deck {
     cards: [],
     maybeboard: [],
     format: "commander",
-    cardCount: 0,
+    cardRowCount: 0,
     targetBracket: 2,
     manualBracket: null,
     budget: null,

@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   buildCardFaces,
   createEmptyDeck,
+  deckCardCount,
   isDeckStub,
   makeDeckCard,
   apiDeckToStoreDeck,
@@ -163,21 +164,51 @@ describe("isDeckStub", () => {
 
   it("calls a deck a stub while it holds fewer cards than it claims", () => {
     // GET /api/decks returns the command zone and a count, not the 99.
-    expect(isDeckStub(deck({ cardCount: 100, cards: [] }))).toBe(true);
+    expect(isDeckStub(deck({ cardRowCount: 100, cards: [] }))).toBe(true);
   });
 
   it("counts the command zone toward the loaded total", () => {
     const commander = makeDeckCard(scryfallCard());
-    expect(isDeckStub(deck({ cardCount: 1, cards: [], commander }))).toBe(false);
+    expect(isDeckStub(deck({ cardRowCount: 1, cards: [], commander }))).toBe(false);
   });
 
   it("is not a stub once the cards are loaded", () => {
     const cards = [makeDeckCard(scryfallCard())];
-    expect(isDeckStub(deck({ cardCount: 1, cards }))).toBe(false);
+    expect(isDeckStub(deck({ cardRowCount: 1, cards }))).toBe(false);
   });
 
   it("treats an empty deck as loaded, not as a stub", () => {
-    expect(isDeckStub(deck({ cardCount: 0, cards: [] }))).toBe(false);
+    expect(isDeckStub(deck({ cardRowCount: 0, cards: [] }))).toBe(false);
+  });
+});
+
+describe("deckCardCount", () => {
+  function deck(overrides: Partial<Deck>): Deck {
+    return { ...createEmptyDeck("d", "d"), ...overrides };
+  }
+
+  it("takes a stub's count from the copies the listing summed", () => {
+    expect(deckCardCount(deck({ cardRowCount: 71, cardCopyCount: 100 }))).toBe(100);
+  });
+
+  it("falls back to a stub's row count when the listing sent no copies", () => {
+    expect(deckCardCount(deck({ cardRowCount: 71 }))).toBe(71);
+  });
+
+  // CR 903.5a: the commander counts toward the deck; the sideboard does not.
+  it("counts a loaded deck's copies from its rows, ignoring a stale listing count", () => {
+    const commander = makeDeckCard(scryfallCard());
+    const loaded = deck({
+      commander,
+      cards: [
+        { ...makeDeckCard(scryfallCard({ name: "Forest" })), quantity: 30 },
+        { ...makeDeckCard(scryfallCard({ name: "Negate" })), zone: "sideboard" },
+      ],
+      cardRowCount: 3,
+      cardCopyCount: 7,
+    });
+
+    expect(deckCardCount(loaded)).toBe(31);
   });
 });
 

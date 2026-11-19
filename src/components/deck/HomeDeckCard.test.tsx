@@ -1,8 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 import { screen } from "@testing-library/react";
+import { apiDeckToStoreDeck } from "@/lib/deck/store-factories";
 import type { Deck, DeckCard } from "@/lib/deck/types";
 import { aDeckCard } from "@/test/builders/card";
 import { aDeck } from "@/test/builders/deck";
+import { emptyApiDeck } from "@/test/in-memory-deck-api";
 import { renderWithIntl } from "@/test/render-with-intl";
 
 vi.mock(import("@/i18n/navigation"), () => import("@/test/i18n-navigation-stub"));
@@ -85,7 +87,39 @@ describe("HomeDeckCard", () => {
     );
 
     expect(screen.getByTestId("deck-identity")).toHaveTextContent("Test Deck");
-    expect(screen.getByTestId("deck-status")).toHaveTextContent("0 cards");
+    // CR 903.5a: the commander counts toward the deck, as the editor counts it.
+    expect(screen.getByTestId("deck-status")).toHaveTextContent("1 / 100 cards");
+  });
+
+  it("shows a listed deck whose 30 Forests are one row as 100 cards", () => {
+    const listed = apiDeckToStoreDeck({
+      ...emptyApiDeck("deck-1", "Talrand Spells"),
+      cards: [
+        {
+          ...makeCard("row-talrand", "Talrand, Sky Summoner", ["U"]),
+          deckId: "deck-1",
+          scryfallId: "sf-talrand",
+          isCommander: true,
+          isPartner: false,
+          zone: "main",
+        },
+      ],
+      // The commander, one row of 30 Forests and 69 single cards.
+      _count: { cards: 71 },
+      cardCopyCount: 100,
+    });
+
+    renderWithIntl(
+      <HomeDeckCard
+        deck={listed}
+        onDelete={vi.fn()}
+        onDuplicate={vi.fn()}
+        deletingId={null}
+        duplicatingId={null}
+      />
+    );
+
+    expect(screen.getByTestId("deck-status")).toHaveTextContent("100 / 100 cards");
   });
 
   it("uses French accessible labels for its mana symbols", () => {

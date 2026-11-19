@@ -138,7 +138,7 @@ function seedDeck(extra: Partial<Deck> = {}): Deck {
     cards: [],
     maybeboard: [],
     format: "commander",
-    cardCount: 0,
+    cardRowCount: 0,
     targetBracket: 2 as 1 | 2 | 3 | 4,
     manualBracket: null as 1 | 2 | 3 | 4 | null,
     budget: null,

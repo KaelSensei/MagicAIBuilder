@@ -1,8 +1,8 @@
 /**
- * How many card rows of a deck the store holds, and the deck's `cardCount`
+ * How many card rows of a deck the store holds, and the deck's `cardRowCount`
  * kept equal to them.
  *
- * `Deck.cardCount` has two sources. The listing (`GET /api/decks`) sends only
+ * `Deck.cardRowCount` has two sources. The listing (`GET /api/decks`) sends only
  * the command zone plus the server's row count, and `isDeckStub` compares that
  * count with the rows held to know whether the full deck is still to be
  * fetched. Once the rows are held, the count is derived from them, and every
@@ -34,7 +34,7 @@ export function countLoadedCards(deck: CardRows): number {
 }
 
 /**
- * The deck with its `cardCount` set to the rows it holds. Call it on every
+ * The deck with its `cardRowCount` set to the rows it holds. Call it on every
  * write that changes the rows of a loaded deck, whatever the slot: the card
  * list and the command zone alike.
  *
@@ -46,5 +46,5 @@ export function countLoadedCards(deck: CardRows): number {
  * @returns the same deck with the count in step with its rows
  */
 export function withLoadedCardCount<D extends Deck>(deck: D): D {
-  return { ...deck, cardCount: countLoadedCards(deck) };
+  return { ...deck, cardRowCount: countLoadedCards(deck) };
 }
