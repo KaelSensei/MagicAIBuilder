@@ -102,6 +102,9 @@ import {
   buildNaturalLanguageSearchContext,
   toSearchLocale,
 } from "@/lib/search/natural-language-query";
+import { withDeckIdentityScope } from "@/lib/search/deck-identity-scope";
+import { useCommanderIdentityScope } from "@/hooks/useCommanderIdentityScope";
+import { CommanderIdentityChip } from "@/components/search/CommanderIdentityChip";
 import { BuilderColorSearchPicker } from "@/components/builder/BuilderColorSearchPicker";
 import {
   BuilderMobileTabBar,
@@ -130,6 +133,8 @@ interface BuildSearchQueryFromModeParams {
   /** The deck's commander, whose partner abilities decide the partner search. */
   readonly deckCommander: PairingCard | null;
   readonly format?: DeckFormat;
+  /** The commander's identity clause the name search adds; "" when widened or unset. */
+  readonly identityScope: string;
 }
 
 function pinnedQueryLabel(pinned: string | null): string | undefined {
@@ -190,7 +195,10 @@ function buildSearchQueryFromMode(p: BuildSearchQueryFromModeParams): string {
         ? buildColorSearchQuery(p.colorFilter, p.searchText, false, legality)
         : "";
     default:
-      return buildSearchQuery(p.searchText, p.filters, legality);
+      return withDeckIdentityScope(
+        buildSearchQuery(p.searchText, p.filters, legality),
+        p.identityScope
+      );
   }
 }
 
@@ -507,6 +515,12 @@ export default function BuilderPage() {
     companionMode,
   });
   const describeActive = descriptionSearchIsActive(describeSearch, naturalSearchAllowed);
+  const identityScope = useCommanderIdentityScope({
+    deckId,
+    deck: naturalSearchContext,
+    nameSearchAllowed: naturalSearchAllowed,
+    describedQueryRuns: pinnedQuery !== null,
+  });
 
   useEffect(() => {
     if (naturalSearchAllowed) return;
@@ -525,6 +539,7 @@ export default function BuilderPage() {
     companionMode,
     deckCommander: deck?.commander ?? null,
     format: deck?.format,
+    identityScope: identityScope.clause,
   });
   const query = searchQueryOrPinned(pinnedQuery, syntaxQuery);
 
@@ -1052,6 +1067,10 @@ export default function BuilderPage() {
                   {showFilters && (
                     <SearchFilters filters={filters} onChange={setFilters} />
                   )}
+                  <CommanderIdentityChip
+                    state={identityScope.chip}
+                    onToggle={identityScope.toggle}
+                  />
                 </>
               )}
 

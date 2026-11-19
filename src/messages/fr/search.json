@@ -12,6 +12,12 @@
   "noSetsFound": "Aucune édition trouvée pour « {query} »",
   "clearSet": "Retirer l'édition sélectionnée",
   "setsAvailable": "{count, plural, one {# édition disponible} other {# éditions disponibles}} — tape pour rechercher",
+  "identityScope": {
+    "scoped": "Seulement les cartes aux couleurs de ton commandant",
+    "widened": "Cartes de toutes les couleurs",
+    "widen": "Afficher toutes les couleurs",
+    "narrow": "Seulement les couleurs de mon commandant"
+  },
   "collectionOnly": {
     "signedOut": "Connecte-toi et ajoute des cartes à ta collection pour ne voir que les cartes que tu possèdes.",
     "emptyCollection": "Ta collection est vide. Ajoutes-y des cartes : ce filtre n'affichera alors que les cartes que tu possèdes.",

@@ -1,7 +1,6 @@
-import { commanderNameExceptions } from "@/lib/deck/color-identity";
-import { PIP_COLORS, type PipColor } from "@/lib/deck/mana-alignment";
+import type { PipColor } from "@/lib/deck/mana-alignment";
 import { getFormatConfig, type DeckFormat } from "@/lib/deck/formats";
-import { identityScopeClause } from "./rulebreaker-scope";
+import { deckIdentityScopeClause } from "./deck-identity-scope";
 import { removeLegalityClause } from "./scryfall-query-syntax";
 
 /** Deck constraints shown on a generated query and checked after an edit. */
@@ -33,7 +32,7 @@ export function applySearchContext(
 ): string {
   const withoutLegal = removeLegalityClause(query);
   if (!context.applyContext) return withoutLegal;
-  const withIdentity = appendToken(withoutLegal, identityClause(context));
+  const withIdentity = appendToken(withoutLegal, deckIdentityScopeClause(context));
   return appendToken(withIdentity, `legal:${getFormatConfig(context.format).scryfallLegality}`);
 }
 
@@ -56,30 +55,6 @@ export function queryWidensDeckContext(
   if (!hasDeckLegality(query, context.format)) return true;
   if (!context.enforceColorIdentity) return false;
   return !identityStaysInside(query, context.colorIdentity);
-}
-
-function identityClause(context: NaturalLanguageSearchContext): string {
-  if (!context.enforceColorIdentity) return "";
-  if (!getFormatConfig(context.format).hasColorIdentity) return "";
-  const colors = orderedColors(context.colorIdentity);
-  return identityScopeClause(
-    colors.length === 0 ? "c" : colors.join(""),
-    commanderNameExceptions(context.commandZoneNames)
-  );
-}
-
-function orderedColors(colors: readonly string[]): readonly PipColor[] {
-  const present = new Set<PipColor>();
-  for (const color of colors) {
-    if (isPipColor(color)) present.add(color);
-  }
-  return PIP_COLORS.filter((color) => present.has(color));
-}
-
-const COLOR_NAMES: readonly string[] = PIP_COLORS;
-
-function isPipColor(value: string): value is PipColor {
-  return COLOR_NAMES.includes(value);
 }
 
 function appendToken(query: string, token: string): string {
