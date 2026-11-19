@@ -21,6 +21,7 @@ import {
   applyEditActionLogEntry,
   applyRemoveActionLogEntry,
   PHASES,
+  hasLostOnLife,
   maxMulligans,
 } from "./engine";
 import type { PlaytestEngine } from "./engine";
@@ -279,10 +280,10 @@ describe("applyDamage / applyHeal", () => {
     expect(next.lifeTotal).toBe(35);
   });
 
-  it("sets isGameOver when life ≤ 0", () => {
+  it("leaves the player lost once damage takes life to zero or less (CR 704.5a)", () => {
     const state = { ...makeState(), lifeTotal: 3 };
     const next = applyDamage(state, 5);
-    expect(next.isGameOver).toBe(true);
+    expect(hasLostOnLife(next)).toBe(true);
   });
 });
 

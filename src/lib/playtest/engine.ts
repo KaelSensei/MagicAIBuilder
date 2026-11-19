@@ -70,7 +70,7 @@ export type { MulliganTally } from "./engine/mulligan";
 
 export { applyDrawCard, applyNextPhase, applyNextTurn } from "./engine/turn";
 
-export { applyDamage, applyHeal } from "./engine/life";
+export { applyDamage, applyHeal, hasLostOnLife } from "./engine/life";
 
 export {
   applyAddCounter,
