@@ -9,6 +9,10 @@
  * client read the deck; their success bodies carry the deck's new `version`.
  * The bulk edit also answers 409 when it names a row the deck no longer
  * holds: the list was edited from an outdated copy.
+ *
+ * POST and PATCH store at most the copy limit, as the editor does: each added
+ * row and each resized row is clamped silently to `min(requested, limit)`
+ * (`lib/deck/copy-limit-write.ts`), and the response carries the stored rows.
  */
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -17,7 +21,7 @@ import {
   addCardRequestSchema,
   deckCardChangesSchema,
 } from "@/lib/validation/card";
-import { requireDeckOwner } from "@/lib/auth/helpers";
+import { ownedDeck, requireAuth, requireDeckOwner } from "@/lib/auth/helpers";
 import { logger } from "@/lib/logger";
 import { readJsonBody } from "@/lib/api/json-body";
 import {
@@ -30,8 +34,51 @@ import {
   type CommandSlotIds,
 } from "@/lib/deck/commander-pairing";
 import { deckRepository } from "@/lib/deck/deck-repository";
+import { COMMAND_SLOT_ROWS } from "@/lib/deck/bulk-edit-command-zone";
+import {
+  cardWithinCopyLimit,
+  storedCopyLimitDeck,
+} from "@/lib/deck/copy-limit-write";
+import type { CopyLimitDeck } from "@/lib/deck/multiples";
 
 type Params = { params: Promise<{ id: string }> };
+
+/**
+ * The ownership check of `requireDeckOwner`, whose one query also reads what
+ * the copy limit needs: the deck's format and the names of the rows that fill
+ * the commander and partner slots (CR 903.5e: their rulebreaker exceptions).
+ * The rule costs no extra round trip.
+ */
+async function requireCopyRuleDeckOwner(
+  deckId: string
+): Promise<
+  | { copyRule: CopyLimitDeck; error?: never }
+  | { copyRule?: never; error: NextResponse }
+> {
+  const auth = await requireAuth();
+  if (auth.error) return { error: auth.error };
+  const deck = await prisma.deck.findUnique({
+    where: { id: deckId },
+    select: {
+      userId: true,
+      format: true,
+      cards: {
+        where: {
+          OR: [{ ...COMMAND_SLOT_ROWS.commander }, { ...COMMAND_SLOT_ROWS.partner }],
+        },
+        select: { name: true },
+      },
+    },
+  });
+  const owned = ownedDeck(deck, auth.session.user.id);
+  if (owned.error) return { error: owned.error };
+  return {
+    copyRule: storedCopyLimitDeck({
+      format: owned.deck.format,
+      commandZoneNames: owned.deck.cards.map((card) => card.name),
+    }),
+  };
+}
 
 /**
  * A command-zone card must not repeat the Oracle card held by the opposite
@@ -54,7 +101,7 @@ async function duplicatesCommandPairing(
 export async function POST(request: Request, { params }: Params) {
   const { id: deckId } = await params;
   try {
-    const ownership = await requireDeckOwner(deckId);
+    const ownership = await requireCopyRuleDeckOwner(deckId);
     if (ownership.error) return ownership.error;
 
     const jsonBody = await readJsonBody(request);
@@ -83,7 +130,7 @@ export async function POST(request: Request, { params }: Params) {
 
     const result = await deckRepository.addCard(
       { deckId, expectedVersion },
-      card
+      cardWithinCopyLimit(card, ownership.copyRule)
     );
     return deckWriteResponse(result, ({ value, version }) =>
       NextResponse.json({ ...value, version }, { status: 201 })
