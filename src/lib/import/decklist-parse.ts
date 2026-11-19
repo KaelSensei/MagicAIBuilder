@@ -4,8 +4,7 @@
  * Everything here turns a string into cards: no network, and no knowledge of
  * any particular site beyond the shapes decklists are pasted in. TappedOut,
  * MTGTop8 and MTGDecks all download plain text and share
- * `parsePlainTextDecklist`; the HTML fallback exists because MTGTop8 sometimes
- * serves a page where a file was expected.
+ * `parsePlainTextDecklist`.
  *
  * The hand-rolled whitespace check is deliberate: the obvious `\s*.*$` patterns
  * are ReDoS-prone, and this parser eats whatever a third-party site returns.
@@ -181,27 +180,4 @@ export function parsePlainTextDecklist(text: string): UrlImportCard[] {
   }
 
   return cards;
-}
-
-/** Fallback: extract card names from HTML via simple regex patterns */
-export function extractCardsFromHtml(html: string): UrlImportCard[] {
-  // MTGTop8 has cards in spans/divs with class "O14" or similar
-  // Pattern: "N Card Name" in consecutive elements
-  const cards: UrlImportCard[] = [];
-  const matches = html.matchAll(/\b(\d+)\s+([A-Z][A-Za-z0-9', /()-]{1,60}?)(?=<|&nbsp;|\s{2,})/g);
-  for (const m of matches) {
-    const quantity = Number.parseInt(m[1], 10);
-    const name = m[2].trim();
-    if (quantity > 0 && quantity <= 20 && name.length > 2) {
-      cards.push({ name, quantity, isCommander: false, isPartner: false, zone: "main" });
-    }
-  }
-  // Deduplicate by name
-  const seen = new Set<string>();
-  return cards.filter((c) => {
-    const key = c.name.toLowerCase();
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
 }
