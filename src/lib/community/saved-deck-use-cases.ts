@@ -7,8 +7,8 @@
  * outcome to a status; the HTTP concerns stay in the route. The use cases
  * depend on the ports in `deck-action-ports.ts` only, so they run in Vitest
  * with in-memory fakes and no database (ADR 0005). The rule is `canSaveDeck`
- * (`deck-action-rules.ts`). The folders themselves are COM-15's
- * (`deck-folders.ts`, `/api/deck-folders`).
+ * (`deck-action-rules.ts`). Reading the library and managing its folders is
+ * `saved-deck-library-use-cases.ts` (`/api/community/deck-folders`).
  *
  * @module community/saved-deck-use-cases
  */
