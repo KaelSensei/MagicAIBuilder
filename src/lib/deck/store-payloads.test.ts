@@ -360,7 +360,11 @@ describe("the add-card request each action sends", () => {
   });
 
   it("addDeckCard sends the row as given, with Game Changer and banned flags from the store's lists rather than the row's own", async () => {
-    useDeckStore.setState({ bannedNames: new Set(["Sol Ring"]) });
+    // A Modern deck, so the row's two Sol Rings sit within the copy limit (CR 100.2a).
+    useDeckStore.setState({
+      decks: { [DECK_ID]: openDeck({ format: "modern", commander: null }) },
+      bannedNames: new Set(["Sol Ring"]),
+    });
 
     await useDeckStore.getState().addDeckCard({
       ...SOL_RING,

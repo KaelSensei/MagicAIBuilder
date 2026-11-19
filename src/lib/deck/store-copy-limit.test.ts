@@ -6,9 +6,8 @@
  * deck (Commander, Brawl, Oathbreaker) holds one (CR 903.5b). Basic lands and
  * cards whose own text allows more are exempt in every format (CR 100.2a,
  * CR 903.5b, CR 101.1). Every store entry point that adds a copy applies the
- * same limit: `addCard`, `addDeckCard` and `updateCardQuantity`. The first
- * add of a card is the exception today: it keeps the quantity it is given
- * (pinned below, before FR-03 moves the limit to `format-rules`).
+ * same limit: `addCard`, `addDeckCard` and `updateCardQuantity`, including
+ * the first add of a card, which clamps the quantity it is given.
  *
  * Sociable: the real store and deck client run; the fake deck API
  * (`src/test/fake-deck-client.ts`) answers the requests in memory.
@@ -227,6 +226,87 @@ describe("stepping a card's quantity (updateCardQuantity)", () => {
   });
 });
 
+// The first add of a card clamps the copies it asks for to the same limit an
+// edit clamps to, silently, as `updateCardQuantity` does.
+describe("the first add of a card", () => {
+  /** The copies the add sent to the deck API. */
+  function sentQuantity(): number | undefined {
+    const [, payload] = deckApi.addCard.mock.lastCall ?? [];
+    return payload?.quantity;
+  }
+
+  // CR 903.5b: a Commander deck holds one Sol Ring, however many one add asks for.
+  it("adding 3 Sol Ring to a Commander deck in one add keeps 1", async () => {
+    openDeck("commander");
+
+    await useDeckStore
+      .getState()
+      .addCard(searchResult(solRing(1)), { quantity: 3 });
+
+    expect(copiesOf("Sol Ring")).toBe(1);
+    expect(sentQuantity()).toBe(1);
+  });
+
+  it("adding a row of 3 Sol Ring to a Commander deck keeps 1", async () => {
+    openDeck("commander");
+
+    await useDeckStore.getState().addDeckCard(solRing(3));
+
+    expect(copiesOf("Sol Ring")).toBe(1);
+    expect(sentQuantity()).toBe(1);
+  });
+
+  // CR 100.2a: a constructed deck holds up to four cards with the same name.
+  it("adding 6 Lightning Bolt to a Modern deck in one add keeps 4", async () => {
+    openDeck("modern");
+
+    await useDeckStore
+      .getState()
+      .addCard(searchResult(bolt(1)), { quantity: 6 });
+
+    expect(copiesOf("Lightning Bolt")).toBe(4);
+    expect(sentQuantity()).toBe(4);
+  });
+
+  // Seven Dwarves: "A deck can have up to seven cards named Seven Dwarves."
+  it("adding a row of 9 Seven Dwarves to a Modern deck keeps the 7 the card allows", async () => {
+    openDeck("modern");
+
+    await useDeckStore.getState().addDeckCard(dwarves(9));
+
+    expect(copiesOf("Seven Dwarves")).toBe(7);
+  });
+
+  // CR 903.5b: basic lands are exempt from the singleton rule.
+  it("adding 30 basic Mountains to a Commander deck in one add keeps 30", async () => {
+    openDeck("commander");
+
+    await useDeckStore
+      .getState()
+      .addCard(searchResult(mountain(1)), { quantity: 30 });
+
+    expect(copiesOf("Mountain")).toBe(30);
+  });
+
+  // CR 101.1: Relentless Rats's own text allows any number of copies.
+  it("adding a row of 20 Relentless Rats to a Commander deck keeps 20", async () => {
+    openDeck("commander");
+
+    await useDeckStore.getState().addDeckCard(rats(20));
+
+    expect(copiesOf("Relentless Rats")).toBe(20);
+  });
+
+  it("adds one copy when the add names no quantity", async () => {
+    openDeck("modern");
+
+    await useDeckStore.getState().addCard(searchResult(bolt(1)));
+
+    expect(copiesOf("Lightning Bolt")).toBe(1);
+    expect(sentQuantity()).toBe(1);
+  });
+});
+
 // Today's clamps that the copy-limit module (master plan FR-03) must keep or
 // consciously change. Each test below says whether it pins a rule or a gap.
 describe("the quantity clamps the store applies today", () => {
@@ -239,33 +319,6 @@ describe("the quantity clamps the store applies today", () => {
     expect(copiesOf("Mountain")).toBe(10);
     expect(deckApi.updateCardQuantity).not.toHaveBeenCalled();
     expect(deckApi.addCard).not.toHaveBeenCalled();
-  });
-
-  it("currently keeps the quantity a first addCard asks for, past the copy limit (pinned; no B2 row yet)", async () => {
-    // CR 903.5b allows one Sol Ring; the first add does not apply copyLimit.
-    openDeck("commander");
-
-    await useDeckStore
-      .getState()
-      .addCard(searchResult(solRing(1)), { quantity: 3 });
-
-    expect(copiesOf("Sol Ring")).toBe(3);
-    expect(deckApi.addCard).toHaveBeenCalledWith(
-      { deckId: DECK_ID },
-      expect.objectContaining({ quantity: 3 })
-    );
-  });
-
-  it("currently keeps the quantity a first addDeckCard row carries, past the copy limit (pinned; no B2 row yet)", async () => {
-    openDeck("commander");
-
-    await useDeckStore.getState().addDeckCard(solRing(3));
-
-    expect(copiesOf("Sol Ring")).toBe(3);
-    expect(deckApi.addCard).toHaveBeenCalledWith(
-      { deckId: DECK_ID },
-      expect.objectContaining({ quantity: 3 })
-    );
   });
 
   it("counts copies per zone: a Commander deck takes a Sol Ring in the sideboard beside the main-deck one", async () => {
