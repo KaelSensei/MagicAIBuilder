@@ -47,6 +47,7 @@ export { PHASES } from "./engine/types";
 export type {
   BattlefieldCard,
   CardZone,
+  CommanderDamageTally,
   DiceRoll,
   LifeHistoryEntry,
   Phase,
@@ -71,6 +72,19 @@ export type { MulliganTally } from "./engine/mulligan";
 export { applyDrawCard, applyNextPhase, applyNextTurn } from "./engine/turn";
 
 export { applyDamage, applyHeal, hasLostOnLife } from "./engine/life";
+
+export {
+  applyCommanderDamage,
+  COMMANDER_DAMAGE_TO_LOSE,
+  commanderDamageByOpponent,
+  isCommanderDamageAmount,
+  MAX_IMAGINED_OPPONENTS,
+} from "./engine/commander-damage";
+export type {
+  CommanderDamageFromCommander,
+  CommanderDamageHit,
+  OpponentCommanderDamage,
+} from "./engine/commander-damage";
 
 export {
   applyAddCounter,

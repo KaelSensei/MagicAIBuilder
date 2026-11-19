@@ -82,6 +82,16 @@
     "castCard": "Cast {name}",
     "empty": "Empty. Return your commander from the graveyard or exile."
   },
+  "commanderDamage": {
+    "title": "Commander damage",
+    "hint": "Record the combat damage each of your commanders deals to each imagined opponent. 21 from one commander loses them the game.",
+    "amount": "Combat damage",
+    "opponent": "Opponent {number}",
+    "fromCommander": "{damage} from {commander}",
+    "record": "Record",
+    "recordFrom": "Record damage from {commander} to Opponent {number}",
+    "lost": "Lost to commander damage (CR 903.10a, CR 704.6c)"
+  },
   "dice": {
     "title": "Dice",
     "roll": "Roll d{sides}",

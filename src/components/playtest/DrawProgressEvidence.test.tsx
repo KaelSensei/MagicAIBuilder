@@ -44,6 +44,8 @@ function engine(overrides: Partial<PlaytestEngine>): PlaytestEngine {
     exile: [],
     commandZone: [],
     commanderIds: [],
+    commanderDamageOpponents: 0,
+    commanderDamage: [],
     diceRolls: [],
     actionLog: [],
     nextActionId: 1,

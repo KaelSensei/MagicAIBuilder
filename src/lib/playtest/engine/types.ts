@@ -6,7 +6,7 @@
  * thing the UI (`components/playtest/`) needs to render a game. `PlaytestEnginePatch` is the
  * writable patch a transition hands to `history.ts`; it stays inside `engine/`.
  * Rules: the turn structure the step list flattens (CR 500.1), the table size (CR 800.1),
- * commanders in the command zone (CR 903.6).
+ * commanders in the command zone (CR 903.6), commander damage (CR 903.10a).
  * Not responsible for: the ports (`ports.ts`) or any transition.
  *
  * @module playtest/engine/types
@@ -77,6 +77,16 @@ export interface LifeHistoryEntry {
   readonly description: string; // e.g., "3 damage (attack)", "-5 (heal)"
 }
 
+/**
+ * The combat damage one commander has dealt to one imagined opponent over the game
+ * (CR 903.10a). `opponent` is a seat from 1 to `commanderDamageOpponents`.
+ */
+export interface CommanderDamageTally {
+  readonly opponent: number;
+  readonly commanderId: string;
+  readonly damage: number;
+}
+
 /** One die roll the player made; `result` is in `[1, sides]`. */
 export interface DiceRoll {
   readonly sides: number;
@@ -144,6 +154,13 @@ export interface PlaytestEngine {
   readonly commandZone: readonly DeckCard[];
   /** Ids of this game's commanders, the only cards the command zone accepts. */
   readonly commanderIds: readonly string[];
+  /**
+   * How many imagined opponents the commander-damage tally offers: 0 when the format does not
+   * use the rule (CR 903.12h for Brawl), else 1 in a duel and 3 at a multiplayer table.
+   */
+  readonly commanderDamageOpponents: number;
+  /** The tally, one entry per opponent and commander that has dealt damage (CR 903.10a). */
+  readonly commanderDamage: readonly CommanderDamageTally[];
   readonly diceRolls: readonly DiceRoll[];
   readonly actionLog: readonly PlaytestActionLogEntry[];
   readonly nextActionId: number;
