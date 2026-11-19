@@ -1967,7 +1967,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     if (!card) return;
 
     const max = copyLimit(deck, card);
-    const newQty = Math.max(1, Math.min(max, card.quantity + delta));
+    const newQty = copiesWithinLimit(card.quantity + delta, max);
     if (newQty === card.quantity) return;
     const writeKey = `${activeDeckId}:${cardId}`;
     const previousWrite = pendingQuantityWrites.get(writeKey);
