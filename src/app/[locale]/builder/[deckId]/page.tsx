@@ -60,12 +60,8 @@ import {
   buildCompanionSearchQuery,
 } from "@/lib/scryfall/search";
 import { SetAutocomplete } from "@/components/search/SetAutocomplete";
-import type {
-  SearchFilters as Filters,
-  DeckCard,
-  CardCategory,
-  DeckZone,
-} from "@/lib/deck/types";
+import type { SearchFilters as Filters } from "@/lib/scryfall/search-types";
+import type { DeckCard, CardCategory, DeckZone } from "@/lib/deck/types";
 import type { DeckFormat } from "@/lib/deck/formats";
 import type { PairingCard } from "@/lib/deck/partner-abilities";
 import type { ScryfallCard } from "@/lib/scryfall/types";

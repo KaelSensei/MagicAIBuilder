@@ -1,5 +1,5 @@
 // Scryfall search query builder
-import type { ColorMode, InteractionType, SearchFilters } from "@/lib/deck/types";
+import type { ColorMode, InteractionType, SearchFilters } from "./search-types";
 import { getFormatConfig } from "@/lib/deck/formats";
 import type { DeckFormat } from "@/lib/deck/formats";
 import {
