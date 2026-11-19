@@ -162,33 +162,14 @@ export interface Deck {
   version?: number;
 }
 
-export type ColorMode = "or" | "and" | "exact";
-export type CmcMode = "range" | "exact" | "min" | "max";
-export type InteractionType =
-  "removal" | "counterspell" | "wipe" | "tutor" | "draw" | "ramp";
-
-export interface SearchFilters {
-  colors: string[];
-  colorMode?: ColorMode;
-  colorlessFilter?: boolean;
-  landFilter?: boolean;
-  types: string[];
-  cmcMin: number | null;
-  cmcMax: number | null;
-  cmcMode?: CmcMode;
-  cmcExact: number | null;
-  priceMin: number | null;
-  priceMax: number | null;
-  powerMin: number | null;
-  powerMax: number | null;
-  toughnessMin: number | null;
-  toughnessMax: number | null;
-  subtype: string;
-  keyword: string;
-  interactionType: InteractionType | null;
-  /**
-   * List only cards whose Oracle card the player owns, in any printing. Applied in the browser
-   * by `useCardSearchResults`; it adds nothing to the Scryfall query.
-   */
-  collectionOnly?: boolean;
-}
+/**
+ * @deprecated The search filter types belong to the card catalog: import them from
+ * `@/lib/scryfall/search-types`. This re-export goes when the card-catalog series closes
+ * (master plan CC-14).
+ */
+export type {
+  CmcMode,
+  ColorMode,
+  InteractionType,
+  SearchFilters,
+} from "@/lib/scryfall/search-types";
