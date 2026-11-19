@@ -3,8 +3,8 @@
  * pages, the sitemap, EDHREC, the meta cache and the MTGTop8 archetype lookup
  * share.
  *
- * Community context (COM-02): the commander decks page and the lookup behind
- * it (`commander-decks-lookup.ts`, which matches the same slug in SQL) own the
+ * Community context (COM-02): the commander decks page and the reader behind
+ * it (`prisma-commander-deck-reader.ts`, which matches the same slug in SQL) own the
  * slug; the sitemap lists the pages it names, and the meta-insights context
  * imports it for its route URLs, cache keys and archetype matching. Kept a
  * leaf with no community import so that `meta-insights/infrastructure/mtgtop8.ts`
