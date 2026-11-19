@@ -6,7 +6,7 @@ import type { BracketLevel, DeckCard } from "@/lib/deck/types";
 import type { DeckStats } from "@/lib/deck/analysis-types";
 import type { DeckFormat } from "@/lib/deck/formats";
 import { getFormatConfig } from "@/lib/deck/formats";
-import { formatDeckCount } from "@/lib/deck/deck-size";
+import { formatDeckCount, formatDeckSize } from "@/lib/deck/deck-size";
 import {
   deckSizeRule,
   deckSizeStatus,
@@ -26,7 +26,7 @@ import { CheckCircle2, AlertTriangle } from "lucide-react";
 interface DeckStatsProps {
   readonly stats: DeckStats | null;
   readonly format: DeckFormat;
-  /** The deck's size rule (`deckSizeRuleOf`); the format's exact size when absent */
+  /** The deck's size rule (`deckSizeRuleOf`); the format's own size and bound when absent */
   readonly sizeRule?: DeckSizeRule;
   readonly cards?: readonly DeckCard[];
   readonly targetBracket?: BracketLevel;
@@ -320,7 +320,7 @@ export function DeckStats({
 
   // Sizes and bracket targets are Commander's; a 60-card deck was being shown
   // "60/100" and "target for B3" before this was gated on the format.
-  const deckSize = sizeRule ?? deckSizeRule(config.deckSize, []);
+  const deckSize = sizeRule ?? deckSizeRule(formatDeckSize(format), []);
   const cardCountStatus =
     CARD_COUNT_STATUS[deckSizeStatus(stats.totalCards, deckSize)];
 
