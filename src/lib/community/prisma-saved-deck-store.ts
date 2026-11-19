@@ -6,8 +6,8 @@
  * for `saved-deck-use-cases.ts`; wired by `deck-action-server.ts`. One
  * bookmark per user and deck is the table's unique key (`userId_deckId`),
  * which is what makes `save` an upsert and `remove` a `deleteMany` that may
- * delete nothing. The two adapters share a file because COM-15 grows the
- * library (folders, listing) from here.
+ * delete nothing. The listing and the folder writes are
+ * `prisma-saved-deck-library.ts`.
  *
  * @module community/prisma-saved-deck-store
  */
