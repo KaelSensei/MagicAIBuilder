@@ -253,6 +253,7 @@ Nothing in the roadmap entry was dropped. The section below is the initiative te
 - [x] A public page, in English, listing dated changes to `/api/v1/decks`, `/api/v1/decks/{id}`, `/api/v1/collection` and `/api/v1/openapi`. A compatible change is labelled compatible. A breaking change names the field and the date.
 - [x] A CI check fails when the OpenAPI document changes and the changelog has no new dated line and no "compatible" label for that change.
 - [x] The page does not document routes outside `/api/v1`. It does not embed a deck.
+- Added 2026-11-19 (seventeenth pass), positioning only: neither of the two largest builders documents a public API. Archidekt staff call its API "open for reading" but undocumented ([forum](https://archidekt.com/forum/thread/40353), search summary), and a blog of February 2026 calls it "not officially supported but open and public for reading" (search summary); Moxfield has unofficial clients only ([moxfield-api](https://github.com/MarioMH8/moxfield-api)), and its own public issue #143 (2025-11-23) reports that an allow-listed User-Agent cannot authenticate. A documented and versioned read API, with keys, an OpenAPI document and a dated changelog, is a visible difference, and it is the case for keeping this initiative in Next. No new route.
 
 ### Enrichment (2026-11-11)
 
