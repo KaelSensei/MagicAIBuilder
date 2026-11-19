@@ -8,7 +8,8 @@
  * the checks the engine does not make today (`PLAYTEST_COMMAND_KNOWN_GAPS`), which a structural
  * change must keep not making until their own fix lands.
  * Rules: the London mulligan waits for its bottom cards (CR 103.5) and has a limit (CR 103.5);
- * only a commander enters the command zone (CR 903.9); damage is never negative (CR 107.1b).
+ * only a commander enters the command zone (CR 903.9); damage is never negative (CR 107.1b);
+ * only Commander tallies commander damage (CR 903.10a, 903.12h).
  * Not responsible for: applying a command (`commands.ts`).
  *
  * @module playtest/engine/command-guards
@@ -21,6 +22,11 @@ import {
   type PlaytestCommand,
   type PlaytestCommandType,
 } from "./commands";
+import {
+  isCommanderDamageAmount,
+  isTallySeat,
+  offersCommanderDamage,
+} from "./commander-damage";
 import { isNegativeDamage } from "./life";
 import { isChoosingBottom, maxMulligans } from "./mulligan";
 import { defaultPlaytestCommandDeps, type PlaytestCommandDeps } from "./ports";
@@ -37,6 +43,9 @@ export type PlaytestGuardReason =
   | "bottom-not-in-hand"
   | "library-empty"
   | "negative-damage"
+  | "no-commander-damage"
+  | "unknown-opponent"
+  | "bad-commander-damage"
   | "not-on-battlefield"
   | "id-taken"
   | "not-a-commander"
@@ -180,6 +189,31 @@ export const PLAYTEST_COMMAND_GUARDS: Readonly<
     ),
   ],
   heal: [whileChoosingBottom],
+  commanderDamage: [
+    whileChoosingBottom,
+    // CR 903.12h: Brawl does not use commander damage; only Commander offers the tally.
+    guard(
+      "commanderDamage",
+      "no-commander-damage",
+      (state) => !offersCommanderDamage(state)
+    ),
+    guard(
+      "commanderDamage",
+      "unknown-opponent",
+      (state, { opponent }) => !isTallySeat(state, opponent)
+    ),
+    // CR 903.10a counts combat damage dealt by a commander, so only a commander's is tallied.
+    guard(
+      "commanderDamage",
+      "not-a-commander",
+      (state, { commanderId }) => !state.commanderIds.includes(commanderId)
+    ),
+    guard(
+      "commanderDamage",
+      "bad-commander-damage",
+      (_state, { amount }) => !isCommanderDamageAmount(amount)
+    ),
+  ],
   tap: [
     whileChoosingBottom,
     guard(
