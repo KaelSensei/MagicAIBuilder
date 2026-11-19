@@ -555,11 +555,6 @@
       "count": 1
     }
   },
-  "src/components/community/DeckCommentPanel.tsx": {
-    "max-lines-per-function": {
-      "count": 1
-    }
-  },
   "src/components/community/DeckRatingPanel.test.tsx": {
     "no-restricted-syntax": {
       "count": 1
