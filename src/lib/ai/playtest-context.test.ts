@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { formatPlaytestEvidenceForPrompt } from "./ai-context";
+import { formatPlaytestEvidenceForPrompt } from "./playtest-context";
 
 describe("formatPlaytestEvidenceForPrompt", () => {
   it("labels player observations as private anecdotal context", () => {

@@ -13,7 +13,7 @@ import { logger } from "@/lib/logger";
 import { requireAuth } from "@/lib/auth/helpers";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { prisma } from "@/lib/db/prisma";
-import { formatPlaytestEvidenceForPrompt } from "@/lib/playtest/ai-context";
+import { formatPlaytestEvidenceForPrompt } from "@/lib/ai/playtest-context";
 import {
   formatDeckBriefForPrompt,
   normalizeDeckBrief,
