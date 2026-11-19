@@ -7,13 +7,16 @@
  * (the deal), `mulligan`, `turn`, `life`, `battlefield`, `zones`, `dice`, `action-log` and
  * `history` (undo). Each `apply*` transition is a pure function from one readonly
  * `PlaytestEngine` to the next, and returns the same state when the move does not apply.
- * `store.ts` holds the current state for the playtest modal (`components/playtest/`).
+ * `commands` names every move as a `PlaytestCommand` and reduces it to its transition
+ * (`reducePlaytest`); `store.ts` dispatches those commands and holds the current state for the
+ * playtest modal (`components/playtest/`).
  * Undo works by snapshot: a transition stores the state it replaced in `history`.
  *
  * Randomness and time come in through two ports, `RandomSource` and `Clock`, bundled as
  * `PlaytestDeps`. The transitions that shuffle or stamp a time take them as their optional
  * last argument and default to `defaultPlaytestDeps` (Web Crypto and the system clock), so a
- * test can replay a whole game from a seed (`engine-golden.test.ts`).
+ * test can replay a whole game from a seed (`engine-golden.test.ts`). A command adds the id
+ * source `newId` (`PlaytestCommandDeps`) for the copies and tokens it creates.
  *
  * Rules: the London mulligan and the free multiplayer mulligan (CR 103.5, 103.5c), the
  * first-turn draw (CR 103.8a, 103.8c), commanders in the command zone (CR 903.6, 903.9b).
@@ -24,8 +27,21 @@
  * @module playtest/engine
  */
 
-export { defaultPlaytestDeps } from "./engine/ports";
-export type { Clock, PlaytestDeps, RandomSource } from "./engine/ports";
+export {
+  defaultNewId,
+  defaultPlaytestCommandDeps,
+  defaultPlaytestDeps,
+} from "./engine/ports";
+export type {
+  Clock,
+  NewId,
+  PlaytestCommandDeps,
+  PlaytestDeps,
+  RandomSource,
+} from "./engine/ports";
+
+export { reducePlaytest } from "./engine/commands";
+export type { PlaytestCommand } from "./engine/commands";
 
 export { PHASES } from "./engine/types";
 export type {
