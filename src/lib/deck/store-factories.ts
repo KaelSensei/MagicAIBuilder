@@ -12,6 +12,7 @@ import type * as deckApi from "@/lib/db/deck-api";
 import { parseBracketLevel } from "@/lib/constants/brackets";
 import { rebuildCardFaces } from "./store-card-faces";
 import { countLoadedCards, withLoadedCardCount } from "./loaded-card-count";
+import { countDeckCards } from "./deck-size";
 
 export { makeDeckCard } from "./store-card-faces";
 export { buildCardFaces } from "@/lib/scryfall/faces";
@@ -42,7 +43,7 @@ export function createEmptyDeck(
     cards: [],
     maybeboard: [],
     format,
-    cardCount: 0,
+    cardRowCount: 0,
     targetBracket: DEFAULT_TARGET_BRACKET,
     manualBracket: null,
     budget: null,
@@ -137,8 +138,8 @@ export function apiDeckToStoreDeck(d: deckApi.ApiDeck): Deck {
   const allCards = d.cards ?? [];
   const { commanderCard, partnerCard, companionCard, deckCards } = partitionApiCards(allCards);
 
-  // The listing sends the server's row count; a full deck is counted from the
-  // rows it holds, once the command zone has been read out of them.
+  // The listing sends the server's row count and card copies; a full deck is
+  // counted from the rows it holds, once the command zone has been read out.
   const deck: Deck = {
     id: d.id,
     name: d.name,
@@ -158,7 +159,8 @@ export function apiDeckToStoreDeck(d: deckApi.ApiDeck): Deck {
     companion: companionCard ? apiCardToDeckCard(companionCard) : null,
     pairingType: d.pairingType ?? "none",
     cards: deckCards.map(apiCardToDeckCard),
-    cardCount: d._count?.cards ?? 0,
+    cardRowCount: d._count?.cards ?? 0,
+    cardCopyCount: d.cardCopyCount,
     maybeboard: deckCards
       .filter((card) => (card.zone ?? "main") === "maybeboard")
       .map(apiCardToDeckCard),
@@ -174,8 +176,8 @@ export function apiDeckToStoreDeck(d: deckApi.ApiDeck): Deck {
  * Whether a deck in the store is still the lightweight listing version.
  *
  * `GET /api/decks` returns only commander / partner / companion plus a total
- * count, so a stub holds fewer rows than `cardCount`. The full deck comes from
- * `GET /api/decks/[id]`, and every edit of a loaded deck keeps `cardCount`
+ * row count, so a stub holds fewer rows than `cardRowCount`. The full deck comes from
+ * `GET /api/decks/[id]`, and every edit of a loaded deck keeps `cardRowCount`
  * equal to its rows (`withLoadedCardCount`), so a loaded deck never reads as a
  * stub again.
  *
@@ -183,7 +185,25 @@ export function apiDeckToStoreDeck(d: deckApi.ApiDeck): Deck {
  * @returns true when its main-deck cards have not been loaded yet
  */
 export function isDeckStub(deck: Deck): boolean {
-  return countLoadedCards(deck) < deck.cardCount;
+  return countLoadedCards(deck) < deck.cardRowCount;
+}
+
+/**
+ * A deck's card count as the deck list shows it, equal to the editor's and the
+ * builder title bar's count of the same deck (`countDeckCards`): copies, not
+ * rows, with the commander and the partner (CR 903.5a).
+ *
+ * A stub holds only its command zone, so its count is the one the listing
+ * summed in the database (`cardCopyCount`); a stub listed without one, by a
+ * server older than the field, falls back to its row count, the old figure.
+ * A loaded deck is counted from its rows, so an edit shows at once.
+ *
+ * @param deck - a deck held in the store, listed or loaded
+ * @returns the number of cards the deck holds against its size rule
+ */
+export function deckCardCount(deck: Deck): number {
+  if (!isDeckStub(deck)) return countDeckCards(deck);
+  return deck.cardCopyCount ?? deck.cardRowCount;
 }
 
 /**

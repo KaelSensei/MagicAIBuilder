@@ -1,9 +1,11 @@
 import React from "react";
 import { screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { apiDeckToStoreDeck } from "@/lib/deck/store-factories";
 import type { Deck, DeckCard } from "@/lib/deck/types";
 import { aDeckCard } from "@/test/builders/card";
 import { aDeck } from "@/test/builders/deck";
+import { emptyApiDeck } from "@/test/in-memory-deck-api";
 import { renderWithProviders, type TestLocale } from "@/test/render";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { DeckListTable } from "./DeckListTable";
@@ -44,7 +46,7 @@ function makeDeck(colorIdentity: readonly string[]): Deck {
     cards: [],
     maybeboard: [],
     format: "commander",
-    cardCount: 1,
+    cardRowCount: 1,
     targetBracket: 3,
     manualBracket: null,
     budget: null,
@@ -110,7 +112,8 @@ describe("DeckListTable card count", () => {
             ...makeDeck([]),
             format: "standard",
             commander: null,
-            cardCount: 60,
+            cardRowCount: 60,
+            cardCopyCount: 60,
           },
         ]}
         deletingId={null}
@@ -128,13 +131,73 @@ describe("DeckListTable card count", () => {
   it("counts a Commander deck out of 100", () => {
     renderWithProviders(
       <DeckListTable
-        decks={[{ ...makeDeck(["U"]), cardCount: 100 }]}
+        decks={[{ ...makeDeck(["U"]), cardRowCount: 100, cardCopyCount: 100 }]}
         deletingId={null}
         duplicatingId={null}
         onDelete={vi.fn()}
         onDuplicate={vi.fn()}
       />
     );
+
+    expect(
+      screen.getByRole("cell", { name: "100 / 100 (complete)" })
+    ).toBeInTheDocument();
+  });
+});
+
+// The list showed the deck's DeckCard rows: a 100-card deck whose 30 Forests
+// are one row read as 71 cards, "29 cards short". It now shows the copies the
+// editor counts (CR 903.5a: the commander counts toward the 100).
+describe("DeckListTable card copies", () => {
+  function renderDeckList(deck: Deck): void {
+    renderWithProviders(
+      <DeckListTable
+        decks={[deck]}
+        deletingId={null}
+        duplicatingId={null}
+        onDelete={vi.fn()}
+        onDuplicate={vi.fn()}
+      />
+    );
+  }
+
+  it("shows a listed deck whose 30 Forests are one row as 100 cards", () => {
+    const listed = apiDeckToStoreDeck({
+      ...emptyApiDeck("deck-1", "Talrand Spells"),
+      cards: [
+        {
+          ...aDeckCard({ id: "row-talrand", name: "Talrand, Sky Summoner", category: "commander" }),
+          deckId: "deck-1",
+          scryfallId: "sf-talrand",
+          isCommander: true,
+          isPartner: false,
+          zone: "main",
+        },
+      ],
+      // The commander, one row of 30 Forests and 69 single cards.
+      _count: { cards: 71 },
+      cardCopyCount: 100,
+    });
+
+    renderDeckList(listed);
+
+    expect(
+      screen.getByRole("cell", { name: "100 / 100 (complete)" })
+    ).toBeInTheDocument();
+  });
+
+  it("shows a loaded deck's copies, not its rows", () => {
+    const loaded = aDeck({
+      commander: aDeckCard({ id: "talrand", name: "Talrand, Sky Summoner" }),
+      cards: [
+        aDeckCard({ id: "forest", name: "Forest", quantity: 30 }),
+        ...Array.from({ length: 69 }, (_, index) => aDeckCard({ id: `spell-${index}` })),
+        aDeckCard({ id: "negate", zone: "sideboard", quantity: 3 }),
+      ],
+      cardRowCount: 72,
+    });
+
+    renderDeckList(loaded);
 
     expect(
       screen.getByRole("cell", { name: "100 / 100 (complete)" })
@@ -158,12 +221,19 @@ describe("DeckListTable deck size state", () => {
     );
   }
 
-  /** A Commander deck led by `commanderName` that holds `cardCount` cards. */
+  /**
+   * A Commander deck led by `commanderName`, as the listing sends it: its
+   * command zone, more rows than that, and `cardCopyCount` cards.
+   */
   function commanderDeck(
-    cardCount: number,
+    cardCopyCount: number,
     commanderName = "Talrand, Sky Summoner"
   ): Deck {
-    return aDeck({ commander: aDeckCard({ name: commanderName }), cardCount });
+    return aDeck({
+      commander: aDeckCard({ name: commanderName }),
+      cardRowCount: 2,
+      cardCopyCount,
+    });
   }
 
   it("announces a 100-card Commander deck in the deck list as complete", () => {

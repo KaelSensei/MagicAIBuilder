@@ -141,7 +141,7 @@ export const RULE_DIVERGENCE_DECK: Deck = {
   maybeboard: [THE_ONE_RING],
   format: "commander",
   // Rows, as a full load derives it (`apiDeckToStoreDeck`); no analysis reads it.
-  cardCount: 9,
+  cardRowCount: 9,
   targetBracket: 3,
   manualBracket: null,
   budget: null,
