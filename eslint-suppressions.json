@@ -1513,11 +1513,6 @@
       "count": 2
     }
   },
-  "src/lib/deck/store-notes-persistence.test.ts": {
-    "no-restricted-syntax": {
-      "count": 1
-    }
-  },
   "src/lib/deck/store.ts": {
     "@typescript-eslint/consistent-type-assertions": {
       "count": 1
