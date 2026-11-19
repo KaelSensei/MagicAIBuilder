@@ -13,6 +13,7 @@ import { deckCardIdSchema, pairingTypeSchema } from "@/lib/validation/deck";
 import { addCardSchema, type AddCardInput } from "@/lib/validation/card";
 import { readIdempotencyKey } from "@/lib/api/idempotency-key";
 import { createOnce } from "@/lib/db/create-once";
+import { countDeckCardCopies } from "@/lib/deck/prisma-deck-card-copies";
 
 /** Max decks per page for the listing endpoint */
 const MAX_PAGE_SIZE = 50;
@@ -120,7 +121,30 @@ function buildCreateDeckData(
   };
 }
 
-// GET /api/decks — paginated lightweight listing (commander/partner/companion only + card count)
+/**
+ * Adds each deck's card count, as the editor counts it, to a page of the
+ * listing: one grouped query for the page, never one per deck.
+ * `_count.cards` stays the row count the store tells a listing stub by
+ * (`isDeckStub`); `cardCopyCount` is the count the deck list shows.
+ *
+ * @param decks - the page of decks
+ * @returns the same decks, each with its `cardCopyCount`
+ */
+async function withCardCopyCounts<D extends { readonly id: string }>(
+  decks: readonly D[]
+): Promise<(D & { readonly cardCopyCount: number })[]> {
+  const copies = await countDeckCardCopies(
+    prisma,
+    decks.map((deck) => deck.id)
+  );
+  return decks.map((deck) => ({
+    ...deck,
+    cardCopyCount: copies.get(deck.id) ?? 0,
+  }));
+}
+
+// GET /api/decks — paginated lightweight listing: commander/partner/companion
+// only, the row count (`_count.cards`) and the card count (`cardCopyCount`)
 export async function GET(request: NextRequest) {
   const startedAt = performance.now();
   let status = 500;
@@ -185,9 +209,10 @@ export async function GET(request: NextRequest) {
       }),
       prisma.deck.count({ where: { userId } }),
     ]);
+    const listed = await withCardCopyCounts(decks);
 
     status = 200;
-    return NextResponse.json({ decks, total, page, limit });
+    return NextResponse.json({ decks: listed, total, page, limit });
   } catch (error) {
     logger.error(error instanceof Error ? error.message : "unknown", "GET /api/decks");
     return NextResponse.json(

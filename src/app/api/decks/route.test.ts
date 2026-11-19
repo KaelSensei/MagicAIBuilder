@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 import { logger } from "@/lib/logger";
+import { deckCardGroupByFake } from "@/test/deck-card-group-by-fake";
+import { deckCard, type FakeDeckCard } from "@/test/playtest-db-fake";
 
 const {
   mockFindMany,
@@ -9,6 +11,7 @@ const {
   mockCreate,
   mockUserFindUnique,
   mockUserUpsert,
+  mockGroupBy,
 } = vi.hoisted(() => ({
   mockFindMany: vi.fn(),
   mockFindFirst: vi.fn(),
@@ -16,6 +19,7 @@ const {
   mockCreate: vi.fn(),
   mockUserFindUnique: vi.fn(),
   mockUserUpsert: vi.fn(),
+  mockGroupBy: vi.fn(),
 }));
 
 vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
@@ -28,6 +32,7 @@ vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
       create: mockCreate,
     },
     user: { findUnique: mockUserFindUnique, upsert: mockUserUpsert },
+    deckCard: { groupBy: mockGroupBy },
   });
 });
 
@@ -184,6 +189,128 @@ describe("GET /api/decks", () => {
     await expect(response.json()).resolves.toEqual({ error: "Failed to fetch decks" });
     expect(log).toHaveBeenCalledWith("Deck list request completed", "GET /api/decks", { status: 500, durationMs: expect.any(Number) });
     log.mockRestore();
+  });
+});
+
+/**
+ * The listing's card count, against the deck's stored rows.
+ *
+ * `_count.cards` counts rows, so a deck whose 30 Forests are one row of
+ * quantity 30 read as 29 cards short of 100. `cardCopyCount` counts the copies
+ * the editor counts (`countDeckCards`): every main-zone copy plus the
+ * commander and the partner (CR 903.5a), never the sideboard, the maybeboard
+ * or a companion.
+ */
+describe("GET /api/decks card copies", () => {
+  /** @returns a stored row of `deckId` */
+  function row(
+    deckId: string,
+    name: string,
+    overrides: Partial<FakeDeckCard> = {}
+  ): FakeDeckCard {
+    return deckCard(name, { deckId, ...overrides });
+  }
+
+  /**
+   * A 100-card Commander deck as stored: its commander, one row of 30 Forests
+   * and 69 single cards, plus a sideboard, a maybeboard and a companion row.
+   */
+  function storedCommanderDeck(deckId: string): FakeDeckCard[] {
+    return [
+      row(deckId, "Talrand, Sky Summoner", { isCommander: true, category: "commander" }),
+      row(deckId, "Forest", { quantity: 30, category: "land" }),
+      ...Array.from({ length: 69 }, (_, index) => row(deckId, `Spell ${index + 1}`)),
+      row(deckId, "Negate", { zone: "sideboard", quantity: 3 }),
+      row(deckId, "Counterspell", { zone: "maybeboard", quantity: 2 }),
+      row(deckId, "Lutri, the Spellchaser", { category: "companion" }),
+    ];
+  }
+
+  /** @returns the deck as the listing's `findMany` reads it: command zone rows and the row count */
+  function listedDeck(deckId: string, rows: readonly FakeDeckCard[]) {
+    const deckRows = rows.filter((stored) => stored.deckId === deckId);
+    return {
+      id: deckId,
+      name: deckId,
+      cards: deckRows.filter(
+        (stored) => stored.isCommander || stored.isPartner || stored.category === "companion"
+      ),
+      _count: { cards: deckRows.length },
+    };
+  }
+
+  /** Answers the listing from `rows`, and returns the fake's call counter. */
+  function storeRows(deckIds: readonly string[], rows: readonly FakeDeckCard[]) {
+    const fake = deckCardGroupByFake(rows);
+    mockGroupBy.mockImplementation(fake.groupBy);
+    mockFindMany.mockResolvedValue(deckIds.map((deckId) => listedDeck(deckId, rows)));
+    mockCount.mockResolvedValue(deckIds.length);
+    return fake;
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockGroupBy.mockResolvedValue([]);
+    authed();
+  });
+
+  it("lists a deck with one row of 30 Forests and 70 other cards as 100 cards", async () => {
+    storeRows(["deck-1"], storedCommanderDeck("deck-1"));
+
+    const response = await GET(listRequest());
+
+    const body = await response.json();
+    expect(body.decks[0]).toMatchObject({ cardCopyCount: 100, _count: { cards: 74 } });
+  });
+
+  // CR 702.124a: a partner is a second commander, so it counts like one.
+  it("counts a partner as one card, as the editor counts it", async () => {
+    storeRows(["deck-1"], [
+      row("deck-1", "Thrasios, Triton Hero", { isCommander: true, isPartner: false, category: "commander" }),
+      row("deck-1", "Tymna the Weaver", { isCommander: true, isPartner: true, category: "commander" }),
+      row("deck-1", "Island", { quantity: 40 }),
+      row("deck-1", "Plains", { quantity: 58 }),
+    ]);
+
+    const response = await GET(listRequest());
+
+    const body = await response.json();
+    expect(body.decks[0].cardCopyCount).toBe(100);
+  });
+
+  it("counts a deck with no card rows as 0 cards", async () => {
+    storeRows(["deck-empty"], []);
+
+    const response = await GET(listRequest());
+
+    const body = await response.json();
+    expect(body.decks[0].cardCopyCount).toBe(0);
+  });
+
+  it("reads the copies of a whole page in one grouped query, not one per deck", async () => {
+    const deckIds = ["deck-1", "deck-2", "deck-3"];
+    const rows = deckIds.flatMap(storedCommanderDeck);
+    const fake = storeRows(deckIds, rows);
+
+    const response = await GET(listRequest());
+
+    const body = await response.json();
+    expect(body.decks.map((deck: { cardCopyCount: number }) => deck.cardCopyCount)).toEqual([100, 100, 100]);
+    expect(fake.calls()).toBe(1);
+    expect(mockGroupBy).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { deckId: { in: deckIds } } })
+    );
+    // Queries per page: the decks, the total and the copies — 3, whatever the page size.
+    expect(mockFindMany.mock.calls.length + mockCount.mock.calls.length + fake.calls()).toBe(3);
+  });
+
+  it("sends no grouped query for an empty page", async () => {
+    storeRows([], []);
+
+    const response = await GET(listRequest("?page=9"));
+
+    await expect(response.json()).resolves.toMatchObject({ decks: [] });
+    expect(mockGroupBy).not.toHaveBeenCalled();
   });
 });
 
