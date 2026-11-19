@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { buildSuggestionEvidence } from "./suggestion-evidence";
+import {
+  attachSuggestionEvidence,
+  buildSuggestionEvidence,
+  suggestionLookupNames,
+} from "./suggestion-evidence";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 
 function card(overrides: Partial<ScryfallCard> = {}): ScryfallCard {
@@ -80,5 +84,146 @@ describe("buildSuggestionEvidence", () => {
         verified: false,
       })
     );
+  });
+});
+
+describe("suggestionLookupNames", () => {
+  it("lists each suggestion before its alternatives, once per name, in the order the model gave them", () => {
+    expect(
+      suggestionLookupNames([
+        {
+          name: "Arcane Signet",
+          alternatives: [{ name: "Fellwar Stone" }, { name: "Mind Stone" }],
+        },
+        { name: "Fellwar Stone" },
+        { name: "Cultivate", alternatives: [] },
+      ])
+    ).toEqual(["Arcane Signet", "Fellwar Stone", "Mind Stone", "Cultivate"]);
+  });
+
+  it("asks for nothing when the model suggested nothing", () => {
+    expect(suggestionLookupNames([])).toEqual([]);
+  });
+});
+
+describe("attachSuggestionEvidence", () => {
+  const deck = { deckColors: ["W", "U"], averageCmc: 3.4 };
+
+  it("attaches evidence to a suggestion and to each alternative, which takes its parent's role", () => {
+    const [suggestion] = attachSuggestionEvidence(
+      [
+        {
+          name: "Arcane Signet",
+          reason: "Accelerates the commander.",
+          category: "ramp",
+          priority: "high",
+          alternatives: [
+            {
+              name: "Fellwar Stone",
+              reason: "A cheaper rock.",
+              dimension: "budget",
+            },
+          ],
+        },
+      ],
+      [
+        card(),
+        card({ id: "card-2", name: "Fellwar Stone", prices: { usd: "0.75" } }),
+      ],
+      deck
+    );
+
+    expect(suggestion).toEqual({
+      name: "Arcane Signet",
+      reason: "Accelerates the commander.",
+      category: "ramp",
+      priority: "high",
+      evidence: expect.objectContaining({
+        role: "ramp",
+        priceUsd: 1.25,
+        verified: true,
+      }),
+      alternatives: [
+        {
+          name: "Fellwar Stone",
+          reason: "A cheaper rock.",
+          dimension: "budget",
+          evidence: expect.objectContaining({
+            role: "ramp",
+            synergy: "A cheaper rock.",
+            priceUsd: 0.75,
+            verified: true,
+          }),
+        },
+      ],
+    });
+  });
+
+  it("finds the card whatever the letter case the model wrote its name in", () => {
+    const [suggestion] = attachSuggestionEvidence(
+      [{ name: "arcane SIGNET", reason: "Ramp.", category: "ramp" }],
+      [card()],
+      deck
+    );
+
+    expect(suggestion?.evidence.verified).toBe(true);
+    expect(suggestion?.evidence.manaValue).toBe(2);
+  });
+
+  it("marks a suggestion unverified when its card was not looked up", () => {
+    const [suggestion] = attachSuggestionEvidence(
+      [
+        {
+          name: "Missing Card",
+          reason: "Provider rationale.",
+          category: "draw",
+          alternatives: [
+            { name: "Also Missing", reason: "Another rationale." },
+          ],
+        },
+      ],
+      [],
+      deck
+    );
+
+    expect(suggestion?.evidence.verified).toBe(false);
+    expect(suggestion?.alternatives?.[0]?.evidence.verified).toBe(false);
+  });
+
+  it("leaves a suggestion without alternatives without them", () => {
+    const [suggestion] = attachSuggestionEvidence(
+      [{ name: "Arcane Signet", reason: "Ramp.", category: "ramp" }],
+      [card()],
+      deck
+    );
+
+    expect(suggestion?.alternatives).toBeUndefined();
+  });
+
+  it("lets a rulebreaker in the command zone widen the colour fit (CR 903.5e)", () => {
+    const blueLand = {
+      name: "Mystic Sanctuary",
+      reason: "Rebuys a spell.",
+      category: "land",
+    };
+    const sanctuary = card({
+      name: "Mystic Sanctuary",
+      type_line: "Land — Island",
+      cmc: 0,
+      color_identity: ["U"],
+    });
+    const redGreen = { deckColors: ["R", "G"], averageCmc: 3 };
+
+    const [plain] = attachSuggestionEvidence([blueLand], [sanctuary], {
+      ...redGreen,
+      commandZoneNames: ["Klothys, God of Destiny"],
+    });
+    const [rulebroken] = attachSuggestionEvidence([blueLand], [sanctuary], {
+      ...redGreen,
+      commandZoneNames: ["Grizzlegom, Hurloon Hero"],
+    });
+
+    expect(plain?.evidence.colorCompatible).toBe(false);
+    expect(rulebroken?.evidence.colorCompatible).toBe(true);
   });
 });
