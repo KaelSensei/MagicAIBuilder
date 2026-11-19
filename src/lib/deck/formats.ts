@@ -4,6 +4,7 @@
  * Every layer (types, validation, search, UI) reads from this config
  * instead of hardcoding format assumptions.
  */
+import type { DeckSizeBound } from "@/modules/format-rules";
 
 /** Supported MTG deck formats */
 export type DeckFormat =
@@ -38,6 +39,13 @@ export interface FormatConfig {
   readonly scryfallLegality: string;
   /** Required main deck size */
   readonly deckSize: number;
+  /**
+   * Whether `deckSize` is exact or a minimum. Exact for Commander (CR 903.5a),
+   * Brawl (CR 903.12d) and Oathbreaker (https://oathbreakermtg.org/rules/,
+   * read 2026-11-19); a minimum with no maximum for the constructed formats
+   * (CR 100.2a).
+   */
+  readonly deckSizeBound: DeckSizeBound;
   /** Maximum sideboard size (0 = no sideboard) */
   readonly sideboardSize: number;
   /** Whether the format uses singleton rule */
@@ -81,6 +89,7 @@ export const FORMAT_CONFIG: Readonly<Record<DeckFormat, FormatConfig>> = {
     label: "Commander",
     scryfallLegality: "commander",
     deckSize: 100,
+    deckSizeBound: "exact",
     sideboardSize: 0,
     isSingleton: true,
     hasCommander: true,
@@ -99,6 +108,7 @@ export const FORMAT_CONFIG: Readonly<Record<DeckFormat, FormatConfig>> = {
     label: "Brawl",
     scryfallLegality: "brawl",
     deckSize: 60,
+    deckSizeBound: "exact",
     sideboardSize: 0,
     isSingleton: true,
     hasCommander: true,
@@ -117,6 +127,7 @@ export const FORMAT_CONFIG: Readonly<Record<DeckFormat, FormatConfig>> = {
     label: "Oathbreaker",
     scryfallLegality: "oathbreaker",
     deckSize: 60,
+    deckSizeBound: "exact",
     sideboardSize: 0,
     isSingleton: true,
     hasCommander: true,
@@ -135,6 +146,7 @@ export const FORMAT_CONFIG: Readonly<Record<DeckFormat, FormatConfig>> = {
     label: "Standard",
     scryfallLegality: "standard",
     deckSize: 60,
+    deckSizeBound: "minimum",
     sideboardSize: 15,
     isSingleton: false,
     hasCommander: false,
@@ -153,6 +165,7 @@ export const FORMAT_CONFIG: Readonly<Record<DeckFormat, FormatConfig>> = {
     label: "Pioneer",
     scryfallLegality: "pioneer",
     deckSize: 60,
+    deckSizeBound: "minimum",
     sideboardSize: 15,
     isSingleton: false,
     hasCommander: false,
@@ -171,6 +184,7 @@ export const FORMAT_CONFIG: Readonly<Record<DeckFormat, FormatConfig>> = {
     label: "Modern",
     scryfallLegality: "modern",
     deckSize: 60,
+    deckSizeBound: "minimum",
     sideboardSize: 15,
     isSingleton: false,
     hasCommander: false,
@@ -189,6 +203,7 @@ export const FORMAT_CONFIG: Readonly<Record<DeckFormat, FormatConfig>> = {
     label: "Legacy",
     scryfallLegality: "legacy",
     deckSize: 60,
+    deckSizeBound: "minimum",
     sideboardSize: 15,
     isSingleton: false,
     hasCommander: false,
@@ -207,6 +222,7 @@ export const FORMAT_CONFIG: Readonly<Record<DeckFormat, FormatConfig>> = {
     label: "Vintage",
     scryfallLegality: "vintage",
     deckSize: 60,
+    deckSizeBound: "minimum",
     sideboardSize: 15,
     isSingleton: false,
     hasCommander: false,
@@ -225,6 +241,7 @@ export const FORMAT_CONFIG: Readonly<Record<DeckFormat, FormatConfig>> = {
     label: "Pauper",
     scryfallLegality: "pauper",
     deckSize: 60,
+    deckSizeBound: "minimum",
     sideboardSize: 15,
     isSingleton: false,
     hasCommander: false,
