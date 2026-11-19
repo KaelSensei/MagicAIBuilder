@@ -44,7 +44,7 @@ function makeDeck(colorIdentity: readonly string[]): Deck {
     cards: [],
     maybeboard: [],
     format: "commander",
-    cardCount: 1,
+    cardRowCount: 1,
     targetBracket: 3,
     manualBracket: null,
     budget: null,
@@ -110,7 +110,7 @@ describe("DeckListTable card count", () => {
             ...makeDeck([]),
             format: "standard",
             commander: null,
-            cardCount: 60,
+            cardRowCount: 60,
           },
         ]}
         deletingId={null}
@@ -128,7 +128,7 @@ describe("DeckListTable card count", () => {
   it("counts a Commander deck out of 100", () => {
     renderWithProviders(
       <DeckListTable
-        decks={[{ ...makeDeck(["U"]), cardCount: 100 }]}
+        decks={[{ ...makeDeck(["U"]), cardRowCount: 100 }]}
         deletingId={null}
         duplicatingId={null}
         onDelete={vi.fn()}
@@ -158,12 +158,12 @@ describe("DeckListTable deck size state", () => {
     );
   }
 
-  /** A Commander deck led by `commanderName` that holds `cardCount` cards. */
+  /** A Commander deck led by `commanderName` that holds `cardRowCount` cards. */
   function commanderDeck(
-    cardCount: number,
+    cardRowCount: number,
     commanderName = "Talrand, Sky Summoner"
   ): Deck {
-    return aDeck({ commander: aDeckCard({ name: commanderName }), cardCount });
+    return aDeck({ commander: aDeckCard({ name: commanderName }), cardRowCount });
   }
 
   it("announces a 100-card Commander deck in the deck list as complete", () => {

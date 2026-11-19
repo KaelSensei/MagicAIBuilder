@@ -134,9 +134,10 @@ export interface Deck {
   /**
    * Row count, command zone included. The server's `_count` while the deck is
    * the listing stub; the rows held once loaded, kept in step by every edit
-   * (`loaded-card-count.ts`). `isDeckStub` compares the two.
+   * (`loaded-card-count.ts`). `isDeckStub` compares the two. Rows, not copies:
+   * thirty Forests in one row count once.
    */
-  cardCount: number;
+  cardRowCount: number;
   targetBracket: BracketLevel;
   manualBracket: BracketLevel | null;
   budget: number | null;

@@ -181,7 +181,7 @@ export function HomeDeckCard({
           }`}
         >
           <div className={`space-y-1 ${textMuted}`}>
-            <p>{t("card.cardCount", { count: deck.cardCount })}</p>
+            <p>{t("card.cardCount", { count: deck.cardRowCount })}</p>
             <div className="flex items-center gap-1">
               <Clock className="h-3 w-3" />
               <span>{format.dateTime(new Date(deck.updatedAt))}</span>

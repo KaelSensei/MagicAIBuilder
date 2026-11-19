@@ -145,7 +145,7 @@ function DeckListRow({
 
       <td className="min-w-[90px]">
         <DeckCardCount
-          cardCount={deck.cardCount}
+          cardCount={deck.cardRowCount}
           rule={deckSizeRuleInFormat(deck)}
           separator=" / "
         />

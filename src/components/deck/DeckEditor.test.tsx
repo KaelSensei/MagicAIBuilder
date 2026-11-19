@@ -102,7 +102,7 @@ function talrandDeck(deck: Partial<Deck> = {}): Deck {
     commander: TALRAND,
     cards: [COUNTERSPELL, SOL_RING, ISLANDS, NEGATE, PONDER],
     maybeboard: [PONDER],
-    cardCount: 6,
+    cardRowCount: 6,
     ...deck,
   };
 }

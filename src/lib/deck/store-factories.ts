@@ -42,7 +42,7 @@ export function createEmptyDeck(
     cards: [],
     maybeboard: [],
     format,
-    cardCount: 0,
+    cardRowCount: 0,
     targetBracket: DEFAULT_TARGET_BRACKET,
     manualBracket: null,
     budget: null,
@@ -158,7 +158,7 @@ export function apiDeckToStoreDeck(d: deckApi.ApiDeck): Deck {
     companion: companionCard ? apiCardToDeckCard(companionCard) : null,
     pairingType: d.pairingType ?? "none",
     cards: deckCards.map(apiCardToDeckCard),
-    cardCount: d._count?.cards ?? 0,
+    cardRowCount: d._count?.cards ?? 0,
     maybeboard: deckCards
       .filter((card) => (card.zone ?? "main") === "maybeboard")
       .map(apiCardToDeckCard),
@@ -174,8 +174,8 @@ export function apiDeckToStoreDeck(d: deckApi.ApiDeck): Deck {
  * Whether a deck in the store is still the lightweight listing version.
  *
  * `GET /api/decks` returns only commander / partner / companion plus a total
- * count, so a stub holds fewer rows than `cardCount`. The full deck comes from
- * `GET /api/decks/[id]`, and every edit of a loaded deck keeps `cardCount`
+ * row count, so a stub holds fewer rows than `cardRowCount`. The full deck comes from
+ * `GET /api/decks/[id]`, and every edit of a loaded deck keeps `cardRowCount`
  * equal to its rows (`withLoadedCardCount`), so a loaded deck never reads as a
  * stub again.
  *
@@ -183,7 +183,7 @@ export function apiDeckToStoreDeck(d: deckApi.ApiDeck): Deck {
  * @returns true when its main-deck cards have not been loaded yet
  */
 export function isDeckStub(deck: Deck): boolean {
-  return countLoadedCards(deck) < deck.cardCount;
+  return countLoadedCards(deck) < deck.cardRowCount;
 }
 
 /**

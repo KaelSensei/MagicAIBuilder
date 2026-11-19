@@ -43,7 +43,7 @@ export interface ApiDeck extends Omit<
   | "cards"
   | "targetBracket"
   | "manualBracket"
-  | "cardCount"
+  | "cardRowCount"
 > {
   createdAt: string;
   updatedAt: string;

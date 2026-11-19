@@ -249,7 +249,7 @@ function openDeck(overrides: Partial<Deck> = {}): Deck {
     companion: null,
     pairingType: "none",
     format: "commander",
-    cardCount: 0,
+    cardRowCount: 0,
     targetBracket: 3,
     manualBracket: null,
     budget: null,
