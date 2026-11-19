@@ -59,6 +59,18 @@ function stubMetaApi(api: MetaApi): () => readonly string[] {
   return () => fetchMock.mock.calls.map(([input]) => String(input));
 }
 
+/**
+ * The URLs `requested` logs from now on. An assertion on them does not depend
+ * on how many requests came before, nor on when the history request (sent a
+ * tick after EDHREC's answer renders) joined the log.
+ */
+function requestsFrom(
+  requested: () => readonly string[]
+): () => readonly string[] {
+  const mark = requested().length;
+  return () => requested().slice(mark);
+}
+
 const EDHREC = {
   body: {
     cards: [
@@ -270,13 +282,19 @@ describe("MetaPanel once expanded for a commander", () => {
     renderPanel();
     expand();
     await screen.findByText("Sol Ring");
+    // The history request leaves a tick after the cards render; wait for its
+    // answer so it cannot land after the click and pass for a refresh request.
+    await screen.findByText("vs 7/25/2026");
+    const sinceRefresh = requestsFrom(requested);
 
     fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
 
-    expect(requested().slice(3)).toEqual([
+    const refreshed = [
       "/api/meta/atraxa-praetors-voice?source=edhrec&refresh=true",
       "/api/meta/atraxa-praetors-voice?source=tournament&refresh=true",
-    ]);
+    ];
+    await waitFor(() => expect(sinceRefresh()).toContain(refreshed[1]));
+    expect(sinceRefresh()).toEqual(refreshed);
   });
 
   it("follows a commander change while open: reads the new commander's sources once, shows nothing of the previous one meanwhile, and asks its history after EDHREC answers", async () => {
@@ -337,10 +355,11 @@ describe("MetaPanel once expanded for a commander", () => {
       />
     );
     expect(requested()).toHaveLength(3);
+    const sinceReopening = requestsFrom(requested);
 
     expand();
 
-    expect(requested().slice(3)).toEqual([
+    expect(sinceReopening()).toEqual([
       "/api/meta/kenrith-the-returned-king?source=edhrec",
       "/api/meta/kenrith-the-returned-king?source=tournament",
     ]);
@@ -465,6 +484,7 @@ describe("MetaPanel popular cards (EDHREC)", () => {
     expect(
       await screen.findByText("EDHREC is temporarily unavailable")
     ).toBeInTheDocument();
+    const sinceRetry = requestsFrom(requested);
     fireEvent.click(
       within(rowAround("EDHREC is temporarily unavailable")).getByRole(
         "button",
@@ -472,9 +492,9 @@ describe("MetaPanel popular cards (EDHREC)", () => {
       )
     );
 
-    expect(requested().slice(2)).toEqual([
-      "/api/meta/atraxa-praetors-voice?source=edhrec",
-    ]);
+    const retried = "/api/meta/atraxa-praetors-voice?source=edhrec";
+    await waitFor(() => expect(sinceRetry()).toContain(retried));
+    expect(sinceRetry()).toEqual([retried]);
   });
 });
 
@@ -627,14 +647,19 @@ describe("MetaPanel competitive decks (tournaments)", () => {
     expand();
 
     await screen.findByText("MTGTop8 is down");
+    // The history request leaves only once EDHREC's answer renders, which can
+    // come after the tournament error; wait for it so it cannot land after
+    // the retry and pass for one of the retry's requests.
+    await screen.findByText("vs 7/25/2026");
+    const sinceRetry = requestsFrom(requested);
     fireEvent.click(
       within(rowAround("MTGTop8 is down")).getByRole("button", {
         name: "Refresh",
       })
     );
 
-    expect(requested().slice(3)).toEqual([
-      "/api/meta/atraxa-praetors-voice?source=tournament",
-    ]);
+    const retried = "/api/meta/atraxa-praetors-voice?source=tournament";
+    await waitFor(() => expect(sinceRetry()).toContain(retried));
+    expect(sinceRetry()).toEqual([retried]);
   });
 });
