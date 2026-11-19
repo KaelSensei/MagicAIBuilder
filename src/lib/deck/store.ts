@@ -17,7 +17,11 @@ import type { ScryfallCard } from "@/lib/scryfall/types";
 import { getCardById } from "@/lib/scryfall/client";
 import { isBasicLand } from "@/lib/scryfall/type-line";
 import { commandZoneExceptions } from "@/lib/deck/color-identity";
-import { deckCopyLimit, type CopyLimitCard } from "@/lib/deck/multiples";
+import {
+  copiesWithinLimit,
+  deckCopyLimit,
+  type CopyLimitCard,
+} from "@/lib/deck/multiples";
 import * as deckApi from "@/lib/db/deck-api";
 import {
   DeckApiError,
@@ -1679,10 +1683,8 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
 
     const selectedCard = await printingToAdd(card, printing);
     const deckCard = makeDeckCard(selectedCard);
-    // If a specific quantity is provided (e.g. bulk import of basics), apply it directly
-    if (quantity && quantity > 1) {
-      deckCard.quantity = quantity;
-    }
+    // The first add clamps to the copy limit, as an edit does (CR 100.2a, CR 903.5b).
+    deckCard.quantity = copiesWithinLimit(quantity, max);
     // Apply target zone (sideboard / maybeboard / main)
     deckCard.zone = zone;
     deckCard.isMaybeboard = zone === "maybeboard";
@@ -1771,7 +1773,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     const enriched = {
       ...(ownedPrinting ? makeDeckCard(ownedPrinting) : card),
       category: card.category,
-      quantity: card.quantity,
+      quantity: copiesWithinLimit(card.quantity, max),
       zone: card.zone,
       isGameChanger: gameChangerNames.has(card.name),
       isBanned: bannedNames.has(card.name),

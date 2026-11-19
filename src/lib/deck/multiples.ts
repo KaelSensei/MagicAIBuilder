@@ -101,3 +101,19 @@ export function deckCopyLimit(card: CopyLimitCard, deck: CopyLimitDeck): number 
   }
   return maxQuantity(card.name, card.typeLine, oracleText, deck.format);
 }
+
+/**
+ * The copies one write gives a deck row: the copies asked for, at least one and
+ * at most the card's copy limit. Every add and every edit clamps through it, so
+ * no write passes the limit (CR 100.2a, CR 903.5b).
+ *
+ * @param requested - The copies asked for; one when the caller names none
+ * @param limit - The card's copy limit, as {@link deckCopyLimit} returns it
+ * @returns The copies to write, from 1 to `limit`
+ */
+export function copiesWithinLimit(
+  requested: number | undefined,
+  limit: number
+): number {
+  return Math.max(1, Math.min(limit, requested ?? 1));
+}
