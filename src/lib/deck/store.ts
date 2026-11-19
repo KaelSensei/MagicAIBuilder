@@ -10,6 +10,7 @@ import type {
   CardCategory,
   PrintingChoice,
 } from "./types";
+import type { DeckFormat } from "./formats";
 import { loadSortPreference, saveSortPreference } from "./sort";
 import type { SortField, SortDirection, GroupBy, SortPreference } from "./sort";
 import { detectPairingType, pairCommanders } from "./pairing";
@@ -287,6 +288,7 @@ const pendingCategoryWrites = new Map<string, PendingCategoryWrite>();
 
 let pendingManualBracketWrites = 0;
 let pendingBudgetWrites = 0;
+let pendingFormatWrites = 0;
 let pendingBulkRemovals = 0;
 let pendingCardAdditionsAndRemovals = 0;
 let pendingRenameWrites = 0;
@@ -439,6 +441,7 @@ function hasPendingSaves(): boolean {
     pendingCategoryWrites.size > 0 ||
     pendingManualBracketWrites > 0 ||
     pendingBudgetWrites > 0 ||
+    pendingFormatWrites > 0 ||
     pendingBulkRemovals > 0 ||
     pendingCardAdditionsAndRemovals > 0 ||
     pendingRenameWrites > 0
@@ -498,9 +501,18 @@ export interface DeckStore {
   setSortPreference: (pref: SortPreference) => void;
 
   // Deck management
+  /**
+   * Creates an account deck and makes it the active deck. A guest opens the
+   * guest deck instead.
+   *
+   * @param name - The deck's name
+   * @param opts - `format`, Commander when left out; `isAIGenerated`
+   * @returns The id of the deck now active
+   * @throws When the server refuses or fails the creation
+   */
   createDeck: (
     name: string,
-    opts?: { isAIGenerated?: boolean }
+    opts?: { isAIGenerated?: boolean; format?: DeckFormat }
   ) => Promise<string>;
   duplicateDeck: (id: string) => Promise<string>;
   deleteDeck: (id: string) => Promise<void>;
@@ -579,6 +591,16 @@ export interface DeckStore {
   setTargetBracket: (bracket: BracketLevel) => Promise<void>;
   setManualBracket: (bracket: BracketLevel | null) => Promise<void>;
   setBudget: (budget: number | null) => Promise<void>;
+  /**
+   * Switches the active deck to `format` and keeps every card (I-42
+   * requirement 4.2). Optimistic, as `setBudget`: a failed save puts the
+   * previous format back. A guest deck keeps the format in this browser.
+   *
+   * @param format - The format to switch to
+   * @returns true once saved; false when there was no deck to switch or the
+   *   save failed and the previous format is back
+   */
+  setFormat: (format: DeckFormat) => Promise<boolean>;
 
   // Computed getters
   getActiveDeck: () => Deck | null;
@@ -732,6 +754,56 @@ function commanderCardOf(
 interface StoreAccess {
   readonly set: StoreApi<DeckStore>["setState"];
   readonly get: () => DeckStore;
+}
+
+/** A format save: the format written, and the one to restore if it fails. */
+interface FormatChange {
+  readonly deckId: string;
+  readonly attempted: DeckFormat;
+  readonly previous: DeckFormat;
+}
+
+/**
+ * Puts the previous format back on a deck whose format save failed, unless a
+ * later switch has already replaced the attempted one.
+ */
+function restoreFormat(
+  set: StoreAccess["set"],
+  { deckId, attempted, previous }: FormatChange
+): void {
+  set((state) => {
+    const deck = state.decks[deckId];
+    if (deck?.format !== attempted) return state;
+    return {
+      decks: { ...state.decks, [deckId]: { ...deck, format: previous } },
+    };
+  });
+}
+
+/**
+ * Saves a format the store already shows, and restores the previous one when
+ * the save fails. The cards are never touched: a switch only re-reads them
+ * (I-42 requirement 4.2).
+ *
+ * @returns true once the server, or this browser for a guest deck, holds it
+ */
+async function saveFormat(
+  { set }: StoreAccess,
+  change: FormatChange
+): Promise<boolean> {
+  pendingFormatWrites += 1;
+  set({ isSyncing: true });
+  try {
+    await deckApi.updateDeck(change.deckId, { format: change.attempted });
+    return true;
+  } catch (err) {
+    logger.error("Unexpected error", "setFormat", err);
+    restoreFormat(set, change);
+    return false;
+  } finally {
+    pendingFormatWrites -= 1;
+    set({ isSyncing: hasPendingSaves() });
+  }
 }
 
 /** A commander to seat, and the deck-list card it was promoted from, if any. */
@@ -1247,7 +1319,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     }
   },
 
-  createDeck: async (name: string, opts?: { isAIGenerated?: boolean }) => {
+  createDeck: async (name, opts) => {
     if (isGuestDeckId(get().activeDeckId ?? "")) {
       await get().setActiveDeck(GUEST_DECK_ID);
       return GUEST_DECK_ID;
@@ -1257,8 +1329,9 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     try {
       const apiDeck = await deckApi.createDeck(name, {
         isAIGenerated: opts?.isAIGenerated,
+        format: opts?.format,
       });
-      const deck = createEmptyDeck(apiDeck.id, apiDeck.name);
+      const deck = createEmptyDeck(apiDeck.id, apiDeck.name, opts?.format);
       deck.createdAt = new Date(apiDeck.createdAt);
       deck.updatedAt = new Date(apiDeck.updatedAt);
       deck.isAIGenerated = apiDeck.isAIGenerated ?? false;
@@ -2475,6 +2548,23 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       pendingBudgetWrites -= 1;
       set({ isSyncing: hasPendingSaves() });
     }
+  },
+
+  setFormat: async (format) => {
+    const { activeDeckId } = get();
+    const deck = activeDeckId ? get().decks[activeDeckId] : undefined;
+    if (!activeDeckId || !deck) return false;
+
+    set((state) => ({
+      decks: {
+        ...state.decks,
+        [activeDeckId]: { ...deck, format, updatedAt: new Date() },
+      },
+    }));
+    return saveFormat(
+      { set, get },
+      { deckId: activeDeckId, attempted: format, previous: deck.format }
+    );
   },
 
   addToMaybeboard: async (card: ScryfallCard) => {

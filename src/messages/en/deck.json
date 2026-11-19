@@ -92,6 +92,7 @@
     "createDeck": "Create Deck",
     "newDeck": "New Deck",
     "newDeckName": "New Deck {index}",
+    "newDeckFormat": "New deck format",
     "deleteConfirm": "Delete this deck? This cannot be undone.",
     "loadFailedTitle": "Could not load your decks",
     "loadFailedDescription": "The server rejected the request, so this list may be incomplete. Your decks are not lost — try again in a moment.",
@@ -900,5 +901,22 @@
   },
   "sync": {
     "conflictReloaded": "This deck was changed elsewhere (another tab or device). It has been reloaded; redo your last change if you still want it."
+  },
+  "format": {
+    "name": {
+      "commander": "Commander",
+      "brawl": "Brawl",
+      "oathbreaker": "Oathbreaker",
+      "standard": "Standard",
+      "pioneer": "Pioneer",
+      "modern": "Modern",
+      "legacy": "Legacy",
+      "vintage": "Vintage",
+      "pauper": "Pauper"
+    },
+    "group": {
+      "commanderVariants": "Commander variants",
+      "constructed": "Constructed formats"
+    }
   }
 }
