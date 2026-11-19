@@ -148,6 +148,30 @@ function moxfieldEntries(
   return Object.values(fallback ?? {});
 }
 
+/** The command-zone flags of an imported card. */
+type CommandZoneRole = Pick<UrlImportCard, "isCommander" | "isPartner">;
+
+/** The flags of a card outside the command zone. */
+const NO_COMMAND_ZONE_ROLE: CommandZoneRole = {
+  isCommander: false,
+  isPartner: false,
+};
+
+/**
+ * The role of the card at `position` in a source's list of commanders.
+ *
+ * CR 702.124a: two commanders with partner can both be a deck's commanders, so the second card
+ * listed is filed as the partner. The importer does not judge the pair: the deck store's
+ * `setPartner` refuses one that cannot share the command zone (CR 702.124). A third card gets no
+ * role and joins the main deck.
+ *
+ * @param position - zero-based index of the card in the source's commander list
+ * @returns the commander flags that card imports with
+ */
+function commandZoneRole(position: number): CommandZoneRole {
+  return { isCommander: position === 0, isPartner: position === 1 };
+}
+
 interface MoxfieldAppendOptions {
   readonly commandZone?: boolean;
   readonly companion?: boolean;
@@ -171,8 +195,9 @@ function appendMoxfieldCards(
     const imported: UrlImportCard = {
       name: entry.card.name,
       quantity: entry.quantity,
-      isCommander: options?.commandZone === true && index === 0,
-      isPartner: options?.commandZone === true && index === 1,
+      ...(options?.commandZone === true
+        ? commandZoneRole(index)
+        : NO_COMMAND_ZONE_ROLE),
       zone,
     };
     cards.push(options?.companion === true ? { ...imported, isCompanion: true } : imported);
