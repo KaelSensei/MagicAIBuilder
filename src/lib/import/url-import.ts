@@ -106,6 +106,10 @@ import { HttpStatusError, httpGet, parseJson } from "@/lib/http";
 import { normalizeImportedName } from "@/lib/scryfall/name-index";
 import { parsePlainTextDecklist } from "./decklist-parse";
 import { fetchMoxfieldJson } from "./moxfield-client";
+import {
+  isMtgTop8CommandZone,
+  mtgTop8FormatCode,
+} from "./mtgtop8-command-zone";
 
 // ─── Moxfield ─────────────────────────────────────────────────────────────────
 
@@ -345,24 +349,51 @@ async function importTappedOut(slug: string): Promise<UrlImportResult> {
 // ─── MTGTop8 ──────────────────────────────────────────────────────────────────
 
 /**
+ * Files an MTGTop8 Commander deck's sideboard into the command zone, in the export's order.
+ *
+ * @param cards - the export's cards, the main deck then the sideboard
+ * @returns the main deck, then the commander and the partner when there is a second card
+ */
+function mtgTop8CommandZone(cards: readonly UrlImportCard[]): UrlImportCard[] {
+  const commandZone = cards
+    .filter((card) => card.zone === "sideboard")
+    .map((card, position): UrlImportCard => ({
+      ...card,
+      ...commandZoneRole(position),
+      zone: "main",
+    }));
+  return [...cards.filter((card) => card.zone !== "sideboard"), ...commandZone];
+}
+
+/**
  * Imports an MTGTop8 deck from the plain-text export its deck page links as "MTGO".
  *
  * The export lists the main deck, then a `Sideboard` heading; it carries no deck name. Recorded
  * on 2026-11-19 in `fixtures/mtgtop8-mtgo-export-v1.ts` (https://www.mtgtop8.com/mtgo?d=913975).
- * There is no HTML fallback: the deck page needs the event id the export does not, and its card
- * names sit in markup the text parser cannot read (DI-01-F1, DI-01-F2).
+ * A Commander deck lists its commander under `Sideboard`, as MTGO does; `isMtgTop8CommandZone`
+ * decides when those cards are the command zone. There is no HTML fallback: the deck page needs
+ * the event id the export does not, and its card names sit in markup the text parser cannot read
+ * (DI-01-F1, DI-01-F2).
  *
  * @param deckId - the deck id (`d=`) from the deck URL
- * @returns the deck's cards, main deck and sideboard
+ * @param formatCode - the deck URL's format code (`f=`), or null when it has none
+ * @returns the deck's cards: the main deck, then the sideboard or the command zone
  * @throws HttpStatusError 404 "Deck not found or is private." when MTGTop8 answers 404 or its
  *   export lists no card, the answer a deck id with no deck behind it gets
  */
-async function importMtgTop8(deckId: string): Promise<UrlImportResult> {
+async function importMtgTop8(
+  deckId: string,
+  formatCode: string | null
+): Promise<UrlImportResult> {
   const res = await httpGet(`https://www.mtgtop8.com/mtgo?d=${deckId}`, {
     headers: { Accept: "text/plain" },
   });
-  const cards = parsePlainTextDecklist(await res.text());
-  if (cards.length === 0) throw new HttpStatusError(404, "Deck not found or is private.");
+  const exported = parsePlainTextDecklist(await res.text());
+  if (exported.length === 0)
+    throw new HttpStatusError(404, "Deck not found or is private.");
+  const cards = isMtgTop8CommandZone(exported, formatCode)
+    ? mtgTop8CommandZone(exported)
+    : exported;
 
   return { name: `MTGTop8 deck #${deckId}`, source: "mtgtop8", cards, ignored: [] };
 }
@@ -514,7 +545,7 @@ export async function importFromUrl(url: string): Promise<UrlImportResult> {
     case "moxfield":   return importMoxfield(id);
     case "archidekt":  return importArchidekt(id);
     case "tappedout":  return importTappedOut(id);
-    case "mtgtop8":    return importMtgTop8(id);
+    case "mtgtop8":    return importMtgTop8(id, mtgTop8FormatCode(url.trim()));
     case "mtgdecks":   return importMtgDecks(mtgDecksPath(url.trim()), id);
     case "aetherhub":  return importAetherHub(id);
     case "edhrec":     return importEdhrec(id);
