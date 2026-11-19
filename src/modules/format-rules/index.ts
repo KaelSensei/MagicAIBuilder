@@ -12,8 +12,10 @@
 export {
   deckSizeRule,
   deckSizeStatus,
+  type DeckSizeBound,
   type DeckSizeRule,
   type DeckSizeStatus,
+  type FormatDeckSize,
 } from "@/modules/format-rules/domain/deck-size";
 export {
   deckConstructionExceptions,
