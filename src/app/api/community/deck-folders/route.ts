@@ -1,11 +1,22 @@
+/**
+ * The caller's saved-deck library: `/api/community/deck-folders`.
+ *
+ * GET  — the folders with the public decks filed in each, and the unfiled ones
+ * POST — create one private folder for organising public-deck bookmarks
+ *
+ * HTTP only: session, body parsing and the status for each outcome. The rules
+ * live in `@/lib/community/saved-deck-library-use-cases`.
+ */
 import { NextResponse } from "next/server";
-import { z } from "zod";
 import { readJsonBody } from "@/lib/api/json-body";
 import { requireAuth } from "@/lib/auth/helpers";
-import { prisma } from "@/lib/db/prisma";
+import { LibraryFolderNameSchema } from "@/lib/community/library-folder-name";
+import { savedDeckLibraryPorts } from "@/lib/community/saved-deck-library.server";
+import {
+  createLibraryFolder,
+  readSavedDeckLibrary,
+} from "@/lib/community/saved-deck-library-use-cases";
 import { logger } from "@/lib/logger";
-
-const FolderSchema = z.object({ name: z.string().trim().min(1).max(80) });
 
 /** List the caller's private folders without leaking decks that are no longer public. */
 export async function GET() {
@@ -14,50 +25,15 @@ export async function GET() {
     if (authentication.error) return authentication.error;
 
     const userId = authentication.session.user.id;
-    const [folders, unfiled] = await Promise.all([
-      prisma.publicDeckFolder.findMany({
-        where: { userId },
-        orderBy: { name: "asc" },
-        select: {
-          id: true,
-          name: true,
-          savedDecks: {
-            where: { deck: { isPublic: true } },
-            orderBy: { createdAt: "desc" },
-            select: {
-              createdAt: true,
-              deck: {
-                select: {
-                  id: true,
-                  name: true,
-                  commanderName: true,
-                  user: { select: { username: true, name: true } },
-                },
-              },
-            },
-          },
-        },
-      }),
-      prisma.savedPublicDeck.findMany({
-        where: { userId, folderId: null, deck: { isPublic: true } },
-        orderBy: { createdAt: "desc" },
-        select: {
-          createdAt: true,
-          deck: {
-            select: {
-              id: true,
-              name: true,
-              commanderName: true,
-              user: { select: { username: true, name: true } },
-            },
-          },
-        },
-      }),
-    ]);
-    return NextResponse.json({ folders, unfiled });
+    return NextResponse.json(
+      await readSavedDeckLibrary(userId, savedDeckLibraryPorts)
+    );
   } catch (error) {
     logger.error("Unexpected error", "GET /api/community/deck-folders", error);
-    return NextResponse.json({ error: "Failed to load folders" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to load folders" },
+      { status: 500 }
+    );
   }
 }
 
@@ -69,18 +45,25 @@ export async function POST(request: Request) {
 
     const jsonBody = await readJsonBody(request);
     if (!jsonBody.ok) return jsonBody.response;
-    const parsed = FolderSchema.safeParse(jsonBody.value);
+    const parsed = LibraryFolderNameSchema.safeParse(jsonBody.value);
     if (!parsed.success) {
-      return NextResponse.json({ error: "Invalid folder name" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid folder name" },
+        { status: 400 }
+      );
     }
 
-    const folder = await prisma.publicDeckFolder.create({
-      data: { userId: authentication.session.user.id, name: parsed.data.name },
-      select: { id: true, name: true, createdAt: true },
-    });
+    const draft = {
+      userId: authentication.session.user.id,
+      name: parsed.data.name,
+    };
+    const folder = await createLibraryFolder(draft, savedDeckLibraryPorts);
     return NextResponse.json(folder, { status: 201 });
   } catch (error) {
     logger.error("Unexpected error", "POST /api/community/deck-folders", error);
-    return NextResponse.json({ error: "Failed to create folder" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to create folder" },
+      { status: 500 }
+    );
   }
 }
