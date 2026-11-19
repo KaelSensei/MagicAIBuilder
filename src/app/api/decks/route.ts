@@ -8,6 +8,7 @@ import { ALL_FORMATS } from "@/lib/deck/formats";
 import { readJsonBody } from "@/lib/api/json-body";
 import { sharesOracleIdentity } from "@/lib/deck/commander-pairing";
 import { commandSlotOf } from "@/lib/deck/bulk-edit-command-zone";
+import { sanitizeDisplayName } from "@/lib/deck/display-name";
 import { deckCardIdSchema, pairingTypeSchema } from "@/lib/validation/deck";
 import { addCardSchema, type AddCardInput } from "@/lib/validation/card";
 import { readIdempotencyKey } from "@/lib/api/idempotency-key";
@@ -37,8 +38,14 @@ function readWholeNumber(value: string | null, fallback: number): number {
   return Number.isFinite(parsed) ? Math.floor(parsed) : fallback;
 }
 
+/**
+ * The longest deck name accepted, as submitted. The cleaned name is never
+ * longer, so cleaning cuts nothing more.
+ */
+const MAX_DECK_NAME_LENGTH = 200;
+
 const createDeckFieldsSchema = z.object({
-  name: z.string().min(1).max(200),
+  name: z.string().min(1).max(MAX_DECK_NAME_LENGTH),
   format: z.enum(ALL_FORMATS).optional().default("commander"),
   targetBracket: z.number().int().min(1).max(5).optional().default(3),
   budget: z.number().positive().nullable().optional(),
@@ -221,8 +228,7 @@ export async function POST(request: Request) {
     if (commanderId && partnerId && await sharesOracleIdentity(commanderId, partnerId)) {
       return NextResponse.json({ error: "Commander and partner must be different cards" }, { status: 400 });
     }
-    // Bounded quantifier prevents ReDoS on HTML tag stripping
-    const sanitizedName = rawName.replaceAll(/<[^>]{0,200}>/g, "").trim();
+    const sanitizedName = sanitizeDisplayName(rawName, MAX_DECK_NAME_LENGTH);
     if (!sanitizedName) {
       return NextResponse.json({ error: "name is required" }, { status: 400 });
     }
