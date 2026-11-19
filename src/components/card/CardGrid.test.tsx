@@ -1,11 +1,11 @@
 /**
  * Characterization of what the search grid renders for a double-faced card (master plan CC-01).
  *
- * `CardGrid` builds the two faces itself (`buildDfcFaces`) and hands them to `CardImage`, which
- * renders `CardFlip`. These tests pin the surface a player sees, so that CC-04 can move the face
- * mapping into one `lib/scryfall/faces.ts` without changing it. The collection badge and the
- * quick-add button are out of scope here: the collection store is empty and the viewer is a
- * guest, so both render nothing.
+ * `CardGrid` builds the two faces with the catalog's `buildCardFaces` (`lib/scryfall/faces.ts`,
+ * moved there by CC-04) and hands them to `CardImage`, which renders `CardFlip`. These tests pin
+ * the surface a player sees, so the face mapping can change home without changing it. The
+ * collection badge and the quick-add button are out of scope here: the collection store is empty
+ * and the viewer is a guest, so both render nothing.
  *
  * The transform, modal and split cards are the recorded catalog fixtures; the expected URLs are
  * written out so a test reads as what the player's browser requests.

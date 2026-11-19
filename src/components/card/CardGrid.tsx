@@ -6,10 +6,10 @@ import { CardImage } from "./CardImage";
 import { DraggableCard } from "./DraggableCard";
 import { cn } from "@/components/ui/utils";
 import type { ScryfallCard } from "@/lib/scryfall/types";
-import { DFC_LAYOUTS } from "@/lib/scryfall/types";
-import { getCardImageUri, getListedImageUri } from "@/lib/scryfall/images";
+import { getCardImageUri } from "@/lib/scryfall/images";
+import { buildCardFaces } from "@/lib/scryfall/faces";
 import { isMdfcWithLandBack } from "@/lib/deck/categories";
-import type { CardFace, DeckZone } from "@/lib/deck/types";
+import type { DeckZone } from "@/lib/deck/types";
 import { CollectionBadge } from "@/components/collection/CollectionBadge";
 import { QuickAddCollectionButton } from "@/components/collection/QuickAddCollectionButton";
 import { SearchZoneMenu } from "@/components/card/SearchZoneMenu";
@@ -23,39 +23,6 @@ interface CardGridProps {
   readonly onAddToMaybeboard?: (card: ScryfallCard) => void;
   readonly onAddToZone?: (card: ScryfallCard, zone: DeckZone) => void;
   readonly maybeboardNames?: Set<string>;
-}
-
-function buildDfcFaces(card: ScryfallCard): [CardFace, CardFace] | undefined {
-  if (!DFC_LAYOUTS.has(card.layout ?? "")) return undefined;
-  const faces = card.card_faces;
-  if (!faces || faces.length < 2) return undefined;
-  const [f0, f1] = faces;
-  return [
-    {
-      name: f0.name,
-      manaCost: f0.mana_cost ?? "",
-      typeLine: f0.type_line ?? "",
-      oracleText: f0.oracle_text ?? "",
-      imageUri:
-        getListedImageUri(f0.image_uris, "grid") ??
-        getCardImageUri(card, "grid", "front"),
-      artCropUri:
-        getListedImageUri(f0.image_uris, "art") ??
-        getCardImageUri(card, "art", "front"),
-    },
-    {
-      name: f1.name,
-      manaCost: f1.mana_cost ?? "",
-      typeLine: f1.type_line ?? "",
-      oracleText: f1.oracle_text ?? "",
-      imageUri:
-        getListedImageUri(f1.image_uris, "grid") ??
-        getCardImageUri(card, "grid", "back"),
-      artCropUri:
-        getListedImageUri(f1.image_uris, "art") ??
-        getCardImageUri(card, "art", "back"),
-    },
-  ];
 }
 
 const containerVariants = {
@@ -99,7 +66,7 @@ export function CardGrid({
       animate="show"
     >
       {cards.map((card) => {
-        const dfcFaces = buildDfcFaces(card);
+        const dfcFaces = buildCardFaces(card);
         return (
           <motion.div key={card.id} variants={itemVariants} className="relative group/gridcard">
             {draggable ? (

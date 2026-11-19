@@ -13,7 +13,8 @@ import { parseBracketLevel } from "@/lib/constants/brackets";
 import { rebuildCardFaces } from "./store-card-faces";
 import { countLoadedCards, withLoadedCardCount } from "./loaded-card-count";
 
-export { buildCardFaces, makeDeckCard } from "./store-card-faces";
+export { makeDeckCard } from "./store-card-faces";
+export { buildCardFaces } from "@/lib/scryfall/faces";
 
 /** The target bracket of a new deck, and of a stored one outside 1–5 (the database default). */
 const DEFAULT_TARGET_BRACKET: Deck["targetBracket"] = 3;
