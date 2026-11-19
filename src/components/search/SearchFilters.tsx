@@ -12,7 +12,7 @@ import type {
   ColorMode,
   InteractionType,
   SearchFilters,
-} from "@/lib/deck/types";
+} from "@/lib/scryfall/search-types";
 
 // These tables live at module scope, where useTranslations cannot run, so they
 // carry catalog keys and are resolved at render time.
