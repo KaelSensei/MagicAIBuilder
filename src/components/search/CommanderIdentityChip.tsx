@@ -22,7 +22,10 @@ export interface CommanderIdentityChipProps {
 }
 
 /** The scope chip; renders nothing when the deck has no identity to scope to. */
-export function CommanderIdentityChip({ state, onToggle }: CommanderIdentityChipProps) {
+export function CommanderIdentityChip({
+  state,
+  onToggle,
+}: CommanderIdentityChipProps) {
   const t = useTranslations("search.identityScope");
   if (state === "hidden") return null;
   const widened = state === "widened";

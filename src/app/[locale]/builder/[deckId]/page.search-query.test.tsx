@@ -304,7 +304,6 @@ const server = setupMsw(
 );
 
 describe("characterization: the builder's name search with a plain-language query", () => {
-
   it("runs the confirmed query exactly as shown, without the filters chosen before it", async () => {
     const user = await openBuilderWithFilters();
     await user.click(button("White"));
@@ -449,6 +448,155 @@ describe("the builder's name search inside the commander's colour identity (I-01
     await user.type(screen.getByPlaceholderText("Search cards…"), "Sol");
 
     await lastSearchIs("name:/Sol/ legal:commander id<=WB");
+    expect(
+      screen.getByText("Only cards in your commander's colors")
+    ).toBeDefined();
+  });
+
+  it("widens to every colour on the chip's one action, keeps legal:commander, and offers to narrow again", async () => {
+    serveDeckLedBy(TEYSA);
+    const { user } = await openBuilder();
+    await user.type(screen.getByPlaceholderText("Search cards…"), "Sol");
+    await lastSearchIs("name:/Sol/ legal:commander id<=WB");
+
+    await user.click(button("Show every color"));
+
+    await lastSearchIs("name:/Sol/ legal:commander");
+    expect(screen.getByText("Cards of every color")).toBeDefined();
+    await user.click(button("Only my commander's colors"));
+    expect(
+      await screen.findByText("Only cards in your commander's colors")
+    ).toBeDefined();
+  });
+
+  it("widens from the keyboard: the chip's action is a focusable native button", async () => {
+    serveDeckLedBy(TEYSA);
+    const { user } = await openBuilder();
+    // A name makes the widened query new: an empty one was cached before the deck loaded.
+    await user.type(screen.getByPlaceholderText("Search cards…"), "Sol");
+    await lastSearchIs("name:/Sol/ legal:commander id<=WB");
+
+    button("Show every color").focus();
+    await user.keyboard("{Enter}");
+
+    await lastSearchIs("name:/Sol/ legal:commander");
+    expect(button("Only my commander's colors")).toHaveFocus();
+  });
+
+  it("scopes a rulebreaker commander with the clause the described search writes: Seluma admits Angels and basics (CR 903.5e)", async () => {
+    serveDeckLedBy(commandZoneCard("Seluma, Light of Aysen", ["W", "B"]));
+
+    await openBuilder();
+
+    await lastSearchIs("legal:commander (id<=WB OR t:angel OR t:basic)");
+  });
+
+  it("scopes a partner pair to their combined identity, in WUBRG order (CR 702.124)", async () => {
+    serveDeckLedBy(
+      commandZoneCard("Thrasios, Triton Hero", ["G", "U"]),
+      commandZoneCard("Tymna the Weaver", ["W", "B"], { isPartner: true })
+    );
+
+    await openBuilder();
+
+    await lastSearchIs("legal:commander id<=WUBG");
+  });
+
+  it("scopes a colourless commander to colourless cards (CR 903.4)", async () => {
+    serveDeckLedBy(commandZoneCard("Kozilek, the Great Distortion", []));
+
+    await openBuilder();
+
+    await lastSearchIs("legal:commander id<=c");
+  });
+
+  it("adds no scope and shows no chip before a commander is set", async () => {
+    server.use(
+      http.get("/api/decks/:id", () =>
+        HttpResponse.json({
+          ...DECK,
+          commanderId: null,
+          commanderName: null,
+          cards: [],
+        })
+      )
+    );
+    const { user } = await openBuilder();
+
+    await user.type(screen.getByPlaceholderText("Search cards…"), "Sol");
+
+    await lastSearchIs("name:/Sol/ legal:commander");
+    expect(
+      screen.queryByText("Only cards in your commander's colors")
+    ).toBeNull();
+  });
+
+  it("adds no scope and shows no chip in a format without colour identity", async () => {
+    server.use(
+      http.get("/api/decks/:id", () =>
+        HttpResponse.json({
+          ...DECK,
+          format: "modern",
+          commanderId: TEYSA.scryfallId,
+          commanderName: TEYSA.name,
+          cards: [TEYSA],
+        })
+      )
+    );
+    const { user } = await openBuilder();
+
+    await user.type(screen.getByPlaceholderText("Search cards…"), "Sol");
+
+    await lastSearchIs("name:/Sol/ legal:modern");
+    expect(
+      screen.queryByText("Only cards in your commander's colors")
+    ).toBeNull();
+  });
+
+  it("keeps the player's own colour filter: it narrows inside the commander's scope", async () => {
+    serveDeckLedBy(TEYSA);
+    const { user } = await openBuilder();
+    await user.click(button("Show filters"));
+
+    await user.click(button("White"));
+
+    await lastSearchIs("id<=W legal:commander id<=WB");
+  });
+
+  it("scopes the search again when the player opens another deck after widening it", async () => {
+    const teysaDeck = {
+      ...DECK,
+      commanderId: TEYSA.scryfallId,
+      commanderName: TEYSA.name,
+      cards: [TEYSA],
+    };
+    const otherDeck = { ...DECK, id: "deck-2", name: "Talrand Tempo" };
+    server.use(
+      http.get("/api/decks/:id", ({ params }) =>
+        HttpResponse.json(params.id === otherDeck.id ? otherDeck : teysaDeck)
+      ),
+      // Opening a deck missing from the store reloads the list, which must hold both decks.
+      http.get("/api/decks", () =>
+        HttpResponse.json({
+          decks: [teysaDeck, otherDeck].map((listed) => ({
+            ...listed,
+            _count: { cards: listed.cards.length },
+          })),
+          total: 2,
+          page: 0,
+          limit: 20,
+        })
+      )
+    );
+    const { user, view } = await openBuilder();
+    await user.type(screen.getByPlaceholderText("Search cards…"), "Sol");
+    await user.click(await findButton("Show every color"));
+    await lastSearchIs("name:/Sol/ legal:commander");
+
+    view.rerender(builderAt(otherDeck.id));
+
+    await screen.findByRole("heading", { level: 1, name: otherDeck.name });
+    await lastSearchIs("name:/Sol/ legal:commander id<=U");
     expect(
       screen.getByText("Only cards in your commander's colors")
     ).toBeDefined();
