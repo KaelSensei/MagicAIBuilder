@@ -5,8 +5,9 @@ import { Link } from "@/i18n/navigation";
 import { useMemo } from "react";
 import { useFormatter, useTranslations } from "next-intl";
 import { Clock, Copy, Loader2, Trash2 } from "lucide-react";
-import { deckSizeRuleInFormat, formatDeckCount } from "@/lib/deck/deck-size";
+import { deckSizeRuleInFormat } from "@/lib/deck/deck-size";
 import type { Deck } from "@/lib/deck/types";
+import { DeckCardCount } from "./DeckCardCount";
 import { getDeckPresentationManaColors } from "./HomeDeckCard";
 
 type HomeDeckManaColor = "W" | "U" | "B" | "R" | "G" | "C";
@@ -142,8 +143,12 @@ function DeckListRow({
         </span>
       </td>
 
-      <td className="min-w-[90px] text-[var(--text-secondary)]">
-        {formatDeckCount(deck.cardCount, deckSizeRuleInFormat(deck), " / ")}
+      <td className="min-w-[90px]">
+        <DeckCardCount
+          cardCount={deck.cardCount}
+          rule={deckSizeRuleInFormat(deck)}
+          separator=" / "
+        />
       </td>
 
       <td className="min-w-[120px] text-[var(--text-secondary)]">

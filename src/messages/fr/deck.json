@@ -175,6 +175,11 @@
     "updated": "Modifié",
     "actions": "Actions"
   },
+  "sizeState": {
+    "complete": "complet",
+    "short": "{count, plural, one {# carte manquante} other {# cartes manquantes}}",
+    "over": "{count, plural, one {# carte en trop} other {# cartes en trop}}"
+  },
   "export": {
     "title": "Options d’export",
     "deckList": "Liste de deck — {count} cartes",
