@@ -51,6 +51,14 @@ export type DeckRemovalCause =
       readonly reason: "preview";
       /** The set's release day, "YYYY-MM-DD" */
       readonly releasesOn: string;
+    }
+  | {
+      /** A Game Changer beyond the most the requested bracket allows (I-02 5.1). */
+      readonly reason: "game_changer";
+      /** The bracket the player asked for */
+      readonly bracket: Bracket;
+      /** That bracket's most Game Changers, the commanders included; finite whenever a card is removed */
+      readonly limit: number;
     };
 
 /**

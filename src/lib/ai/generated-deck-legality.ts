@@ -14,6 +14,9 @@
  *   outside the colour identity, a copy beyond the card's limit, or the
  *   commander repeated in the list. A card not legal only because its set is
  *   not out yet is named a preview, with its release day (I-73 3.5).
+ * - A Game Changer beyond the requested bracket's limit is removed, the
+ *   commanders counted first and the list kept in its order
+ *   (`generated-deck-game-changers.ts`, requirement 5.1).
  * - The list is then brought to the exact deck size with basic lands
  *   (`generated-deck-size.ts`).
  * - A rulebreaker commander's exceptions apply (CR 903.5e): a card one admits
@@ -31,6 +34,7 @@ import type {
   DeckRemovalCause,
   DeckRemovalReason,
 } from "@/app/api/ai/build/types";
+import type { BracketLevel } from "@/lib/constants/brackets";
 import { fetchInBatches } from "@/lib/deck/batch-fetch";
 import {
   isBackground,
@@ -55,6 +59,7 @@ import {
   repairedListSize,
   type CommandZoneIdentity,
 } from "./generated-deck-construction";
+import { gameChangerSlots } from "./generated-deck-game-changers";
 import { fitToDeckSize, type KeptCard } from "./generated-deck-size";
 import { producedColoursOf, sourceNeeds } from "./generated-deck-sources";
 
@@ -83,6 +88,8 @@ type Resolve = (name: string) => ScryfallCard | undefined;
 export interface GeneratedDeckCheck {
   /** Today: whether a not-yet-legal card is a preview depends on it (I-73 3.1) */
   readonly today: Date;
+  /** The bracket the player asked for: it caps the Game Changers (I-02 5.1) */
+  readonly bracket: BracketLevel;
 }
 
 /** The card data a generated deck is checked against, and the day it is read on. */
@@ -198,7 +205,7 @@ function removalCause(
 function filterListedCards(
   entries: readonly AICard[],
   commandZone: readonly ScryfallCard[],
-  { resolve, today }: CardData
+  { resolve, today, bracket }: CardData
 ): {
   readonly kept: readonly KeptCard[];
   /** The card data of each kept entry, in list order */
@@ -210,6 +217,7 @@ function filterListedCards(
     commandZoneNames: new Set(commandZone.map((card) => card.name)),
     today,
   };
+  const slots = gameChangerSlots(bracket, commandZone);
   const copiesByName = new Map<string, number>();
   const kept: KeptCard[] = [];
   const keptCards: ScryfallCard[] = [];
@@ -243,11 +251,24 @@ function filterListedCards(
       },
       { format: "commander", exceptions: rules.identity.exceptions }
     );
-    const quantity = Math.min(entry.quantity, Math.max(0, limit - copiesSoFar));
-    if (quantity < entry.quantity) {
+    const legalCopies = Math.min(
+      entry.quantity,
+      Math.max(0, limit - copiesSoFar)
+    );
+    if (legalCopies < entry.quantity) {
       corrections.push(
-        removal(card.name, entry.quantity - quantity, "extra_copies")
+        removal(card.name, entry.quantity - legalCopies, "extra_copies")
       );
+    }
+    // Only the copies the format allows take a Game Changer slot.
+    const quantity = slots.admit(card, legalCopies);
+    if (quantity < legalCopies) {
+      corrections.push({
+        action: "removed",
+        name: card.name,
+        quantity: legalCopies - quantity,
+        ...slots.cause,
+      });
     }
     if (quantity === 0) continue;
 
@@ -316,13 +337,17 @@ export function checkGeneratedDeckLegality(
  * endpoint, in batches of 75 names, then checks the deck against that data.
  *
  * @param deck - The model's reply, already past the shape check of `validateGeneratedDeck`
- * @param today - Now; the day a preview card's status is read on
+ * @param check - The bracket the player asked for, and `today`, the day a
+ *   preview card's status is read on (now when absent)
  * @returns The verdict of `checkGeneratedDeckLegality`
  * @throws When Scryfall cannot be reached: a deck that was not checked is never accepted
  */
 export async function verifyGeneratedDeck(
   deck: AIDeckResponse,
-  today: Date = new Date()
+  {
+    bracket,
+    today = new Date(),
+  }: Pick<GeneratedDeckCheck, "bracket"> & Partial<GeneratedDeckCheck>
 ): Promise<GeneratedDeckVerdict> {
   const names = new Set(
     [deck.commander, deck.partner ?? "", ...deck.cards.map((card) => card.name)]
@@ -332,5 +357,6 @@ export async function verifyGeneratedDeck(
   const cards = await fetchInBatches([...names].map((name) => ({ name })));
   return checkGeneratedDeckLegality(deck, buildScryfallNameIndex(cards), {
     today,
+    bracket,
   });
 }

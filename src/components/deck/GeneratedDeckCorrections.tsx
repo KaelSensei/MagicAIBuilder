@@ -30,6 +30,15 @@ function reasonText(
       date: releaseDayText(format, correction.releasesOn),
     });
   }
+  if (correction.reason === "game_changer") {
+    // The sentence names the bracket the player chose and its limit, so the
+    // removal reads as that bracket's rule, not as a judgement of the card.
+    return t("wizard.correctionReasonGameChanger", {
+      bracket: correction.bracket,
+      name: t(`bracket.name.${correction.bracket}`),
+      limit: correction.limit,
+    });
+  }
   const { reason } = correction;
   switch (reason) {
     case "unknown_card":

@@ -5,6 +5,12 @@ import type {
   DeckCorrection,
   DeckRemovalReason,
 } from "@/app/api/ai/build/types";
+import type { BracketLevel } from "@/lib/constants/brackets";
+import {
+  BLUE_GAME_CHANGERS,
+  GRAND_ARBITER_AUGUSTIN_IV,
+  MYSTIC_REMORA,
+} from "@/lib/scryfall/fixtures/game-changers-v1";
 import { buildScryfallNameIndex } from "@/lib/scryfall/name-index";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import {
@@ -23,8 +29,14 @@ import {
 } from "./generated-deck-legality";
 
 const CARD_DATA = buildScryfallNameIndex(ALL_GENERATED_DECK_CARDS);
-/** The check's "today": the preview fixtures release on 2027-02-05, later. */
-const CHECK: GeneratedDeckCheck = { today: new Date("2026-11-16T12:00:00Z") };
+/**
+ * The check's "today": the preview fixtures release on 2027-02-05, later.
+ * Bracket 4 sets no Game Changer limit, so the other rules are checked alone.
+ */
+const CHECK: GeneratedDeckCheck = {
+  today: new Date("2026-11-16T12:00:00Z"),
+  bracket: 4,
+};
 
 type Entry = readonly [name: string, quantity: number];
 
@@ -77,6 +89,22 @@ function removed(
   reason: DeckRemovalReason
 ): DeckCorrection {
   return { action: "removed", name, quantity, reason };
+}
+
+/** A Game Changer removed because the bracket allows no more than `limit`. */
+function overGameChangerLimit(
+  name: string,
+  bracket: BracketLevel,
+  limit: number
+): DeckCorrection {
+  return {
+    action: "removed",
+    name,
+    quantity: 1,
+    reason: "game_changer",
+    bracket,
+    limit,
+  };
 }
 
 function added(name: string, quantity: number): DeckCorrection {
@@ -345,7 +373,7 @@ describe("checkGeneratedDeckLegality", () => {
     const verdict = checkGeneratedDeckLegality(
       reply({ ...TALRAND, entries: [["Tidewater Oracle", 1]] }),
       CARD_DATA,
-      { today: releaseDay }
+      { ...CHECK, today: releaseDay }
     );
 
     expect(verdict).toEqual(
@@ -614,6 +642,171 @@ describe("checkGeneratedDeckLegality", () => {
       );
 
       expect(copies(acceptedDeck(verdict))).toBe(99);
+    });
+  });
+
+  describe("under the requested bracket's Game Changer limit", () => {
+    const cardData = buildScryfallNameIndex([
+      ...ALL_GENERATED_DECK_CARDS,
+      ...BLUE_GAME_CHANGERS,
+      MYSTIC_REMORA,
+      GRAND_ARBITER_AUGUSTIN_IV,
+    ]);
+
+    it("removes the Game Changers a Bracket 2 deck cannot hold and refills with basics", () => {
+      const verdict = checkGeneratedDeckLegality(
+        reply({
+          ...TALRAND,
+          entries: [
+            ["Rhystic Study", 1],
+            ["Mystic Remora", 1],
+            ["Cyclonic Rift", 1],
+          ],
+        }),
+        cardData,
+        { ...CHECK, bracket: 2 }
+      );
+
+      expect(verdict).toEqual({
+        status: "accepted",
+        deck: {
+          commander: "Talrand, Sky Summoner",
+          partner: null,
+          cards: [
+            { name: "Mystic Remora", quantity: 1, category: "other" },
+            { name: "Island", quantity: 98, category: "land" },
+          ],
+        },
+        corrections: [
+          overGameChangerLimit("Rhystic Study", 2, 0),
+          overGameChangerLimit("Cyclonic Rift", 2, 0),
+          added("Island", 2),
+        ],
+      });
+    });
+
+    it("keeps the first three Game Changers of a Bracket 3 list", () => {
+      const modelReply = reply({
+        ...TALRAND,
+        entries: BLUE_GAME_CHANGERS.map(({ name }) => [name, 1]),
+      });
+
+      const verdict = checkGeneratedDeckLegality(modelReply, cardData, {
+        ...CHECK,
+        bracket: 3,
+      });
+
+      expect(verdict).toEqual(
+        expect.objectContaining({
+          corrections: [
+            overGameChangerLimit("Fierce Guardianship", 3, 3),
+            overGameChangerLimit("Thassa's Oracle", 3, 3),
+            added("Island", 2),
+          ],
+        })
+      );
+      expect(acceptedDeck(verdict).cards.map(({ name }) => name)).toEqual([
+        "Rhystic Study",
+        "Cyclonic Rift",
+        "Force of Will",
+        "Island",
+      ]);
+      // The same list always gives the same result.
+      expect(
+        checkGeneratedDeckLegality(modelReply, cardData, {
+          ...CHECK,
+          bracket: 3,
+        })
+      ).toEqual(verdict);
+    });
+
+    it("a Game Changer commander counts toward the limit and is never removed", () => {
+      const verdict = checkGeneratedDeckLegality(
+        reply({
+          commander: GRAND_ARBITER_AUGUSTIN_IV.name,
+          basic: "Island",
+          entries: [
+            ["Rhystic Study", 1],
+            ["Cyclonic Rift", 1],
+            ["Force of Will", 1],
+          ],
+        }),
+        cardData,
+        { ...CHECK, bracket: 3 }
+      );
+
+      expect(verdict).toEqual(
+        expect.objectContaining({
+          deck: expect.objectContaining({
+            commander: "Grand Arbiter Augustin IV",
+          }),
+          corrections: [
+            overGameChangerLimit("Force of Will", 3, 3),
+            // The basic goes to white, the colour with the fewest sources.
+            added("Plains", 1),
+          ],
+        })
+      );
+    });
+
+    it("removes every Game Changer from a Bracket 1 list: a thematic exception is the player's to claim", () => {
+      const verdict = checkGeneratedDeckLegality(
+        reply({ ...TALRAND, entries: [["Force of Will", 1]] }),
+        cardData,
+        { ...CHECK, bracket: 1 }
+      );
+
+      expect(verdict).toEqual(
+        expect.objectContaining({
+          corrections: [
+            overGameChangerLimit("Force of Will", 1, 0),
+            added("Island", 1),
+          ],
+        })
+      );
+    });
+
+    it.each([4, 5] as const)(
+      "removes no Game Changer from a Bracket %i list",
+      (bracket) => {
+        const modelReply = reply({
+          ...TALRAND,
+          entries: BLUE_GAME_CHANGERS.map(({ name }) => [name, 1]),
+        });
+
+        expect(
+          checkGeneratedDeckLegality(modelReply, cardData, {
+            ...CHECK,
+            bracket,
+          })
+        ).toEqual({ status: "accepted", deck: modelReply, corrections: [] });
+      }
+    );
+
+    it("counts a Game Changer listed twice once, after removing its extra copy", () => {
+      const verdict = checkGeneratedDeckLegality(
+        reply({
+          ...TALRAND,
+          entries: [
+            ["Rhystic Study", 2],
+            ["Cyclonic Rift", 1],
+            ["Force of Will", 1],
+            ["Fierce Guardianship", 1],
+          ],
+        }),
+        cardData,
+        { ...CHECK, bracket: 3 }
+      );
+
+      expect(verdict).toEqual(
+        expect.objectContaining({
+          corrections: [
+            removed("Rhystic Study", 1, "extra_copies"),
+            overGameChangerLimit("Fierce Guardianship", 3, 3),
+            added("Island", 2),
+          ],
+        })
+      );
     });
   });
 });

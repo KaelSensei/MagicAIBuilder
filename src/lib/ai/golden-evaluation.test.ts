@@ -111,6 +111,7 @@ describe("AI golden evaluation", () => {
       expect(
         checkGeneratedDeckLegality(sample.response, CARD_DATA, {
           today: TODAY,
+          bracket: 4,
         })
       ).toEqual(
         expect.objectContaining({

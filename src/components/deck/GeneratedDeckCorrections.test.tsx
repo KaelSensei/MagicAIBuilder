@@ -100,6 +100,57 @@ describe("GeneratedDeckCorrections", () => {
     );
   });
 
+  describe("a Game Changer beyond the bracket's limit (I-02 5.1)", () => {
+    it.each([
+      {
+        locale: "en",
+        bracket: 2,
+        limit: 0,
+        text: "Removed Rhystic Study: a Game Changer, and Bracket 2 (Core) allows none",
+      },
+      {
+        locale: "en",
+        bracket: 3,
+        limit: 3,
+        text: "Removed Rhystic Study: a Game Changer, and Bracket 3 (Upgraded) allows at most 3",
+      },
+      {
+        locale: "fr",
+        bracket: 2,
+        limit: 0,
+        text: "Retrait de Rhystic Study : un Game Changer, et le Bracket 2 (Basique) n’en autorise aucun",
+      },
+      {
+        locale: "fr",
+        bracket: 3,
+        limit: 3,
+        text: "Retrait de Rhystic Study : un Game Changer, et le Bracket 3 (Amélioré) n’en autorise pas plus de 3",
+      },
+    ] as const)(
+      "names Bracket $bracket and its limit ($locale)",
+      ({ locale, bracket, limit, text }) => {
+        renderWithIntl(
+          <GeneratedDeckCorrections
+            corrections={[
+              {
+                action: "removed",
+                name: "Rhystic Study",
+                quantity: 1,
+                reason: "game_changer",
+                bracket,
+                limit,
+              },
+            ]}
+            onOpenDeck={vi.fn()}
+          />,
+          { locale }
+        );
+
+        expect(screen.getByRole("listitem")).toHaveTextContent(text);
+      }
+    );
+  });
+
   it("opens the deck only when the player asks", () => {
     const onOpenDeck = vi.fn();
     renderWithIntl(
