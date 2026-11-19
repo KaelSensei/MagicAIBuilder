@@ -54,6 +54,23 @@ export function deckSizeRuleInFormat(
 }
 
 /**
+ * The cards a loaded deck holds against its size rule: every copy in the main
+ * zone, plus the commander and the partner (CR 903.5a: the commander counts
+ * toward the 100). The sideboard, the maybeboard and a companion stay out.
+ *
+ * @param deck - The deck's rows as the store holds them
+ * @returns The card count the editor and the builder title bar show
+ */
+export function countDeckCards(
+  deck: Pick<Deck, "cards" | "commander" | "partner">
+): number {
+  const mainCopies = deck.cards
+    .filter((card) => card.zone === "main")
+    .reduce((sum, card) => sum + card.quantity, 0);
+  return mainCopies + (deck.commander ? 1 : 0) + (deck.partner ? 1 : 0);
+}
+
+/**
  * A deck's card count as a counter shows it: "99/100" against a maximum, or the
  * bare count when the deck has none.
  *
