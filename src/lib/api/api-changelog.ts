@@ -66,6 +66,15 @@ const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
  */
 export const API_CHANGELOG: readonly ApiChangelogEntry[] = [
   {
+    date: "2026-11-19",
+    label: "compatible",
+    summary:
+      "The deck list adds cardCopyCount, the cards a deck holds as the deck editor counts them. cardCount keeps its meaning: card rows, not copies.",
+    routes: ["/api/v1/decks"],
+    field: null,
+    documentHash: "e26667d0c8d413332226e6e5b6bffe15e9b6f23466cd61735886c224bd1adafc",
+  },
+  {
     date: "2026-11-14",
     label: "compatible",
     summary:

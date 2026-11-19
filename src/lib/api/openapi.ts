@@ -116,7 +116,18 @@ export function buildOpenApiDocument(serverUrl: string) {
             },
             targetBracket: { type: "integer", minimum: 1, maximum: 5 },
             isPublic: { type: "boolean" },
-            cardCount: { type: "integer", minimum: 0 },
+            cardCount: {
+              type: "integer",
+              minimum: 0,
+              description:
+                "Card rows, not copies: thirty Forests in one row count once. Kept for compatibility; read cardCopyCount for the deck's size.",
+            },
+            cardCopyCount: {
+              type: "integer",
+              minimum: 0,
+              description:
+                "Cards the deck holds, as the deck editor counts them: every main-deck copy plus the commander and the partner, without the sideboard, the maybeboard or a companion. Sent by GET /api/v1/decks.",
+            },
             createdAt: { type: "string", format: "date-time" },
             updatedAt: { type: "string", format: "date-time" },
           },

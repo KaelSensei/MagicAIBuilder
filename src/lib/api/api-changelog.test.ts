@@ -85,8 +85,13 @@ describe("checkApiChangelog", () => {
       })
     ).toEqual({ ok: true });
 
+    // The first line (the list is oldest last) records all four routes; every
+    // later line names only routes among them. Comparing the flattened list
+    // with the four routes held only while the changelog had one line.
+    expect(API_CHANGELOG.at(-1)?.routes).toEqual([...PUBLIC_READ_ROUTES]);
+    const publicRoutes = new Set<string>(PUBLIC_READ_ROUTES);
     const routes = API_CHANGELOG.flatMap((entry) => entry.routes);
-    expect(routes).toEqual([...PUBLIC_READ_ROUTES]);
+    expect(routes.every((route) => publicRoutes.has(route))).toBe(true);
     expect(routes.every((route) => route.startsWith("/api/v1/"))).toBe(true);
   });
 });

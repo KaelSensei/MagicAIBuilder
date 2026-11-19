@@ -62,6 +62,7 @@ import type {
   updateDeck,
 } from "@/lib/db/deck-api";
 import { rowFillsCommandSlot } from "@/lib/deck/bulk-edit-command-zone";
+import { countStoredCardCopies } from "@/lib/deck/stored-card-count";
 import { CARD_CATEGORIES, type CardCategory } from "@/lib/deck/types";
 import { prismaQuery } from "@/test/prisma-query";
 
@@ -233,9 +234,17 @@ function rowFromPayload(
   };
 }
 
-/** The listing shape of a deck: no rows, a row count. */
+/**
+ * The listing shape of a deck: no rows, a row count and the card copies the
+ * server sums (`GET /api/decks`, `countDeckCardCopies`).
+ */
 function listed(deck: ApiDeck): ApiDeck {
-  return { ...deck, cards: [], _count: { cards: deck.cards.length } };
+  return {
+    ...deck,
+    cards: [],
+    _count: { cards: deck.cards.length },
+    cardCopyCount: countStoredCardCopies(deck.cards),
+  };
 }
 
 /** Removes the rows that fill `slots`, by role, as the routes delete them. */
