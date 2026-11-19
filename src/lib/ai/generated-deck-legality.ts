@@ -14,6 +14,9 @@
  *   outside the colour identity, a copy beyond the card's limit, or the
  *   commander repeated in the list. A card not legal only because its set is
  *   not out yet is named a preview, with its release day (I-73 3.5).
+ * - A Game Changer beyond the requested bracket's limit is removed, the
+ *   commanders counted first and the list kept in its order
+ *   (`generated-deck-game-changers.ts`, requirement 5.1).
  * - The list is then brought to the exact deck size with basic lands
  *   (`generated-deck-size.ts`).
  * - A rulebreaker commander's exceptions apply (CR 903.5e): a card one admits
@@ -31,22 +34,14 @@ import type {
   DeckRemovalCause,
   DeckRemovalReason,
 } from "@/app/api/ai/build/types";
+import type { BracketLevel } from "@/lib/constants/brackets";
 import { fetchInBatches } from "@/lib/deck/batch-fetch";
 import {
   isBackground,
   isCommanderEligible,
 } from "@/lib/deck/commander-eligibility";
-import {
-  colorsProducedBy,
-  PIP_COLORS,
-  type PipColor,
-} from "@/lib/deck/mana-alignment";
 import { deckCopyLimit } from "@/lib/deck/multiples";
 import { canPairCommanders, pairingCardOf } from "@/lib/deck/pairing";
-import {
-  sourceTargetsByColour,
-  type SpellCost,
-} from "@/lib/deck/source-targets";
 import {
   buildScryfallNameIndex,
   normalizeImportedName,
@@ -64,11 +59,9 @@ import {
   repairedListSize,
   type CommandZoneIdentity,
 } from "./generated-deck-construction";
-import {
-  fitToDeckSize,
-  type KeptCard,
-  type SourceNeed,
-} from "./generated-deck-size";
+import { gameChangerSlots } from "./generated-deck-game-changers";
+import { fitToDeckSize, type KeptCard } from "./generated-deck-size";
+import { producedColoursOf, sourceNeeds } from "./generated-deck-sources";
 
 /** The outcome of checking a generated deck against card data. */
 export type GeneratedDeckVerdict =
@@ -91,11 +84,17 @@ interface CommandZone {
 }
 type Resolve = (name: string) => ScryfallCard | undefined;
 
-/** The card data a generated deck is checked against, and the day it is read on. */
-interface CardData {
-  readonly resolve: Resolve;
+/** What a generated deck is checked under, beside its card data. */
+export interface GeneratedDeckCheck {
   /** Today: whether a not-yet-legal card is a preview depends on it (I-73 3.1) */
   readonly today: Date;
+  /** The bracket the player asked for: it caps the Game Changers (I-02 5.1) */
+  readonly bracket: BracketLevel;
+}
+
+/** The card data a generated deck is checked against, and the day it is read on. */
+interface CardData extends GeneratedDeckCheck {
+  readonly resolve: Resolve;
 }
 
 function rejected(reason: string): Rejected {
@@ -202,50 +201,11 @@ function removalCause(
   return null;
 }
 
-/** The cost of the face a player casts first: the front face of a card with faces. */
-function frontFaceCost(card: ScryfallCard): SpellCost {
-  return {
-    name: card.name,
-    manaCost: card.card_faces?.[0]?.mana_cost ?? card.mana_cost ?? "",
-  };
-}
-
-/** The colours a card taps for when its front face is a land; empty otherwise. */
-function producedColoursOf(card: ScryfallCard): readonly PipColor[] {
-  const [frontTypeLine = ""] = card.type_line.split("//", 1);
-  if (!/\bLand\b/.test(frontTypeLine)) return [];
-  return [
-    ...colorsProducedBy({
-      typeLine: card.type_line,
-      oracleText: card.oracle_text ?? "",
-      colorIdentity: card.color_identity,
-    }),
-  ];
-}
-
-/**
- * Each colour of the command zone with its source target, set by the most
- * demanding of the commanders' and the kept cards' costs (I-58 requirement 3).
- */
-function sourceNeeds(
-  commandZone: readonly ScryfallCard[],
-  kept: readonly ScryfallCard[]
-): readonly SourceNeed[] {
-  const identity = new Set(commandZone.flatMap((card) => card.color_identity));
-  const targets = sourceTargetsByColour(
-    [...commandZone, ...kept].map(frontFaceCost)
-  );
-  return PIP_COLORS.filter((colour) => identity.has(colour)).map((colour) => ({
-    colour,
-    target: targets.get(colour)?.sources ?? 0,
-  }));
-}
-
 /** Keeps the legal copies of each listed card and records every copy removed. */
 function filterListedCards(
   entries: readonly AICard[],
   commandZone: readonly ScryfallCard[],
-  { resolve, today }: CardData
+  { resolve, today, bracket }: CardData
 ): {
   readonly kept: readonly KeptCard[];
   /** The card data of each kept entry, in list order */
@@ -257,6 +217,7 @@ function filterListedCards(
     commandZoneNames: new Set(commandZone.map((card) => card.name)),
     today,
   };
+  const slots = gameChangerSlots(bracket, commandZone);
   const copiesByName = new Map<string, number>();
   const kept: KeptCard[] = [];
   const keptCards: ScryfallCard[] = [];
@@ -290,11 +251,24 @@ function filterListedCards(
       },
       { format: "commander", exceptions: rules.identity.exceptions }
     );
-    const quantity = Math.min(entry.quantity, Math.max(0, limit - copiesSoFar));
-    if (quantity < entry.quantity) {
+    const legalCopies = Math.min(
+      entry.quantity,
+      Math.max(0, limit - copiesSoFar)
+    );
+    if (legalCopies < entry.quantity) {
       corrections.push(
-        removal(card.name, entry.quantity - quantity, "extra_copies")
+        removal(card.name, entry.quantity - legalCopies, "extra_copies")
       );
+    }
+    // Only the copies the format allows take a Game Changer slot.
+    const quantity = slots.admit(card, legalCopies);
+    if (quantity < legalCopies) {
+      corrections.push({
+        action: "removed",
+        name: card.name,
+        quantity: legalCopies - quantity,
+        ...slots.cause,
+      });
     }
     if (quantity === 0) continue;
 
@@ -320,19 +294,19 @@ function filterListedCards(
  *
  * @param deck - The model's reply, already past the shape check of `validateGeneratedDeck`
  * @param cardData - Scryfall cards indexed by `buildScryfallNameIndex`
- * @param today - Now, read as its UTC day: a card Scryfall does not mark legal
- *   whose set releases later is removed as a `preview` with its release day,
- *   not as `not_legal` (I-73 3.5)
+ * @param check - `today` is now, read as its UTC day: a card Scryfall does not
+ *   mark legal whose set releases later is removed as a `preview` with its
+ *   release day, not as `not_legal` (I-73 3.5)
  * @returns The repaired deck with every correction made, or the reasons it cannot be repaired
  */
 export function checkGeneratedDeckLegality(
   deck: AIDeckResponse,
   cardData: ReadonlyMap<string, ScryfallCard>,
-  today: Date
+  check: GeneratedDeckCheck
 ): GeneratedDeckVerdict {
   const data: CardData = {
+    ...check,
     resolve: (name) => cardData.get(normalizeImportedName(name)),
-    today,
   };
   const commandZone = resolveCommandZone(deck, data);
   if (commandZone.status === "rejected") return commandZone;
@@ -363,13 +337,17 @@ export function checkGeneratedDeckLegality(
  * endpoint, in batches of 75 names, then checks the deck against that data.
  *
  * @param deck - The model's reply, already past the shape check of `validateGeneratedDeck`
- * @param today - Now; the day a preview card's status is read on
+ * @param check - The bracket the player asked for, and `today`, the day a
+ *   preview card's status is read on (now when absent)
  * @returns The verdict of `checkGeneratedDeckLegality`
  * @throws When Scryfall cannot be reached: a deck that was not checked is never accepted
  */
 export async function verifyGeneratedDeck(
   deck: AIDeckResponse,
-  today: Date = new Date()
+  {
+    bracket,
+    today = new Date(),
+  }: Pick<GeneratedDeckCheck, "bracket"> & Partial<GeneratedDeckCheck>
 ): Promise<GeneratedDeckVerdict> {
   const names = new Set(
     [deck.commander, deck.partner ?? "", ...deck.cards.map((card) => card.name)]
@@ -377,5 +355,8 @@ export async function verifyGeneratedDeck(
       .filter((name) => name.length > 0)
   );
   const cards = await fetchInBatches([...names].map((name) => ({ name })));
-  return checkGeneratedDeckLegality(deck, buildScryfallNameIndex(cards), today);
+  return checkGeneratedDeckLegality(deck, buildScryfallNameIndex(cards), {
+    today,
+    bracket,
+  });
 }
