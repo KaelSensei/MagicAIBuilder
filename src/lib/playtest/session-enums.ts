@@ -4,9 +4,10 @@
  *
  * Playtest context, session records. Both columns are plain strings in
  * Postgres, so every other playtest module reads the sets from here: the API
- * validation (`session-input`), the aggregates (`analytics`), the prompt
- * evidence (`ai-context`), the history panel's ordering (`summary-view`) and
- * the result bar's options. The tuple order is the order the UI shows.
+ * validation (`session-input`), the aggregates (`analytics`), the history
+ * panel's ordering (`summary-view`) and the result bar's options. The AI
+ * copilot reads them too, for the prompt evidence (`ai/playtest-context`).
+ * The tuple order is the order the UI shows.
  *
  * @module playtest/session-enums
  */
