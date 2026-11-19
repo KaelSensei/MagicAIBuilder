@@ -416,6 +416,8 @@ The sweep found six products generating decks and none publishing what was check
 
   Every answer states that no model produced it ([D-54](../owner-decisions.md#product-scope-and-non-goals)). Players paste lists into assistants that "confidently make up mana costs" ([xoPLA.NET](https://xopla.net/posts/a-little-tool-to-make-ai-better-at-magic-the-gathering-deckbuilding), 2025-11-09). Whether such answers count as proxying Scryfall data is [L-21](../legal-questions.md#l-21-proxying-repackaging-and-our-own-api-terms-scryfall). Added 2026-11-11.
 
+- [ ] Added 2026-11-19 (seventeenth pass): the specs README's finding "Generation is commoditised; verification is not" is now contested. EDHcheck's AI builder and Rules Judge (2026-11-17) withhold an answer that fails their checks ([announcement](https://edhcheck.com/updates/edhcheck-ai/)), and MTG Agents runs "a deterministic legality gate" first ([Commander builder](https://mtg-agents.com/commander-deck-builder)), both read 2026-11-19. Neither publishes the verdict per claim, nor the check as a surface a third party can call. That is this initiative's remaining difference, so its public wording says "the rule behind each verdict, published", not only "checked".
+
 ### Definition of done
 
 A third party submits a list and receives a versioned, dated, rule-level verdict that matches what the product shows its own players for the same list.

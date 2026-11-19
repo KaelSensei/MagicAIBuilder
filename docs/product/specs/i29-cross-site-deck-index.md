@@ -643,6 +643,7 @@ Two initiatives added on 2026-11-09 consume this index. [I-34](i34-commander-dat
 - [ ] Source register: record the cEDH Decklist Database's status tags (`COMPETITIVE`, `BREW`, `OUTDATED`) and Discord links, and show them with a Bracket 5 list. Add Commander's Herald's cEDH guides and cEDH Brewers Base as researched sources ([cEDH DDB](https://cedh-decklist-database.com/), seen 2026-11-10). Added 2026-11-11.
 - [ ] Indexed external decks get I-54 4.5's computed styles and [I-77](i77-a-bracket-estimate-players-can-audit.md)'s estimate, with its method version, beside their declared fields. Added 2026-11-11.
 - [ ] Add "may we show EDHREC salt, with credit" to [D-25](../owner-decisions.md#data-sources-and-partners)'s letter to Space Cow Media; until then [I-78](i78-what-this-deck-does-to-the-table.md)'s category flags stand in. Added 2026-11-11.
+- [ ] Added 2026-11-19 (seventeenth pass): the corpus honours the two rules [I-34](i34-commander-data-reports.md) gained in the same pass. A deck whose owner switched off aggregate statistics never enters a statistic, and a deck the copilot generated counts in no statistic until the exclusion rule says otherwise. Players already read aggregate counts as open to generated lists ("AI-generated primers?", r/EDH, 97 points, 2026-02-14, [thread](https://www.reddit.com/r/EDH/comments/1r4vk61/)), and the "largest indexer" goal depends on the index being credible. An external deck whose source does not say how it was built carries no such flag; the methods page says so.
 
 ### Engineering enablers
 
