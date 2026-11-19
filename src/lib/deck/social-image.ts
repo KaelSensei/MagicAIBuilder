@@ -1,5 +1,6 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
+import { isCommanderRow } from "@/lib/deck/bulk-edit-command-zone";
 
 /**
  * Data for the deck image at `/og/deck/{id}`.
@@ -87,7 +88,7 @@ export async function loadPublicDeckImage(
  */
 function toDeckImage(row: DeckImageRow): DeckImage {
   const commanderCards = row.cards
-    .filter((card) => card.isCommander || card.isPartner)
+    .filter(isCommanderRow)
     .sort((a, b) => Number(a.isPartner) - Number(b.isPartner));
   const identitySource = commanderCards.length > 0 ? commanderCards : row.cards;
 

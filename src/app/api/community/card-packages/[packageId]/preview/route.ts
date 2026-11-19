@@ -11,6 +11,7 @@ import { commandZoneNamesOf, previewCardPackage } from "@/lib/community/card-pac
 import { verifyPackageCards } from "@/lib/community/verified-package-cards";
 import { prisma } from "@/lib/db/prisma";
 import { ALL_FORMATS } from "@/lib/deck/formats";
+import { isCommanderRow } from "@/lib/deck/bulk-edit-command-zone";
 import { logger } from "@/lib/logger";
 import { isBasicLand } from "@/lib/scryfall/type-line";
 
@@ -86,7 +87,7 @@ export async function POST(request: Request, context: RouteContext) {
 
     const commanderColors = new Set<string>();
     for (const card of deck.cards) {
-      if (card.isCommander || card.isPartner) {
+      if (isCommanderRow(card)) {
         for (const color of card.colorIdentity) commanderColors.add(color);
       }
     }

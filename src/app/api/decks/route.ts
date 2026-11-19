@@ -7,6 +7,7 @@ import { logger } from "@/lib/logger";
 import { ALL_FORMATS } from "@/lib/deck/formats";
 import { readJsonBody } from "@/lib/api/json-body";
 import { sharesOracleIdentity } from "@/lib/deck/commander-pairing";
+import { commandSlotOf } from "@/lib/deck/bulk-edit-command-zone";
 import { deckCardIdSchema, pairingTypeSchema } from "@/lib/validation/deck";
 import { addCardSchema, type AddCardInput } from "@/lib/validation/card";
 import { readIdempotencyKey } from "@/lib/api/idempotency-key";
@@ -72,8 +73,9 @@ function hasOneCommandRowPerSlot(cards: readonly AddCardInput[]): boolean {
   let commanders = 0;
   let partners = 0;
   for (const card of cards) {
-    if (card.isPartner) partners += 1;
-    else if (card.isCommander) commanders += 1;
+    const slot = commandSlotOf(card);
+    if (slot === "partner") partners += 1;
+    else if (slot === "commander") commanders += 1;
   }
   return commanders <= 1 && partners <= 1;
 }
