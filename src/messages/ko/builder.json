@@ -27,6 +27,7 @@
   },
   "dropToMove": "Drop here to move to {label}",
   "noCardsYet": "No cards yet",
+  "colorIdentityViolation": "Outside commander color identity",
   "tags": { "add": "Add tag", "placeholder": "tag name…" },
   "details": {
     "title": "Deck details",

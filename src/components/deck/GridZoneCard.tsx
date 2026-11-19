@@ -1,8 +1,8 @@
 "use client";
 /**
  * One main-deck card of the editor grid: its image, the controls that move,
- * remove or recategorise it, and the note naming the rulebreaker commander
- * that admits it (CR 903.5e).
+ * remove or recategorise it, the words for an identity violation (CR 903.5c)
+ * and the note naming the rulebreaker commander that admits it (CR 903.5e).
  *
  * @module deck/GridZoneCard
  */
@@ -11,6 +11,7 @@ import { useDraggable } from "@dnd-kit/core";
 import { Bookmark, GripVertical, Layers } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { CardImage } from "@/components/card/CardImage";
+import { ColorIdentityViolationLabel } from "@/components/deck/ColorIdentityViolationLabel";
 import { RulebreakerAdmissionNote } from "@/components/deck/RulebreakerAdmissionNote";
 import { cn } from "@/components/ui/utils";
 import type { CardCategory, DeckCard } from "@/lib/deck/types";
@@ -127,6 +128,10 @@ export function GridZoneCard({
       >
         ×
       </button>
+      <ColorIdentityViolationLabel
+        isViolation={isViolation}
+        className="mt-1 block text-center"
+      />
       {/* Outside every button of the tile: a <details> inside one is invalid HTML. */}
       <RulebreakerAdmissionNote
         admission={admission}

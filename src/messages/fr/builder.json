@@ -19,6 +19,7 @@
   },
   "dropToMove": "Déposez ici pour déplacer vers {label}",
   "noCardsYet": "Aucune carte pour le moment",
+  "colorIdentityViolation": "Hors identité couleur du commandant",
   "tags": {
     "add": "Ajouter une étiquette",
     "placeholder": "nom de l'étiquette…"
