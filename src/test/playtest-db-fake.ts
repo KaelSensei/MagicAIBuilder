@@ -2,7 +2,9 @@
  * In-memory Prisma tables behind recorded playtests (one deck, its cards,
  * snapshots and sessions), so tests can follow a run to the stored rows.
  * Supports equality `where`, `orderBy` on `createdAt` and `take`; `select`
- * and `include` are ignored, and a deck comes back with its cards.
+ * and `include` are ignored, and a deck comes back with its cards. Card rows
+ * can be deleted and created in bulk and a snapshot deleted, as a snapshot
+ * restore and delete do.
  */
 import { prismaQuery } from "@/test/prisma-query";
 
@@ -194,7 +196,8 @@ function nullableCount(value: unknown): number | null {
  */
 function createPlaytestDb() {
   const deck = FAKE_DECK;
-  let cards: readonly FakeDeckCard[] = [];
+  /** Seeded as `FakeDeckCard`s; `createMany` adds the rows it is given as they are. */
+  let cards: readonly Row[] = [];
   let snapshots: FakeSnapshot[] = [];
   let sessions: FakeSession[] = [];
   let sequence = 0;
@@ -226,11 +229,35 @@ function createPlaytestDb() {
     deckCard: {
       findMany: ({ where }: FindArgs) =>
         Promise.resolve(cards.filter((card) => matches(card, where))),
+      deleteMany: ({ where }: FindArgs) =>
+        prismaQuery(() => {
+          const kept = cards.filter((card) => !matches(card, where));
+          const count = cards.length - kept.length;
+          cards = kept;
+          return { count };
+        }),
+      createMany: ({ data }: { readonly data: readonly Row[] }) =>
+        prismaQuery(() => {
+          const created = data.map((row) => ({
+            id: `card-${++sequence}`,
+            ...row,
+          }));
+          cards = [...cards, ...created];
+          return { count: created.length };
+        }),
     },
     deckSnapshot: {
       findFirst: (args: FindArgs) =>
         Promise.resolve(find(snapshots, args)[0] ?? null),
       findMany: (args: FindArgs) => Promise.resolve(find(snapshots, args)),
+      delete: ({ where }: FindArgs) =>
+        prismaQuery(() => {
+          const [doomed] = find(snapshots, { where });
+          // Prisma rejects a delete that matches no row (P2025).
+          if (!doomed) throw new Error("Record to delete does not exist.");
+          snapshots = snapshots.filter((snapshot) => snapshot !== doomed);
+          return doomed;
+        }),
       create: ({ data }: CreateArgs) =>
         prismaQuery(() => {
           const snapshot: FakeSnapshot = {
