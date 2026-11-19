@@ -402,17 +402,36 @@ async function importMtgDecks(deckPath: string, slug: string): Promise<UrlImport
   return { name: `MTGDecks: ${slug}`, source: "mtgdecks", cards, ignored: [] };
 }
 
-/** Import AetherHub's documented URL payload without scraping a public page. */
+/**
+ * Files the `sb` list of a Commander builder URL into the command zone, in AetherHub's order.
+ *
+ * @param text - the `sb` parameter, one "N Card Name" per line
+ * @returns the commander, then the partner when `sb` names a second card
+ */
+function aetherHubCommandZone(text: string): UrlImportCard[] {
+  return parsePlainTextDecklist(text).map((card, position) => ({
+    ...card,
+    ...commandZoneRole(position),
+  }));
+}
+
+/**
+ * Imports AetherHub's documented builder-URL payload without scraping a public page.
+ *
+ * `m` is the main deck; `sb` is the command zone when `t=cmd`, and the sideboard otherwise.
+ *
+ * @param url - a detected `aetherhub.com/Deck/Builder` URL
+ * @returns the deck's cards, with a format warning when it is not marked as Commander
+ * @throws Error "AetherHub URL does not contain any cards" when `m` and `sb` list no card
+ */
 function importAetherHub(url: string): UrlImportResult {
   const params = new URL(url).searchParams;
   const main = parsePlainTextDecklist(params.get("m") ?? "");
   const sideboardText = params.get("sb") ?? "";
   const isCommander = params.get("t") === "cmd";
-  const sideboardHeader = isCommander ? "Commander" : "Sideboard";
-  const sideboardPayload = sideboardText
-    ? `${sideboardHeader}\n${sideboardText}`
-    : "";
-  const sideboard = parsePlainTextDecklist(sideboardPayload);
+  const sideboard = isCommander
+    ? aetherHubCommandZone(sideboardText)
+    : parsePlainTextDecklist(`Sideboard\n${sideboardText}`);
 
   if (main.length === 0 && sideboard.length === 0) {
     throw new Error("AetherHub URL does not contain any cards");
