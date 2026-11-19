@@ -622,3 +622,98 @@ describe("POST /api/decks with cards and an idempotency key", () => {
     );
   });
 });
+
+/**
+ * A created deck holds at most the copy limit, as the editor and the cards
+ * route do: each row is clamped silently with the format and the command
+ * zone the request itself names, so the rule reads no stored deck.
+ */
+describe("POST /api/decks with cards — copy limit", () => {
+  const SOL_RING = {
+    scryfallId: "4cbc6901-6a4a-4d0a-83ea-7eefa3b35021",
+    name: "Sol Ring",
+    typeLine: "Artifact",
+    oracleText: "{T}: Add {C}{C}.",
+    category: "ramp",
+  };
+  const FOREST = {
+    scryfallId: "33333333-3333-4333-8333-333333333333",
+    name: "Forest",
+    typeLine: "Basic Land — Forest",
+    category: "land",
+  };
+  const SEVEN_DWARVES = {
+    scryfallId: "55555555-5555-4555-8555-555555555555",
+    name: "Seven Dwarves",
+    typeLine: "Creature — Dwarf",
+    oracleText:
+      "Seven Dwarves gets +1/+1 for each other creature named Seven Dwarves you control.\nA deck can have up to seven cards named Seven Dwarves.",
+    category: "creature",
+  };
+  const LIGHTNING_BOLT = {
+    scryfallId: "22222222-2222-4222-8222-222222222222",
+    name: "Lightning Bolt",
+    typeLine: "Instant",
+    oracleText: "Lightning Bolt deals 3 damage to any target.",
+    category: "removal",
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    authed();
+    // The created deck answers with the rows the create stored.
+    mockCreate.mockImplementation(
+      ({ data }: { data: { cards: { create: readonly object[] } } }) =>
+        Promise.resolve({ id: "deck-1", ...data, cards: data.cards.create })
+    );
+  });
+
+  /** The copies the create stored for `name`, one entry per row. */
+  function createdCopies(name: string): readonly number[] {
+    const stored: readonly { name: string; quantity: number }[] =
+      mockCreate.mock.lastCall?.[0].data.cards.create ?? [];
+    return stored.filter((card) => card.name === name).map((card) => card.quantity);
+  }
+
+  it("stores one Sol Ring when a Commander deck is created with three", async () => {
+    const response = await POST(
+      createRequest({ name: "Atraxa", cards: [{ ...SOL_RING, quantity: 3 }] })
+    );
+
+    expect(response.status).toBe(201);
+    expect(createdCopies("Sol Ring")).toEqual([1]);
+    expect(await response.json()).toMatchObject({
+      cards: [expect.objectContaining({ name: "Sol Ring", quantity: 1 })],
+    });
+  });
+
+  it("keeps thirty Forests, a basic land, and stops Seven Dwarves at seven", async () => {
+    await POST(
+      createRequest({
+        name: "Atraxa",
+        cards: [
+          { ...FOREST, quantity: 30 },
+          { ...SEVEN_DWARVES, quantity: 9 },
+        ],
+      })
+    );
+
+    expect(createdCopies("Forest")).toEqual([30]);
+    expect(createdCopies("Seven Dwarves")).toEqual([7]);
+  });
+
+  it("reads the format the request names: a Modern deck keeps four Lightning Bolts and stops a fifth", async () => {
+    await POST(
+      createRequest({
+        name: "Burn",
+        format: "modern",
+        cards: [
+          { ...LIGHTNING_BOLT, quantity: 4 },
+          { ...LIGHTNING_BOLT, quantity: 5, zone: "sideboard" },
+        ],
+      })
+    );
+
+    expect(createdCopies("Lightning Bolt")).toEqual([4, 4]);
+  });
+});
