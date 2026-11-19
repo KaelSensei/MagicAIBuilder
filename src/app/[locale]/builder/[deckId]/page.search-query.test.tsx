@@ -256,41 +256,43 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
+// One server for the whole file: `setupMsw` is called once per file (its header says why).
+const server = setupMsw(
+  http.get("/api/decks/:id", () => HttpResponse.json(DECK)),
+  http.get("/api/decks", () =>
+    HttpResponse.json({
+      decks: [{ ...DECK, _count: { cards: DECK.cards.length } }],
+      total: 1,
+      page: 0,
+      limit: 20,
+    })
+  ),
+  // Game Changers and the banlist read the same cache; their queries never match `TRANSLATED`.
+  http.get("/api/cache/search", ({ request }) => {
+    const query = new URL(request.url).searchParams.get("query") ?? "";
+    if (query !== "is:gamechanger" && query !== "banned:commander") {
+      searched.push(query);
+    }
+    return HttpResponse.json({
+      hit: true,
+      data: query === TRANSLATED ? translatedPage : EMPTY_SEARCH_RESPONSE,
+    });
+  }),
+  http.get("/api/search/translate", () =>
+    HttpResponse.json({ available: true })
+  ),
+  http.post("/api/search/translate", () =>
+    HttpResponse.json({
+      query: TRANSLATED,
+      context: { format: "commander", colorIdentity: ["U"] },
+    })
+  ),
+  http.get("/api/meta/:slug/history", () =>
+    HttpResponse.json({ report: null, snapshotCount: 0, windowDays: 90 })
+  )
+);
+
 describe("characterization: the builder's name search with a plain-language query", () => {
-  const server = setupMsw(
-    http.get("/api/decks/:id", () => HttpResponse.json(DECK)),
-    http.get("/api/decks", () =>
-      HttpResponse.json({
-        decks: [{ ...DECK, _count: { cards: DECK.cards.length } }],
-        total: 1,
-        page: 0,
-        limit: 20,
-      })
-    ),
-    // Game Changers and the banlist read the same cache; their queries never match `TRANSLATED`.
-    http.get("/api/cache/search", ({ request }) => {
-      const query = new URL(request.url).searchParams.get("query") ?? "";
-      if (query !== "is:gamechanger" && query !== "banned:commander") {
-        searched.push(query);
-      }
-      return HttpResponse.json({
-        hit: true,
-        data: query === TRANSLATED ? translatedPage : EMPTY_SEARCH_RESPONSE,
-      });
-    }),
-    http.get("/api/search/translate", () =>
-      HttpResponse.json({ available: true })
-    ),
-    http.post("/api/search/translate", () =>
-      HttpResponse.json({
-        query: TRANSLATED,
-        context: { format: "commander", colorIdentity: ["U"] },
-      })
-    ),
-    http.get("/api/meta/:slug/history", () =>
-      HttpResponse.json({ report: null, snapshotCount: 0, windowDays: 90 })
-    )
-  );
 
   it("runs the confirmed query exactly as shown, without the filters chosen before it", async () => {
     const user = await openBuilderWithFilters();
