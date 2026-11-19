@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/Input";
 import { cn } from "@/components/ui/utils";
 import { DeckBulkFolderMove } from "./DeckBulkFolderMove";
 import { DeckFolderActions, type DeckFolderOption } from "./DeckFolderActions";
+import { FolderName } from "./FolderName";
 
 interface Props {
   readonly decks: readonly Pick<Deck, "id" | "name" | "folderId">[];
@@ -98,7 +99,7 @@ export function DeckFolderControls({
             onClick={() => onFilterChange(folder.id)}
             className={`rounded-[var(--lumen-radius-pill)] border px-3 py-1 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] ${filterId === folder.id ? "border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent-text)]" : "border-[var(--border)] text-[var(--text-secondary)]"}`}
           >
-            {folder.name}
+            <FolderName name={folder.name} />
           </button>
         ))}
       </div>
