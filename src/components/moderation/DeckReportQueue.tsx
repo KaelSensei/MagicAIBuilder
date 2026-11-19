@@ -1,11 +1,20 @@
 "use client";
-
+/**
+ * The moderator's queue of pending deck reports: it lists each report with
+ * its reason, deck and reporter, and resolves one as reviewed or dismissed.
+ *
+ * Community context (UI, moderation). Reads `GET /api/moderation/deck-reports`
+ * and resolves through `PATCH /api/moderation/deck-reports/[reportId]`.
+ * Not responsible for: the reasons themselves (`REPORT_REASONS`,
+ * `lib/community/community-contracts.ts`), nor who may moderate
+ * (`lib/auth/require-moderator.ts`).
+ */
 import { useEffect, useState } from "react";
 import { Check, ExternalLink, Flag, Loader2, ShieldX, X } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import type { ReportReason } from "@/lib/community/community-contracts";
 
-type ReportReason = "spam" | "harassment" | "illegal_content" | "other";
 type ReviewStatus = "reviewed" | "dismissed";
 
 interface DeckReport {

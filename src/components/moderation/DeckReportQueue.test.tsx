@@ -1,5 +1,9 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  REPORT_REASONS,
+  type ReportReason,
+} from "@/lib/community/community-contracts";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { DeckReportQueue } from "./DeckReportQueue";
 
@@ -47,6 +51,52 @@ describe("DeckReportQueue", () => {
         body: JSON.stringify({ status: "reviewed" }),
       })
     );
+  });
+
+  it("labels every report reason with its moderation wording", async () => {
+    // Keyed by the shared union, so a new reason fails to compile here until
+    // the queue's wording for it is pinned too.
+    const labels: Readonly<Record<ReportReason, string>> = {
+      spam: "Spam",
+      harassment: "Harassment",
+      illegal_content: "Illegal content",
+      other: "Other",
+    };
+    const reports = REPORT_REASONS.map((reason) => ({
+      ...REPORT,
+      id: `report-${reason}`,
+      reason,
+      deck: { ...REPORT.deck, id: `deck-${reason}`, name: `Deck ${reason}` },
+    }));
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+      new Response(JSON.stringify({ reports }), { status: 200 })
+    );
+
+    renderWithIntl(<DeckReportQueue />);
+
+    expect(await screen.findByText("Deck spam")).toBeInTheDocument();
+    for (const reason of REPORT_REASONS) {
+      expect(screen.getByText(labels[reason])).toBeInTheDocument();
+    }
+  });
+
+  it("currently lists a report whose stored reason is outside REPORT_REASONS (pinned; see the COM-03 follow-up)", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({ reports: [{ ...REPORT, reason: "rude" }] }),
+        {
+          status: 200,
+        }
+      )
+    );
+
+    renderWithIntl(<DeckReportQueue />);
+
+    expect(await screen.findByText("Suspicious deck")).toBeInTheDocument();
+    expect(
+      screen.getByText("deck.moderation.reasons.rude")
+    ).toBeInTheDocument();
   });
 
   it("shows a restricted-access message when the API forbids the viewer", async () => {
