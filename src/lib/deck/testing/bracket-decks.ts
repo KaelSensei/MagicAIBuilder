@@ -10,16 +10,21 @@
  * @module deck/testing/bracket-decks
  */
 import type { Combo } from "@/modules/combos";
+import type { DeckStats } from "@/lib/deck/analysis-types";
 import type { DeckCard } from "@/lib/deck/types";
 import { aDeckCard } from "@/test/builders/card";
 
-/** A basic land: category `land`, left out of the average mana value. */
+/**
+ * A basic Forest: category `land`, left out of the average mana value. Green,
+ * as its mana ability gives it a green colour identity (CR 903.4).
+ */
 export function aBasicLand(index: number): DeckCard {
   return aDeckCard({
     id: `land-${index}`,
     name: `Forest ${index}`,
     typeLine: "Basic Land — Forest",
     oracleText: "({T}: Add {G}.)",
+    colorIdentity: ["G"],
     category: "land",
   });
 }
@@ -80,6 +85,7 @@ export function drannithMagistrate(): DeckCard {
     typeLine: "Creature — Human Wizard",
     oracleText:
       "Your opponents can't cast spells from anywhere other than their hands.",
+    colorIdentity: ["W"],
     category: "creature",
     isGameChanger: true,
   });
@@ -125,6 +131,37 @@ export function aThirtyCardList(): DeckCard[] {
     ...cards(5, (i) => aRemovalCard(i, 2)),
     ...cards(5, (i) => aCreature(i, 2)),
   ];
+}
+
+/**
+ * Synthetic stats of a 100-card Commander deck, as `bracket.test.ts` builds
+ * them: a Core-level shell with no Game Changers and no warnings to report.
+ */
+export function aDeckStats(overrides: Partial<DeckStats> = {}): DeckStats {
+  return {
+    totalCards: 100,
+    lands: 37,
+    creatures: 25,
+    ramp: 8,
+    draw: 8,
+    removal: 6,
+    boardWipes: 3,
+    avgCmc: 3.0,
+    manaCurve: { 1: 5, 2: 15, 3: 20, 4: 15, 5: 8 },
+    colorDistribution: { U: 30, W: 20 },
+    gameChangersCount: 0,
+    gameChangersList: [],
+    totalPrice: 50,
+    overBudgetCards: [],
+    bannedCards: [],
+    colorIdentityViolations: [],
+    commanderRuleIssues: [],
+    flexibleLands: 0,
+    formatStats: null,
+    manaAlignment: null,
+    turnOnePlayability: null,
+    ...overrides,
+  };
 }
 
 /** A Commander Spellbook variant: an infinite combo of exactly two cards. */
