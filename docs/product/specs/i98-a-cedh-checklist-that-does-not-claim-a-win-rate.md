@@ -253,6 +253,7 @@ The cEDH Decklist Database's submit page, read 2026-11-11, requires a commander-
 - [ ] Show: legality report, last updated date, whether a public viewer needs an account, whether a primer exists and how long it is, and combo lines already on the deck. Each row says "met" or "not met" against the quoted requirement.
 - [ ] A fixed row: "The database requires the list to be on Moxfield. This product does not put it there."
 - [ ] No win rate, no "expected 25%", and no "accepted" or "rejected". The page links to the submit page for the requirements this product does not check, including staples and the win-rate sentence.
+- Added 2026-11-19 (seventeenth pass), context only: per-card cEDH win rates are real demand that this checklist still refuses. "A personal project to check my 'pet cards' accidentally became a free cEDH analytics tool" drew 95 points (r/CompetitiveEDH, 2025-08-12, [thread](https://www.reddit.com/r/CompetitiveEDH/comments/1mof66n/)), and "I couldn't find the cEDH deckbuilding tool I wanted, so I built it", which shows "individual card win rates by aggregating data on decks that include a certain card", drew 93 points (2026-01-05, [thread](https://www.reddit.com/r/CompetitiveEDH/comments/1q4pc3i/)); both are Arctic Shift snapshots and both are built on TopDeck.gg and EDHTop16 data. The refusal stands: [I-09](i09-meta-and-evidence.md)'s block is a licence block (TopDeck.gg's developer terms forbid commercialising API data, landscape §10), and a win rate is what this spec refuses to claim.
 
 ### Enrichment (2026-11-11)
 
