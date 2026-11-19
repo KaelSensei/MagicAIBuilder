@@ -1,16 +1,19 @@
 /**
- * The two ports through which the playtest engine touches the platform: randomness and time.
+ * The ports through which the playtest engine touches the platform: randomness, time and the ids
+ * of the cards a game creates.
  *
  * Context: playtest, the engine. Every transition that shuffles or stamps a time takes a
  * `PlaytestDeps` as its optional last argument and defaults to `defaultPlaytestDeps`, so a
  * test can replay a whole game from a seed (`src/test/seeded-random.ts`,
- * `engine-golden.test.ts`) while production reads Web Crypto and the system clock.
+ * `engine-golden.test.ts`) while production reads Web Crypto and the system clock. A command
+ * (`commands.ts`) takes a `PlaytestCommandDeps`, the same ports plus `newId`, because creating a
+ * copy or a token needs an id the transitions receive ready-made.
  * Not responsible for: the shuffle itself (`shuffle.ts`) or the undo stamps (`history.ts`).
  *
  * @module playtest/engine/ports
  */
 
-import { randomIntBelow } from "@/lib/crypto-random";
+import { randomAlphanumericId, randomIntBelow } from "@/lib/crypto-random";
 
 /**
  * Where the engine's randomness comes from: the shuffle of the deal and of every mulligan.
@@ -49,4 +52,30 @@ export interface PlaytestDeps {
 export const defaultPlaytestDeps: PlaytestDeps = {
   random: { intBelow: (upperExclusive) => randomIntBelow(upperExclusive) },
   clock: { now: () => Date.now() },
+};
+
+/**
+ * Where the ids of the cards a game creates come from: the playtest-only copies and tokens.
+ *
+ * Each call returns a fresh id body, unique within the game. The engine prefixes it
+ * (`playtest-copy-`, `playtest-token-`, see `commands.ts`) so a session card is told apart from a
+ * deck card. A test returns a known string, so a whole game is reproducible.
+ */
+export type NewId = () => string;
+
+/** The ports a command may use: the transitions' `PlaytestDeps` plus the id source. */
+export interface PlaytestCommandDeps extends PlaytestDeps {
+  readonly newId: NewId;
+}
+
+/**
+ * The production id source: 16 lowercase alphanumeric characters from Web Crypto, the body the
+ * store generated for its copies and tokens before the reducer took over.
+ */
+export const defaultNewId: NewId = () => randomAlphanumericId(16);
+
+/** The production ports for a command: `defaultPlaytestDeps` and `defaultNewId`. */
+export const defaultPlaytestCommandDeps: PlaytestCommandDeps = {
+  ...defaultPlaytestDeps,
+  newId: defaultNewId,
 };
