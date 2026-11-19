@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { readNdjsonLines } from "./ndjson-lines";
+import { readNdjsonEvents, readNdjsonLines } from "./ndjson-lines";
 
 /** A body reader that yields `chunks` one read at a time, as a network stream does. */
 function readerOf(
@@ -54,5 +54,67 @@ describe("readNdjsonLines", () => {
       if (line === "two") break;
     }
     expect(seen).toEqual(["one", "two"]);
+  });
+});
+
+/** The event shape the `readNdjsonEvents` tests accept: a `{ "n": <number> }` object. */
+interface Numbered {
+  readonly n: number;
+}
+
+function isNumbered(value: unknown): value is Numbered {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "n" in value &&
+    typeof value.n === "number"
+  );
+}
+
+async function collectEvents(
+  chunks: readonly (string | Uint8Array)[]
+): Promise<Numbered[]> {
+  const events: Numbered[] = [];
+  for await (const event of readNdjsonEvents(readerOf(chunks), isNumbered)) {
+    events.push(event);
+  }
+  return events;
+}
+
+describe("readNdjsonEvents", () => {
+  it("yields each line the guard accepts, in order, including a last line without a line break", async () => {
+    expect(await collectEvents(['{"n":1}\n{"n":', '2}\n{"n":3}'])).toEqual([
+      { n: 1 },
+      { n: 2 },
+      { n: 3 },
+    ]);
+  });
+
+  it("skips blank lines, lines that are not JSON and values the guard refuses", async () => {
+    expect(
+      await collectEvents([
+        '\n   \n{"n":1}\nnot json\n{"n":"2"}\n[1]\nnull\n{"n":4}\n',
+      ])
+    ).toEqual([{ n: 1 }, { n: 4 }]);
+  });
+
+  it("accepts a line wrapped in spaces or ended by a carriage return", async () => {
+    expect(await collectEvents(['  {"n":1}  \r\n{"n":2}\r\n'])).toEqual([
+      { n: 1 },
+      { n: 2 },
+    ]);
+  });
+
+  it("stops reading when the consumer leaves the loop early", async () => {
+    const seen: Numbered[] = [];
+    const events = readNdjsonEvents(
+      readerOf(['{"n":1}\n{"n":2}\n{"n":3}\n']),
+      isNumbered
+    );
+    for await (const event of events) {
+      seen.push(event);
+      if (event.n === 2) break;
+    }
+    expect(seen).toEqual([{ n: 1 }, { n: 2 }]);
   });
 });

@@ -1,16 +1,22 @@
 "use client";
+/**
+ * Client side of the AI deck build: posts the request, reads the NDJSON build
+ * stream through guarded events, and exposes progress and the finished list.
+ */
 import { useState, useCallback, useRef } from "react";
 import type {
   BuildEvent,
   BuildRequest,
   BuildSource,
   DeckCorrection,
+  DeckRemovalReason,
 } from "@/app/api/ai/build/types";
 import {
   readAiCallDenialResponse,
   type AiCallDenial,
 } from "@/lib/ai/usage/denial";
-import { readNdjsonLines } from "@/lib/async/ndjson-lines";
+import { readNdjsonEvents } from "@/lib/async/ndjson-lines";
+import { isRecord } from "@/lib/guards";
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -79,58 +85,162 @@ export function countCopies(cards: readonly BuildCard[]): number {
   return cards.reduce((sum, c) => sum + c.quantity, 0);
 }
 
+// ---------------------------------------------------------------------------
+// Build stream events
+// ---------------------------------------------------------------------------
+type CardEvent = Extract<BuildEvent, { type: "card" }>;
+
 /**
- * Process a batch of decoded text lines into the accumulator.
- * Returns true when a "done" event was seen, false otherwise.
+ * A build event as this client accepts it off the wire.
+ *
+ * Status, commander and error events need every field they carry. A card's
+ * `quantity` and every field of `done` stay `unknown` here: a server that
+ * predates them sends none, and the reader falls back as if a field it cannot
+ * read were absent, so a `done` event always completes the build.
  */
-function processLines(
-  lines: string[],
-  acc: BuildAcc,
-  onUpdate: (acc: BuildAcc) => void,
-): boolean {
-  for (const line of lines) {
-    const trimmed = line.trim();
-    if (!trimmed) continue;
-    let event: BuildEvent;
-    try {
-      event = JSON.parse(trimmed) as BuildEvent;
-    } catch {
-      continue;
-    }
-    switch (event.type) {
-      case "status":
-        acc.messages.push(event.message);
-        onUpdate(acc);
-        break;
-      case "commander":
-        acc.commander = event.name;
-        onUpdate(acc);
-        break;
-      case "card":
-        acc.cards.push({
-          name: event.name,
-          category: event.category,
-          // Tolerate a server that predates the quantity field.
-          quantity: Math.max(1, Math.floor(event.quantity || 1)),
-        });
-        if (acc.cards.length % 5 === 0) onUpdate(acc);
-        break;
-      case "done":
-        acc.totalCards = event.totalCards ?? countCopies(acc.cards);
-        acc.source = event.source ?? "ai";
-        acc.corrections = event.corrections ?? [];
-        onUpdate(acc);
-        return true;
-      case "error":
-        throw new Error(event.message);
-    }
+type ReceivedBuildEvent =
+  | Exclude<BuildEvent, { type: "card" | "done" }>
+  | (Omit<CardEvent, "quantity"> & { readonly quantity?: unknown })
+  | {
+      readonly type: "done";
+      readonly totalCards?: unknown;
+      readonly source?: unknown;
+      readonly corrections?: unknown;
+    };
+
+/** Every reason the server gives for removing copies; the key set is checked against the type. */
+const REMOVAL_REASONS: Readonly<Record<DeckRemovalReason, true>> = {
+  unknown_card: true,
+  outside_color_identity: true,
+  banned: true,
+  not_legal: true,
+  extra_copies: true,
+  commander_in_list: true,
+  over_size: true,
+};
+
+/**
+ * Accepts one parsed NDJSON line as a build event.
+ *
+ * @param value - parsed line
+ * @returns whether the value is an event of a known type with the fields it needs
+ */
+function isBuildEvent(value: unknown): value is ReceivedBuildEvent {
+  if (!isRecord(value)) return false;
+  switch (value.type) {
+    case "status":
+    case "error":
+      return typeof value.message === "string";
+    case "commander":
+      return typeof value.name === "string";
+    case "card":
+      return (
+        typeof value.name === "string" && typeof value.category === "string"
+      );
+    case "done":
+      return true;
+    default:
+      return false;
   }
-  return false;
 }
 
 /**
- * Reads a NDJSON build stream line by line, delegating each line to processLines.
- * The last event is read even when the stream ends without a line break after it.
+ * True when a correction is one the wizard can explain to the player.
+ *
+ * @param value - one entry of the done event's `corrections`
+ * @returns whether it names a card, a count and a reason of its action
+ */
+function isDeckCorrection(value: unknown): value is DeckCorrection {
+  if (!isRecord(value)) return false;
+  if (typeof value.name !== "string" || typeof value.quantity !== "number")
+    return false;
+  if (value.action === "added") return value.reason === "fill_to_size";
+  if (value.action !== "removed") return false;
+  if (value.reason === "preview") return typeof value.releasesOn === "string";
+  return (
+    typeof value.reason === "string" &&
+    Object.hasOwn(REMOVAL_REASONS, value.reason)
+  );
+}
+
+/**
+ * Copies of one card event; a missing or unreadable count means one copy, as
+ * a server that predates the quantity field sends none.
+ */
+function copiesOf(quantity: unknown): number {
+  return typeof quantity === "number"
+    ? Math.max(1, Math.floor(quantity || 1))
+    : 1;
+}
+
+/** Records the done event's totals, falling back for each field it cannot read. */
+function applyDone(
+  event: Extract<ReceivedBuildEvent, { type: "done" }>,
+  acc: BuildAcc
+): void {
+  const { totalCards, source, corrections } = event;
+  acc.totalCards =
+    typeof totalCards === "number" ? totalCards : countCopies(acc.cards);
+  acc.source = source === "ai" || source === "demo" ? source : "ai";
+  acc.corrections = Array.isArray(corrections)
+    ? corrections.filter(isDeckCorrection)
+    : [];
+}
+
+/**
+ * Applies one build event to the accumulator.
+ *
+ * Progress is published after each status and commander event, after every
+ * fifth card, and after done.
+ *
+ * @param event - guarded build event
+ * @param acc - accumulator updated in place
+ * @param onUpdate - publishes the accumulator
+ * @returns true once the done event has been applied
+ * @throws Error with the server's message on an error event
+ */
+function applyBuildEvent(
+  event: ReceivedBuildEvent,
+  acc: BuildAcc,
+  onUpdate: (acc: BuildAcc) => void
+): boolean {
+  switch (event.type) {
+    case "status":
+      acc.messages.push(event.message);
+      onUpdate(acc);
+      return false;
+    case "commander":
+      acc.commander = event.name;
+      onUpdate(acc);
+      return false;
+    case "card":
+      acc.cards.push({
+        name: event.name,
+        category: event.category,
+        quantity: copiesOf(event.quantity),
+      });
+      if (acc.cards.length % 5 === 0) onUpdate(acc);
+      return false;
+    case "done":
+      applyDone(event, acc);
+      onUpdate(acc);
+      return true;
+    case "error":
+      throw new Error(event.message);
+    default: {
+      const unhandled: never = event;
+      return unhandled;
+    }
+  }
+}
+
+/**
+ * Reads a NDJSON build stream until its done event.
+ *
+ * The last event is read even when the stream ends without a line break after
+ * it; a line that is not a build event is skipped.
+ *
+ * @throws Error when the stream ends before its done event, or on an error event
  */
 async function processBuildStream(
   reader: ReadableStreamDefaultReader<Uint8Array>,
@@ -145,8 +255,8 @@ async function processBuildStream(
     corrections: [],
   };
 
-  for await (const line of readNdjsonLines(reader)) {
-    if (processLines([line], acc, onUpdate)) return acc;
+  for await (const event of readNdjsonEvents(reader, isBuildEvent)) {
+    if (applyBuildEvent(event, acc, onUpdate)) return acc;
   }
 
   // Falling out of the loop means the stream ended without a "done" event, so

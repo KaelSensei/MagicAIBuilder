@@ -1,5 +1,9 @@
+/**
+ * Client reader for the AI suggestion stream: guards each NDJSON event and
+ * folds it into the suggestions, removals and analysis the panel shows.
+ */
 import type { StreamEvent } from "@/app/api/ai/suggest/route";
-import { readNdjsonLines } from "@/lib/async/ndjson-lines";
+import { readNdjsonEvents } from "@/lib/async/ndjson-lines";
 import { isRecordOrArray } from "@/lib/guards";
 import type {
   AISuggestionResult,
@@ -76,25 +80,6 @@ function isRemovalData(value: unknown): boolean {
 }
 
 /**
- * Parses one NDJSON line into a stream event.
- *
- * @param line - one line from the response, possibly blank or invalid
- * @returns the event, or undefined when the line should be skipped
- */
-function parseNdjsonLine(line: string): StreamEvent | undefined {
-  const trimmed = line.trim();
-  if (!trimmed) return undefined;
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(trimmed);
-  } catch {
-    return undefined;
-  }
-  if (!isStreamEvent(parsed)) return undefined;
-  return parsed;
-}
-
-/**
  * Applies one event to the accumulator.
  *
  * @param event - validated stream event
@@ -145,9 +130,7 @@ export async function processStream(
     provider: "mock",
   };
 
-  for await (const line of readNdjsonLines(reader)) {
-    const event = parseNdjsonLine(line);
-    if (event === undefined) continue;
+  for await (const event of readNdjsonEvents(reader, isStreamEvent)) {
     if (applyStreamEvent(event, acc)) onUpdate(acc);
   }
   return acc;
