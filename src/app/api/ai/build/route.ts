@@ -369,8 +369,11 @@ export async function POST(request: Request) {
         const source: BuildSource = origin.kind === "model" ? "ai" : "demo";
 
         // Card data, not the model, decides what reaches the player: illegal
-        // cards are repaired and every change rides on the "done" event.
-        const verdict = await verifyGeneratedDeck(deck);
+        // cards, and Game Changers beyond the requested bracket's limit, are
+        // repaired and every change rides on the "done" event.
+        const verdict = await verifyGeneratedDeck(deck, {
+          bracket: body.bracket,
+        });
         if (verdict.status === "rejected") {
           throw new Error(
             `Generated deck rejected: ${verdict.reasons.join(" ")}`

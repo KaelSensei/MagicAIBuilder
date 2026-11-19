@@ -528,6 +528,33 @@ describe("useAIDeckBuild with lines outside the build event contract", () => {
     );
   });
 
+  it("keeps a Game Changer removal that names its bracket and the bracket's limit", async () => {
+    const overLimit = {
+      action: "removed",
+      name: "Rhystic Study",
+      quantity: 1,
+      reason: "game_changer",
+      bracket: 2,
+      limit: 0,
+    };
+    const { built } = await buildFrom([
+      JSON.stringify(SOL_RING),
+      JSON.stringify({
+        ...DONE,
+        corrections: [
+          overLimit,
+          { ...overLimit, name: "Cyclonic Rift", bracket: 6 },
+          { ...overLimit, name: "Force of Will", limit: "0" },
+          { ...overLimit, name: "Mana Drain", bracket: undefined },
+        ],
+      }),
+    ]);
+
+    expect(built).toEqual(
+      expect.objectContaining({ corrections: [overLimit] })
+    );
+  });
+
   it("completes the build with fallbacks when the done event's fields cannot be read", async () => {
     const { state, built } = await buildFrom([
       JSON.stringify({ ...SOL_RING, quantity: 3 }),
