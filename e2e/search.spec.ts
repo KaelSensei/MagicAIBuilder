@@ -12,7 +12,10 @@ test.describe("Card Search Flow", () => {
   });
 
   test("can create a new deck", async ({ page }) => {
-    await page.click("text=New Deck");
+    // A strict role, as in openBuilder: "text=New Deck" is a loose, case-blind
+    // substring match, and since #1593 it also resolves to the /decks page's
+    // "New deck format" label, which it clicks first.
+    await page.getByRole("banner").getByRole("button", { name: "New Deck", exact: true }).click();
     // Should navigate to builder (deck creation can be slow on a cold server)
     await page.waitForURL(/\/builder\//);
     await expect(page).toHaveURL(/\/builder\//);
