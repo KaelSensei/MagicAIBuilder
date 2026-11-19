@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Heart } from "lucide-react";
 import { cn } from "@/components/ui/utils";
+import { hasLostOnLife } from "@/lib/playtest/engine";
 import type { LifeHistoryEntry, Phase } from "@/lib/playtest/engine";
 
 interface LifeTrackerProps {
@@ -32,7 +33,8 @@ export function LifeTracker({
   // keep its own identical copy.
   const formatPhase = (phase: Phase) => t(`phases.${phase}`);
   const [customInput, setCustomInput] = useState("");
-  const isGameOver = lifeTotal <= 0;
+  // The engine's own rule (CR 704.5a), so the tracker and the engine cannot disagree.
+  const hasLost = hasLostOnLife({ lifeTotal });
 
   function handleCustomSubmit() {
     const val = Number.parseInt(customInput, 10);
@@ -50,12 +52,14 @@ export function LifeTracker({
         <div
           className={cn(
             "font-black tabular-nums leading-none",
-            isGameOver ? "text-red-400 text-6xl" : "text-[var(--text-primary)] text-7xl"
+            hasLost
+              ? "text-red-400 text-6xl"
+              : "text-[var(--text-primary)] text-7xl"
           )}
         >
           {lifeTotal}
         </div>
-        {isGameOver && (
+        {hasLost && (
           <p className="text-red-400 font-bold mt-1 text-sm uppercase tracking-widest">
             {t("gameOver")}
           </p>

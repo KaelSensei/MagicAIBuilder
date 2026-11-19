@@ -305,10 +305,4 @@ export const PLAYTEST_COMMAND_KNOWN_GAPS: readonly PlaytestCommandKnownGap[] = [
       "a negative amount is accepted and gains life; CR 119.3 knows no negative loss",
     followUp: "validate the amount in its own fix (noted by PT-03)",
   },
-  {
-    type: "heal",
-    behaviour:
-      "isGameOver stays true after a heal brings the total above zero; only a later loss that leaves life above zero clears it",
-    followUp: "B2-46 derives the loss from the life total (CR 704.5a)",
-  },
 ];

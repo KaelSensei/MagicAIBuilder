@@ -36,6 +36,7 @@ import {
   applyUndo,
   applyUntapAll,
   createPlaytestState,
+  hasLostOnLife,
 } from "./engine";
 import type {
   BattlefieldCard,
@@ -117,24 +118,35 @@ describe("undo", () => {
   });
 });
 
+// B2-46 flipped the two pins that lived here: the loss is now read from the life total
+// (CR 704.5a), so a heal above zero ends it as surely as damage does.
 describe("losing on life", () => {
-  it("currently keeps isGameOver after a heal brings life back above zero (pinned; see B2-46)", () => {
+  it("ends the loss when a heal brings life back above zero (CR 704.5a)", () => {
     const lost = applyDamage(dealt(), 40);
-    expect(lost.isGameOver).toBe(true);
+    expect(hasLostOnLife(lost)).toBe(true);
 
     const healed = applyHeal(lost, 5);
 
     expect(healed.lifeTotal).toBe(5);
-    expect(healed.isGameOver).toBe(true);
+    expect(hasLostOnLife(healed)).toBe(false);
   });
 
-  it("currently clears isGameOver only when later damage leaves life above zero (pinned; see B2-46)", () => {
+  it("keeps the player in the game when damage after a heal leaves life above zero", () => {
     const healed = applyHeal(applyDamage(dealt(), 45), 10);
 
     const hit = applyDamage(healed, 1);
 
     expect(hit.lifeTotal).toBe(4);
-    expect(hit.isGameOver).toBe(false);
+    expect(hasLostOnLife(hit)).toBe(false);
+  });
+
+  it("returns to the loss when undo takes back the heal", () => {
+    const healed = applyHeal(applyDamage(dealt(), 40), 5);
+
+    const undone = applyUndo(healed);
+
+    expect(undone.lifeTotal).toBe(0);
+    expect(hasLostOnLife(undone)).toBe(true);
   });
 });
 
