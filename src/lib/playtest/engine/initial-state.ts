@@ -49,7 +49,6 @@ export function createPlaytestState(
     cardsToBottom: 0,
     lifeTotal: overrides.lifeTotal ?? STARTING_LIFE,
     lifeHistory: [],
-    isGameOver: false,
     hand,
     library,
     battlefield: [],

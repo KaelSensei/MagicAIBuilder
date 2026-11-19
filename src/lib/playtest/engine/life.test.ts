@@ -1,11 +1,26 @@
 /**
- * Solitary tests of the life-history helper shared by `applyDamage` and `applyHeal`.
+ * Solitary tests of the pure life policies: the life-history helper shared by `applyDamage` and
+ * `applyHeal`, and the losing-on-life rule (CR 704.5a).
  *
  * The transitions themselves are covered through the barrel in `../engine.test.ts`.
  */
 
 import { describe, expect, it } from "vitest";
-import { lifeEntry } from "./life";
+import { hasLostOnLife, lifeEntry } from "./life";
+
+describe("hasLostOnLife", () => {
+  it("says the player has lost at exactly zero life (CR 704.5a)", () => {
+    expect(hasLostOnLife({ lifeTotal: 0 })).toBe(true);
+  });
+
+  it("says the player has lost below zero life (CR 704.5a)", () => {
+    expect(hasLostOnLife({ lifeTotal: -7 })).toBe(true);
+  });
+
+  it("says the player is still in the game at one life", () => {
+    expect(hasLostOnLife({ lifeTotal: 1 })).toBe(false);
+  });
+});
 
 const atTurnThreeMain = { turn: 3, phase: "Main1" } as const;
 const clockAt = (now: number) => ({ now: () => now });

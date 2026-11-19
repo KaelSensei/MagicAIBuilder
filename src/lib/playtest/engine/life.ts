@@ -4,7 +4,8 @@
  * Context: playtest, the engine. `LifeTracker.tsx` calls both transitions through the store
  * and reads `lifeHistory`; each change is also a `kind: "life"` log line.
  * Rules: life loss and gain adjust the total (CR 119.3); at zero or less the player has lost
- * (CR 704.5a), which the engine records as `isGameOver`.
+ * (CR 704.5a). The loss is read from the total by `hasLostOnLife`, never stored, so a heal,
+ * a later loss and an undo all agree with it.
  * Not responsible for: the starting total (`initial-state.ts`, `lib/deck/game-constants.ts`).
  *
  * @module playtest/engine/life
@@ -37,13 +38,26 @@ export function lifeEntry(
   };
 }
 
+// ─── Losing on life ───────────────────────────────────────────────────────
+/**
+ * True when the player has lost the game on life: CR 704.5a, "If a player has 0 or less life,
+ * that player loses the game."
+ *
+ * Pure and derived from `lifeTotal` alone, so it cannot drift from the total the way a stored
+ * flag did (B2-46: a heal above zero used to leave the player flagged as lost).
+ */
+export function hasLostOnLife(
+  state: Pick<PlaytestEngine, "lifeTotal">
+): boolean {
+  return state.lifeTotal <= 0;
+}
+
 // ─── Damage / heal ────────────────────────────────────────────────────────
 /**
  * Takes `amount` off the life total (CR 119.3) and records the loss in the life history.
  *
- * `isGameOver` becomes true when the total ends at zero or less (CR 704.5a) and false when a
- * later loss leaves it above zero; `applyHeal` never touches the flag. Returns the same state
- * while a bottom choice is pending. `amount` is not validated: a negative amount gains life.
+ * Returns the same state while a bottom choice is pending. `amount` is not validated: a
+ * negative amount gains life.
  *
  * @param description - what caused the loss, kept in the history and the log line
  * @param deps - `clock` stamps the history entry and the undo entry
@@ -62,7 +76,6 @@ export function applyDamage(
     patch: {
       lifeTotal: newLife,
       lifeHistory: [...state.lifeHistory, entry],
-      isGameOver: newLife <= 0,
     },
     description: `Lost ${amount} life: ${description}`,
     evidence: { kind: "life", lifeDelta: -amount },
@@ -72,8 +85,8 @@ export function applyDamage(
 /**
  * Adds `amount` to the life total (CR 119.3) and records the gain in the life history.
  *
- * Does not clear `isGameOver`: a player who reached zero stays flagged after a heal (pinned in
- * `engine.characterization.test.ts`). Returns the same state while a bottom choice is pending.
+ * A heal that brings the total above zero ends a loss on life, since `hasLostOnLife` reads the
+ * total (CR 704.5a). Returns the same state while a bottom choice is pending.
  *
  * @param deps - `clock` stamps the history entry and the undo entry
  */

@@ -37,7 +37,6 @@ function engine(overrides: Partial<PlaytestEngine>): PlaytestEngine {
     cardsToBottom: 0,
     lifeTotal: 40,
     lifeHistory: [],
-    isGameOver: false,
     hand: [],
     library: Array.from({ length: 89 }, (_, index) => card(index)),
     battlefield: [],

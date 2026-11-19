@@ -31,6 +31,7 @@ import {
   applyUndo,
   applyUntapAll,
   createPlaytestState,
+  hasLostOnLife,
   maxMulligans,
 } from "@/lib/playtest/engine";
 import type { PlaytestEngine, RandomSource } from "@/lib/playtest/engine";
@@ -549,10 +550,9 @@ function command_type(type: string): PlaytestCommandType {
 
 // ─── Known gaps, pinned ───────────────────────────────────────────────────
 describe("known gaps (pinned, not fixed here)", () => {
-  it("lists the two gaps the guard table carries", () => {
+  it("lists the one gap the guard table carries", () => {
     expect(PLAYTEST_COMMAND_KNOWN_GAPS.map((gap) => gap.type)).toEqual([
       "damage",
-      "heal",
     ]);
   });
 
@@ -566,19 +566,22 @@ describe("known gaps (pinned, not fixed here)", () => {
       playtestCommandBlockReason(state, { type: "damage", amount: -5 }, deps)
     ).toBeNull();
   });
+});
 
-  it("currently keeps isGameOver after a heal brings life back above zero (pinned; see B2-46)", () => {
+// B2-46 closed the heal gap: the loss is read from the life total, never stored.
+describe("losing on life through the reducer", () => {
+  it("ends the loss when a heal command brings life back above zero (CR 704.5a)", () => {
     const lost = reducePlaytest(
       baseState(),
       { type: "damage", amount: 40 },
       deps
     );
-    expect(lost.isGameOver).toBe(true);
+    expect(hasLostOnLife(lost)).toBe(true);
 
     const healed = reducePlaytest(lost, { type: "heal", amount: 5 }, deps);
 
     expect(healed.lifeTotal).toBe(5);
-    expect(healed.isGameOver).toBe(true);
+    expect(hasLostOnLife(healed)).toBe(false);
   });
 });
 
