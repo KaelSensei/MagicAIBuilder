@@ -815,6 +815,68 @@ The candidates read and not promoted are listed in the roadmap's [seventeenth-pa
 
 ---
 
+## 19. An eighteenth pass: leagues, creator content, precon choice and formats (2026-11-19)
+
+Read on 19 November 2026, on `dev` at `045f4992` (#1578), in three angles: at the table and around the game; learning, content and the release calendar; formats and variants, card and commander pages, budget building and deck heuristics. The owner asked for "roadmap v2": a distinct subject gets a roadmap line and its own spec file. The pass did not sign in to any site. Reddit scores are Arctic Shift snapshots; "search summary" marks a page known only from a search engine's summary. Pages that refused tools on the day (Patreon, Wargamer and MTGGoldfish articles with HTTP 403; two store league pages and DeckCheck's precon search with HTTP 404) were not used for any claim; Moxfield and Archidekt were not fetched, by rule.
+
+### What was checked
+
+- **Leagues with a change allowance.** Commander's Herald's precon league allows "$5 in upgrades and … up to 5 different cards" a week, basics exempt, with money "rolled over" if tracked "on the Miro board by Monday" ([article](https://commandersherald.com/why-you-should-consider-starting-a-precon-league/), 2024-01-15). r/EDH threads describe budget, precon, modified-precon and sealed leagues (9 to 103 points), and a 149-point thread rejects a store league's scoring ("You'd spend more time bookkeeping than playing commander"). Castlog's Liga-Builder sells "budget rules" among eight modules beside ELO or points; Playgroup's leagues group games and check no deck. That became [I-104](specs/i104-league-decks-and-the-change-allowance-between-rounds.md).
+- **The table around the game.** Playgroup's public API records a post-game `deck_matched_bracket` endorsement; its pre-registered seat-order trial stood at "648 of 3,000 games collected"; a 714-point r/EDH thread describes an overtime rule after the first elimination. Wizards' bracket update of 9 February 2026 calls the brackets "a tool to guide pregame conversations—not an ultimate arbiter". Wizards' player profiles show event history since February 2026, and Draftsim reports players finding stores that "allegedly added them to Commander events they never attended". SpellBot 24.1.6 (18 November 2026) lists Convoke, Girudo, Playgroup Live and EDHLAB, and no longer SpellTable. PRISM sells a sleeve-marking scheme for one copy shared by many decks.
+- **Content about a commander or a precon.** EDHREC's articles feed titles deck techs with the commander's name first; The Command Zone published four Star Trek precon upgrade guides between 29 October and 13 November 2026; EDHREC's commander page lists only EDHREC's own articles; Library of Leng indexes "237,891 articles" with no commander organisation. YouTube's API policies require stored data to be refreshed or deleted after 30 days and forbid aggregating API data across channels. No r/EDH request for a per-commander content list was found. That became [I-105](specs/i105-creator-content-linked-to-commanders-and-precons.md).
+- **Choosing a precon.** "Which precon should I buy?" threads reach 115 points and 133 comments. Wizards' Reality Fracture buyer's guide (8 September 2026) names a target player per deck and no complexity or bracket. Draftsim's database covers 186 decks across 50 sets and says every precon is Bracket 2. That became [I-106](specs/i106-choosing-a-precon-one-product-lines-decks-side-by-side.md).
+- **A simulated kill turn.** EDHcheck's Premium plays a deck "1,500 times" for a turn-by-turn win curve. The seventeenth pass wrote the same job as a variant of I-31; this pass promoted it to [I-107](specs/i107-the-turn-a-goldfish-completes-its-route.md).
+- **Releases and rules.** Wizards announced the Dune Secret Lair superdrop on 18 November 2026 for 30 November, with eight new legendary creatures; Scryfall files them inside the 2019 `sld` set, Commander `not_legal` until release. Grimoria shows previews with a wishlist. The judges' "Name the Rule" blog publishes an unofficial bulletin because official Oracle sections omit changes.
+- **Formats.** Duel Commander created "Banned as Companion Only" on 30 March 2026, which Scryfall cannot express, and makes Mystery Booster Commander Edition legal on 1 January 2027; PDH Home Base runs dated "Break the Rules" months; Oathbreaker's committee refuses Game Changers; Canadian Highlander dates each points update and names the next; Tiny Leaders Reborn publishes a dated watchlist; Scryfall has a `predh` key.
+- **Card pages.** EDHcheck shipped card pages on 17 November 2026 from its own analysed decks, with commanders that run a card and cards "played in its decks far more than their popularity in the same colours predicts".
+
+### Verified facts and corrections
+
+One load-bearing fact per new initiative was fetched once more on 19 November 2026 with the User-Agent `MagicAIBuilder/1.0 (+https://magic-ai-builder.vercel.app)`:
+
+- **I-104.** Castlog's Liga-Builder metadata: "Start free with ELO or points, then add skill trees, quests and budget rules. 8 optional modules." The research note's "live Cardmarket price validation" was not in the part read, so I-104 writes it as reported.
+- **I-105.** EDHREC's feed carried "Jurati, Cordial Queen | Artifact Tokens Aggro" and "Jace, Multiverse Architect | A $50 Upgrade for Multiverse Reforged", both dated 19 November 2026. The feed's categories were not visible in the part read and are written as reported.
+- **I-106.** Draftsim: "186 decks across 50 sets", "Prices updated November 6, 2026", and "Every precon is Bracket 2 (Core) out of the box".
+- **I-107.** EDHcheck's pricing: "Full Turn Clock: we play your deck 1,500 times: the turn-by-turn win curve, how it wins and which combos close games".
+
+Corrections recorded where they belong:
+
+- **Section 8, SpellBot.** It no longer pairs games for SpellTable: version 24.1.6 of 18 November 2026 calls itself "The Discord bot for Convoke" and lists Convoke, Girudo, Playgroup Live and EDHLAB ([PyPI](https://pypi.org/project/spellbot/)). The line is on I-46.
+- **Playgroup's corpus** now has three published figures: "620,000+" in `llms.txt` (updated August 2026), "770,000+" (About, 9 November) and "790,000+" (deck builder, 19 November). I-35's market row and Castlog's ("Private statistics only") are corrected on I-35.
+- **I-17's market sentence** "None of them is a _reversible operation on your own list_" is out of date: Grimoria and Nerd Leagues act on a precon list. Neither keeps a dated baseline with a revert.
+- **I-42's Moxfield row** ("No Pauper EDH in this list") is contradicted by Moxfield's 2026 production bundle, which lists 41 formats including Pauper EDH and PreDH.
+- **The sixteenth pass's "I-48 carries Oracle changes"** is wrong: I-48 covers the banned list, Game Changers and bracket definitions. Oracle changes go to I-47 with I-67.
+- **Draftsim's "Every precon is Bracket 2"** conflicts with Wizards' update of 21 October 2025, which I-48 and I-77 record as withdrawing that sentence. I-106 never shows it.
+
+### Where the new initiatives sit
+
+I-106 is Next after the numbered Next band; its first slice waits for I-17 slice 1 and I-77 slice 1. I-104, I-105 and I-107 are Later: I-104's first slice is a pure function, and the league waits for D-101; I-105 waits for I-29 slice 0, L-53 and D-102; I-107 waits for I-31's engine, I-65's route map and D-103. None is a score, a tournament manager or a paid check of one's own deck.
+
+### Folded back into an existing initiative
+
+| Finding | Where it went |
+| --- | --- |
+| A deck-level bracket answer from the table; a season as a date window; slice 10's import sources; Playgroup's and Castlog's corrected rows | I-35 |
+| Overtime and seat compensation as named house rules | I-15 |
+| Wizards' 2026-02-09 framing; one authored question about a game lost and enjoyed | I-88 |
+| An attendance export of checked-in accounts; night kinds; a waitlist with a go or cancel deadline | I-41 |
+| A sleeve-marking guide; tokens no card prints; Convoke and Playgroup Live table links; Playgroup's playtest link | I-43, I-19, I-46, I-50 |
+| Castlog's pod pass and five-deck cap; EDHTracker's pod review (search summary) | I-30 |
+| A `stockPrecon` rule type; a pod recap every member opts into | I-53, I-60 |
+| Creators as bundle authors; a corrected market sentence | I-17 |
+| The Foundations Commander decks as the first sample decks | I-39 |
+| Secret Lair drops keyed by printing date; release status per format | I-73 |
+| Grimoria's preview wishlist, as evidence for D-81 | I-18 |
+| Oracle changes in the rules watch; the CR glossary's keyword reminders | I-47 |
+| Convoke's Twitch extension and MTGGoldfish's popout; a Twitch extension as an owner question | I-36 |
+| Duel Commander's companion-only ban; PDH's dated options; Oathbreaker eligibility; Canadian Highlander dates; Tiny Leaders evidence; PreDH; the Moxfield row | I-42 |
+| A stored pre-game colour choice (CR 903.4b) | I-03 |
+| The card page's shape; a card preset of the deck search | I-34, I-75 |
+
+The candidates read and not promoted, and the seventeenth pass's lines kept as refinements, are listed in the roadmap's [eighteenth-pass section](roadmap.md#what-the-eighteenth-pass-checked-and-did-not-promote).
+
+---
+
 ## Sources
 
 Primary pages and announcements:
@@ -1351,3 +1413,79 @@ Engineering and operations:
 - GitHub changelog, improved detection for withdrawn Dependabot alerts, 13 October 2026: <https://github.blog/changelog/2026-10-13-improved-detection-for-withdrawn-dependabot-alerts>
 - GitHub Docs, controlling the dependencies updated (search summary): <https://docs.github.com/en/code-security/how-tos/secure-your-supply-chain/manage-your-dependency-security/controlling-dependencies-updated>
 - Costbench, Checkly's free plan (search summary): <https://costbench.com/software/browser-testing/checkly/free-plan/>
+
+### Added 19 November 2026 (eighteenth pass)
+
+Read on 19 November 2026 unless another date is given, for section 19. A page already cited by an earlier pass is not repeated here (EDHcheck's pricing and announcement, WPN's Commander Party page, Duel Commander's home page and Moxfield's bundle). Reddit scores are Arctic Shift snapshots.
+
+Leagues and the table:
+
+- Commander's Herald, "Why You Should Consider Starting A Precon League", 15 January 2024: <https://commandersherald.com/why-you-should-consider-starting-a-precon-league/>
+- r/EDH, "'Anything in stock' sealed league", 13 April 2025: <https://www.reddit.com/r/EDH/comments/1jy8cmo/>
+- r/EDH, "Precon Upgrade League Advice", 3 February 2025: <https://www.reddit.com/r/EDH/comments/1ignn57/>
+- r/EDH, "Has your LGS / group done any kind of league?", 9 November 2026: <https://www.reddit.com/r/EDH/comments/1xs6vj5/>
+- r/EDH, "I am joining a Precon League … What Precon to go with?", 7 September 2026: <https://www.reddit.com/r/EDH/comments/1wa54gu/>
+- r/EDH, "…until I saw the scoring system", 6 January 2026: <https://www.reddit.com/r/EDH/comments/1q59xa3/>
+- cedhstats, mirror of TopDeck.gg's "Commander Precon League Week 9", 1 June 2026: <https://cedhstats.org/tournaments/commander-precon-league-week-9>
+- Castlog, home and FAQ: <https://castlog.gg/>
+- Castlog, Liga-Builder: <https://castlog.gg/features/liga-builder>
+- Playgroup, "Rewind 2025, Playgroup Leagues and more", 2 December 2025: <https://playgroup.gg/posts/96-rewind-2025-playgroup-leagues-and-more>
+- Playgroup, public API (OpenAPI): <https://playgroup.gg/.well-known/openapi.yaml>
+- Playgroup, `llms.txt` (updated August 2026): <https://playgroup.gg/llms.txt>
+- Playgroup, Playscore: <https://playgroup.gg/playscore>
+- Playgroup, turn-order experiment (updated 19 November 2026): <https://playgroup.gg/commander/turn-order/experiment>
+- r/EDH, Playgroup's "Help us test a fix for the going-first advantage", 9 September 2026: <https://www.reddit.com/r/EDH/comments/1wbly08/>
+- Nerd Leagues, "Commander pod league" (updated 2 August 2026): <https://www.nerdleagues.com/how-it-works/commander-pod-league>
+- WPN, "Commander Nights: The Lord of the Rings: Tales of Middle-earth" (2023): <https://wpn.wizards.com/en/event/commander-nights-the-lord-of-the-rings-tales-of-middle-earth>
+- r/EDH, "A rule 0 change that has vastly improved my group's play experience", 20 November 2025: <https://www.reddit.com/r/EDH/comments/1p20rmj/>
+- r/EDH, "We asked everyone to describe a game they LOST but still loved", 26 October 2026: <https://www.reddit.com/r/EDH/comments/1xg23fe/>
+- Wizards, "Commander Brackets Beta Update – February 9, 2026": <https://magic.wizards.com/en/news/announcements/commander-brackets-beta-update-february-9-2026>
+- Wizards, "Companion App Update: Magic Player Profiles", 11 February 2026: <https://magic.wizards.com/en/news/announcements/companion-app-update-magic-player-profiles>
+- Draftsim, "Companion app exposes alleged LGS fraud", 20 February 2026: <https://draftsim.com/companion-app-exposes-alleged-lgs-fraud/>
+- PRISM (undated): <https://prismmtg.netlify.app>
+- MythicHub, "Deckbuilder stacks, collection status, proxies", 8 December 2025: <https://mythichub.com/blog/deckbuilder-stacks-collection-status-proxies>
+- r/EDH, "How should I represent tokens have never been printed?", 7 May 2026: <https://www.reddit.com/r/EDH/comments/1t5yhvn/>
+- SpellBot 24.1.6 on PyPI, 18 November 2026: <https://pypi.org/project/spellbot/>
+- SpellBot, features: <https://raw.githubusercontent.com/lexicalunit/spellbot/main/FEATURES.md>
+- r/EDH, "Still use spelltable? Time to move over to convoke!", 2 November 2026: <https://www.reddit.com/r/EDH/comments/1xlxcko/>
+
+Content, learning and releases:
+
+- EDHREC, articles feed: <https://edhrec.com/articles/feed>
+- EDHREC, commander JSON for Atraxa, Praetors' Voice: <https://json.edhrec.com/pages/commanders/atraxa-praetors-voice.json>
+- EDHREC, precons: <https://edhrec.com/precon>
+- Draftsim, feed: <https://draftsim.com/feed/>
+- The Command Zone, podcast feed: <https://feeds.megaphone.fm/STU7163382979>
+- Library of Leng: <https://library-of-leng.com/>
+- metagame.info, Commander: <https://metagame.info/en-us/mtg/commander>
+- Google, YouTube API Services Developer Policies: <https://developers.google.com/youtube/terms/developer-policies>
+- r/EDH, "[PRIMER] Dragonhawk …", 15 October 2026: <https://www.reddit.com/r/EDH/comments/1x6kdfv/>
+- r/EDH, "What deck have you written a primer for?", 22 September 2026: <https://www.reddit.com/r/EDH/comments/1wner45/>
+- r/EDH, "Which precon should I buy for playing without upgrades?", 26 March 2026: <https://www.reddit.com/r/EDH/comments/1s3vs14/>
+- Wizards, "Reality Fracture Buyer's Guide for Commander", 8 September 2026: <https://magic.wizards.com/en/news/feature/reality-fracture-buyers-guide-for-commander>
+- Wizards, "Foundations Commander Decklists", 18 September 2026: <https://magic.wizards.com/en/news/announcements/foundations-commander-decklists>
+- Draftsim, MTG Commander Precons (prices updated 6 November 2026): <https://draftsim.com/commander-precons/>
+- Grimoria, Precon Upgrades (v2.5.6): <https://www.grimoria.app/help/deckbuilder/precon-upgrades>
+- Grimoria, spoiler cards (v2.5.6): <https://grimoria.app/help/discovery/spoiler-cards>
+- Nerd Leagues, importing a precon (updated 2 August 2026): <https://www.nerdleagues.com/how-it-works/import-precon>
+- Wizards, "Secret Lair: My Arrakis! My Superdrop", 18 November 2026: <https://magic.wizards.com/en/news/announcements/secret-lair-my-arrakis-my-superdrop>
+- MTG Judges, "Name the Rule", Unofficial Update Bulletin, TMNT edition, 19 March 2026: <https://blogs.magicjudges.org/nametherule/uub-tmt/>
+- Convoke, Twitch extension: <https://convoke.games/en/twitch-extension>
+
+Formats and card pages:
+
+- Duel Commander, announcements: <https://www.duelcommander.org/announcements/>
+- Duel Commander, Mystery Booster Commander Edition statement, 28 September 2026: <https://www.duelcommander.org/announcements/2026/09/28/>
+- Scryfall API, Lutri, the Spellchaser: <https://api.scryfall.com/cards/named?exact=Lutri,%20the%20Spellchaser>
+- Scryfall API, Whtz, the Bibliophile: <https://api.scryfall.com/cards/named?exact=Whtz,%20the%20Bibliophile>
+- PDH Home Base, Rule Break Month 4: <https://pdhhomebase.com/rule-break-month-4/>
+- PDH Home Base, Rule Break Month 5, 8 November 2026: <https://pdhhomebase.com/rule-break-month-5/>
+- PDH Home Base, removing 1v1 rules, 22 May 2025: <https://pdhhomebase.com/removing-1v1-rules-from-the-website/>
+- Oathbreaker Rules Committee, February 2026 update: <https://oathbreakermtg.org/oathbreaker-banlist-update-february-2026/>
+- Oathbreaker Rules Committee, "Oathbreaker not utilizing Game Changers": <https://oathbreakermtg.org/oathbreaker-not-utilizing-game-changers/>
+- Wizards, Oathbreaker format page: <https://magic.wizards.com/en/formats/oathbreaker>
+- Canadian Highlander, "Fall 2026 Points Update", 31 August 2026: <https://canadianhighlander.ca/2026/08/31/fall-2026-points-update/>
+- Tiny Leaders Reborn, blog: <https://tiny-leaders-reborn.blogspot.com/>
+- Draftsim, "PreDH", 27 March 2026: <https://draftsim.com/predh-mtg/>
+- EDHcheck, Smothering Tithe card page: <https://edhcheck.com/cards/smothering-tithe/>
+- Scryfall, Smothering Tithe: <https://scryfall.com/card/rna/22/smothering-tithe>
