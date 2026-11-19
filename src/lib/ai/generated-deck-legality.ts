@@ -36,17 +36,8 @@ import {
   isBackground,
   isCommanderEligible,
 } from "@/lib/deck/commander-eligibility";
-import {
-  colorsProducedBy,
-  PIP_COLORS,
-  type PipColor,
-} from "@/lib/deck/mana-alignment";
 import { deckCopyLimit } from "@/lib/deck/multiples";
 import { canPairCommanders, pairingCardOf } from "@/lib/deck/pairing";
-import {
-  sourceTargetsByColour,
-  type SpellCost,
-} from "@/lib/deck/source-targets";
 import {
   buildScryfallNameIndex,
   normalizeImportedName,
@@ -64,11 +55,8 @@ import {
   repairedListSize,
   type CommandZoneIdentity,
 } from "./generated-deck-construction";
-import {
-  fitToDeckSize,
-  type KeptCard,
-  type SourceNeed,
-} from "./generated-deck-size";
+import { fitToDeckSize, type KeptCard } from "./generated-deck-size";
+import { producedColoursOf, sourceNeeds } from "./generated-deck-sources";
 
 /** The outcome of checking a generated deck against card data. */
 export type GeneratedDeckVerdict =
@@ -204,45 +192,6 @@ function removalCause(
     return { reason: "outside_color_identity" };
   }
   return null;
-}
-
-/** The cost of the face a player casts first: the front face of a card with faces. */
-function frontFaceCost(card: ScryfallCard): SpellCost {
-  return {
-    name: card.name,
-    manaCost: card.card_faces?.[0]?.mana_cost ?? card.mana_cost ?? "",
-  };
-}
-
-/** The colours a card taps for when its front face is a land; empty otherwise. */
-function producedColoursOf(card: ScryfallCard): readonly PipColor[] {
-  const [frontTypeLine = ""] = card.type_line.split("//", 1);
-  if (!/\bLand\b/.test(frontTypeLine)) return [];
-  return [
-    ...colorsProducedBy({
-      typeLine: card.type_line,
-      oracleText: card.oracle_text ?? "",
-      colorIdentity: card.color_identity,
-    }),
-  ];
-}
-
-/**
- * Each colour of the command zone with its source target, set by the most
- * demanding of the commanders' and the kept cards' costs (I-58 requirement 3).
- */
-function sourceNeeds(
-  commandZone: readonly ScryfallCard[],
-  kept: readonly ScryfallCard[]
-): readonly SourceNeed[] {
-  const identity = new Set(commandZone.flatMap((card) => card.color_identity));
-  const targets = sourceTargetsByColour(
-    [...commandZone, ...kept].map(frontFaceCost)
-  );
-  return PIP_COLORS.filter((colour) => identity.has(colour)).map((colour) => ({
-    colour,
-    target: targets.get(colour)?.sources ?? 0,
-  }));
 }
 
 /** Keeps the legal copies of each listed card and records every copy removed. */
