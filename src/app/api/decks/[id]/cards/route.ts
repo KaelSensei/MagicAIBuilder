@@ -37,9 +37,11 @@ import { deckRepository } from "@/lib/deck/deck-repository";
 import { COMMAND_SLOT_ROWS } from "@/lib/deck/bulk-edit-command-zone";
 import {
   cardWithinCopyLimit,
+  changesWithinCopyLimit,
   storedCopyLimitDeck,
+  type CopiesChange,
 } from "@/lib/deck/copy-limit-write";
-import type { CopyLimitDeck } from "@/lib/deck/multiples";
+import type { CopyLimitCard, CopyLimitDeck } from "@/lib/deck/multiples";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -64,7 +66,10 @@ async function requireCopyRuleDeckOwner(
       format: true,
       cards: {
         where: {
-          OR: [{ ...COMMAND_SLOT_ROWS.commander }, { ...COMMAND_SLOT_ROWS.partner }],
+          OR: [
+            { ...COMMAND_SLOT_ROWS.commander },
+            { ...COMMAND_SLOT_ROWS.partner },
+          ],
         },
         select: { name: true },
       },
@@ -78,6 +83,22 @@ async function requireCopyRuleDeckOwner(
       commandZoneNames: owned.deck.cards.map((card) => card.name),
     }),
   };
+}
+
+/**
+ * The card text of the rows a bulk edit resizes, by row id: one query for the
+ * whole edit, none when it resizes nothing. A row of another deck is not read.
+ */
+async function resizedRows(
+  deckId: string,
+  changes: readonly CopiesChange[]
+): Promise<ReadonlyMap<string, CopyLimitCard>> {
+  if (changes.length === 0) return new Map();
+  const rows = await prisma.deckCard.findMany({
+    where: { deckId, id: { in: changes.map((change) => change.cardId) } },
+    select: { id: true, name: true, typeLine: true, oracleText: true },
+  });
+  return new Map(rows.map((row) => [row.id, row]));
 }
 
 /**
@@ -155,7 +176,7 @@ const NO_STORED_SLOTS: CommandSlotIds = { commanderId: null, partnerId: null };
 export async function PATCH(request: Request, { params }: Params) {
   const { id: deckId } = await params;
   try {
-    const ownership = await requireDeckOwner(deckId);
+    const ownership = await requireCopyRuleDeckOwner(deckId);
     if (ownership.error) return ownership.error;
 
     const jsonBody = await readJsonBody(request);
@@ -185,12 +206,17 @@ export async function PATCH(request: Request, { params }: Params) {
       : null;
     if (refusal) return NextResponse.json({ error: refusal }, { status: 400 });
 
+    // The copy limit reads the stored command zone, even when this edit
+    // changes it: only a commander with no maximum deck size changes a
+    // limit (CR 903.5e), and only above the 99 copies a request may send.
+    const { copyRule } = ownership;
+    const rows = await resizedRows(deckId, quantityChanges);
     const result = await deckRepository.applyBulkEdit(
       { deckId, expectedVersion },
       {
         removeCardIds,
-        quantityChanges,
-        addCards,
+        quantityChanges: changesWithinCopyLimit(quantityChanges, rows, copyRule),
+        addCards: addCards.map((card) => cardWithinCopyLimit(card, copyRule)),
         clearSlots: clearCommandSlots,
         fields: commandZone ?? {},
       }

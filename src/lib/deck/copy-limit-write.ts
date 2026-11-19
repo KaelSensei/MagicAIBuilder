@@ -59,5 +59,39 @@ export function cardWithinCopyLimit<Card extends CopiesWrite>(
   card: Card,
   deck: CopyLimitDeck
 ): Card {
-  return { ...card, quantity: copiesWithinLimit(card.quantity, deckCopyLimit(card, deck)) };
+  return {
+    ...card,
+    quantity: copiesWithinLimit(card.quantity, deckCopyLimit(card, deck)),
+  };
+}
+
+/** One row's new copies in a bulk edit. */
+export interface CopiesChange {
+  readonly cardId: string;
+  readonly quantity: number;
+}
+
+/**
+ * The bulk edit's new copies, each clamped to its row's copy limit.
+ *
+ * @param changes - The new copies, by row id
+ * @param rows - The card text of the rows the changes name, by row id. A row
+ *   missing here is not in the deck: its change passes unchanged, and the
+ *   write refuses it as stale.
+ * @param deck - The deck's copy-limit facts, from {@link storedCopyLimitDeck}
+ * @returns The changes, in order, with clamped copies
+ */
+export function changesWithinCopyLimit(
+  changes: readonly CopiesChange[],
+  rows: ReadonlyMap<string, CopyLimitCard>,
+  deck: CopyLimitDeck
+): readonly CopiesChange[] {
+  return changes.map((change) => {
+    const card = rows.get(change.cardId);
+    if (card === undefined) return change;
+    return {
+      ...change,
+      quantity: copiesWithinLimit(change.quantity, deckCopyLimit(card, deck)),
+    };
+  });
 }

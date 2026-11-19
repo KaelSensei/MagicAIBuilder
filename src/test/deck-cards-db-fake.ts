@@ -153,7 +153,8 @@ function createDeckCardsDb() {
         const cardLookup = select?.cards;
         if (cardLookup === undefined) return Promise.resolve(tables.deck);
         const cards = tables.cards.filter(
-          (card) => card.deckId === where.id && matches(card, cardLookup.where ?? {})
+          (card) =>
+            card.deckId === where.id && matches(card, cardLookup.where ?? {})
         );
         return Promise.resolve({ ...tables.deck, cards });
       },
