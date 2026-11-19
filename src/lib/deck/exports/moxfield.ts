@@ -8,6 +8,7 @@
  */
 import type { Deck } from "@/lib/deck/types";
 import { cardLine } from "./card-line";
+import { textDownload, type ExportResult } from "./contract";
 
 /** Moxfield format — same as plain text, Moxfield parses "1 Card Name" directly */
 export function exportMoxfield(deck: Deck): string {
@@ -30,4 +31,16 @@ export function exportMoxfield(deck: Deck): string {
     for (const card of zoneCards) lines.push(cardLine(card, card.quantity));
   }
   return lines.join("\n");
+}
+
+/**
+ * The Moxfield export as an {@link ExportResult}. It keeps every zone and the
+ * companion, so it has no notice.
+ */
+export function moxfieldExport(deck: Deck): ExportResult {
+  return {
+    content: exportMoxfield(deck),
+    ...textDownload(deck, "moxfield"),
+    notices: [],
+  };
 }

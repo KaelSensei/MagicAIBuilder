@@ -9,6 +9,7 @@
  */
 import type { Deck, DeckCard } from "@/lib/deck/types";
 import { cardLine } from "./card-line";
+import { textDownload, type ExportResult } from "./contract";
 
 function plainTextCardLines(card: DeckCard): string[] {
   const lines = [cardLine(card, card.quantity)];
@@ -42,4 +43,16 @@ export function exportPlainText(deck: Deck): string {
     for (const card of zoneCards) lines.push(...plainTextCardLines(card));
   }
   return lines.join("\n");
+}
+
+/**
+ * The plain-text export as an {@link ExportResult}. It keeps every zone and
+ * the companion, so it has no notice.
+ */
+export function plainTextExport(deck: Deck): ExportResult {
+  return {
+    content: exportPlainText(deck),
+    ...textDownload(deck, "plaintext"),
+    notices: [],
+  };
 }

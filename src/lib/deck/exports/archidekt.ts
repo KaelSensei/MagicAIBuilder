@@ -8,6 +8,8 @@
  * @module deck/exports/archidekt
  */
 import type { Deck, DeckCard } from "@/lib/deck/types";
+import { textDownload, type ExportResult } from "./contract";
+import { droppedCompanion } from "./notices";
 
 /** @returns the app category as an Archidekt bracket tag, e.g. `[Ramp]` */
 function archidektCategoryTag(category: string): string {
@@ -71,4 +73,17 @@ export function exportArchidekt(deck: Deck): string {
     deck.cards.filter((card) => card.zone === "maybeboard")
   );
   return lines.join("\n");
+}
+
+/**
+ * The Archidekt export as an {@link ExportResult}. It has no companion
+ * section, so the companion gets a `cardDropped` notice; Sideboard and
+ * Considering keep their own sections.
+ */
+export function archidektExport(deck: Deck): ExportResult {
+  return {
+    content: exportArchidekt(deck),
+    ...textDownload(deck, "archidekt"),
+    notices: droppedCompanion(deck),
+  };
 }

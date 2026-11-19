@@ -7,6 +7,8 @@
  * @module deck/exports/tappedout
  */
 import type { Deck } from "@/lib/deck/types";
+import { textDownload, type ExportResult } from "./contract";
+import { droppedCompanion, droppedZone } from "./notices";
 
 /**
  * TappedOut format — commanders marked with *CMDR*, then the main deck only.
@@ -22,4 +24,20 @@ export function exportTappedOut(deck: Deck): string {
     lines.push(`${card.quantity}x ${card.name}`);
   }
   return lines.join("\n");
+}
+
+/**
+ * The TappedOut export as an {@link ExportResult}: the companion, Sideboard
+ * and Considering cards it leaves out each get a `cardDropped` notice.
+ */
+export function tappedOutExport(deck: Deck): ExportResult {
+  return {
+    content: exportTappedOut(deck),
+    ...textDownload(deck, "tappedout"),
+    notices: [
+      ...droppedCompanion(deck),
+      ...droppedZone(deck, "sideboard"),
+      ...droppedZone(deck, "maybeboard"),
+    ],
+  };
 }

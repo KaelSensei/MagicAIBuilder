@@ -7,6 +7,9 @@
  * @module deck/exports/mtgo
  */
 import type { Deck } from "@/lib/deck/types";
+import { underscoreFileStem } from "@/lib/text/slug";
+import type { ExportResult } from "./contract";
+import { commandersMovedToMainDeck, droppedZone } from "./notices";
 
 /** Escape card names used in double-quoted XML attributes. */
 function escapeXmlAttribute(value: string): string {
@@ -60,4 +63,23 @@ export function exportMTGO(deck: Deck): string {
   <PreconstructedDeckID>0</PreconstructedDeckID>
 ${cardXml}
 </Deck>`;
+}
+
+/**
+ * The MTGO export as an {@link ExportResult}, a `.dek` XML file. The
+ * commanders are written into the main deck (`Sideboard="false"`) until open
+ * question 1 of I-50 settles where MTGO wants them, so each gets a
+ * `cardMoved` notice; the Considering cards it leaves out each get a
+ * `cardDropped` notice. The companion goes to the sideboard, as MTGO expects.
+ */
+export function mtgoExport(deck: Deck): ExportResult {
+  return {
+    content: exportMTGO(deck),
+    fileName: `${underscoreFileStem(deck.name)}.dek`,
+    mimeType: "application/xml",
+    notices: [
+      ...commandersMovedToMainDeck(deck),
+      ...droppedZone(deck, "maybeboard"),
+    ],
+  };
 }

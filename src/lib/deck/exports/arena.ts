@@ -9,6 +9,8 @@
  */
 import type { Deck } from "@/lib/deck/types";
 import { cardLine } from "./card-line";
+import { textDownload, type ExportResult } from "./contract";
+import { droppedZone } from "./notices";
 
 /** MTG Arena format — requires "Commander" / "Deck" sections with set/number if available */
 export function exportArena(deck: Deck): string {
@@ -36,4 +38,17 @@ export function exportArena(deck: Deck): string {
     for (const card of sideboard) lines.push(cardLine(card, card.quantity));
   }
   return lines.join("\n");
+}
+
+/**
+ * The MTG Arena export as an {@link ExportResult}: the Considering cards it
+ * leaves out each get a `cardDropped` notice. The companion keeps its
+ * `Companion` section; its sideboard copy is how Arena expects it.
+ */
+export function arenaExport(deck: Deck): ExportResult {
+  return {
+    content: exportArena(deck),
+    ...textDownload(deck, "arena"),
+    notices: droppedZone(deck, "maybeboard"),
+  };
 }

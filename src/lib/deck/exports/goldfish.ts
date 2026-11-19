@@ -8,6 +8,8 @@
  */
 import type { Deck } from "@/lib/deck/types";
 import { cardLine } from "./card-line";
+import { textDownload, type ExportResult } from "./contract";
+import { droppedCompanion, droppedZone } from "./notices";
 
 /**
  * MTGGoldfish format — their text import uses the MTGO convention: the main
@@ -24,4 +26,21 @@ export function exportGoldfish(deck: Deck): string {
   return side.length > 0
     ? `${main.join("\n")}\n\n${side.join("\n")}`
     : main.join("\n");
+}
+
+/**
+ * The MTGGoldfish export as an {@link ExportResult}. Its sideboard slot holds
+ * the command zone, so the companion, Sideboard and Considering cards each
+ * get a `cardDropped` notice.
+ */
+export function goldfishExport(deck: Deck): ExportResult {
+  return {
+    content: exportGoldfish(deck),
+    ...textDownload(deck, "goldfish"),
+    notices: [
+      ...droppedCompanion(deck),
+      ...droppedZone(deck, "sideboard"),
+      ...droppedZone(deck, "maybeboard"),
+    ],
+  };
 }
