@@ -12,9 +12,11 @@
  * discards it.
  *
  * Rows reuse the deck-card shape of {@link deckCard} from the playtest fake.
- * `select` and `include` are ignored: a lookup returns the whole row. A
- * `where` value of `undefined` filters nothing, and `{ in: [...] }` matches
- * any listed value, as in Prisma.
+ * `select` and `include` are ignored: a lookup returns the whole row, except
+ * that `deck.findUnique` answers a nested `select.cards` with the deck's rows
+ * that match its `where`, as the copy-limit lookup of the cards route reads
+ * them. A `where` value of `undefined` filters nothing, `{ in: [...] }`
+ * matches any listed value and `OR: [...]` any listed filter, as in Prisma.
  */
 import {
   deckCard,
@@ -32,14 +34,17 @@ export type FakeCardsDeck = {
   readonly partnerId: string | null;
   readonly companionId: string | null;
   readonly pairingType: string;
+  /** The deck's format, which sets its copy limit. */
+  readonly format: string;
   readonly updatedAt: Date;
   /** The optimistic-lock counter: how many card writes the deck has saved. */
   readonly version: number;
 };
 
 /**
- * The deck every reset starts from: owned by `FAKE_DECK.userId`, with an
- * empty command zone, last edited 2026-11-01, after seven saved writes.
+ * The deck every reset starts from: a Commander deck owned by
+ * `FAKE_DECK.userId`, with an empty command zone, last edited 2026-11-01,
+ * after seven saved writes.
  */
 export const CARDS_DECK: FakeCardsDeck = {
   id: FAKE_DECK.id,
@@ -49,6 +54,7 @@ export const CARDS_DECK: FakeCardsDeck = {
   partnerId: null,
   companionId: null,
   pairingType: "none",
+  format: "commander",
   updatedAt: new Date("2026-11-01T10:00:00.000Z"),
   version: 7,
 };
@@ -73,17 +79,32 @@ function isInFilter(
   );
 }
 
+/** Whether `value` is a filter object, as each entry of Prisma's `OR` list is. */
+function isFilter(value: unknown): value is Filter {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
 /**
  * @param row - Stored row.
- * @param where - Filter on top-level columns: a value to equal, or `{ in: [...] }`.
+ * @param where - Filter on top-level columns: a value to equal,
+ *   `{ in: [...] }`, or `OR: [...]` of such filters.
  * @returns Whether the row holds every value of the filter.
  */
 function matches(row: Filter, where: Filter): boolean {
   return Object.entries(where).every(([key, value]) => {
     if (value === undefined) return true;
+    if (key === "OR" && Array.isArray(value)) {
+      return value.some((option) => isFilter(option) && matches(row, option));
+    }
     if (isInFilter(value)) return value.in.includes(row[key]);
     return row[key] === value;
   });
+}
+
+/** The nested card lookup a `deck.findUnique` may select. */
+interface DeckLookup {
+  readonly where: { readonly id: string };
+  readonly select?: { readonly cards?: { readonly where?: Filter } };
 }
 
 /** The `where` and `data` of the version claim (`deck.updateMany`). */
@@ -127,8 +148,16 @@ function createDeckCardsDb() {
    */
   const delegatesOver = (tables: Tables) => ({
     deck: {
-      findUnique: ({ where }: { readonly where: { readonly id: string } }) =>
-        Promise.resolve(tables.deck.id === where.id ? tables.deck : null),
+      findUnique: ({ where, select }: DeckLookup) => {
+        if (tables.deck.id !== where.id) return Promise.resolve(null);
+        const cardLookup = select?.cards;
+        if (cardLookup === undefined) return Promise.resolve(tables.deck);
+        const cards = tables.cards.filter(
+          (card) =>
+            card.deckId === where.id && matches(card, cardLookup.where ?? {})
+        );
+        return Promise.resolve({ ...tables.deck, cards });
+      },
       update: ({
         where,
         data,
