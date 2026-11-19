@@ -18,12 +18,13 @@ import {
 } from "./fixtures/generated-deck-cards";
 import {
   checkGeneratedDeckLegality,
+  type GeneratedDeckCheck,
   type GeneratedDeckVerdict,
 } from "./generated-deck-legality";
 
 const CARD_DATA = buildScryfallNameIndex(ALL_GENERATED_DECK_CARDS);
 /** The check's "today": the preview fixtures release on 2027-02-05, later. */
-const TODAY = new Date("2026-11-16T12:00:00Z");
+const CHECK: GeneratedDeckCheck = { today: new Date("2026-11-16T12:00:00Z") };
 
 type Entry = readonly [name: string, quantity: number];
 
@@ -313,7 +314,7 @@ describe("checkGeneratedDeckLegality", () => {
   it.each(REPAIRED_CASES)(
     "repairs $label and reports each change",
     ({ reply: modelReply, corrections }) => {
-      const verdict = checkGeneratedDeckLegality(modelReply, CARD_DATA, TODAY);
+      const verdict = checkGeneratedDeckLegality(modelReply, CARD_DATA, CHECK);
 
       expect(verdict).toEqual(
         expect.objectContaining({ status: "accepted", corrections })
@@ -321,7 +322,7 @@ describe("checkGeneratedDeckLegality", () => {
       const deck = acceptedDeck(verdict);
       expect(copies(deck)).toBe(modelReply.partner ? 98 : 99);
       // The repaired list passes the same check without a further change.
-      expect(checkGeneratedDeckLegality(deck, CARD_DATA, TODAY)).toEqual({
+      expect(checkGeneratedDeckLegality(deck, CARD_DATA, CHECK)).toEqual({
         status: "accepted",
         deck,
         corrections: [],
@@ -330,7 +331,7 @@ describe("checkGeneratedDeckLegality", () => {
   );
 
   it.each(REJECTED_CASES)("rejects $label", ({ reply: modelReply, reason }) => {
-    const verdict = checkGeneratedDeckLegality(modelReply, CARD_DATA, TODAY);
+    const verdict = checkGeneratedDeckLegality(modelReply, CARD_DATA, CHECK);
 
     expect(verdict).toEqual({
       status: "rejected",
@@ -344,7 +345,7 @@ describe("checkGeneratedDeckLegality", () => {
     const verdict = checkGeneratedDeckLegality(
       reply({ ...TALRAND, entries: [["Tidewater Oracle", 1]] }),
       CARD_DATA,
-      releaseDay
+      { today: releaseDay }
     );
 
     expect(verdict).toEqual(
@@ -368,7 +369,7 @@ describe("checkGeneratedDeckLegality", () => {
           ],
         }),
         CARD_DATA,
-        TODAY
+        CHECK
       )
     );
 
@@ -382,7 +383,7 @@ describe("checkGeneratedDeckLegality", () => {
     const verdict = checkGeneratedDeckLegality(
       reply({ ...TYMNA_AND_THRASIOS, size: 93 }),
       CARD_DATA,
-      TODAY
+      CHECK
     );
 
     expect(verdict).toEqual(
@@ -421,7 +422,7 @@ describe("checkGeneratedDeckLegality", () => {
         size: 21,
       }),
       cardData,
-      TODAY
+      CHECK
     );
 
     // Targets: white 26 ({2}{W}{W}), blue and green 20 and black 19 (gold
@@ -455,7 +456,7 @@ describe("checkGeneratedDeckLegality", () => {
         cards: [{ name: "Sol Ring", quantity: 1, category: "ramp" }],
       },
       buildScryfallNameIndex([...ALL_GENERATED_DECK_CARDS, kozilek]),
-      TODAY
+      CHECK
     );
 
     expect(verdict).toEqual(
@@ -480,7 +481,7 @@ describe("checkGeneratedDeckLegality", () => {
     it("keeps a stack of them as basic lands", () => {
       const modelReply = reply({ ...TALRAND, basic: snowIsland.name });
 
-      expect(checkGeneratedDeckLegality(modelReply, cardData, TODAY)).toEqual({
+      expect(checkGeneratedDeckLegality(modelReply, cardData, CHECK)).toEqual({
         status: "accepted",
         deck: modelReply,
         corrections: [],
@@ -495,7 +496,7 @@ describe("checkGeneratedDeckLegality", () => {
         size: 100,
       });
 
-      expect(checkGeneratedDeckLegality(modelReply, cardData, TODAY)).toEqual(
+      expect(checkGeneratedDeckLegality(modelReply, cardData, CHECK)).toEqual(
         expect.objectContaining({
           status: "accepted",
           corrections: [removed(snowIsland.name, 1, "over_size")],
@@ -532,7 +533,7 @@ describe("checkGeneratedDeckLegality", () => {
         entries: [[fallenAngel.name, 1]],
       });
 
-      expect(checkGeneratedDeckLegality(modelReply, cardData, TODAY)).toEqual({
+      expect(checkGeneratedDeckLegality(modelReply, cardData, CHECK)).toEqual({
         status: "accepted",
         deck: modelReply,
         corrections: [],
@@ -558,7 +559,7 @@ describe("checkGeneratedDeckLegality", () => {
             bannedAngel,
             ...ALL_GENERATED_DECK_CARDS,
           ]),
-          TODAY
+          CHECK
         )
       ).toEqual(
         expect.objectContaining({
@@ -581,7 +582,7 @@ describe("checkGeneratedDeckLegality", () => {
         size: 149,
       });
 
-      expect(checkGeneratedDeckLegality(modelReply, cardData, TODAY)).toEqual({
+      expect(checkGeneratedDeckLegality(modelReply, cardData, CHECK)).toEqual({
         status: "accepted",
         deck: modelReply,
         corrections: [],
@@ -598,7 +599,7 @@ describe("checkGeneratedDeckLegality", () => {
         size: 199,
       });
 
-      expect(checkGeneratedDeckLegality(modelReply, cardData, TODAY)).toEqual({
+      expect(checkGeneratedDeckLegality(modelReply, cardData, CHECK)).toEqual({
         status: "accepted",
         deck: modelReply,
         corrections: [],
@@ -609,7 +610,7 @@ describe("checkGeneratedDeckLegality", () => {
       const verdict = checkGeneratedDeckLegality(
         reply({ commander: whtz.name, basic: "Island", size: 90 }),
         cardData,
-        TODAY
+        CHECK
       );
 
       expect(copies(acceptedDeck(verdict))).toBe(99);

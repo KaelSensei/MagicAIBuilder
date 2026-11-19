@@ -91,11 +91,15 @@ interface CommandZone {
 }
 type Resolve = (name: string) => ScryfallCard | undefined;
 
-/** The card data a generated deck is checked against, and the day it is read on. */
-interface CardData {
-  readonly resolve: Resolve;
+/** What a generated deck is checked under, beside its card data. */
+export interface GeneratedDeckCheck {
   /** Today: whether a not-yet-legal card is a preview depends on it (I-73 3.1) */
   readonly today: Date;
+}
+
+/** The card data a generated deck is checked against, and the day it is read on. */
+interface CardData extends GeneratedDeckCheck {
+  readonly resolve: Resolve;
 }
 
 function rejected(reason: string): Rejected {
@@ -320,19 +324,19 @@ function filterListedCards(
  *
  * @param deck - The model's reply, already past the shape check of `validateGeneratedDeck`
  * @param cardData - Scryfall cards indexed by `buildScryfallNameIndex`
- * @param today - Now, read as its UTC day: a card Scryfall does not mark legal
- *   whose set releases later is removed as a `preview` with its release day,
- *   not as `not_legal` (I-73 3.5)
+ * @param check - `today` is now, read as its UTC day: a card Scryfall does not
+ *   mark legal whose set releases later is removed as a `preview` with its
+ *   release day, not as `not_legal` (I-73 3.5)
  * @returns The repaired deck with every correction made, or the reasons it cannot be repaired
  */
 export function checkGeneratedDeckLegality(
   deck: AIDeckResponse,
   cardData: ReadonlyMap<string, ScryfallCard>,
-  today: Date
+  check: GeneratedDeckCheck
 ): GeneratedDeckVerdict {
   const data: CardData = {
+    ...check,
     resolve: (name) => cardData.get(normalizeImportedName(name)),
-    today,
   };
   const commandZone = resolveCommandZone(deck, data);
   if (commandZone.status === "rejected") return commandZone;
@@ -377,5 +381,7 @@ export async function verifyGeneratedDeck(
       .filter((name) => name.length > 0)
   );
   const cards = await fetchInBatches([...names].map((name) => ({ name })));
-  return checkGeneratedDeckLegality(deck, buildScryfallNameIndex(cards), today);
+  return checkGeneratedDeckLegality(deck, buildScryfallNameIndex(cards), {
+    today,
+  });
 }

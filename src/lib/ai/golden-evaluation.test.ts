@@ -109,7 +109,9 @@ describe("AI golden evaluation", () => {
     it(`checks ${sample.label} against card data`, () => {
       expect(validateGeneratedDeck(sample.response)).toEqual([]);
       expect(
-        checkGeneratedDeckLegality(sample.response, CARD_DATA, TODAY)
+        checkGeneratedDeckLegality(sample.response, CARD_DATA, {
+          today: TODAY,
+        })
       ).toEqual(
         expect.objectContaining({
           status: "accepted",
