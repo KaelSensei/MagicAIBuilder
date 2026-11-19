@@ -1,8 +1,20 @@
+/**
+ * Creating a deck from the `/decks` page, driven as a player would.
+ *
+ * The real deck store and deck API client run; MSW serves `POST /api/decks`
+ * and records what the page sent (`setupMsw`). The page's chrome (header,
+ * footer, deck views, wizard) is replaced, as it was before this file moved
+ * off its deck store mock.
+ */
 import { fireEvent, screen, waitFor } from "@testing-library/react";
-import { expect, it, vi } from "vitest";
+import { http, HttpResponse } from "msw";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
+import { useDeckStore } from "@/lib/deck/store";
+import { emptyApiDeck } from "@/test/in-memory-deck-api";
+import { setupMsw } from "@/test/msw";
 import { renderWithIntl } from "@/test/render-with-intl";
 
-const createDeck = vi.hoisted(() => vi.fn(async (_name: string) => "deck-1"));
+const push = vi.hoisted(() => vi.fn());
 
 vi.mock("next-auth/react", () => ({
   useSession: () => ({ status: "unauthenticated" }),
@@ -12,20 +24,9 @@ vi.mock(import("next/navigation"), () => ({
     back: vi.fn(),
     forward: vi.fn(),
     refresh: vi.fn(),
-    push: vi.fn(),
+    push,
     replace: vi.fn(),
     prefetch: vi.fn(),
-  }),
-}));
-vi.mock("@/lib/deck/store", () => ({
-  useDeckStore: () => ({
-    decks: {},
-    createDeck,
-    loadDecks: vi.fn(),
-    isSyncing: false,
-    deleteDeck: vi.fn(),
-    duplicateDeck: vi.fn(),
-    loadError: null,
   }),
 }));
 vi.mock("@/hooks/useToast", () => ({
@@ -60,6 +61,39 @@ vi.mock(import("@/components/deck/GuestDeckClaimOffer"), () => ({
 
 import DecksPage from "./page";
 
+const NEW_DECK_ID = "deck-1";
+
+/** The JSON bodies `POST /api/decks` received, in order. */
+let creations: unknown[] = [];
+
+/** The format a creation asked for; the route stores Commander when none is sent. */
+function requestedFormat(body: unknown): string {
+  if (typeof body !== "object" || body === null || !("format" in body)) {
+    return "commander";
+  }
+  return typeof body.format === "string" ? body.format : "commander";
+}
+
+setupMsw(
+  http.post("/api/decks", async ({ request }) => {
+    const body: unknown = await request.json();
+    creations.push(body);
+    return HttpResponse.json(
+      { ...emptyApiDeck(NEW_DECK_ID), format: requestedFormat(body) },
+      { status: 201 }
+    );
+  })
+);
+
+beforeEach(() => {
+  creations = [];
+});
+
+afterEach(() => {
+  push.mockClear();
+  useDeckStore.setState({ decks: {}, activeDeckId: null });
+});
+
 // The numbered default name was the English template `New Deck ${n}`, stored
 // as the deck's name whatever language its creator used.
 it("names a new deck in the creator's locale", async () => {
@@ -68,6 +102,8 @@ it("names a new deck in the creator's locale", async () => {
   fireEvent.click(screen.getByRole("button", { name: "Créer un deck" }));
 
   await waitFor(() =>
-    expect(createDeck).toHaveBeenCalledWith("Nouveau deck 1")
+    expect(creations).toEqual([
+      expect.objectContaining({ name: "Nouveau deck 1" }),
+    ])
   );
 });
