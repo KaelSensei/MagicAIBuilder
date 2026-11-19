@@ -75,6 +75,7 @@ const ACTIONS = [
   "setCompanion",
   "setDeckGridCols",
   "setDeckViewMode",
+  "setFormat",
   "setGameChangerNames",
   "setGroupBy",
   "setManualBracket",

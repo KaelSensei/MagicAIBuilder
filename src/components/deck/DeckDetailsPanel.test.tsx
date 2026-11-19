@@ -1,21 +1,52 @@
 /**
  * The builder's deck details panel, driven as a player would.
  *
- * Sociable: the real deck store and the real deck API client run; only `fetch`
- * is replaced, by a recorder that answers every request with 200. A control
- * counts as working when the deck in the store changes and the matching
- * `PATCH /api/decks/[id]` leaves the page.
+ * Sociable: the real deck store, the real deck API client and the real
+ * Scryfall client run; only `fetch` is replaced, by a recorder that answers
+ * every deck request with 200 and a Scryfall ban-list search with the cards
+ * `bannedIn` names for that format. A control counts as working when the deck
+ * in the store changes and the matching `PATCH /api/decks/[id]` leaves the page.
  */
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { DeckFormat } from "@/lib/deck/formats";
+import {
+  createGuestDeck,
+  GUEST_DECK_ID,
+  loadGuestDeck,
+} from "@/lib/deck/guest-deck";
 import { useDeckStore } from "@/lib/deck/store";
 import { createEmptyDeck } from "@/lib/deck/store-factories";
 import type { Deck } from "@/lib/deck/types";
-import { renderWithIntl } from "@/test/render-with-intl";
+import { aDeckCard } from "@/test/builders/card";
+import { aScryfallCard } from "@/test/builders/scryfall";
+import { renderWithProviders } from "@/test/render";
 import { DeckDetailsPanel } from "./DeckDetailsPanel";
 
 const DECK_ID = "deck-1";
+
+/** The cards Scryfall lists as banned in each format, for this test. */
+let bannedIn: Partial<Record<DeckFormat, readonly string[]>> = {};
+
+/**
+ * Scryfall's answer to a `banned:<format>` search: the cards `bannedIn` names,
+ * or its 404 for a search that matches nothing.
+ */
+function scryfallBanListAnswer(url: URL): Response {
+  const format = /banned:(\w+)/.exec(url.searchParams.get("q") ?? "")?.[1];
+  const names = Object.entries(bannedIn).find(([key]) => key === format)?.[1];
+  if (!names || names.length === 0) {
+    return Response.json({ object: "error" }, { status: 404 });
+  }
+  return Response.json({
+    object: "list",
+    has_more: false,
+    data: names.map((name, index) =>
+      aScryfallCard({ id: `banned-${index}`, name })
+    ),
+  });
+}
 
 /** A request the deck API client sent, with its JSON body parsed. */
 interface SentRequest {
@@ -51,21 +82,28 @@ function openDeck(details: Partial<Deck> = {}): void {
 }
 
 /** Mounts the panel the way the builder page does: fed from the store's deck. */
-function BuilderDeckDetails() {
-  const deck = useDeckStore((state) => state.decks[DECK_ID]);
+function BuilderDeckDetails({
+  deckId = DECK_ID,
+}: {
+  readonly deckId?: string;
+}) {
+  const deck = useDeckStore((state) => state.decks[deckId]);
   return deck ? <DeckDetailsPanel deck={deck} /> : null;
 }
 
 function renderPanel(locale: "en" | "fr" = "en") {
-  renderWithIntl(<BuilderDeckDetails />, { locale });
+  renderWithProviders(<BuilderDeckDetails />, { locale });
 }
 
 beforeEach(() => {
   sent = [];
   serverStatus = 200;
+  bannedIn = {};
   vi.stubGlobal(
     "fetch",
     vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = new URL(String(input), "http://localhost");
+      if (url.pathname === "/cards/search") return scryfallBanListAnswer(url);
       sent.push({
         method: init?.method ?? "GET",
         url: String(input),
@@ -83,6 +121,7 @@ beforeEach(() => {
 afterEach(() => {
   vi.unstubAllGlobals();
   useDeckStore.setState({ decks: {}, activeDeckId: null });
+  localStorage.clear();
 });
 
 describe("DeckDetailsPanel", () => {
@@ -342,6 +381,288 @@ describe("DeckDetailsPanel", () => {
       await waitFor(() => expect(deckPatches()).toEqual([{ budget: 2.5 }]));
       await waitFor(() => expect(storedDeck()?.budget).toBe(5));
       expect(budget).toHaveValue(5);
+    });
+  });
+
+  describe("format", () => {
+    const ATRAXA = aDeckCard({
+      id: "atraxa",
+      name: "Atraxa, Praetors' Voice",
+      typeLine: "Legendary Creature — Phyrexian Angel Horror",
+      colorIdentity: ["W", "U", "B", "G"],
+      category: "commander",
+    });
+    const SOL_RING = aDeckCard({
+      id: "sol-ring",
+      name: "Sol Ring",
+      typeLine: "Artifact",
+    });
+    const LIGHTNING_BOLT = aDeckCard({
+      id: "lightning-bolt",
+      name: "Lightning Bolt",
+      typeLine: "Instant",
+      colorIdentity: ["R"],
+    });
+    const FORESTS = aDeckCard({
+      id: "forest",
+      name: "Forest",
+      typeLine: "Basic Land — Forest",
+      category: "land",
+      quantity: 97,
+    });
+
+    /** A complete 100-card Commander deck: Atraxa and 99 cards. */
+    function openCommanderDeck(): void {
+      openDeck({
+        commander: ATRAXA,
+        cards: [SOL_RING, LIGHTNING_BOLT, FORESTS],
+      });
+    }
+
+    /** The problems the switch preview lists, in order, as the player reads them. */
+    function listedProblems(preview: HTMLElement): readonly string[] {
+      return within(preview)
+        .getAllByRole("listitem")
+        .map((item) => item.textContent ?? "");
+    }
+
+    it("switching a Commander deck to Brawl lists what breaks and removes no card", async () => {
+      const user = userEvent.setup();
+      bannedIn = { brawl: ["Sol Ring"] };
+      openCommanderDeck();
+      renderPanel();
+      const details = screen.getByRole("region", { name: "Deck details" });
+
+      await user.selectOptions(
+        within(details).getByRole("combobox", { name: "Format" }),
+        "Brawl"
+      );
+      const preview = within(details).getByRole("region", {
+        name: "Switch to Brawl?",
+      });
+
+      await within(preview).findByText("Banned in Brawl: Sol Ring");
+      expect(listedProblems(preview)).toEqual([
+        "Deck size: 100/60, 40 cards over",
+        "Outside the commander's color identity: Lightning Bolt",
+        "Banned in Brawl: Sol Ring",
+      ]);
+      expect(storedDeck()?.format).toBe("commander");
+      expect(deckPatches()).toEqual([]);
+
+      await user.click(
+        within(preview).getByRole("button", { name: "Switch to Brawl" })
+      );
+
+      expect(storedDeck()?.format).toBe("brawl");
+      expect(storedDeck()?.cards).toEqual([SOL_RING, LIGHTNING_BOLT, FORESTS]);
+      expect(storedDeck()?.commander).toEqual(ATRAXA);
+      expect(deckPatches()).toEqual([{ format: "brawl" }]);
+      expect(
+        within(details).getByRole("combobox", { name: "Format" })
+      ).toHaveDisplayValue("Brawl");
+    });
+
+    it("saves nothing and shows the deck's format again when the player cancels", async () => {
+      const user = userEvent.setup();
+      openCommanderDeck();
+      renderPanel();
+      const details = screen.getByRole("region", { name: "Deck details" });
+      const format = within(details).getByRole("combobox", { name: "Format" });
+
+      await user.selectOptions(format, "Modern");
+      await user.click(within(details).getByRole("button", { name: "Cancel" }));
+
+      expect(
+        within(details).queryByRole("region", { name: "Switch to Modern?" })
+      ).toBeNull();
+      expect(format).toHaveDisplayValue("Commander");
+      expect(format).toHaveFocus();
+      expect(storedDeck()?.format).toBe("commander");
+      expect(deckPatches()).toEqual([]);
+    });
+
+    it("puts the previous format back and says so when the save fails", async () => {
+      const user = userEvent.setup();
+      serverStatus = 500;
+      openCommanderDeck();
+      renderPanel();
+      const details = screen.getByRole("region", { name: "Deck details" });
+      const format = within(details).getByRole("combobox", { name: "Format" });
+
+      await user.selectOptions(format, "Brawl");
+      await user.click(
+        within(details).getByRole("button", { name: "Switch to Brawl" })
+      );
+
+      expect(await within(details).findByRole("alert")).toHaveTextContent(
+        "The format could not be saved. The deck is back to Commander."
+      );
+      expect(deckPatches()).toEqual([{ format: "brawl" }]);
+      expect(storedDeck()?.format).toBe("commander");
+      expect(storedDeck()?.cards).toEqual([SOL_RING, LIGHTNING_BOLT, FORESTS]);
+      expect(format).toHaveDisplayValue("Commander");
+    });
+
+    it("lists the cards over the copy limit when a Modern deck switches to Commander", async () => {
+      const user = userEvent.setup();
+      const bolts = { ...LIGHTNING_BOLT, quantity: 4 };
+      const mountains = aDeckCard({
+        id: "mountain",
+        name: "Mountain",
+        typeLine: "Basic Land — Mountain",
+        category: "land",
+        quantity: 56,
+      });
+      openDeck({ format: "modern", cards: [bolts, mountains] });
+      renderPanel();
+      const details = screen.getByRole("region", { name: "Deck details" });
+
+      await user.selectOptions(
+        within(details).getByRole("combobox", { name: "Format" }),
+        "Commander"
+      );
+      const preview = within(details).getByRole("region", {
+        name: "Switch to Commander?",
+      });
+
+      await waitFor(() =>
+        expect(within(preview).queryByRole("status")).toBeNull()
+      );
+      expect(listedProblems(preview)).toEqual([
+        "Deck size: 60/100, 40 cards short",
+        "More copies than Commander allows: Lightning Bolt (4, 1 allowed)",
+      ]);
+      expect(
+        within(preview).getByText(
+          "No card is removed. The editor keeps reporting these problems until you fix them."
+        )
+      ).toBeInTheDocument();
+    });
+
+    it("says nothing breaks when the deck already follows the new format", async () => {
+      const user = userEvent.setup();
+      openDeck({
+        format: "modern",
+        cards: [
+          aDeckCard({
+            id: "island",
+            name: "Island",
+            typeLine: "Basic Land — Island",
+            quantity: 60,
+          }),
+        ],
+      });
+      renderPanel();
+      const details = screen.getByRole("region", { name: "Deck details" });
+
+      await user.selectOptions(
+        within(details).getByRole("combobox", { name: "Format" }),
+        "Pioneer"
+      );
+      const preview = within(details).getByRole("region", {
+        name: "Switch to Pioneer?",
+      });
+
+      expect(
+        await within(preview).findByText(
+          "Nothing breaks: the deck already follows the rules of Pioneer."
+        )
+      ).toBeInTheDocument();
+      expect(within(preview).queryAllByRole("listitem")).toHaveLength(0);
+    });
+
+    it("says the ban list could not be loaded and still lists what it can check", async () => {
+      const user = userEvent.setup();
+      openCommanderDeck();
+      renderPanel();
+      vi.mocked(fetch).mockImplementation(async (input) => {
+        const url = new URL(String(input), "http://localhost");
+        return url.pathname === "/cards/search"
+          ? Response.json({ object: "error" }, { status: 500 })
+          : Response.json({});
+      });
+      const details = screen.getByRole("region", { name: "Deck details" });
+
+      await user.selectOptions(
+        within(details).getByRole("combobox", { name: "Format" }),
+        "Brawl"
+      );
+      const preview = within(details).getByRole("region", {
+        name: "Switch to Brawl?",
+      });
+
+      await waitFor(() =>
+        expect(within(preview).getByRole("status")).toHaveTextContent(
+          "The Brawl ban list could not be loaded, so banned cards are not listed."
+        )
+      );
+      expect(listedProblems(preview)).toEqual([
+        "Deck size: 100/60, 40 cards over",
+        "Outside the commander's color identity: Lightning Bolt",
+      ]);
+    });
+
+    it("groups the Commander variants apart from the constructed formats, named from the French catalogue", () => {
+      openDeck();
+      renderPanel("fr");
+      const details = screen.getByRole("region", { name: "Détails du deck" });
+      const format = within(details).getByRole("combobox", { name: "Format" });
+
+      const optionsIn = (group: string) =>
+        within(within(format).getByRole("group", { name: group }))
+          .getAllByRole("option")
+          .map((option) => option.textContent);
+      expect(
+        within(format)
+          .getAllByRole("group")
+          .map((group) => group.getAttribute("label"))
+      ).toEqual(["Variantes de Commander", "Formats construits"]);
+      expect(optionsIn("Variantes de Commander")).toEqual([
+        "Commander",
+        "Brawl",
+        "Oathbreaker",
+      ]);
+      expect(optionsIn("Formats construits")).toEqual([
+        "Standard",
+        "Pioneer",
+        "Modern",
+        "Legacy",
+        "Vintage",
+        "Pauper",
+      ]);
+      expect(format).toHaveDisplayValue("Commander");
+    });
+
+    it("keeps a guest deck's new format in this browser and sends nothing", async () => {
+      const user = userEvent.setup();
+      useDeckStore.setState({
+        decks: {
+          [GUEST_DECK_ID]: {
+            ...createGuestDeck(),
+            commander: ATRAXA,
+            cards: [SOL_RING, LIGHTNING_BOLT, FORESTS],
+          },
+        },
+        activeDeckId: GUEST_DECK_ID,
+      });
+      renderWithProviders(<BuilderDeckDetails deckId={GUEST_DECK_ID} />);
+      const details = screen.getByRole("region", { name: "Deck details" });
+
+      await user.selectOptions(
+        within(details).getByRole("combobox", { name: "Format" }),
+        "Oathbreaker"
+      );
+      await user.click(
+        within(details).getByRole("button", { name: "Switch to Oathbreaker" })
+      );
+
+      expect(useDeckStore.getState().decks[GUEST_DECK_ID]?.format).toBe(
+        "oathbreaker"
+      );
+      expect(loadGuestDeck()?.format).toBe("oathbreaker");
+      expect(loadGuestDeck()?.cards).toHaveLength(3);
+      expect(sent.filter(({ method }) => method === "PATCH")).toEqual([]);
     });
   });
 });
