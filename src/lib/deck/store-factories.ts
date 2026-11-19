@@ -12,6 +12,7 @@ import type * as deckApi from "@/lib/db/deck-api";
 import { parseBracketLevel } from "@/lib/constants/brackets";
 import { rebuildCardFaces } from "./store-card-faces";
 import { countLoadedCards, withLoadedCardCount } from "./loaded-card-count";
+import { countDeckCards } from "./deck-size";
 
 export { makeDeckCard } from "./store-card-faces";
 export { buildCardFaces } from "@/lib/scryfall/faces";
@@ -137,8 +138,8 @@ export function apiDeckToStoreDeck(d: deckApi.ApiDeck): Deck {
   const allCards = d.cards ?? [];
   const { commanderCard, partnerCard, companionCard, deckCards } = partitionApiCards(allCards);
 
-  // The listing sends the server's row count; a full deck is counted from the
-  // rows it holds, once the command zone has been read out of them.
+  // The listing sends the server's row count and card copies; a full deck is
+  // counted from the rows it holds, once the command zone has been read out.
   const deck: Deck = {
     id: d.id,
     name: d.name,
@@ -159,6 +160,7 @@ export function apiDeckToStoreDeck(d: deckApi.ApiDeck): Deck {
     pairingType: d.pairingType ?? "none",
     cards: deckCards.map(apiCardToDeckCard),
     cardRowCount: d._count?.cards ?? 0,
+    cardCopyCount: d.cardCopyCount,
     maybeboard: deckCards
       .filter((card) => (card.zone ?? "main") === "maybeboard")
       .map(apiCardToDeckCard),
@@ -184,6 +186,24 @@ export function apiDeckToStoreDeck(d: deckApi.ApiDeck): Deck {
  */
 export function isDeckStub(deck: Deck): boolean {
   return countLoadedCards(deck) < deck.cardRowCount;
+}
+
+/**
+ * A deck's card count as the deck list shows it, equal to the editor's and the
+ * builder title bar's count of the same deck (`countDeckCards`): copies, not
+ * rows, with the commander and the partner (CR 903.5a).
+ *
+ * A stub holds only its command zone, so its count is the one the listing
+ * summed in the database (`cardCopyCount`); a stub listed without one, by a
+ * server older than the field, falls back to its row count, the old figure.
+ * A loaded deck is counted from its rows, so an edit shows at once.
+ *
+ * @param deck - a deck held in the store, listed or loaded
+ * @returns the number of cards the deck holds against its size rule
+ */
+export function deckCardCount(deck: Deck): number {
+  if (!isDeckStub(deck)) return countDeckCards(deck);
+  return deck.cardCopyCount ?? deck.cardRowCount;
 }
 
 /**

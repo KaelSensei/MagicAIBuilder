@@ -62,7 +62,7 @@ export interface ApiDeck extends Omit<
   forkedFromDeckName?: string | null;
   forkedFromUserName?: string | null;
   cards: ApiDeckCard[];
-  /** Prisma _count — present on listing responses */
+  /** Prisma _count — present on listing responses: card rows, not copies */
   _count?: { cards: number };
 }
 

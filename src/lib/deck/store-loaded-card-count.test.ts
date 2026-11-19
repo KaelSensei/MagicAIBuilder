@@ -19,7 +19,7 @@ import type { ScryfallCard } from "@/lib/scryfall/types";
 import { installFakeDeckClient } from "@/test/fake-deck-client";
 import { recordToasts } from "@/test/toast-recorder";
 import { useDeckStore } from "./store";
-import { isDeckStub } from "./store-factories";
+import { deckCardCount, isDeckStub } from "./store-factories";
 import type { Deck } from "./types";
 
 const api = installFakeDeckClient();
@@ -289,6 +289,32 @@ describe("deck store — cardRowCount follows the loaded rows", () => {
     await useDeckStore.getState().loadDecks();
 
     expect(activeDeck().cardRowCount).toBe(1);
+  });
+
+  it("lists a saved deck whose 30 Forests are one row as 100 cards", async () => {
+    const forests = apiRow("row-forest", "Forest", {
+      typeLine: "Basic Land — Forest",
+      category: "land",
+      quantity: 30,
+    });
+    const spells = Array.from({ length: 69 }, (_, index) =>
+      apiRow(`row-spell-${index}`, `Spell ${index}`)
+    );
+    api.seedDeck(apiDeck([COMMANDER, forests, ...spells]));
+
+    await useDeckStore.getState().loadDecks();
+
+    const listed = activeDeck();
+    expect(isDeckStub(listed)).toBe(true);
+    expect(listed.cardRowCount).toBe(71);
+    expect(deckCardCount(listed)).toBe(100);
+  });
+
+  it("counts a loaded deck's copies once its rows arrive", async () => {
+    const forests = apiRow("row-forest", "Forest", { category: "land", quantity: 30 });
+    await openSavedDeck(apiDeck([COMMANDER, forests, SOL_RING]));
+
+    expect(deckCardCount(activeDeck())).toBe(32);
   });
 
   it("still reads a deck from the listing as a stub until its rows arrive", async () => {

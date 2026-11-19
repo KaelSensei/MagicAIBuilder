@@ -6,6 +6,7 @@ import { useMemo } from "react";
 import { useFormatter, useTranslations } from "next-intl";
 import { Clock, Copy, Loader2, Trash2 } from "lucide-react";
 import { deckSizeRuleInFormat } from "@/lib/deck/deck-size";
+import { deckCardCount } from "@/lib/deck/store-factories";
 import type { Deck } from "@/lib/deck/types";
 import { DeckCardCount } from "./DeckCardCount";
 import { getDeckPresentationManaColors } from "./HomeDeckCard";
@@ -145,7 +146,7 @@ function DeckListRow({
 
       <td className="min-w-[90px]">
         <DeckCardCount
-          cardCount={deck.cardRowCount}
+          cardCount={deckCardCount(deck)}
           rule={deckSizeRuleInFormat(deck)}
           separator=" / "
         />

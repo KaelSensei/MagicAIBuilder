@@ -138,6 +138,13 @@ export interface Deck {
    * thirty Forests in one row count once.
    */
   cardRowCount: number;
+  /**
+   * The deck's card count, copies not rows, as the listing (`GET /api/decks`)
+   * sums it in the database. Present only on a deck read from the listing, and
+   * read only while the deck is a stub: once its rows are held,
+   * `deckCardCount` counts them instead.
+   */
+  cardCopyCount?: number;
   targetBracket: BracketLevel;
   manualBracket: BracketLevel | null;
   budget: number | null;
