@@ -79,8 +79,8 @@ function apiDeck(
 }
 
 /** The same deck as the lightweight listing returns it: no main cards, a count. */
-function listingDeck(cardCount: number) {
-  return apiDeck([], { _count: { cards: cardCount } });
+function listingDeck(cardRowCount: number) {
+  return apiDeck([], { _count: { cards: cardRowCount } });
 }
 
 const TWENTY_CARDS = Array.from({ length: 20 }, (_, i) => `c${i}`);
@@ -232,7 +232,7 @@ function toStoreShape(deck: ReturnType<typeof apiDeck>) {
     pairingType: "none" as const,
     cards: [],
     maybeboard: [],
-    cardCount: (deck as { _count?: { cards: number } })._count?.cards ?? 0,
+    cardRowCount: (deck as { _count?: { cards: number } })._count?.cards ?? 0,
     targetBracket: 3 as const,
     manualBracket: null,
     budget: null,

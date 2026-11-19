@@ -20,7 +20,7 @@ import type { Deck } from "@/lib/deck/types";
  *   description;
  * - both dates at the Unix epoch, so a test never depends on the clock.
  *
- * `cardCount` stays 0 unless given: the store derives it when a deck loads, and most code reads
+ * `cardRowCount` stays 0 unless given: the store derives it when a deck loads, and most code reads
  * `cards`. Pass it when the code under test reads it. `maybeboard` is not derived from cards whose
  * zone is "maybeboard" either.
  *
@@ -38,7 +38,7 @@ export function aDeck(overrides: Partial<Deck> = {}): Deck {
     pairingType: "none",
     cards: [],
     maybeboard: [],
-    cardCount: 0,
+    cardRowCount: 0,
     targetBracket: 3,
     manualBracket: null,
     budget: null,

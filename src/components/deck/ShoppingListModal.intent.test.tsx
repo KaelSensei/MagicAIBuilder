@@ -35,7 +35,7 @@ const deck: Deck = {
   cards: [sol, signet],
   maybeboard: [],
   format: "commander",
-  cardCount: 2,
+  cardRowCount: 2,
   targetBracket: 1,
   manualBracket: null,
   budget: null,

@@ -1,11 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const { mockRequireScope, mockFindMany, mockCount, mockLogError } = vi.hoisted(() => ({
-  mockRequireScope: vi.fn(),
-  mockFindMany: vi.fn(),
-  mockCount: vi.fn(),
-  mockLogError: vi.fn(),
-}));
+const { mockRequireScope, mockFindMany, mockCount, mockLogError, mockGroupBy } =
+  vi.hoisted(() => ({
+    mockRequireScope: vi.fn(),
+    mockFindMany: vi.fn(),
+    mockCount: vi.fn(),
+    mockLogError: vi.fn(),
+    mockGroupBy: vi.fn(),
+  }));
 
 vi.mock(import("@/lib/api/authenticate"), async () => {
   const actual = await vi.importActual<typeof import("@/lib/api/authenticate")>(
@@ -18,6 +20,7 @@ vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
   const { stubPrisma } = await import("@/test/prisma-stub");
   return stubPrisma(await importOriginal(), {
     deck: { findMany: mockFindMany, count: mockCount },
+    deckCard: { groupBy: mockGroupBy },
   });
 });
 vi.mock(import("@/lib/logger"), () => ({
@@ -26,6 +29,10 @@ vi.mock(import("@/lib/logger"), () => ({
 
 import { GET } from "./route";
 import { apiError } from "@/lib/api/authenticate";
+import {
+  deckCardGroupByFake,
+  storedHundredCardDeck,
+} from "@/test/deck-card-group-by-fake";
 
 function request(query = "") {
   return new Request(`http://localhost/api/v1/decks${query}`);
@@ -54,6 +61,7 @@ beforeEach(() => {
   });
   mockFindMany.mockResolvedValue([deckRow()]);
   mockCount.mockResolvedValue(1);
+  mockGroupBy.mockResolvedValue([]);
 });
 
 describe("GET /api/v1/decks", () => {
@@ -89,11 +97,26 @@ describe("GET /api/v1/decks", () => {
         targetBracket: 3,
         isPublic: false,
         cardCount: 99,
+        cardCopyCount: 0,
         createdAt: "2026-08-01T10:00:00.000Z",
         updatedAt: "2026-08-20T10:00:00.000Z",
       },
     ]);
     expect(body.pagination).toEqual({ page: 0, limit: 25, total: 1 });
+  });
+
+  // `cardCount` has always counted DeckCard rows, and a public field keeps its
+  // meaning: the copies the editor counts arrive beside it.
+  it("adds the card copies of a deck with one row of 30 Forests, and keeps cardCount the row count", async () => {
+    const fake = deckCardGroupByFake(storedHundredCardDeck("deck-1"));
+    mockGroupBy.mockImplementation(fake.groupBy);
+    mockFindMany.mockResolvedValue([deckRow({ _count: { cards: 74 } })]);
+
+    const body = await (await GET(request())).json();
+
+    expect(body.data[0]).toMatchObject({ cardCount: 74, cardCopyCount: 100 });
+    // Queries per page: the decks, the total and the copies — 3, whatever the page size.
+    expect(mockFindMany.mock.calls.length + mockCount.mock.calls.length + fake.calls()).toBe(3);
   });
 
   it("defaults to the first page of 25", async () => {
