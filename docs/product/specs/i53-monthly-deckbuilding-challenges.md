@@ -146,6 +146,7 @@ Sponsor         id, name, url, kind (store | creator | other), agreementRef (own
 - Game results or tournament play; I-35 and I-41 own the table.
 - A model that checks rules, shortlists, judges, writes judges' notes or summarises results; requiring card ownership or a purchase, or reading the collection.
 - Open public challenge creation by any account; salt-style card votes.
+- Added 2026-11-19 (eighteenth pass): a season of rounds, a list re-registered every round, and an allowance measured from a member's previous entry. Those belong to [I-104](i104-league-decks-and-the-change-allowance-between-rounds.md), which reuses this initiative's rule types with an optional `fromRound` and keeps the same refusal of points and leaderboards.
 
 ## Testing strategy
 
@@ -601,6 +602,7 @@ Archidekt and EDHREC have run a monthly deckbuilding contest since at least Marc
 - [ ] Added 2026-11-15 (fifteenth pass): [I-102](i102-a-theme-you-can-measure.md)'s handle kinds (first letter, word in the name, creature type, artist, plane or set) become rule types a challenge may require, checked by the same matcher, so "every card starts with S" has one definition (I-102 slice 9).
 
   NetrunnerDB types restrictions down to `points` with a `point_limit` ([API v3](https://api.netrunnerdb.com/api/v3/public/restrictions), seen 2026-11-10). Riftbound 2v2 forbids allies repeating battlefields ([rules](https://playriftbound.com/en-us/news/rules-and-releases/riftbound-core-rules-patch-notes/), 2025-10-24). Added 2026-11-11.
+- [ ] Added 2026-11-19 (eighteenth pass): a rule type `stockPrecon {catalogueVersion, maxChanges = 0}`, checked against [I-17](i17-precon-path-and-tiered-upgrades.md)'s catalogue, for a night ([I-41](i41-store-commander-nights.md)) or a pod ([I-15](i15-rule-zero-sheets-and-pod-profiles.md)); [I-104](i104-league-decks-and-the-change-allowance-between-rounds.md)'s round 0 reuses it. Playgroup pitches its leagues for "Precon-only games?" ([post](https://playgroup.gg/posts/96-rewind-2025-playgroup-leagues-and-more), 2025-12-02), and TopDeck.gg's "Commander Precon League Week 9" had 28 players (2026-06-01, [mirror](https://cedhstats.org/tournaments/commander-precon-league-week-9)), both read 2026-11-19.
 
 ### Engineering enablers
 

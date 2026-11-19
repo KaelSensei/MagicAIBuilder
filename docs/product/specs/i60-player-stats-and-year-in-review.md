@@ -614,6 +614,7 @@ A player with a dozen decks cannot see them as a whole: the profile lists public
   - Slice 9's sign-up entry is `User.signupEntry = recap`, written by [I-72](i72-growth-loops-referrals-creators-and-return.md) slice 2, instead of a `signup_entry` event (2026-11-10).
 - [ ] After I-30's decision: statistics over any date range and trends across several years (slice 14).
 - [ ] Added 2026-11-12 (thirteenth pass): the private stats page gains a collection overview beside the deck statistics (rows, copies, value with its date through I-59, a breakdown by colour and type; no card named on a public surface) and, once I-35 logs games, the player's decks ordered by last played, with "not played since" as a sortable column and no streak.
+- [ ] Added 2026-11-19 (eighteenth pass), Later, after [I-35](i35-pod-game-log.md) slice 6: a pod recap built only from games every member confirmed, shown only if every member opts in, counting per deck and never naming a "nemesis", a "victim" or a best player (I-35 7.3). Playgroup ships "a playgroup-level Rewind … a static infographic you can share or even print" ([post](https://playgroup.gg/posts/96-rewind-2025-playgroup-leagues-and-more), 2025-12-02) and Castlog "a Spotify Wrapped-style yearly recap with shareable cards" ([home](https://castlog.gg/), read 2026-11-19). The recap stays free, as this spec's recaps are.
 
 ### Engineering enablers
 
