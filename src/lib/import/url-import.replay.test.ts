@@ -2,7 +2,7 @@
 /**
  * Replays recorded and built source payloads through `importFromUrl` for the three import
  * sources whose adapters `url-import.test.ts` covers least: AetherHub, the EDHREC average deck
- * (its 99-card cap and de-duplication) and MTGTop8 (its HTML fallback). MSW stands in for the
+ * (its 99-card cap and de-duplication) and MTGTop8 (its MTGO export). MSW stands in for the
  * network (ADR 0005, rule 4), with no handler by default, so a request a test does not serve
  * fails that test: the AetherHub cases prove the adapter never calls out.
  *
@@ -11,7 +11,7 @@
  * nothing here. Tests named "currently …" pin today's behaviour where it is wrong; the follow-up
  * each one names will flip it. The payloads and how they were captured are documented in
  * `fixtures/aetherhub-builder-urls-v1.ts`, `fixtures/edhrec-average-deck-v1.ts` and
- * `fixtures/mtgtop8-deck-page-v1.ts`.
+ * `fixtures/mtgtop8-mtgo-export-v1.ts`.
  *
  * The node environment matches where the adapters run: `POST /api/import/url` calls them on the
  * server.
@@ -33,11 +33,11 @@ import {
   EDHREC_IMPORT_RECORDED_URL,
 } from "./fixtures/edhrec-average-deck-v1";
 import {
-  MTGTOP8_DECK_BLOCK_RECORDED,
-  MTGTOP8_EXPORT_NOT_FOUND_BODY,
+  MTGTOP8_EXPORT_RECORDED,
+  MTGTOP8_EXPORT_RECORDED_URL,
   MTGTOP8_RECORDED_DECK_ID,
   MTGTOP8_RECORDED_EVENT_ID,
-} from "./fixtures/mtgtop8-deck-page-v1";
+} from "./fixtures/mtgtop8-mtgo-export-v1";
 import { importFromUrl, type UrlImportCard } from "./url-import";
 
 const server = setupMsw();
@@ -280,82 +280,68 @@ describe("EDHREC average deck", () => {
   });
 });
 
-describe("MTGTop8 text export and HTML fallback", () => {
+describe("MTGTop8 MTGO export", () => {
   const importUrl = `https://www.mtgtop8.com/event?e=${MTGTOP8_RECORDED_EVENT_ID}&d=${MTGTOP8_RECORDED_DECK_ID}&f=EDH`;
-  const exportUrl = `https://www.mtgtop8.com/mtg-decks/${MTGTOP8_RECORDED_DECK_ID}/export.txt`;
-  const latin1Html = { "Content-Type": "text/html; charset=ISO-8859-1" };
 
-  /** The text export answering with `body` and `status`. */
+  /**
+   * The export (MSW matches `/mtgo` whatever its query) answering with `body` and `status`, as
+   * MTGTop8 sends it. No handler serves the deck page, so a test that reaches it fails.
+   */
   function exportAnswers(body: string, status = 200) {
-    return http.get(exportUrl, ({ request }) => {
+    return http.get("https://www.mtgtop8.com/mtgo", ({ request }) => {
       received.push(request.clone());
-      return HttpResponse.text(body, { status, headers: latin1Html });
+      return HttpResponse.text(body, {
+        status,
+        headers: { "Content-Type": "text/plain;charset=ISO-8859-1" },
+      });
     });
   }
 
-  /** The deck page (MSW matches `/event` whatever its query) serving `html`. */
-  function deckPageServes(html: string) {
-    return http.get("https://www.mtgtop8.com/event", ({ request }) => {
-      received.push(request.clone());
-      return HttpResponse.text(html, { headers: latin1Html });
-    });
-  }
-
-  it("uses a text export that lists cards and never loads the deck page", async () => {
-    server.use(exportAnswers("1 Surrak, Elusive Hunter\n1 Ba Sing Se\n"));
+  it("imports the recorded MTGO export: the main deck, then the sideboard, from one request with the app's User-Agent", async () => {
+    server.use(exportAnswers(MTGTOP8_EXPORT_RECORDED));
 
     const imported = await importFromUrl(importUrl);
 
-    expect(imported).toEqual({
-      name: `MTGTop8 deck #${MTGTOP8_RECORDED_DECK_ID}`,
-      source: "mtgtop8",
-      cards: [mainCard("Surrak, Elusive Hunter"), mainCard("Ba Sing Se")],
-      ignored: [],
-    });
-    expect(received.map((request) => request.url)).toEqual([exportUrl]);
-  });
-
-  it("currently asks for the deck page with the deck id as the event id when the export lists no card (pinned; see follow-up DI-01-F1)", async () => {
-    server.use(exportAnswers(""), deckPageServes(MTGTOP8_DECK_BLOCK_RECORDED));
-
-    await importFromUrl(importUrl);
-
     expect(received.map((request) => request.url)).toEqual([
-      exportUrl,
-      `https://www.mtgtop8.com/event?e=${MTGTOP8_RECORDED_DECK_ID}&d=${MTGTOP8_RECORDED_DECK_ID}`,
+      MTGTOP8_EXPORT_RECORDED_URL,
     ]);
+    expect(received[0]?.headers.get("user-agent")).toBe(USER_AGENT);
+    expect(imported.name).toBe(`MTGTop8 deck #${MTGTOP8_RECORDED_DECK_ID}`);
+    const main = imported.cards.filter((card) => card.zone === "main");
+    expect(main).toHaveLength(88);
+    expect(main.reduce((total, card) => total + card.quantity, 0)).toBe(99);
+    expect(main.slice(0, 2)).toEqual([
+      mainCard("Allosaurus Shepherd"),
+      mainCard("Arbor Elf"),
+    ]);
+    expect(main).toContainEqual(mainCard("Snow-Covered Forest", 12));
+    expect(imported.cards.at(-1)).toEqual({
+      ...mainCard("Surrak, Elusive Hunter"),
+      zone: "sideboard",
+    });
   });
 
-  it("currently fails on the export's 404, MTGTop8's answer today, before trying the deck page (pinned; see follow-up DI-01-F1)", async () => {
-    server.use(exportAnswers(MTGTOP8_EXPORT_NOT_FOUND_BODY, 404));
+  it("fails with the not-found message when MTGTop8 answers 404 for the deck", async () => {
+    server.use(exportAnswers("", 404));
 
     await expect(importFromUrl(importUrl)).rejects.toMatchObject({
       status: 404,
       message: "Deck not found or is private.",
     });
-    expect(received.map((request) => request.url)).toEqual([exportUrl]);
+    expect(received.map((request) => request.url)).toEqual([
+      MTGTOP8_EXPORT_RECORDED_URL,
+    ]);
   });
 
-  it("currently reads the recorded deck markup as one card named after a section heading (pinned; see follow-up DI-01-F2)", async () => {
-    server.use(exportAnswers(""), deckPageServes(MTGTOP8_DECK_BLOCK_RECORDED));
+  it("fails with the not-found message when the export lists no card, and never loads the deck page", async () => {
+    server.use(exportAnswers("\r\n"));
 
-    const imported = await importFromUrl(importUrl);
-
-    // Card names sit in a <span> after their quantity; only "6 OTHER SPELLS" reads as
-    // "N Card Name", and the 39, 32 and 22 of the other headings exceed the 20-copy limit.
-    expect(imported.cards).toEqual([mainCard("OTHER SPELLS", 6)]);
-  });
-
-  it("keeps the first spelling of each name found in running text, with at most 20 copies", async () => {
-    const html =
-      "<div>2 Lightning Bolt&nbsp;</div><div>21 Mountain</div><div>3 Lightning Bolt</div><div>1 Forest</div>";
-    server.use(exportAnswers("\n"), deckPageServes(html));
-
-    const imported = await importFromUrl(importUrl);
-
-    expect(imported.cards).toEqual([
-      mainCard("Lightning Bolt", 2),
-      mainCard("Forest"),
+    await expect(importFromUrl(importUrl)).rejects.toMatchObject({
+      status: 404,
+      message: "Deck not found or is private.",
+    });
+    expect(received.map((request) => request.url)).toEqual([
+      MTGTOP8_EXPORT_RECORDED_URL,
     ]);
   });
 });

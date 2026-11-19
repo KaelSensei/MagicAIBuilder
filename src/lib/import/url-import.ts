@@ -102,9 +102,9 @@ export function detectSource(
   return null;
 }
 
-import { httpGet, parseJson } from "@/lib/http";
+import { HttpStatusError, httpGet, parseJson } from "@/lib/http";
 import { normalizeImportedName } from "@/lib/scryfall/name-index";
-import { extractCardsFromHtml, parsePlainTextDecklist } from "./decklist-parse";
+import { parsePlainTextDecklist } from "./decklist-parse";
 import { fetchMoxfieldJson } from "./moxfield-client";
 
 // ─── Moxfield ─────────────────────────────────────────────────────────────────
@@ -318,29 +318,26 @@ async function importTappedOut(slug: string): Promise<UrlImportResult> {
 }
 
 // ─── MTGTop8 ──────────────────────────────────────────────────────────────────
-// MTGTop8 deck page has a "Export" button that gives plain text.
-// The direct export URL is: /mtg-decks/[event_id]/[deck_id]/export.txt or
-// the deck list is in the HTML inside a <textarea> or specific div.
 
+/**
+ * Imports an MTGTop8 deck from the plain-text export its deck page links as "MTGO".
+ *
+ * The export lists the main deck, then a `Sideboard` heading; it carries no deck name. Recorded
+ * on 2026-11-19 in `fixtures/mtgtop8-mtgo-export-v1.ts` (https://www.mtgtop8.com/mtgo?d=913975).
+ * There is no HTML fallback: the deck page needs the event id the export does not, and its card
+ * names sit in markup the text parser cannot read (DI-01-F1, DI-01-F2).
+ *
+ * @param deckId - the deck id (`d=`) from the deck URL
+ * @returns the deck's cards, main deck and sideboard
+ * @throws HttpStatusError 404 "Deck not found or is private." when MTGTop8 answers 404 or its
+ *   export lists no card, the answer a deck id with no deck behind it gets
+ */
 async function importMtgTop8(deckId: string): Promise<UrlImportResult> {
-  // Try text export endpoint first
-  const res = await httpGet(
-    `https://www.mtgtop8.com/mtg-decks/${deckId}/export.txt`,
-    { headers: { Accept: "text/plain, text/html" } }
-  );
-  const text = await res.text();
-  const cards = parsePlainTextDecklist(text);
-
-  if (cards.length === 0) {
-    // Fall back: parse HTML for deck content
-    const htmlRes = await httpGet(
-      `https://www.mtgtop8.com/event?e=${deckId}&d=${deckId}`
-    );
-    const html = await htmlRes.text();
-    const extracted = extractCardsFromHtml(html);
-    if (extracted.length === 0) throw new Error("Could not parse deck from MTGTop8.");
-    return { name: `MTGTop8 deck #${deckId}`, source: "mtgtop8", cards: extracted, ignored: [] };
-  }
+  const res = await httpGet(`https://www.mtgtop8.com/mtgo?d=${deckId}`, {
+    headers: { Accept: "text/plain" },
+  });
+  const cards = parsePlainTextDecklist(await res.text());
+  if (cards.length === 0) throw new HttpStatusError(404, "Deck not found or is private.");
 
   return { name: `MTGTop8 deck #${deckId}`, source: "mtgtop8", cards, ignored: [] };
 }
