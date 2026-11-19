@@ -480,6 +480,7 @@ Commander Spellbook says which cards win together; nothing in the product says w
 - [ ] The builder panel "Cards that pull against each other" and the owner's deck page: questions, counts, clauses, certainty; English and French templates; the verdict-word test with "nonbo" banned (slice 3).
 - [ ] "I mean it": `DeckCoherenceNote`, owner-only routes, re-open on a count change of more than one, excluded from every projection by a schema test (slice 4).
 - [ ] After the owner's decisions: the labelled fixture and the methods-page rows with the precision floor (slice 5); the "coherence" warning class in I-03 (slice 6); `checked` claims on copilot suggestions (slice 7); the findings column on I-76's candidates (slice 8); the public-page switch and read route (slice 9); Tagger's `symmetrical` after L-22 (slice 10).
+- Added 2026-11-19 (seventeenth pass), evidence only: the player voice the 2026-11-12 search could not read. "EDHREC should really add a nonbo tag (PSA about Zada)" drew 228 points and 262 comments (r/EDH, 2026-02-26, [thread](https://www.reddit.com/r/EDH/comments/1rfc8x7/); Arctic Shift snapshot, read 2026-11-19). It is dated demand for slices 0–4. The scope does not change, and the word "nonbo" stays banned from findings (slice 3), because a finding is a question, not a verdict.
 
 ### Engineering enablers
 
