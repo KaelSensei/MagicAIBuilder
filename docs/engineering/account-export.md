@@ -11,7 +11,7 @@
 | Second export within the hour | `429 { "error": "…" }` with `Retry-After` in seconds                                                                                                                    |
 | Database failure              | `500 { "error": "Failed to export account" }`                                                                                                                           |
 
-The export is free on every plan: there is no plan check (I-38 requirement 10.1). The rate limit is one export per account per hour, through `checkRateLimit` in `src/lib/rate-limit.ts`. That limit lives in each server instance's memory, like every other limit today (audit finding M2 in [api-route-inventory.md](api-route-inventory.md)).
+The export is free on every plan: there is no plan check (I-38 requirement 10.1). The rate limit is one export per account per hour, through `checkRateLimit` in `src/lib/rate-limit.ts`, the same limiter every other route uses.
 
 ## The schema
 
