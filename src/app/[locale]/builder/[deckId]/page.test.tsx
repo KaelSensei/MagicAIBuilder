@@ -487,6 +487,23 @@ describe("characterization: builder page shell", () => {
       );
     });
 
+    // CR 903.5a: a Commander deck holds exactly 100 cards, the commander included.
+    it("announces a 100-card Commander deck in the title bar as complete", async () => {
+      server.use(
+        http.get("/api/decks/:id", () =>
+          HttpResponse.json(
+            savedDeck({ cards: [TALRAND, { ...ISLANDS, quantity: 99 }] })
+          )
+        )
+      );
+
+      await openSavedDeck();
+
+      const titleBarCount = screen.getByText("100 / 100");
+      expect(titleBarCount).toHaveTextContent("100 / 100 (complete)");
+      expect(titleBarCount).toHaveClass("text-green-500");
+    });
+
     it("lists commander-legal cards in the search panel before anything is typed", async () => {
       await openSavedDeck();
 
