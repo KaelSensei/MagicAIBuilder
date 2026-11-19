@@ -1,11 +1,21 @@
 "use client";
+/**
+ * One main-deck card of the editor grid: its image, the controls that move,
+ * remove or recategorise it, the words for an identity violation (CR 903.5c)
+ * and the note naming the rulebreaker commander that admits it (CR 903.5e).
+ *
+ * @module deck/GridZoneCard
+ */
 
 import { useDraggable } from "@dnd-kit/core";
 import { Bookmark, GripVertical, Layers } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { CardImage } from "@/components/card/CardImage";
+import { ColorIdentityViolationLabel } from "@/components/deck/ColorIdentityViolationLabel";
+import { RulebreakerAdmissionNote } from "@/components/deck/RulebreakerAdmissionNote";
 import { cn } from "@/components/ui/utils";
 import type { CardCategory, DeckCard } from "@/lib/deck/types";
+import type { RulebreakerAdmission } from "@/modules/format-rules";
 
 const EDITABLE_CATEGORIES: readonly CardCategory[] = [
   "creature", "instant", "sorcery", "artifact", "enchantment", "planeswalker",
@@ -15,6 +25,8 @@ const EDITABLE_CATEGORIES: readonly CardCategory[] = [
 interface GridZoneCardProps {
   readonly card: DeckCard;
   readonly isViolation: boolean;
+  /** The rulebreaker commander's admission of this off-identity card, if any */
+  readonly admission?: RulebreakerAdmission;
   readonly onRemoveCard: (id: string) => void;
   readonly onCardClick?: (card: DeckCard) => void;
   readonly onMoveToMaybeboard?: (id: string) => void;
@@ -34,6 +46,7 @@ interface GridZoneCardProps {
 export function GridZoneCard({
   card,
   isViolation,
+  admission,
   onRemoveCard,
   onCardClick,
   onMoveToMaybeboard,
@@ -115,6 +128,16 @@ export function GridZoneCard({
       >
         ×
       </button>
+      <ColorIdentityViolationLabel
+        isViolation={isViolation}
+        className="mt-1 block text-center"
+      />
+      {/* Outside every button of the tile: a <details> inside one is invalid HTML. */}
+      <RulebreakerAdmissionNote
+        admission={admission}
+        cardName={card.name}
+        layout="tile"
+      />
       {onChangeCategory && (
         <select
           aria-label={t("actions.changeCategoryFor", { name: card.name })}
