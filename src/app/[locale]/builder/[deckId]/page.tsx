@@ -31,7 +31,7 @@ import { currentDataAsOfFacts } from "@/lib/deck/data-as-of";
 import { useDeckStore } from "@/lib/deck/store";
 import { isDeckStub } from "@/lib/deck/store-factories";
 import { computeDeckStats } from "@/lib/deck/stats";
-import { deckSizeRuleInFormat, formatDeckCount } from "@/lib/deck/deck-size";
+import { countDeckCards, deckSizeRuleInFormat } from "@/lib/deck/deck-size";
 import { addNamedCardToZone } from "@/lib/deck/ai-add-card";
 import { logger } from "@/lib/logger";
 import { useUIStore } from "@/lib/ui/store";
@@ -42,6 +42,7 @@ import { Header } from "@/components/layout/Header";
 import { SearchBar } from "@/components/search/SearchBar";
 import { SearchFilters } from "@/components/search/SearchFilters";
 import { SearchResults } from "@/components/search/SearchResults";
+import { DeckCardCount } from "@/components/deck/DeckCardCount";
 import { DeckEditor } from "@/components/deck/DeckEditor";
 import { DeckStats } from "@/components/deck/DeckStats";
 import { DrawOddsPanel } from "@/components/deck/DrawOddsPanel";
@@ -870,17 +871,12 @@ export default function BuilderPage() {
               ✨ {t("badges.ai")}
             </span>
           )}
-          <span className="text-xs text-[var(--text-secondary)]">
-            {formatDeckCount(
-              deck.cards
-                .filter((c) => c.zone === "main")
-                .reduce((s, c) => s + c.quantity, 0) +
-                (deck.commander ? 1 : 0) +
-                (deck.partner ? 1 : 0),
-              deckSizeRuleInFormat(deck),
-              " / "
-            )}
-          </span>
+          <DeckCardCount
+            cardCount={countDeckCards(deck)}
+            rule={deckSizeRuleInFormat(deck)}
+            separator=" / "
+            className="text-xs"
+          />
           <DeckSaveIndicator saving={isSyncing} label={t("saving")} />
           <div className="ml-auto flex items-center gap-1 md:gap-2">
             {/* Duplicate deck */}
