@@ -504,6 +504,30 @@ describe("characterization: builder page shell", () => {
       expect(titleBarCount).toHaveClass("text-green-500");
     });
 
+    it("announces in the title bar how many cards a Commander deck still lacks", async () => {
+      await openSavedDeck();
+
+      const titleBarCount = screen.getByText("14 / 100");
+      expect(titleBarCount).toHaveTextContent("14 / 100 (86 cards short)");
+      expect(titleBarCount).not.toHaveClass("text-green-500");
+    });
+
+    it("announces in the title bar how many cards a Commander deck is over", async () => {
+      server.use(
+        http.get("/api/decks/:id", () =>
+          HttpResponse.json(
+            savedDeck({ cards: [TALRAND, { ...ISLANDS, quantity: 101 }] })
+          )
+        )
+      );
+
+      await openSavedDeck();
+
+      expect(screen.getByText("102 / 100")).toHaveTextContent(
+        "102 / 100 (2 cards over)"
+      );
+    });
+
     it("lists commander-legal cards in the search panel before anything is typed", async () => {
       await openSavedDeck();
 
