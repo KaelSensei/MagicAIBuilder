@@ -7,7 +7,7 @@
 //
 // @module deck/store-factories
 import type { Deck, DeckCard } from "./types";
-import type { CommandSlot } from "./bulk-edit-command-zone";
+import { commandSlotOf, type CommandSlot } from "./bulk-edit-command-zone";
 import type * as deckApi from "@/lib/db/deck-api";
 import { parseBracketLevel } from "@/lib/constants/brackets";
 import { rebuildCardFaces } from "./store-card-faces";
@@ -102,23 +102,27 @@ function apiCardToDeckCard(card: deckApi.ApiDeckCard): DeckCard {
 /**
  * Separates commander, partner, companion, and the remaining deck rows.
  *
- * A partner whose name matches the commander is dropped. Companion is a
- * category, not a zone flag.
+ * Each row's slot is read by `commandSlotOf`, the rule the server clears
+ * slots by. A partner whose name matches the commander is dropped.
  *
  * @param allCards - cards returned with the deck
  * @returns the four groups
  */
 function partitionApiCards(allCards: readonly deckApi.ApiDeckCard[]) {
-  const commanderCard = allCards.find((card) => card.isCommander && !card.isPartner) ?? null;
-  const rawPartnerCard = allCards.find((card) => card.isPartner) ?? null;
+  const bySlot = new Map<CommandSlot | null, deckApi.ApiDeckCard[]>();
+  for (const card of allCards) {
+    const slot = commandSlotOf(card);
+    const group = bySlot.get(slot) ?? [];
+    group.push(card);
+    bySlot.set(slot, group);
+  }
+  const firstIn = (slot: CommandSlot) => bySlot.get(slot)?.[0] ?? null;
+  const commanderCard = firstIn("commander");
+  const rawPartnerCard = firstIn("partner");
   const partnerCard =
     rawPartnerCard && rawPartnerCard.name !== commanderCard?.name ? rawPartnerCard : null;
-  const companionCard =
-    allCards.find((card) => !card.isCommander && !card.isPartner && card.category === "companion") ??
-    null;
-  const deckCards = allCards.filter(
-    (card) => !card.isCommander && !card.isPartner && card.category !== "companion"
-  );
+  const companionCard = firstIn("companion");
+  const deckCards = bySlot.get(null) ?? [];
   return { commanderCard, partnerCard, companionCard, deckCards };
 }
 
