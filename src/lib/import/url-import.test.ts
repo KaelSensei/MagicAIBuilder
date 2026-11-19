@@ -442,26 +442,14 @@ describe("importFromUrl", () => {
     expect(result.cards.length).toBeGreaterThanOrEqual(2);
   });
 
-  it("MTGTop8: falls back to HTML card extraction when export empty", async () => {
-    const spy = vi.spyOn(http, "httpGet");
-    spy.mockResolvedValueOnce(new Response("", { status: 200 }));
-    const html =
-      '<div class="deck">2 Lightning Bolt  &nbsp;1 Forest  </div>';
-    spy.mockResolvedValueOnce(new Response(html, { status: 200 }));
-
-    const result = await importFromUrl("https://mtgtop8.com/event?d=8001&e=1");
-    expect(result.source).toBe("mtgtop8");
-    expect(result.cards.some((c) => c.name === "Lightning Bolt")).toBe(true);
-  });
-
-  it("MTGTop8: throws when export and HTML yield no cards", async () => {
+  it("MTGTop8: reports an export with no card as a deck not found, without a second request", async () => {
     const spy = vi.spyOn(http, "httpGet");
     spy.mockResolvedValueOnce(new Response("\n", { status: 200 }));
-    spy.mockResolvedValueOnce(new Response("<html></html>", { status: 200 }));
 
     await expect(
       importFromUrl("https://www.mtgtop8.com/event?e=2&d=8002")
-    ).rejects.toThrow("Could not parse deck from MTGTop8");
+    ).rejects.toThrow("Deck not found or is private.");
+    expect(spy).toHaveBeenCalledTimes(1);
   });
 
   it("MTGDecks: imports txt list", async () => {
