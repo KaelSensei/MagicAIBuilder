@@ -57,6 +57,9 @@ export function createPlaytestState(
     commandZone: [],
     // The cards dealt into the command zone are the game's commanders.
     commanderIds: (overrides.commandZone ?? []).map((card) => card.id),
+    // No tally unless the deal says the format uses commander damage (`deal.ts`).
+    commanderDamageOpponents: 0,
+    commanderDamage: [],
     diceRolls: [],
     actionLog: [],
     nextActionId: 1,
