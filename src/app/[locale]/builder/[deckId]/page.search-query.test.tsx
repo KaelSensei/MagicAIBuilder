@@ -175,8 +175,8 @@ function findButton(name: string): Promise<HTMLElement> {
   return waitFor(() => button(name));
 }
 
-/** Opens the saved deck at `/en/builder/deck-1`, shows the filters and waits for the first search. */
-async function openBuilderWithFilters() {
+/** The builder page at `/en/builder/<deckId>`, inside the router contexts Next gives it. */
+function builderAt(deckId: string) {
   const router = {
     back: vi.fn(),
     forward: vi.fn(),
@@ -185,18 +185,29 @@ async function openBuilderWithFilters() {
     replace: vi.fn(),
     prefetch: vi.fn(),
   };
-  renderWithProviders(
+  return (
     <AppRouterContext.Provider value={router}>
-      <PathParamsContext.Provider value={{ locale: "en", deckId: DECK_ID }}>
+      <PathParamsContext.Provider value={{ locale: "en", deckId }}>
         <BuilderPage />
       </PathParamsContext.Provider>
-    </AppRouterContext.Provider>,
-    { session: PLAYER }
+    </AppRouterContext.Provider>
   );
+}
+
+/** Opens the saved deck at `/en/builder/deck-1` and waits for its title. */
+async function openBuilder(deckName: string = DECK.name) {
+  const view = renderWithProviders(builderAt(DECK_ID), { session: PLAYER });
   const user = userEvent.setup();
-  await screen.findByRole("heading", { level: 1, name: "Talrand Spells" });
+  await screen.findByRole("heading", { level: 1, name: deckName });
+  return { user, view };
+}
+
+/** Opens the saved deck at `/en/builder/deck-1`, shows the filters and waits for the first search. */
+async function openBuilderWithFilters() {
+  const { user } = await openBuilder();
   await user.click(button("Show filters"));
-  await lastSearchIs("legal:commander");
+  // Talrand leads the deck, so the name search stays inside blue (I-01, AC-01-160).
+  await lastSearchIs("legal:commander id<=U");
   return user;
 }
 
@@ -297,7 +308,7 @@ describe("characterization: the builder's name search with a plain-language quer
   it("runs the confirmed query exactly as shown, without the filters chosen before it", async () => {
     const user = await openBuilderWithFilters();
     await user.click(button("White"));
-    await lastSearchIs("id<=W legal:commander");
+    await lastSearchIs("id<=W legal:commander id<=U");
 
     await runPlainLanguageQuery(user);
 
@@ -357,7 +368,7 @@ describe("characterization: the builder's name search with a plain-language quer
 
     await user.type(screen.getByPlaceholderText("Search cards…"), "brain");
 
-    await searchesSince(sent, ["name:/brain/ id<=WB legal:commander"]);
+    await searchesSince(sent, ["name:/brain/ id<=WB legal:commander id<=U"]);
     expect(screen.queryByText(/^Query: /)).toBeNull();
   });
 
@@ -390,5 +401,56 @@ describe("characterization: the builder's name search with a plain-language quer
     await runPlainLanguageQuery(user);
 
     expect(sentNames).toEqual([["Talrand, Sky Summoner"]]);
+  });
+});
+
+/** A command-zone row of the deck under test, built on Talrand's. */
+function commandZoneCard(
+  name: string,
+  colorIdentity: readonly string[],
+  slot: { readonly isPartner: boolean } = { isPartner: false }
+): ApiDeckCard {
+  return {
+    ...TALRAND,
+    id: `row-${name}`,
+    scryfallId: `scryfall-${name}`,
+    name,
+    typeLine: "Legendary Creature",
+    colorIdentity: [...colorIdentity],
+    isCommander: !slot.isPartner,
+    isPartner: slot.isPartner,
+  };
+}
+
+/** Serves the deck under test led by `commander`, with `partner` beside it when given. */
+function serveDeckLedBy(commander: ApiDeckCard, partner?: ApiDeckCard): void {
+  server.use(
+    http.get("/api/decks/:id", () =>
+      HttpResponse.json({
+        ...DECK,
+        commanderId: commander.scryfallId,
+        commanderName: commander.name,
+        partnerId: partner?.scryfallId ?? null,
+        pairingType: partner ? "partner" : "none",
+        cards: partner ? [commander, partner] : [commander],
+      })
+    )
+  );
+}
+
+/** Teysa Karlov: a white and black commander with no rulebreaker exception. */
+const TEYSA = commandZoneCard("Teysa Karlov", ["W", "B"]);
+
+describe("the builder's name search inside the commander's colour identity (I-01, AC-01-160 to AC-01-162)", () => {
+  it("searches inside the commander's colour identity once a commander is set", async () => {
+    serveDeckLedBy(TEYSA);
+    const { user } = await openBuilder();
+
+    await user.type(screen.getByPlaceholderText("Search cards…"), "Sol");
+
+    await lastSearchIs("name:/Sol/ legal:commander id<=WB");
+    expect(
+      screen.getByText("Only cards in your commander's colors")
+    ).toBeDefined();
   });
 });
