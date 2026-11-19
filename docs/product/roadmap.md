@@ -1,6 +1,6 @@
 # MagicAIBuilder: Product Roadmap
 
-> **Updated:** 2026-11-19 (seventeenth pass: no new initiative; a competitor feature matrix, ranked player demand and the platform went to 24 existing specs, four legal questions and three owner decisions, and r/EDH's hostility to AI tools became a positioning risk). Before it, 2026-11-16 (sixteenth pass: no new initiative; rulebreaker commanders, a release-day check, Commander Box League and Two-Headed Giant Commander nights went to I-03, I-73, I-102, I-42 and I-41), 2026-11-15 (fifteenth pass: I-102 a theme you can measure, I-103 planar, scheme and Attraction decks), and 2026-11-14 (fourteenth pass: no new initiative; collection counting, the editor, the mana base, prices and the bracket floor gained scenarios)
+> **Updated:** 2026-11-19 (eighteenth pass, in the "roadmap v2" format of one subject, one row, one file: I-104 league decks, I-105 creator content, I-106 choosing a precon and I-107 a route clock, the last promoted from a seventeenth-pass line; 36 dated scope lines went to 21 existing specs). Before it, 2026-11-19 (seventeenth pass: no new initiative; a competitor feature matrix, ranked player demand and the platform went to 24 existing specs, four legal questions and three owner decisions, and r/EDH's hostility to AI tools became a positioning risk). Before it, 2026-11-16 (sixteenth pass: no new initiative; rulebreaker commanders, a release-day check, Commander Box League and Two-Headed Giant Commander nights went to I-03, I-73, I-102, I-42 and I-41), 2026-11-15 (fifteenth pass: I-102 a theme you can measure, I-103 planar, scheme and Attraction decks), and 2026-11-14 (fourteenth pass: no new initiative; collection counting, the editor, the mana base, prices and the bracket floor gained scenarios)
 
 > **North star:** help a Commander player go from an idea to a legal, explainable, testable and enjoyable deck.
 
@@ -8,26 +8,26 @@ This roadmap is the index. The user stories, scenarios and scope for each initia
 
 ## Themes
 
-The initiatives group into the jobs a Commander player actually has. I-80 to I-98, added on 2026-11-11, and I-99 to I-101, added on 2026-11-12, are marked. The fourteenth pass, on 2026-11-14, the sixteenth, on 2026-11-16, and the seventeenth, on 2026-11-19, added no initiative. Placement and the impact table are in [Impact and effort](#twelfth-pass-impact-effort-and-placement). Personas, the dependency graph, the quarter sequence and the risks are in [Planning Views](#planning-views).
+The initiatives group into the jobs a Commander player actually has. I-80 to I-98, added on 2026-11-11, and I-99 to I-101, added on 2026-11-12, are marked. The fourteenth pass, on 2026-11-14, the sixteenth, on 2026-11-16, and the seventeenth, on 2026-11-19, added no initiative. The eighteenth, the same day, added I-104 to I-107, marked in the last column. Placement and the impact table are in [Impact and effort](#twelfth-pass-impact-effort-and-placement). Personas, the dependency graph, the quarter sequence and the risks are in [Planning Views](#planning-views).
 
-| Theme | Already on the roadmap | Added 2026-11-11 | Added 2026-11-12 and 15 |
+| Theme | Already on the roadmap | Added 2026-11-11 | Added 2026-11-12, 15 and 19 |
 | --- | --- | --- | --- |
 | AI coaching and explainability | I-02, I-14, I-22, I-70 | I-83, I-91 | — |
-| Game night and pods | I-15, I-23, I-35, I-41, I-79 | I-88, I-94 | I-99, I-103 |
-| Playtesting and goldfish | I-07, I-21, I-31 | I-81, I-82, I-87, I-97 | — |
-| Budget, price and proxies | I-06, I-32, I-45, I-55, I-59 | I-80, I-84, I-96 | — |
+| Game night and pods | I-15, I-23, I-35, I-41, I-79 | I-88, I-94 | I-99, I-103, I-104 |
+| Playtesting and goldfish | I-07, I-21, I-31 | I-81, I-82, I-87, I-97 | I-107 |
+| Budget, price and proxies | I-06, I-32, I-45, I-55, I-59 | I-80, I-84, I-96 | I-106 |
 | Collection and import | I-16, I-26, I-43, I-62, I-76 | I-89, I-90 | I-101 |
-| Sharing, creators and search | I-08, I-34, I-36, I-46, I-75 | I-92, I-95 | — |
+| Sharing, creators and search | I-08, I-34, I-36, I-46, I-75 | I-92, I-95 | I-105 |
 | Phone, offline and reading | I-11, I-19, I-24, I-25, I-40, I-49 | I-93 | — |
 | Trust, data and competitive lists | I-09, I-38, I-67, I-77 | I-86, I-98 | I-100, I-102 |
 | Money and growth | I-30, I-39, I-66, I-72 | — | — |
 | Platform | I-05, I-69, I-71, I-74 | I-95 | — |
 
-I-85, player-supplied art, sits with the editor and is not a custom card. Cube, a life counter and a custom-card creator stay non-goals. I-99 has no timer and I-101 no registry; I-100 sits with the checkable analyses beside I-77. I-102 measures a theme the owner chose and never grades it; I-103 keeps side decks and simulates no planar die.
+I-85, player-supplied art, sits with the editor and is not a custom card. Cube, a life counter and a custom-card creator stay non-goals. I-99 has no timer and I-101 no registry; I-100 sits with the checkable analyses beside I-77. I-102 measures a theme the owner chose and never grades it; I-103 keeps side decks and simulates no planar die. I-104 checks league decks and ranks no player; I-105 links other people's content out and never ranks a creator; I-106 compares a precon line's decks with no power score; I-107 goldfishes one declared route and names no bracket.
 
 ## Roadmap At A Glance
 
-One row per initiative, in numeric order, generated on 2026-11-11 by the script behind the [dependency page](specs/dependency-graph.md). State is the initiative's `Status` line. Priority is Now, Next, Later or Parked. The slice column names the lowest-numbered slice that can start now. Every initiative has a spec file. Regenerate it with the dependency page; do not edit rows by hand. The generator must keep every row's spec link, including I-80 to I-103. The rows for I-99 to I-101 were written by hand on 2026-11-12, and those for I-102 and I-103 on 2026-11-15, as the I-80 to I-98 rows were. [I-74](specs/i74-a-roadmap-agents-can-execute.md) slice 4 moves its generation into the repository, behind a CI check.
+One row per initiative, in numeric order, generated on 2026-11-11 by the script behind the [dependency page](specs/dependency-graph.md). State is the initiative's `Status` line. Priority is Now, Next, Later or Parked. The slice column names the lowest-numbered slice that can start now. Every initiative has a spec file. Regenerate it with the dependency page; do not edit rows by hand. The generator must keep every row's spec link, including I-80 to I-107. The rows for I-99 to I-101 were written by hand on 2026-11-12, those for I-102 and I-103 on 2026-11-15, and those for I-104 to I-107 on 2026-11-19, as the I-80 to I-98 rows were. [I-74](specs/i74-a-roadmap-agents-can-execute.md) slice 4 moves its generation into the repository, behind a CI check.
 
 <!-- glance:start -->
 
@@ -136,6 +136,10 @@ One row per initiative, in numeric order, generated on 2026-11-11 by the script 
 | [I-101](specs/i101-collecting-goals-beyond-a-set.md)                                      | Collecting goals         | Later    | Later (2027) | — (slice 1 waits for I-67 slice 2; the rest for gate C and D-98)        |  [spec](specs/i101-collecting-goals-beyond-a-set.md)                      |
 | [I-102](specs/i102-a-theme-you-can-measure.md)                                           | Theme coverage           | Next     | Next         | 1: Handles on stored fields, `matchTheme`, `themeCoverage`              |  [spec](specs/i102-a-theme-you-can-measure.md)                            |
 | [I-103](specs/i103-planar-scheme-and-attraction-decks-beside-the-commander-deck.md)       | Side decks               | Next     | Next         | 1: One shared `DeckZone` with the three side zones (+2 more)            |  [spec](specs/i103-planar-scheme-and-attraction-decks-beside-the-commander-deck.md) |
+| [I-104](specs/i104-league-decks-and-the-change-allowance-between-rounds.md) | League decks | Later | Later | 1: `checkRoundAllowance`, a pure check with no schema (by hand; the rest waits for D-101) | [spec](specs/i104-league-decks-and-the-change-allowance-between-rounds.md) |
+| [I-105](specs/i105-creator-content-linked-to-commanders-and-precons.md) | Creator content | Later | Later | — (slice 1 waits for I-29 slice 0 and L-53) | [spec](specs/i105-creator-content-linked-to-commanders-and-precons.md) |
+| [I-106](specs/i106-choosing-a-precon-one-product-lines-decks-side-by-side.md) | Precon chooser | Next | Next | — (slice 1 waits for I-17 slice 1 and I-77 slice 1) | [spec](specs/i106-choosing-a-precon-one-product-lines-decks-side-by-side.md) |
+| [I-107](specs/i107-the-turn-a-goldfish-completes-its-route.md) | Route clock | Later | Later | — (slice 1 waits for I-31 slice 1 and I-65 slice 1) | [spec](specs/i107-the-turn-a-goldfish-completes-its-route.md) |
 <!-- glance:end -->
 
 ---
@@ -250,6 +254,45 @@ Added 2026-11-19. No new initiative number, so no glance row. As in the fourteen
 
 The pass also added four legal questions ([L-13](legal-questions.md#l-13-audience-measurement-error-replay-and-device-reads), [L-36](legal-questions.md#l-36-the-european-accessibility-act), [L-37](legal-questions.md#l-37-platform-status-and-the-micro-enterprise-floor), [L-40](legal-questions.md#l-40-the-ai-acts-transparency-duties-art-50)) and dated evidence to [D-34, D-35 and D-39](owner-decisions.md#product-scope-and-non-goals); see [What the seventeenth pass checked](#what-the-seventeenth-pass-checked-and-did-not-promote).
 
+### Eighteenth pass: impact, effort and placement
+
+Added 2026-11-19, with the twelfth pass's labels, in the "roadmap v2" format the owner asked for: a distinct subject gets the next free id, a glance row and its own spec file; a refinement stays a dated line in the spec that owns it. I-106 is Next and sits after the numbered Next band, as the fifteenth pass's items do; I-104, I-105 and I-107 are Later. I-107 is the seventeenth pass's speed-variant line on I-31, promoted because it is a deliverable with its own surface, its own competitor and its own risk; the line on I-31 is now a pointer. The review is [section 19 of the landscape](competitive-landscape.md#19-an-eighteenth-pass-leagues-creator-content-precon-choice-and-formats-2026-11-19).
+
+| ID | Impact | Effort | Risk | Place | Confidence | Why it is not sooner |
+| --- | --- | --- | --- | --- | --- | --- |
+| I-104 League decks | Medium | Medium | Medium | Later | Medium | Precon and budget leagues allow a fixed change per round, kept by hand on shared boards; Castlog sells league budget rules beside ELO, and a 149-point r/EDH thread rejects heavy scoring. Slice 1 is pure; the league waits for I-53's rule types, I-32's prices and D-101 |
+| I-105 Creator content | Medium | Medium | Medium | Later | Low | Content about a commander or precon is on dated feeds and no site joins it across sources, but no r/EDH request for it was found. Waits for I-29 slice 0, L-53 and D-102 |
+| I-106 Precon chooser | Medium | Small | Low | Next | High | "Which precon should I buy?" threads reach 115 points; Wizards' buyer's guide rates no complexity and Draftsim calls every precon Bracket 2. Every signal is another Next initiative's; slice 1 waits for I-17 slice 1 and I-77 slice 1 |
+| I-107 Route clock | Medium | Medium | High | Later | High | EDHcheck sells a 1,500-game Turn Clock; I-65's estimates assume every piece in hand. Waits for I-31's engine, I-65's map and D-103; a speed read as power is the risk |
+
+The scope the pass attached to ids that already exist, in the fourteenth pass's format. Each row is one or more dated lines in the owning spec; none changes that id's place, and Effort is the addition.
+
+| Existing id | What was added | Impact | Effort | Risk | Place | Confidence | Why it is not a new number |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| I-42 Variants | Duel Commander's companion-only ban and experimental unbans; PDH's dated options and face-by-face eligibility; Oathbreaker eligibility by type; Canadian Highlander dates; Tiny Leaders evidence; PreDH; a corrected Moxfield row | Medium | Small | Low | Next, unchanged | High | I-42 owns variant rules, lists and their maintainers as data |
+| I-35 Game log | A deck-level bracket answer from the table; a season as a date window; slice 10's import sources; corrected Playgroup and Castlog rows | Medium | Small | Medium | Later, unchanged | Medium | Seat confirmation, mismatch and imports are already 2.2, 3.5 and slice 10 |
+| I-41 Store nights | An attendance export of checked-in accounts only; night kinds with pasted special rules; a waitlist with a go or cancel deadline | Medium | Small | Low | Later, unchanged | High | Capacity, check-in and house rules per night are already 4.1 |
+| I-73 Set releases | Secret Lair drops keyed by printing date (the Dune superdrop as fixture); release status per format | Medium | Small | Low | Next, unchanged | High | Release status and the playbook are already I-73's |
+| I-17 Precons | A corrected market sentence (Grimoria, Nerd Leagues); creators with verified links as bundle authors | Medium | Small | Medium | Next, unchanged | Medium | Bundles are already scope, and "who writes the editorial bundles" is already an open question |
+| I-47 Rules answers | Oracle changes in the rules watch, correcting "I-48 carries Oracle changes"; the CR glossary's one-line keyword reminders | Medium | Small | Low | Next, unchanged | High | 8.2 and 4.1 already own the watch and keyword links |
+| I-88 Pre-game script | Wizards' 2026-02-09 framing and Bracket 1's declared exceptions; one authored question about a game lost and enjoyed | Medium | Small | Low | Next, unchanged | High | The authored list already owns every question |
+| I-15 Rule 0 sheets | Overtime and seat compensation as named house rules, with sources | Medium | Small | Low | Next, unchanged | Medium | House rules are already fields and rule objects |
+| I-34 Data reports | The card page's shape; an owner question on starting on the product's own decks | Medium | Medium | Medium | Next, unchanged | High | Card × bracket pages are already 3.3 and slice 10 |
+| I-39 First run | The Foundations Commander decks as the first official sample decks | Medium | Small | Low | Next, unchanged | High | 4.2 already plans precon sample decks |
+| I-43 Storage places | A sleeve-marking guide for pool copies | Medium | Small | Low | Later, unchanged | Medium | The travelling staple is already scope |
+| I-75 Deck search | A card preset of the query contract | Medium | Small | Low | Next, unchanged | High | 2.4 already serves presets |
+| I-18 New-card radar | Grimoria's preview wishlist as evidence for D-81 | Medium | Small | Low | Later, unchanged | Medium | Evidence only |
+| I-03 Deck feedback | A stored pre-game colour choice (CR 903.4b) | Low | Small | Low | Now, unchanged | High | Tolabow's gap is already recorded in `format-rules` |
+| I-19 Offline viewing | Tokens no card prints, as text tokens | Low | Small | Low | Next, unchanged | Medium | The token list is already slice 2 |
+| I-60 Player stats | A pod recap only every member opts into, after I-35 slice 6 | Low | Medium | Medium | Next, unchanged; the line is Later | High | Recaps and their opt-in are already I-60's |
+| I-36 Creator toolkit | Convoke's and MTGGoldfish's stream references; a Twitch extension as an owner question | Low | Medium | Medium | Later, unchanged | Medium | 5.2 already owns the overlay |
+| I-30 Paid tier | Castlog's pod pass and five-deck cap; a second pod review sold elsewhere | Low | Small | Low | Next, unchanged | Medium | Evidence only |
+| I-46 Discord | Convoke and Playgroup Live as table links after SpellBot left SpellTable | Low | Small | Low | Next, unchanged | High | The table link is already a seventeenth-pass line |
+| I-50 Play online | Playgroup's playtest link accepts two deck sites only | Low | Small | Low | Next, unchanged | High | Slice 12 already plans partner imports |
+| I-53 Challenges | A `stockPrecon` rule type | Low | Small | Low | Later, unchanged | Medium | Rule types are already slice 1 |
+
+The pass also added one legal question ([L-53](legal-questions.md#l-53-listing-other-sites-content-from-public-feeds-and-youtube)), three owner decisions ([D-101 to D-103](owner-decisions.md#product-scope-and-non-goals)) and dated evidence on D-27 and D-81; see [What the eighteenth pass checked](#what-the-eighteenth-pass-checked-and-did-not-promote).
+
 ---
 
 ## Planning Views
@@ -258,7 +301,7 @@ Added 2026-11-11. These views order work that already has an initiative. They ar
 
 ### How to read an enrichment
 
-Every Now item, every Next item, and I-80 through I-103 has an enrichment block in front of its definition of done. The block is the player contract. The spec, where one exists, remains the engineering contract. Do not copy a slice table into the block.
+Every Now item, every Next item, and I-80 through I-107 has an enrichment block in front of its definition of done. The block is the player contract. The spec, where one exists, remains the engineering contract. Do not copy a slice table into the block.
 
 Telemetry names are reserved for I-39's event store. Nothing is emitted until that store exists. A row holds counts and enums only: no email, name, username, deck name, card name, list, search text or URL, the same bar as I-39 requirement 8.3. A notice to a player goes through I-63, not through the event.
 
@@ -270,11 +313,11 @@ A person can be more than one of these. The table says which initiatives are for
 
 | Persona | What they are trying to do | Initiatives |
 | --- | --- | --- |
-| Casual pod player | Sit down with friends, say what the deck does, and play | I-01, I-07, I-15, I-17, I-19, I-28, I-88, I-93, I-94, I-99, I-100, I-102, I-103 |
-| Bracket-focused player | Match the table without a fake score | I-03, I-15, I-28, I-48, I-77, I-78, I-88, I-99, I-100, I-102 |
-| cEDH player | Check legality, combos and a primer, and not a win rate | I-09, I-21, I-31, I-42, I-50, I-65, I-98, I-99 |
-| Collector and budget player | Know what they own, what it costs, and what they can proxy | I-06, I-16, I-32, I-45, I-55, I-57, I-59, I-76, I-80, I-84, I-89, I-90, I-96, I-101, I-103 |
-| Content creator | Publish a list people can read, embed and trust | I-08, I-34, I-36, I-46, I-72, I-75, I-83, I-92, I-95, I-99, I-102 |
+| Casual pod player | Sit down with friends, say what the deck does, and play | I-01, I-07, I-15, I-17, I-19, I-28, I-88, I-93, I-94, I-99, I-100, I-102, I-103, I-104, I-105, I-106 |
+| Bracket-focused player | Match the table without a fake score | I-03, I-15, I-28, I-48, I-77, I-78, I-88, I-99, I-100, I-102, I-104, I-106, I-107 |
+| cEDH player | Check legality, combos and a primer, and not a win rate | I-09, I-21, I-31, I-42, I-50, I-65, I-98, I-99, I-107 |
+| Collector and budget player | Know what they own, what it costs, and what they can proxy | I-06, I-16, I-32, I-45, I-55, I-57, I-59, I-76, I-80, I-84, I-89, I-90, I-96, I-101, I-103, I-104, I-106 |
+| Content creator | Publish a list people can read, embed and trust | I-08, I-34, I-36, I-46, I-72, I-75, I-83, I-92, I-95, I-99, I-102, I-105 |
 
 ### Dependencies
 
@@ -320,6 +363,13 @@ flowchart TD
   I67 --> I102a["I-102 Artist and plane handles"]
   I17["I-17 Precons"] --> I103p["I-103 Precon side lists"]
   I42["I-42 Variants"] --> I103o["I-103 Archenemy Commander option"]
+  I53["I-53 Challenges"] --> I104["I-104 League decks"]
+  I32["I-32 Prices"] --> I104
+  I29["I-29 Deck index"] --> I105["I-105 Creator content"]
+  I17 --> I106["I-106 Precon chooser"]
+  I77 --> I106
+  I31 --> I107["I-107 Route clock"]
+  I65 --> I107
 ```
 
 | Initiative | Waits on | Unblocks |
@@ -350,6 +400,13 @@ flowchart TD
 | I-102 slice 6 | I-67 slice 2's printings | Artist, plane, watermark and flavour handles |
 | I-103 slices 1, 2 and 5 | Nothing that is not already on `dev` | Side zones, their checks, text export and import |
 | I-103 slice 4 | D-100 | The side-deck board players see |
+| I-104 slice 1 | Nothing that is not already on `dev` | The allowance check, pure, with no schema |
+| I-104 slices 2 to 4 | I-53 slice 1, I-29 slice 2, I-32 slice 2 and D-101 | Leagues members can join and register lists in |
+| I-105 slice 1 | I-29 slice 0 and L-53 | Content sources as reviewed records |
+| I-105 slice 4 | I-67 slice 2, I-17 slice 1 and D-102 | The content list players see |
+| I-106 slice 1 | I-17 slice 1 and I-77 slice 1 | The precon comparison |
+| I-107 slice 1 | I-31 slice 1 and I-65 slice 1 | Route-completion predicates |
+| I-107 slice 3 | I-31 slices 2 to 6, I-65 slice 3 and D-103 | The route clock players see |
 
 I-21 as a whole stays Later. Only the seeded slices I-31 needs move ahead, which the portfolio already says. That is not a promotion of the bench.
 
@@ -361,8 +418,8 @@ Buckets follow Now, then Next, then Later. A bucket is an order. It is not a pro
 | --- | --- | --- |
 | 2026 Q4 | The Now band: I-01 recovery, I-02's visible verdict and card-data repair, I-03's sourced warnings, I-04's focus and typing undo, I-05's WebP path, deletion session and rate limit. Beside them, the Next slices that protect the product and need nothing: I-71's command guard, I-61's password fix, I-67's reader, I-39's public-page and replay fixes, I-49's contrast measure | Billing, new locales, a marketplace, any Later initiative |
 | 2027 Q1 | Next work that other Next work waits on: I-67, I-14, I-15, I-63, I-70, I-30's metering and disclosure with no charge, I-34's index policy, I-57's printing defects, I-42's format picker, I-46's previews, I-50's export contract, I-86, I-95, I-96, I-97 | I-30's charge, I-91's model wording, I-80's art |
-| 2027 Q2 | The rest of Next: I-06, I-07, I-08, I-09, I-13 with I-37, I-16, I-17, I-19, I-28, I-31, I-32 without an affiliate code until the lawyer says yes, I-38's remaining safety floor, I-47, I-48, I-52, I-54, I-55, I-56, I-58, I-60, I-62, I-64, I-65, I-66, I-68, I-69, I-72, I-73, I-74, I-75, I-76, I-77, I-78, I-88, I-91's deterministic mode, I-92, then I-99 slices 0 to 8 and I-100 slices 0 to 4 once I-65 slice 1 and I-78 slice 1 have shipped, and I-102 slices 0 to 5 and I-103 slices 0 to 5 | The 2027 horizon, the Later rows of I-80 to I-98, I-99 slices 9 to 13, I-100 slices 5 to 10 and I-101 |
-| 2027 Q3 and after | Later, one at a time, after the wait in the table above is met: I-18, I-20, I-21, I-22 to I-27, I-29, I-35, I-36's remainder, I-40, I-41, I-43 to I-45, I-51, I-53, I-59, I-79, I-80, I-81, I-82, I-83's insert, I-84, I-85's upload, I-87, I-89, I-90, I-93, I-94, I-98, I-99 slices 9 to 13, I-100 slices 5 to 10, I-101 behind gate C, I-102 slices 6 to 10 and I-103 slices 6 to 10. I-33 stays parked until the owner picks a rung | A date for any of these |
+| 2027 Q2 | The rest of Next: I-06, I-07, I-08, I-09, I-13 with I-37, I-16, I-17, I-19, I-28, I-31, I-32 without an affiliate code until the lawyer says yes, I-38's remaining safety floor, I-47, I-48, I-52, I-54, I-55, I-56, I-58, I-60, I-62, I-64, I-65, I-66, I-68, I-69, I-72, I-73, I-74, I-75, I-76, I-77, I-78, I-88, I-91's deterministic mode, I-92, then I-99 slices 0 to 8 and I-100 slices 0 to 4 once I-65 slice 1 and I-78 slice 1 have shipped, and I-102 slices 0 to 5 and I-103 slices 0 to 5, and I-106 slices 1 to 3 once I-17 slice 1 and I-77 slice 1 have shipped | The 2027 horizon, the Later rows of I-80 to I-98, I-99 slices 9 to 13, I-100 slices 5 to 10 and I-101 |
+| 2027 Q3 and after | Later, one at a time, after the wait in the table above is met: I-18, I-20, I-21, I-22 to I-27, I-29, I-35, I-36's remainder, I-40, I-41, I-43 to I-45, I-51, I-53, I-59, I-79, I-80, I-81, I-82, I-83's insert, I-84, I-85's upload, I-87, I-89, I-90, I-93, I-94, I-98, I-99 slices 9 to 13, I-100 slices 5 to 10, I-101 behind gate C, I-102 slices 6 to 10, I-103 slices 6 to 10, I-104 after D-101, I-105 after L-53 and D-102, I-106 slices 4 to 6 and I-107 after D-103. I-33 stays parked until the owner picks a rung | A date for any of these |
 
 ### Risks and mitigations
 
@@ -379,6 +436,9 @@ Buckets follow Now, then Next, then Later. A bucket is an order. It is not a pro
 | A side card counted as a main card | A plane or a scheme changes the deck's count, curve, price or bracket | I-103 slice 1 gives one shared zone type and a sociable test on every reader of the main zone |
 | A load band or a finding read as a verdict | Players treat "demanding" or a coherence question as a judgement on a deck or a person | I-99 shows every factor beside the band and bans the pejoratives; I-100 asks a question, keeps findings private and lets the owner answer "I mean it"; both measure precision on an owner-labelled fixture before any public surface |
 | An "AI" product launched into a forum hostile to AI tools | r/EDH's "Can we ban AI-slop, vibe-coded apps from bring solicited on here?" drew 1,840 points and 336 comments (2026-04-03, Arctic Shift snapshot read 2026-11-19), and every AI-tool launch found there since sits at 0 or 1 point. A launch post that leads with the model is dismissed before anyone reads the checks | Added 2026-11-19. Positioning, not a feature: the landing copy, the pricing page and the first public posts lead with the checks and the tools that call no model, and link I-30 slice 5's disclosure page ([I-02](specs/i02-checkable-ai-copilot.md), [I-30](specs/i30-business-model-and-paid-tier.md)). Legality stays usable with the copilot off |
+| A league that becomes a tournament manager | A points column or standings creep into I-104, against I-41 1.1 and I-35's non-goals | Added 2026-11-19. I-104's data model has no game result, and whether a league ever shows standings is owner decision D-101, not a slice |
+| Another site's content listed against its terms | I-105 lists titles and links from feeds whose terms forbid reuse, or treats YouTube data in a way its policies refuse | Added 2026-11-19. Every source is a reviewed I-29 record with its terms and read date, link-only by default; L-53 comes before slice 1, and an I-69 switch hides every list at once |
+| A speed figure read as a power verdict | I-107's goldfish turn is quoted at the table as a bracket or as proof a deck is "too fast" | Added 2026-11-19. Private by default, no bracket or score on the panel, a limits line that names what the goldfish ignores, and D-103 before any surface |
 
 ### Kill criteria for Now
 
@@ -475,11 +535,36 @@ Read on 2026-11-19. No new initiative number; every valid candidate went to the 
 - **Player threads with an owner and no new scope:** the 909-point Scryfall syntax cheat sheet (I-14); distrust of automatic bracket verdicts at 797, 609 and 131 points (I-77, I-22); EDHREC's combo section at 407 points (I-09 reads Commander Spellbook); a layers explainer at 165 points (I-27, I-47); Archidekt's monthly contest at 162 points (I-53); 19 months of playgroup statistics at 185 points (I-23); portfolio and price trackers (I-59); a hypergeometric calculator at 43 points (shipped); cheaper lands at 11 points (I-58, I-55); ManaBox's proxy request (I-80); and r/Moxfield's small requests (I-37, I-16, I-40, I-57, I-08).
 - **Searched with nothing found:** Moxfield's feature-request vote totals (403) and the contents of its editor redesign; a TCGplayer or Cardmarket deck builder; a 2026 Historic Brawl builder change; price, reprint or ban alerts at Moxfield, Archidekt or EDHREC; embeds at Moxfield or Archidekt; accessibility complaints about deckbuilders; new changelog entries at Archidekt, EDHREC or Cardsphere; any r/EDHrec post in 2025–2026; a request for an AI builder among 11 r/EDH posts titled "chatgpt", all at 0 points; tool requests among r/mtgproxies' and r/archidekt's posts.
 
+### What the eighteenth pass checked and did not promote
+
+Read on 2026-11-19, in three angles: at the table and around the game; learning, content and the release calendar; formats, card and commander pages, budget and deck heuristics. Four new initiative numbers, I-104 to I-107; 36 dated scope lines on 21 existing specs; one legal question (L-53); three owner decisions (D-101 to D-103). Every "existing owner: none" claim was re-checked against the glance table and the specs before a number was given. The review and its sources are [section 19 of the landscape](competitive-landscape.md#19-an-eighteenth-pass-leagues-creator-content-precon-choice-and-formats-2026-11-19).
+
+- **The seventeenth pass, revisited.** Its 33 dated lines were read again. One describes a distinct deliverable and was promoted: I-31's speed variant became [I-107](specs/i107-the-turn-a-goldfish-completes-its-route.md). The other 32 refine the spec that holds them (evidence, a corrected sentence, a proposed requirement inside an existing section, or an owner question before any work) and stay where they are.
+- **The same job proposed twice.** R3's league allowance on I-17's ledger and R1's league candidate are one subject, I-104. R2's precon comparison, proposed as an I-17 line, is I-106. Both neighbours carry a non-goal line that points to the new file.
+- **Life, commander damage, poison, a turn timer and live designations:** non-goal unchanged; Playgroup, Castlog and Nerd Leagues ship them free.
+- **Achievements, bingo, quests, XP and Playscore-style points:** rejected under I-35, I-39 7.4 and I-53's non-goals; a 149-point thread rejects a store league's bookkeeping.
+- **League standings, Elo, leaderboards, rivals and "nemesis":** rejected; whether an I-104 league ever shows standings is D-101.
+- **Endorsements of players** (Playgroup's `good_sport`, `would_play_again`; Convoke's commends): rejected; only the deck-level bracket answer joins I-35.
+- **Finding a pod** (Playgroup's map, SpellBot's `/lfg` by bracket, store directories): non-goal unchanged. Wizards' update of 2026-02-09 names finding "the right kinds of games" a priority; that is a reason to ask the owner, not to build.
+- **A sleeve inventory per deck, a singleton gauntlet across decks, owned-token tracking:** no demand found; the one software job is I-43's marking guide.
+- **Online leagues and competitive circuits** (TopDeck's Championship Series, a $360 cEDH league): the tournament-manager non-goal stands.
+- **A Commander course, a rules quiz, newsletters and article hosting for creators:** rejected; I-27, I-28 and I-68 refuse a course, and I-36 and I-72 refuse publishing.
+- **Creator affiliate links, a creator's deck feed, a public release calendar:** rejected as reversals of I-36, I-72 and I-73 non-goals; a reader-pulled profile feed would be one line on I-46 if ever wanted.
+- **Answer coverage by permanent type** (how many removal pieces hit an enchantment, a planeswalker, a land): not promoted; no analyser splits removal this way, and an r/EDH search for "removal suite" since 2025 returned no post. I-28 slice 7 is the owner if demand appears.
+- **Pauper Duel Commander:** not a format here; no single maintainer since 2025-05-22, recorded on I-42.
+- **Two-Headed Giant Commander and Commander Draft:** no team construction rule to check, and drafting stays a non-goal.
+- **A richer commander page, prices from ten vendors, cheaper-card swaps, budget tiers and "the deck under €X", template ratios and land counts:** owned by I-08, I-34, I-75, I-54, I-09, I-96, I-32, I-55, I-28, I-58 and I-77; a 337-point "100 Budget Decks Each Under $100" thread is one more voice for I-75 slice 6. An "average deck" stays excluded.
+- **A public card page that repeats Scryfall:** outside the strategic boundaries; I-34's card page is built from decks, not card data.
+- **Owned, with nothing new:** spoiler season per commander (I-18, I-73), banlist pushes (I-48; the next banned-and-restricted date is still 2026-11-30), reprint tracking (I-84, I-59), the first-deck journey (I-39, I-17), embeds and primers with video (I-36), returning players (I-72, I-48), and new-player feedback threads at 259 and 51 points (I-03, I-27, I-28, I-81, I-99).
+- **Searched with nothing found:** a per-commander index of videos and podcasts at any competitor (became I-105); a playgroup's shared deck roster; deck rotation rules outside leagues; a new Rule 0 checklist product; a 2026 Brawl change; a new official Commander variant; per-variant deck counts; a PreDH maintainer; a Karsten update after 2022; a versioned deck link for a video; Commander's Herald as a content source (its ten newest items are satire).
+
 ---
 
 ## Initiative index
 
 The [glance table](#roadmap-at-a-glance) is the index: one row, the status, the priority, and the spec link. Every initiative, Later and Parked included, has a full feature contract. The roadmap text was moved into the spec and then expanded. Nothing was kept only in a shorter form.
+
+The eighteenth pass (2026-11-19) added four rows in the "roadmap v2" format, one subject, one row, one file: [I-104 League decks](specs/i104-league-decks-and-the-change-allowance-between-rounds.md), [I-105 Creator content](specs/i105-creator-content-linked-to-commanders-and-precons.md), [I-106 Precon chooser](specs/i106-choosing-a-precon-one-product-lines-decks-side-by-side.md) and [I-107 Route clock](specs/i107-the-turn-a-goldfish-completes-its-route.md).
 
 ## Delivery rules
 

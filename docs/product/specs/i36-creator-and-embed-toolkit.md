@@ -146,6 +146,7 @@ No table stores an IP address or a user agent, and a schema test guards that abs
 - Creator revenue shares, tips or affiliate splits; affiliate links are [I-32](i32-seller-handoff-and-affiliate-carts.md)'s question.
 - Third-party analytics, advertising or pixels on any surface here.
 - Contests and community programming, which are operations rather than product. [I-72](i72-growth-loops-referrals-creators-and-return.md#5-creator-programme-owner-decision) proposes early access and a complimentary seat for creators, which would amend this line; that is owner decision [D-80](../owner-decisions.md#product-scope-and-non-goals), and the line stands until it is decided (2026-11-10).
+- Added 2026-11-19 (eighteenth pass): a cross-site list of other people's videos, articles and podcast episodes per commander or precon. That belongs to [I-105](i105-creator-content-linked-to-commanders-and-precons.md); this initiative keeps video attached to a deck on this site, and I-105 reuses 4.4's timestamp syntax for creator submissions.
 
 ## Testing strategy
 
@@ -544,6 +545,7 @@ Reference sites grew because other people linked to them. Creators amplified EDH
 - [ ] A `public:read` API scope with two attributed endpoints and a limiter on I-05 M2's shared store (one owner, decided 2026-11-10), behind a terms page reviewed by a lawyer (slice 11).
 - [ ] A cookie-free view counter with daily-salted de-duplication and an owner toggle; views rank nothing (slice 12).
 - Moved 2026-11-10: the creator kit is now [I-72](i72-growth-loops-referrals-creators-and-return.md)'s slice 13, and operator-verified links on the creator page its slice 14. Early access and a complimentary seat for creators (I-72 slice 15) would amend this initiative's non-goal "contests and community programming"; the non-goal stands until owner decision [D-80](../owner-decisions.md#product-scope-and-non-goals). Whether such a grant must be labelled is [L-43](../legal-questions.md#l-43-referral-and-creator-rewards).
+- [ ] Added 2026-11-19 (eighteenth pass), for 5.2: Convoke's Twitch extension ("When you select your commander and deck in Convoke, your viewers instantly see it too"; "Works instantly for anyone watching your Twitch stream. No downloads or accounts required"; [page](https://convoke.games/en/twitch-extension), read 2026-11-19) and MTGGoldfish's deck "Stream Popout" (search summary; the page answered HTTP 403) are the shipped references for the overlay layout. An owner question joins them: a Twitch panel extension that shows a streamer's chosen public deck through this initiative's public projection, with no account for viewers and no card recognition on the video. It is not a chat overlay, but it needs Twitch's review and an extension backend, so the owner decides whether it fits the non-goal. Card recognition on stream stays out: it is camera scanning by another name, and [D-34](../owner-decisions.md#product-scope-and-non-goals) holds it.
 
 ### Engineering enablers
 
