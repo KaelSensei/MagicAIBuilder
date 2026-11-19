@@ -183,6 +183,7 @@ DeckRouteMap     deckId, inputHash, definitionsVersion, tagsFileDate, spellbookO
 - A second combo database, or scraping Spellbook; the per-deck call and its terms stay as #1324 built them.
 - A model deciding or summarising routes. Rewording is optional, checked and labelled (9.2).
 - Paywalling the single-deck map, its sources or its evidence ([strategic boundaries](../roadmap.md#strategic-boundaries)).
+- Added 2026-11-19 (eighteenth pass): the turn on which a shuffled, goldfished list completes one declared route. That belongs to [I-107](i107-the-turn-a-goldfish-completes-its-route.md), which runs on I-31's engine and reads this map; the mana-only floor and the speed band (6.1, 6.2) stay here, and the line above still holds for this initiative.
 
 ## Testing strategy
 
