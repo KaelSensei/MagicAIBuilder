@@ -173,14 +173,33 @@ export async function requireDeckOwner(deckId: string): Promise<
     select: { id: true, userId: true },
   });
 
+  const owned = ownedDeck(deck, result.session.user.id);
+  if (owned.error) return owned;
+  return { userId: result.session.user.id, deck: owned.deck };
+}
+
+/**
+ * The ownership verdict on a deck row a handler already read: the row when
+ * `userId` owns it, else 404 (no row) or 403. A handler that needs more of the
+ * deck than {@link requireDeckOwner} selects reads it in the same query as the
+ * ownership check and judges it here.
+ *
+ * @param deck - The deck row, `null` when no deck has the id
+ * @param userId - The signed-in user's id, from {@link requireAuth}
+ * @returns The row, or the response to return
+ */
+export function ownedDeck<Deck extends { readonly userId: string | null }>(
+  deck: Deck | null,
+  userId: string
+): { deck: Deck; error?: never } | { deck?: never; error: NextResponse } {
   if (!deck) {
     return { error: NextResponse.json({ error: "Deck not found" }, { status: 404 }) };
   }
 
   // Only the owner may access a deck; ownerless (legacy) decks are denied
-  if (deck.userId !== result.session.user.id) {
+  if (deck.userId !== userId) {
     return { error: NextResponse.json({ error: "Forbidden" }, { status: 403 }) };
   }
 
-  return { userId: result.session.user.id, deck };
+  return { deck };
 }
