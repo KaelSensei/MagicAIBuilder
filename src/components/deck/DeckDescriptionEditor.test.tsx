@@ -1,4 +1,5 @@
 import { act, fireEvent, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithProviders } from "@/test/render";
 import { renderWithIntl } from "@/test/render-with-intl";
@@ -201,13 +202,27 @@ describe("DeckDescriptionEditor", () => {
       expect(screen.getByRole("textbox")).toHaveValue("Original");
     });
 
-    it("saves the draft when the source loses focus", () => {
+    it("saves the draft when the player presses outside the editor", async () => {
+      const user = userEvent.setup();
+      const source = openEditor("Original");
+      fireEvent.change(source, { target: { value: "Updated" } });
+      const backdrop = screen.getByRole("dialog").parentElement;
+
+      await user.pointer({ keys: "[MouseLeft]", target: backdrop ?? source });
+
+      expect(updateDeckDescription).toHaveBeenCalledTimes(1);
+      expect(updateDeckDescription).toHaveBeenCalledWith("deck-1", "Updated");
+    });
+
+    it("keeps the editor open, unsaved, when the player presses inside it", async () => {
+      const user = userEvent.setup();
       const source = openEditor("Original");
       fireEvent.change(source, { target: { value: "Updated" } });
 
-      fireEvent.blur(source);
+      await user.click(screen.getByRole("region", { name: "Preview" }));
 
-      expect(updateDeckDescription).toHaveBeenCalledWith("deck-1", "Updated");
+      expect(updateDeckDescription).not.toHaveBeenCalled();
+      expect(screen.getByRole("textbox")).toHaveValue("Updated");
     });
 
     it("saves the draft with the Save button", () => {

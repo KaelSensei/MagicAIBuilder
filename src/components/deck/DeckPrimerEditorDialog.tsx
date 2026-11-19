@@ -5,7 +5,8 @@
  * Context: deck building (ui), opened by `DeckDescriptionEditor`. The builder's details panel is
  * 280 px wide at `lg`, too narrow for two panes, so editing opens in the shared `Modal`: the panes
  * sit side by side from `lg` and stack below it, each at a working height with its own scroll.
- * The save contract is the editor's: blur, Save and Ctrl/Cmd+Enter save; Escape drops the draft.
+ * The save contract is the editor's: leaving it (a press outside, the dialog's form of the old
+ * textarea blur), Save and Ctrl/Cmd+Enter save; Escape drops the draft.
  * Not responsible for: saving or the draft state, which the editor owns.
  *
  * @module deck/DeckPrimerEditorDialog
@@ -34,30 +35,20 @@ interface DeckPrimerEditorDialogProps {
   readonly onCancel: () => void;
 }
 
-/**
- * Keeps the dialog open when Radix asks to close it.
- *
- * Radix closes on Escape and on a press outside the panel, before the textarea sees either. The
- * textarea's own handlers keep the editor's contract: its Escape drops the draft, and the outside
- * press blurs it, which saves. Closing here first would drop a draft the player meant to save.
- */
-function deferCloseToTheTextarea(): void {
-  // Intentionally empty: see the TSDoc above.
-}
-
-/** The labelled source pane: Escape cancels, Ctrl+Enter or Cmd+Enter saves, blur saves. */
+/** The labelled source pane; Ctrl+Enter or Cmd+Enter saves. */
 function PrimerSourcePane({
   draft,
   textareaRef,
   onDraftChange,
   onSave,
-  onCancel,
-}: Omit<DeckPrimerEditorDialogProps, "open">) {
+}: Pick<
+  DeckPrimerEditorDialogProps,
+  "draft" | "textareaRef" | "onDraftChange" | "onSave"
+>) {
   const t = useTranslations("deck");
   const sourceId = useId();
 
   const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (event.key === "Escape") onCancel();
     if ((event.ctrlKey || event.metaKey) && event.key === "Enter") onSave();
   };
 
@@ -75,7 +66,6 @@ function PrimerSourcePane({
         value={draft}
         onChange={(event) => onDraftChange(event.target.value)}
         onKeyDown={handleKeyDown}
-        onBlur={onSave}
         placeholder={t("description.placeholder")}
         maxLength={DESCRIPTION_MAX_LENGTH}
         className={`w-full resize-none rounded-md border border-[var(--border)] bg-[var(--surface)] px-2.5 py-2 font-mono text-xs text-[var(--text-primary)] outline-none transition-colors placeholder:text-[var(--text-secondary)]/50 focus:border-[var(--accent)] ${PANE_BODY_CLASS}`}
@@ -89,8 +79,14 @@ function PrimerSourcePane({
  *
  * Shows the primer template insert while the draft is empty, the character counter and Save.
  */
-export function DeckPrimerEditorDialog(props: DeckPrimerEditorDialogProps) {
-  const { open, draft, textareaRef, onDraftChange, onSave } = props;
+export function DeckPrimerEditorDialog({
+  open,
+  draft,
+  textareaRef,
+  onDraftChange,
+  onSave,
+  onCancel,
+}: DeckPrimerEditorDialogProps) {
   const t = useTranslations("deck");
 
   const insertPrimerTemplate = () => {
@@ -99,9 +95,13 @@ export function DeckPrimerEditorDialog(props: DeckPrimerEditorDialogProps) {
   };
 
   return (
+    // A press outside is how the player leaves the editor, the dialog's form of the old
+    // textarea blur, so it saves; Escape drops the draft. Focus is trapped inside, so a
+    // press within the dialog never leaves it.
     <Modal
       open={open}
-      onClose={deferCloseToTheTextarea}
+      onClose={onSave}
+      onEscape={onCancel}
       title={t("description.edit")}
       maxWidth="max-w-5xl"
       showClose={false}
@@ -110,8 +110,6 @@ export function DeckPrimerEditorDialog(props: DeckPrimerEditorDialogProps) {
         {draft.trim() === "" && (
           <button
             type="button"
-            // Keep focus in the textarea: its blur saves and closes the dialog.
-            onMouseDown={(event) => event.preventDefault()}
             onClick={insertPrimerTemplate}
             className="flex w-fit items-center gap-1.5 rounded-md border border-[var(--border)] px-2.5 py-1.5 text-xs text-[var(--text-secondary)] transition-colors hover:border-[var(--accent)] hover:text-[var(--text-primary)]"
           >
@@ -120,7 +118,12 @@ export function DeckPrimerEditorDialog(props: DeckPrimerEditorDialogProps) {
           </button>
         )}
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-          <PrimerSourcePane {...props} />
+          <PrimerSourcePane
+            draft={draft}
+            textareaRef={textareaRef}
+            onDraftChange={onDraftChange}
+            onSave={onSave}
+          />
           <DeckPrimerPreview
             markdown={draft}
             label={t("description.preview")}
@@ -137,9 +140,6 @@ export function DeckPrimerEditorDialog(props: DeckPrimerEditorDialogProps) {
           </span>
           <button
             type="button"
-            // Keep focus in the textarea: its blur also saves, so a press
-            // that moved focus here sent the description twice.
-            onMouseDown={(event) => event.preventDefault()}
             onClick={onSave}
             className="text-xs px-2 py-0.5 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white rounded transition-colors"
           >

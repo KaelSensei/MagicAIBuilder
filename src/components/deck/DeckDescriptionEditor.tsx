@@ -25,8 +25,9 @@ interface DeckDescriptionEditorProps {
 /**
  * Edits the description of one deck.
  *
- * Saves on blur, on Save and on Ctrl+Enter (Cmd+Enter on macOS); Escape drops
- * the draft. The editor stays open until the save settles.
+ * Saves on a press outside the editor (its form of blur), on Save and on
+ * Ctrl+Enter (Cmd+Enter on macOS); Escape drops the draft. The editor stays
+ * open until the save settles.
  */
 export function DeckDescriptionEditor({
   deckId,
