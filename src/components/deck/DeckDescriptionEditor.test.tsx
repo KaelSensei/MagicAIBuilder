@@ -1,5 +1,6 @@
-import { act, fireEvent, screen } from "@testing-library/react";
+import { act, fireEvent, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { renderWithProviders } from "@/test/render";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { DeckDescriptionEditor } from "./DeckDescriptionEditor";
 
@@ -88,5 +89,27 @@ describe("DeckDescriptionEditor", () => {
       "deck-1",
       expect.stringContaining("## Game plan")
     );
+  });
+
+  describe("split view", () => {
+    /** Opens the editor on `description` and returns its source textarea. */
+    function openEditor(description: string): HTMLElement {
+      renderWithProviders(
+        <DeckDescriptionEditor deckId="deck-1" description={description} />
+      );
+      fireEvent.click(screen.getByRole("button", { name: "Edit description" }));
+      return screen.getByRole("textbox");
+    }
+
+    it("shows the rendered primer beside the Markdown source while editing", () => {
+      const source = openEditor("");
+
+      fireEvent.change(source, { target: { value: "## Game plan" } });
+
+      const preview = screen.getByRole("region", { name: "Preview" });
+      expect(
+        within(preview).getByRole("heading", { level: 2, name: "Game plan" })
+      ).toBeDefined();
+    });
   });
 });

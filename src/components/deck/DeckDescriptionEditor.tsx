@@ -1,21 +1,21 @@
 "use client";
 /**
- * The deck's description: one collapsed line that expands into a textarea,
- * with a primer template for an empty description.
+ * The deck's description: one collapsed line that expands into the saved text,
+ * and opens the primer editor (Markdown source beside its rendered preview).
  *
- * Context: deck building (ui). It saves through the deck store's
- * `updateDeckDescription`, which sends `PATCH /api/decks/[id]` and restores the
- * previous text on a failed save. The server caps a description at 2,000
- * characters (`patchDeckSchema` in `src/lib/validation/deck.ts`), so the
- * textarea does too.
+ * Context: deck building (ui). It owns the draft and saves through the deck
+ * store's `updateDeckDescription`, which sends `PATCH /api/decks/[id]` and
+ * restores the previous text on a failed save. `DeckPrimerEditorDialog` draws
+ * the editing surface, with the server's 2,000-character cap.
  *
  * @module deck/DeckDescriptionEditor
  */
 import { useTranslations } from "next-intl";
 import { useState, useRef, useEffect } from "react";
-import { ChevronDown, ChevronRight, Edit3, ListPlus } from "lucide-react";
+import { ChevronDown, ChevronRight, Edit3 } from "lucide-react";
 import { useShallow } from "zustand/react/shallow";
 import { useDeckStore } from "@/lib/deck/store";
+import { DeckPrimerEditorDialog } from "./DeckPrimerEditorDialog";
 
 interface DeckDescriptionEditorProps {
   readonly deckId: string;
@@ -26,7 +26,7 @@ interface DeckDescriptionEditorProps {
  * Edits the description of one deck.
  *
  * Saves on blur, on Save and on Ctrl+Enter (Cmd+Enter on macOS); Escape drops
- * the draft. The textarea stays open until the save settles.
+ * the draft. The editor stays open until the save settles.
  */
 export function DeckDescriptionEditor({
   deckId,
@@ -71,20 +71,9 @@ export function DeckDescriptionEditor({
     setEditing(false);
   };
 
-  const insertPrimerTemplate = () => {
-    setDraft(t("description.primerTemplateContent"));
-    textareaRef.current?.focus();
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Escape") {
-      setEditing(false);
-      setDraft(description ?? "");
-    }
-    // Ctrl+Enter or Cmd+Enter saves
-    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
-      void handleSave();
-    }
+  const cancelEditing = () => {
+    setEditing(false);
+    setDraft(description ?? "");
   };
 
   const hasContent = description?.trim();
@@ -126,70 +115,34 @@ export function DeckDescriptionEditor({
       {/* Expanded area */}
       {expanded && (
         <div className="px-3 pb-3">
-          {editing ? (
-            <div className="flex flex-col gap-1.5">
-              {draft.trim() === "" && (
-                <button
-                  type="button"
-                  onMouseDown={(event) => event.preventDefault()}
-                  onClick={insertPrimerTemplate}
-                  className="flex w-fit items-center gap-1.5 rounded-md border border-[var(--border)] px-2.5 py-1.5 text-xs text-[var(--text-secondary)] transition-colors hover:border-[var(--accent)] hover:text-[var(--text-primary)]"
-                >
-                  <ListPlus className="h-3.5 w-3.5" />
-                  {t("description.usePrimerTemplate")}
-                </button>
-              )}
-              <textarea
-                ref={textareaRef}
-                value={draft}
-                onChange={(e) => setDraft(e.target.value)}
-                onKeyDown={handleKeyDown}
-                onBlur={handleSave}
-                placeholder={t("description.placeholder")}
-                rows={4}
-                maxLength={2000}
-                className="w-full bg-[var(--surface)] border border-[var(--border)] focus:border-[var(--accent)] rounded-md px-2.5 py-2 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]/50 resize-y outline-none transition-colors"
-              />
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] text-[var(--text-secondary)]/50">
-                  {t("description.editorHelp", {
-                    count: draft.length,
-                    max: 2000,
-                  })}
-                </span>
-                <button
-                  type="button"
-                  // Keep focus in the textarea: its blur also saves, so a press
-                  // that moved focus here sent the description twice.
-                  onMouseDown={(event) => event.preventDefault()}
-                  onClick={handleSave}
-                  className="text-xs px-2 py-0.5 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white rounded transition-colors"
-                >
-                  {t("description.save")}
-                </button>
-              </div>
-            </div>
-          ) : (
-            <button
-              type="button"
-              className="text-xs text-[var(--text-secondary)] whitespace-pre-wrap cursor-text min-h-[24px] text-left w-full bg-transparent border-none p-0"
-              onClick={handleEdit}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") startEditing();
-              }}
-              title={t("description.clickToEdit")}
-            >
-              {hasContent ? (
-                <span className="text-[var(--text-primary)]">{hasContent}</span>
-              ) : (
-                <span className="italic opacity-50">
-                  {t("description.empty")}
-                </span>
-              )}
-            </button>
-          )}
+          <button
+            type="button"
+            className="text-xs text-[var(--text-secondary)] whitespace-pre-wrap cursor-text min-h-[24px] text-left w-full bg-transparent border-none p-0"
+            onClick={handleEdit}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") startEditing();
+            }}
+            title={t("description.clickToEdit")}
+          >
+            {hasContent ? (
+              <span className="text-[var(--text-primary)]">{hasContent}</span>
+            ) : (
+              <span className="italic opacity-50">
+                {t("description.empty")}
+              </span>
+            )}
+          </button>
         </div>
       )}
+
+      <DeckPrimerEditorDialog
+        open={editing}
+        draft={draft}
+        textareaRef={textareaRef}
+        onDraftChange={setDraft}
+        onSave={() => void handleSave()}
+        onCancel={cancelEditing}
+      />
     </div>
   );
 }
