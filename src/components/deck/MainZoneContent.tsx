@@ -451,6 +451,7 @@ export function MainZoneContent({
             key={card.id}
             card={card}
             isViolation={violationCardIds.has(card.id)}
+            admission={admissions.get(card.id)}
             onRemoveCard={onRemoveCard}
             onCardClick={onCardClick}
             onMoveToMaybeboard={onMoveToMaybeboard}
