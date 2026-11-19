@@ -58,6 +58,16 @@ describe("LifeTracker", () => {
     expect(screen.getByText(/game over/i)).toBeDefined();
   });
 
+  it("drops Game Over once a heal brings life back above zero (CR 704.5a)", () => {
+    const { rerender } = renderWithIntl(
+      <LifeTracker {...defaultProps} lifeTotal={0} />
+    );
+
+    rerender(<LifeTracker {...defaultProps} lifeTotal={1} />);
+
+    expect(screen.queryByText(/game over/i)).toBeNull();
+  });
+
   it("shows life history entries when provided", () => {
     const history = [
       { turn: 1, phase: "Main1" as const, timestamp: Date.now(), delta: -5, description: "damage" },
