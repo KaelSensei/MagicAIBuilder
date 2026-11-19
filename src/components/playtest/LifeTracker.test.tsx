@@ -53,6 +53,24 @@ describe("LifeTracker", () => {
     expect(onDamage).toHaveBeenCalledWith(5);
   });
 
+  // The engine refuses negative damage (CR 107.1b); the tracker never sends one: a typed
+  // negative amount is damage of its absolute value.
+  it("sends a typed -4 as damage of 4, never as a negative amount", () => {
+    const onDamage = vi.fn();
+    const onHeal = vi.fn();
+    renderWithIntl(
+      <LifeTracker {...defaultProps} onDamage={onDamage} onHeal={onHeal} />
+    );
+
+    fireEvent.change(screen.getByPlaceholderText("+/- amount"), {
+      target: { value: "-4" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Apply" }));
+
+    expect(onDamage).toHaveBeenCalledWith(4);
+    expect(onHeal).not.toHaveBeenCalled();
+  });
+
   it("shows Game Over when life is 0 or below", () => {
     renderWithIntl(<LifeTracker {...defaultProps} lifeTotal={0} />);
     expect(screen.getByText(/game over/i)).toBeDefined();
