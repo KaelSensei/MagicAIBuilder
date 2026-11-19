@@ -16,6 +16,8 @@
 import {
   deckConstructionExceptions,
   isIdentityExempt,
+  rulebreakerAdmission,
+  type RulebreakerAdmission,
   type RulebreakerException,
 } from "@/modules/format-rules";
 import type { Deck } from "./types";
@@ -25,7 +27,7 @@ export interface ColorIdentityViolation {
   readonly cardName: string;
 }
 
-function buildCommanderIdentitySet(deck: Deck): ReadonlySet<string> {
+function buildCommanderIdentitySet(deck: Pick<Deck, "commander" | "partner">): ReadonlySet<string> {
   return new Set([...(deck.commander?.colorIdentity ?? []), ...(deck.partner?.colorIdentity ?? [])]);
 }
 
@@ -39,9 +41,12 @@ function buildCommanderIdentitySet(deck: Deck): ReadonlySet<string> {
 export function commandZoneExceptions(
   deck: Pick<Deck, "commander" | "partner">
 ): readonly RulebreakerException[] {
-  return commanderNameExceptions(
-    [deck.commander, deck.partner].flatMap((card) => (card ? [card.name] : []))
-  );
+  return commanderNameExceptions(commandZoneNames(deck));
+}
+
+/** The commander's and the partner's names: never the companion or the 99. */
+function commandZoneNames(deck: Pick<Deck, "commander" | "partner">): readonly string[] {
+  return [deck.commander, deck.partner].flatMap((card) => (card ? [card.name] : []));
 }
 
 /**
@@ -117,6 +122,43 @@ export function getColorIdentityViolations(deck: Deck): readonly ColorIdentityVi
     if (a.cardId !== b.cardId) return a.cardId < b.cardId ? -1 : 1;
     return 0;
   });
+}
+
+/**
+ * The rulebreaker commander that admits a card whose identity leaves the
+ * command zone's (CR 903.5c), and through which exception (CR 903.5e): why
+ * an off-colour card is no violation. A card the colours already allow needs
+ * no admission; a rulebreaker in the 99 grants nothing.
+ *
+ * @param deck - The deck whose commander and partner are read
+ * @param card - The card's identity letters, type line and mana value
+ * @returns The admission, or undefined when the card needs none or none applies
+ */
+export function admittedByRulebreaker(
+  deck: Pick<Deck, "commander" | "partner">,
+  card: IdentityCard
+): RulebreakerAdmission | undefined {
+  if (!deck.commander) return undefined;
+  if (!isCardOutsideColorIdentity(buildCommanderIdentitySet(deck), card)) return undefined;
+  // A stored card has no Oracle id: the table finds it by its exact name.
+  const commandZone = commandZoneNames(deck).map((name) => ({ oracleId: null, name }));
+  return rulebreakerAdmission(commandZone, { typeLine: card.typeLine, manaValue: card.cmc });
+}
+
+/**
+ * Every main-deck card a rulebreaker commander admits, by row id: the cards
+ * {@link getColorIdentityViolations} leaves out only because of an exception.
+ *
+ * @param deck - The deck; only its main zone is read
+ * @returns The admissions, empty when the commander is no rulebreaker
+ */
+export function rulebreakerAdmissions(deck: Deck): ReadonlyMap<string, RulebreakerAdmission> {
+  const admissions = new Map<string, RulebreakerAdmission>();
+  for (const card of deck.cards) {
+    const admission = card.zone === "main" ? admittedByRulebreaker(deck, card) : undefined;
+    if (admission) admissions.set(card.id, admission);
+  }
+  return admissions;
 }
 
 /**

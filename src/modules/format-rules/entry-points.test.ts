@@ -20,6 +20,7 @@ describe("the format rules entry points", () => {
       "deckSizeStatus",
       "isIdentityExempt",
       "liftsMaximumDeckSize",
+      "rulebreakerAdmission",
       "RULEBREAKERS",
       "RULEBREAKERS_SOURCE",
       "RULEBREAKERS_VERSION",
