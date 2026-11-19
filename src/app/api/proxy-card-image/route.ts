@@ -7,7 +7,10 @@
  * session needed, so each client IP has a request budget (`RATE_LIMIT`). The
  * route fetches only https URLs on cards.scryfall.io and never follows a
  * redirect, so it cannot be turned into a fetcher of other hosts (SSRF). It
- * answers images only, at most 5 MB each.
+ * answers images only, at most 5 MB each. Vercel's CDN keeps each image it
+ * answers for a year, so a repeat export never reaches the function; an error
+ * is never cached. Each request's log line carries the bytes of the image it
+ * served, the origin transfer it cost.
  *
  * @module api/proxy-card-image
  */
@@ -21,8 +24,30 @@ import { SCRYFALL_IMAGE_HOST } from "@/lib/scryfall/constants";
 
 const MAX_PARAM_LEN = 700;
 const UPSTREAM_TIMEOUT_MS = 15_000;
-/** Scryfall's largest PNG is ~1.5 MB; 5 MB leaves room without buffering anything absurd. */
+/**
+ * Scryfall's largest PNG is ~1.5 MB; 5 MB leaves room without buffering anything
+ * absurd, and stays under the 10 MB Vercel's CDN caches at most
+ * (https://vercel.com/docs/caching/cdn-cache, updated 2026-09-14, read 2026-11-17).
+ */
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+
+/**
+ * How long Vercel's CDN keeps a proxied image: one year, the longest it allows
+ * (https://vercel.com/docs/caching/cache-control-headers, updated 2026-09-14,
+ * read 2026-11-17). Safe because the card's `imageUri` carries Scryfall's version
+ * stamp in its query string, which is part of this route's URL: a changed image
+ * arrives under a new URL, so a cached copy is never stale. A repeat export then
+ * costs one CDN request instead of a function call and the image's origin
+ * transfer (I-66, slice 4).
+ */
+const CDN_LIFETIME_SECONDS = 365 * 24 * 60 * 60;
+
+/**
+ * How long the browser keeps a proxied image. `Vercel-CDN-Cache-Control` is read
+ * by Vercel's CDN only and never reaches the browser, so the browser keeps this
+ * shorter lifetime of its own.
+ */
+const BROWSER_LIFETIME_SECONDS = 24 * 60 * 60;
 
 /**
  * Requests one client may make per window, the app's own budget: Scryfall
@@ -65,16 +90,57 @@ function isAllowedScryfallImageUrl(raw: string): boolean {
 export async function GET(request: Request) {
   const startedAt = performance.now();
   let status = 500;
+  let bytes: number | undefined;
   try {
     const response = await proxyCardImage(request);
     status = response.status;
+    bytes = imageBytes(response);
     return response;
   } finally {
     logger.info("Card image proxy request completed", "GET /api/proxy-card-image", {
       status,
       durationMs: Math.round(performance.now() - startedAt),
+      ...(bytes === undefined ? {} : { bytes }),
     });
   }
+}
+
+/**
+ * The size of the image a response carries, for the request's log line: the
+ * bytes moved between Vercel's CDN and this function, which Fast Origin
+ * Transfer bills (I-66, slice 4).
+ *
+ * @param response An answer of `proxyCardImage`.
+ * @returns The image's byte count, or `undefined` for an answer that carries
+ *   no image (an error), so the log never reports a size nobody measured.
+ */
+function imageBytes(response: Response): number | undefined {
+  if (response.status !== 200) return undefined;
+  const declared = response.headers.get("Content-Length");
+  return declared === null ? undefined : Number(declared);
+}
+
+/**
+ * The answer for an image that passed every check.
+ *
+ * Only this answer may be cached: errors carry no caching header, so a failed
+ * or throttled request is never served again from the CDN. Sharing it across
+ * clients is safe because the route reads no session: the same URL gets the
+ * same Scryfall image, whoever asks.
+ *
+ * @param image The image's bytes, at most `MAX_IMAGE_BYTES`.
+ * @param contentType Its `image/*` type, as Scryfall declared it.
+ */
+function servedImage(image: ArrayBuffer, contentType: string): NextResponse {
+  return new NextResponse(image, {
+    status: 200,
+    headers: {
+      "Content-Type": contentType,
+      "Content-Length": String(image.byteLength),
+      "Cache-Control": `public, max-age=${BROWSER_LIFETIME_SECONDS}`,
+      "Vercel-CDN-Cache-Control": `max-age=${CDN_LIFETIME_SECONDS}`,
+    },
+  });
 }
 
 /**
@@ -143,13 +209,7 @@ async function proxyCardImage(request: Request): Promise<NextResponse> {
     if (buffer.byteLength > MAX_IMAGE_BYTES) {
       return NextResponse.json({ error: "Image too large" }, { status: 502 });
     }
-    return new NextResponse(buffer, {
-      status: 200,
-      headers: {
-        "Content-Type": contentType,
-        "Cache-Control": "public, max-age=86400",
-      },
-    });
+    return servedImage(buffer, contentType);
   } catch {
     return NextResponse.json({ error: "Upstream fetch failed" }, { status: 502 });
   }
