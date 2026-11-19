@@ -13,6 +13,7 @@
 
 import type { DeckFormat } from "./formats";
 import type { BracketLevel } from "@/lib/constants/brackets";
+import type { CardFace } from "@/lib/scryfall/faces";
 
 /**
  * Every category a deck card can be filed under. `DeckCard.category` stores one as a plain
@@ -59,17 +60,11 @@ export type { BracketLevel };
 export type PrintingChoice = "explicit" | "owned-first";
 
 /**
- * One face of a two-faced card (CR 712.1), with its own name, mana cost, type line, rules text
- * and images. `DeckCard.cardFaces` holds the front face, then the back face.
+ * One face of a two-faced card (CR 712.1). The card catalog owns the shape, next to its one
+ * mapper (`lib/scryfall/faces.ts`); it is re-exported here because `DeckCard.cardFaces` holds
+ * the front face, then the back face.
  */
-export interface CardFace {
-  name: string;
-  manaCost: string;
-  typeLine: string;
-  oracleText: string;
-  imageUri: string;
-  artCropUri: string;
-}
+export type { CardFace };
 export interface DeckCard {
   id: string;
   scryfallId?: string;

@@ -1,59 +1,16 @@
 /**
  * Face mapping between Scryfall cards, stored double-faced text, and deck cards.
+ *
+ * A Scryfall card's faces come from the catalog's one mapper, `buildCardFaces`
+ * (`lib/scryfall/faces.ts`); this module derives the rest of the deck card from
+ * them, and rebuilds the faces of a stored row from its `Front // Back` fields.
  */
 import type { DeckCard, CardFace } from "./types";
 import { categorizeCard, categorizeDfcCard } from "./categories";
-import type { ScryfallCard, ScryfallCardFace } from "@/lib/scryfall/types";
-import { DFC_LAYOUTS } from "@/lib/scryfall/types";
-import {
-  getCardImageUri,
-  getListedImageUri,
-  buildScryfallImageUrl,
-} from "@/lib/scryfall/images";
+import type { ScryfallCard } from "@/lib/scryfall/types";
+import { buildCardFaces } from "@/lib/scryfall/faces";
+import { getCardImageUri, buildScryfallImageUrl } from "@/lib/scryfall/images";
 import { priceUsdOf } from "@/lib/scryfall/price";
-
-/**
- * Maps one Scryfall face onto the deck face shape.
- *
- * @param face - Scryfall face
- * @param sc - parent card, used when the face has no image
- * @param side - which face image to request
- * @returns the stored face
- */
-function toCardFace(
-  face: ScryfallCardFace,
-  sc: ScryfallCard,
-  side: "front" | "back"
-): CardFace {
-  return {
-    name: face.name,
-    manaCost: face.mana_cost ?? "",
-    typeLine: face.type_line ?? "",
-    oracleText: face.oracle_text ?? "",
-    imageUri:
-      getListedImageUri(face.image_uris, "grid") ??
-      getCardImageUri(sc, "grid", side),
-    artCropUri:
-      getListedImageUri(face.image_uris, "art") ??
-      getCardImageUri(sc, "art", side),
-  };
-}
-
-/**
- * Builds the two faces of a double-faced card.
- *
- * @param sc - Scryfall card
- * @returns both faces, or undefined when the card is not a two-faced layout
- */
-export function buildCardFaces(
-  sc: ScryfallCard
-): [CardFace, CardFace] | undefined {
-  if (!DFC_LAYOUTS.has(sc.layout ?? "")) return undefined;
-  const front = sc.card_faces?.[0];
-  const back = sc.card_faces?.[1];
-  if (!front || !back) return undefined;
-  return [toCardFace(front, sc, "front"), toCardFace(back, sc, "back")];
-}
 
 /**
  * Keeps a printed power or toughness, treating an empty string as absent.
