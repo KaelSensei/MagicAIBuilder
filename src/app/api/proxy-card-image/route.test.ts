@@ -103,6 +103,31 @@ describe("GET /api/proxy-card-image", () => {
     expect(vi.mocked(global.fetch).mock.calls[0]?.[0]).toBe(VALID_URL);
   });
 
+  it("lets Vercel's CDN keep a proxied image for a year, and the browser for a day", async () => {
+    const res = await GET(makeReq(`url=${encodeURIComponent(VALID_URL)}`));
+
+    expect(res.status).toBe(200);
+    expect(res.headers.get("Vercel-CDN-Cache-Control")).toBe("max-age=31536000");
+    expect(res.headers.get("Cache-Control")).toBe("public, max-age=86400");
+  });
+
+  it.each([
+    ["a missing url", "", 400, undefined],
+    ["a disallowed host", `url=${encodeURIComponent("https://evil.com/x.jpg")}`, 403, undefined],
+    ["an upstream error", `url=${encodeURIComponent(VALID_URL)}`, 502, { ok: false, status: 404 }],
+    ["an upstream that is not an image", `url=${encodeURIComponent(VALID_URL)}`, 502, { ok: true, headers: new Headers({ "content-type": "text/html" }) }],
+  ])("sends no caching header with %s", async (_label, search, expected, upstream) => {
+    if (upstream !== undefined) {
+      vi.mocked(global.fetch).mockResolvedValueOnce(upstream as unknown as Response);
+    }
+
+    const res = await GET(makeReq(search));
+
+    expect(res.status).toBe(expected);
+    expect(res.headers.get("Vercel-CDN-Cache-Control")).toBeNull();
+    expect(res.headers.get("Cache-Control")).toBeNull();
+  });
+
   it("returns 502 when upstream is not ok", async () => {
     vi.mocked(global.fetch).mockResolvedValueOnce({
       ok: false,
@@ -155,11 +180,6 @@ describe("GET /api/proxy-card-image request timing", () => {
   });
 
   it.each([
-    ["a proxied image", () => vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
-      ok: true,
-      headers: new Headers({ "content-type": "image/jpeg" }),
-      arrayBuffer: () => Promise.resolve(new ArrayBuffer(4)),
-    })), `url=${encodeURIComponent(VALID_URL)}`, 200],
     ["a missing url", () => undefined, "", 400],
     ["a disallowed host", () => undefined, `url=${encodeURIComponent("https://evil.com/x.jpg")}`, 403],
     ["an upstream failure", () => vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("offline"))), `url=${encodeURIComponent(VALID_URL)}`, 502],
@@ -173,6 +193,23 @@ describe("GET /api/proxy-card-image request timing", () => {
     const calls = info.mock.calls.filter(([message]) => message === "Card image proxy request completed");
     expect(calls).toEqual([
       ["Card image proxy request completed", "GET /api/proxy-card-image", { status: expected, durationMs: expect.any(Number) }],
+    ]);
+  });
+
+  it("logs the image's bytes with the status and duration of a proxied image", async () => {
+    const info = vi.spyOn(logger, "info").mockImplementation(() => undefined);
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+      ok: true,
+      headers: new Headers({ "content-type": "image/jpeg" }),
+      arrayBuffer: () => Promise.resolve(new ArrayBuffer(110_600)),
+    }));
+
+    const res = await GET(makeReq(`url=${encodeURIComponent(VALID_URL)}`));
+
+    expect(res.status).toBe(200);
+    const calls = info.mock.calls.filter(([message]) => message === "Card image proxy request completed");
+    expect(calls).toEqual([
+      ["Card image proxy request completed", "GET /api/proxy-card-image", { status: 200, durationMs: expect.any(Number), bytes: 110_600 }],
     ]);
   });
 });
@@ -229,6 +266,8 @@ describe("GET /api/proxy-card-image rate limit", () => {
 
     expect(throttled.status).toBe(429);
     expect(throttled.headers.get("Retry-After")).toBe("60");
+    expect(throttled.headers.get("Vercel-CDN-Cache-Control")).toBeNull();
+    expect(throttled.headers.get("Cache-Control")).toBeNull();
     expect(await throttled.json()).toEqual({ error: "Too many requests" });
     expect(network.requested).toHaveLength(300);
     expect((await GET(fromClient("203.0.113.10"))).status).toBe(200);
