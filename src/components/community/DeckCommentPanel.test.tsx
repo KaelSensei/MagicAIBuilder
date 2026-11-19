@@ -1,12 +1,37 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { act, screen, fireEvent, waitFor } from "@testing-library/react";
-import { renderWithIntl, renderWithProviders } from "@/test/render";
+/**
+ * The comment panel of a public deck against MSW-served comment routes: what a
+ * reader and a signed-in player see, which writes the panel sends, and how it
+ * shows a stream it could not read. Every request the routes receive is
+ * recorded, so a test asserts what was sent without spying on `fetch`.
+ */
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  act,
+  fireEvent,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
+import { delay, http, HttpResponse } from "msw";
+import { z } from "zod";
+import type { DeckComment, DeckCommentThread } from "@/lib/community/comments";
+import { COMMUNITY_READ_TIMEOUT_MS } from "@/lib/community/community-client";
+import { setupMsw } from "@/test/msw";
+import { renderWithProviders } from "@/test/render";
 
-vi.mock(import("@/i18n/navigation"), () => import("@/test/i18n-navigation-stub"));
+vi.mock(
+  import("@/i18n/navigation"),
+  () => import("@/test/i18n-navigation-stub")
+);
 
 import { DeckCommentPanel } from "./DeckCommentPanel";
 
-function thread(overrides: Record<string, unknown> = {}) {
+const COMMENTS_ROUTE = "/api/community/decks/:deckId/comments";
+const COMMENT_ROUTE = "/api/community/decks/:deckId/comments/:commentId";
+/** The comment stream of the deck most tests render. */
+const DECK_COMMENTS = "/api/community/decks/deck-1/comments";
+
+function thread(overrides: Partial<DeckCommentThread> = {}): DeckCommentThread {
   return {
     id: "c1",
     deckId: "deck-1",
@@ -22,34 +47,149 @@ function thread(overrides: Record<string, unknown> = {}) {
   };
 }
 
-const fetchMock = vi.fn();
+// ---------------------------------------------------------------------------
+// The comment routes, as MSW serves them
+// ---------------------------------------------------------------------------
 
-function stubStream(threads: unknown[], count = threads.length) {
-  fetchMock.mockImplementation((_url: string, init?: RequestInit) => {
-    if (init?.method === undefined) {
-      return Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve({ comments: threads, count }),
-      });
-    }
-    return Promise.resolve({ ok: true, status: 201, json: () => Promise.resolve({}) });
+/** One request as a comment route received it. */
+interface SentRequest {
+  readonly method: string;
+  readonly path: string;
+  /** The parsed JSON body, or null when the request carried none. */
+  readonly body: unknown;
+}
+
+const server = setupMsw();
+let sent: SentRequest[] = [];
+
+async function record(request: Request): Promise<void> {
+  const text = await request.clone().text();
+  sent.push({
+    method: request.method,
+    path: new URL(request.url).pathname,
+    body: text === "" ? null : JSON.parse(text),
   });
 }
 
+/** Every request the routes received, in order, as `METHOD path`. */
+function sentRoutes(): readonly string[] {
+  return sent.map(({ method, path }) => `${method} ${path}`);
+}
+
+/** The writes the routes received, in order. */
+function sentWrites(): readonly SentRequest[] {
+  return sent.filter((request) => request.method !== "GET");
+}
+
+/** The body the post route accepts (`CommentRequest`). */
+const CommentRequestBody = z.object({
+  body: z.string(),
+  parentId: z.string().optional(),
+});
+
+/** The signed-in player who posts in these tests. */
+const VIEWER = { name: "Ben", username: "ben", image: null };
+
+/**
+ * The comment the post route saves and answers with 201: the request's body
+ * and parent, a fresh id, the viewer as its author (`toDeckComment`).
+ */
+function savedComment(
+  deckId: string,
+  request: z.infer<typeof CommentRequestBody>
+): DeckComment {
+  return {
+    id: `saved-${sent.length}`,
+    deckId,
+    parentId: request.parentId ?? null,
+    body: request.body,
+    createdAt: "2026-08-19T09:00:00.000Z",
+    updatedAt: "2026-08-19T09:00:00.000Z",
+    author: VIEWER,
+    isDeckOwner: false,
+    isAuthor: true,
+  };
+}
+
+/** `threads` with `comment` placed as the stream serves it: a top-level comment first, a reply last under its parent. */
+function withComment(
+  threads: readonly DeckCommentThread[],
+  comment: DeckComment
+): readonly DeckCommentThread[] {
+  const saved: DeckCommentThread = { ...comment, replies: [] };
+  if (comment.parentId === null) return [saved, ...threads];
+  return threads.map((parent) =>
+    parent.id === comment.parentId
+      ? { ...parent, replies: [...parent.replies, saved] }
+      : { ...parent, replies: withComment(parent.replies, comment) }
+  );
+}
+
+/** How many comments `threads` hold, replies included, as the route counts them. */
+function countComments(threads: readonly DeckCommentThread[]): number {
+  return threads.reduce(
+    (total, parent) => total + 1 + countComments(parent.replies),
+    0
+  );
+}
+
+/**
+ * The routes serving `threads` as the stream of every deck. A posted comment
+ * is saved into the stream, so the next read serves it, as the real route
+ * does; a delete is accepted.
+ */
+function serveStream(threads: readonly DeckCommentThread[]) {
+  let stream = threads;
+  server.use(
+    http.get(COMMENTS_ROUTE, async ({ request }) => {
+      await record(request);
+      return HttpResponse.json({
+        comments: stream,
+        count: countComments(stream),
+      });
+    }),
+    http.post<{ deckId: string }>(
+      COMMENTS_ROUTE,
+      async ({ request, params }) => {
+        await record(request);
+        const body = CommentRequestBody.parse(await request.json());
+        const comment = savedComment(params.deckId, body);
+        stream = withComment(stream, comment);
+        return HttpResponse.json(comment, { status: 201 });
+      }
+    ),
+    http.delete(COMMENT_ROUTE, async ({ request }) => {
+      await record(request);
+      return HttpResponse.json({ deleted: true });
+    })
+  );
+}
+
 beforeEach(() => {
-  vi.stubGlobal("fetch", fetchMock);
+  sent = [];
 });
 
 afterEach(() => {
-  vi.useRealTimers();
-  vi.clearAllMocks();
+  vi.restoreAllMocks();
   vi.unstubAllGlobals();
 });
 
+function renderPanel(
+  props: { readonly isOwner?: boolean; readonly isSignedIn?: boolean } = {}
+) {
+  return renderWithProviders(
+    <DeckCommentPanel
+      deckId="deck-1"
+      isOwner={props.isOwner ?? false}
+      isSignedIn={props.isSignedIn ?? false}
+    />
+  );
+}
+
 describe("DeckCommentPanel", () => {
   it("renders the stream with count, author and body", async () => {
-    stubStream([thread()]);
-    renderWithIntl(<DeckCommentPanel deckId="deck-1" isOwner={false} isSignedIn={false} />);
+    serveStream([thread()]);
+    renderPanel();
 
     expect(await screen.findByText("Why no Cyclonic Rift?")).toBeTruthy();
     expect(screen.getByText("1 comment")).toBeTruthy();
@@ -57,53 +197,65 @@ describe("DeckCommentPanel", () => {
   });
 
   it("badges the deck author's comments", async () => {
-    stubStream([thread({ isDeckOwner: true })]);
-    renderWithIntl(<DeckCommentPanel deckId="deck-1" isOwner={false} isSignedIn={false} />);
+    serveStream([thread({ isDeckOwner: true })]);
+    renderPanel();
 
     expect(await screen.findByText("Deck author")).toBeTruthy();
   });
 
   it("nests replies under their parent", async () => {
-    stubStream([
+    serveStream([
       thread({
-        replies: [thread({ id: "c2", parentId: "c1", body: "Budget cut.", isDeckOwner: true })],
+        replies: [
+          thread({
+            id: "c2",
+            parentId: "c1",
+            body: "Budget cut.",
+            isDeckOwner: true,
+          }),
+        ],
       }),
     ]);
-    renderWithIntl(<DeckCommentPanel deckId="deck-1" isOwner={false} isSignedIn={false} />);
+    renderPanel();
 
     expect(await screen.findByText("Budget cut.")).toBeTruthy();
   });
 
   it("asks anonymous viewers to sign in instead of showing the form", async () => {
-    stubStream([]);
-    renderWithIntl(<DeckCommentPanel deckId="deck-1" isOwner={false} isSignedIn={false} />);
+    serveStream([]);
+    renderPanel();
 
     expect(await screen.findByText(/sign in to join/i)).toBeTruthy();
     expect(screen.queryByRole("button", { name: /post/i })).toBeNull();
   });
 
-  it("posts a comment and reloads the stream", async () => {
-    stubStream([]);
-    renderWithIntl(<DeckCommentPanel deckId="deck-1" isOwner={false} isSignedIn={true} />);
+  it("posts a comment and shows it once the stream has reloaded", async () => {
+    serveStream([thread()]);
+    renderPanel({ isSignedIn: true });
 
     const textarea = await screen.findByPlaceholderText(/ask a question/i);
     fireEvent.change(textarea, { target: { value: "Nice curve!" } });
     fireEvent.click(screen.getByRole("button", { name: /post/i }));
 
-    await waitFor(() =>
-      expect(fetchMock).toHaveBeenCalledWith(
-        "/api/community/decks/deck-1/comments",
-        expect.objectContaining({
-          method: "POST",
-          body: JSON.stringify({ body: "Nice curve!" }),
-        })
-      )
-    );
+    const stream = screen.getByRole("list");
+    expect(await within(stream).findByText("Nice curve!")).toBeInTheDocument();
+    expect(screen.getByText("2 comments")).toBeInTheDocument();
+    expect(sentRoutes()).toEqual([
+      `GET ${DECK_COMMENTS}`,
+      `POST ${DECK_COMMENTS}`,
+      `GET ${DECK_COMMENTS}`,
+    ]);
+    expect(sentWrites()).toEqual([
+      { method: "POST", path: DECK_COMMENTS, body: { body: "Nice curve!" } },
+    ]);
   });
 
   it("offers edit and delete only on the viewer's own comments", async () => {
-    stubStream([thread({ isAuthor: true }), thread({ id: "c2", body: "Not mine." })]);
-    renderWithIntl(<DeckCommentPanel deckId="deck-1" isOwner={false} isSignedIn={true} />);
+    serveStream([
+      thread({ isAuthor: true }),
+      thread({ id: "c2", body: "Not mine." }),
+    ]);
+    renderPanel({ isSignedIn: true });
 
     await screen.findByText("Not mine.");
     expect(screen.getAllByRole("button", { name: /edit/i })).toHaveLength(1);
@@ -111,17 +263,17 @@ describe("DeckCommentPanel", () => {
   });
 
   it("lets the deck owner delete anyone's comment", async () => {
-    stubStream([thread()]);
-    renderWithIntl(<DeckCommentPanel deckId="deck-1" isOwner={true} isSignedIn={true} />);
+    serveStream([thread()]);
+    renderPanel({ isOwner: true, isSignedIn: true });
 
     await screen.findByText("Why no Cyclonic Rift?");
     expect(screen.getAllByRole("button", { name: /delete/i })).toHaveLength(1);
     expect(screen.queryByRole("button", { name: /edit/i })).toBeNull();
   });
 
-  it("sends a reply with the parent id", async () => {
-    stubStream([thread()]);
-    renderWithIntl(<DeckCommentPanel deckId="deck-1" isOwner={false} isSignedIn={true} />);
+  it("sends a reply with the parent id and shows it under its parent once the stream has reloaded", async () => {
+    serveStream([thread()]);
+    renderPanel({ isSignedIn: true });
 
     fireEvent.click(await screen.findByRole("button", { name: /reply/i }));
     const forms = screen.getAllByPlaceholderText(/ask a question/i);
@@ -129,39 +281,50 @@ describe("DeckCommentPanel", () => {
     const replySubmits = screen.getAllByRole("button", { name: /reply/i });
     fireEvent.click(replySubmits[replySubmits.length - 1]);
 
-    await waitFor(() =>
-      expect(fetchMock).toHaveBeenCalledWith(
-        "/api/community/decks/deck-1/comments",
-        expect.objectContaining({
-          method: "POST",
-          body: JSON.stringify({ body: "Budget.", parentId: "c1" }),
-        })
-      )
-    );
+    const [parent] = screen.getAllByRole("listitem");
+    const replies = await within(parent).findByRole("list");
+    expect(within(replies).getByText("Budget.")).toBeInTheDocument();
+    expect(sentRoutes()).toEqual([
+      `GET ${DECK_COMMENTS}`,
+      `POST ${DECK_COMMENTS}`,
+      `GET ${DECK_COMMENTS}`,
+    ]);
+    expect(sentWrites()).toEqual([
+      {
+        method: "POST",
+        path: DECK_COMMENTS,
+        body: { body: "Budget.", parentId: "c1" },
+      },
+    ]);
   });
 
   it("keeps the newer deck's comments when an older request resolves last", async () => {
-    let resolveOlder: (value: { ok: boolean; json: () => Promise<unknown> }) => void = () => {};
-    const older = new Promise<{ ok: boolean; json: () => Promise<unknown> }>((resolve) => {
-      resolveOlder = resolve;
+    let releaseOlder: () => void = () => undefined;
+    const olderReleased = new Promise<void>((resolve) => {
+      releaseOlder = resolve;
     });
-    vi.stubGlobal(
-      "fetch",
-      vi.fn((url: string) => {
-        if (url.includes("deck-older")) return older;
-        return Promise.resolve({
-          ok: true,
-          json: () =>
-            Promise.resolve({
-              comments: [thread({ id: "new", body: "Newer deck comment." })],
-              count: 1,
-            }),
+    server.use(
+      http.get(COMMENTS_ROUTE, async ({ params }) => {
+        if (params.deckId === "deck-older") {
+          await olderReleased;
+          return HttpResponse.json({
+            comments: [thread({ id: "old", body: "Stale deck comment." })],
+            count: 1,
+          });
+        }
+        return HttpResponse.json({
+          comments: [thread({ id: "new", body: "Newer deck comment." })],
+          count: 1,
         });
       })
     );
 
     const { rerender } = renderWithProviders(
-      <DeckCommentPanel deckId="deck-older" isOwner={false} isSignedIn={false} />
+      <DeckCommentPanel
+        deckId="deck-older"
+        isOwner={false}
+        isSignedIn={false}
+      />
     );
     rerender(
       <DeckCommentPanel
@@ -173,15 +336,10 @@ describe("DeckCommentPanel", () => {
 
     expect(await screen.findByText("Newer deck comment.")).toBeInTheDocument();
 
+    // The older answer has had every chance to land before the checks below.
     await act(async () => {
-      resolveOlder({
-        ok: true,
-        json: () =>
-          Promise.resolve({
-            comments: [thread({ id: "old", body: "Stale deck comment." })],
-            count: 1,
-          }),
-      });
+      releaseOlder();
+      await delay(50);
     });
 
     expect(screen.getByText("Newer deck comment.")).toBeInTheDocument();
@@ -190,17 +348,19 @@ describe("DeckCommentPanel", () => {
 
   it("flips the top-level order with the sort toggle", async () => {
     // The API serves newest first; the toggle only reverses the top level.
-    stubStream([
+    serveStream([
       thread({ id: "new", body: "Newest comment." }),
-      thread({ id: "old", body: "Oldest comment.", createdAt: "2026-08-17T10:00:00.000Z" }),
+      thread({
+        id: "old",
+        body: "Oldest comment.",
+        createdAt: "2026-08-17T10:00:00.000Z",
+      }),
     ]);
-    renderWithIntl(<DeckCommentPanel deckId="deck-1" isOwner={false} isSignedIn={false} />);
+    renderPanel();
 
     await screen.findByText("Newest comment.");
     const bodies = () =>
-      screen
-        .getAllByText(/comment\./i)
-        .map((el) => el.textContent);
+      screen.getAllByText(/comment\./i).map((el) => el.textContent);
     expect(bodies()).toEqual(["Newest comment.", "Oldest comment."]);
 
     fireEvent.click(screen.getByRole("button", { name: /newest first/i }));
@@ -210,17 +370,20 @@ describe("DeckCommentPanel", () => {
   });
 
   it("deletes after confirmation", async () => {
-    stubStream([thread({ isAuthor: true })]);
+    serveStream([thread({ isAuthor: true })]);
     vi.stubGlobal("confirm", vi.fn().mockReturnValue(true));
-    renderWithIntl(<DeckCommentPanel deckId="deck-1" isOwner={false} isSignedIn={true} />);
+    renderPanel({ isSignedIn: true });
 
     fireEvent.click(await screen.findByRole("button", { name: /delete/i }));
 
     await waitFor(() =>
-      expect(fetchMock).toHaveBeenCalledWith(
-        "/api/community/decks/deck-1/comments/c1",
-        expect.objectContaining({ method: "DELETE" })
-      )
+      expect(sentWrites()).toEqual([
+        {
+          method: "DELETE",
+          path: "/api/community/decks/deck-1/comments/c1",
+          body: null,
+        },
+      ])
     );
   });
 
@@ -230,67 +393,81 @@ describe("DeckCommentPanel", () => {
    * on, with no way to retry.
    */
   describe("when the stream cannot be read", () => {
+    /**
+     * Replaces the client's read timeout with a signal the route fires once
+     * the request has arrived, then never answers: the test neither waits
+     * 15 seconds nor races a short timer. `vi.restoreAllMocks` undoes it.
+     */
     it("stops waiting for a stalled request and offers a retry", async () => {
-      vi.useFakeTimers();
-      vi.spyOn(AbortSignal, "timeout").mockImplementation((milliseconds) => {
-        const controller = new AbortController();
-        setTimeout(() => controller.abort(), milliseconds);
-        return controller.signal;
-      });
-      vi.stubGlobal(
-        "fetch",
-        vi.fn().mockImplementation((_url: string, init?: RequestInit) => {
-          return new Promise((_resolve, reject) => {
-            init?.signal?.addEventListener("abort", () => reject(new DOMException("", "AbortError")));
-          });
+      const readTimeout = new AbortController();
+      const timeout = vi
+        .spyOn(AbortSignal, "timeout")
+        .mockReturnValue(readTimeout.signal);
+      server.use(
+        http.get(COMMENTS_ROUTE, async () => {
+          readTimeout.abort(
+            new DOMException(
+              "The operation was aborted due to timeout",
+              "TimeoutError"
+            )
+          );
+          await delay("infinite");
         })
       );
 
-      renderWithIntl(<DeckCommentPanel deckId="deck-1" isOwner={false} isSignedIn={false} />);
-      await act(async () => vi.advanceTimersByTimeAsync(15_000));
+      renderPanel();
 
-      expect(screen.getByText(/comments could not be loaded/i)).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: /try again/i })).toBeInTheDocument();
+      expect(
+        await screen.findByText(/comments could not be loaded/i)
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /try again/i })
+      ).toBeInTheDocument();
+      expect(timeout).toHaveBeenCalledWith(COMMUNITY_READ_TIMEOUT_MS);
     });
 
     it("says so instead of looking like an empty stream, when the API errors", async () => {
-      vi.stubGlobal(
-        "fetch",
-        vi.fn().mockResolvedValue({ ok: false, status: 500, json: () => Promise.resolve({}) })
+      server.use(
+        http.get(COMMENTS_ROUTE, () => HttpResponse.json({}, { status: 500 }))
       );
-      renderWithIntl(<DeckCommentPanel deckId="deck-1" isOwner={false} isSignedIn={false} />);
+      renderPanel();
 
-      expect(await screen.findByText(/comments could not be loaded/i)).toBeInTheDocument();
+      expect(
+        await screen.findByText(/comments could not be loaded/i)
+      ).toBeInTheDocument();
       expect(screen.queryByText(/no comments yet/i)).not.toBeInTheDocument();
     });
 
     it("says so when the request throws outright", async () => {
-      vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("offline")));
-      renderWithIntl(<DeckCommentPanel deckId="deck-1" isOwner={false} isSignedIn={false} />);
+      server.use(http.get(COMMENTS_ROUTE, () => HttpResponse.error()));
+      renderPanel();
 
-      expect(await screen.findByText(/comments could not be loaded/i)).toBeInTheDocument();
+      expect(
+        await screen.findByText(/comments could not be loaded/i)
+      ).toBeInTheDocument();
     });
 
     it("offers a retry that recovers the stream", async () => {
-      vi.stubGlobal(
-        "fetch",
-        vi
-          .fn()
-          .mockResolvedValueOnce({ ok: false, status: 500, json: () => Promise.resolve({}) })
-          .mockResolvedValue({
-            ok: true,
-            status: 200,
-            json: () => Promise.resolve({ comments: [thread()], count: 1 }),
-          })
+      server.use(
+        http.get(COMMENTS_ROUTE, () => HttpResponse.json({}, { status: 500 }), {
+          once: true,
+        }),
+        http.get(COMMENTS_ROUTE, () =>
+          HttpResponse.json({ comments: [thread()], count: 1 })
+        )
       );
 
-      renderWithIntl(<DeckCommentPanel deckId="deck-1" isOwner={false} isSignedIn={false} />);
+      renderPanel();
       await screen.findByText(/comments could not be loaded/i);
 
       fireEvent.click(screen.getByRole("button", { name: /try again/i }));
 
-      expect(await screen.findByText("Why no Cyclonic Rift?")).toBeInTheDocument();
-      expect(screen.queryByText(/comments could not be loaded/i)).not.toBeInTheDocument();
+      expect(
+        await screen.findByText("Why no Cyclonic Rift?")
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByText(/comments could not be loaded/i)
+      ).not.toBeInTheDocument();
     });
   });
 });
