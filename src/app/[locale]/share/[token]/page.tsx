@@ -6,6 +6,7 @@ import { ShareDeckView } from "@/components/deck/ShareDeckView";
 import type { ApiSharedDeck } from "@/lib/deck/share-types";
 import { findSharedDeckCached } from "@/lib/deck/shared-deck-lookup";
 import { normalizeScryfallImageUrl } from "@/lib/scryfall/images";
+import { commandSlotOf } from "@/lib/deck/bulk-edit-command-zone";
 import { logger } from "@/lib/logger";
 import { metadataTranslations } from "@/lib/seo/page-metadata";
 
@@ -52,8 +53,8 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     return { title: t("notFound") };
   }
 
-  const commander = deck.cards.find((c) => c.isCommander && !c.isPartner);
-  const partner = deck.cards.find((c) => c.isPartner);
+  const commander = deck.cards.find((c) => commandSlotOf(c) === "commander");
+  const partner = deck.cards.find((c) => commandSlotOf(c) === "partner");
   const cardCount = deck.cards.length;
 
   let commanderLabel: string;

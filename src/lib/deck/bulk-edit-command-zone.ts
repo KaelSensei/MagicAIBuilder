@@ -43,6 +43,13 @@ export const COMMAND_SLOT_ROWS: Readonly<
   companion: { isCommander: false, isPartner: false, category: "companion" },
 };
 
+/** The fields of a stored deck row that place it in a command-zone slot. */
+export interface CommandSlotFlags {
+  readonly isCommander: boolean;
+  readonly isPartner: boolean;
+  readonly category: string;
+}
+
 /**
  * Whether a stored row fills a command-zone slot: it carries every flag
  * `COMMAND_SLOT_ROWS` names for that slot. The server clears a slot with the
@@ -53,11 +60,7 @@ export const COMMAND_SLOT_ROWS: Readonly<
  * @returns true when the row fills the slot
  */
 export function rowFillsCommandSlot(
-  row: {
-    readonly isCommander: boolean;
-    readonly isPartner: boolean;
-    readonly category: string;
-  },
+  row: CommandSlotFlags,
   slot: CommandSlot
 ): boolean {
   const role = COMMAND_SLOT_ROWS[slot];
@@ -66,6 +69,35 @@ export function rowFillsCommandSlot(
     (role.isPartner === undefined || role.isPartner === row.isPartner) &&
     (role.category === undefined || role.category === row.category)
   );
+}
+
+/**
+ * The command-zone slot a stored row fills, by the flags `COMMAND_SLOT_ROWS`
+ * names. The three slots' flags never overlap, so a row fills at most one:
+ * `isPartner` alone makes a partner, even without `isCommander`.
+ *
+ * @param row - the flags of a stored row
+ * @returns the slot, or null for a row of the deck itself
+ */
+export function commandSlotOf(row: CommandSlotFlags): CommandSlot | null {
+  return COMMAND_SLOTS.find((slot) => rowFillsCommandSlot(row, slot)) ?? null;
+}
+
+/**
+ * Whether a stored row is one of the deck's commanders: the commander or its
+ * partner. The same rows as `commandSlotOf` puts in those two slots; neither
+ * slot reads the category, so the flags alone decide.
+ *
+ * CR 702.124a: a partner is a second commander. CR 903.4: the commanders'
+ * colour identity bounds the deck. CR 702.139a: a companion is not a commander.
+ *
+ * @param row - the commander and partner flags of a stored row
+ * @returns true for a commander or partner row
+ */
+export function isCommanderRow(
+  row: Pick<CommandSlotFlags, "isCommander" | "isPartner">
+): boolean {
+  return row.isCommander || row.isPartner;
 }
 
 /** How the edited text leaves one command-zone slot. */
