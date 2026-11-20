@@ -1,222 +1,64 @@
-// Deck export utilities — supports Moxfield, Arena, MTGO, TappedOut, Archidekt,
-// MTGGoldfish, EDHRec, Plain Text
-import type { Deck, DeckCard } from "./types";
+/**
+ * The deck export entry point: every shipped export target, by name, and
+ * {@link exportDeck}, which runs one under the export contract (I-50
+ * requirement 1).
+ *
+ * Deck interchange. Each target's exporter lives in `./exports/<target>.ts`;
+ * callers import from this file only, so the folder can change behind it.
+ * Targets: plain text, Moxfield, MTG Arena, MTGO, TappedOut, Archidekt,
+ * MTGGoldfish and EDHREC. The `exportX` functions return the text alone,
+ * for callers that need no file name or notices.
+ *
+ * @module deck/export
+ */
+import type { Deck } from "./types";
+import type { ExportResult, ExportTarget, Exporter } from "./exports/contract";
+import { plainTextExport } from "./exports/plain-text";
+import { moxfieldExport } from "./exports/moxfield";
+import { arenaExport } from "./exports/arena";
+import { mtgoExport } from "./exports/mtgo";
+import { tappedOutExport } from "./exports/tappedout";
+import { archidektExport } from "./exports/archidekt";
+import { goldfishExport } from "./exports/goldfish";
+import { edhrecExport } from "./exports/edhrec";
 
-/** Format a single card line for plain text / Moxfield */
-function cardLine(card: DeckCard, qty = 1): string {
-  return `${qty} ${card.name}`;
-}
+export { exportPlainText } from "./exports/plain-text";
+export { exportMoxfield } from "./exports/moxfield";
+export { exportArena } from "./exports/arena";
+export { exportMTGO } from "./exports/mtgo";
+export { exportTappedOut } from "./exports/tappedout";
+export { exportArchidekt } from "./exports/archidekt";
+export { exportGoldfish } from "./exports/goldfish";
+export { exportEdhrec } from "./exports/edhrec";
+export {
+  EXPORT_TARGETS,
+  type ExportNotice,
+  type ExportResult,
+  type ExportSourceZone,
+  type ExportTarget,
+} from "./exports/contract";
 
-function plainTextCardLines(card: DeckCard): string[] {
-  const lines = [cardLine(card, card.quantity)];
-  const note = card.notes?.trim();
-  if (note) {
-    lines.push(...note.split(/\r\n|\r|\n/).map((line) => `// Note: ${line}`));
-  }
-  return lines;
-}
-
-/** Plain text export — simple "1 Card Name" format, with optional // note lines */
-export function exportPlainText(deck: Deck): string {
-  const lines: string[] = [];
-  if (deck.commander) { lines.push("Commander", cardLine(deck.commander), ""); }
-  if (deck.partner) { lines.push("Partner", cardLine(deck.partner), ""); }
-  if (deck.companion) { lines.push("Companion", cardLine(deck.companion), ""); }
-  lines.push("Deck");
-  for (const [zone, heading] of [["main", ""], ["sideboard", "Sideboard"], ["maybeboard", "Considering"]] as const) {
-    const zoneCards = deck.cards.filter((card) => card.zone === zone);
-    if (zone !== "main" && zoneCards.length > 0) lines.push("", heading);
-    for (const card of zoneCards) lines.push(...plainTextCardLines(card));
-  }
-  return lines.join("\n");
-}
-
-/** Moxfield format — same as plain text, Moxfield parses "1 Card Name" directly */
-export function exportMoxfield(deck: Deck): string {
-  const lines: string[] = [];
-  if (deck.commander) { lines.push("// Commander", cardLine(deck.commander), ""); }
-  if (deck.partner) { lines.push("// Partner", cardLine(deck.partner), ""); }
-  if (deck.companion) { lines.push("// Companion", cardLine(deck.companion), ""); }
-  lines.push("// Deck");
-  for (const zone of ["main", "sideboard", "maybeboard"]) {
-    const zoneCards = deck.cards.filter((card) => card.zone === zone);
-    if (zone !== "main" && zoneCards.length > 0) {
-      lines.push("", zone === "sideboard" ? "// Sideboard" : "// Considering");
-    }
-    for (const card of zoneCards) lines.push(cardLine(card, card.quantity));
-  }
-  return lines.join("\n");
-}
-
-/** MTG Arena format — requires "Commander" / "Deck" sections with set/number if available */
-export function exportArena(deck: Deck): string {
-  const lines: string[] = [];
-  if (deck.companion) {
-    lines.push("Companion", cardLine(deck.companion), "");
-  }
-  if (deck.commander || deck.partner) {
-    lines.push("Commander");
-    if (deck.commander) lines.push(cardLine(deck.commander));
-    if (deck.partner) lines.push(cardLine(deck.partner));
-    lines.push("");
-  }
-  lines.push("Deck");
-  for (const card of deck.cards.filter((card) => card.zone === "main")) {
-    lines.push(cardLine(card, card.quantity));
-  }
-  const sideboard = deck.cards.filter((card) => card.zone === "sideboard");
-  const companion = deck.companion;
-  if (companion && !sideboard.some((card) => card.name === companion.name)) {
-    sideboard.push({ ...companion, quantity: 1, zone: "sideboard" });
-  }
-  if (sideboard.length > 0) {
-    lines.push("", "Sideboard");
-    for (const card of sideboard) lines.push(cardLine(card, card.quantity));
-  }
-  return lines.join("\n");
-}
-
-/** Escape card names used in double-quoted XML attributes. */
-function escapeXmlAttribute(value: string): string {
-  return value.replaceAll(/[&<>"]/g, (character) => {
-    switch (character) {
-      case "&": return "&amp;";
-      case "<": return "&lt;";
-      case ">": return "&gt;";
-      case "\"": return "&quot;";
-      default: return character;
-    }
-  });
-}
-
-/** MTGO .dek format (XML) */
-export function exportMTGO(deck: Deck): string {
-  const allCards: { name: string; qty: number; isSideboard?: boolean }[] = [];
-  if (deck.commander) allCards.push({ name: deck.commander.name, qty: 1 });
-  if (deck.partner) allCards.push({ name: deck.partner.name, qty: 1 });
-  const companion = deck.companion;
-  const companionIsInSideboard = deck.cards.some(
-    (card) => card.zone === "sideboard" && card.name === companion?.name,
-  );
-  if (companion && !companionIsInSideboard) {
-    allCards.push({ name: companion.name, qty: 1, isSideboard: true });
-  }
-  for (const card of deck.cards) {
-    if (card.zone === "maybeboard") continue;
-    allCards.push({ name: card.name, qty: card.quantity, isSideboard: card.zone === "sideboard" });
-  }
-
-  const cardXml = allCards
-    .map((c) => `  <Cards CatID="0" Quantity="${c.qty}" Sideboard="${c.isSideboard === true}" Name="${escapeXmlAttribute(c.name)}" />`)
-    .join("\n");
-
-  return `<?xml version="1.0" encoding="utf-8"?>
-<Deck xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <NetDeckID>0</NetDeckID>
-  <PreconstructedDeckID>0</PreconstructedDeckID>
-${cardXml}
-</Deck>`;
-}
-
-/** TappedOut format — commanders marked with *CMDR* */
-export function exportTappedOut(deck: Deck): string {
-  const lines: string[] = [];
-  if (deck.commander) lines.push(`1x ${deck.commander.name} *CMDR*`);
-  if (deck.partner) lines.push(`1x ${deck.partner.name} *CMDR*`);
-  for (const card of deck.cards) {
-    lines.push(`${card.quantity}x ${card.name}`);
-  }
-  return lines.join("\n");
-}
-
-/** @returns the app category as an Archidekt bracket tag, e.g. `[Ramp]` */
-function archidektCategoryTag(category: string): string {
-  return `[${category.charAt(0).toUpperCase()}${category.slice(1)}]`;
-}
+const EXPORTERS: Readonly<Record<ExportTarget, Exporter>> = {
+  moxfield: moxfieldExport,
+  arena: arenaExport,
+  mtgo: mtgoExport,
+  tappedout: tappedOutExport,
+  archidekt: archidektExport,
+  goldfish: goldfishExport,
+  edhrec: edhrecExport,
+  plaintext: plainTextExport,
+};
 
 /**
- * Appends a counted Archidekt section without emitting an empty zone.
- * @param lines Export lines being built.
- * @param heading Archidekt section heading.
- * @param cards Cards belonging to the section.
- * @returns Nothing.
+ * Exports `deck` to `target`: its content, file name, MIME type and a notice
+ * for every card the target drops or moves. Pure: the same deck gives the
+ * same result, byte for byte (I-50 requirement 1.5).
+ *
+ * @param deck - the deck to export; it is not changed
+ * @param target - one of the shipped targets
  */
-function appendArchidektSection(
-  lines: string[],
-  heading: string,
-  cards: readonly DeckCard[]
-): void {
-  if (cards.length === 0) return;
-  const count = cards.reduce((sum, card) => sum + card.quantity, 0);
-  lines.push("", `${heading} (${count})`);
-  for (const card of cards) {
-    lines.push(`${card.quantity}x ${card.name} ${archidektCategoryTag(card.category)}`);
-  }
-}
-
-/**
- * Archidekt format — sections with card counts, each card tagged with its
- * category in Archidekt's bracket syntax so the categorisation survives the
- * round trip. `{top}` pins the commander's category as premier, which is what
- * makes Archidekt display the card in the command zone.
- */
-export function exportArchidekt(deck: Deck): string {
-  const lines: string[] = [];
-  if (deck.commander || deck.partner) {
-    const cmdCount = (deck.commander ? 1 : 0) + (deck.partner ? 1 : 0);
-    lines.push(`Commander (${cmdCount})`);
-    if (deck.commander) lines.push(`1x ${deck.commander.name} [Commander{top}]`);
-    if (deck.partner) lines.push(`1x ${deck.partner.name} [Commander{top}]`);
-    lines.push("");
-  }
-  const mainCards = deck.cards.filter((card) => card.zone === "main");
-  const mainCount = mainCards.reduce((s, c) => s + c.quantity, 0);
-  lines.push(`Mainboard (${mainCount})`);
-  for (const card of mainCards) {
-    lines.push(`${card.quantity}x ${card.name} ${archidektCategoryTag(card.category)}`);
-  }
-  appendArchidektSection(
-    lines,
-    "Sideboard",
-    deck.cards.filter((card) => card.zone === "sideboard")
-  );
-  appendArchidektSection(
-    lines,
-    "Considering",
-    deck.cards.filter((card) => card.zone === "maybeboard")
-  );
-  return lines.join("\n");
-}
-
-/**
- * MTGGoldfish format — their text import uses the MTGO convention: the main
- * deck, a blank line, then the commander (and partner) as the sideboard slot,
- * which Goldfish reads as the command zone for EDH decks.
- */
-export function exportGoldfish(deck: Deck): string {
-  const main = deck.cards
-    .filter((card) => card.zone === "main")
-    .map((card) => cardLine(card, card.quantity));
-  const side: string[] = [];
-  if (deck.commander) side.push(cardLine(deck.commander));
-  if (deck.partner) side.push(cardLine(deck.partner));
-  return side.length > 0 ? `${main.join("\n")}\n\n${side.join("\n")}` : main.join("\n");
-}
-
-/**
- * EDHRec format — the deck check tool takes a plain list with no marker
- * syntax and reads the first legal commander as the deck's commander, so the
- * command zone goes first.
- */
-export function exportEdhrec(deck: Deck): string {
-  const lines: string[] = [];
-  if (deck.commander) lines.push(cardLine(deck.commander));
-  if (deck.partner) lines.push(cardLine(deck.partner));
-  for (const card of deck.cards) {
-    if (card.zone !== "main") continue;
-    lines.push(cardLine(card, card.quantity));
-  }
-  return lines.join("\n");
+export function exportDeck(deck: Deck, target: ExportTarget): ExportResult {
+  return EXPORTERS[target](deck);
 }
 
 /** Copy text to clipboard */

@@ -189,7 +189,18 @@
     "downloadFormat": "Télécharger le fichier {format}",
     "proxySheets": "Exporter les planches de proxys (Print / PDF)",
     "addCardsForProxy": "Ajoutez des cartes pour exporter les proxys",
-    "proxyTooltip": "Exporter des planches de proxys imprimables"
+    "proxyTooltip": "Exporter des planches de proxys imprimables",
+    "notices": {
+      "leftOut": "{format} n’exporte pas {count, plural, one {# carte} other {# cartes}}",
+      "moved": "{format} place {count, plural, one {# carte} other {# cartes}} dans son deck principal",
+      "card": "{quantity} {name} ({zone})",
+      "zone": {
+        "commandZone": "Zone de commandement",
+        "companion": "Compagnon",
+        "sideboard": "Réserve",
+        "maybeboard": "À considérer"
+      }
+    }
   },
   "import": {
     "title": "Importer une liste de deck",
