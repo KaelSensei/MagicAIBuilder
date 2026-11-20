@@ -325,6 +325,7 @@ Nine catalogues are dormant. Every AI deckbuilder found in the sweep is English-
 - [ ] Complete and human-review the catalogue before routing it.
 - [ ] Test dates, numbers, pluralisation, mana symbols and card text together, as I-11 requires.
 - [ ] State what is not localised — card data Scryfall does not carry in that language — rather than falling back silently.
+- [ ] Added 2026-11-20 (nineteenth pass), slice 1 evidence for "completeness of Scryfall's card data": of 32,642 Commander-legal paper cards (`f:commander game:paper`, `unique=cards`), a printing exists in German for 96%, French 96%, Japanese 96%, Italian 94%, Spanish 94%, Portuguese 77%, Simplified Chinese 73%, Traditional Chinese 54%, Russian 49% and Korean 39% (computed from Scryfall's API, 2026-11-20). Portuguese, Korean and Russian would need slice 3's fallback disclosure on a large share of cards. A weak signal, labelled as one: the 2026 CommandFests include two in Germany, two in Japan, two in China and one each in Italy, Brazil and Mexico ([lineup](https://magic.gg/news/announcing-2026s-commandfest-lineup), 2026-03-10). Reddit cannot measure these markets (r/mtgfr holds 3 posts, r/magicbrasil 976, Arctic Shift metadata); population still needs the product's own traffic.
 
 ### Definition of done
 
