@@ -4,7 +4,7 @@
 **Priority:** Next  
 **Depth:** Full
 
-This file is the feature spec. It had no engineering-slice spec before 2026-11-11. It has no delivery-slice table, so the dependency generator does not pick slices from it until one is added.
+This file is the feature spec. It had no engineering-slice spec before 2026-11-11. The delivery-slice table records build order. A slice marked Done has merged to `dev`; the glance table names the lowest-numbered slice that can start now.
 
 ## Feature contract (Full, 2026-11-11)
 
@@ -240,8 +240,8 @@ Nothing in the roadmap entry was dropped. The section below is the initiative te
 
 **Outcome:** a developer can read, in one page, what changed in the public read API since the previous deploy, and a breaking change cannot merge without a dated line.
 
-**Status:** Next
-**Priority:** Next. The API is already public.
+**Status:** Shipped
+**Priority:** Next. The API is already public. The page and the changelog check shipped in #1509.
 **Impact / effort:** Medium / small
 **Risk:** Low. The page describes routes that exist. It does not add a route.
 **Depends on:** nothing. I-22's versioned verdict is a later contract and will add its own lines when it ships.
@@ -276,6 +276,16 @@ Nothing in the roadmap entry was dropped. The section below is the initiative te
 **Rollout.** Public. No account. No flag. It does not document routes outside `/api/v1`.
 
 **Open questions.** I-22's verdict, when it exists, adds its own lines. It does not replace this page.
+
+## Delivery slices
+
+Both scope lines of the moved record shipped together. The initiative status is Shipped.
+
+| #   | Slice                                                                                                                                                                                                                                                                                            | Depends on |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------- |
+| 1   | A public page listing dated changes to `/api/v1/decks`, `/api/v1/decks/{id}`, `/api/v1/collection` and `/api/v1/openapi`, and a check that fails when the OpenAPI document changes without a new dated line or a compatible label. The page renders signed out and embeds no deck. Done (#1509). | —          |
+
+No later slice remains. I-22's versioned verdict adds its own lines when it ships; it is not a slice here.
 
 ### Definition of done
 

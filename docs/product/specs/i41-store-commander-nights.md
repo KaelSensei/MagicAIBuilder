@@ -169,7 +169,7 @@ Organiser routes check `StoreMember`: `POST /api/stores`, `PATCH /api/stores/[sl
 
 | #   | Slice                                                                                                                                                          | Depends on                                                               |
 | --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| 1   | `formPods` with its policy, deterministic tie-break and brute-force tests                                                                                      | —                                                                        |
+| 1   | `formPods` with its policy, deterministic tie-break and brute-force tests Done (#1617).                                                                        | —                                                                        |
 | 2   | Account-free pod planner page, printable, with the no-network test and one I-39 product event                                                                  | 1                                                                        |
 | 3   | Store, staff roles, store page with house rules, "not verified" label, `noindex`                                                                               | —                                                                        |
 | 4   | Nights: policy, check-in window, token rotation, printable QR code                                                                                             | 3                                                                        |
@@ -223,8 +223,6 @@ Read 2026-11-09 unless dated.
 ## Feature contract (Full, 2026-11-11)
 
 The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
-
-
 
 ### Summary and problem
 
@@ -545,22 +543,22 @@ Then the player sees an empty state that names what is missing, and the page doe
 
 The player-visible outcome is: an organiser opens a casual Commander night, checks players in by QR code with or without an account, and forms pods of three to five by declared and estimated bracket. Players never pay, and a guest leaves only a nickname that is deleted within a day.
 
-| State | What the player sees |
-| --- | --- |
-| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
-| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
-| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
-| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
-| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
-| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
-| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
-| English | New controls use the `en` catalogue. |
-| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| State            | What the player sees                                                                                                                                  |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Empty            | A sentence that names what is missing and the next action. No invented row, author, price or score.                                                   |
+| Loading          | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready.                                        |
+| Error            | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there.                                                       |
+| Partial          | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished.                                                 |
+| Stale            | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed.                                             |
+| Guest            | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401.               |
+| Signed-in        | Writes go to that account only. Another player's notes, budget and collection are not in the response.                                                |
+| English          | New controls use the `en` catalogue.                                                                                                                  |
+| French           | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control.                                                         |
 | Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
-| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
-| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
-| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
-| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+| Keyboard         | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes.                         |
+| Screen reader    | Each new control has an accessible name. A status change is announced in words, not only by colour.                                                   |
+| Colour           | A warning and an error differ by text or icon as well as hue, in both themes.                                                                         |
+| Success          | The completed action is confirmed in words. A second identical action does not duplicate the write.                                                   |
 
 ### Alternate paths
 
@@ -616,4 +614,3 @@ Wizards EventLink records who came and forms no pods: for Commander "no pairings
 At a night, every checked-in player sits in a pod of an allowed size within the night's bracket spread or waits with a stated reason, the public page shows declared brackets only, and no guest name survives 24 hours after the night ends.
 
 ---
-

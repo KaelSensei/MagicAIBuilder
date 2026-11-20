@@ -243,7 +243,7 @@ Routes: `POST /api/events` (beacon; allowlisted names only; signed-in rows get t
 | #   | Slice                                                                                                                 | Depends on                                                                      |
 | --- | --------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
 | 0   | Lawyer questions added to I-30's list; the measurement section of I-38's privacy policy (8.9)                         | I-38's privacy policy; owner and counsel for the questions                      |
-| 1   | Stop the onboarding modal opening on public pages and correct its two wrong sentences (1.1)                           | —                                                                               |
+| 1   | Stop the onboarding modal opening on public pages and correct its two wrong sentences (1.1) Done (#1499).             | —                                                                               |
 | 2   | Sign-up honours `callbackUrl`; honest guest notice; guest AI message (6.1, 6.4, 6.5)                                  | —                                                                               |
 | 3   | Delete or fix `GET /api/templates` (4.4)                                                                              | —                                                                               |
 | 4   | Sentry replay settings and URL scrubbing (9.1–9.3)                                                                    | —                                                                               |
@@ -720,22 +720,22 @@ Then the player sees an empty state that names what is missing, and the page doe
 
 The player-visible outcome is: a visitor reaches a useful deck without an account and keeps it on signing up, and the owner counts activation and retention from the product's own database, with no third-party tracker.
 
-| State | What the player sees |
-| --- | --- |
-| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
-| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
-| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
-| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
-| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
-| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
-| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
-| English | New controls use the `en` catalogue. |
-| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| State            | What the player sees                                                                                                                                  |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Empty            | A sentence that names what is missing and the next action. No invented row, author, price or score.                                                   |
+| Loading          | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready.                                        |
+| Error            | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there.                                                       |
+| Partial          | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished.                                                 |
+| Stale            | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed.                                             |
+| Guest            | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401.               |
+| Signed-in        | Writes go to that account only. Another player's notes, budget and collection are not in the response.                                                |
+| English          | New controls use the `en` catalogue.                                                                                                                  |
+| French           | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control.                                                         |
 | Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
-| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
-| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
-| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
-| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+| Keyboard         | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes.                         |
+| Screen reader    | Each new control has an accessible name. A status change is announced in words, not only by colour.                                                   |
+| Colour           | A warning and an error differ by text or icon as well as hue, in both themes.                                                                         |
+| Success          | The completed action is confirmed in words. A second identical action does not duplicate the write.                                                   |
 
 ### Alternate paths
 
@@ -796,6 +796,7 @@ I-30 needs evidence before a price, and today none of it can be counted: there i
 **User story.** As a new player, I want the deck I started while signed out to be there after I create an account, so that the first run is not a dead end.
 
 **Acceptance.**
+
 - The onboarding modal does not open on a public page.
 - A guest deck is attached to the new account, not discarded.
 - An event row contains no email, name, deck name, card name, list or URL.
@@ -817,4 +818,3 @@ I-30 needs evidence before a price, and today none of it can be counted: there i
 A fresh visitor builds, checks, playtests and exports with no modal and no account and keeps the deck on signing up, and the owner reads weekly activation and retention, with n and intervals, from rows that hold nothing personal beyond an account id.
 
 ---
-

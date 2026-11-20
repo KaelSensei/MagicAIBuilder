@@ -72,16 +72,16 @@ Verified on `dev` at `fee835d8` on 2026-11-10:
 
 2.1 The loops, with the entry value each sign-up records and the initiative that owns the surface:
 
-| Loop                            | What travels                                    | Entry value                                         | Surface owner                                      |
-| ------------------------------- | ----------------------------------------------- | --------------------------------------------------- | -------------------------------------------------- |
+| Loop                            | What travels                                    | Entry value                                         | Surface owner                          |
+| ------------------------------- | ----------------------------------------------- | --------------------------------------------------- | -------------------------------------- |
 | Shared deck link                | A public or share-token deck URL                | `deck_page`, `share_page`                           | [I-08](i08-share-compare-and-learn.md) |
-| Embed and deck image            | An iframe in an article; the preview image      | `deck_page` (via `embed`)                           | I-36                                               |
-| Discord                         | A link preview; an app reply                    | `deck_page` (via `discord`)                         | I-46                                               |
-| Creator decklist in a video     | A deck URL in a description or pinned comment   | `deck_page`, `creator_page`                         | I-36, group 5                                      |
-| Pod invite                      | An invite to a pod's sheets                     | `pod_invite`                                        | I-15, I-23; pod pass in I-30                       |
-| Search to data pages and guides | A report, rules-change, guide or commander page | `report`, `rules_change`, `guide`, `commander_page` | I-34, I-48, I-28, I-68                             |
-| Recap                           | A shared year in review                         | `recap`                                             | I-60                                               |
-| Referral                        | A referral link                                 | `referral`                                          | group 4                                            |
+| Embed and deck image            | An iframe in an article; the preview image      | `deck_page` (via `embed`)                           | I-36                                   |
+| Discord                         | A link preview; an app reply                    | `deck_page` (via `discord`)                         | I-46                                   |
+| Creator decklist in a video     | A deck URL in a description or pinned comment   | `deck_page`, `creator_page`                         | I-36, group 5                          |
+| Pod invite                      | An invite to a pod's sheets                     | `pod_invite`                                        | I-15, I-23; pod pass in I-30           |
+| Search to data pages and guides | A report, rules-change, guide or commander page | `report`, `rules_change`, `guide`, `commander_page` | I-34, I-48, I-28, I-68                 |
+| Recap                           | A shared year in review                         | `recap`                                             | I-60                                   |
+| Referral                        | A referral link                                 | `referral`                                          | group 4                                |
 
 2.2 **Signed-out fork.** On a public deck or share page, "Fork" stays enabled for a signed-out visitor. It opens sign-up with the entry and a return path; after sign-up the fork is created and the builder opens on it (`Deck.origin = fork`, I-39 8.2). A "Build your own" link does the same into I-39's first-run panel.
 2.3 **`via` on the product's own links.** The embed's "View on MagicAIBuilder" link, Discord app replies and the recap's call to action append `via` from the fixed enum `embed | discord | recap`. The landing page passes it to its sign-up link.
@@ -206,7 +206,7 @@ Routes: `GET /join/{code}` answers 302 to `/auth/signup?entry=referral&code=…`
 | 2   | `signupEntry` and `signupVia` written at account creation; `via` on the product's own links; `share_action` event                      | 1; I-39 slice 10                                                              |
 | 3   | Loop view in I-39's owner page: sign-ups, activation and time to first full-size deck by entry, with n and intervals                   | 2; I-39 slice 12                                                              |
 | 4   | Share-to-signup rate per 1,000 public deck and embed views                                                                             | 3; I-36 slice 12                                                              |
-| 5   | `whatItTakes` pure function reproducing 9.1, with fixture tests                                                                        | —                                                                             |
+| 5   | `whatItTakes` pure function reproducing 9.1, with fixture tests Done (#1554).                                                          | —                                                                             |
 | 6   | "What it takes" panel with measured activation, churn and conversion beside the assumptions                                            | 3, 5; I-30 slice 10                                                           |
 | 7   | Publishing calendar, first edition, in `docs/product/publishing-calendar.md`                                                           | —                                                                             |
 | 8   | Calendar check in the docs CI: missing fields fail, rows due within 30 days are listed                                                 | 7                                                                             |
@@ -514,22 +514,22 @@ Then they come from the French catalogue and are not hard-coded English
 
 The player-visible outcome is: every way a Commander player arrives, from a shared deck or a creator's decklist to a pod invite or a referral link, leads into an account without losing the page; the owner sees sign-ups, activation and time to the first full-size deck by entry; rewards are months of the plan, never cash; and nothing brings a player back that the player did not set up.
 
-| State | What the player sees |
-| --- | --- |
-| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
-| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
-| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
-| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
-| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
-| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
-| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
-| English | New controls use the `en` catalogue. |
-| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| State            | What the player sees                                                                                                                                  |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Empty            | A sentence that names what is missing and the next action. No invented row, author, price or score.                                                   |
+| Loading          | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready.                                        |
+| Error            | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there.                                                       |
+| Partial          | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished.                                                 |
+| Stale            | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed.                                             |
+| Guest            | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401.               |
+| Signed-in        | Writes go to that account only. Another player's notes, budget and collection are not in the response.                                                |
+| English          | New controls use the `en` catalogue.                                                                                                                  |
+| French           | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control.                                                         |
 | Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
-| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
-| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
-| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
-| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+| Keyboard         | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes.                         |
+| Screen reader    | Each new control has an accessible name. A status change is announced in words, not only by colour.                                                   |
+| Colour           | A warning and an error differ by text or icon as well as hue, in both themes.                                                                         |
+| Success          | The completed action is confirmed in words. A second identical action does not duplicate the write.                                                   |
 
 ### Alternate paths
 
@@ -579,6 +579,7 @@ The product has to pay, and nothing yet counts where an account comes from. [I-6
 **User story.** As a player who found a deck while signed out, I want to fork it and land back on my copy, so that sign-up is not a dead end.
 
 **Acceptance.**
+
 - A signed-out fork goes through sign-up and returns to the new deck.
 - The entry point is recorded without a campaign that ranks people.
 - A referral, if one exists later, is plan time, not cash.
@@ -600,4 +601,3 @@ The product has to pay, and nothing yet counts where an account comes from. [I-6
 A signed-out visitor forks a public deck, signs up with Google and lands in the builder on the fork; the owner sees that sign-up under its entry, with n and an interval; no link a player copies carries a parameter; and no notice reaches a player because they went quiet.
 
 ---
-

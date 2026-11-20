@@ -226,7 +226,7 @@ POST/GET/PATCH/DELETE /api/me/deck-searches   → saved searches (signed in)
 
 | #   | Slice                                                                                                                                                                                                           | Depends on                         |
 | --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
-| 0   | `DeckSearchQuery` with URL parse and serialise, fixed order, limits; solitary tests                                                                                                                             | —                                  |
+| 0   | `DeckSearchQuery` with URL parse and serialise, fixed order, limits; solitary tests Done (#1550).                                                                                                               | —                                  |
 | 1   | `PublicDeckSearch` projection, migration, sync on every write route with the parity test, backfill script; `listedInSearch` and the owner's switch                                                              | —                                  |
 | 2   | `GET /api/community/decks`: commander, pair, colours, recency, author, name; sorts by update, listing date and votes as shipped; keyset pages, timeout, cache, rate limit; commander route re-pointed (I-08 L6) | 0, 1                               |
 | 3   | Launch notice to authors of public decks in the library and the visibility setting                                                                                                                              | 1                                  |
@@ -564,22 +564,22 @@ Then the player sees an empty state that names what is missing, and the page doe
 
 The player-visible outcome is: a signed-out player searches MagicAIBuilder's own public decks by commander, colours, cards included and excluded, price with its basis, declared bracket and freshness, sees why each result appears and how each order is computed, and can save a search that says when a new deck matches; an author can keep any public deck out of search.
 
-| State | What the player sees |
-| --- | --- |
-| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
-| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
-| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
-| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
-| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
-| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
-| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
-| English | New controls use the `en` catalogue. |
-| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| State            | What the player sees                                                                                                                                  |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Empty            | A sentence that names what is missing and the next action. No invented row, author, price or score.                                                   |
+| Loading          | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready.                                        |
+| Error            | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there.                                                       |
+| Partial          | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished.                                                 |
+| Stale            | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed.                                             |
+| Guest            | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401.               |
+| Signed-in        | Writes go to that account only. Another player's notes, budget and collection are not in the response.                                                |
+| English          | New controls use the `en` catalogue.                                                                                                                  |
+| French           | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control.                                                         |
 | Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
-| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
-| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
-| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
-| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+| Keyboard         | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes.                         |
+| Screen reader    | Each new control has an accessible name. A status change is announced in words, not only by colour.                                                   |
+| Colour           | A warning and an error differ by text or icon as well as hue, in both themes.                                                                         |
+| Success          | The completed action is confirmed in words. A second identical action does not duplicate the write.                                                   |
 
 ### Alternate paths
 
@@ -631,6 +631,7 @@ A player finds someone else's deck in two ways today: the author's profile, or t
 **User story.** As a player looking for a public deck, I want to filter by commander, cards and a price with its basis, so that I can see why a result appeared.
 
 **Acceptance.**
+
 - A result says which filters it matched.
 - Popularity is not the default order.
 - An author can keep a public deck out of search.
@@ -652,4 +653,3 @@ A player finds someone else's deck in two ways today: the author's profile, or t
 A signed-out player finds Atraxa decks that play Smothering Tithe but not Rhystic Study, under $150 and updated this year, and sees why each result appears and how the order is computed; an author who turns off "Show in deck search" leaves every result and alert at once; and the commander page reads at most 50 decks through an index, never every deck for the commander.
 
 ---
-

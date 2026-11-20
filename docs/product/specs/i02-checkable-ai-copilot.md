@@ -83,15 +83,15 @@ Open in the roadmap: _"Keep the deterministic validator's verdict visible in the
 
 ## Delivery slices
 
-| #   | Slice                                                                      | Depends on |
-| --- | -------------------------------------------------------------------------- | ---------- |
-| 1   | Type every claim at the API boundary: `checked` with source, or `reasoned` | —          |
-| 2   | Render the distinction, non-colour-dependent, in the suggestion panel      | 1          |
-| 3   | Validator verdict panel: passed, corrected, rejected with rules            | 1          |
-| 4   | Rejected suggestions shown rather than dropped                             | 3          |
-| 5   | Provider, model and reproducibility statement on the result                | 1          |
+| #   | Slice                                                                                    | Depends on |
+| --- | ---------------------------------------------------------------------------------------- | ---------- |
+| 1   | Type every claim at the API boundary: `checked` with source, or `reasoned` Done (#1613). | —          |
+| 2   | Render the distinction, non-colour-dependent, in the suggestion panel                    | 1          |
+| 3   | Validator verdict panel: passed, corrected, rejected with rules                          | 1          |
+| 4   | Rejected suggestions shown rather than dropped                                           | 3          |
+| 5   | Provider, model and reproducibility statement on the result                              | 1          |
 
-Slice 1 is a contract change and should land with its tests before any UI work; slices 2 and 3 can then proceed in parallel.
+Slice 1 landed in #1613 and slice 8 in #1583. Slices 2, 3 and 5 can proceed in parallel; slice 2 is the lowest that can start now.
 
 ## Revision 2026-11-09
 
@@ -148,13 +148,13 @@ Evidence: on r/EDH, ["Do not use AI to make deck suggestions or clarify rules. I
 
 ### Added delivery slices
 
-| #   | Slice                                                                      | Depends on            |
-| --- | -------------------------------------------------------------------------- | --------------------- |
-| 6   | Record `stop_reason` and token usage per route; report truncation          | Moved to I-30 slice 1 |
-| 7   | Per-user monthly metering and quota (with I-05)                            | Moved to I-30 slice 2 |
-| 8   | Server-side card-data check of generated decks, unresolved names shown     | —                     |
-| 9   | Repair from a legal candidate pool, corrections shown in the verdict panel | 3, 8; I-76 slice 3    |
-| 10  | Public AI-use disclosure page and per-surface labels                       | Moved to I-30 slice 5 |
+| #   | Slice                                                                                | Depends on            |
+| --- | ------------------------------------------------------------------------------------ | --------------------- |
+| 6   | Record `stop_reason` and token usage per route; report truncation                    | Moved to I-30 slice 1 |
+| 7   | Per-user monthly metering and quota (with I-05)                                      | Moved to I-30 slice 2 |
+| 8   | Server-side card-data check of generated decks, unresolved names shown Done (#1583). | —                     |
+| 9   | Repair from a legal candidate pool, corrections shown in the verdict panel           | 3, 8; I-76 slice 3    |
+| 10  | Public AI-use disclosure page and per-surface labels                                 | Moved to I-30 slice 5 |
 
 Added 2026-11-11: slice 9's pool reads [I-76](i76-complete-this-deck-from-my-collection.md) slice 3's `isLegalCandidate`, so the legal-candidate filter has one owner. Completion from the collection is I-76; its AI mode (I-76 slice 20) picks from slice 9's pool and counts against the allowance.
 

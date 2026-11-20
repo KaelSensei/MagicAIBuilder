@@ -205,21 +205,21 @@ LabResult        keepTable[stage][class]{share, marginPct, ci, verdict}, keepRat
 
 ## Delivery slices
 
-| #   | Slice                                                                                                                                                                                                                                                      | Depends on                                                |
-| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| 1   | Engine core: TypeScript port of the research model into `src/lib/deck-lab/` (colourless), batch seeds, parity and hypergeometric tests                                                                                                                     | I-21 slice 1                                              |
-| 2   | Card classification: `DeckCard` to `LabCard` with rule trace, quantities expanded, commanders in the command zone, per-deck overrides; colours parsed but not yet used _(owns the card mana facts that I-58 slice 2 reads; one owner, decided 2026-11-10)_ | —                                                         |
-| 3   | Worker runtime: pool, batch-order merge, progress, cancel, sample-size ladder _(I-21 slice 6 owns the worker runtime; decided 2026-11-10)_                                                                                                                 | 1; I-21 slice 6                                           |
-| 4   | Colour model: pips, matching, fetches, MDFCs, filters, colour-aware land and fetch choice, colour hand class; throughput recorded                                                                                                                          | 1, 2                                                      |
-| 5   | Default run results: cross-fitted keep table, commander by turn, percentiles, colour sources, per-card castability, land drops, batch-means intervals, limits list naming I-78's group hug and wheel cards (added 2026-11-11)                              | 3, 4; I-21 slice 3                                        |
-| 6   | Deck Lab page: run, classification review and overrides, results, seed and limits panel; signed-out run on a visible or pasted list                                                                                                                        | 5                                                         |
-| 7   | Run record (`DeckLabRun`), replay link, engine-version handling                                                                                                                                                                                            | 6                                                         |
-| 8   | Variants: presets and custom swaps on common random numbers, re-solved policy, paired intervals, Holm, practical bar, N′                                                                                                                                   | 5; I-21 slice 5                                           |
-| 9   | Server runner: same module in Node, queue, daily cap, cache by run key, worker–server parity test                                                                                                                                                          | 7                                                         |
-| 10  | History across snapshots and two-snapshot comparison                                                                                                                                                                                                       | 9; I-21 slice 5                                           |
-| 11  | Norms placement with cell fallback, n and suppression                                                                                                                                                                                                      | 5; I-29 slices 8 and 11; I-28 slice 2                     |
-| 12  | Paid gating of 8 (beyond the free pair), 9 and 10                                                                                                                                                                                                          | 8, 9, 10; **Blocked** on I-30's decision and legal review |
-| 13  | Deck-specific keep advice in the playtest and in I-28's opening-hand check                                                                                                                                                                                 | 5; I-28 slice 9                                           |
+| #   | Slice                                                                                                                                                                                                                                                                    | Depends on                                                |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------- |
+| 1   | Engine core: TypeScript port of the research model into `src/lib/deck-lab/` (colourless), batch seeds, parity and hypergeometric tests                                                                                                                                   | I-21 slice 1                                              |
+| 2   | Card classification: `DeckCard` to `LabCard` with rule trace, quantities expanded, commanders in the command zone, per-deck overrides; colours parsed but not yet used _(owns the card mana facts that I-58 slice 2 reads; one owner, decided 2026-11-10)_ Done (#1601). | —                                                         |
+| 3   | Worker runtime: pool, batch-order merge, progress, cancel, sample-size ladder _(I-21 slice 6 owns the worker runtime; decided 2026-11-10)_                                                                                                                               | 1; I-21 slice 6                                           |
+| 4   | Colour model: pips, matching, fetches, MDFCs, filters, colour-aware land and fetch choice, colour hand class; throughput recorded                                                                                                                                        | 1, 2                                                      |
+| 5   | Default run results: cross-fitted keep table, commander by turn, percentiles, colour sources, per-card castability, land drops, batch-means intervals, limits list naming I-78's group hug and wheel cards (added 2026-11-11)                                            | 3, 4; I-21 slice 3                                        |
+| 6   | Deck Lab page: run, classification review and overrides, results, seed and limits panel; signed-out run on a visible or pasted list                                                                                                                                      | 5                                                         |
+| 7   | Run record (`DeckLabRun`), replay link, engine-version handling                                                                                                                                                                                                          | 6                                                         |
+| 8   | Variants: presets and custom swaps on common random numbers, re-solved policy, paired intervals, Holm, practical bar, N′                                                                                                                                                 | 5; I-21 slice 5                                           |
+| 9   | Server runner: same module in Node, queue, daily cap, cache by run key, worker–server parity test                                                                                                                                                                        | 7                                                         |
+| 10  | History across snapshots and two-snapshot comparison                                                                                                                                                                                                                     | 9; I-21 slice 5                                           |
+| 11  | Norms placement with cell fallback, n and suppression                                                                                                                                                                                                                    | 5; I-29 slices 8 and 11; I-28 slice 2                     |
+| 12  | Paid gating of 8 (beyond the free pair), 9 and 10                                                                                                                                                                                                                        | 8, 9, 10; **Blocked** on I-30's decision and legal review |
+| 13  | Deck-specific keep advice in the playtest and in I-28's opening-hand check                                                                                                                                                                                               | 5; I-28 slice 9                                           |
 
 Slice 2 ships alone, and slice 1 ships as soon as I-21's shuffler exists. Slices 1–7 are the free product. Four I-21 slices gate this work: slice 1 gates slice 1, slice 6 gates slice 3, slice 3 gates slice 5, and slice 5 gates slices 8 and 10. Those I-21 slices therefore need to leave "Later".
 
@@ -664,22 +664,22 @@ Then the player sees an empty state that names what is missing, and the page doe
 
 The player-visible outcome is: a player opens their own Commander list and gets a seeded, replayable analysis: the best keep rule for the first seven and the free seven, the chance the commander is cast by each turn, per-turn mana and colours, and swaps judged with an interval.
 
-| State | What the player sees |
-| --- | --- |
-| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
-| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
-| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
-| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
-| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
-| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
-| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
-| English | New controls use the `en` catalogue. |
-| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| State            | What the player sees                                                                                                                                  |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Empty            | A sentence that names what is missing and the next action. No invented row, author, price or score.                                                   |
+| Loading          | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready.                                        |
+| Error            | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there.                                                       |
+| Partial          | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished.                                                 |
+| Stale            | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed.                                             |
+| Guest            | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401.               |
+| Signed-in        | Writes go to that account only. Another player's notes, budget and collection are not in the response.                                                |
+| English          | New controls use the `en` catalogue.                                                                                                                  |
+| French           | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control.                                                         |
 | Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
-| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
-| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
-| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
-| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+| Keyboard         | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes.                         |
+| Screen reader    | Each new control has an accessible name. A status change is announced in words, not only by colour.                                                   |
+| Colour           | A warning and an error differ by text or icon as well as hue, in both themes.                                                                         |
+| Success          | The completed action is confirmed in words. A second identical action does not duplicate the write.                                                   |
 
 ### Alternate paths
 
@@ -743,6 +743,7 @@ The [opening-hands guide](../guides/commander-mulligans-curves-and-play-style.md
 **User story.** As a player tuning one list, I want a keep table and a swap result I can rerun, so that a difference that is noise is labelled noise.
 
 **Acceptance.**
+
 - The same seed and sample size reproduce the interval.
 - A swap that is not distinguishable at that sample says so, and says the sample that would be needed.
 - The run does not change the deck.
@@ -764,4 +765,3 @@ The [opening-hands guide](../guides/commander-mulligans-curves-and-play-style.md
 A player runs Deck Lab on their own list without an account and gets a keep table and commander and mana development, each figure with its interval, seed, sample size and engine version; a replay link reproduces the run byte for byte; and a variant's verdict says when the difference is not distinguishable.
 
 ---
-
