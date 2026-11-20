@@ -29,6 +29,7 @@ const PUBLIC_PAGE_PREFIXES: readonly string[] = [
   "/u", // public profile pages
   "/commanders", // public deck discovery by commander
   "/rules", // Game Changers, banlist and Comprehensive Rules reference pages
+  "/precons", // dated official precon lists, read only (I-17)
 ];
 
 /** Public at exactly this path and nowhere below it. */

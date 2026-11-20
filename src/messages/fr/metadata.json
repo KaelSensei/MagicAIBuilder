@@ -58,5 +58,9 @@
       "title": "Préférences de notification — MagicAIBuilder",
       "description": "Choisissez quels événements de la communauté peuvent vous notifier"
     }
+  },
+  "precons": {
+    "title": "Precons Commander — MagicAIBuilder",
+    "description": "Listes officielles de precons datées, en lecture seule."
   }
 }
