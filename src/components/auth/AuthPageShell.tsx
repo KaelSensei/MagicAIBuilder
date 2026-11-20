@@ -12,6 +12,7 @@ interface AuthPageShellProps {
 /**
  * Shared shell for auth pages (sign-in / sign-up).
  * Renders the centered layout, logo, optional error banner and slot for form content.
+ * The error banner is an alert (`role="alert"`), announced as soon as it appears.
  */
 export function AuthPageShell({ subtitle, error, children }: AuthPageShellProps) {
   return (
@@ -28,9 +29,15 @@ export function AuthPageShell({ subtitle, error, children }: AuthPageShellProps)
           <p className="text-sm text-[var(--text-secondary)]">{subtitle}</p>
         </div>
 
-        {/* Error banner */}
+        {/* Error banner. An alert, so a screen reader says a failed sign-in
+            or sign-up without the player moving focus (WCAG 4.1.3). The form
+            clears the error before each submit, so a repeated failure mounts
+            the banner again and is announced again. */}
         {error && (
-          <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm px-4 py-2 rounded-lg">
+          <div
+            role="alert"
+            className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm px-4 py-2 rounded-lg"
+          >
             {error}
           </div>
         )}
