@@ -4,30 +4,7 @@ import type { ReactNode } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { motion } from "framer-motion";
 import { useDialogFocusReturn } from "@/hooks/useDialogFocusReturn";
-
-/** Input types a player types text into; the life total field is a number. */
-const TEXT_ENTRY_INPUT_TYPES: ReadonlySet<string> = new Set([
-  "text",
-  "search",
-  "number",
-  "url",
-  "tel",
-  "email",
-  "password",
-]);
-
-/**
- * Whether a key event comes from a field the player types text into.
- * @param target - The keyboard event's target
- * @returns True for a textarea or a text-entry input
- */
-function isTextEntryTarget(target: EventTarget | null): boolean {
-  if (target instanceof HTMLTextAreaElement) return true;
-  return (
-    target instanceof HTMLInputElement &&
-    TEXT_ENTRY_INPUT_TYPES.has(target.type)
-  );
-}
+import { isTextEntryTarget } from "@/components/playtest/key-targets";
 
 /**
  * Escape in a text field stays with the field. The action log cancels an edit
