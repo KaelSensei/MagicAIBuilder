@@ -177,6 +177,7 @@ A row holds: `deckId`, `format`, commander Oracle names with French printed name
 - Indexing recaps, adding them to the sitemap, or posting them anywhere on the player's behalf.
 - Time spent in the product, sessions or activity days as statistics.
 - A paid recap.
+- Added 2026-11-20 (nineteenth pass): a target over the player's decks, with slots they pin, skip and share (the 32-deck challenge), is [I-113](i113-a-project-across-my-own-decks-the-32-colour-identities-and-other-slot-grids.md)'s; this initiative keeps passive counts, and its counting module gives I-113 the identity rule. A deck's stage in the roster is [I-114](i114-a-decks-place-in-the-roster-keep-rest-retire-or-take-apart.md)'s; 3.1's "active decks" may read it.
 
 ## Testing strategy
 

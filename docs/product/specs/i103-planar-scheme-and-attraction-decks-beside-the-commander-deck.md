@@ -409,6 +409,7 @@ Wizards put fifty planes in March of the Machine Commander (2023), forty in Doct
 - [ ] `checkSideDeck` for CR 901.3, 901.15a, 904.3 and 717.2a, each result citing its rule, never "illegal" (slice 2).
 - [ ] The side-card search mode with a visible query and no legality filter, the type gate, and the options column (slice 3); the editor's side-deck board (slice 4, after D-100); text export and import of the three sections (slice 5).
 - [ ] Later: precon side lists (slice 6); Archenemy Commander and Supervillain Rumble as declared options in I-42 (slice 7); sheet fields (slice 8); per-target exports (slice 9); offline download and Attraction triggers in the pilot sheet (slice 10).
+- [ ] Added 2026-11-20 (nineteenth pass): a fourth side component, a sticker-sheet set: at least ten unique sheets, checked with CR 123.2a cited ("a player who chooses to play with stickers must start the game with at least ten sticker sheets … and each of their sticker sheets must be unique"; CR 123.2: "Sticker sheets are not cards"), listed in text export, and searchable through this initiative's path for cards no format calls legal; no random draw, since nothing here simulates a game. Scryfall counts 50 sticker sheets (`t:stickers include:extras`) and 47 Commander-legal cards that use stickers (computed 2026-11-20); EDHREC's "Stickers" tag lists Rocco, Cabaretti Caterer at 27 decks ([tag](https://edhrec.com/tags/stickers), read 2026-11-20). Today `checkSideDeck` cites CR 100.7 for acorn Attractions only.
 
 ### Engineering enablers
 

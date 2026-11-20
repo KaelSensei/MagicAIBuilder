@@ -538,6 +538,7 @@ On 2026-11-09 the owner named a marketplace "recognised like Cardmarket or TCGpl
 - [ ] Measure stage 1 for six months with quarterly review entries, then choose the first market (slices 2–3).
 - [ ] Compare affiliate, take-rate and subscription income on measured numbers, then commission a legal review of stage 5 (slices 5–6).
 - [ ] Log the owner's stage-5 go or no-go. A "go" lands in the same pull request as the roadmap change that reverses the non-goal (slice 9).
+- [ ] Added 2026-11-20 (nineteenth pass), evidence only, for the rung where a marketplace reads a wanted list: CardNexus's marketplace lets a buyer "flip on the 'Complete my lists' filter and see only the cards you still need … buy your way to 100% completion", and the same release opens a public API "in private preview" with inventory, sales, purchases and lists endpoints ([changelog](https://feedback.cardnexus.com/changelog/freshly-sleeved-21-complete-my-lists-gundam-tcg-and-public), 2026-07-16, read 2026-11-20). [I-56](i56-wishlists-friends-can-buy-from.md)'s wanted list is this product's input for that rung.
 
 ### Boundaries
 
