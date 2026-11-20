@@ -314,7 +314,7 @@ describe("MTGTop8 MTGO export", () => {
     });
   }
 
-  it("imports the recorded MTGO export: the main deck, then the sideboard, from one request with the app's User-Agent", async () => {
+  it("imports the recorded MTGO export: the main deck, then the commander, from one request with the app's User-Agent", async () => {
     server.use(exportAnswers(MTGTOP8_EXPORT_RECORDED));
 
     const imported = await importFromUrl(importUrl);
@@ -324,7 +324,9 @@ describe("MTGTop8 MTGO export", () => {
     ]);
     expect(received[0]?.headers.get("user-agent")).toBe(USER_AGENT);
     expect(imported.name).toBe(`MTGTop8 deck #${MTGTOP8_RECORDED_DECK_ID}`);
-    const main = imported.cards.filter((card) => card.zone === "main");
+    const main = imported.cards.filter(
+      (card) => card.zone === "main" && !card.isCommander
+    );
     expect(main).toHaveLength(88);
     expect(main.reduce((total, card) => total + card.quantity, 0)).toBe(99);
     expect(main.slice(0, 2)).toEqual([
@@ -332,9 +334,183 @@ describe("MTGTop8 MTGO export", () => {
       mainCard("Arbor Elf"),
     ]);
     expect(main).toContainEqual(mainCard("Snow-Covered Forest", 12));
-    expect(imported.cards.at(-1)).toEqual({
-      ...mainCard("Surrak, Elusive Hunter"),
-      zone: "sideboard",
+    expect(imported.cards.at(-1)).toEqual(
+      commanderCard("Surrak, Elusive Hunter")
+    );
+  });
+
+  /**
+   * A hand-built export in the recorded text shape: "N Card Name" lines and a bare `Sideboard`
+   * heading, each line ending in CRLF. Only deck 913975 was recorded; these stand in for the
+   * partner pair and the non-Commander decks no recording covers.
+   */
+  function exportBody(lines: readonly string[]): string {
+    return lines.map((line) => `${line}\r\n`).join("");
+  }
+
+  /** A deck URL for `deckId`, with the format code `f=` when one is given. */
+  function deckUrl(deckId: string, formatCode?: string): string {
+    const url = new URL("https://www.mtgtop8.com/event");
+    url.searchParams.set("e", "9000");
+    url.searchParams.set("d", deckId);
+    if (formatCode !== undefined) url.searchParams.set("f", formatCode);
+    return url.href;
+  }
+
+  /** A 98-card main deck and a partner pair under `Sideboard`: 100 cards, no format code. */
+  const PARTNER_PAIR_EXPORT = exportBody([
+    "1 Sol Ring",
+    "97 Island",
+    "Sideboard",
+    "1 Tymna the Weaver",
+    "1 Thrasios, Triton Hero",
+  ]);
+
+  /** A 60-card main deck and a 15-card sideboard. */
+  const CONSTRUCTED_EXPORT = exportBody([
+    "4 Lightning Bolt",
+    "56 Mountain",
+    "Sideboard",
+    "3 Pyroblast",
+    "4 Smash to Smithereens",
+    "4 Searing Blood",
+    "4 Roiling Vortex",
+  ]);
+
+  describe("command zone", () => {
+    it(`importing MTGTop8 deck ${MTGTOP8_RECORDED_DECK_ID} marks Surrak, Elusive Hunter as the commander and leaves 99 cards in the main deck`, async () => {
+      server.use(exportAnswers(MTGTOP8_EXPORT_RECORDED));
+
+      const imported = await importFromUrl(importUrl);
+
+      expect(
+        imported.cards.filter((card) => card.isCommander || card.isPartner)
+      ).toEqual([commanderCard("Surrak, Elusive Hunter")]);
+      const deck = imported.cards.filter((card) => !card.isCommander);
+      expect(deck.every((card) => card.zone === "main")).toBe(true);
+      expect(deck.reduce((total, card) => total + card.quantity, 0)).toBe(99);
+    });
+
+    it("recognises a Commander deck without a format code by its shape: 99 cards and one under Sideboard", async () => {
+      server.use(exportAnswers(MTGTOP8_EXPORT_RECORDED));
+
+      const imported = await importFromUrl(
+        `https://www.mtgtop8.com/event?e=${MTGTOP8_RECORDED_EVENT_ID}&d=${MTGTOP8_RECORDED_DECK_ID}`
+      );
+
+      expect(imported.cards.filter((card) => card.isCommander)).toEqual([
+        commanderCard("Surrak, Elusive Hunter"),
+      ]);
+      expect(imported.cards.some((card) => card.zone === "sideboard")).toBe(
+        false
+      );
+    });
+
+    it("files two cards under Sideboard as the commander, then the partner, in the export's order", async () => {
+      server.use(exportAnswers(PARTNER_PAIR_EXPORT));
+
+      const imported = await importFromUrl(deckUrl("8101"));
+
+      expect(
+        imported.cards.filter((card) => card.isCommander || card.isPartner)
+      ).toEqual([
+        commanderCard("Tymna the Weaver"),
+        partnerCard("Thrasios, Triton Hero"),
+      ]);
+      expect(imported.cards.some((card) => card.zone === "sideboard")).toBe(
+        false
+      );
+    });
+
+    it("takes the cEDH format code as a commander format, even when the deck is not 100 cards", async () => {
+      server.use(
+        exportAnswers(
+          exportBody([
+            "1 Sol Ring",
+            "1 Island",
+            "Sideboard",
+            "1 Kinnan, Bonder Prodigy",
+          ])
+        )
+      );
+
+      const imported = await importFromUrl(deckUrl("8102", "cEDH"));
+
+      expect(imported.cards.filter((card) => card.isCommander)).toEqual([
+        commanderCard("Kinnan, Bonder Prodigy"),
+      ]);
+    });
+
+    it("keeps the 15 sideboard cards of a 60-card deck", async () => {
+      server.use(exportAnswers(CONSTRUCTED_EXPORT));
+
+      const imported = await importFromUrl(deckUrl("8103"));
+
+      const sideboard = imported.cards.filter(
+        (card) => card.zone === "sideboard"
+      );
+      expect(sideboard.reduce((total, card) => total + card.quantity, 0)).toBe(
+        15
+      );
+      expect(
+        imported.cards.some((card) => card.isCommander || card.isPartner)
+      ).toBe(false);
+    });
+
+    it("keeps a single sideboard card of a deck that is not 100 cards and has no format code", async () => {
+      server.use(
+        exportAnswers(
+          exportBody([
+            "4 Lightning Bolt",
+            "56 Mountain",
+            "Sideboard",
+            "1 Pyroblast",
+          ])
+        )
+      );
+
+      const imported = await importFromUrl(deckUrl("8104"));
+
+      expect(imported.cards.at(-1)).toEqual({
+        ...mainCard("Pyroblast"),
+        zone: "sideboard",
+      });
+    });
+
+    it("keeps three sideboard cards even under a commander format code", async () => {
+      server.use(
+        exportAnswers(
+          exportBody([
+            "97 Forest",
+            "Sideboard",
+            "1 Pyroblast",
+            "1 Red Elemental Blast",
+            "1 Hydroblast",
+          ])
+        )
+      );
+
+      const imported = await importFromUrl(deckUrl("8105", "EDH"));
+
+      expect(
+        imported.cards.filter((card) => card.zone === "sideboard")
+      ).toHaveLength(3);
+      expect(
+        imported.cards.some((card) => card.isCommander || card.isPartner)
+      ).toBe(false);
+    });
+
+    it("keeps the sideboard of a 100-card shape when the format code is not a commander format", async () => {
+      server.use(exportAnswers(MTGTOP8_EXPORT_RECORDED));
+
+      const imported = await importFromUrl(
+        deckUrl(MTGTOP8_RECORDED_DECK_ID, "VI")
+      );
+
+      expect(imported.cards.at(-1)).toEqual({
+        ...mainCard("Surrak, Elusive Hunter"),
+        zone: "sideboard",
+      });
     });
   });
 
