@@ -22,7 +22,10 @@ import {
   ListChecks,
   ShieldCheck,
 } from "lucide-react";
-import { autocompleteCardName, getCardByNameFuzzy } from "@/lib/scryfall/client";
+import {
+  autocompleteCardName,
+  getCardByNameFuzzy,
+} from "@/lib/scryfall/client";
 import { logger } from "@/lib/logger";
 import { useAIDeckBuild, countCopies } from "@/hooks/useAIDeckBuild";
 import { useAiDenialMessage } from "@/hooks/useAiDenialMessage";
@@ -638,6 +641,42 @@ function StepLoading({
 // Main wizard
 // ---------------------------------------------------------------------------
 
+/**
+ * The actions under a failed build or save. "Try saving again" stores the deck already built;
+ * "Try again" returns to the plan for a fresh build.
+ */
+function BuildFailureActions({
+  saveFailed,
+  onRetrySave,
+  onStartOver,
+}: {
+  readonly saveFailed: boolean;
+  readonly onRetrySave: () => void;
+  readonly onStartOver: () => void;
+}) {
+  const t = useTranslations("deck");
+  return (
+    <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
+      {saveFailed && (
+        <button
+          type="button"
+          onClick={onRetrySave}
+          className="px-4 py-2 rounded-xl text-sm font-semibold bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white transition-colors"
+        >
+          {t("wizard.trySavingAgain")}
+        </button>
+      )}
+      <button
+        type="button"
+        onClick={onStartOver}
+        className="text-sm text-[var(--accent-text)] hover:underline"
+      >
+        {t("wizard.tryAgain")}
+      </button>
+    </div>
+  );
+}
+
 const TOTAL_WIZARD_STEPS = 6;
 
 export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
@@ -741,6 +780,15 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
         : commanderName,
   });
 
+  // A failure once the deck exists returns to the plan, as before: saving
+  // again would create a second deck.
+  const reportFailure = (err: unknown) => {
+    const message = err instanceof Error ? err.message : "Deck build failed";
+    logger.error("Generate error", "DeckWizard", err);
+    setBuildError(message);
+    setIsBuilding(false);
+  };
+
   const handleGenerateWith = async (skipCommander = false) => {
     if (!strategy) return;
     setIsBuilding(true);
@@ -769,11 +817,25 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
         result,
       });
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Deck build failed";
-      logger.error("Generate error", "DeckWizard", err);
-      setBuildError(message);
-      setIsBuilding(false);
+      reportFailure(err);
     }
+  };
+
+  const retrySave = () => builtDeck.retry().catch(reportFailure);
+
+  const startOver = () => {
+    setIsBuilding(false);
+    setBuildError(null);
+    resetSave();
+    resetBuild();
+  };
+
+  // The server's own text never reaches the player: a deck the server could
+  // not create gets the wizard's message.
+  const loadingError = (): string | null => {
+    if (buildState.denial) return describeDenial(buildState.denial);
+    if (builtDeck.saveFailed) return t("wizard.deckNotSaved");
+    return buildError;
   };
 
   // ---------------------------------------------------------------------------
@@ -869,24 +931,14 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
                         isDemoDeck={isDemoDeck}
                         importedCount={builtDeck.importedCount}
                         importTotal={builtDeck.importTotal}
-                        error={
-                          buildState.denial
-                            ? describeDenial(buildState.denial)
-                            : buildError
-                        }
+                        error={loadingError()}
                       />
-                      {buildError && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setIsBuilding(false);
-                            setBuildError(null);
-                            resetBuild();
-                          }}
-                          className="mt-6 text-sm text-[var(--accent-text)] hover:underline"
-                        >
-                          {t("wizard.tryAgain")}
-                        </button>
+                      {(buildError || builtDeck.saveFailed) && (
+                        <BuildFailureActions
+                          saveFailed={builtDeck.saveFailed}
+                          onRetrySave={retrySave}
+                          onStartOver={startOver}
+                        />
                       )}
                     </>
                   )}
