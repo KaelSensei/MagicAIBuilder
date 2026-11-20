@@ -103,7 +103,7 @@ export function MoxfieldDeckResults({
                   `https://moxfield.com/decks/${encodeURIComponent(deck.id)}`
                 )
               }
-              className="shrink-0 text-xs text-[var(--accent)] hover:underline"
+              className="shrink-0 text-xs text-[var(--accent-text)] hover:underline"
             >
               {t("importDeck", { name: deck.name })}
             </button>

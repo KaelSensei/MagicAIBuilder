@@ -23,7 +23,7 @@ export function CardPackagesPanel({ deckId, cards, onApplied }: CardPackagesPane
     <section className="rounded-lg border border-[var(--border)] bg-[var(--surface)]">
       <button type="button" onClick={() => setExpanded((value) => !value)} className="flex w-full items-center justify-between gap-3 p-4 text-left" aria-expanded={expanded}>
         <span className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide">
-          <PackageOpen className="h-4 w-4 text-[var(--accent)]" /> {t("title")}
+          <PackageOpen className="h-4 w-4 text-[var(--accent-text)]" /> {t("title")}
         </span>
         {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
       </button>

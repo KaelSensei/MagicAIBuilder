@@ -81,7 +81,7 @@ export function CardTooltip({ card, children }: CardTooltipProps) {
             />
             {card.price != null && (
               <div className="p-2 bg-(--surface) text-xs text-(--text-secondary)">
-                <span className="text-(--accent)">
+                <span className="text-(--accent-text)">
                   {formatUsdPrice(locale, card.price)}
                 </span>
               </div>

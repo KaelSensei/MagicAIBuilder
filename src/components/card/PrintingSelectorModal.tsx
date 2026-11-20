@@ -139,7 +139,7 @@ export function PrintingSelectorModal({
         <div className="flex-1 overflow-hidden p-4">
           {isLoading ? (
             <div className="flex items-center justify-center h-40">
-              <Loader2 className="w-6 h-6 animate-spin text-(--accent)" />
+              <Loader2 className="w-6 h-6 animate-spin text-(--accent-text)" />
             </div>
           ) : (
             <div className="flex h-full gap-4">
