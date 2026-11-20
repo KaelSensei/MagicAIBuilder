@@ -97,8 +97,8 @@ function toBlock(entries: readonly PodEntry[], policy: PodPolicy): Block {
   const ordered = [...entries].sort((left, right) =>
     left.id.localeCompare(right.id, "en")
   );
-  let minBracket = ordered[0]?.bracket ?? 1;
-  let maxBracket = minBracket;
+  let minBracket: number = ordered[0]?.bracket ?? 1;
+  let maxBracket: number = minBracket;
   for (const entry of ordered) {
     minBracket = Math.min(minBracket, entry.bracket);
     maxBracket = Math.max(maxBracket, entry.bracket);
@@ -117,8 +117,8 @@ function blockProblem(
   entries: readonly PodEntry[],
   policy: PodPolicy
 ): WaitingReason | null {
-  let minBracket = entries[0]?.bracket ?? 1;
-  let maxBracket = minBracket;
+  let minBracket: number = entries[0]?.bracket ?? 1;
+  let maxBracket: number = minBracket;
   for (const entry of entries) {
     minBracket = Math.min(minBracket, entry.bracket);
     maxBracket = Math.max(maxBracket, entry.bracket);
@@ -163,8 +163,8 @@ export interface SeatedPod {
 
 /** A table made of blocks. */
 export function podFromBlocks(blocks: readonly Block[]): SeatedPod {
-  let minBracket = blocks[0]?.minBracket ?? 0;
-  let maxBracket = blocks[0]?.maxBracket ?? 0;
+  let minBracket: number = blocks[0]?.minBracket ?? 0;
+  let maxBracket: number = blocks[0]?.maxBracket ?? 0;
   const ids: string[] = [];
   for (const block of blocks) {
     minBracket = Math.min(minBracket, block.minBracket);
