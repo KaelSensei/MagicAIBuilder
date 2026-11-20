@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { screen, within } from "@testing-library/react";
+import { fireEvent, screen, within } from "@testing-library/react";
 import { apiDeckToStoreDeck } from "@/lib/deck/store-factories";
 import type { Deck, DeckCard } from "@/lib/deck/types";
 import { aDeckCard } from "@/test/builders/card";
@@ -223,6 +223,44 @@ describe("HomeDeckCard actions beside its link", () => {
     expect(
       screen.getByRole("button", { name: "Delete Test Deck" })
     ).toHaveClass("size-7");
+  });
+
+  // The callbacks here neither prevent the default nor stop propagation, so
+  // only the markup keeps the click away from the link.
+  it("a click on Delete does not navigate", () => {
+    const deck = makeDeck();
+    const { onDelete } = renderDeckCard(deck);
+    const linkClick = vi.fn();
+    screen.getByRole("link").addEventListener("click", linkClick);
+
+    fireEvent.click(screen.getByRole("button", { name: "Delete Test Deck" }));
+
+    expect(onDelete).toHaveBeenCalledWith(expect.anything(), deck.id);
+    expect(linkClick).not.toHaveBeenCalled();
+  });
+
+  it("a click on Duplicate duplicates the deck without navigating", () => {
+    const deck = makeDeck();
+    const { onDuplicate } = renderDeckCard(deck);
+    const linkClick = vi.fn();
+    screen.getByRole("link").addEventListener("click", linkClick);
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Duplicate Test Deck" })
+    );
+
+    expect(onDuplicate).toHaveBeenCalledWith(expect.anything(), deck.id);
+    expect(linkClick).not.toHaveBeenCalled();
+  });
+
+  it("the deck name links to the deck's builder", () => {
+    const deck = makeDeck();
+    renderDeckCard(deck);
+
+    expect(screen.getByRole("link", { name: "Test Deck" })).toHaveAttribute(
+      "href",
+      `/builder/${deck.id}`
+    );
   });
 });
 
