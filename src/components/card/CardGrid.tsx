@@ -22,6 +22,8 @@ interface CardGridProps {
   readonly draggable?: boolean;
   readonly onAddToMaybeboard?: (card: ScryfallCard) => void;
   readonly onAddToZone?: (card: ScryfallCard, zone: DeckZone) => void;
+  /** Copies already in each zone, shown on the zone menu. */
+  readonly zoneCounts?: Readonly<Record<DeckZone, number>>;
   readonly maybeboardNames?: Set<string>;
 }
 
@@ -46,6 +48,7 @@ export function CardGrid({
   draggable = false,
   onAddToMaybeboard: _onAddToMaybeboard,
   onAddToZone,
+  zoneCounts,
   maybeboardNames: _maybeboardNames,
 }: CardGridProps) {
   const t = useTranslations("card");
@@ -107,7 +110,7 @@ export function CardGrid({
             />
             {onAddToZone && (
               <div className="absolute inset-x-1 bottom-1 z-20">
-                <SearchZoneMenu card={card} onAddToZone={onAddToZone} />
+                <SearchZoneMenu card={card} onAddToZone={onAddToZone} zoneCounts={zoneCounts} />
               </div>
             )}
           </motion.div>

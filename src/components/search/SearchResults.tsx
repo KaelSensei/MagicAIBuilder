@@ -7,11 +7,13 @@
  *
  * @module components/search/SearchResults
  */
+import { useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { Loader2, AlertCircle, LayoutGrid, List } from "lucide-react";
 import { CardGrid } from "@/components/card/CardGrid";
 import { CardSearchListItem } from "@/components/card/CardSearchListItem";
 import { useDeckStore } from "@/lib/deck/store";
+import { countCopiesByZone } from "@/lib/deck/zone-source";
 import type { DeckZone } from "@/lib/deck/types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import type { CollectionOnlyState } from "@/hooks/useCardSearchResults";
@@ -60,6 +62,7 @@ export function SearchResults({
   const maybeboardNames = new Set(
     activeDeck?.maybeboard.map((c) => c.name) ?? []
   );
+  const zoneCounts = useMemo(() => countCopiesByZone(activeDeck), [activeDeck]);
 
   if (isLoading) {
     return (
@@ -157,6 +160,7 @@ export function SearchResults({
           onCardClick={onCardClick}
           onAddToMaybeboard={onAddToMaybeboard}
           onAddToZone={onAddToZone}
+          zoneCounts={zoneCounts}
           maybeboardNames={maybeboardNames}
           draggable={draggable}
         />
@@ -169,6 +173,7 @@ export function SearchResults({
               onClick={onCardClick}
               onAddToMaybeboard={onAddToMaybeboard}
               onAddToZone={onAddToZone}
+              zoneCounts={zoneCounts}
               isInMaybeboard={maybeboardNames.has(card.name)}
               draggable={draggable}
             />
