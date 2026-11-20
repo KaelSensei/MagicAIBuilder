@@ -128,5 +128,22 @@
     "invalidDescription": "Describe the card in a few words.",
     "invalidQuery": "That did not become a valid Scryfall query. Try a shorter description.",
     "failed": "The query could not be written. Syntax search still works."
+  },
+  "quickAdd": {
+    "open": "Quick add",
+    "title": "Quick add",
+    "placeholder": "Card name, role, or rules text",
+    "hint": "Enter adds to the main deck. Shift+Enter the sideboard. Alt+Enter considering. Alt+R switches between the name and the rules text. The palette stays open.",
+    "nameReading": "Name",
+    "oracleReading": "Rules text",
+    "readingGroup": "How to read this line",
+    "idle": "Type at least two letters.",
+    "searching": "Searching…",
+    "noResults": "No cards for this query.",
+    "error": "The search could not be completed.",
+    "added": "Added {name} to {zone}.",
+    "priceUnknown": "No price",
+    "option": "{name}, {type}",
+    "shortcut": "Ctrl+K or ⌘K"
   }
 }
