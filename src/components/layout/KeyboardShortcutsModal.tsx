@@ -28,6 +28,7 @@ const SHORTCUTS: ShortcutEntry[] = [
   { keys: ["⌘S", "Ctrl+S"], descriptionKey: "save" },
   { keys: ["⌘E", "Ctrl+E"], descriptionKey: "export" },
   { keys: ["⌘I", "Ctrl+I"], descriptionKey: "import" },
+  { keys: ["⌘K", "Ctrl+K"], descriptionKey: "quickAdd" },
 ];
 
 interface KeybadgeProps {
