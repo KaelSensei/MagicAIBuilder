@@ -65,6 +65,26 @@ export function cardWithinCopyLimit<Card extends CopiesWrite>(
   };
 }
 
+/**
+ * One row's edit with its new copies, if it names any, clamped to the row's
+ * copy limit. An edit that names no quantity keeps the stored copies, so it
+ * passes unchanged.
+ *
+ * @param edit - The columns to write; `quantity` absent keeps the stored copies
+ * @param card - The card text of the row the edit changes
+ * @param deck - The deck's copy-limit facts, from {@link storedCopyLimitDeck}
+ * @returns The same edit, with `quantity` from 1 to the card's limit when present
+ */
+export function editWithinCopyLimit<
+  Edit extends { readonly quantity?: number },
+>(edit: Edit, card: CopyLimitCard, deck: CopyLimitDeck): Edit {
+  if (edit.quantity === undefined) return edit;
+  return {
+    ...edit,
+    quantity: copiesWithinLimit(edit.quantity, deckCopyLimit(card, deck)),
+  };
+}
+
 /** One row's new copies in a bulk edit. */
 export interface CopiesChange {
   readonly cardId: string;

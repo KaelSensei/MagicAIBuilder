@@ -12,12 +12,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 /** The notes column of the one deck row the fake database holds. */
 const db = vi.hoisted((): { notes: string | null } => ({ notes: null }));
 
-vi.mock(import("@/lib/auth/helpers"), () => ({
-  requireDeckOwner: vi.fn(async () => ({
-    userId: "owner-1",
-    deck: { id: "deck-1", userId: "owner-1" },
-  })),
+/** The session: the deck's owner is signed in. */
+const { mockAuth } = vi.hoisted(() => ({
+  mockAuth: vi.fn().mockResolvedValue({ user: { id: "owner-1" } }),
 }));
+vi.mock(import("@/lib/auth/config"), () => ({ auth: mockAuth }));
 
 vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
   const { stubPrisma } = await import("@/test/prisma-stub");
@@ -29,15 +28,32 @@ vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
       return storedRow();
     }),
   };
-  // The deck repository claims the deck's next version and reads it back in
-  // the card's transaction (lib/deck/deck-repository.ts).
+  // One lookup answers both reads of the deck: the owner check, which also
+  // reads the copy limit's format and command zone, and the deck repository,
+  // which claims the deck's next version and reads it back in the card's
+  // transaction (lib/deck/deck-repository.ts).
   const deck = {
     updateMany: vi.fn(async () => ({ count: 1 })),
-    findUnique: vi.fn(async () => ({ version: 1 })),
+    findUnique: vi.fn(async () => ({
+      version: 1,
+      userId: "owner-1",
+      format: "commander",
+      cards: [],
+    })),
+  };
+  // The session check reads the signed-in user's row.
+  const user = {
+    findUnique: vi.fn(async () => ({
+      id: "owner-1",
+      name: null,
+      email: null,
+      image: null,
+    })),
   };
   return stubPrisma(await importOriginal(), {
     deckCard,
     deck,
+    user,
     // The route writes the card and the deck in one transaction (B2-09); this
     // fake has no rollback to model, so the transaction runs on the same tables.
     $transaction: (
