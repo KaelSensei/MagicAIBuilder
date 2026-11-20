@@ -20,15 +20,20 @@ import {
   applyDamage,
   applyDrawCard,
   applyEditActionLogEntry,
+  applyGainCitysBlessing,
   applyHeal,
   applyMoveToZone,
   applyMulligan,
   applyNextPhase,
   applyNextTurn,
+  applyPlayerCounter,
   applyRecordMana,
   applyRemoveActionLogEntry,
+  applyRingTempts,
   applyRollDie,
+  applySetDayNight,
   applyTap,
+  applyToggleDesignation,
   applyUndo,
   applyUntapAll,
   createPlaytestState,
@@ -216,6 +221,37 @@ const ROWS: readonly ReducerRow[] = [
     from: tallyState,
     command: () => KENRITH_HITS_OPPONENT_ONE,
     expected: (s) => applyCommanderDamage(s, KENRITH_HITS_OPPONENT_ONE, deps),
+  },
+  {
+    label: "playerCounter puts counters on the player",
+    type: "playerCounter",
+    command: () => ({ type: "playerCounter", counter: "poison", amount: 2 }),
+    expected: (s) =>
+      applyPlayerCounter(s, { counter: "poison", amount: 2 }, deps),
+  },
+  {
+    label: "gainCitysBlessing gives the player the city's blessing",
+    type: "gainCitysBlessing",
+    command: () => ({ type: "gainCitysBlessing" }),
+    expected: (s) => applyGainCitysBlessing(s, deps),
+  },
+  {
+    label: "setDayNight makes it day",
+    type: "setDayNight",
+    command: () => ({ type: "setDayNight", dayNight: "day" }),
+    expected: (s) => applySetDayNight(s, "day", deps),
+  },
+  {
+    label: "toggleDesignation makes the player the monarch",
+    type: "toggleDesignation",
+    command: () => ({ type: "toggleDesignation", designation: "monarch" }),
+    expected: (s) => applyToggleDesignation(s, "monarch", deps),
+  },
+  {
+    label: "ringTempts counts one more temptation",
+    type: "ringTempts",
+    command: () => ({ type: "ringTempts" }),
+    expected: (s) => applyRingTempts(s, deps),
   },
   {
     label: "tap toggles a permanent",
@@ -472,6 +508,21 @@ function blockedScenario(
       return {
         state: tallyState(),
         command: { ...KENRITH_HITS_OPPONENT_ONE, amount: 0 },
+      };
+    case "bad-counter-change":
+      return {
+        state: base,
+        command: { type: "playerCounter", counter: "energy", amount: -1 },
+      };
+    case "has-citys-blessing":
+      return {
+        state: applyGainCitysBlessing(base, deps),
+        command: { type: "gainCitysBlessing" },
+      };
+    case "same-day-night":
+      return {
+        state: applySetDayNight(base, "night", deps),
+        command: { type: "setDayNight", dayNight: "night" },
       };
     case "not-in-zone":
       return {

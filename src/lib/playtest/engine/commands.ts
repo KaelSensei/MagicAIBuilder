@@ -35,13 +35,27 @@ import {
   applyCommanderDamage,
   type CommanderDamageHit,
 } from "./commander-damage";
+import {
+  applyGainCitysBlessing,
+  applyPlayerCounter,
+  applyRingTempts,
+  applySetDayNight,
+  applyToggleDesignation,
+  type PlayerCounterChange,
+} from "./designations";
 import { applyRollDie } from "./dice";
 import { applyUndo } from "./history";
 import { applyDamage, applyHeal } from "./life";
 import { applyBottomCards, applyMulligan } from "./mulligan";
 import { defaultPlaytestCommandDeps, type PlaytestCommandDeps } from "./ports";
 import { applyDrawCard, applyNextPhase, applyNextTurn } from "./turn";
-import type { CardZone, PlaytestEngine, PlaytestTokenSpec } from "./types";
+import type {
+  CardZone,
+  DayOrNight,
+  PlaytestEngine,
+  PlaytestTokenSpec,
+  ToggledDesignation,
+} from "./types";
 import { applyMoveToZone } from "./zones";
 
 // ─── Commands ─────────────────────────────────────────────────────────────
@@ -73,6 +87,25 @@ export type PlaytestCommand =
    * the player's own life does not change.
    */
   | ({ readonly type: "commanderDamage" } & CommanderDamageHit)
+  /**
+   * Put `amount` poison, energy or experience counters on the player, or take them off when
+   * negative (CR 122.1, 107.14).
+   */
+  | ({ readonly type: "playerCounter" } & PlayerCounterChange)
+  /** Get the city's blessing for the rest of the game (CR 702.131a, 702.131c). */
+  | { readonly type: "gainCitysBlessing" }
+  /** It becomes day or night (CR 731.1); day becomes night and back (CR 731.1a). */
+  | { readonly type: "setDayNight"; readonly dayNight: DayOrNight }
+  /**
+   * Become the monarch or take the initiative, or lose it to an imagined opponent
+   * (CR 725.3, 726.3).
+   */
+  | {
+      readonly type: "toggleDesignation";
+      readonly designation: ToggledDesignation;
+    }
+  /** The Ring tempts the player once more (CR 701.54a). */
+  | { readonly type: "ringTempts" }
   /** Toggle one permanent between tapped and untapped. */
   | { readonly type: "tap"; readonly cardId: string }
   /** Untap every permanent at once (CR 502.3). */
@@ -171,6 +204,16 @@ export function reducePlaytest(
       return applyHeal(state, command.amount, deps);
     case "commanderDamage":
       return applyCommanderDamage(state, command, deps);
+    case "playerCounter":
+      return applyPlayerCounter(state, command, deps);
+    case "gainCitysBlessing":
+      return applyGainCitysBlessing(state, deps);
+    case "setDayNight":
+      return applySetDayNight(state, command.dayNight, deps);
+    case "toggleDesignation":
+      return applyToggleDesignation(state, command.designation, deps);
+    case "ringTempts":
+      return applyRingTempts(state, deps);
     case "tap":
       return applyTap(state, command.cardId, deps);
     case "untapAll":

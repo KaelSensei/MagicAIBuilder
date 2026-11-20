@@ -92,6 +92,27 @@
     "recordFrom": "Record damage from {commander} to Opponent {number}",
     "lost": "Lost to commander damage (CR 903.10a, CR 704.6c)"
   },
+  "designations": {
+    "title": "Player counters and designations",
+    "hint": "Set what your cards give you. Each change is one step that undo reverses.",
+    "counter": "{counter, select, poison {Poison} energy {Energy} other {Experience}}: {count}",
+    "add": "Add one {counter, select, poison {poison} energy {energy} other {experience}} counter",
+    "remove": "Remove one {counter, select, poison {poison} energy {energy} other {experience}} counter",
+    "poisonLost": "Lost to poison (CR 104.3d, CR 704.5c)",
+    "monarch": "{has, select, yes {You are the monarch} other {You are not the monarch}}",
+    "becomeMonarch": "Become the monarch",
+    "loseMonarch": "An opponent becomes the monarch",
+    "initiative": "{has, select, yes {You have the initiative} other {You do not have the initiative}}",
+    "takeInitiative": "Take the initiative",
+    "loseInitiative": "An opponent takes the initiative",
+    "ring": "{count, plural, =0 {The Ring has not tempted you} one {The Ring has tempted you once} other {The Ring has tempted you # times}}",
+    "ringTempts": "The Ring tempts you",
+    "dayNight": "{state, select, day {It is day} night {It is night} other {Neither day nor night}}",
+    "becomeDay": "It becomes day",
+    "becomeNight": "It becomes night",
+    "blessing": "{has, select, yes {You have the city's blessing} other {You do not have the city's blessing}}",
+    "getBlessing": "Get the city's blessing"
+  },
   "dice": {
     "title": "Dice",
     "roll": "Roll d{sides}",
