@@ -266,7 +266,7 @@ const SHARED_DECK_KEYS = [
   "targetBracket",
 ];
 
-/** The card fields `ShareDeckView` reads. */
+/** The card fields `ShareDeckView` reads, plus the `zone` the page metadata counts by. */
 const SHARED_CARD_KEYS = [
   "artCropUri",
   "category",
@@ -280,6 +280,7 @@ const SHARED_CARD_KEYS = [
   "manaCost",
   "name",
   "quantity",
+  "zone",
 ];
 
 function sharedCard(card: DeckCard) {
@@ -296,6 +297,7 @@ function sharedCard(card: DeckCard) {
     isCommander: card.isCommander,
     isPartner: card.isPartner,
     isGameChanger: card.isGameChanger,
+    zone: card.zone,
   };
 }
 

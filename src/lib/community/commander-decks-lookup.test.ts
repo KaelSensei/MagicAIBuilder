@@ -11,13 +11,13 @@
 import type { unstable_cache } from "next/cache";
 import { afterEach, expect, it, vi } from "vitest";
 
-const { mockDeckFindMany, mockQueryRaw, mockUnstableCache } = vi.hoisted(
-  () => ({
+const { mockDeckFindMany, mockQueryRaw, mockGroupBy, mockUnstableCache } =
+  vi.hoisted(() => ({
     mockDeckFindMany: vi.fn(),
     mockQueryRaw: vi.fn(),
+    mockGroupBy: vi.fn(),
     mockUnstableCache: vi.fn(),
-  })
-);
+  }));
 
 type UnstableCache = typeof unstable_cache;
 
@@ -25,6 +25,7 @@ vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
   const { stubPrisma } = await import("@/test/prisma-stub");
   return stubPrisma(await importOriginal(), {
     deck: { findMany: mockDeckFindMany },
+    deckCard: { groupBy: mockGroupBy },
     $queryRaw: mockQueryRaw,
   });
 });
@@ -42,6 +43,10 @@ vi.mock(import("next/cache"), () => ({
   },
 }));
 
+import {
+  deckCardGroupByFake,
+  storedHundredCardDeck,
+} from "@/test/deck-card-group-by-fake";
 import { ANONYMOUS_READ_REVALIDATE_SECONDS } from "./anonymous-read-cache";
 import {
   findCommanderDecks,
@@ -65,18 +70,32 @@ function atraxaDeck(
     cards: [{ name: ATRAXA, imageUri: "", artCropUri: "" }],
     votes: votes.map((vote) => ({ ...vote, deckId: id })),
     ratings: [],
-    _count: { cards: 100 },
   };
 }
 
-/** Wires both reads: the id query finds these rows, the hydration returns them. */
+/**
+ * Wires the three reads: the id query finds these rows, the hydration returns
+ * them, and each is stored as a 100-card deck whose 30 Forests are one row.
+ *
+ * @returns the card-copy fake, which counts its queries
+ */
 function stubMatch(rows: readonly ReturnType<typeof atraxaDeck>[]) {
   mockQueryRaw.mockResolvedValue(rows.map((row) => ({ id: row.id })));
   mockDeckFindMany.mockResolvedValue(rows);
+  const copies = deckCardGroupByFake(
+    rows.flatMap((row) => storedHundredCardDeck(row.id))
+  );
+  mockGroupBy.mockImplementation(copies.groupBy);
+  return copies;
 }
 
 afterEach(() => {
-  for (const mock of [mockDeckFindMany, mockQueryRaw, mockUnstableCache]) {
+  for (const mock of [
+    mockDeckFindMany,
+    mockQueryRaw,
+    mockGroupBy,
+    mockUnstableCache,
+  ]) {
     mock.mockReset();
   }
 });
@@ -175,6 +194,24 @@ it("caps a listing at 50 decks while reporting the full total", async () => {
 
   expect(listing.decks).toHaveLength(50);
   expect(listing.total).toBe(51);
+});
+
+// Before: two queries (the id match and the hydration) and a row count.
+// After: one more, a single grouped sum for the whole listing, never one per deck.
+it("counts the card copies of 51 decks in one query, three in all", async () => {
+  const copies = stubMatch(
+    Array.from({ length: 51 }, (_, i) => atraxaDeck(`deck-${i}`))
+  );
+
+  const listing = await findCommanderDecks("atraxa-praetors-voice", null);
+
+  expect(listing.decks.every((deck) => deck.cardCount === 100)).toBe(true);
+  expect(copies.calls()).toBe(1);
+  expect(
+    mockQueryRaw.mock.calls.length +
+      mockDeckFindMany.mock.calls.length +
+      copies.calls()
+  ).toBe(3);
 });
 
 it("lets a database error reach the caller", async () => {

@@ -51,6 +51,7 @@ function storedCard(
     isCommander: false,
     isPartner: false,
     isGameChanger: false,
+    zone: "main",
     ...extra,
   };
 }

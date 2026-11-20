@@ -21,8 +21,12 @@ const { mockDeckFindMany, mockQueryRaw } = vi.hoisted(() => ({
 
 vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
   const { stubPrisma } = await import("@/test/prisma-stub");
+  const { deckCardGroupByFake } =
+    await import("@/test/deck-card-group-by-fake");
   return stubPrisma(await importOriginal(), {
     deck: { findMany: mockDeckFindMany },
+    // The listing also sums card copies; these tests read votes, not counts.
+    deckCard: { groupBy: deckCardGroupByFake([]).groupBy },
     $queryRaw: mockQueryRaw,
   });
 });
@@ -59,7 +63,6 @@ const ATRAXA_DECK = {
     { userId: DOWNVOTER, deckId: "deck-1", value: -1 },
   ],
   ratings: [],
-  _count: { cards: 100 },
 };
 
 /** `viewerVote` on the deck, as `viewerId` is told it by the page's read. */
