@@ -14,6 +14,10 @@
   Oracle id, with the typed exceptions each grants (CR 903.5e, 113.6n;
   [I-03](../../../docs/product/specs/i03-trustworthy-deck-feedback.md), the 2026-11-16 scope line).
 - The deck size rule: the minimum and maximum a deck is held to, and where a count stands.
+- A league round's change allowance: swaps, money in one market and a declared pool,
+  reported and never stored here
+  ([I-104](../../../docs/product/specs/i104-league-decks-and-the-change-allowance-between-rounds.md)
+  slice 1).
 - Every rule is a pure function that cites its Comprehensive Rules number and reports; it never
   refuses an edit (ADR 0009).
 
@@ -38,6 +42,7 @@ Every colour-identity reader (the deck's violations and companion, the AI deck c
 suggestion evidence, the card package preview) asks one question, `isOutsideDeckIdentity` in
 `lib/deck/color-identity.ts`, which reads these exceptions.
 | `deckSizeRule`, `deckSizeStatus` | `index.ts` | A deck's size rule, and whether a count is short, legal or over | `lib/deck/deck-size.ts`, `DeckStats`, the AI deck check |
+| `checkRoundAllowance` | `index.ts` | A league list against the round's swap, money and pool allowance | Nothing yet; registration is I-104 slice 3 |
 
 ## Invariants
 
@@ -56,6 +61,9 @@ suggestion evidence, the card package preview) asks one question, `isOutsideDeck
 | No maximum size lifts the 99 cap on basics and "any number" cards, never the singleton  | CR 903.5b, 903.5e   | `lib/deck/rulebreaker-copy-limit.test.ts`                                           |
 | The described search's identity clause admits what the commander admits                 | CR 903.5e           | `lib/search/rulebreaker-search-scope.test.ts`                                       |
 | An admission names the rulebreaker only for an off-identity card that it exempts        | CR 903.5c, 903.5e   | `domain/rulebreaker-admission.test.ts`, `lib/deck/rulebreaker-admission.test.ts`    |
+| Six swaps against a cap of five fail and name the six pairs                             | I-104 3.2           | `domain/league-allowance.test.ts`                                                   |
+| A basic-for-basic swap is exempt only when the host says so                             | I-104 3.2           | `domain/league-allowance.test.ts`                                                   |
+| An added card with no price makes the money part unknown, never a pass                  | I-104 3.4           | `domain/league-allowance.test.ts`                                                   |
 
 ## Persistence and providers
 
