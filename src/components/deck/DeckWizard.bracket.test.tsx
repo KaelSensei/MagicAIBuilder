@@ -24,14 +24,14 @@ interface StepLabels {
 /** Wizard labels needed to walk to the bracket step, per locale. */
 const STEP_LABELS: Readonly<Record<TestLocale, StepLabels>> = {
   en: {
-    budget: "Budget < $50",
+    budget: "Budget < $50 per card",
     next: "Continue",
     color: "Blue",
     strategy: /Control Counter and control/,
     bracketTitle: "Power level?",
   },
   fr: {
-    budget: "Budget < 50 $",
+    budget: "Budget < 50 $ par carte",
     next: "Continuer",
     color: "Bleu",
     strategy: /Contrôle Contrer et contrôler/,

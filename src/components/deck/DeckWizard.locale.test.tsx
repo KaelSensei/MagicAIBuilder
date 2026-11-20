@@ -11,7 +11,7 @@ function renderFrenchWizard() {
 }
 
 async function openColorStep() {
-  fireEvent.click(screen.getByRole("button", { name: "Budget < 50 $" }));
+  fireEvent.click(screen.getByRole("button", { name: "Budget < 50 $ par carte" }));
   fireEvent.click(screen.getByRole("button", { name: "Continuer" }));
   return screen.findByRole("button", { name: "Bleu" });
 }
@@ -24,7 +24,12 @@ async function openStrategyStep() {
 
 it("shows translated budget choices in the French deck wizard", () => {
   renderFrenchWizard();
-  expect(screen.getByRole("button", { name: "Modéré 50 $ – 200 $" })).toBeInTheDocument();
+  expect(
+    screen.getByRole("button", { name: "Modéré 50 $ – 200 $ par carte" })
+  ).toBeInTheDocument();
+  expect(
+    screen.getByRole("button", { name: "Sans limite Aucun plafond par carte" })
+  ).toBeInTheDocument();
 });
 
 it("names color choices in French for assistive technology", async () => {
