@@ -120,16 +120,16 @@ Verified on `dev` on 2026-11-09 (commit `61792c1`).
 
 8.1 A daily job applies this table, idempotently, with a dry-run mode that reports counts:
 
-| Data                                       | Kept                                                                                       | Basis                                   |
-| ------------------------------------------ | ------------------------------------------------------------------------------------------ | --------------------------------------- |
-| Account with no sign-in                    | 2 years, then deleted as in 6; warned by email 30 days before (a hypothesis for the delay) | CNIL's view of inactive accounts [11]   |
-| Signed-out notices with no decision linked | 6 months after closing                                                                     | Hypothesis; matches the appeal window   |
-| Decisions and anonymised reports           | 3 years after the decision                                                                 | Hypothesis; lawyer question             |
-| Deletion tombstones                        | 7 days                                                                                     | Session lifetime                        |
-| Expired verification tokens                | Deleted daily                                                                              | No use after expiry                     |
-| Contributor identification data            | As the decree requires, in the restricted store                                            | LCEN Art. 6 V A [6][7]; lawyer question |
-| Logs, Sentry events and replays            | The provider's retention, stated in the privacy policy                                     | Provider settings                       |
-| `MetaSnapshot`                             | 365 days (exists)                                                                          | `src/modules/meta-insights/infrastructure/snapshots.ts`             |
+| Data                                       | Kept                                                                                       | Basis                                                   |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------ | ------------------------------------------------------- |
+| Account with no sign-in                    | 2 years, then deleted as in 6; warned by email 30 days before (a hypothesis for the delay) | CNIL's view of inactive accounts [11]                   |
+| Signed-out notices with no decision linked | 6 months after closing                                                                     | Hypothesis; matches the appeal window                   |
+| Decisions and anonymised reports           | 3 years after the decision                                                                 | Hypothesis; lawyer question                             |
+| Deletion tombstones                        | 7 days                                                                                     | Session lifetime                                        |
+| Expired verification tokens                | Deleted daily                                                                              | No use after expiry                                     |
+| Contributor identification data            | As the decree requires, in the restricted store                                            | LCEN Art. 6 V A [6][7]; lawyer question                 |
+| Logs, Sentry events and replays            | The provider's retention, stated in the privacy policy                                     | Provider settings                                       |
+| `MetaSnapshot`                             | 365 days (exists)                                                                          | `src/modules/meta-insights/infrastructure/snapshots.ts` |
 
 8.2 Each row's period lives in one constant, and the privacy policy is rendered from the same table, so the two cannot drift.
 
@@ -189,7 +189,7 @@ Routes: `POST /api/reports` (signed in or out); `GET /api/moderation/cases`, `PO
 | 1   | Legal notice (identity fields supplied by the owner) and DSA contact page in French and English, footer links                                                                                                                                                  | —                                            |
 | 2   | Deletion defect: end the session on delete and add the tombstone; regression test with a live JWT                                                                                                                                                              | —                                            |
 | 3   | Deletion cascade rules of 6.4: replies survive, fork label, anonymised reports                                                                                                                                                                                 | 2                                            |
-| 4   | Full JSON export endpoint with its schema and the guard test                                                                                                                                                                                                   | —                                            |
+| 4   | Full JSON export endpoint with its schema and the guard test Done (#1595).                                                                                                                                                                                     | —                                            |
 | 5   | Settings → Account page: download export, delete account with re-authentication                                                                                                                                                                                | 3, 4                                         |
 | 6   | Privacy policy v1 rendered from the retention constants, processor list, versioned legal documents                                                                                                                                                             | — (final wording after 0)                    |
 | 7   | Terms v1 with moderation rules and minimum age; acceptance and age declaration recorded at signup                                                                                                                                                              | 6 (final wording after 0)                    |
@@ -669,22 +669,22 @@ Then the missing price is labelled unknown and is not shown as zero
 
 The player-visible outcome is: a player can report anything public, learn why something was hidden and contest it, block another player, read who runs the site and how their data is used, download everything tied to their account and delete it for good.
 
-| State | What the player sees |
-| --- | --- |
-| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
-| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
-| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
-| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
-| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
-| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
-| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
-| English | New controls use the `en` catalogue. |
-| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| State            | What the player sees                                                                                                                                  |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Empty            | A sentence that names what is missing and the next action. No invented row, author, price or score.                                                   |
+| Loading          | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready.                                        |
+| Error            | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there.                                                       |
+| Partial          | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished.                                                 |
+| Stale            | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed.                                             |
+| Guest            | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401.               |
+| Signed-in        | Writes go to that account only. Another player's notes, budget and collection are not in the response.                                                |
+| English          | New controls use the `en` catalogue.                                                                                                                  |
+| French           | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control.                                                         |
 | Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
-| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
-| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
-| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
-| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+| Keyboard         | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes.                         |
+| Screen reader    | Each new control has an accessible name. A status change is announced in words, not only by colour.                                                   |
+| Colour           | A warning and an error differ by text or icon as well as hue, in both themes.                                                                         |
+| Success          | The completed action is confirmed in words. A second identical action does not duplicate the write.                                                   |
 
 ### Alternate paths
 
@@ -750,6 +750,7 @@ MagicAIBuilder shows public decks, primers, comments, reviews, profiles, package
 **User story.** As a player who wants to leave, I want deletion, export and a way to report someone, so that the account is mine.
 
 **Acceptance.**
+
 - Deletion expires the session and does not recreate the account on the next request.
 - An export contains the player's decks and collection and not another player's reports.
 - A report can be filed on a deck, a comment, a review, a profile or a package, and the reporter sees a status.
@@ -771,4 +772,3 @@ MagicAIBuilder shows public decks, primers, comments, reviews, profiles, package
 A deleted account stays deleted on every device after its owner could download all of it, and other players' replies survive; every public item can be reported signed in or out, and every restriction reaches its author with a statement of reasons and a route to appeal; the legal notice, DSA contact, terms and privacy policy are public, versioned and name every processor.
 
 ---
-

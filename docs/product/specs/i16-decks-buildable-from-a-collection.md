@@ -84,16 +84,16 @@ Rank the initiative on those three, not on coverage percentage, which is table s
 
 ## Delivery slices
 
-| #   | Slice                                                                      | Depends on |
-| --- | -------------------------------------------------------------------------- | ---------- |
-| 0   | **I-06 printing-level ownership** — blocking, not part of this initiative  | —          |
-| 1   | Coverage computation over a fixed candidate corpus, Oracle legality, no UI | 0          |
-| 2   | Read-only ranked route with pagination and unpriced disclosure             | 1          |
-| 3   | Collection-page surface showing rank, coverage and missing cost            | 2          |
-| 4   | Commitment index from deck and collection rows (re-pointed 2026-11-11)     | —          |
-| 5   | Provenance labels and the generated-candidate rule                         | 3          |
-| 6   | Owned copies shown as free or committed in search and on deck rows         | 4          |
-| 7   | Free-cards ranking mode (moved from slice 4 on 2026-11-11)                 | 2, 4       |
+| #   | Slice                                                                                | Depends on |
+| --- | ------------------------------------------------------------------------------------ | ---------- |
+| 0   | **I-06 printing-level ownership** — blocking, not part of this initiative            | —          |
+| 1   | Coverage computation over a fixed candidate corpus, Oracle legality, no UI           | 0          |
+| 2   | Read-only ranked route with pagination and unpriced disclosure                       | 1          |
+| 3   | Collection-page surface showing rank, coverage and missing cost                      | 2          |
+| 4   | Commitment index from deck and collection rows (re-pointed 2026-11-11) Done (#1616). | —          |
+| 5   | Provenance labels and the generated-candidate rule                                   | 3          |
+| 6   | Owned copies shown as free or committed in search and on deck rows                   | 4          |
+| 7   | Free-cards ranking mode (moved from slice 4 on 2026-11-11)                           | 2, 4       |
 
 Slice 0 is the whole risk of this initiative. Slices 4 and 6 need only deck and collection rows, so they may go ahead of slice 0; slice 6 is the roadmap's scope item, added to this table on 2026-11-11 to keep the numbering. Validate demand before starting slice 1: the roadmap already marks this effort as medium-to-large.
 
@@ -440,22 +440,22 @@ Then the player sees an empty state that names what is missing, and the page doe
 
 The player-visible outcome is: a player can start from owned cards and see which commanders or lists those cards can build, including free copies and the cost of what is missing.
 
-| State | What the player sees |
-| --- | --- |
-| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
-| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
-| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
-| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
-| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
-| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
-| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
-| English | New controls use the `en` catalogue. |
-| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| State            | What the player sees                                                                                                                                  |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Empty            | A sentence that names what is missing and the next action. No invented row, author, price or score.                                                   |
+| Loading          | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready.                                        |
+| Error            | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there.                                                       |
+| Partial          | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished.                                                 |
+| Stale            | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed.                                             |
+| Guest            | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401.               |
+| Signed-in        | Writes go to that account only. Another player's notes, budget and collection are not in the response.                                                |
+| English          | New controls use the `en` catalogue.                                                                                                                  |
+| French           | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control.                                                         |
 | Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
-| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
-| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
-| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
-| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+| Keyboard         | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes.                         |
+| Screen reader    | Each new control has an accessible name. A status change is announced in words, not only by colour.                                                   |
+| Colour           | A warning and an error differ by text or icon as well as hue, in both themes.                                                                         |
+| Success          | The completed action is confirmed in words. A second identical action does not duplicate the write.                                                   |
 
 ### Alternate paths
 
@@ -500,6 +500,7 @@ MTGGoldfish SuperBrew and Mana For Cards Discover are the references. This initi
 **User story.** As a player starting from a box of cards, I want commanders ranked by what I already own, so that a copy committed to another deck is not treated as free.
 
 **Acceptance.**
+
 - Oracle identity is used for colour and legality. Printing identity is used for price.
 - A free-cards mode treats copies in other decks as unavailable.
 - An unknown price is marked unknown, not zero.
@@ -521,4 +522,3 @@ MTGGoldfish SuperBrew and Mana For Cards Discover are the references. This initi
 A collection produces a ranked, sourced view of buildable lists that shows free copies and unknown prices, without changing ownership.
 
 ---
-
