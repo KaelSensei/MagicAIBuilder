@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { screen } from "@testing-library/react";
+import { fireEvent, screen, within } from "@testing-library/react";
 import { apiDeckToStoreDeck } from "@/lib/deck/store-factories";
 import type { Deck, DeckCard } from "@/lib/deck/types";
 import { aDeckCard } from "@/test/builders/card";
@@ -181,6 +181,86 @@ describe("HomeDeckCard", () => {
 
     expect(screen.getByText("IA")).toBeInTheDocument();
     expect(screen.queryByText("AI")).not.toBeInTheDocument();
+  });
+});
+
+/**
+ * The deck card on `/decks` with no action in flight, and the two action
+ * callbacks it was given.
+ */
+function renderDeckCard(deck: Deck = makeDeck()) {
+  const onDelete = vi.fn();
+  const onDuplicate = vi.fn();
+  renderWithIntl(
+    <HomeDeckCard
+      deck={deck}
+      onDelete={onDelete}
+      onDuplicate={onDuplicate}
+      deletingId={null}
+      duplicatingId={null}
+    />
+  );
+  return { onDelete, onDuplicate };
+}
+
+// WCAG 4.1.2: a button nested in a link has no reliable role, and the link's
+// name ran the deck name together with "Duplicate" and "Delete".
+describe("HomeDeckCard actions beside its link", () => {
+  it("the deck card's link contains no button, and its accessible name is the deck name", () => {
+    renderDeckCard();
+
+    const link = screen.getByRole("link");
+    expect(link).toHaveAccessibleName("Test Deck");
+    expect(within(link).queryAllByRole("button")).toHaveLength(0);
+  });
+
+  // WCAG 2.5.8: a target is at least 24 by 24 CSS px. jsdom computes no
+  // layout and loads no Tailwind, so this reads the size class: size-7 is
+  // 28 px, around a 14 px icon.
+  it("the Delete button is at least 24 px", () => {
+    renderDeckCard();
+
+    expect(
+      screen.getByRole("button", { name: "Delete Test Deck" })
+    ).toHaveClass("size-7");
+  });
+
+  // The callbacks here neither prevent the default nor stop propagation, so
+  // only the markup keeps the click away from the link.
+  it("a click on Delete does not navigate", () => {
+    const deck = makeDeck();
+    const { onDelete } = renderDeckCard(deck);
+    const linkClick = vi.fn();
+    screen.getByRole("link").addEventListener("click", linkClick);
+
+    fireEvent.click(screen.getByRole("button", { name: "Delete Test Deck" }));
+
+    expect(onDelete).toHaveBeenCalledWith(expect.anything(), deck.id);
+    expect(linkClick).not.toHaveBeenCalled();
+  });
+
+  it("a click on Duplicate duplicates the deck without navigating", () => {
+    const deck = makeDeck();
+    const { onDuplicate } = renderDeckCard(deck);
+    const linkClick = vi.fn();
+    screen.getByRole("link").addEventListener("click", linkClick);
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Duplicate Test Deck" })
+    );
+
+    expect(onDuplicate).toHaveBeenCalledWith(expect.anything(), deck.id);
+    expect(linkClick).not.toHaveBeenCalled();
+  });
+
+  it("the deck name links to the deck's builder", () => {
+    const deck = makeDeck();
+    renderDeckCard(deck);
+
+    expect(screen.getByRole("link", { name: "Test Deck" })).toHaveAttribute(
+      "href",
+      `/builder/${deck.id}`
+    );
   });
 });
 
