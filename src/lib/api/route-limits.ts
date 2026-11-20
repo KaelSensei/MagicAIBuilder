@@ -114,6 +114,7 @@ export const ROUTE_LIMITS: readonly RouteLimitDeclaration[] = [
   unlimited("decks/[id]/fork"),
   unlimited("decks/[id]/legality"),
   unlimited("decks/[id]/playtest-sessions"),
+  unlimited("decks/[id]/rule-zero"),
   unlimited("decks/[id]/share"),
   unlimited("decks/[id]/snapshots"),
   unlimited("decks/[id]/snapshots/[snapshotId]"),
