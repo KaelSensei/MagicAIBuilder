@@ -4,7 +4,7 @@
 **Priority:** Now  
 **Depth:** Full
 
-This file is the feature spec. It had no engineering-slice spec before 2026-11-11. It has no delivery-slice table, so the dependency generator does not pick slices from it until one is added.
+This file is the feature spec. It had no engineering-slice spec before 2026-11-11. The delivery-slice table records build order. A slice marked Done has merged to `dev`; the glance table names the lowest-numbered slice that can start now.
 
 ## Feature contract (Full, 2026-11-11)
 
@@ -805,6 +805,30 @@ As a player naming a folder, I want `{U}` to show as a blue mana symbol, so that
 **Open questions.** Whether a 30-day trash is compatible with erasure stays L-52.
 
 **Kill criteria.** Stop new editor views, including I-37, if a reload can still lose or duplicate a card.
+
+## Delivery slices
+
+Derived from the contract's acceptance criteria and the moved record's scope. A Done slice is one the spec or a merged pull request already records as shipped. Open slices keep the requirement text.
+
+| #   | Slice                                                                                                                                                                                                                                                           | Depends on    |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
+| 1   | Persist main, sideboard and maybeboard as the database source of truth, so a reload shows the same zone and quantity (AC-01-01). Done (#1263, #1273).                                                                                                           | —             |
+| 2   | A printing change keeps the zone and quantity, and a failed printing save restores the previous printing and tells the player. Done (checked scope).                                                                                                            | 1             |
+| 3   | Cross-zone drag and drop: zone targets stay mounted, do not resize, and the smallest target under the pointer wins. Done (#1264, #1273).                                                                                                                        | 1             |
+| 4   | Keyboard and touch move a card into the same zone a drag would, and the primary action has a name and a visible focus (US-01-03, AC-01-08). Done (checked scope).                                                                                               | 3             |
+| 5   | Overlapping writes of different fields each roll back to that field's last confirmed value, and a failed save leaves the last confirmed deck with a catalogue message rather than a stack trace (AC-01-02, AC-01-04). The parent scope item is still open.      | 1             |
+| 6   | Docker-backed end-to-end coverage for add, move, reload and recovery. The parent scope item is still open.                                                                                                                                                      | —             |
+| 7   | A signed-in card note survives reload, or the editor says it did not save (AC-01-03). `patchCardSchema` drops `notes` today. The fork leak under I-08 (L1) is fixed first, as the spec requires.                                                                | I-08 (L1)     |
+| 8   | Bulk edit applies only the lines that changed, in one transaction, and a stale row answers 409. A printing typed in the text is still I-37 slice 16. Done (#1314).                                                                                              | 5             |
+| 9   | A folder name may include `{W}`, `{U}`, `{B}`, `{R}` and `{G}`. The library renders each as the mana symbol and the letter; an unknown token stays as typed. Done (#1586).                                                                                      | —             |
+| 10  | Once a commander is set, builder search defaults to that colour identity, with one visible chip to widen it. Done (#1590).                                                                                                                                      | 1             |
+| 11  | Re-mount the orphaned deck fields the owner decided on 2026-11-10: tags, description, target bracket, budget, inline notes, and owned or buy badges. Badges also concern I-06 and tags I-37; those neighbours do not gate the fields the editor already stores. | —             |
+| 12  | Deleting a deck moves it to a trash the owner can restore for N days (D-92), then purges it. Folders gain bulk delete into the same trash. Whether the trash fits erasure is L-52.                                                                              | D-92; L-52    |
+| 13  | Archive a deck: hidden from the library, pickers and pod lists, never deleted, restored in one action.                                                                                                                                                          | 12            |
+| 14  | Lock a deck's card list until the owner unlocks it. Notes and proxy marks stay editable. I-50 slice 10 freezes the locked list for a deck check.                                                                                                                | I-50 slice 10 |
+| 15  | Empty, loading and error states name what is missing and do not show a zero for an unknown price (AC-01-05). A guest keeps the deck in the session until I-39's sign-up handoff (AC-01-06). New controls use the `en` and `fr` catalogues (AC-01-07).           | 5; I-39       |
+
+Slice 5 is the lowest that can start now. Slice 6 and slice 11 can start beside it. Slice 7 waits for I-08 (L1). Slice 12 waits for D-92 and L-52.
 
 ### Definition of done
 

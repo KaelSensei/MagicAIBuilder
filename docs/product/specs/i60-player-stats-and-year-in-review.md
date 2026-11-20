@@ -190,24 +190,24 @@ A row holds: `deckId`, `format`, commander Oracle names with French printed name
 
 ## Delivery slices
 
-| #   | Slice                                                                                                                                                    | Depends on                              |
-| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
-| 0   | Lawyer questions added to I-30's list; the stats and recap paragraph for I-38's privacy policy                                                           | — (owner and counsel; no code)          |
-| 1   | Pure counting module: active decks, colours, commanders, cards used most, shared cards, brackets, built and changed; `src/lib/deck/analytics.ts` already deleted (P1-32) | —                                       |
-| 2   | `/stats` page and `GET /api/user/stats`, English and French, accessible charts with tables                                                               | 1                                       |
-| 3   | Value section with dated prices                                                                                                                          | 2; I-32 slice 2                         |
-| 4   | Opt-in, the 1 December job, `YearRecap` rows, the owner recap page, the December invitation, deletion, tone deny-list test                               | 2                                       |
-| 5   | Owner image download, landscape and portrait, in both languages                                                                                          | 4; I-36 slice 2 (the deck image branch) |
-| 6   | Levels, preview, deck choices, `/u/{username}/recap/{year}`, `/recap/{token}`, `noindex` and robots, 60-second revocation, report button                 | 4; I-36 slice 1; I-38 slices 7 and 8    |
-| 7   | Public recap image and preview tags                                                                                                                      | 5, 6; I-46 slice 1                      |
-| 8   | Events, counters and the owner growth view                                                                                                               | 4, 6; I-39 slices 10 and 12             |
-| 9   | Visitor call to action into an import-first first run, with `User.signupEntry` _(re-pointed 2026-11-10 to I-72 slice 2)_                                 | 6, 8; I-39 slice 5; I-72 slice 2        |
-| 10  | Games section on the stats page and in the recap                                                                                                         | 2, 4; I-35 slices 4 and 5               |
-| 11  | Recap embed                                                                                                                                              | 6; I-36 slice 3                         |
-| 12  | Exact change counts from the change log                                                                                                                  | 1; I-37 slice 10                        |
-| 13  | `Deck.origin` written by the create, import, fork, duplicate and AI routes; built and imported counted apart                                             | 1                                       |
-| 14  | Paid candidate: date ranges and multi-year trends                                                                                                        | 2; I-30 slice 0                         |
-| 15  | Staggered-invitation experiment                                                                                                                          | 8; I-39 slice 14                        |
+| #   | Slice                                                                                                                                                                                  | Depends on                              |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| 0   | Lawyer questions added to I-30's list; the stats and recap paragraph for I-38's privacy policy                                                                                         | — (owner and counsel; no code)          |
+| 1   | Pure counting module: active decks, colours, commanders, cards used most, shared cards, brackets, built and changed; `src/lib/deck/analytics.ts` already deleted (P1-32) Done (#1551). | —                                       |
+| 2   | `/stats` page and `GET /api/user/stats`, English and French, accessible charts with tables                                                                                             | 1                                       |
+| 3   | Value section with dated prices                                                                                                                                                        | 2; I-32 slice 2                         |
+| 4   | Opt-in, the 1 December job, `YearRecap` rows, the owner recap page, the December invitation, deletion, tone deny-list test                                                             | 2                                       |
+| 5   | Owner image download, landscape and portrait, in both languages                                                                                                                        | 4; I-36 slice 2 (the deck image branch) |
+| 6   | Levels, preview, deck choices, `/u/{username}/recap/{year}`, `/recap/{token}`, `noindex` and robots, 60-second revocation, report button                                               | 4; I-36 slice 1; I-38 slices 7 and 8    |
+| 7   | Public recap image and preview tags                                                                                                                                                    | 5, 6; I-46 slice 1                      |
+| 8   | Events, counters and the owner growth view                                                                                                                                             | 4, 6; I-39 slices 10 and 12             |
+| 9   | Visitor call to action into an import-first first run, with `User.signupEntry` _(re-pointed 2026-11-10 to I-72 slice 2)_                                                               | 6, 8; I-39 slice 5; I-72 slice 2        |
+| 10  | Games section on the stats page and in the recap                                                                                                                                       | 2, 4; I-35 slices 4 and 5               |
+| 11  | Recap embed                                                                                                                                                                            | 6; I-36 slice 3                         |
+| 12  | Exact change counts from the change log                                                                                                                                                | 1; I-37 slice 10                        |
+| 13  | `Deck.origin` written by the create, import, fork, duplicate and AI routes; built and imported counted apart                                                                           | 1                                       |
+| 14  | Paid candidate: date ranges and multi-year trends                                                                                                                                      | 2; I-30 slice 0                         |
+| 15  | Staggered-invitation experiment                                                                                                                                                        | 8; I-39 slice 14                        |
 
 Slices 1, 2 and 4 give a player their own statistics and a private December recap with no dependency outside this spec. Slices 5 to 9 make it a growth loop and wait for the deck image, the public projection, I-38's report and age steps, and I-39's event store. Slices 10 and 12 deepen it as I-35 and I-37 land.
 
@@ -561,22 +561,22 @@ Then the player sees an empty state that names what is missing, and the page doe
 
 The player-visible outcome is: a player sees statistics across their own decks on a private page: colours, commanders, the cards used most, brackets, deck value, cards shared across decks, and decks built and changed, each with its denominator. Each December, if they opted in, they get a Commander year in review in English or French, frozen at a stated cut-off, which they may keep private, share by link or show on their profile.
 
-| State | What the player sees |
-| --- | --- |
-| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
-| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
-| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
-| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
-| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
-| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
-| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
-| English | New controls use the `en` catalogue. |
-| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| State            | What the player sees                                                                                                                                  |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Empty            | A sentence that names what is missing and the next action. No invented row, author, price or score.                                                   |
+| Loading          | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready.                                        |
+| Error            | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there.                                                       |
+| Partial          | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished.                                                 |
+| Stale            | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed.                                             |
+| Guest            | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401.               |
+| Signed-in        | Writes go to that account only. Another player's notes, budget and collection are not in the response.                                                |
+| English          | New controls use the `en` catalogue.                                                                                                                  |
+| French           | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control.                                                         |
 | Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
-| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
-| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
-| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
-| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+| Keyboard         | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes.                         |
+| Screen reader    | Each new control has an accessible name. A status change is announced in words, not only by colour.                                                   |
+| Colour           | A warning and an error differ by text or icon as well as hue, in both themes.                                                                         |
+| Success          | The completed action is confirmed in words. A second identical action does not duplicate the write.                                                   |
 
 ### Alternate paths
 
@@ -630,6 +630,7 @@ A player with a dozen decks cannot see them as a whole: the profile lists public
 **User story.** As a player looking back at a year, I want counts of what I built, so that the recap is mine and not a ranking.
 
 **Acceptance.**
+
 - Each statistic shows its denominator.
 - The recap has no streak, no rank and no named opponent.
 - The recap is private unless the player later opts into a share, which is Later.
@@ -651,4 +652,3 @@ A player with a dozen decks cannot see them as a whole: the profile lists public
 A player with ten decks opens `/stats` and sees colours, commanders, shared cards and brackets, each with its denominator; on 1 December an opted-in player gets a private recap in their language that names no other player and ranks them against no one; and a recap shared by link stops working within a minute of revocation and never reaches a search engine.
 
 ---
-

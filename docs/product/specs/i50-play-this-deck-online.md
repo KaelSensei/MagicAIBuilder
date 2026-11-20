@@ -168,7 +168,7 @@ Routes: a read-only route returning `CardPlatformInfo` for up to 250 Scryfall ID
 
 | #   | Slice                                                                                                                                                                                                                                           | Depends on                                                          |
 | --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| 0   | Export contract: `ExportResult` with typed notices, exporters split per target, `v1` fixtures for the eight shipped formats, TappedOut Considering fix                                                                                          | —                                                                   |
+| 0   | Export contract: `ExportResult` with typed notices, exporters split per target, `v1` fixtures for the eight shipped formats, TappedOut Considering fix Done (#1594).                                                                            | —                                                                   |
 | 1   | `CardPlatformInfo`: Scryfall type fields, set `arena_code` and `mtgo_code`, read-only route filled on the server, 24-hour set cache _(2026-11-10: I-67 slices 9 and 10 later switch the source to local tables; no new dependency)_             | —                                                                   |
 | 2   | Name rules per target and layout, with a layout fixture per target                                                                                                                                                                              | 0                                                                   |
 | 3   | Arena Brawl: Arena codes and numbers or none, not-on-Arena and Brawl-illegal notices, coverage share, no sideboard                                                                                                                              | 0, 1, 2                                                             |
@@ -587,22 +587,22 @@ Then it does not call the deck fair, unfair, salty, or a win rate unless the mov
 
 The player-visible outcome is: a player, or any viewer of a public deck, takes the deck to Tabletop Simulator, Cockatrice, XMage, Forge, Magic Online, MTG Arena Brawl or a browser table in a file each destination accepts, and is told before copying what that destination lacks or will refuse. Webcam players get a table view, a printable list and a frozen deck check link.
 
-| State | What the player sees |
-| --- | --- |
-| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
-| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
-| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
-| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
-| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
-| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
-| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
-| English | New controls use the `en` catalogue. |
-| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| State            | What the player sees                                                                                                                                  |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Empty            | A sentence that names what is missing and the next action. No invented row, author, price or score.                                                   |
+| Loading          | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready.                                        |
+| Error            | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there.                                                       |
+| Partial          | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished.                                                 |
+| Stale            | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed.                                             |
+| Guest            | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401.               |
+| Signed-in        | Writes go to that account only. Another player's notes, budget and collection are not in the response.                                                |
+| English          | New controls use the `en` catalogue.                                                                                                                  |
+| French           | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control.                                                         |
 | Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
-| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
-| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
-| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
-| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+| Keyboard         | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes.                         |
+| Screen reader    | Each new control has an accessible name. A status change is announced in words, not only by colour.                                                   |
+| Colour           | A warning and an error differ by text or icon as well as hue, in both themes.                                                                         |
+| Success          | The completed action is confirmed in words. A second identical action does not duplicate the write.                                                   |
 
 ### Alternate paths
 
@@ -659,6 +659,7 @@ A deck built here is usually played somewhere else, and on a weeknight that plac
 **User story.** As a player taking a deck to another table, I want a file that program accepts, and a list of the cards it will drop, so that the failure is not a surprise inside the other program.
 
 **Acceptance.**
+
 - Each export is a fixture that matches byte for byte.
 - Sideboard and Considering cards do not enter a playable zone by accident.
 - A destination that has not been imported in the real client says it has not been tested.
@@ -680,4 +681,3 @@ A deck built here is usually played somewhere else, and on a weeknight that plac
 A player exports a Commander deck with a partner and a companion to Cockatrice, XMage and Tabletop Simulator, each file imports in the client version its fixture names, and every dropped or substituted card was listed before the download; a viewer of a public deck does the same without signing in; and an Arena Brawl export states the deck's Arena coverage.
 
 ---
-

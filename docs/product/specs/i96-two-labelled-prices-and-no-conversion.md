@@ -4,7 +4,7 @@
 **Priority:** Next  
 **Depth:** Full
 
-This file is the feature spec. It had no engineering-slice spec before 2026-11-11. It has no delivery-slice table, so the dependency generator does not pick slices from it until one is added.
+This file is the feature spec. It had no engineering-slice spec before 2026-11-11. The delivery-slice table records build order. A slice marked Done has merged to `dev`; the glance table names the lowest-numbered slice that can start now.
 
 ## Feature contract (Full, 2026-11-11)
 
@@ -289,6 +289,17 @@ As a player who wants a Cardsphere figure beside Scryfall's, I want each figure'
 **Non-passing.** A single "price" that is the sum or the conversion. A Cardsphere amount shown before the terms are read. I-32's open question records that the terms were not read on 2026-11-14, so the amount is not shown yet. The acceptance is the label rule for the day it is.
 
 **Open question.** Whether to show the third amount at all waits on those terms. This initiative does not fetch Cardsphere.
+
+## Delivery slices
+
+The moved record's one scope line is the card and the deck total. The printing selector landed first and is its own slice; the scope line itself is still open.
+
+| #   | Slice                                                                                                                                                                                                                                                                                 | Depends on |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| 1   | The printing selector shows Scryfall's dollar amount and euro amount, each named as Scryfall's figure. An amount Scryfall did not send says so, and no figure is converted. Done (#1553).                                                                                             | —          |
+| 2   | On a card and on a deck total, show USD and EUR when both were stored, labelled "Scryfall, not a quote". An amount the source did not send is "no USD from Scryfall" or "no EUR from Scryfall", not a zero. The acquisition plan keeps the one currency I-06 already chose, labelled. | 1          |
+
+Slice 2 can start now. The initiative stays Next until that line is true on the card and the deck total.
 
 ### Definition of done
 
