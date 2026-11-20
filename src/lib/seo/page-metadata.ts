@@ -24,6 +24,7 @@ export const FIXED_PAGE_NAMESPACES = [
   "settings.apiKeys",
   "settings.notifications",
   "apiChangelog",
+  "precons",
 ] as const;
 
 /** A page whose title and description do not depend on what it shows. */
