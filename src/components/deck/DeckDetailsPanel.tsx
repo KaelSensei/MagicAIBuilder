@@ -12,6 +12,9 @@
  * The format picker (I-42 slice 1) reads the whole deck: before a switch is
  * saved it lists what the cards would break under the new format.
  *
+ * The Theme panel (I-102 slice 3) closes the section: it counts the cards on
+ * the player's theme and keeps the theme in its own state, unsaved.
+ *
  * Not responsible for: the manual bracket override, which lives in
  * `BracketIndicator`.
  *
@@ -28,6 +31,7 @@ import { DeckFormatPicker } from "./DeckFormatPicker";
 import { DeckTagsEditor } from "./DeckTagsEditor";
 import { DeckTargetBracketPicker } from "./DeckTargetBracketPicker";
 import { RuleZeroSheetSection } from "./RuleZeroSheetSection";
+import { ThemePanel } from "./ThemePanel";
 
 interface DeckDetailsPanelProps {
   /**
@@ -72,6 +76,7 @@ export function DeckDetailsPanel({ deck }: DeckDetailsPanelProps) {
         onCommit={(budget) => void setBudget(budget)}
       />
       <RuleZeroSheetSection deckId={deck.id} />
+      <ThemePanel deck={deck} />
     </section>
   );
 }
