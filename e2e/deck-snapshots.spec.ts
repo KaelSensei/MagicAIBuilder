@@ -163,8 +163,9 @@ test.describe("Deck snapshots", () => {
 
     await expandHistory(page);
     const entry = page.getByRole("listitem").filter({ hasText: "both cards" });
-    // The badge compares the snapshot with the deck as it is now: one card fewer.
-    await expect(entry).toContainText("-1 cards");
+    // The badge compares the snapshot with the deck as it is now: one card fewer, in the singular.
+    await expect(entry).toContainText("-1 card");
+    await expect(entry).not.toContainText("-1 cards");
 
     const restored = page.waitForResponse(
       (response) =>

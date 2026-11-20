@@ -122,13 +122,13 @@ describe("findSnapshotOfVersion", () => {
 });
 
 describe("snapshotContent", () => {
-  it("stores every card row with the commander's name and the row count", () => {
+  it("stores every card row with the commander's name and the card copies: ten Forests count ten, the sideboard none", () => {
     expect(
       snapshotContent({ commanderId: "commander-row", cards: DECK })
     ).toEqual({
       cardList: JSON.parse(JSON.stringify(DECK)),
       commander: "Atraxa, Praetors' Voice",
-      cardCount: 4,
+      cardCount: 12,
     });
   });
 
