@@ -91,7 +91,7 @@ export function SavePublicDeckButton({ deckId, isSignedIn, isOwner }: Props) {
             </button>
           </div>
           {status === "loading" ? (
-            <Loader2 className="mx-auto my-6 h-5 w-5 animate-spin text-[var(--accent)]" />
+            <Loader2 className="mx-auto my-6 h-5 w-5 animate-spin text-[var(--accent-text)]" />
           ) : (
             <>
               <label className="mt-3 block text-xs text-[var(--text-secondary)]">

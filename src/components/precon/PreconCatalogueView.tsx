@@ -76,7 +76,7 @@ function PreconVersionArticle({
         {t("sourceRead", { date: version.sourceReadAt })}
       </p>
       <a
-        className="mt-2 inline-block text-sm text-[var(--accent)] underline"
+        className="mt-2 inline-block text-sm text-[var(--accent-text)] underline"
         href={version.sourceUrl}
         rel="noreferrer"
       >
