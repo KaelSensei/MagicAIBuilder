@@ -18,7 +18,16 @@ function isCollectionRequest(value: unknown): value is CollectionRequest {
   );
 }
 
-/** Scryfall double: answers every collection lookup, Mana Crypt banned in Commander. */
+/** Scryfall's Commander status for the cards the double knows by id; every other card is legal. */
+const COMMANDER_STATUS: Readonly<Record<string, string>> = {
+  "mana-crypt": "banned",
+  "preview-card": "not_legal",
+};
+
+/**
+ * Scryfall double: answers every collection lookup, Mana Crypt banned in Commander, and a preview
+ * card not legal until its set releases on 2027-04-09.
+ */
 const scryfallFetch = vi.fn(
   async (_url: string, init?: RequestInit): Promise<Response> => {
     const body: unknown = JSON.parse(
@@ -31,7 +40,8 @@ const scryfallFetch = vi.fn(
       cmc: 0,
       type_line: "Artifact",
       color_identity: [],
-      legalities: { commander: id === "mana-crypt" ? "banned" : "legal" },
+      legalities: { commander: COMMANDER_STATUS[id] ?? "legal" },
+      ...(id === "preview-card" ? { released_at: "2027-04-09" } : {}),
     }));
     return new Response(
       JSON.stringify({ object: "list", not_found: [], data }),
@@ -104,6 +114,28 @@ describe("checkDeckLegality", () => {
       kind: "checked",
       legal: false,
       violations: [{ name: "Mana Crypt", reason: "banned" }],
+    });
+  });
+
+  it("names a card whose set is not out yet as a preview, with its release day", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-11-20T12:00:00.000Z"));
+
+    const verdict = await checkDeckLegality("commander", [
+      deckRow("preview-card"),
+    ]);
+
+    expect(verdict).toMatchObject({
+      kind: "checked",
+      legal: false,
+      violations: [
+        {
+          name: "Card preview-card",
+          reason: "preview",
+          releasesOn: "2027-04-09",
+        },
+      ],
+      source: { fetchedAt: "2026-11-20T12:00:00.000Z" },
     });
   });
 

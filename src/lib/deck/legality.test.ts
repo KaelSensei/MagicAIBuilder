@@ -119,6 +119,91 @@ describe("judgeDeckLegality", () => {
     ]);
   });
 
+  describe("a preview card (I-73 3.2, 3.4)", () => {
+    /** Darkhold Destiny's Hela, previewed on Archidekt five months before its 2027-04-09 release. */
+    const hela = (legalities: Record<string, string>): ScryfallCard => ({
+      ...scryfallCard("hela", "Hela, Mistress of Darkness", legalities),
+      released_at: "2027-04-09",
+    });
+
+    it("names a new card whose set is not out on the fetch day as a preview, with its release day", () => {
+      const verdict = judgeDeckLegality({
+        format: "commander",
+        cards: [row("hela", "Hela, Mistress of Darkness")],
+        scryfallCards: [hela({ commander: "not_legal" })],
+        fetchedAt: FETCHED_AT,
+      });
+
+      expect(verdict.violations).toEqual([
+        {
+          name: "Hela, Mistress of Darkness",
+          reason: "preview",
+          releasesOn: "2027-04-09",
+        },
+      ]);
+    });
+
+    it("keeps Scryfall's verdict: the card stays not legal and so does the deck", () => {
+      const verdict = judgeDeckLegality({
+        format: "commander",
+        cards: [row("hela", "Hela, Mistress of Darkness")],
+        scryfallCards: [hela({ commander: "not_legal" })],
+        fetchedAt: FETCHED_AT,
+      });
+
+      expect(verdict.legal).toBe(false);
+      expect(verdict.cards).toEqual([
+        {
+          scryfallId: "hela",
+          name: "Hela, Mistress of Darkness",
+          status: "not_legal",
+        },
+      ]);
+    });
+
+    it("reads the deck's format, so a card not yet legal in Modern is a preview there", () => {
+      const verdict = judgeDeckLegality({
+        format: "modern",
+        cards: [row("hela", "Hela, Mistress of Darkness")],
+        scryfallCards: [hela({ commander: "legal", modern: "not_legal" })],
+        fetchedAt: FETCHED_AT,
+      });
+
+      expect(verdict.violations).toEqual([
+        {
+          name: "Hela, Mistress of Darkness",
+          reason: "preview",
+          releasesOn: "2027-04-09",
+        },
+      ]);
+    });
+
+    it.each([
+      [
+        "a reprint whose new set comes out later",
+        { released_at: "2027-04-09", reprint: true },
+      ],
+      ["a card released on the fetch day", { released_at: "2026-11-09" }],
+      ["a card with no release date", {}],
+    ])("calls %s not legal, with no release day", (_card, release) => {
+      const verdict = judgeDeckLegality({
+        format: "commander",
+        cards: [row("ponder", "Ponder")],
+        scryfallCards: [
+          {
+            ...scryfallCard("ponder", "Ponder", { commander: "not_legal" }),
+            ...release,
+          },
+        ],
+        fetchedAt: FETCHED_AT,
+      });
+
+      expect(verdict.violations).toEqual([
+        { name: "Ponder", reason: "not_legal" },
+      ]);
+    });
+  });
+
   it("names Scryfall, the legality key read and the fetch time as its source", () => {
     const verdict = judgeDeckLegality({
       format: "pauper",

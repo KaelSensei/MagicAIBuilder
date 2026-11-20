@@ -49,11 +49,31 @@ export type ReleaseDatedCard = Pick<ScryfallCard, "released_at" | "reprint" | "l
  * @returns the status, with the release day when the card is not out yet
  */
 export function releaseStatus(card: ReleaseDatedCard, today: Date): ReleaseStatus {
-  const releasesOn = card.released_at;
-  if (card.reprint === true || releasesOn === undefined || releasesOn <= releaseDayOf(today)) {
-    return { kind: "released" };
-  }
+  const releasesOn = releaseDayAhead(card, today);
+  if (releasesOn === null) return { kind: "released" };
   return card.legalities?.commander === "legal"
     ? { kind: "upcoming", releasesOn }
     : { kind: "preview", releasesOn };
+}
+
+/**
+ * The release day of a card that is not out yet, whatever the format: the date half of
+ * `releaseStatus`, for a check that reads another format's legality (the deck verdict).
+ *
+ * A reprint, a card with no `released_at` and a card released today are out, as in
+ * `releaseStatus`.
+ *
+ * @param card - a printing as Scryfall sent it
+ * @param today - now; read as its UTC calendar day (`releaseDayOf`)
+ * @returns the release day, "YYYY-MM-DD", or null when the card is out
+ */
+export function releaseDayAhead(
+  card: Pick<ScryfallCard, "released_at" | "reprint">,
+  today: Date
+): string | null {
+  const releasesOn = card.released_at;
+  if (card.reprint === true || releasesOn === undefined || releasesOn <= releaseDayOf(today)) {
+    return null;
+  }
+  return releasesOn;
 }
