@@ -76,6 +76,7 @@ function card(
     isCommander: false,
     isPartner: false,
     isGameChanger: false,
+    zone: "main",
     ...overrides,
   };
 }
@@ -213,6 +214,31 @@ it("describes a shared deck in English", async () => {
   );
   // A capability URL: no canonical, no hreflang.
   expect(metadata.alternates).toBeUndefined();
+});
+
+// CR 903.5a: a Commander deck is 100 cards, its commander included. Thirty
+// Forests are one stored row, and the sideboard, the maybeboard and a
+// companion (CR 702.139a) stay out, so a row count read this deck as 74 cards.
+it("the share page's description says 100 cards", async () => {
+  mockDeckFindUnique.mockResolvedValue({
+    ...PARTNERS_DECK,
+    cards: [
+      card({ id: "talrand", name: "Talrand, Sky Summoner", isCommander: true }),
+      card({ id: "forest", name: "Forest", quantity: 30, category: "land" }),
+      ...Array.from({ length: 69 }, (_, index) =>
+        card({ id: `spell-${index}`, name: `Spell ${index + 1}` })
+      ),
+      card({ id: "negate", name: "Negate", zone: "sideboard", quantity: 3 }),
+      card({ id: "counter", name: "Counterspell", zone: "maybeboard" }),
+      card({ id: "lutri", name: "Lutri", category: "companion" }),
+    ],
+  });
+
+  const metadata = await generateMetadata(pageParams(TOKEN));
+
+  expect(metadata.description).toBe(
+    "Commander: Talrand, Sky Summoner · 100 cards · Bracket 2 · commander"
+  );
 });
 
 it("describes a shared deck in French under /fr", async () => {

@@ -5,6 +5,7 @@ import { Link } from "@/i18n/navigation";
 import { useMemo } from "react";
 import { useFormatter, useTranslations } from "next-intl";
 import { Clock, Copy, Loader2, Trash2 } from "lucide-react";
+import { deckSizeRuleInFormat, formatDeckCount } from "@/lib/deck/deck-size";
 import { deckCardCount } from "@/lib/deck/store-factories";
 import type { Deck } from "@/lib/deck/types";
 import { normalizeScryfallImageUrl } from "@/lib/scryfall/images";
@@ -91,6 +92,9 @@ export function HomeDeckCard({
   const t = useTranslations("deck");
   const tBuilder = useTranslations("builder");
   const format = useFormatter();
+  // The deck list table's counter, against the deck's own size rule.
+  const rule = deckSizeRuleInFormat(deck);
+  const counter = formatDeckCount(deckCardCount(deck), rule, " / ");
 
   return (
     <Link
@@ -182,7 +186,7 @@ export function HomeDeckCard({
           }`}
         >
           <div className={`space-y-1 ${textMuted}`}>
-            <p>{t("card.cardCount", { count: deckCardCount(deck) })}</p>
+            <p>{t("card.cardCount", { counter })}</p>
             <div className="flex items-center gap-1">
               <Clock className="h-3 w-3" />
               <span>{format.dateTime(new Date(deck.updatedAt))}</span>
