@@ -60,11 +60,10 @@ export type BracketPathLine =
     }
   | {
       /**
-       * A floor the estimate could not check, because its data was
-       * unavailable: the estimate was made without it (I-77 4.3).
+       * The two-card-combo floor was not checked: combo data was
+       * unavailable, so the estimate was made without it (I-77 4.3).
        */
-      readonly kind: "floorNotChecked";
-      readonly rule: BracketRestriction;
+      readonly kind: "comboFloorNotChecked";
     }
   | {
       /** A list under 60 cards: its terms do not count (I-77 2.6). */
@@ -134,18 +133,19 @@ function floorLines(
 }
 
 /**
- * The floors the estimate could not check because their data was missing
- * (I-77 4.3). A floor this method does not detect yet is a blind spot of the
- * method, which the audit view words (slice 2), not a gap of this deck.
+ * The combo floor, when the estimate could not check it for lack of combo
+ * data (I-77 4.3). A floor this method does not detect yet (mass land denial,
+ * extra turns) is a blind spot of the method, which the audit view words
+ * (slice 2), not a gap of this deck's data.
  */
 function notCheckedLines(
   assessment: BracketAssessment
 ): readonly BracketPathLine[] {
-  return assessment.floors.flatMap((row): BracketPathLine[] =>
-    row.status === "notChecked" && row.reason === "comboDataUnavailable"
-      ? [{ kind: "floorNotChecked", rule: row.rule }]
-      : []
+  const comboDataMissing = assessment.floors.some(
+    (row) =>
+      row.status === "notChecked" && row.reason === "comboDataUnavailable"
   );
+  return comboDataMissing ? [{ kind: "comboFloorNotChecked" }] : [];
 }
 
 /**

@@ -207,7 +207,7 @@ describe("pathToBracket — what the estimate could not check", () => {
         count: 1,
         cards: ["Rhystic Study"],
       },
-      { kind: "floorNotChecked", rule: "twoCardCombos" },
+      { kind: "comboFloorNotChecked" },
       { kind: "termOutOfReach", key: "ramp", score: 4 },
     ]);
   });
@@ -215,7 +215,7 @@ describe("pathToBracket — what the estimate could not check", () => {
   it("combo data unavailable is said beside a target the estimate does not exceed", () => {
     expect(pathToBracket(assess(aStrongList(), unavailable), 4)).toEqual([
       { kind: "noRuleStops", target: 4 },
-      { kind: "floorNotChecked", rule: "twoCardCombos" },
+      { kind: "comboFloorNotChecked" },
     ]);
   });
 
