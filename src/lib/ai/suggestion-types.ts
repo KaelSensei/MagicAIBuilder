@@ -1,6 +1,7 @@
 import type { Archetype } from "@/lib/ai/archetypes";
 import type { DeckBrief } from "@/lib/ai/deck-brief";
 import type { DeckQuestion } from "@/lib/ai/deck-question";
+import type { CopilotClaim } from "@/lib/ai/suggestion-claims";
 import type { SuggestionEvidence } from "@/lib/ai/suggestion-evidence";
 
 /** One card the assistant suggests adding. */
@@ -10,6 +11,8 @@ export interface CardSuggestion {
   category: string;
   priority: "high" | "medium" | "low";
   evidence?: SuggestionEvidence;
+  /** Checked facts and the model's sentences. Slice 2 renders them. */
+  claims?: readonly CopilotClaim[];
   alternatives?: CardAlternative[];
 }
 
@@ -19,6 +22,8 @@ export interface CardAlternative {
   reason: string;
   dimension: "budget" | "power" | "playstyle";
   evidence?: SuggestionEvidence;
+  /** Checked facts and the model's sentence for this alternative. */
+  claims?: readonly CopilotClaim[];
 }
 
 /** One card the assistant suggests cutting. */
