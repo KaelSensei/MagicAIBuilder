@@ -27,6 +27,7 @@ import { DeckDescriptionEditor } from "./DeckDescriptionEditor";
 import { DeckFormatPicker } from "./DeckFormatPicker";
 import { DeckTagsEditor } from "./DeckTagsEditor";
 import { DeckTargetBracketPicker } from "./DeckTargetBracketPicker";
+import { RuleZeroSheetSection } from "./RuleZeroSheetSection";
 
 interface DeckDetailsPanelProps {
   /**
@@ -70,6 +71,7 @@ export function DeckDetailsPanel({ deck }: DeckDetailsPanelProps) {
         value={deck.budget}
         onCommit={(budget) => void setBudget(budget)}
       />
+      <RuleZeroSheetSection deckId={deck.id} />
     </section>
   );
 }

@@ -33,6 +33,7 @@ import {
   PROFILE,
   RATING,
   REPORT,
+  RULE_ZERO_SHEET,
   SAVED_DECK,
   SNAPSHOT,
   USAGE_COUNTER,
@@ -106,6 +107,7 @@ async function readDeckbuildingRows(userId: string) {
     deckFolders,
     collection,
     acquisitionIntents,
+    ruleZeroSheets,
     cardPackages,
   ] = await Promise.all([
     prisma.user.findUnique({ where: { id: userId }, select: PROFILE }),
@@ -115,6 +117,10 @@ async function readDeckbuildingRows(userId: string) {
     prisma.acquisitionIntent.findMany({
       ...byUser,
       select: ACQUISITION_INTENT,
+    }),
+    prisma.ruleZeroSheet.findMany({
+      where: { ownerId: userId },
+      select: RULE_ZERO_SHEET,
     }),
     prisma.cardPackage.findMany({
       where: { authorId: userId },
@@ -127,6 +133,7 @@ async function readDeckbuildingRows(userId: string) {
     deckFolders,
     collection,
     acquisitionIntents,
+    ruleZeroSheets,
     cardPackages,
   };
 }

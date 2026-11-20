@@ -39,6 +39,7 @@ model User {
   apiKeys           ApiKey[]
   notificationPreferences NotificationPreference?
   aiUsage           AiUsage[]
+  ruleZeroSheets    RuleZeroSheet[]
   usageCounters     UsageCounter[]
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
@@ -58,6 +59,31 @@ model AcquisitionIntent {
 
   @@unique([userId, deckId, scryfallId])
   @@index([userId, deckId])
+}
+
+/// A player's private Rule 0 sheet for one deck (I-15 slice 1).
+/// Declared fields only: nothing here is computed from the deck list.
+/// Sharing is a later slice, so there is no share row.
+model RuleZeroSheet {
+  id                 String   @id
+  ownerId            String
+  owner              User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  deckId             String   @unique
+  deck               Deck     @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  speed              String
+  winConditions      String[]
+  hasCombos          Boolean
+  combosNote         String   @default("")
+  hasExtraTurns      Boolean
+  extraTurnsNote     String   @default("")
+  hasResourceDenial  Boolean
+  resourceDenialNote String   @default("")
+  proxyCount         Int
+  houseRules         String   @default("")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([ownerId])
 }
 
 /// Event-level opt-in controls for future in-app or delivery notifications.
@@ -148,6 +174,7 @@ model Deck {
   reports            DeckReport[]
   acquisitionIntents AcquisitionIntent[]
   savedBy            SavedPublicDeck[]
+  ruleZeroSheet      RuleZeroSheet?
   /// Client-chosen key that makes POST /api/decks safe to repeat: a retry with
   /// the same key returns this deck instead of writing a second one.
   idempotencyKey     String?

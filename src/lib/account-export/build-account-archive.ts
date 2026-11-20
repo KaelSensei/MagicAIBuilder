@@ -42,6 +42,7 @@ export function buildAccountArchive(
     deckFolders: rows.deckFolders.map(folderOf),
     collection: rows.collection.map(collectionCardOf),
     acquisitionIntents: rows.acquisitionIntents.map(acquisitionIntentOf),
+    ruleZeroSheets: rows.ruleZeroSheets.map(ruleZeroSheetOf),
     cardPackages: cardPackagesOf(rows),
     ratings: rows.ratings.map(ratingOf),
     votes: rows.votes.map(voteOf),
@@ -98,6 +99,26 @@ function acquisitionIntentOf(
     mode: intent.mode,
     createdAt: intent.createdAt.toISOString(),
     updatedAt: intent.updatedAt.toISOString(),
+  };
+}
+
+function ruleZeroSheetOf(
+  sheet: RowOf<"ruleZeroSheets">
+): AccountArchive["ruleZeroSheets"][number] {
+  return {
+    deckId: sheet.deckId,
+    speed: sheet.speed,
+    winConditions: sheet.winConditions,
+    hasCombos: sheet.hasCombos,
+    combosNote: sheet.combosNote,
+    hasExtraTurns: sheet.hasExtraTurns,
+    extraTurnsNote: sheet.extraTurnsNote,
+    hasResourceDenial: sheet.hasResourceDenial,
+    resourceDenialNote: sheet.resourceDenialNote,
+    proxyCount: sheet.proxyCount,
+    houseRules: sheet.houseRules,
+    createdAt: sheet.createdAt.toISOString(),
+    updatedAt: sheet.updatedAt.toISOString(),
   };
 }
 
