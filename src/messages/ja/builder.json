@@ -33,6 +33,38 @@
     "title": "Deck details",
     "targetBracket": "Target bracket",
     "targetBracketOption": "Bracket {level}: {name}",
+    "bracketPath": {
+      "title": "To reach Bracket {target}",
+      "estimate": "Estimated bracket of this list: {estimate}.",
+      "cedhIntent": "Bracket 5 is declared, not estimated: a list cannot show the cEDH intent that sets it apart, so the estimate stops at Bracket 4.",
+      "noRuleStops": "No official rule stops this deck at Bracket {target}.",
+      "gameChangerFloor": "{allowed, plural, =0 {Bracket {target} allows no Game Changers.} one {Bracket {target} allows up to # Game Changer.} other {Bracket {target} allows up to # Game Changers.}} This list has {count}: {cards}.",
+      "restrictionFloor": {
+        "twoCardCombos": "Bracket {target} allows no two-card combos. This list has {count, plural, one {# combo} other {# combos}}, with {cards}.",
+        "massLandDenial": "Bracket {target} allows no mass land denial. This list has {count}: {cards}.",
+        "extraTurns": "Bracket {target} allows no extra-turn cards. This list has {count}: {cards}."
+      },
+      "comboFloorNotChecked": "Two-card combos: not checked. The estimate was made without combo data.",
+      "tooFewCards": "This list has {count, plural, one {# card} other {# cards}}: too few cards for the heuristic part, so only the official rules above set the estimate.",
+      "term": {
+        "ramp": "ramp",
+        "draw": "draw",
+        "removal": "removal",
+        "winSpeed": "win speed",
+        "avgCmc": "average mana value"
+      },
+      "termReads": {
+        "ramp": "The {term} term reads {score} from {value, plural, one {# ramp card} other {# ramp cards}}; at {bound, number} or fewer it would read {wouldRead}.",
+        "draw": "The {term} term reads {score} from {value, plural, one {# draw card} other {# draw cards}}; at {bound, number} or fewer it would read {wouldRead}.",
+        "removal": "The {term} term reads {score} from {value, plural, one {# removal card} other {# removal cards}}; at {bound, number} or fewer it would read {wouldRead}.",
+        "boardWipes": "The {term} term reads {score} from {value, plural, one {# board wipe} other {# board wipes}}; at {bound, number} or fewer it would read {wouldRead}.",
+        "weightedRemoval": "The {term} term reads {score} from a removal count of {value, number}, board wipes weighted; at {bound, number} or less it would read {wouldRead}.",
+        "avgCmc": "The {term} term reads {score} from an average mana value of {value, number}; above {bound, number} it would read {wouldRead}.",
+        "winConditions": "The {term} term reads {score} from {value, plural, one {# win condition} other {# win conditions}}; at {bound, number} or fewer it would read {wouldRead}.",
+        "fastWins": "The {term} term reads {score} from {value, plural, one {# fast-win card} other {# fast-win cards}}; at {bound, number} or fewer it would read {wouldRead}."
+      },
+      "termOutOfReach": "The {term} term reads {score}; no single count it reads brings it to {target} or lower on its own."
+    },
     "budget": "Budget per card",
     "budgetHint": "In US dollars. Leave the field empty for no limit.",
     "budgetInvalid": "Enter an amount above zero, or leave the field empty for no limit.",
