@@ -8,6 +8,8 @@ import { renderWithIntl } from "@/test/render-with-intl";
 let createDeckImpl: (name: string) => Promise<string> = async (_name: string) =>
   "deck-0";
 let setActiveDeckImpl: (id: string) => void = (_id: string) => {};
+/** How late a slow deck creation resolves: after the click, well within `waitFor`'s wait. */
+const SLOW_CREATE_MS = 30;
 
 // One router for the whole file, so a test can see where the header navigates.
 const router = vi.hoisted(() => ({
@@ -74,7 +76,13 @@ describe("Header", () => {
   });
 
   it("creates a deck and activates it when clicking Import on home", async () => {
-    const createDeck = vi.fn(async (_name: string) => "deck-123");
+    // The deck is created a little after the click, as it is under a loaded run.
+    const createDeck = vi.fn(
+      (_name: string) =>
+        new Promise<string>((resolve) => {
+          setTimeout(() => resolve("deck-123"), SLOW_CREATE_MS);
+        })
+    );
     const setActiveDeck = vi.fn((_id: string) => {});
     createDeckImpl = (name: string) => createDeck(name);
     setActiveDeckImpl = (id: string) => setActiveDeck(id);
@@ -86,8 +94,8 @@ describe("Header", () => {
       await screen.findByRole("button", { name: /import/i })
     );
 
-    await waitFor(() => expect(createDeck).toHaveBeenCalledTimes(1));
-    expect(setActiveDeck).toHaveBeenCalledWith("deck-123");
+    await waitFor(() => expect(setActiveDeck).toHaveBeenCalledWith("deck-123"));
+    expect(createDeck).toHaveBeenCalledTimes(1);
   });
 
   it("uses the active locale for the imported deck name", async () => {
