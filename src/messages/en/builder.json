@@ -226,5 +226,53 @@
       "anyLand": "{card} is outside your commander's color identity. As your commander, {commander} lets your deck include any land, whatever its colors (rule 903.5e).",
       "anyBasicLand": "{card} is outside your commander's color identity. As your commander, {commander} lets your deck include any basic land, whatever its colors (rule 903.5e)."
     }
+  },
+  "theme": {
+    "title": "Theme",
+    "notSaved": "This theme is not saved with the deck yet. It stays while the builder is open.",
+    "handlesLegend": "Handles a card can match",
+    "kindLabel": "Kind of handle {number}",
+    "valueLabel": "Value of handle {number}",
+    "ignoreLeadingThe": "Ignore a leading “The”",
+    "remove": "Remove",
+    "removeLabel": "Remove handle {number}",
+    "add": "Add a handle",
+    "maxHandles": "A theme holds up to three handles.",
+    "pendingKind": "{kind}: needs card details not stored yet",
+    "matchLegend": "A card is on theme when it matches",
+    "match": {
+      "any": "any handle",
+      "all": "every handle"
+    },
+    "countBasics": "Count basic lands",
+    "noHandle": "Name a handle to count the cards that match it.",
+    "coverage": "{onTheme} of {denominator, plural, one {# card} other {# cards}} on theme",
+    "onTheme": "On theme",
+    "offTheme": "Off theme",
+    "handle": "{kind}: {value}",
+    "handleIgnoringThe": "{kind}: {value}, ignoring a leading “The”",
+    "evidence": "{field}: {excerpt}",
+    "noMatch": "no handle matches",
+    "partialMatch": "matches {matched} of {total} handles",
+    "noCardForHandle": "No counted card matches this handle.",
+    "noOffTheme": "No counted card is off theme.",
+    "commandZone": "command zone",
+    "copies": "{quantity} ×",
+    "kinds": {
+      "creatureType": "Creature type",
+      "nameWord": "Word in name",
+      "firstLetter": "First letter",
+      "textWord": "Word in rules text",
+      "cardType": "Card type",
+      "artist": "Artist",
+      "planeOrSet": "Plane or set",
+      "watermark": "Watermark",
+      "flavorWord": "Word in flavor text"
+    },
+    "fields": {
+      "name": "name",
+      "typeLine": "type line",
+      "oracleText": "Oracle text"
+    }
   }
 }
