@@ -135,6 +135,7 @@ const ROUTE_POLICIES: Readonly<
   "share/[token]": { GET: "share-token" },
   "user/api-keys": { GET: "session", POST: "session" },
   "user/api-keys/[id]": { DELETE: "session" },
+  "user/export": { GET: "session" },
   "user/init": { GET: "session" },
   "user/notification-preferences": { GET: "session", PATCH: "session" },
   "user/onboarding": { GET: "session", POST: "session", DELETE: "session" },
