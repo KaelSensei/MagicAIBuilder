@@ -109,9 +109,12 @@ export function CardGrid({
               className="absolute bottom-6 right-1 z-10 opacity-0 group-hover/gridcard:opacity-100 transition-opacity"
             />
             {onAddToZone && (
-              <div className="absolute inset-x-1 bottom-1 z-20">
-                <SearchZoneMenu card={card} onAddToZone={onAddToZone} zoneCounts={zoneCounts} />
-              </div>
+              <SearchZoneMenu
+                card={card}
+                onAddToZone={onAddToZone}
+                zoneCounts={zoneCounts}
+                placement="tile"
+              />
             )}
           </motion.div>
         );
