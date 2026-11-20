@@ -1,0 +1,32 @@
+{
+  "open": "Rule 0 sheet",
+  "title": "Rule 0 sheet",
+  "disclaimer": "This sheet records what you declared. It does not guarantee a balanced game.",
+  "privateNote": "Only you can see this sheet.",
+  "empty": "No sheet yet. Record what you want the table to know.",
+  "speed": "Intended speed",
+  "speeds": {
+    "exhibition": "Exhibition",
+    "core": "Core",
+    "upgraded": "Upgraded",
+    "optimized": "Optimized",
+    "cedh": "cEDH",
+    "custom": "Custom"
+  },
+  "winConditions": "How the deck wins",
+  "winConditionsHint": "One way per line",
+  "combos": "Combos",
+  "extraTurns": "Extra turns",
+  "resourceDenial": "Resource denial",
+  "present": "Present",
+  "note": "What you want the table to know",
+  "proxyCount": "Proxy count",
+  "houseRules": "House rules",
+  "save": "Save sheet",
+  "saving": "Saving the sheet",
+  "saved": "Sheet saved",
+  "invalid": "The sheet could not be saved. Check the declared fields.",
+  "unavailable": "The sheet could not be saved. Try again.",
+  "signIn": "Sign in to record a rule 0 sheet.",
+  "loading": "Loading the rule 0 sheet"
+}
