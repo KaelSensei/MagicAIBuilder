@@ -3,12 +3,24 @@
  *
  * The Commander and format rules the server and the browser share, as pure
  * functions from `domain/` that report and never refuse (ADR 0009). Today it
- * holds the side-deck construction checks (I-103) and the deck size rule; the
- * Commander deck's other rules still live under `src/lib/deck/` until they
- * move here.
+ * holds the side-deck construction checks (I-103), the deck size rule and the
+ * league round allowance (I-104); the Commander deck's other rules still live
+ * under `src/lib/deck/` until they move here.
  *
  * @module format-rules
  */
+export {
+  checkRoundAllowance,
+  type AllowancePart,
+  type AllowancePartReport,
+  type AllowanceReport,
+  type AllowanceVerdict,
+  type DatedCardPrice,
+  type LeagueListCard,
+  type LeagueListPair,
+  type PriceMarket,
+  type SwapPair,
+} from "@/modules/format-rules/domain/league-allowance";
 export {
   deckSizeRule,
   deckSizeStatus,
