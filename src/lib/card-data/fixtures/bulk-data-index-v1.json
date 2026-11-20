@@ -1,0 +1,83 @@
+{
+  "object": "list",
+  "has_more": false,
+  "data": [
+    {
+      "object": "bulk_data",
+      "id": "27bf3214-1271-490b-bdfe-c0be6c23d02e",
+      "type": "oracle_cards",
+      "updated_at": "2026-11-20T10:02:03.416+00:00",
+      "uri": "https://api.scryfall.com/bulk-data/27bf3214-1271-490b-bdfe-c0be6c23d02e",
+      "name": "Oracle Cards",
+      "description": "A JSON file containing one Scryfall card object for each Oracle ID on Scryfall. The chosen sets for the cards are an attempt to return the most up-to-date recognizable version of the card.",
+      "jsonl_download_uri": "https://data.scryfall.io/oracle-cards/oracle-cards-20261120100203.jsonl.gz",
+      "compressed_size": 25540722
+    },
+    {
+      "object": "bulk_data",
+      "id": "6bbcf976-6369-4401-88fc-3a9e4984c305",
+      "type": "unique_artwork",
+      "updated_at": "2026-11-20T10:03:08.320+00:00",
+      "uri": "https://api.scryfall.com/bulk-data/6bbcf976-6369-4401-88fc-3a9e4984c305",
+      "name": "Unique Artwork",
+      "description": "A JSON file of Scryfall card objects that together contain all unique artworks. The chosen cards promote the best image scans.",
+      "jsonl_download_uri": "https://data.scryfall.io/unique-artwork/unique-artwork-20261120100308.jsonl.gz",
+      "compressed_size": 39387676
+    },
+    {
+      "object": "bulk_data",
+      "id": "e2ef41e3-5778-4bc2-af3f-78eca4dd9c23",
+      "type": "default_cards",
+      "updated_at": "2026-11-20T10:06:19.060+00:00",
+      "uri": "https://api.scryfall.com/bulk-data/e2ef41e3-5778-4bc2-af3f-78eca4dd9c23",
+      "name": "Default Cards",
+      "description": "A JSON file containing every card object on Scryfall in English or the printed language if the card is only available in one language.",
+      "jsonl_download_uri": "https://data.scryfall.io/default-cards/default-cards-20261120100619.jsonl.gz",
+      "compressed_size": 81290006
+    },
+    {
+      "object": "bulk_data",
+      "id": "922288cb-4bef-45e1-bb30-0c2bd3d3534f",
+      "type": "all_cards",
+      "updated_at": "2026-11-20T10:23:04.905+00:00",
+      "uri": "https://api.scryfall.com/bulk-data/922288cb-4bef-45e1-bb30-0c2bd3d3534f",
+      "name": "All Cards",
+      "description": "A JSON file containing every card object on Scryfall in every language.",
+      "jsonl_download_uri": "https://data.scryfall.io/all-cards/all-cards-20261120102304.jsonl.gz",
+      "compressed_size": 408100914
+    },
+    {
+      "object": "bulk_data",
+      "id": "06f54c0b-ab9c-452d-b35a-8297db5eb940",
+      "type": "rulings",
+      "updated_at": "2026-11-20T10:00:34.717+00:00",
+      "uri": "https://api.scryfall.com/bulk-data/06f54c0b-ab9c-452d-b35a-8297db5eb940",
+      "name": "Rulings",
+      "description": "A JSON file containing all Rulings on Scryfall. Each ruling refers to cards via an `oracle_id`.",
+      "jsonl_download_uri": "https://data.scryfall.io/rulings/rulings-20261120100034.jsonl.gz",
+      "compressed_size": 5508481
+    },
+    {
+      "object": "bulk_data",
+      "id": "48da5752-eeb6-4126-bf97-8829e20ad14f",
+      "type": "art_tags",
+      "updated_at": "2026-11-20T10:01:24.781+00:00",
+      "uri": "https://api.scryfall.com/bulk-data/48da5752-eeb6-4126-bf97-8829e20ad14f",
+      "name": "Art Tags",
+      "description": "A JSON file containing all art (illustration) tags sourced from Tagger, the Scryfall community tagging project.",
+      "jsonl_download_uri": "https://data.scryfall.io/art-tags/art-tags-20261120100124.jsonl.gz",
+      "compressed_size": 13454005
+    },
+    {
+      "object": "bulk_data",
+      "id": "bd8df61e-5d0a-47a2-9086-40137a645b98",
+      "type": "oracle_tags",
+      "updated_at": "2026-11-20T10:00:53.557+00:00",
+      "uri": "https://api.scryfall.com/bulk-data/bd8df61e-5d0a-47a2-9086-40137a645b98",
+      "name": "Oracle Tags",
+      "description": "A JSON file containing all Oracle tags sourced from Tagger, the Scryfall community tagging project.",
+      "jsonl_download_uri": "https://data.scryfall.io/oracle-tags/oracle-tags-20261120100053.jsonl.gz",
+      "compressed_size": 6124552
+    }
+  ]
+}
