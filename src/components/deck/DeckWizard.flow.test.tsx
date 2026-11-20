@@ -15,6 +15,9 @@
  * deck card loses a double-faced card's faces. Tests that pin such behaviour say "currently"
  * and name the row that will flip them. The split of this file (DB-44, DB-46) must keep them
  * green unchanged.
+ *
+ * A deck the server cannot create is no longer pinned: the wizard keeps the built deck, says it
+ * could not be saved, and "Try saving again" creates it without a new build (wizard-save-retry).
  */
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { MotionGlobalConfig } from "framer-motion";
@@ -352,8 +355,24 @@ function cardBody(name: string): z.infer<typeof CardBody> | undefined {
   return cardBodies.find((body) => body.name === name);
 }
 
+const DECK_NOT_SAVED =
+  "Your deck was built, but it could not be saved. The build is kept: try saving it again.";
+const TRY_SAVING_AGAIN = "Try saving again";
+
 describe("DeckWizard flow (characterization)", () => {
   const server = setupMsw(...handlers);
+
+  /** The deck API refuses to create the deck, every time or only for the first request. */
+  function failDeckCreation(options: { readonly once?: boolean } = {}): void {
+    server.use(
+      http.post(
+        "/api/decks",
+        () =>
+          HttpResponse.json({ error: "Database unavailable" }, { status: 500 }),
+        options
+      )
+    );
+  }
   server.events.on("request:start", ({ request }) => {
     sent.push(describeRequest(request));
   });
@@ -815,28 +834,154 @@ describe("DeckWizard flow (characterization)", () => {
       }
     );
 
-    it("currently returns to the plan without a message when the deck cannot be created (pinned; new follow-up, see the P1-19 PR)", async () => {
+    it("says the built deck could not be saved and keeps it", async () => {
+      failDeckCreation();
+
+      await generateDeck();
+
+      expect(await screen.findByText(DECK_NOT_SAVED)).toBeInTheDocument();
+      expect(
+        screen.getByRole("heading", { name: "AI is building your deck…" })
+      ).toBeInTheDocument();
+      expect(screen.queryByRole("heading", { name: HEADINGS.plan })).toBeNull();
+      expect(
+        screen.getByRole("button", { name: TRY_SAVING_AGAIN })
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: "Try again" })
+      ).toBeInTheDocument();
+      expect(screen.queryByText(/Database unavailable|HTTP 500/)).toBeNull();
+      expect(sent).toEqual(["POST /api/ai/build", "POST /api/decks"]);
+      expect(onComplete).not.toHaveBeenCalled();
+    });
+
+    it("saving again creates the deck without a new build", async () => {
+      failDeckCreation({ once: true });
+      await generateDeck();
+
+      fireEvent.click(
+        await screen.findByRole("button", { name: TRY_SAVING_AGAIN })
+      );
+
+      await waitForDeckOpened();
+      expect(sent).toEqual([
+        "POST /api/ai/build",
+        "POST /api/decks",
+        "POST /api/decks",
+        "GET scryfall /cards/named",
+        "PATCH /api/decks/deck-ai-1/command-zone",
+        "POST scryfall /cards/collection",
+        ...STREAMED_CARDS.map(() => "POST /api/decks/deck-ai-1/cards"),
+      ]);
+      expect(buildBodies).toHaveLength(1);
+      expect(deckBodies).toEqual([
+        { name: "AI Deck — Control", isAIGenerated: true },
+      ]);
+      expect(useDeckStore.getState().decks[DECK_ID]?.commander?.name).toBe(
+        TALRAND
+      );
+      expect(storedCard("Island")?.quantity).toBe(30);
+      expect(onComplete).toHaveBeenCalledTimes(1);
+    });
+
+    it("saving again shows the build's corrections before opening the deck", async () => {
+      failDeckCreation({ once: true });
       server.use(
-        http.post("/api/decks", () =>
+        http.post(BUILD_URL, () =>
+          ndjson(
+            buildEvents({
+              corrections: [
+                {
+                  action: "removed",
+                  name: "Mana Crypt",
+                  quantity: 1,
+                  reason: "banned",
+                },
+              ],
+            })
+          )
+        )
+      );
+      await generateDeck();
+
+      fireEvent.click(
+        await screen.findByRole("button", { name: TRY_SAVING_AGAIN })
+      );
+
+      expect(
+        await screen.findByText("Removed Mana Crypt: banned in Commander")
+      ).toBeInTheDocument();
+      expect(onComplete).not.toHaveBeenCalled();
+      fireEvent.click(screen.getByRole("button", { name: "Open the deck" }));
+      expect(onComplete).toHaveBeenCalledWith(DECK_ID);
+      expect(sent.slice(0, 3)).toEqual([
+        "POST /api/ai/build",
+        "POST /api/decks",
+        "POST /api/decks",
+      ]);
+      expect(sent.filter((line) => line === "POST /api/ai/build")).toHaveLength(
+        1
+      );
+    });
+
+    it("keeps the message, sends no new build and opens no deck when saving again fails too", async () => {
+      failDeckCreation();
+      await generateDeck();
+
+      fireEvent.click(
+        await screen.findByRole("button", { name: TRY_SAVING_AGAIN })
+      );
+
+      await waitFor(() =>
+        expect(sent).toEqual([
+          "POST /api/ai/build",
+          "POST /api/decks",
+          "POST /api/decks",
+        ])
+      );
+      expect(await screen.findByText(DECK_NOT_SAVED)).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: TRY_SAVING_AGAIN })
+      ).toBeInTheDocument();
+      expect(screen.queryByText(/Database unavailable|HTTP 500/)).toBeNull();
+      expect(onComplete).not.toHaveBeenCalled();
+    });
+
+    it("starts a fresh build when the player chooses Try again after a failed save", async () => {
+      failDeckCreation({ once: true });
+      await generateDeck();
+
+      fireEvent.click(await screen.findByRole("button", { name: "Try again" }));
+      await screen.findByRole("heading", { name: HEADINGS.plan });
+      expect(screen.queryByText(DECK_NOT_SAVED)).toBeNull();
+      generate();
+
+      await waitForDeckOpened();
+      expect(sent.slice(0, 4)).toEqual([
+        "POST /api/ai/build",
+        "POST /api/decks",
+        "POST /api/ai/build",
+        "POST /api/decks",
+      ]);
+      expect(buildBodies).toHaveLength(2);
+    });
+
+    it("currently opens the deck without its commander, and creates no second deck, when the command zone cannot be saved (pinned; follow-up of the wizard-save-retry PR)", async () => {
+      server.use(
+        http.patch("/api/decks/:id/command-zone", () =>
           HttpResponse.json({ error: "Database unavailable" }, { status: 500 })
         )
       );
 
       await generateDeck();
 
-      await waitFor(() =>
-        expect(
-          screen.getByRole("button", { name: "Generate Deck" })
-        ).toBeInTheDocument()
-      );
+      await waitForDeckOpened();
+      expect(sent.filter((line) => line === "POST /api/decks")).toHaveLength(1);
+      expect(useDeckStore.getState().decks[DECK_ID]?.commander).toBeNull();
+      expect(storedDeckCards()).toHaveLength(STREAMED_CARDS.length);
       expect(
-        screen.getByRole("heading", { name: HEADINGS.plan })
-      ).toBeInTheDocument();
-      expect(
-        screen.queryByText(/Database unavailable|HTTP 500|failed/)
+        screen.queryByRole("button", { name: TRY_SAVING_AGAIN })
       ).toBeNull();
-      expect(sent).toEqual(["POST /api/ai/build", "POST /api/decks"]);
-      expect(onComplete).not.toHaveBeenCalled();
     });
 
     it("leaves the commander empty and still saves the cards when Scryfall cannot resolve the streamed commander", async () => {
