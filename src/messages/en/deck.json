@@ -355,7 +355,9 @@
       "empty-library": "Add cards to the main deck to see the odds.",
       "not-a-card-count": "Enter a whole number of cards, 0 or more.",
       "more-drawn-than-library": "The library holds fewer cards than this draw.",
-      "more-matching-than-library": "More cards match than the library holds."
+      "more-matching-than-library": "More cards match than the library holds.",
+      "more-wanted-than-drawn": "At least {minimum} is more than the {drawn} cards drawn.",
+      "no-lands": "No land is counted in the main deck."
     }
   },
   "proxy": {

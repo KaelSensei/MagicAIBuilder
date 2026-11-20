@@ -278,14 +278,20 @@ Moxfield's production JavaScript, captured on 14 May 2026, includes a hypergeome
 
 ## Delivery slices
 
-The moved record's three scope lines and the definition of done are the panel. The code on `dev` implements them: the pure count, the builder panel, lands or one library card, and the sentence that this is not a recorded game, in English and in French. The generic failure, empty and guest scenarios in the contract were not re-checked here, so the initiative status stays Next.
+The moved record's three scope lines and the definition of done are the panel. The code on `dev` implements them: the pure count, the builder panel, lands or one library card, and the sentence that this is not a recorded game, in English and in French. Slice 2 re-checked the contract's failure, empty and guest scenarios against that panel; the notes under the table say what held and what changed.
 
 | #   | Slice                                                                                                                                                                                                                                                                                                                                                                                    | Depends on |
 | --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
 | 1   | The panel asks the chance of at least K lands, or at least one copy of a chosen library card, in an opening seven or by a chosen turn. It shows the inputs and the probability, excludes Considering and Sideboard, uses no `Math.random` and no seed, and says it is a count of equally likely hands. A second open of the same deck shows the same digits. Done (#1398, #1494, #1502). | —          |
-| 2   | Re-check the contract's failure, empty and guest scenarios (AC-97-04, AC-97-05, AC-97-06) against the panel that slice 1 shipped, and close them or record the gap.                                                                                                                                                                                                                      | 1          |
+| 2   | Re-check the contract's failure, empty and guest scenarios (AC-97-04, AC-97-05, AC-97-06) against the panel that slice 1 shipped, and close them or record the gap. Done (`test/i97-draw-odds-scenarios`).                                                                                                                                                                               | 1          |
 
-Slice 2 can start now. It is a check of the shipped panel, not a second calculator.
+Slice 2 re-checked the shipped panel; it is not a second calculator. `DrawOddsPanel.test.tsx` pins each scenario:
+
+- **AC-97-04, failure.** A blank, fractional, negative or non-numeric minimum, and a turn that draws more cards than the library holds, show a catalogue sentence; correcting the input brings the chance back, and the field keeps its name and focus. A minimum above the cards drawn, such as 100 from a 99-card library, used to show "0.0%"; the panel now says "At least 100 is more than the 7 cards drawn." A minimum of 0 stays a known 100.0%: every hand holds at least zero cards.
+- **AC-97-05, empty.** A deck with no card, or only Sideboard and Considering cards, says the main deck needs cards. The lands question in a deck without lands used to show "0.0%"; it now says "No land is counted in the main deck."
+- **AC-97-06, guest.** A guest deck (id `guest`) and a signed-in deck with the same cards show the same digits and inputs; the panel makes no request and reads no session.
+
+The formula still answers a minimum above the cards drawn with a known 0 (`chanceOfAtLeast`, `src/lib/deck/draw-odds.ts:73-82`); the panel names that case itself. Moving the check into the formula's gaps is left for a later change.
 
 ### Definition of done
 
