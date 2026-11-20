@@ -1,5 +1,9 @@
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  NO_INSPIRED_FORKS,
+  type InspiredFork,
+} from "@/lib/deck/inspired-forks";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { PublicDeckActions } from "./PublicDeckActions";
 
@@ -237,6 +241,119 @@ describe("PublicDeckActions", () => {
       expect(
         await screen.findByRole("button", { name: "Deck partagé" })
       ).toBeInTheDocument();
+    });
+  });
+
+  describe("the public forks a deck inspired (I-08, AC-08-193 to AC-08-195)", () => {
+    /** A listed fork "Fork n" by "Player n". */
+    const forkNumber = (n: number): InspiredFork => ({
+      id: `fork-${n}`,
+      name: `Fork ${n}`,
+      author: `Player ${n}`,
+    });
+
+    it("lists each public fork under its count, linked to its page with its author", () => {
+      renderWithIntl(
+        <PublicDeckActions
+          deckId="source"
+          deckName="Original"
+          isSignedIn={false}
+          inspiredForks={{
+            forks: [
+              forkNumber(1),
+              forkNumber(2),
+              { id: "fork-3", name: "Ownerless fork", author: null },
+            ],
+            total: 3,
+          }}
+        />
+      );
+
+      const forks = screen.getByRole("list", {
+        name: "Inspiration for 3 decks",
+      });
+      const links = within(forks).getAllByRole("link");
+      expect(links.map((link) => link.textContent)).toEqual([
+        "Fork 1 by Player 1",
+        "Fork 2 by Player 2",
+        "Ownerless fork",
+      ]);
+      expect(links.map((link) => link.getAttribute("href"))).toEqual([
+        "/deck/fork-1",
+        "/deck/fork-2",
+        "/deck/fork-3",
+      ]);
+    });
+
+    it("names the ten it lists, then how many more the deck inspired", () => {
+      const tenForks = Array.from({ length: 10 }, (_, index) =>
+        forkNumber(index + 1)
+      );
+      renderWithIntl(
+        <PublicDeckActions
+          deckId="source"
+          deckName="Original"
+          isSignedIn={false}
+          inspiredForks={{ forks: tenForks, total: 14 }}
+        />
+      );
+
+      const forks = screen.getByRole("list", {
+        name: "Inspiration for 14 decks",
+      });
+      expect(within(forks).getAllByRole("link")).toHaveLength(10);
+      expect(within(forks).getByText("and 4 more")).toBeInTheDocument();
+    });
+
+    it("sits beside the forked-from credit of a deck that is itself a fork", () => {
+      renderWithIntl(
+        <PublicDeckActions
+          deckId="fork"
+          deckName="Fork"
+          isSignedIn={false}
+          forkedFrom={{ id: "source", name: "Original", author: "Kael" }}
+          inspiredForks={{ forks: [forkNumber(1)], total: 1 }}
+        />
+      );
+
+      expect(
+        screen.getByRole("link", { name: "Original by Kael" })
+      ).toHaveAttribute("href", "/deck/source");
+      expect(
+        screen.getByRole("list", { name: "Inspiration for 1 deck" })
+      ).toBeInTheDocument();
+    });
+
+    it("shows no line for a deck nobody forked publicly", () => {
+      renderWithIntl(
+        <PublicDeckActions
+          deckId="source"
+          deckName="Original"
+          isSignedIn={false}
+          inspiredForks={NO_INSPIRED_FORKS}
+        />
+      );
+
+      expect(screen.queryByRole("list")).not.toBeInTheDocument();
+      expect(screen.queryByText(/Inspiration for/)).not.toBeInTheDocument();
+    });
+
+    it("reads in French, singular and plural", () => {
+      renderWithIntl(
+        <PublicDeckActions
+          deckId="source"
+          deckName="Original"
+          isSignedIn={false}
+          inspiredForks={{ forks: [forkNumber(1)], total: 3 }}
+        />,
+        { locale: "fr" }
+      );
+
+      const forks = screen.getByRole("list", { name: "A inspiré 3 decks" });
+      expect(within(forks).getByRole("link")).toHaveTextContent(
+        "Fork 1 par Player 1"
+      );
+      expect(within(forks).getByText("et 2 autres")).toBeInTheDocument();
     });
   });
 });
