@@ -226,5 +226,53 @@
       "anyLand": "{card} est hors de l’identité couleur de votre commandant. En tant que commandant, {commander} permet à votre deck d’inclure n’importe quel terrain, quelles que soient ses couleurs (règle 903.5e).",
       "anyBasicLand": "{card} est hors de l’identité couleur de votre commandant. En tant que commandant, {commander} permet à votre deck d’inclure n’importe quel terrain de base, quelles que soient ses couleurs (règle 903.5e)."
     }
+  },
+  "theme": {
+    "title": "Thème",
+    "notSaved": "Ce thème n’est pas encore enregistré avec le deck. Il reste tant que l’éditeur est ouvert.",
+    "handlesLegend": "Critères qu’une carte peut remplir",
+    "kindLabel": "Type du critère {number}",
+    "valueLabel": "Valeur du critère {number}",
+    "ignoreLeadingThe": "Ignorer un « The » initial",
+    "remove": "Retirer",
+    "removeLabel": "Retirer le critère {number}",
+    "add": "Ajouter un critère",
+    "maxHandles": "Un thème compte au plus trois critères.",
+    "pendingKind": "{kind} : demande des détails de carte pas encore enregistrés",
+    "matchLegend": "Une carte est dans le thème quand elle remplit",
+    "match": {
+      "any": "un des critères",
+      "all": "tous les critères"
+    },
+    "countBasics": "Compter les terrains de base",
+    "noHandle": "Indiquez un critère pour compter les cartes qui le remplissent.",
+    "coverage": "{onTheme} sur {denominator, plural, one {# carte} other {# cartes}} dans le thème",
+    "onTheme": "Dans le thème",
+    "offTheme": "Hors thème",
+    "handle": "{kind} : {value}",
+    "handleIgnoringThe": "{kind} : {value}, sans compter un « The » initial",
+    "evidence": "{field} : {excerpt}",
+    "noMatch": "aucun critère ne correspond",
+    "partialMatch": "remplit {matched} des {total} critères",
+    "noCardForHandle": "Aucune carte comptée ne remplit ce critère.",
+    "noOffTheme": "Aucune carte comptée n’est hors thème.",
+    "commandZone": "zone de commandement",
+    "copies": "{quantity} ×",
+    "kinds": {
+      "creatureType": "Type de créature",
+      "nameWord": "Mot du nom",
+      "firstLetter": "Première lettre",
+      "textWord": "Mot du texte de règles",
+      "cardType": "Type de carte",
+      "artist": "Artiste",
+      "planeOrSet": "Plan ou extension",
+      "watermark": "Filigrane",
+      "flavorWord": "Mot du texte d’ambiance"
+    },
+    "fields": {
+      "name": "nom",
+      "typeLine": "ligne de type",
+      "oracleText": "texte Oracle"
+    }
   }
 }

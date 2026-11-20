@@ -668,4 +668,43 @@ describe("DeckDetailsPanel", () => {
       expect(sent.filter(({ method }) => method === "PATCH")).toEqual([]);
     });
   });
+
+  describe("theme", () => {
+    it("opens the Theme panel on the builder's deck, a guest deck included, and sends nothing", async () => {
+      const user = userEvent.setup();
+      useDeckStore.setState({
+        decks: {
+          [GUEST_DECK_ID]: {
+            ...createGuestDeck(),
+            cards: [
+              aDeckCard({
+                id: "shivan",
+                name: "Shivan Dragon",
+                typeLine: "Creature — Dragon",
+              }),
+              aDeckCard({
+                id: "sol-ring",
+                name: "Sol Ring",
+                typeLine: "Artifact",
+              }),
+            ],
+          },
+        },
+        activeDeckId: GUEST_DECK_ID,
+      });
+      renderWithProviders(<BuilderDeckDetails deckId={GUEST_DECK_ID} />);
+      const details = screen.getByRole("region", { name: "Deck details" });
+
+      await user.click(within(details).getByRole("button", { name: "Theme" }));
+      await user.type(
+        within(details).getByRole("textbox", { name: "Value of handle 1" }),
+        "Dragon"
+      );
+
+      expect(
+        within(details).getByText("1 of 2 cards on theme")
+      ).toBeInTheDocument();
+      expect(sent).toEqual([]);
+    });
+  });
 });
