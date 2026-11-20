@@ -355,7 +355,9 @@
       "empty-library": "Ajoutez des cartes au deck principal pour voir les probabilités.",
       "not-a-card-count": "Saisissez un nombre entier de cartes, 0 ou plus.",
       "more-drawn-than-library": "La bibliothèque contient moins de cartes que cette pioche.",
-      "more-matching-than-library": "Plus de cartes correspondent que la bibliothèque n’en contient."
+      "more-matching-than-library": "Plus de cartes correspondent que la bibliothèque n’en contient.",
+      "more-wanted-than-drawn": "Au moins {minimum}, c’est plus que les {drawn} cartes piochées.",
+      "no-lands": "Aucun terrain n’est compté dans le deck principal."
     }
   },
   "proxy": {
