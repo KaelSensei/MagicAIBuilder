@@ -6,6 +6,7 @@
  * browser sets that flag, so it records what the client believed, not what the
  * format's list says.
  */
+import { releaseDayAhead } from "@/lib/releases/release-status";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import { FORMAT_CONFIG, type DeckFormat } from "./formats";
 
@@ -29,15 +30,30 @@ export interface CardLegality {
   readonly status: CardLegalityStatus;
 }
 
-/** Why a card makes the deck illegal. */
+/**
+ * Why a card makes the deck illegal. `preview` is Scryfall's `not_legal` for a card whose set is
+ * not out yet (I-73 3.2): the verdict is the same, only the words change.
+ */
 export type LegalityViolationReason =
-  "banned" | "not_legal" | "restricted_over_limit" | "unverified";
+  "banned" | "not_legal" | "preview" | "restricted_over_limit" | "unverified";
 
-/** A card that makes the deck illegal, once per card name and reason. */
-export interface LegalityViolation {
-  readonly name: string;
-  readonly reason: LegalityViolationReason;
-}
+/** The reasons a card's status gives with no release date to read: every reason but `preview`. */
+type StatusViolationReason = Exclude<LegalityViolationReason, "preview">;
+
+/**
+ * A card that makes the deck illegal, once per card name and reason. A `preview` names the day
+ * its set releases, "YYYY-MM-DD", so no surface says "not legal" alone (I-73 3.4).
+ */
+export type LegalityViolation =
+  | {
+      readonly name: string;
+      readonly reason: StatusViolationReason;
+    }
+  | {
+      readonly name: string;
+      readonly reason: "preview";
+      readonly releasesOn: string;
+    };
 
 /** Where the card data behind a verdict came from, and when. */
 export interface LegalitySource {
@@ -99,7 +115,7 @@ function toStatus(value: string | undefined): CardLegalityStatus {
  */
 function violationReason(
   status: CardLegalityStatus
-): LegalityViolationReason | null {
+): StatusViolationReason | null {
   switch (status) {
     case "legal":
     case "restricted":
@@ -117,6 +133,25 @@ function violationReason(
   }
 }
 
+/**
+ * The violation a card's status causes, read on the day the card data was fetched: a card not
+ * legal only because its set is not out yet is a `preview`, with its release day.
+ */
+function violationFor(
+  card: { readonly name: string; readonly status: CardLegalityStatus },
+  scryfallCard: ScryfallCard | undefined,
+  fetchedAt: Date
+): LegalityViolation | null {
+  const reason = violationReason(card.status);
+  if (reason !== "not_legal" || !scryfallCard) {
+    return reason ? { name: card.name, reason } : null;
+  }
+  const releasesOn = releaseDayAhead(scryfallCard, fetchedAt);
+  return releasesOn
+    ? { name: card.name, reason: "preview", releasesOn }
+    : { name: card.name, reason };
+}
+
 function compareViolations(
   left: LegalityViolation,
   right: LegalityViolation
@@ -131,7 +166,9 @@ function compareViolations(
  * Judge a deck against its format from Scryfall card data the server fetched.
  *
  * A card Scryfall did not return is `unknown`, and the deck is then not called
- * legal: an unverified card cannot be vouched for.
+ * legal: an unverified card cannot be vouched for. A card Scryfall marks not
+ * legal because its set is not out on the fetch day is named a `preview`, with
+ * its release day; the deck is still not legal (I-73 3.2).
  *
  * @param input.format - The deck's format, already known to be supported
  * @param input.cards - The deck rows; maybeboard rows are ignored
@@ -166,8 +203,12 @@ export function judgeDeckLegality(input: {
         (restrictedCopies.get(name) ?? 0) + row.quantity
       );
     }
-    const reason = violationReason(status);
-    if (reason) violations.set(`${reason}:${name}`, { name, reason });
+    const violation = violationFor(
+      { name, status },
+      scryfallCard,
+      input.fetchedAt
+    );
+    if (violation) violations.set(`${violation.reason}:${name}`, violation);
   }
 
   for (const [name, copies] of restrictedCopies) {
