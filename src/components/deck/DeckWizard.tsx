@@ -1,5 +1,4 @@
 "use client";
-import { forEachSequential } from "@/lib/async/sequential";
 /**
  * DeckWizard — 4-step AI-guided Commander deck builder.
  *
@@ -26,22 +25,18 @@ import {
 import {
   autocompleteCardName,
   getCardByNameFuzzy,
-  getCardCollection,
 } from "@/lib/scryfall/client";
 import { logger } from "@/lib/logger";
 import { useAIDeckBuild, countCopies } from "@/hooks/useAIDeckBuild";
 import { useAiDenialMessage } from "@/hooks/useAiDenialMessage";
-import type { BuildCard } from "@/hooks/useAIDeckBuild";
 import { useLocalizedCardText } from "@/hooks/useLocalizedCardText";
-import { useDeckStore } from "@/lib/deck/store";
 import type { ScryfallCard } from "@/lib/scryfall/types";
-import { categorizeCard } from "@/lib/deck/categories";
-import { getCardImageUri, getListedImageUri } from "@/lib/scryfall/images";
-import { priceUsdOf } from "@/lib/scryfall/price";
-import type { BracketLevel, CardCategory, DeckCard } from "@/lib/deck/types";
+import { getListedImageUri } from "@/lib/scryfall/images";
+import type { BracketLevel } from "@/lib/deck/types";
 import { createDeckPlan } from "@/lib/ai/deck-plan";
-import type { BuildRequest, DeckCorrection } from "@/app/api/ai/build/types";
+import type { BuildRequest } from "@/app/api/ai/build/types";
 import { GeneratedDeckCorrections } from "./GeneratedDeckCorrections";
+import { useBuiltDeckSave } from "./use-built-deck-save";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -646,123 +641,43 @@ function StepLoading({
 // Main wizard
 // ---------------------------------------------------------------------------
 
-const TOTAL_WIZARD_STEPS = 6;
-/** Max cards per Scryfall collection lookup request */
-const BATCH_SIZE = 75;
-
-/** Tries to resolve a commander name and set it — non-fatal if it fails. */
-async function tryResolveCommander(
-  commanderName: string,
-  setCommander: (card: ScryfallCard) => Promise<void>
-): Promise<void> {
-  try {
-    const card = await getCardByNameFuzzy(commanderName);
-    await setCommander(card);
-  } catch {
-    // Non-fatal — commander name might not resolve exactly
-  }
-}
-
-const DECK_CATEGORIES: ReadonlySet<string> = new Set<CardCategory>([
-  "commander",
-  "companion",
-  "creature",
-  "instant",
-  "sorcery",
-  "artifact",
-  "enchantment",
-  "planeswalker",
-  "land",
-  "ramp",
-  "draw",
-  "removal",
-  "boardWipe",
-  "winCondition",
-  "protection",
-  "other",
-]);
-
-/** Narrows an AI-provided category string without casting; unknown values fall back to Scryfall. */
-function isDeckCategory(value: string | undefined): value is CardCategory {
-  return value !== undefined && DECK_CATEGORIES.has(value);
-}
-
-/** One decklist entry, collapsed by name so quantities survive the import. */
-interface ImportEntry {
-  readonly name: string;
-  readonly category: string;
-  readonly quantity: number;
-}
-
 /**
- * Collapses the streamed cards by name, summing quantities.
- *
- * The previous version deduplicated with a Set and hardcoded `quantity: 1`,
- * which silently dropped every extra copy — a 99-card list arrived as ~65 cards
- * because the basic lands collapsed into singletons.
+ * The actions under a failed build or save. "Try saving again" stores the deck already built;
+ * "Try again" returns to the plan for a fresh build.
  */
-export function collapseEntries(
-  cards: readonly BuildCard[]
-): readonly ImportEntry[] {
-  const byName = new Map<string, ImportEntry>();
-  for (const card of cards) {
-    const existing = byName.get(card.name);
-    byName.set(card.name, {
-      name: card.name,
-      category: existing?.category ?? card.category,
-      quantity: (existing?.quantity ?? 0) + card.quantity,
-    });
-  }
-  return [...byName.values()];
+function BuildFailureActions({
+  saveFailed,
+  onRetrySave,
+  onStartOver,
+}: {
+  readonly saveFailed: boolean;
+  readonly onRetrySave: () => void;
+  readonly onStartOver: () => void;
+}) {
+  const t = useTranslations("deck");
+  return (
+    <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
+      {saveFailed && (
+        <button
+          type="button"
+          onClick={onRetrySave}
+          className="px-4 py-2 rounded-xl text-sm font-semibold bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white transition-colors"
+        >
+          {t("wizard.trySavingAgain")}
+        </button>
+      )}
+      <button
+        type="button"
+        onClick={onStartOver}
+        className="text-sm text-[var(--accent-text)] hover:underline"
+      >
+        {t("wizard.tryAgain")}
+      </button>
+    </div>
+  );
 }
 
-/** Fetches and imports cards from Scryfall in batches of BATCH_SIZE. */
-async function importCardsInBatches(
-  entries: readonly ImportEntry[],
-  addDeckCard: (card: DeckCard) => Promise<void>,
-  onProgress: (imported: number) => void
-): Promise<void> {
-  const byName = new Map(entries.map((e) => [e.name, e]));
-  let imported = 0;
-
-  const offsets = Array.from({ length: Math.ceil(entries.length / BATCH_SIZE) }, (_, index) => index * BATCH_SIZE);
-  await forEachSequential(offsets, async (i) => {
-    const batch = entries.slice(i, i + BATCH_SIZE);
-    try {
-      const result = await getCardCollection(
-        batch.map((entry) => ({ name: entry.name }))
-      );
-      await forEachSequential(result.data, async (sc) => {
-        const entry = byName.get(sc.name);
-        const deckCard: DeckCard = {
-          id: sc.id,
-          scryfallId: sc.id,
-          name: sc.name,
-          manaCost: sc.mana_cost ?? "",
-          cmc: sc.cmc,
-          typeLine: sc.type_line,
-          oracleText: sc.oracle_text ?? "",
-          colorIdentity: sc.color_identity,
-          isGameChanger: false,
-          isBanned: false,
-          price: priceUsdOf(sc),
-          imageUri: getCardImageUri(sc, "grid"),
-          artCropUri: getCardImageUri(sc, "art"),
-          category: isDeckCategory(entry?.category)
-            ? entry.category
-            : categorizeCard(sc),
-          quantity: entry?.quantity ?? 1,
-          zone: "main",
-        };
-        await addDeckCard(deckCard);
-        imported += deckCard.quantity;
-        onProgress(imported);
-      });
-    } catch (err) {
-      logger.error("Batch import error", "DeckWizard", err);
-    }
-  });
-}
+const TOTAL_WIZARD_STEPS = 6;
 
 export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
   const t = useTranslations("deck");
@@ -790,21 +705,11 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
   const [isBuilding, setIsBuilding] = useState(false);
   const [buildError, setBuildError] = useState<string | null>(null);
   const [isDemoDeck, setIsDemoDeck] = useState(false);
-  // Importing 99 cards is ~65 serialized round trips; without a counter the
-  // dialog looks frozen for the whole minute.
-  const [importedCount, setImportedCount] = useState(0);
-  const [importTotal, setImportTotal] = useState(0);
-  // A deck the server's card-data check changed: the player reads the changes
-  // before the wizard opens it.
-  const [correctedDeck, setCorrectedDeck] = useState<{
-    readonly deckId: string;
-    readonly corrections: readonly DeckCorrection[];
-  } | null>(null);
 
   const { state: buildState, build, reset: resetBuild } = useAIDeckBuild();
   const describeDenial = useAiDenialMessage();
-  const { createDeck, setActiveDeck, addDeckCard, setCommander } =
-    useDeckStore();
+  const builtDeck = useBuiltDeckSave(onComplete);
+  const { correctedDeck, reset: resetSave } = builtDeck;
 
   // Reset wizard on open
   useEffect(() => {
@@ -821,12 +726,10 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
       setIsBuilding(false);
       setBuildError(null);
       setIsDemoDeck(false);
-      setImportedCount(0);
-      setImportTotal(0);
-      setCorrectedDeck(null);
+      resetSave();
       resetBuild();
     }
-  }, [open, resetBuild]);
+  }, [open, resetBuild, resetSave]);
 
   const navigate = (next: number) => {
     setDir(next > step ? 1 : -1);
@@ -877,6 +780,15 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
         : commanderName,
   });
 
+  // A failure once the deck exists returns to the plan, as before: saving
+  // again would create a second deck.
+  const reportFailure = (err: unknown) => {
+    const message = err instanceof Error ? err.message : "Deck build failed";
+    logger.error("Generate error", "DeckWizard", err);
+    setBuildError(message);
+    setIsBuilding(false);
+  };
+
   const handleGenerateWith = async (skipCommander = false) => {
     if (!strategy) return;
     setIsBuilding(true);
@@ -898,34 +810,32 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
       const strategyLabel = strategyOption
         ? t(`wizard.${strategyOption.labelKey}`)
         : strategy;
-      const deckId = await createDeck(
-        t("wizard.aiDeckName", { strategy: strategyLabel }),
-        { isAIGenerated: true }
-      );
-      await setActiveDeck(deckId);
-
-      // Read the commander off the build result, not off `buildState`: this
-      // closure captured the render-time snapshot, where it is still null.
-      if (result.commander) {
-        await tryResolveCommander(result.commander, setCommander);
-      }
-
-      const entries = collapseEntries(result.cards);
-      setImportTotal(countCopies(result.cards));
-      setImportedCount(0);
-      await importCardsInBatches(entries, addDeckCard, setImportedCount);
-
-      if (result.corrections.length > 0) {
-        setCorrectedDeck({ deckId, corrections: result.corrections });
-        return;
-      }
-      onComplete(deckId);
+      // The build result, not `buildState`: this closure captured the
+      // render-time snapshot, where the streamed deck is still empty.
+      await builtDeck.save({
+        name: t("wizard.aiDeckName", { strategy: strategyLabel }),
+        result,
+      });
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Deck build failed";
-      logger.error("Generate error", "DeckWizard", err);
-      setBuildError(message);
-      setIsBuilding(false);
+      reportFailure(err);
     }
+  };
+
+  const retrySave = () => builtDeck.retry().catch(reportFailure);
+
+  const startOver = () => {
+    setIsBuilding(false);
+    setBuildError(null);
+    resetSave();
+    resetBuild();
+  };
+
+  // The server's own text never reaches the player: a deck the server could
+  // not create gets the wizard's message.
+  const loadingError = (): string | null => {
+    if (buildState.denial) return describeDenial(buildState.denial);
+    if (builtDeck.saveFailed) return t("wizard.deckNotSaved");
+    return buildError;
   };
 
   // ---------------------------------------------------------------------------
@@ -1019,26 +929,16 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
                         cardCount={countCopies(buildState.cards)}
                         totalCards={buildState.totalCards}
                         isDemoDeck={isDemoDeck}
-                        importedCount={importedCount}
-                        importTotal={importTotal}
-                        error={
-                          buildState.denial
-                            ? describeDenial(buildState.denial)
-                            : buildError
-                        }
+                        importedCount={builtDeck.importedCount}
+                        importTotal={builtDeck.importTotal}
+                        error={loadingError()}
                       />
-                      {buildError && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setIsBuilding(false);
-                            setBuildError(null);
-                            resetBuild();
-                          }}
-                          className="mt-6 text-sm text-[var(--accent-text)] hover:underline"
-                        >
-                          {t("wizard.tryAgain")}
-                        </button>
+                      {(buildError || builtDeck.saveFailed) && (
+                        <BuildFailureActions
+                          saveFailed={builtDeck.saveFailed}
+                          onRetrySave={retrySave}
+                          onStartOver={startOver}
+                        />
                       )}
                     </>
                   )}
