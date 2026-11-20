@@ -7,7 +7,8 @@
  * Rules reference context, `ui/`. Built on the shared `Modal`, which gives it
  * the dialog role, the focus trap, the focus return to the tile that opened it
  * and an Escape that closes only the top dialog (#1340). Presentational: the
- * page owns which card is zoomed and what the printings button opens.
+ * page owns which card is zoomed, what the printings button opens and what the
+ * add-to-open-deck button does.
  *
  * @module rules-reference/ui/CardZoomModal
  */
@@ -15,6 +16,8 @@ import type { KeyboardEvent } from "react";
 import { useTranslations } from "next-intl";
 import { X } from "lucide-react";
 import { Modal, ModalTitle } from "@/components/ui/Modal";
+import type { OpenDeckAddition } from "@/modules/rules-reference/client/useAddToOpenDeck";
+import { AddToOpenDeckButton } from "@/modules/rules-reference/ui/AddToOpenDeckButton";
 import {
   getCardGridImageUri,
   getListedCardImageUri,
@@ -22,7 +25,7 @@ import {
 import { resolveLocalizedText } from "@/lib/scryfall/localized";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 
-/** The zoomed card, the page it steps through, and what closing and the printings button do. */
+/** The zoomed card, the page it steps through, and what closing and the buttons do. */
 export interface CardZoomModalProps {
   /** The zoomed card; it must be one of `cards`. */
   readonly card: ScryfallCard;
@@ -33,6 +36,8 @@ export interface CardZoomModalProps {
   readonly onNavigate: (card: ScryfallCard) => void;
   /** Called when the visitor asks for every printing of the zoomed card. */
   readonly onOpenPrintings: () => void;
+  /** The add to the deck open in this session; no add button nor hint when absent. */
+  readonly openDeck?: OpenDeckAddition;
 }
 
 const SIDE_BUTTON_CLASS =
@@ -68,14 +73,19 @@ interface ZoomedCardPanelProps {
   readonly position: { readonly current: number; readonly total: number };
   readonly onClose: () => void;
   readonly onOpenPrintings: () => void;
+  readonly openDeck: OpenDeckAddition | undefined;
 }
 
-/** The card itself: the close button, the display-size image, the caption and the printings button. */
+/**
+ * The card itself: the close button, the display-size image, the caption, the printings button
+ * and the add to the open deck.
+ */
 function ZoomedCardPanel({
   card,
   position,
   onClose,
   onOpenPrintings,
+  openDeck,
 }: ZoomedCardPanelProps) {
   const t = useTranslations("rules");
   const text = resolveLocalizedText(card);
@@ -122,6 +132,7 @@ function ZoomedCardPanel({
           {t("zoom.viewAllArts")}
         </button>
       </div>
+      {openDeck && <AddToOpenDeckButton addition={openDeck} />}
     </div>
   );
 }
@@ -142,6 +153,7 @@ export function CardZoomModal({
   onClose,
   onNavigate,
   onOpenPrintings,
+  openDeck,
 }: CardZoomModalProps) {
   const t = useTranslations("rules");
   const currentIndex = cards.findIndex((c) => c.id === card.id);
@@ -172,6 +184,7 @@ export function CardZoomModal({
           position={{ current: currentIndex + 1, total: cards.length }}
           onClose={onClose}
           onOpenPrintings={onOpenPrintings}
+          openDeck={openDeck}
         />
         <StepButton
           direction="previous"

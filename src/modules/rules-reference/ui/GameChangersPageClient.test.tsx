@@ -24,13 +24,22 @@ import { ReadonlyURLSearchParams } from "next/navigation";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { GameChangersPageClient } from "./GameChangersPageClient";
 import { useCollectionStore } from "@/lib/collection/store";
+import { useDeckStore } from "@/lib/deck/store";
+import type { Deck } from "@/lib/deck/types";
 import type {
   ScryfallCard,
   ScryfallSearchResponse,
 } from "@/lib/scryfall/types";
+import { aDeck } from "@/test/builders/deck";
 import { aScryfallCard } from "@/test/builders/scryfall";
+import {
+  createInMemoryDeckApi,
+  emptyApiDeck,
+} from "@/test/in-memory-deck-api";
+import { deckApiHandlers } from "@/test/fake-deck-client";
 import { setupMsw } from "@/test/msw";
 import { renderWithProviders } from "@/test/render";
+import { recordToasts } from "@/test/toast-recorder";
 
 const { router, searchParams } = vi.hoisted(() => ({
   router: {
@@ -136,12 +145,17 @@ function answerScryfall(request: Request): HttpResponse<JsonBodyType> {
   return HttpResponse.json(answer);
 }
 
+/** The deck API the deck store saves to, in memory, for the add-to-open-deck tests. */
+const deckApi = createInMemoryDeckApi();
+const toasts = recordToasts();
+
 const server = setupMsw(
   http.get("/api/cache/search", ({ request }) => {
     cacheLookups.push(new URL(request.url).searchParams.get("query") ?? "");
     return HttpResponse.json({ hit: false, data: null });
   }),
-  http.get(SCRYFALL_SEARCH, ({ request }) => answerScryfall(request))
+  http.get(SCRYFALL_SEARCH, ({ request }) => answerScryfall(request)),
+  ...deckApiHandlers(deckApi)
 );
 
 beforeEach(() => {
@@ -157,6 +171,9 @@ beforeEach(() => {
   // jsdom lays nothing out, so it has no scrollIntoView; the page calls it on every page change.
   Element.prototype.scrollIntoView = vi.fn();
   useCollectionStore.setState({ collectionCards: {}, collectionCardsFoil: {} });
+  deckApi.reset();
+  toasts.mockClear();
+  useDeckStore.setState({ decks: {}, activeDeckId: null, undoStack: [] });
 });
 
 afterEach(() => {
@@ -610,5 +627,52 @@ describe("loading and failure", () => {
     expect(await screen.findByText("No cards found.")).toBeInTheDocument();
     expect(screen.getByText("0 cards")).toBeInTheDocument();
     expect(screen.queryByText(/Failed to load/)).toBeNull();
+  });
+});
+
+describe("adding the zoomed card to the open deck", () => {
+  const DECK_ID = "deck-atraxa";
+  const DECK_NAME = "Atraxa Superfriends";
+
+  /** Opens `deck` as the builder does: held by the store, active, and saved on the server. */
+  function openDeckInBuilder(overrides: Partial<Deck> = {}): void {
+    const deck = aDeck({ id: DECK_ID, name: DECK_NAME, ...overrides });
+    deckApi.seedDeck(emptyApiDeck(DECK_ID, DECK_NAME));
+    useDeckStore.setState({
+      decks: { [DECK_ID]: deck },
+      activeDeckId: DECK_ID,
+    });
+  }
+
+  /** The open deck's rows named `name` in the main deck, as the store holds them. */
+  function mainDeckRows(name: string) {
+    return (useDeckStore.getState().decks[DECK_ID]?.cards ?? []).filter(
+      (card) => card.name === name && card.zone === "main"
+    );
+  }
+
+  async function zoomInto(name: string) {
+    const { user } = await openPage();
+    await user.click(screen.getByRole("button", { name: `View ${name}` }));
+    return { user, zoom: screen.getByRole("dialog", { name: `${name} — zoom` }) };
+  }
+
+  it("pressing Add adds Rhystic Study to the open deck's main zone and saves it", async () => {
+    openDeckInBuilder();
+    const { user, zoom } = await zoomInto("Rhystic Study");
+
+    await user.click(
+      within(zoom).getByRole("button", { name: `Add to ${DECK_NAME}` })
+    );
+
+    expect(
+      await within(zoom).findByRole("button", { name: `Added to ${DECK_NAME}` })
+    ).toBeInTheDocument();
+    expect(mainDeckRows("Rhystic Study")).toHaveLength(1);
+    await waitFor(() =>
+      expect(deckApi.savedDeck(DECK_ID)?.cards.map((row) => row.name)).toEqual([
+        "Rhystic Study",
+      ])
+    );
   });
 });
