@@ -875,6 +875,75 @@ I-106 is Next after the numbered Next band; its first slice waits for I-17 slice
 
 The candidates read and not promoted, and the seventeenth pass's lines kept as refinements, are listed in the roadmap's [eighteenth-pass section](roadmap.md#what-the-eighteenth-pass-checked-and-did-not-promote).
 
+## 20. A nineteenth pass: the shelf of decks, gifts, cubes and pools, and signings (2026-11-20)
+
+Read on 20 November 2026, on `dev` at `c88bdc7d` (#1631), on the owner's request to "add 10 more features to the roadmap" in the "roadmap v2" format, in six angles over two waves: collaboration, groups and the social graph; cube, draft and the value of sealed product; AI, capture and integrations; homebrew, custom content, Rule 0 and lore; money, time and deck lifecycles; regional markets, real-world events and physical play. Eight subjects held under the ownership test, I-108 to I-115. Ten were asked for; two are missing, and none was padded or split.
+
+### What was checked
+
+- **Decks for someone else.** r/EDH has 24 "for my girlfriend" and 32 "for my wife" titles since 2025-01-01, and r/BudgetBrews runs a recurring $30–$50 Secret Santa in which each member builds "a complete, ready-to-play Commander deck for a fellow community member". Archidekt clones and shares; TableCommander limits collaborators to friends; no handover of a private deck to a named account was found. Volunteer threads ("Let Me Build You a Commander Deck?", 192 points, 523 comments) carry the same four fields in every request: an anchor, a theme, a budget and a bracket.
+- **Cube and draft.** Archidekt's top open request is large lists (507 points, cubes being one use). CubeCobra holds 2,201 public Commander-category cubes; its deckbuilder builds to 23 and 17 with no commander slot. Playgroup now runs free Commander cube drafts and sealed in the browser, with curators checking identity, partners, Game Changers and combos by hand. CR 903.13f (2026-11-06) and Wizards' Box League page set construction rules that no tool checks against a player's own pool.
+- **Sealed product.** A 300-point r/EDH thread's top comment (141) asked for "%chance of finding a card"; Wizards publishes per-slot percentages; MTGJSON publishes per-card weights from an upstream that declares no licence; Grimoria and others give per-set rates and expected values. None starts from a deck's missing cards.
+- **AI, capture and integrations.** Every job researched has an owner; the strongest outside signal is negative ("Boo AI", 24 points, under an AI tool's 0-point launch). Scryfall now documents Tagger tags as an API object with stable ids and weights. Six small free scanner apps launched in 2025–2026. Commander Spellbook and Playgroup publish client policies; Playgroup's API can open a live table.
+- **Homebrew and Rule 0.** The old Commander Rules Committee's "Silver-Bordered Project" (2024-08-14) kept silver-border and acorn cards illegal and sorted them into three categories; a 140-point thread asks about Rule 0 commanders; Archidekt's "Custom" format switches legality off. Custom-card demand inside deckbuilding is thin, and Wizards' Fan Content Policy is unchanged since 2017-11-15.
+- **The shelf of decks.** 74 r/EDH "32 deck" titles since 2025-01-01, up to 338 points, tracked in spreadsheets, PDFs and a fake Archidekt deck; a 319-point "too many decks" thread, a yearly review column and an archived Archidekt request to mark decks "not papered". The product commits every deck's copies and asks for every deck's missing cards forever.
+- **Events and physical play.** MagicCon artist alleys of 50 to 63 artists, 16 CommandFests in 2026; Archidekt's Artist Finder for four MagicCons and MTG Burrow's Artist Search with binder and deck tags (2026-10-26). Hareruya publishes casual store results by bracket; Scryfall's card coverage runs from 96% in German, French and Japanese to 39% in Korean.
+
+### Verified facts and corrections
+
+One load-bearing fact per new initiative was fetched once more on 20 November 2026 with the User-Agent `MagicAIBuilder/1.0 (+https://magic-ai-builder.vercel.app)`:
+
+- **I-108.** r/BudgetBrews' 2026 exchange post (Arctic Shift): "brew a complete, ready-to-play Commander deck for a fellow community member" and "between $30 and $50 USD (excluding basi[c lands and shipping])". Its title is "The Secrets of Strixhaven Secret Santa: Flashback Edition! ($50 Budget Commander Exchange)", 10 points.
+- **I-109.** "Let Me Build You a Commander Deck? (Back to School Edition)": 192 points, 523 comments (Arctic Shift snapshot).
+- **I-110.** Playgroup's cube page: "everyone builds a 60-card Commander deck from what they got, and you play those decks on Playgroup Live".
+- **I-111.** CR 903.13f in the Comprehensive Rules of 2026-11-06, verbatim, with its three exceptions.
+- **I-112.** Wizards' "Collecting Star Trek": "mythic rare (12.4%)" and "Collector Booster: $37.99".
+- **I-113.** "As a new player, I took on the 32 deck challenge…": 338 points, 100 comments (Arctic Shift snapshot).
+- **I-114.** "I had too many decks, and it was stressing me out ...": 319 points, 182 comments (Arctic Shift snapshot).
+- **I-115.** MTG Burrow's changelog: "Binder and deck tags in Artist Search."
+
+Corrections recorded where they belong:
+
+- **I-20 and the specs README.** "Propose-and-accept exists nowhere" is out of date: TappedOut offered it per card in 2012–2013 (forum testimony, current state not verified).
+- **The user guide's "Total Value".** It says "estimated value based on purchase prices entered", but the product stores Scryfall's USD price at the moment of adding; recorded on I-06, with the guide edit left as a follow-up.
+- **Two counts of the same challenge.** The R4 note counted 74 r/EDH titles with "32 deck" and the R5 note 68 with "32 deck challenge", both since 2025-01-01; both filters are named where they are cited.
+- **Mystery Booster Commander's new commanders.** Scryfall marks one such printing `booster: false` while MTGJSON places it on a booster sheet; I-112 names its source wherever they disagree.
+
+### Where the new initiatives sit
+
+I-113 and I-114 are Next after the numbered Next band: I-113's first slice reads I-60's shipped identity rule, and I-114's first slice is pure, with its second waiting for D-107. I-108, I-109, I-111 and I-115 are Later: I-111 and I-115 each have a pure first slice a person may build now. I-110 is Blocked on D-104, which would narrow the cube non-goal for a checked list only, and I-112 on D-106 and L-54. None is paid. I-111 promotes I-42's sixteenth-pass open question; I-113 merges two notes that proposed the same subject; I-109 stays apart from I-108 because it is public content addressed to strangers.
+
+### Folded back into an existing initiative
+
+| Finding | Where it went |
+| --- | --- |
+| Rule 0 exceptions the editor understands; a token-commander house rule; a player-level sheet; durable groups as D-40 evidence | I-15 |
+| A library filter inside the owner's own decks | I-01 |
+| Commander Limited as data; Duel Commander's schedule and a French source; Commander 1v1 | I-42 |
+| An exchange draw; "Draw a brief"; an event's entry rules across my decks | I-53 |
+| A deck-help session; options in a feedback question | I-08 |
+| A propose-and-accept correction; credit without a score; who may be invited | I-20 |
+| A Collector's Edition as an edition; a Secret Lair drop's cost; Wizards' MSRP | I-17, I-106 |
+| A 300-entry fixture; a note on a history batch; Tagger roles by id | I-37, I-65, I-54 |
+| Scanner evidence; photo-to-list; `share_target` | I-40 |
+| "Hide AI tools"; "Did you mean …?"; an MCP read of one's own decks; a typed client and policy; Discord sign-in | I-02, I-10, I-22, I-36, I-23 |
+| JSONL bulk and the card manifest; Spellbook's client rules; Hareruya in the register | I-67, I-09, I-29 |
+| "Total Value" corrected; paid by month; a deck's paid figure | I-06, I-59 |
+| Night policies from Hareruya; Commander Party dates | I-41 |
+| Double-faced substitutes; one bring list for several decks; an event's proxy rule; Oracle slips | I-19, I-80, I-93 |
+| A character handle; a collector-number handle; theme feasibility per commander | I-102, I-54 |
+| Story links; French feeds | I-105 |
+| Flavour descriptions in the regression set | I-14 |
+| A sticker-sheet set | I-103 |
+| A grandmaster set; Collectors' Lists as evidence | I-101 |
+| Locale coverage; a language rule's reach; a list-only handoff to a seller with no Scryfall price | I-25, I-57, I-32 |
+| Avoid lists and graduated restrictions; an age page and k-ID | I-38 |
+| "Who in my pod has this card"; product provenance; CardNexus's list filter | I-44, I-26, I-33 |
+| "Not papered"; convention box labels; notices that skip retired decks; a first deck for a child; a year of games kept by hand | I-43, I-18, I-73, I-99, I-35 |
+| EDHcheck's Discord bot; Playgroup's session API; "in N of your other decks"; "why is this card here?" from roles | I-46, I-50, I-76, I-91 |
+
+The candidates read and not promoted, and the two promotions tested and declined (Rule 0 exceptions on I-15, a private library filter on I-01), are listed in the roadmap's [nineteenth-pass section](roadmap.md#what-the-nineteenth-pass-checked-and-did-not-promote). Legal questions L-54 and L-55 and owner decisions D-104 to D-108 were added.
+
 ---
 
 ## Sources
@@ -1489,3 +1558,91 @@ Formats and card pages:
 - Draftsim, "PreDH", 27 March 2026: <https://draftsim.com/predh-mtg/>
 - EDHcheck, Smothering Tithe card page: <https://edhcheck.com/cards/smothering-tithe/>
 - Scryfall, Smothering Tithe: <https://scryfall.com/card/rna/22/smothering-tithe>
+
+### Added 20 November 2026 (nineteenth pass)
+
+All read on 20 November 2026 unless dated otherwise. Reddit scores are Arctic Shift snapshots. Search summaries are marked.
+
+Decks for someone else and build requests:
+
+- r/BudgetBrews, "The Secrets of Strixhaven Secret Santa: Flashback Edition! ($50 Budget Commander Exchange)", 16 June 2026: <https://www.reddit.com/r/BudgetBrews/comments/1u72wm4/>
+- r/EDH, "Help me build a gift deck for my girlfriend", 22 October 2026: <https://www.reddit.com/r/EDH/comments/1xck0v3/>
+- r/EDH, a playgroup's $50 exchange, 25 August 2024: <https://www.reddit.com/r/EDH/comments/1f12dsj/>
+- r/EDH, "Let Me Build You a Commander Deck? (Back to School Edition)", 15 August 2026: <https://www.reddit.com/r/EDH/comments/1vpcysz/>
+- r/EDH, "Let me build a deck for you!", 27 October 2026: <https://www.reddit.com/r/EDH/comments/1xgikli/>
+- TableCommander, social docs: <https://tablecommander.com/docs/social>
+- Archidekt, "Deck help requests", 27 July 2026: <https://archidekt.com/news/24799503>
+- TappedOut, "Level up": <https://tappedout.net/help-desk/level-up/>
+- TappedOut forum, card suggestions, 22 October 2013: <https://tappedout.net/mtg-forum/tappedout/how-do-you-get-a-good-card-suggestion/>
+- Playgroup, "The new Playgroup app and everything else since July", 4 November 2026: <https://playgroup.gg/posts/101-the-new-playgroup-app-and-everything-else-since-july>
+
+Cube, draft and sealed product:
+
+- Archidekt, feature board and "[Builder] Cube/large deck support": <https://archidekt.com/features>, <https://archidekt.com/forum/thread/2377567>
+- CubeCobra, search `category:Commander`: <https://cubecobra.com/search?q=category%3ACommander&order=pop>
+- CubeCobra wiki, cube page: <https://github.com/dekkerglen/CubeCobra/tree/master/packages/server/content/wiki/cube-page>
+- Playgroup, cube draft and Classic Commander: <https://playgroup.gg/cube-draft>, <https://playgroup.gg/cubes/classic-commander>
+- MTGO, "Introducing Commander Cube", May 2025 (search summary): <https://www.mtgo.com/news/introducing-commander-cube>
+- Wizards, Comprehensive Rules, 6 November 2026: <https://media.wizards.com/2026/downloads/MagicCompRules%2020261106.txt>
+- Wizards, Commander Limited and Commander Box League: <https://magic.wizards.com/en/formats/commander-limited>, <https://magic.wizards.com/en/play-events/commander-box-league>
+- Draftsim, "Mystery Booster Commander Edition", updated 29 August 2026: <https://draftsim.com/mtg-mystery-booster-commander-edition/>
+- r/EDH, "I made a website to match Decks with Boosters", 9 March 2025: <https://www.reddit.com/r/EDH/comments/1j7cnol/>
+- Wizards, "Collecting Magic: The Gathering | Star Trek", 20 October 2026: <https://magic.wizards.com/en/news/feature/collecting-star-trek>
+- MTGJSON, Booster Sheet model: <https://mtgjson.com/data-models/booster/booster-sheet/>
+- Grimoria, Booster Pull Rates (2.5.8) and Collectors' Lists: <https://grimoria.app/help/discovery/pull-rates>, <https://grimoria.app/help/discovery/collectors-lists>
+- Draftsim, "MTG Value Report: The Dune Secret Lair", updated 18 November 2026: <https://draftsim.com/mtg-value-report-dune-secret-lair/>
+- CardNexus changelog, 5 February and 16 July 2026: <https://feedback.cardnexus.com/changelog/freshly-sleeved-12-from-sealed-mtg-to-cyberpunk-and-curios>, <https://feedback.cardnexus.com/changelog/freshly-sleeved-21-complete-my-lists-gundam-tcg-and-public>
+
+AI, capture and integrations:
+
+- Scryfall, Tags, bulk data, card manifest and fuzzy names: <https://scryfall.com/docs/api/tags>, <https://scryfall.com/docs/api/bulk-data>, <https://scryfall.com/docs/api/cards/manifest>, <https://scryfall.com/docs/api/cards/named>
+- Commander Spellbook, API schema (v7.4.4): <https://backend.commanderspellbook.com/schema/>
+- Playgroup, OpenAPI and `llms.txt`: <https://playgroup.gg/.well-known/openapi.yaml>, <https://playgroup.gg/llms.txt>
+- EDHcheck, "EDHcheck Comes to Discord", 30 June 2026: <https://edhcheck.com/updates/discord-bot/>
+- TableCommander, getting started: <https://tablecommander.com/getting-started>
+- iTunes lookup of scanner apps: <https://itunes.apple.com/lookup?id=1546754798,6759303500,6763615089,6817541736,6751768626,6740892169,6746699358,1460407674,1247645833,1460657155,6504142186&country=us>
+- SnapDrafter, App Store: <https://apps.apple.com/ca/app/snapdrafter/id6746699358>
+- MDN, `share_target`, and WebKit bug 194593: <https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Manifest/Reference/share_target>, <https://bugs.webkit.org/show_bug.cgi?id=194593>
+- PyPI, `mtg-mcp-server`: <https://pypi.org/pypi/mtg-mcp-server/json>
+- r/EDH, "What deckbuilding website do you use and why?", 1 October 2026: <https://www.reddit.com/r/EDH/comments/1wv8mf7/>
+
+Homebrew, Rule 0 and lore (research, not legal advice):
+
+- Wizards, Fan Content Policy (last updated 15 November 2017): <https://company.wizards.com/en/legal/fancontentpolicy>
+- Commander Rules Committee, "The Silver-Bordered Project", 14 August 2024: <https://mtgcommander.net/index.php/2024/08/14/the-silver-bordered-project/>
+- r/EDH, Rule 0 commanders, 21 March 2026: <https://www.reddit.com/r/EDH/comments/1rzz0b2/>
+- Archidekt, formats API: <https://archidekt.com/api/decks/formats/>
+- Scryfall, search syntax: <https://scryfall.com/docs/syntax>
+- MTG Wiki, Copyrights: <https://mtg.wiki/page/MTG_Wiki:Copyrights>
+- Wizards, Magic Story: <https://magic.wizards.com/en/story>
+- Commander's Herald, "Proxy wars", 19 November 2022 (fetch summary): <https://commandersherald.com/proxy-wars-hasbro-strikes-back-against-their-fans/>
+- r/EDH, "Meet the… 6-7 deck", 27 January 2026: <https://www.reddit.com/r/EDH/comments/1qofupw/>
+- Stephen Tavener, Artist Commander Resources, generated 14 November 2026: <http://mrraow.com/uploads/mtgartists/artist_commander.html>
+
+Money, time and deck lifecycles:
+
+- r/EDH, "As a new player, I took on the 32 deck challenge…", 9 July 2026: <https://www.reddit.com/r/EDH/comments/1urgi9u/>
+- r/EDH, "32 Deck Challenge & Deck Theme Tracker", 2 December 2025: <https://www.reddit.com/r/EDH/comments/1pcbqia/>
+- Archidekt, deck "32 Deck Challenge": <https://archidekt.com/decks/5244386/32_deck_challenge>
+- r/EDH, "I had too many decks, and it was stressing me out ...", 11 October 2026: <https://www.reddit.com/r/EDH/comments/1x2um80/>
+- r/EDH, "Deck of the Month Challenge made me happier with my decks", 26 December 2025: <https://www.reddit.com/r/EDH/comments/1pw44ce/>
+- Card Kingdom, "Commander Class of 2025", 16 December 2025: <https://blog.cardkingdom.com/commander-class-of-2025/>
+- EDHREC, "When To Dismantle Your Commander Deck", 28 January 2026: <https://edhrec.com/articles/when-to-dismantle-your-commander-deck>
+- Archidekt forum, "[Collection] Mark decks as not part of Collection": <https://archidekt.com/forum/thread/2320932>
+- EDHREC, "What I Learned in 2025 After 311 Commander Games", 12 January 2026: <https://edhrec.com/articles/what-i-learned-in-2025-after-311-commander-games>
+- Wizards, k-ID parental consent FAQ, updated 9 February 2026: <https://secretlair-support.wizards.com/hc/en-us/articles/44174734111252-Wizards-k-ID-Parental-Consent-FAQ>
+- EchoMTG, age suitability: <https://www.echomtg.com/legal/age-suitability>
+
+Regional markets, events and physical play:
+
+- MTG Festivals, "Meet the Artists of Magic": <https://www.mtgfestivals.com/global/en-us/magiccon-news/meet-the-artists-of-magic.html>
+- EDHREC, Archidekt's MagicCon artist finder, 6 June 2025 and 8 July 2026: <https://edhrec.com/articles/archidekt-announces-new-magiccon-feature-for-searching-artists>, <https://edhrec.com/articles/archidekt-art-finder-returns-for-magiccon-amsterdam>
+- MTG Burrow, changelog: <https://mtgburrow.com/changelog>
+- magic.gg, "Announcing 2026's CommandFest lineup", 10 March 2026: <https://magic.gg/news/announcing-2026s-commandfest-lineup>
+- MagicCon Atlanta, on-demand events: <https://mcatlanta.mtgfestivals.com/en-us/magic-play/on-demand-events.html>
+- Hareruya, Omiya Commander gathering, 23 August 2026, a deck page and `robots.txt`: <https://www.hareruyamtg.com/en/events/599795/detail>, <https://www.hareruyamtg.com/en/deck/1309432/show/>, <https://www.hareruyamtg.com/robots.txt>
+- TopDeck, The Quest for a Cause: <https://topdeck.gg/event/the-quest-part-1>
+- Card Kingdom, "What Should You Bring to CommandFest?", 7 July 2022: <https://blog.cardkingdom.com/what-should-you-bring-to-commandfest/>
+- duelcommander.org: <https://duelcommander.org/>
+- Wizards, Commander 1v1: <https://magic.wizards.com/en/formats/commander-1v1>
+- Cardmarket, "What's new", September 2026: <https://www.cardmarket.com/en/Insight/Articles/whats-new-at-cardmarket-9-2026>

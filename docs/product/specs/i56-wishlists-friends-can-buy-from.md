@@ -186,6 +186,7 @@ Routes: `GET|POST /api/wishlist/items`; `PATCH|DELETE /api/wishlist/items/[id]`;
 - Several named wishlists. One wanted list with filters and two switches covers trades and gifts (1.3).
 - Accessories, sleeves and other non-Magic products, which givers often buy [14] but which no card data describes.
 - Store stock or availability. I-32 hands off; it does not list stock.
+- Added 2026-11-20 (nineteenth pass): building a whole deck for someone and handing it to their account is [I-108](i108-decks-built-for-someone-else-the-brief-and-the-handover.md)'s. This initiative keeps gifts of cards, precons and sealed products from a wanted list.
 
 ## Testing strategy
 
