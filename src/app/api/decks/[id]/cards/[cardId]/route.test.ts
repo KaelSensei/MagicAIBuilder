@@ -7,28 +7,43 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  requireDeckOwner: vi.fn(),
+  auth: vi.fn(),
   findFirst: vi.fn(),
   updateCard: vi.fn(),
   claimDeckVersion: vi.fn(),
 }));
 
-vi.mock(import("@/lib/auth/helpers"), () => ({
-  requireDeckOwner: mocks.requireDeckOwner,
-}));
+vi.mock(import("@/lib/auth/config"), () => ({ auth: mocks.auth }));
 
 vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
   const { stubPrisma } = await import("@/test/prisma-stub");
   const deckCard = { findFirst: mocks.findFirst, update: mocks.updateCard };
-  // The deck repository claims the deck's next version and reads it back in
-  // the card's transaction (lib/deck/deck-repository.ts).
+  // One lookup answers both reads of the deck: the owner check, which also
+  // reads the copy limit's format and command zone, and the deck repository,
+  // which claims the deck's next version and reads it back in the card's
+  // transaction (lib/deck/deck-repository.ts).
   const deck = {
     updateMany: mocks.claimDeckVersion,
-    findUnique: async () => ({ version: 1 }),
+    findUnique: async () => ({
+      version: 1,
+      userId: "user-1",
+      format: "commander",
+      cards: [],
+    }),
+  };
+  // The session check reads the signed-in user's row.
+  const user = {
+    findUnique: async ({ where }: { where: { id: string } }) => ({
+      id: where.id,
+      name: null,
+      email: null,
+      image: null,
+    }),
   };
   return stubPrisma(await importOriginal(), {
     deckCard,
     deck,
+    user,
     // Here the transaction runs on the same mocks; route.atomic.test.ts and
     // route.version.test.ts check what a failure or a stale version stores.
     $transaction: (
@@ -82,7 +97,7 @@ function patchRequest(body: unknown): Request {
 describe("PATCH /api/decks/[id]/cards/[cardId]", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.requireDeckOwner.mockResolvedValue({ deck: { id: "deck-1" } });
+    mocks.auth.mockResolvedValue({ user: { id: "user-1" } });
     mocks.findFirst.mockResolvedValue({ id: "card-1", deckId: "deck-1" });
     mocks.updateCard.mockResolvedValue({ id: "card-1" });
     mocks.claimDeckVersion.mockResolvedValue({ count: 1 });
@@ -144,6 +159,14 @@ describe("PATCH /api/decks/[id]/cards/[cardId]", () => {
   );
 
   it("persists a valid card quantity", async () => {
+    // A basic land: the copy limit lets a Commander deck hold any number.
+    mocks.findFirst.mockResolvedValue({
+      id: "card-1",
+      deckId: "deck-1",
+      name: "Forest",
+      typeLine: "Basic Land — Forest",
+      oracleText: "",
+    });
     const request = new Request("http://localhost/api/decks/deck-1/cards/card-1", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },

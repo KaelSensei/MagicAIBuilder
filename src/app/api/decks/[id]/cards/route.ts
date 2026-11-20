@@ -21,9 +21,10 @@ import {
   addCardRequestSchema,
   deckCardChangesSchema,
 } from "@/lib/validation/card";
-import { ownedDeck, requireAuth, requireDeckOwner } from "@/lib/auth/helpers";
+import { requireDeckOwner } from "@/lib/auth/helpers";
 import { logger } from "@/lib/logger";
 import { readJsonBody } from "@/lib/api/json-body";
+import { requireCopyRuleDeckOwner } from "@/lib/api/copy-rule-deck-owner";
 import {
   deckWriteResponse,
   readExpectedVersionQuery,
@@ -34,56 +35,14 @@ import {
   type CommandSlotIds,
 } from "@/lib/deck/commander-pairing";
 import { deckRepository } from "@/lib/deck/deck-repository";
-import { COMMAND_SLOT_ROWS } from "@/lib/deck/bulk-edit-command-zone";
 import {
   cardWithinCopyLimit,
   changesWithinCopyLimit,
-  storedCopyLimitDeck,
   type CopiesChange,
 } from "@/lib/deck/copy-limit-write";
-import type { CopyLimitCard, CopyLimitDeck } from "@/lib/deck/multiples";
+import type { CopyLimitCard } from "@/lib/deck/multiples";
 
 type Params = { params: Promise<{ id: string }> };
-
-/**
- * The ownership check of `requireDeckOwner`, whose one query also reads what
- * the copy limit needs: the deck's format and the names of the rows that fill
- * the commander and partner slots (CR 903.5e: their rulebreaker exceptions).
- * The rule costs no extra round trip.
- */
-async function requireCopyRuleDeckOwner(
-  deckId: string
-): Promise<
-  | { copyRule: CopyLimitDeck; error?: never }
-  | { copyRule?: never; error: NextResponse }
-> {
-  const auth = await requireAuth();
-  if (auth.error) return { error: auth.error };
-  const deck = await prisma.deck.findUnique({
-    where: { id: deckId },
-    select: {
-      userId: true,
-      format: true,
-      cards: {
-        where: {
-          OR: [
-            { ...COMMAND_SLOT_ROWS.commander },
-            { ...COMMAND_SLOT_ROWS.partner },
-          ],
-        },
-        select: { name: true },
-      },
-    },
-  });
-  const owned = ownedDeck(deck, auth.session.user.id);
-  if (owned.error) return { error: owned.error };
-  return {
-    copyRule: storedCopyLimitDeck({
-      format: owned.deck.format,
-      commandZoneNames: owned.deck.cards.map((card) => card.name),
-    }),
-  };
-}
 
 /**
  * The card text of the rows a bulk edit resizes, by row id: one query for the

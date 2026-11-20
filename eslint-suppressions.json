@@ -235,11 +235,6 @@
       "count": 1
     }
   },
-  "src/app/api/decks/[id]/cards/[cardId]/route.test.ts": {
-    "no-restricted-syntax": {
-      "count": 1
-    }
-  },
   "src/app/api/decks/[id]/cards/route.patch.test.ts": {
     "no-restricted-syntax": {
       "count": 1
@@ -1516,11 +1511,6 @@
     },
     "vitest/prefer-import-in-mock": {
       "count": 2
-    }
-  },
-  "src/lib/deck/store-notes-persistence.test.ts": {
-    "no-restricted-syntax": {
-      "count": 1
     }
   },
   "src/lib/deck/store.ts": {

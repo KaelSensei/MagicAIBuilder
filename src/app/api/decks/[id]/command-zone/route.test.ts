@@ -274,3 +274,62 @@ describe("PATCH /api/decks/[id]/command-zone — the body", () => {
     expect(deckCardsDb.deck().partnerId).toBeNull();
   });
 });
+
+/**
+ * The rows a command-zone change adds hold at most the copy limit, as the
+ * editor and the cards route do: each is clamped silently, and the response
+ * carries the stored rows. The browser always sends one copy; the route
+ * accepts up to 99, so the server enforces the rule.
+ */
+describe("PATCH /api/decks/[id]/command-zone — copy limit", () => {
+  /** The stored copies of `name`, one entry per row. */
+  function storedCopies(name: string): readonly number[] {
+    return deckCardsDb
+      .cards()
+      .filter((card) => card.name === name)
+      .map((card) => card.quantity);
+  }
+
+  it("stores one Atraxa row when the commander is seated with three copies", async () => {
+    const [atraxa] = SEAT_ATRAXA.addCards;
+
+    const response = await changeCommandZone({
+      ...SEAT_ATRAXA,
+      addCards: [
+        {
+          ...atraxa,
+          typeLine: "Legendary Creature — Phyrexian Angel Horror",
+          quantity: 3,
+        },
+      ],
+    });
+
+    expect(response.status).toBe(200);
+    expect(storedCopies("Atraxa, Praetors' Voice")).toEqual([1]);
+    expect(await response.json()).toMatchObject({
+      cards: [expect.objectContaining({ quantity: 1 })],
+    });
+  });
+
+  it("keeps thirty Relentless Rats, whose text allows any number", async () => {
+    const response = await changeCommandZone({
+      removeCardIds: [],
+      clearCommandSlots: [],
+      addCards: [
+        {
+          scryfallId: "44444444-4444-4444-8444-444444444444",
+          name: "Relentless Rats",
+          typeLine: "Creature — Rat",
+          oracleText:
+            "Relentless Rats gets +1/+1 for each other creature on the battlefield named Relentless Rats.\nA deck can have any number of cards named Relentless Rats.",
+          category: "creature",
+          quantity: 30,
+        },
+      ],
+      commandZone: {},
+    });
+
+    expect(response.status).toBe(200);
+    expect(storedCopies("Relentless Rats")).toEqual([30]);
+  });
+});
