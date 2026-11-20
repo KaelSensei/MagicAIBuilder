@@ -1,6 +1,96 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { useToastStore, useToast } from "./useToast";
+
+/** Dismisses every toast through the store, so no auto-close timer outlives its test. */
+function dismissAll(): void {
+  const { toasts, remove } = useToastStore.getState();
+  for (const toast of toasts) remove(toast.id);
+}
+
+afterEach(() => {
+  dismissAll();
+  vi.useRealTimers();
+});
+
+/** The messages the store holds. */
+function storedMessages(): readonly unknown[] {
+  return useToastStore.getState().toasts.map((toast) => toast.message);
+}
+
+describe("useToastStore — reading time", () => {
+  beforeEach(() => {
+    useToastStore.setState({ toasts: [] });
+    vi.useFakeTimers();
+  });
+
+  it.each(["success", "info", "warning"] as const)(
+    "closes a %s toast after eight seconds, not before",
+    (type) => {
+      useToastStore.getState().add(type, "Read me");
+
+      vi.advanceTimersByTime(7_999);
+      expect(storedMessages()).toEqual(["Read me"]);
+
+      vi.advanceTimersByTime(1);
+      expect(storedMessages()).toEqual([]);
+    }
+  );
+
+  it("keeps an error toast until the player dismisses it", () => {
+    useToastStore.getState().add("error", "Save failed");
+
+    vi.advanceTimersByTime(60_000);
+
+    expect(storedMessages()).toEqual(["Save failed"]);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("leaves no timer running once a toast is dismissed", () => {
+    useToastStore.getState().add("success", "Deck saved");
+    const [toast] = useToastStore.getState().toasts;
+
+    useToastStore.getState().remove(toast.id);
+
+    expect(storedMessages()).toEqual([]);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("does not close a held toast, and gives it a fresh eight seconds once released", () => {
+    useToastStore.getState().add("info", "Undo applied");
+    const [toast] = useToastStore.getState().toasts;
+    vi.advanceTimersByTime(5_000);
+
+    useToastStore.getState().hold(toast.id);
+    vi.advanceTimersByTime(30_000);
+    expect(storedMessages()).toEqual(["Undo applied"]);
+
+    useToastStore.getState().release(toast.id);
+    vi.advanceTimersByTime(7_999);
+    expect(storedMessages()).toEqual(["Undo applied"]);
+    vi.advanceTimersByTime(1);
+    expect(storedMessages()).toEqual([]);
+  });
+
+  it("starts no timer when a toast already removed is released", () => {
+    useToastStore.getState().add("success", "Deck saved");
+    const [toast] = useToastStore.getState().toasts;
+    useToastStore.getState().remove(toast.id);
+
+    useToastStore.getState().release(toast.id);
+
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("closes each of two toasts raised together on its own timer", () => {
+    useToastStore.getState().add("error", "Save failed");
+    useToastStore.getState().add("success", "Deck saved");
+
+    vi.advanceTimersByTime(8_000);
+
+    expect(storedMessages()).toEqual(["Save failed"]);
+  });
+});
 
 describe("useToastStore", () => {
   beforeEach(() => {
