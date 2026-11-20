@@ -6,8 +6,8 @@
  * per case.
  *
  * `SnapshotStore`: a deck is read with its saved card rows; a stored
- * snapshot reads back whole; the list is newest first and holds only that
- * deck's snapshots; a snapshot is never found through another deck; a delete
+ * snapshot reads back whole; the list is newest first, holds only that
+ * deck's snapshots, and carries each one's card list; a snapshot is never found through another deck; a delete
  * removes it; a card replacement leaves exactly the new rows.
  * `DeckVersionStore`: the saved rows read back; the recent snapshots are
  * newest first, that deck's only, and at most `limit`; a created snapshot is
@@ -15,8 +15,7 @@
  * `prisma-snapshot-store.test.ts`.
  *
  * What it leaves to the routes' suites: the exact Prisma arguments, such as
- * the history list leaving out the card list, which the in-memory Prisma
- * tables ignore.
+ * the history list's `select`, which the in-memory Prisma tables ignore.
  *
  * @module deck/testing/snapshot-store-contract
  */
@@ -135,6 +134,23 @@ export const SNAPSHOT_STORE_CONTRACT_CASES: readonly SnapshotStoreContractCase[]
         expect(listed.map((snapshot) => snapshot.name)).toEqual([
           "Second",
           "First",
+        ]);
+      },
+    },
+    {
+      name: "lists each snapshot with its stored card list and stored count",
+      deckCards: [SOL_RING],
+      run: async ({ deckId, snapshots }) => {
+        await snapshots.create(
+          newSnapshot(deckId, "Before", [SOL_RING, FORESTS])
+        );
+
+        const [listed] = await snapshots.listSummaries(deckId);
+
+        expect(listed?.cardCount).toBe(2);
+        expect(names(restoredDeckCards(deckId, listed?.cardList))).toEqual([
+          "Sol Ring",
+          "Forest",
         ]);
       },
     },

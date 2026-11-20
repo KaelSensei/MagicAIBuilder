@@ -48,6 +48,11 @@ const deckSnapshot = z.strictObject({
   id: z.string(),
   name: z.string(),
   commander: z.string().nullable(),
+  /**
+   * The cards the snapshot holds, counted as the deck list counts them: every
+   * main-zone copy plus the commander and partner. The stored number when the
+   * card list cannot be read.
+   */
   cardCount: z.number().int(),
   /** The card list exactly as the snapshot stored it (a JSON column). */
   cardList: z.unknown(),

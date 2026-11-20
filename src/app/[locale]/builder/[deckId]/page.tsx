@@ -1198,7 +1198,7 @@ export default function BuilderPage() {
 
             <SnapshotsPanel
               deckId={deckId}
-              currentCardCount={deck.cards.length}
+              currentDeck={deck}
               onRestore={handleSnapshotRestore}
             />
 

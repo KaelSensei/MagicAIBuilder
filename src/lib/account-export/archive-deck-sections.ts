@@ -11,6 +11,7 @@
 import type { AccountArchive } from "./archive-schema";
 import type { AccountRows, RowOf } from "./account-row-selects";
 import { deckPlainText } from "./deck-plain-text";
+import { snapshotCardCopies } from "@/lib/deck/snapshot-card-count";
 
 /** @returns the rows grouped by the id of the row that owns them */
 function groupBy<Item>(
@@ -79,6 +80,12 @@ function deckCardOf(
   };
 }
 
+/**
+ * @param snapshot - One stored snapshot of the deck.
+ * @returns The snapshot as the archive carries it; `cardCount` counts its
+ *   card list as the history list does (`snapshotCardCopies`), so a snapshot
+ *   saved when the column held its row count exports its copies.
+ */
 function snapshotOf(
   snapshot: RowOf<"snapshots">
 ): AccountArchive["decks"][number]["snapshots"][number] {
@@ -86,7 +93,7 @@ function snapshotOf(
     id: snapshot.id,
     name: snapshot.name,
     commander: snapshot.commander,
-    cardCount: snapshot.cardCount,
+    cardCount: snapshotCardCopies(snapshot.deckId, snapshot),
     cardList: snapshot.cardList,
     createdAt: snapshot.createdAt.toISOString(),
   };
