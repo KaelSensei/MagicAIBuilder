@@ -13,21 +13,32 @@
  */
 import "server-only";
 import { z } from "zod";
-import type { Combo } from "@/modules/combos/domain/combo";
+import type {
+  Combo,
+  ComboBracketTag,
+  ComboZone,
+} from "@/modules/combos/domain/combo";
 
 const namedSchema = z.object({ name: z.string() });
 
 /** The fields of Spellbook's `Variant` this app reads; every one is required by its schema. */
 export const spellbookVariantSchema = z.object({
   id: z.string(),
-  uses: z.array(z.object({ card: namedSchema })),
+  uses: z.array(
+    z.object({ card: namedSchema, zoneLocations: z.array(z.string()) })
+  ),
   requires: z.array(z.object({ template: namedSchema })),
-  produces: z.array(z.object({ feature: namedSchema })),
+  produces: z.array(
+    z.object({ feature: z.object({ name: z.string(), status: z.string() }) })
+  ),
   description: z.string(),
   notes: z.string(),
   easyPrerequisites: z.string(),
   notablePrerequisites: z.string(),
   manaNeeded: z.string(),
+  manaValueNeeded: z.number().int().nonnegative(),
+  // Letters stay strings here: a letter Spellbook adds later must not fail the whole lookup.
+  bracketTag: z.string(),
 });
 
 /** Spellbook's wire shape for one combo variant. It stays inside `infrastructure/`. */
@@ -55,6 +66,42 @@ function readsAsInfinite(effects: readonly string[]): boolean {
     const lower = effect.toLowerCase();
     return INFINITE_KEYWORDS.some((keyword) => lower.includes(keyword));
   });
+}
+
+/** Spellbook's `FeatureStatusEnum` letter for a Standalone result: "a standalone, probably impactful effect". */
+const STANDALONE_STATUS = "S";
+
+/** Spellbook's `ZoneLocationsEnum` letters (schema API 7.4.4, read 2026-11-20). */
+const ZONE_BY_LETTER: ReadonlyMap<string, ComboZone> = new Map([
+  ["H", "hand"],
+  ["B", "battlefield"],
+  ["C", "commandZone"],
+  ["E", "exile"],
+  ["G", "graveyard"],
+  ["L", "library"],
+]);
+
+/** Spellbook's `BracketTagEnum` letters (schema API 7.4.4, read 2026-11-20). */
+const BRACKET_TAG_BY_LETTER: ReadonlyMap<string, ComboBracketTag> = new Map([
+  ["R", "ruthless"],
+  ["S", "spicy"],
+  ["P", "powerful"],
+  ["O", "oddball"],
+  ["C", "core"],
+  ["E", "exhibition"],
+  ["B", "banned"],
+]);
+
+/** The zones each named card starts in; a letter this app does not know is skipped. */
+function startZones(
+  uses: SpellbookVariant["uses"]
+): Readonly<Record<string, readonly ComboZone[]>> {
+  return Object.fromEntries(
+    uses.map((used) => [
+      used.card.name,
+      used.zoneLocations.flatMap((letter) => ZONE_BY_LETTER.get(letter) ?? []),
+    ])
+  );
 }
 
 /** Spellbook writes one prerequisite per line. */
@@ -85,6 +132,10 @@ function comboDescription(
  * - `prerequisites.conditions`: the notable prerequisites, then the easy ones,
  *   one per non-blank line, each once.
  * - `isInfinite`: see `readsAsInfinite`.
+ * - `startZones`: each card's `zoneLocations`, by name, skipping unknown letters.
+ * - `standaloneResults`: the effects whose feature status is Standalone.
+ * - `bracketTag`: Spellbook's tag by name, `null` for a letter added after
+ *   API 7.4.4, so a new tag never fails the lookup.
  *
  * @param variant - a variant Spellbook sent, already validated by `spellbookVariantSchema`
  */
@@ -107,5 +158,11 @@ export function toCombo(variant: SpellbookVariant): Combo {
       conditions: [...conditions],
       manaNeeded: variant.manaNeeded.trim(),
     },
+    startZones: startZones(variant.uses),
+    standaloneResults: variant.produces
+      .filter((produced) => produced.feature.status === STANDALONE_STATUS)
+      .map((produced) => produced.feature.name),
+    manaValueNeeded: variant.manaValueNeeded,
+    bracketTag: BRACKET_TAG_BY_LETTER.get(variant.bracketTag) ?? null,
   };
 }

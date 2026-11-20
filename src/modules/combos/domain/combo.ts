@@ -22,6 +22,42 @@ export interface ComboPrerequisites {
   readonly manaNeeded: string;
 }
 
+/**
+ * The zones a combo piece can start in, as Spellbook's `zoneLocations` names
+ * them (CR 400.1, plus the command zone, CR 408). I-65 reads them to attach
+ * graveyard and exile answers to a route (requirement 7.2).
+ */
+export const COMBO_ZONES = [
+  "hand",
+  "battlefield",
+  "commandZone",
+  "exile",
+  "graveyard",
+  "library",
+] as const;
+
+/** One of {@link COMBO_ZONES}. */
+export type ComboZone = (typeof COMBO_ZONES)[number];
+
+/**
+ * Commander Spellbook's own bracket tag for a combo, from its `BracketTagEnum`
+ * (https://backend.commanderspellbook.com/schema/, API 7.4.4, read 2026-11-20).
+ * It is Spellbook's label, not this app's bracket estimate: I-65 shows it
+ * beside a route, and I-03 owns the estimate.
+ */
+export const COMBO_BRACKET_TAGS = [
+  "ruthless",
+  "spicy",
+  "powerful",
+  "oddball",
+  "core",
+  "exhibition",
+  "banned",
+] as const;
+
+/** One of {@link COMBO_BRACKET_TAGS}. */
+export type ComboBracketTag = (typeof COMBO_BRACKET_TAGS)[number];
+
 /** One combo the deck can assemble: the cards, what they do, and what else they need. */
 export interface Combo {
   /** Spellbook's variant id, which also names its page on commanderspellbook.com. */
@@ -36,6 +72,21 @@ export interface Combo {
   readonly isInfinite: boolean;
   /** What else the combo needs before it works. */
   readonly prerequisites: ComboPrerequisites;
+  /**
+   * The zones each named card must start in, keyed by its name in `cards`;
+   * several zones mean any one of them.
+   */
+  readonly startZones: Readonly<Record<string, readonly ComboZone[]>>;
+  /**
+   * The effects Spellbook marks Standalone, a notable result on its own, in
+   * Spellbook's order. Empty for an engine, such as infinite mana that another
+   * combo consumes (I-65 requirement 2.5); `comboResultKind` reads each one.
+   */
+  readonly standaloneResults: readonly string[];
+  /** Total mana value of the pieces to cast, by Spellbook's count; I-65's speed band reads it. */
+  readonly manaValueNeeded: number;
+  /** Spellbook's bracket tag, or `null` when it sent a tag this app does not know. */
+  readonly bracketTag: ComboBracketTag | null;
 }
 
 /**
