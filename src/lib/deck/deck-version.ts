@@ -15,6 +15,7 @@ import type { Prisma } from "@prisma/client";
 
 import { toJsonPayload } from "@/lib/db/json-payload";
 import { restoredDeckCards } from "./snapshot-restore";
+import { countStoredCardCopies } from "./stored-card-count";
 
 /** The card columns that decide whether two deck lists play the same. */
 export interface DeckVersionCard {
@@ -31,16 +32,25 @@ export interface VersionedSnapshot {
   readonly cardList: unknown;
 }
 
+/**
+ * A saved card row as snapshot capture reads it: the version columns, plus the
+ * category that marks a companion, which the card count leaves out.
+ */
+export interface CapturableCard extends DeckVersionCard {
+  readonly category: string;
+}
+
 /** A deck as snapshot capture reads it: its saved card rows and commander id. */
 export interface CapturableDeck {
   readonly commanderId: string | null;
-  readonly cards: readonly DeckVersionCard[];
+  readonly cards: readonly CapturableCard[];
 }
 
 /** The columns of a new `DeckSnapshot` that describe its card list. */
 export interface SnapshotContent {
   readonly cardList: Prisma.InputJsonValue;
   readonly commander: string | null;
+  /** The cards the deck holds, counted by `countStoredCardCopies`. */
   readonly cardCount: number;
 }
 
@@ -130,8 +140,11 @@ export function findSnapshotOfVersion(
  * The whole card row is stored, not only the version fields, so a restore can
  * rebuild printings, categories and notes: pass the full `DeckCard` rows.
  *
+ * The card count follows `countStoredCardCopies`, the rule of the deck list
+ * and the title bar: 30 Forests in one row count 30.
+ *
  * @param deck - The deck with its saved card rows.
- * @returns The card list, commander label and row count for `deckSnapshot.create`.
+ * @returns The card list, commander label and card count for `deckSnapshot.create`.
  */
 export function snapshotContent(deck: CapturableDeck): SnapshotContent {
   const commanderCard = deck.cards.find((card) => card.isCommander);
@@ -140,6 +153,6 @@ export function snapshotContent(deck: CapturableDeck): SnapshotContent {
     cardList: toJsonPayload(deck.cards),
     commander:
       commanderCard?.name ?? partnerCard?.name ?? deck.commanderId ?? null,
-    cardCount: deck.cards.length,
+    cardCount: countStoredCardCopies(deck.cards),
   };
 }

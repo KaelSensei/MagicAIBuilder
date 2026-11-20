@@ -11,7 +11,7 @@
  *
  * @module deck/testing/in-memory-snapshot-store
  */
-import type { DeckVersionCard } from "@/lib/deck/deck-version";
+import type { CapturableCard } from "@/lib/deck/deck-version";
 import type {
   DeckVersionStore,
   DeckWithCards,
@@ -36,13 +36,13 @@ export interface InMemorySnapshotStore {
   readonly snapshots: SnapshotStore;
   readonly versions: DeckVersionStore;
   /** Replaces the deck's saved card rows, as an edit in the builder would. */
-  readonly saveCards: (cards: readonly DeckVersionCard[]) => void;
+  readonly saveCards: (cards: readonly CapturableCard[]) => void;
   /** Deletes the deck, as another tab could between two requests. */
   readonly deleteDeck: () => void;
   /** @returns every stored snapshot, oldest first */
   readonly storedSnapshots: () => readonly StoredSnapshot[];
   /** @returns the deck's saved card rows */
-  readonly savedCards: () => readonly DeckVersionCard[];
+  readonly savedCards: () => readonly CapturableCard[];
 }
 
 /**
@@ -55,7 +55,7 @@ export interface InMemorySnapshotStore {
  */
 export function inMemorySnapshotStore(
   deck: InMemoryDeck,
-  cards: readonly DeckVersionCard[]
+  cards: readonly CapturableCard[]
 ): InMemorySnapshotStore {
   let savedCards = cards;
   let deckExists = true;
@@ -91,7 +91,7 @@ export function inMemorySnapshotStore(
 
   const replaceCards = (
     deckId: string,
-    restored: readonly DeckVersionCard[]
+    restored: readonly CapturableCard[]
   ): void => {
     if (deckId === deck.id) savedCards = [...restored];
   };
@@ -100,11 +100,12 @@ export function inMemorySnapshotStore(
     listSummaries: (deckId) =>
       Promise.resolve(
         newestFirst(deckId).map(
-          ({ id, name, commander, cardCount, createdAt }) => ({
+          ({ id, name, commander, cardCount, cardList, createdAt }) => ({
             id,
             name,
             commander,
             cardCount,
+            cardList: structuredClone(cardList),
             createdAt,
           })
         )

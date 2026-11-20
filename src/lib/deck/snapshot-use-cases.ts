@@ -14,9 +14,11 @@
  */
 import { snapshotContent } from "@/lib/deck/deck-version";
 import { sanitizeDisplayName } from "@/lib/deck/display-name";
+import { snapshotCardCopies } from "@/lib/deck/snapshot-card-count";
 import { restoredDeckCards } from "@/lib/deck/snapshot-restore";
 import type {
   DeckWithCards,
+  ListedSnapshot,
   SnapshotStore,
   SnapshotSummary,
   StoredSnapshot,
@@ -77,6 +79,25 @@ export interface SnapshotUseCases {
 }
 
 /**
+ * The history row of a listed snapshot: its card list left out, its card
+ * count read from that list, so a snapshot saved when the stored count was
+ * its rows reads its copies.
+ *
+ * @param deckId - The deck that owns the snapshot.
+ * @param snapshot - The snapshot as the store lists it.
+ * @returns The summary the history list shows.
+ */
+function summaryOf(deckId: string, snapshot: ListedSnapshot): SnapshotSummary {
+  return {
+    id: snapshot.id,
+    name: snapshot.name,
+    commander: snapshot.commander,
+    cardCount: snapshotCardCopies(deckId, snapshot),
+    createdAt: snapshot.createdAt,
+  };
+}
+
+/**
  * Binds the snapshot use cases to a store.
  *
  * @param store - The snapshot store; the server passes the Prisma one.
@@ -84,7 +105,10 @@ export interface SnapshotUseCases {
  */
 export function makeSnapshotUseCases(store: SnapshotStore): SnapshotUseCases {
   return {
-    listSnapshots: (deckId) => store.listSummaries(deckId),
+    async listSnapshots(deckId) {
+      const listed = await store.listSummaries(deckId);
+      return listed.map((snapshot) => summaryOf(deckId, snapshot));
+    },
 
     async saveSnapshot({ deckId, rawName }) {
       const name = sanitizeDisplayName(rawName, MAX_SNAPSHOT_NAME_LENGTH);
