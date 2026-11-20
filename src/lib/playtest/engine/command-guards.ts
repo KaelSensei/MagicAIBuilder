@@ -117,29 +117,27 @@ const inLog = (state: PlaytestEngine, entryId: number): boolean =>
   state.actionLog.some((entry) => entry.id === entryId);
 const isBlank = (text: string): boolean => text.trim() === "";
 
+/** The state field that holds each zone's cards; the command zone is the only renamed one. */
+const ZONE_FIELD: Readonly<
+  Record<
+    CardZone,
+    "hand" | "library" | "battlefield" | "graveyard" | "exile" | "commandZone"
+  >
+> = {
+  hand: "hand",
+  library: "library",
+  battlefield: "battlefield",
+  graveyard: "graveyard",
+  exile: "exile",
+  command: "commandZone",
+};
+
 /** The cards of one zone, as `applyMoveToZone` looks the moved card up. */
 function zoneCards(
   state: PlaytestEngine,
   zone: CardZone
 ): readonly { readonly id: string }[] {
-  switch (zone) {
-    case "hand":
-      return state.hand;
-    case "library":
-      return state.library;
-    case "battlefield":
-      return state.battlefield;
-    case "graveyard":
-      return state.graveyard;
-    case "exile":
-      return state.exile;
-    case "command":
-      return state.commandZone;
-    default: {
-      const exhaustive: never = zone;
-      return exhaustive;
-    }
-  }
+  return state[ZONE_FIELD[zone]];
 }
 
 // ─── The table ────────────────────────────────────────────────────────────
@@ -189,6 +187,8 @@ export const PLAYTEST_COMMAND_GUARDS: Readonly<
   ],
   nextPhase: [whileChoosingBottom],
   nextTurn: [whileChoosingBottom],
+  // CR 701.24c, 701.24d: an empty library is still shuffled, so only the bottom choice blocks.
+  shuffleLibrary: [whileChoosingBottom],
   damage: [
     whileChoosingBottom,
     // CR 107.1b: no one deals negative damage, so it must not become a life gain.

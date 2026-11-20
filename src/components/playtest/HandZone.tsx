@@ -7,6 +7,7 @@ import { CARD_BACK_URL } from "@/lib/scryfall/images";
 import { PlaytestCardImage } from "@/components/playtest/PlaytestCardImage";
 import type { DeckCard } from "@/lib/deck/types";
 import { useLocalizeDeckCard } from "@/components/card/LocalizedDeckTextContext";
+import { playtestCardAttributes } from "@/components/playtest/key-targets";
 import {
   MulliganBottomChoice,
   type BottomChoiceRequest,
@@ -101,7 +102,11 @@ export function HandZone({
               {hand.map((card) => {
                 const view = localize(card);
                 return (
-                <div key={card.id} className="relative">
+                <div
+                  key={card.id}
+                  className="relative"
+                  {...playtestCardAttributes(card.id, "hand")}
+                >
                   <button
                     type="button"
                     onClick={() => handleCardClick(card)}

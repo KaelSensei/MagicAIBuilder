@@ -32,6 +32,7 @@ import { DrawProgressEvidence } from "@/components/playtest/DrawProgressEvidence
 import { OpeningHandEvidence } from "@/components/playtest/OpeningHandEvidence";
 import { DiceRoller } from "@/components/playtest/DiceRoller";
 import { PlaytestActionLog } from "@/components/playtest/PlaytestActionLog";
+import { PlaytestKeys } from "@/components/playtest/PlaytestKeys";
 import { LocalizedDeckTextProvider } from "@/components/card/LocalizedDeckTextContext";
 import { analyzeEngineDrawProgress } from "@/lib/playtest/draw-progress-evidence";
 import { buildTokenLibrary } from "@/lib/deck/token-library";
@@ -256,6 +257,7 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
                 }
               />
             )}
+            <PlaytestKeys />
             <button
               type="button"
               onClick={handleClose}

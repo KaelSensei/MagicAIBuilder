@@ -8,6 +8,19 @@ import { PlaytestCardImage } from "@/components/playtest/PlaytestCardImage";
 import type { BattlefieldCard } from "@/lib/playtest/engine";
 import { useLocalizeDeckCard } from "@/components/card/LocalizedDeckTextContext";
 import type { TokenLibraryEntry } from "@/lib/deck/token-library";
+import { playtestCardAttributes } from "@/components/playtest/key-targets";
+
+/**
+ * The data attributes of one permanent: its test id, whether it is tapped, and the marker the
+ * playtest's move keys find the focused card by.
+ */
+function permanentAttributes(card: BattlefieldCard) {
+  return {
+    "data-testid": `battlefield-card-${card.id}`,
+    "data-tapped": card.tapped ? "true" : "false",
+    ...playtestCardAttributes(card.id, "battlefield"),
+  };
+}
 
 interface BattlefieldZoneProps {
   readonly battlefield: readonly BattlefieldCard[];
@@ -73,8 +86,7 @@ export function BattlefieldZone({
           return (
           <div
             key={card.id}
-            data-testid={`battlefield-card-${card.id}`}
-            data-tapped={card.tapped ? "true" : "false"}
+            {...permanentAttributes(card)}
             className={cn(
               "relative bg-[var(--surface-hover)] rounded-lg overflow-hidden border border-[var(--border)] transition-all",
               card.tapped && "opacity-70 rotate-6"
