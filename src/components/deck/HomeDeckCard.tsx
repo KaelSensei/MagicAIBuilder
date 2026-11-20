@@ -4,11 +4,12 @@ import Image from "next/image";
 import { Link } from "@/i18n/navigation";
 import { useMemo } from "react";
 import { useFormatter, useTranslations } from "next-intl";
-import { Clock, Copy, Loader2, Trash2 } from "lucide-react";
+import { Clock } from "lucide-react";
 import { deckSizeRuleInFormat, formatDeckCount } from "@/lib/deck/deck-size";
 import { deckCardCount } from "@/lib/deck/store-factories";
 import type { Deck } from "@/lib/deck/types";
 import { normalizeScryfallImageUrl } from "@/lib/scryfall/images";
+import { DeckCardActions } from "./DeckCardActions";
 
 interface HomeDeckCardProps {
   readonly deck: Deck;
@@ -76,6 +77,15 @@ function getDeckManaSymbolUrl(color: HomeDeckManaColor): string {
   return `https://svgs.scryfall.io/card-symbols/${color}.svg`;
 }
 
+/**
+ * One deck on `/decks`: its name links to the builder, and the card around it
+ * shows the commander art, the counter, the bracket and the colour pips.
+ *
+ * @param props.onDelete Called with the click and the deck id; never navigates.
+ * @param props.onDuplicate Called with the click and the deck id; never navigates.
+ * @param props.deletingId The deck whose deletion is in flight, if any.
+ * @param props.duplicatingId The deck whose duplication is in flight, if any.
+ */
 export function HomeDeckCard({
   deck,
   onDelete,
@@ -96,10 +106,13 @@ export function HomeDeckCard({
   const rule = deckSizeRuleInFormat(deck);
   const counter = formatDeckCount(deckCardCount(deck), rule, " / ");
 
+  // The link wraps the deck name only and stretches over the card through its
+  // ::after box, so a click anywhere outside the actions still opens the deck;
+  // the actions are its siblings (WCAG 4.1.2). The wrapper draws the link's
+  // focus ring around the whole card.
   return (
-    <Link
-      href={`/builder/${deck.id}`}
-      className="group relative block h-full min-h-48 overflow-hidden rounded-[var(--lumen-radius-xl)] border border-[var(--border)] shadow-[var(--lumen-shadow-sm)] transition-[border-color,box-shadow,transform] hover:-translate-y-0.5 hover:border-[var(--accent)] hover:shadow-[var(--lumen-shadow-md)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]"
+    <div
+      className="group relative h-full min-h-48 overflow-hidden rounded-[var(--lumen-radius-xl)] border border-[var(--border)] shadow-[var(--lumen-shadow-sm)] transition-[border-color,box-shadow,transform] hover:-translate-y-0.5 hover:border-[var(--accent)] hover:shadow-[var(--lumen-shadow-md)] has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-[var(--accent)] has-[a:focus-visible]:ring-offset-2 has-[a:focus-visible]:ring-offset-[var(--background)]"
       style={
         hasArt
           ? {
@@ -112,47 +125,23 @@ export function HomeDeckCard({
       data-testid="deck-card"
     >
       <div
-        className={`relative flex h-full flex-col p-5 ${
+        className={`flex h-full flex-col p-5 ${
           hasArt
             ? "bg-gradient-to-t from-black/90 via-black/60 to-black/20"
             : "bg-[var(--surface)] group-hover:bg-[var(--surface-hover)]"
         }`}
       >
-        <div className="absolute right-3 top-3 flex items-center gap-1">
-          <button
-            type="button"
-            onClick={(e) => onDuplicate(e, deck.id)}
-            disabled={duplicatingId === deck.id}
-            className="rounded-[var(--lumen-radius-pill)] p-1 text-[var(--text-secondary)] opacity-0 transition-opacity hover:bg-[var(--accent)]/20 hover:text-[var(--accent-text)] focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] group-hover:opacity-100 group-focus-within:opacity-100 disabled:opacity-60"
-            aria-label={t("card.duplicate", { name: deck.name })}
-          >
-            {duplicatingId === deck.id ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <Copy className="h-3.5 w-3.5" />
-            )}
-          </button>
-          <button
-            type="button"
-            onClick={(e) => onDelete(e, deck.id)}
-            disabled={deletingId === deck.id}
-            className="rounded-[var(--lumen-radius-pill)] p-1 text-[var(--text-secondary)] opacity-0 transition-opacity hover:bg-red-500/20 hover:text-red-400 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] group-hover:opacity-100 group-focus-within:opacity-100 disabled:opacity-60"
-            aria-label={t("card.delete", { name: deck.name })}
-          >
-            {deletingId === deck.id ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <Trash2 className="h-3.5 w-3.5" />
-            )}
-          </button>
-        </div>
-
         <div data-testid="deck-identity" className="space-y-2 pr-14">
           <div className="flex items-start justify-between">
             <h3
               className={`truncate pr-2 text-base font-semibold ${textPrimary}`}
             >
-              {deck.name}
+              <Link
+                href={`/builder/${deck.id}`}
+                className="after:absolute after:inset-0 focus-visible:outline-none"
+              >
+                {deck.name}
+              </Link>
             </h3>
             <div className="flex shrink-0 items-center gap-1.5">
               {deck.isAIGenerated && (
@@ -228,6 +217,14 @@ export function HomeDeckCard({
           </div>
         </div>
       </div>
-    </Link>
+
+      <DeckCardActions
+        deck={deck}
+        onDelete={onDelete}
+        onDuplicate={onDuplicate}
+        isDeleting={deletingId === deck.id}
+        isDuplicating={duplicatingId === deck.id}
+      />
+    </div>
   );
 }
