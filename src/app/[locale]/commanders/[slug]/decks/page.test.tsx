@@ -9,13 +9,19 @@ import { screen } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { renderWithIntl } from "@/test/render-with-intl";
 
-const { mockDeckFindMany, mockQueryRaw, mockUnstableCache, mockAuth } =
-  vi.hoisted(() => ({
-    mockDeckFindMany: vi.fn(),
-    mockQueryRaw: vi.fn(),
-    mockUnstableCache: vi.fn(),
-    mockAuth: vi.fn(),
-  }));
+const {
+  mockDeckFindMany,
+  mockQueryRaw,
+  mockGroupBy,
+  mockUnstableCache,
+  mockAuth,
+} = vi.hoisted(() => ({
+  mockDeckFindMany: vi.fn(),
+  mockQueryRaw: vi.fn(),
+  mockGroupBy: vi.fn(),
+  mockUnstableCache: vi.fn(),
+  mockAuth: vi.fn(),
+}));
 
 type UnstableCache = typeof unstable_cache;
 
@@ -27,6 +33,7 @@ vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
   const { stubPrisma } = await import("@/test/prisma-stub");
   return stubPrisma(await importOriginal(), {
     deck: { findMany: mockDeckFindMany },
+    deckCard: { groupBy: mockGroupBy },
     $queryRaw: mockQueryRaw,
   });
 });
@@ -58,6 +65,10 @@ vi.mock(
 
 import { ANONYMOUS_READ_REVALIDATE_SECONDS } from "@/lib/community/anonymous-read-cache";
 import { logger } from "@/lib/logger";
+import {
+  deckCardGroupByFake,
+  storedHundredCardDeck,
+} from "@/test/deck-card-group-by-fake";
 import CommanderDecksPage, { generateMetadata } from "./page";
 
 const ATRAXA = "Atraxa, Praetors' Voice";
@@ -75,7 +86,6 @@ function atraxaDeck(votes: readonly { userId: string; value: number }[] = []) {
     cards: [{ name: ATRAXA, imageUri: "", artCropUri: "" }],
     votes: votes.map((vote) => ({ ...vote, deckId: "deck-1" })),
     ratings: [],
-    _count: { cards: 100 },
   };
 }
 
@@ -102,12 +112,14 @@ async function renderListing(slug: string): Promise<void> {
 
 beforeEach(() => {
   mockAuth.mockResolvedValue(null);
+  mockGroupBy.mockImplementation(deckCardGroupByFake([]).groupBy);
 });
 
 afterEach(() => {
   for (const mock of [
     mockDeckFindMany,
     mockQueryRaw,
+    mockGroupBy,
     mockUnstableCache,
     mockAuth,
   ]) {
@@ -129,6 +141,19 @@ it("renders the listing with no HTTP server and no NEXT_PUBLIC_APP_URL", async (
   expect(
     screen.getByRole("link", { name: "Atraxa Superfriends" })
   ).toBeInTheDocument();
+});
+
+// CR 903.5a: a Commander deck is 100 cards, its commander included. Thirty
+// Forests are one stored row, so a row count read the deck as 74 cards.
+it("a commander page lists a deck with 30 Forests in one row as 100 cards", async () => {
+  mockGroupBy.mockImplementation(
+    deckCardGroupByFake(storedHundredCardDeck("deck-1")).groupBy
+  );
+  stubMatch([atraxaDeck()]);
+
+  await renderListing(ATRAXA_SLUG);
+
+  expect(screen.getByText("Builder · 100 cards")).toBeInTheDocument();
 });
 
 it("renders the empty state for a commander nobody has published a deck for", async () => {

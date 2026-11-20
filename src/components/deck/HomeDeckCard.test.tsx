@@ -122,6 +122,31 @@ describe("HomeDeckCard", () => {
     expect(screen.getByTestId("deck-status")).toHaveTextContent("100 / 100 cards");
   });
 
+  // CR 100.2a: a constructed deck holds at least 60 cards and has no maximum.
+  it("a Modern deck of 63 cards reads 63 / 60+ on its grid card", () => {
+    const deck = aDeck({
+      format: "modern",
+      cards: [
+        aDeckCard({ id: "forest", name: "Forest", quantity: 23 }),
+        aDeckCard({ id: "bolt", name: "Lightning Bolt", quantity: 40 }),
+      ],
+    });
+
+    renderWithIntl(
+      <HomeDeckCard
+        deck={deck}
+        onDelete={vi.fn()}
+        onDuplicate={vi.fn()}
+        deletingId={null}
+        duplicatingId={null}
+      />
+    );
+
+    expect(screen.getByTestId("deck-status")).toHaveTextContent(
+      "63 / 60+ cards"
+    );
+  });
+
   it("uses French accessible labels for its mana symbols", () => {
     const deck = makeDeck({ commander: makeCard("cmd", "Atraxa", ["G"]) });
 
