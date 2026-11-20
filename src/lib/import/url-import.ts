@@ -297,22 +297,22 @@ async function importArchidekt(id: string): Promise<UrlImportResult> {
       .map((c) => c.name.toLowerCase())
   );
 
-  // Archidekt has no partner flag — both halves of a pair sit in the
-  // Commander category, and importing both as commander loses the second.
-  let commanderSeen = false;
+  // Archidekt has no partner flag: both halves of a pair sit in the Commander category, so a
+  // card's rank within that category decides its command-zone role, as for Moxfield.
+  let commanderPosition = 0;
   for (const entry of data.cards ?? []) {
     const inCommanderCategory = entry.categories.some(
       (c) => c.toLowerCase() === "commander"
     );
-    const isCommander = inCommanderCategory && !commanderSeen;
-    const isPartner = inCommanderCategory && commanderSeen;
-    if (inCommanderCategory) commanderSeen = true;
+    const role = inCommanderCategory
+      ? commandZoneRole(commanderPosition)
+      : NO_COMMAND_ZONE_ROLE;
+    if (inCommanderCategory) commanderPosition += 1;
 
     cards.push({
       name: entry.card.oracleCard.name,
       quantity: entry.quantity,
-      isCommander,
-      isPartner,
+      ...role,
       zone: inCommanderCategory ? "main" : archidektZone(entry.categories, notIncluded),
     });
   }
