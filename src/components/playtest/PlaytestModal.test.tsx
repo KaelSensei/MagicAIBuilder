@@ -431,9 +431,11 @@ describe("PlaytestModal", () => {
     it("moves focus into the playtest when it opens", async () => {
       await openFromBuilder();
 
+      // The first control of the header: the playtest's keys, then Close.
+      expect(screen.getByRole("button", { name: "Keys" })).toHaveFocus();
       expect(
         screen.getByRole("button", { name: "Close playtest" })
-      ).toHaveFocus();
+      ).toBeInTheDocument();
     });
 
     it("keeps Tab inside the playtest", async () => {

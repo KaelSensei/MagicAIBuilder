@@ -113,6 +113,25 @@
     "blessing": "{has, select, yes {Tu as la bénédiction de la cité} other {Tu n’as pas la bénédiction de la cité}}",
     "getBlessing": "Obtenir la bénédiction de la cité"
   },
+  "hotkeys": {
+    "open": "Touches",
+    "openHint": "Touches du test de jeu (?)",
+    "title": "Touches du test de jeu",
+    "intro": "Appuie sur une touche quand le focus n’est pas dans un champ de texte. Les touches de déplacement agissent sur la carte qui a le focus dans ta main ou sur le champ de bataille. Échap ferme cette liste.",
+    "singleKeysOff": "Les raccourcis à une touche sont désactivés : seuls Ctrl+Z et ⌘Z fonctionnent. Réactive-les depuis les raccourcis clavier de l’éditeur de deck.",
+    "actions": {
+      "draw": "Piocher une carte",
+      "nextTurn": "Passer au tour suivant",
+      "shuffle": "Mélanger ta bibliothèque",
+      "untapAll": "Dégager tous tes permanents",
+      "toGraveyard": "Mettre la carte qui a le focus dans ton cimetière",
+      "toExile": "Exiler la carte qui a le focus",
+      "toBattlefield": "Mettre la carte qui a le focus sur le champ de bataille",
+      "toHand": "Renvoyer la carte qui a le focus dans ta main",
+      "showKeys": "Afficher cette liste",
+      "undo": "Annuler la dernière étape de la partie"
+    }
+  },
   "dice": {
     "title": "Dés",
     "roll": "Lancer un d{sides}",
