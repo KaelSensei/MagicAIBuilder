@@ -4,7 +4,7 @@
 **Priority:** Now  
 **Depth:** Full
 
-This file is the feature spec. It had no engineering-slice spec before 2026-11-11. It has no delivery-slice table, so the dependency generator does not pick slices from it until one is added.
+This file is the feature spec. It had no engineering-slice spec before 2026-11-11. The delivery-slice table records build order. A slice marked Done has merged to `dev`; the glance table names the lowest-numbered slice that can start now.
 
 ## Feature contract (Full, 2026-11-11)
 
@@ -516,22 +516,22 @@ Then the player sees an empty state that names what is missing, and the page doe
 
 The player-visible outcome is: the product feels as reliable and polished as the tools players already use.
 
-| State | What the player sees |
-| --- | --- |
-| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
-| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
-| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
-| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
-| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
-| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
-| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
-| English | New controls use the `en` catalogue. |
-| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| State            | What the player sees                                                                                                                                  |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Empty            | A sentence that names what is missing and the next action. No invented row, author, price or score.                                                   |
+| Loading          | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready.                                        |
+| Error            | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there.                                                       |
+| Partial          | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished.                                                 |
+| Stale            | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed.                                             |
+| Guest            | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401.               |
+| Signed-in        | Writes go to that account only. Another player's notes, budget and collection are not in the response.                                                |
+| English          | New controls use the `en` catalogue.                                                                                                                  |
+| French           | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control.                                                         |
 | Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
-| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
-| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
-| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
-| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+| Keyboard         | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes.                         |
+| Screen reader    | Each new control has an accessible name. A status change is announced in words, not only by colour.                                                   |
+| Colour           | A warning and an error differ by text or icon as well as hue, in both themes.                                                                         |
+| Success          | The completed action is confirmed in words. A second identical action does not duplicate the write.                                                   |
 
 ### Alternate paths
 
@@ -605,6 +605,7 @@ Nothing in the roadmap entry was dropped. The section below is the initiative te
 **User story.** As a player who types, drags and uses a keyboard, I want the editor to stay still and give me my typing undo back, so that the page does not fight the browser.
 
 **Acceptance.**
+
 - Ctrl or Cmd+Z inside a text field undoes typing, not a deck edit.
 - A dialog traps focus and returns it when it closes.
 - A drag does not move the layout of the card under the pointer.
@@ -623,9 +624,33 @@ Nothing in the roadmap entry was dropped. The section below is the initiative te
 
 **Kill criteria.** Revert a change that blocks typing undo, traps focus, or moves the layout during a drag.
 
+## Delivery slices
+
+Derived from the contract's acceptance criteria and the moved record's scope. A checked parent is Done. An open parent stays startable, including where child pull requests already landed.
+
+| #   | Slice                                                                                                                                                                                                                                                                                                                               | Depends on   |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
+| 1   | Fix profile and deck loading so no request appears to hang: a 15-second bound, a localised retry, and a failed list distinguished from a missing deck. Several children are checked; the parent scope item is still open.                                                                                                           | —            |
+| 2   | Use route-level skeletons and cached session or profile data only where a sign-out cannot show another player's data (AC-04-111). #987 and #991 cover public profiles and public decks; cached profile data is still open.                                                                                                          | —            |
+| 3   | Bound collection loading to 15 seconds, with a localised retry, and keep the cached cards after a failed refresh. Done (#1013).                                                                                                                                                                                                     | —            |
+| 4   | Time out a stalled acquisition plan after 15 seconds and expose a localised retry that does not cancel close or filter. Done (#995).                                                                                                                                                                                                | —            |
+| 5   | Remove refresh loops, hover jitter, layout shift and an unstable card preview. Drag does not move the card under the pointer (AC-04-03). #1270 and #1271 pin the preview and the commander banner; the parent is still open.                                                                                                        | —            |
+| 6   | Make warning panels collapsible and dismissible, with an accessible close control. Done (checked scope).                                                                                                                                                                                                                            | —            |
+| 7   | Keep the colour-identity banner subtle: official mana symbols, a restrained background and stable dimensions. Done (checked scope).                                                                                                                                                                                                 | 5            |
+| 8   | Make card zoom intentional in "View all cards", not a hover effect on every card. Done (checked scope).                                                                                                                                                                                                                             | 5            |
+| 9   | Explain an empty EDHREC missing-card filter, and keep the add action visible without hover at a 40px target. Done (#1058).                                                                                                                                                                                                          | —            |
+| 10  | Keep keyboard shortcuts from stealing typing. Ctrl or Cmd+Z in a text field undoes typing, not the deck (AC-04-01). The single-key switch defaults on and is stored in `localStorage` (AC-04-06). Done (#1309, #1320). The spec notes #1320 was not checked in a browser or with a screen reader; remapping waits for I-37 slice 3. | —            |
+| 11  | Preserve the dark and light design language while improving hierarchy, spacing and responsive behaviour. I-13 records the design constraint.                                                                                                                                                                                        | I-13 slice 1 |
+| 12  | Add visual-regression coverage for the editor, the banner, the warning panel and card hover. #1270 covers the banner and the fixed preview; the warning panel and hover screenshots are still open.                                                                                                                                 | 5            |
+| 13  | Accessibility bundle 1, dialogs: one dialog traps focus and restores it on close (AC-04-02). #1340 rebuilt the shared modal. Import and printing close names, and whether every dialog in the bundle is closed, stay open.                                                                                                          | —            |
+| 14  | Accessibility bundle 4, forms and status: label the builder search, filters, import, bulk edit, export, life tracker, snapshots, wizard and comments; `autoComplete` on sign-in and sign-up; announce search, import and errors; toasts stay long enough to read.                                                                   | 13           |
+| 15  | Accessibility bundle 5, keyboard, visible focus and target size: no nested buttons that start a drag, no Duplicate or Delete inside the deck-card link, a preview that is not hover-only, a visible focus ring, and controls of at least 24px.                                                                                      | 10, 13       |
+| 16  | Scan the builder, the playtest and the public deck with `@axe-core/playwright` in the Docker end-to-end gate. Bundles 2, 3 and 6 stay with I-24.                                                                                                                                                                                    | 13, 14, 15   |
+
+Slice 1 is the lowest that can start now. Slices 2, 5 and 13 can start beside it. Slice 12 waits for slice 5, and slice 11 waits for I-13 slice 1.
+
 ### Definition of done
 
 The editor remains visually stable while the user searches, hovers, moves cards, saves and navigates between zones on desktop and mobile.
 
 ---
-

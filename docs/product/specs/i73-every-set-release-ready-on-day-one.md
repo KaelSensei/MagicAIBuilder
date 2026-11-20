@@ -223,8 +223,8 @@ ReleaseCheck      setKey, itemId, state (notBuilt|due|done|late|skipped), checke
 | #   | Slice                                                                                                                                          | Depends on                                                                              |
 | --- | ---------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
 | 0   | Owner decisions: previews in the radar (I-18 non-goal), set pages yes or no, digest timing, the gallery and switch windows, the free allowance | — (owner; no code)                                                                      |
-| 1   | `releaseStatus` and `previewQuery` as pure functions with fixtures; `ScryfallCard` gains `released_at` and `preview`                           | —                                                                                       |
-| 2   | Preview wording: search and set-browser switch, editor warning, copilot reason, image label                                                    | 1                                                                                       |
+| 1   | `releaseStatus` and `previewQuery` as pure functions with fixtures; `ScryfallCard` gains `released_at` and `preview` Done (#1538).             | —                                                                                       |
+| 2   | Preview wording: search and set-browser switch, editor warning, copilot reason, image label Done (#1543, #1610).                               | 1                                                                                       |
 | 3   | `SetRelease`, `ReleaseMilestone`, milestone detection as an I-67 consumer, the 2027 seed with sources                                          | 1; I-67 slice 4                                                                         |
 | 4   | `isReleaseLegalitySwitch` and its use in I-67's gate and run report                                                                            | 3; I-67 slice 2                                                                         |
 | 5   | Playbook file, `ReleaseCheck`, `/ops/releases`, the owner emails at `T-30` and `release`                                                       | 3; I-69 slice 7                                                                         |
@@ -544,22 +544,22 @@ Then it does not call the deck fair, unfair, salty, or a win rate unless the mov
 
 The player-visible outcome is: on preview day a player sees which new cards fit one deck, each labelled "Preview: legal in Commander from 5 February 2027"; on the day Scryfall turns a set legal, the card data loads without waiting for the owner; and the owner sees, for each release, which rows of a playbook kept as data are done, late or not built yet.
 
-| State | What the player sees |
-| --- | --- |
-| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
-| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
-| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
-| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
-| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
-| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
-| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
-| English | New controls use the `en` catalogue. |
-| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| State            | What the player sees                                                                                                                                  |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Empty            | A sentence that names what is missing and the next action. No invented row, author, price or score.                                                   |
+| Loading          | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready.                                        |
+| Error            | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there.                                                       |
+| Partial          | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished.                                                 |
+| Stale            | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed.                                             |
+| Guest            | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401.               |
+| Signed-in        | Writes go to that account only. Another player's notes, budget and collection are not in the response.                                                |
+| English          | New controls use the `en` catalogue.                                                                                                                  |
+| French           | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control.                                                         |
 | Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
-| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
-| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
-| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
-| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+| Keyboard         | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes.                         |
+| Screen reader    | Each new control has an accessible name. A status change is announced in words, not only by colour.                                                   |
+| Colour           | A warning and an error differ by text or icon as well as hue, in both themes.                                                                         |
+| Success          | The completed action is confirmed in words. A second identical action does not duplicate the write.                                                   |
 
 ### Alternate paths
 
@@ -610,6 +610,7 @@ Wizards ships a Commander-relevant set every six to nine weeks, and six are plan
 **User story.** As a player browsing a set that is not out yet, I want a preview card labelled with the date it becomes legal, so that the editor does not call it simply illegal.
 
 **Acceptance.**
+
 - Search, the editor and the copilot use one status: legal, preview with a date, or not legal.
 - A preview card can be added and is labelled.
 - A release-day legality change does not trip the card-data hold by itself.
@@ -631,4 +632,3 @@ Wizards ships a Commander-relevant set every six to nine weeks, and six are plan
 On a replayed release, a preview card reads "Preview: legal in Commander from 5 February 2027" in search, the editor and the copilot; on the day its set turns legal, the Oracle file loads without the owner's confirmation; and the release page lists every playbook row as done, due, late, skipped or not built.
 
 ---
-

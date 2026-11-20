@@ -4,7 +4,7 @@
 **Priority:** Next  
 **Depth:** Full
 
-This file is the feature spec. It had no engineering-slice spec before 2026-11-11. It has no delivery-slice table, so the dependency generator does not pick slices from it until one is added.
+This file is the feature spec. It had no engineering-slice spec before 2026-11-11. The delivery-slice table records build order. A slice marked Done has merged to `dev`; the glance table names the lowest-numbered slice that can start now.
 
 ## Feature contract (Full, 2026-11-11)
 
@@ -275,6 +275,17 @@ I-09 labels external recommendations with a source. The deck itself does not say
 **Rollout.** On for guests and signed-in players, public and private. No flag. It does not jump the backup or the copilot.
 
 **Open questions.** None that block the first line. The later timestamps simply replace the placeholder sentences.
+
+## Delivery slices
+
+The moved record's three scope lines, kept as slices. The first two are checked and merged. The third is the same line once the later timestamps exist.
+
+| #   | Slice                                                                                                                                                                                                                                                                                | Depends on |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------- |
+| 1   | One line on the builder and on the public deck: the rules file's effective date, "Prices: USD stored with each card", and "Card data: not loaded from the daily file". A missing date is absent, not guessed, and the line does not fetch Scryfall, EDHREC or a price. Done (#1510). | —          |
+| 2   | When a card-data load time and a price series exist, the same line reads those timestamps and drops the placeholder sentences.                                                                                                                                                       | I-67; I-59 |
+
+Slice 2 waits for I-67 and I-59. Nothing else in this initiative can start now. The initiative stays Next: the placeholder sentences are still the line a player sees.
 
 ### Definition of done
 

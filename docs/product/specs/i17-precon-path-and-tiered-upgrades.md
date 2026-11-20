@@ -89,14 +89,14 @@ BundleApply    deckId, bundleId, appliedAt, revertedAt?, beforeSnapshotId
 
 ## Delivery slices
 
-| #   | Slice                                                                                                                                      | Depends on                         |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------- |
-| 1   | Catalogue model and read-only display _(re-pointed 2026-11-10: the first dated set arrives through I-67 slice 13, which needs this model)_ | —                                  |
-| 2   | Open-as-working-copy and the sealed diff via the I-07 engine                                                                               | 1; I-67 slice 13 for the first set |
-| 3   | Bundle model and application with the not-applied report                                                                                   | 2                                  |
-| 4   | One-action revert via `beforeSnapshotId`                                                                                                   | 3                                  |
-| 5   | Budget bands, estimate labelling and unpriced disclosure                                                                                   | 3                                  |
-| 6   | Hand-off to the I-06 acquisition plan for the missing cards                                                                                | 5                                  |
+| #   | Slice                                                                                                                                                    | Depends on                         |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
+| 1   | Catalogue model and read-only display _(re-pointed 2026-11-10: the first dated set arrives through I-67 slice 13, which needs this model)_ Done (#1618). | —                                  |
+| 2   | Open-as-working-copy and the sealed diff via the I-07 engine                                                                                             | 1; I-67 slice 13 for the first set |
+| 3   | Bundle model and application with the not-applied report                                                                                                 | 2                                  |
+| 4   | One-action revert via `beforeSnapshotId`                                                                                                                 | 3                                  |
+| 5   | Budget bands, estimate labelling and unpriced disclosure                                                                                                 | 3                                  |
+| 6   | Hand-off to the I-06 acquisition plan for the missing cards                                                                                              | 5                                  |
 
 Slices 1 and 2 are useful alone: a dated precon catalogue with a diff is shippable value before any bundle exists.
 
@@ -511,22 +511,22 @@ Then the player sees an empty state that names what is missing, and the page doe
 
 The player-visible outcome is: a player can open a dated official precon, see the diff from that list, and apply a reversible budget bundle on a separate working copy.
 
-| State | What the player sees |
-| --- | --- |
-| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
-| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
-| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
-| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
-| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
-| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
-| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
-| English | New controls use the `en` catalogue. |
-| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| State            | What the player sees                                                                                                                                  |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Empty            | A sentence that names what is missing and the next action. No invented row, author, price or score.                                                   |
+| Loading          | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready.                                        |
+| Error            | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there.                                                       |
+| Partial          | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished.                                                 |
+| Stale            | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed.                                             |
+| Guest            | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401.               |
+| Signed-in        | Writes go to that account only. Another player's notes, budget and collection are not in the response.                                                |
+| English          | New controls use the `en` catalogue.                                                                                                                  |
+| French           | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control.                                                         |
 | Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
-| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
-| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
-| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
-| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+| Keyboard         | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes.                         |
+| Screen reader    | Each new control has an accessible name. A status change is announced in words, not only by colour.                                                   |
+| Colour           | A warning and an error differ by text or icon as well as hue, in both themes.                                                                         |
+| Success          | The completed action is confirmed in words. A second identical action does not duplicate the write.                                                   |
 
 ### Alternate paths
 
@@ -586,6 +586,7 @@ EDHREC precon upgrades, DeckCheck and Farseek are the references. Generic budget
 **User story.** As a player who bought a precon, I want the sealed list dated and a budget bundle I can undo, so that the product is not rewriting the deck I own.
 
 **Acceptance.**
+
 - The sealed list names its source and date.
 - A bundle applies to a working copy and reverses in one action.
 - Every price on the bundle is labelled an estimate.
@@ -607,4 +608,3 @@ EDHREC precon upgrades, DeckCheck and Farseek are the references. Generic budget
 A player can open a dated precon, preview a budget bundle, apply it to a working copy, and reverse it without altering the source list.
 
 ---
-
