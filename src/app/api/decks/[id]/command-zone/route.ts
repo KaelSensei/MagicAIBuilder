@@ -14,16 +14,22 @@
  * A pair the rules refuse (the same card twice, CR 903.5b; no shared partner
  * ability, CR 702.124) answers 400. This is the only route that checks a pair:
  * `PATCH /api/decks/[id]` refuses the command fields outright.
+ *
+ * The rows the change adds hold at most the copy limit, as the editor does:
+ * each is clamped silently to `min(requested, limit)`
+ * (`lib/deck/copy-limit-write.ts`). The browser sends one copy; the request
+ * schema accepts up to 99.
  */
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { requireCopyRuleDeckOwner } from "@/lib/api/copy-rule-deck-owner";
 import { readJsonBody } from "@/lib/api/json-body";
 import type { RouteParams } from "@/lib/api/route-kit";
 import { deckWriteResponse } from "@/lib/api/versioned-deck-write";
-import { requireDeckOwner } from "@/lib/auth/helpers";
 import { prisma } from "@/lib/db/prisma";
 import { commandPairRefusal } from "@/lib/deck/commander-pairing";
+import { cardWithinCopyLimit } from "@/lib/deck/copy-limit-write";
 import { deckRepository } from "@/lib/deck/deck-repository";
 import { logger } from "@/lib/logger";
 import { commandZoneChangeSchema } from "@/lib/validation/card";
@@ -44,7 +50,7 @@ async function storedCommandSlots(deckId: string) {
 export async function PATCH(request: Request, { params }: RouteParams<"id">) {
   const { id: deckId } = await params;
   try {
-    const ownership = await requireDeckOwner(deckId);
+    const ownership = await requireCopyRuleDeckOwner(deckId);
     if (ownership.error) return ownership.error;
 
     const jsonBody = await readJsonBody(request);
@@ -74,12 +80,16 @@ export async function PATCH(request: Request, { params }: RouteParams<"id">) {
     );
     if (refusal) return NextResponse.json({ error: refusal }, { status: 400 });
 
+    // The limit reads the stored command zone, as the bulk edit does: only a
+    // commander with no maximum deck size changes a limit (CR 903.5e), and
+    // only above the 99 copies a request may send.
+    const { copyRule } = ownership;
     const result = await deckRepository.writeCommandZone(
       { deckId, expectedVersion },
       {
         removeCardIds,
         clearSlots: clearCommandSlots,
-        addCards,
+        addCards: addCards.map((card) => cardWithinCopyLimit(card, copyRule)),
         fields: commandZone,
       }
     );

@@ -24,7 +24,11 @@ vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
 import { DELETE, PATCH } from "./route";
 
 const SIGNET = deckCard("Arcane Signet", { category: "ramp" });
-const FOREST = deckCard("Forest", { quantity: 10, category: "land" });
+const FOREST = deckCard("Forest", {
+  quantity: 10,
+  category: "land",
+  typeLine: "Basic Land — Forest",
+});
 const SAVED_CARDS = [SIGNET, FOREST];
 
 function params(cardId: string) {
