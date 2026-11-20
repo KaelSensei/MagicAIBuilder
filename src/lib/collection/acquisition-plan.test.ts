@@ -3,8 +3,14 @@
 import { describe, expect, it } from "vitest";
 
 import { aDeckCard } from "@/test/builders/card";
-import { buildAcquisitionPlan, toAcquisitionPlanDeck } from "./acquisition-plan";
-import type { AcquisitionPlanDeck, AcquisitionPlanRow } from "./acquisition-plan";
+import {
+  buildAcquisitionPlan,
+  toAcquisitionPlanDeck,
+} from "./acquisition-plan";
+import type {
+  AcquisitionPlanDeck,
+  AcquisitionPlanRow,
+} from "./acquisition-plan";
 import type { AcquisitionMode } from "./acquisition-intent";
 
 function row(
@@ -113,7 +119,10 @@ describe("buildAcquisitionPlan with each deck's acquisition choices", () => {
   });
 
   it("defers a printing marked proxy now in its only deck instead of buying it", () => {
-    const plan = buildAcquisitionPlan([deckNeedingCrypt("a", { crypt: "proxy_now" })], {});
+    const plan = buildAcquisitionPlan(
+      [deckNeedingCrypt("a", { crypt: "proxy_now" })],
+      {}
+    );
 
     expect(plan).toEqual([
       expect.objectContaining({
@@ -161,7 +170,10 @@ describe("buildAcquisitionPlan with each deck's acquisition choices", () => {
   });
 
   it("defers a printing marked buy later with its own choice", () => {
-    const plan = buildAcquisitionPlan([deckNeedingCrypt("a", { crypt: "buy_later" })], {});
+    const plan = buildAcquisitionPlan(
+      [deckNeedingCrypt("a", { crypt: "buy_later" })],
+      {}
+    );
 
     expect(plan).toEqual([
       expect.objectContaining({
@@ -183,12 +195,19 @@ describe("buildAcquisitionPlan with each deck's acquisition choices", () => {
 
   it("ignores a choice saved in another deck", () => {
     const plan = buildAcquisitionPlan(
-      [deckNeedingCrypt("a"), { ...deckNeedingCrypt("b", { other: "proxy_now" }), cards: [] }],
+      [
+        deckNeedingCrypt("a"),
+        { ...deckNeedingCrypt("b", { other: "proxy_now" }), cards: [] },
+      ],
       {}
     );
 
     expect(plan).toEqual([
-      expect.objectContaining({ acquireQuantity: 1, deferredQuantity: 0, deferred: [] }),
+      expect.objectContaining({
+        acquireQuantity: 1,
+        deferredQuantity: 0,
+        deferred: [],
+      }),
     ]);
   });
 });
