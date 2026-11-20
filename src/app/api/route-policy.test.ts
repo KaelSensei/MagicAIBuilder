@@ -145,6 +145,7 @@ const ROUTE_POLICIES: Readonly<
   "user/notification-preferences": { GET: "session", PATCH: "session" },
   "user/onboarding": { GET: "session", POST: "session", DELETE: "session" },
   "user/profile": { GET: "session", PATCH: "session", DELETE: "session" },
+  "user/stats": { GET: "session" },
   "user/username": { PATCH: "session" },
   "users/[username]": { GET: "optional-viewer" },
   "v1/collection": { GET: "api-key" },

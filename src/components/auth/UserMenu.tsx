@@ -4,7 +4,14 @@ import { useSession, signOut } from "next-auth/react";
 import Image from "next/image";
 import { Link } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
-import { BookOpen, KeyRound, LogIn, LogOut, User } from "lucide-react";
+import {
+  BarChart3,
+  BookOpen,
+  KeyRound,
+  LogIn,
+  LogOut,
+  User,
+} from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useOnboardingContext } from "@/components/onboarding/OnboardingProvider";
 
@@ -99,6 +106,15 @@ export function UserMenu() {
           >
             <User className="w-4 h-4" />
             {t("userMenu.profile")}
+          </Link>
+
+          <Link
+            href="/stats"
+            onClick={handleClose}
+            className="flex items-center gap-2 px-4 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors"
+          >
+            <BarChart3 className="w-4 h-4" />
+            {t("userMenu.stats")}
           </Link>
 
           <Link
