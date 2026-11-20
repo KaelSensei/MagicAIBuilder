@@ -92,6 +92,27 @@
     "recordFrom": "Enregistrer les blessures de {commander} infligées à l’adversaire {number}",
     "lost": "A perdu par blessures de commandant (CR 903.10a, CR 704.6c)"
   },
+  "designations": {
+    "title": "Marqueurs et désignations",
+    "hint": "Indique ce que tes cartes te donnent. Chaque changement est une étape que l’annulation défait.",
+    "counter": "{counter, select, poison {Poison} energy {Énergie} other {Expérience}} : {count}",
+    "add": "Ajouter un marqueur {counter, select, poison {poison} energy {énergie} other {expérience}}",
+    "remove": "Retirer un marqueur {counter, select, poison {poison} energy {énergie} other {expérience}}",
+    "poisonLost": "A perdu par le poison (CR 104.3d, CR 704.5c)",
+    "monarch": "{has, select, yes {Tu es le monarque} other {Tu n’es pas le monarque}}",
+    "becomeMonarch": "Devenir le monarque",
+    "loseMonarch": "Un adversaire devient le monarque",
+    "initiative": "{has, select, yes {Tu as l’initiative} other {Tu n’as pas l’initiative}}",
+    "takeInitiative": "Prendre l’initiative",
+    "loseInitiative": "Un adversaire prend l’initiative",
+    "ring": "{count, plural, =0 {L’Anneau ne t’a pas tenté} one {L’Anneau t’a tenté une fois} other {L’Anneau t’a tenté # fois}}",
+    "ringTempts": "L’Anneau te tente",
+    "dayNight": "{state, select, day {Il fait jour} night {Il fait nuit} other {Ni jour ni nuit}}",
+    "becomeDay": "Il devient jour",
+    "becomeNight": "Il devient nuit",
+    "blessing": "{has, select, yes {Tu as la bénédiction de la cité} other {Tu n’as pas la bénédiction de la cité}}",
+    "getBlessing": "Obtenir la bénédiction de la cité"
+  },
   "dice": {
     "title": "Dés",
     "roll": "Lancer un d{sides}",

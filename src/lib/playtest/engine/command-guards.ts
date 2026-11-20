@@ -27,6 +27,11 @@ import {
   isTallySeat,
   offersCommanderDamage,
 } from "./commander-damage";
+import {
+  hasCitysBlessing,
+  isAlreadyDayNight,
+  refusesCounterChange,
+} from "./designations";
 import { isNegativeDamage } from "./life";
 import { isChoosingBottom, maxMulligans } from "./mulligan";
 import { defaultPlaytestCommandDeps, type PlaytestCommandDeps } from "./ports";
@@ -46,6 +51,9 @@ export type PlaytestGuardReason =
   | "no-commander-damage"
   | "unknown-opponent"
   | "bad-commander-damage"
+  | "bad-counter-change"
+  | "has-citys-blessing"
+  | "same-day-night"
   | "not-on-battlefield"
   | "id-taken"
   | "not-a-commander"
@@ -214,6 +222,23 @@ export const PLAYTEST_COMMAND_GUARDS: Readonly<
       (_state, { amount }) => !isCommanderDamageAmount(amount)
     ),
   ],
+  playerCounter: [
+    whileChoosingBottom,
+    // CR 122.1: a counter is a marker, so a player never has fewer than none.
+    guard("playerCounter", "bad-counter-change", refusesCounterChange),
+  ],
+  gainCitysBlessing: [
+    whileChoosingBottom,
+    // CR 702.131a: the blessing is kept "for the rest of the game"; getting it twice adds nothing.
+    guard("gainCitysBlessing", "has-citys-blessing", hasCitysBlessing),
+  ],
+  setDayNight: [
+    whileChoosingBottom,
+    // CR 731.1a: only a change of designation is a move; it is already day or night.
+    guard("setDayNight", "same-day-night", isAlreadyDayNight),
+  ],
+  toggleDesignation: [whileChoosingBottom],
+  ringTempts: [whileChoosingBottom],
   tap: [
     whileChoosingBottom,
     guard(

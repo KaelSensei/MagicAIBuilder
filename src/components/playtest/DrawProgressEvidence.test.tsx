@@ -1,6 +1,6 @@
 import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import type { PlaytestEngine } from "@/lib/playtest/engine";
+import { NO_DESIGNATIONS, type PlaytestEngine } from "@/lib/playtest/engine";
 import type { DeckCard } from "@/lib/deck/types";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { DrawProgressEvidence } from "./DrawProgressEvidence";
@@ -46,6 +46,7 @@ function engine(overrides: Partial<PlaytestEngine>): PlaytestEngine {
     commanderIds: [],
     commanderDamageOpponents: 0,
     commanderDamage: [],
+    designations: NO_DESIGNATIONS,
     diceRolls: [],
     actionLog: [],
     nextActionId: 1,
