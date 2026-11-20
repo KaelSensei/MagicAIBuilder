@@ -372,6 +372,33 @@ describe("POST /api/ai/suggest event stream", () => {
             priceUsd: 9.8,
             verified: true,
           },
+          claims: [
+            { kind: "reasoned", text: "Protects Talrand." },
+            {
+              kind: "checked",
+              text: "Mana value 1",
+              source: "scryfall-card-data",
+              observedAt: "2026-11-11T09:00:00.000Z",
+            },
+            {
+              kind: "checked",
+              text: "Price 9.8 USD",
+              source: "scryfall-card-data",
+              observedAt: "2026-11-11T09:00:00.000Z",
+            },
+            {
+              kind: "checked",
+              text: "Legal in Commander",
+              source: "scryfall-card-data",
+              observedAt: "2026-11-11T09:00:00.000Z",
+            },
+            {
+              kind: "checked",
+              text: "Inside the commander's colour identity",
+              source: "colour-identity-rule",
+              observedAt: "2026-11-11T09:00:00.000Z",
+            },
+          ],
         },
       });
       expect((await readAsPanel(body)).result.suggestions).toEqual([]);

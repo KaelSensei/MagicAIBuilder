@@ -24,6 +24,10 @@ import {
   suggestionLookupNames,
   type SuggestionEvidence,
 } from "@/lib/ai/suggestion-evidence";
+import {
+  withSuggestionClaims,
+  type CopilotClaim,
+} from "@/lib/ai/suggestion-claims";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import { isNonEmptyString } from "@/lib/guards";
 import {
@@ -140,6 +144,8 @@ export interface CardSuggestion {
   category: string;
   priority: "high" | "medium" | "low";
   evidence?: SuggestionEvidence;
+  /** Checked facts and the model's sentences, typed. Absent on a reply that never reached card data. */
+  claims?: readonly CopilotClaim[];
   alternatives?: CardAlternative[];
 }
 
@@ -148,6 +154,8 @@ export interface CardAlternative {
   reason: string;
   dimension: "budget" | "power" | "playstyle";
   evidence?: SuggestionEvidence;
+  /** Checked facts and the model's sentence for this alternative. */
+  claims?: readonly CopilotClaim[];
 }
 
 export interface CardRemoval {
@@ -516,9 +524,14 @@ async function enrichSuggestionEvidence(
       isNonEmptyString
     ),
   };
+  const evidenced = attachSuggestionEvidence(result.suggestions, cards, deck);
   return {
     ...result,
-    suggestions: attachSuggestionEvidence(result.suggestions, cards, deck),
+    suggestions: withSuggestionClaims(evidenced, cards, {
+      ...deck,
+      observedAt: new Date().toISOString(),
+      deckCardNames: req.cardNames,
+    }),
   };
 }
 
