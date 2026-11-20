@@ -42,7 +42,7 @@ async function openFrenchPlanStep() {
   const next = () =>
     fireEvent.click(screen.getByRole("button", { name: "Continuer" }));
 
-  fireEvent.click(screen.getByRole("button", { name: "Budget < 50 $" }));
+  fireEvent.click(screen.getByRole("button", { name: "Budget < 50 $ par carte" }));
   next();
   fireEvent.click(await screen.findByRole("button", { name: "Bleu" }));
   next();
