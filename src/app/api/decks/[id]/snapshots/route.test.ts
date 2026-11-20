@@ -126,23 +126,33 @@ afterEach(() => {
 });
 
 describe("GET /api/decks/[id]/snapshots", () => {
-  it("lists the deck's snapshots, newest first, without their card lists", async () => {
-    const rows = [
+  it("lists the deck's snapshots, newest first, counting the copies of their card lists and leaving the lists out", async () => {
+    fake.deckSnapshot.findMany.mockResolvedValue([
       {
         id: "snapshot-2",
         name: "After the cuts",
         commander: "Atraxa, Praetors' Voice",
+        // Saved when the column held the row count.
         cardCount: 3,
+        cardList: [ATRAXA, FORESTS, SOL_RING].map((card) => ({
+          ...card,
+          scryfallId: `scryfall-${card.name}`,
+        })),
         createdAt: new Date("2026-11-10T12:00:00.000Z"),
       },
-    ];
-    fake.deckSnapshot.findMany.mockResolvedValue(rows);
+    ]);
 
     const response = await listSnapshots();
 
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual([
-      { ...rows[0], createdAt: "2026-11-10T12:00:00.000Z" },
+      {
+        id: "snapshot-2",
+        name: "After the cuts",
+        commander: "Atraxa, Praetors' Voice",
+        cardCount: 12,
+        createdAt: "2026-11-10T12:00:00.000Z",
+      },
     ]);
     expect(fake.deckSnapshot.findMany).toHaveBeenCalledWith({
       where: { deckId: DECK_ID },
@@ -152,6 +162,7 @@ describe("GET /api/decks/[id]/snapshots", () => {
         name: true,
         commander: true,
         cardCount: true,
+        cardList: true,
         createdAt: true,
       },
     });
@@ -206,7 +217,7 @@ describe("POST /api/decks/[id]/snapshots", () => {
       name: "Before the cuts",
       cardList: [ATRAXA, FORESTS, SOL_RING],
       commander: "Atraxa, Praetors' Voice",
-      cardCount: 3,
+      cardCount: 12,
     });
   });
 
@@ -221,9 +232,9 @@ describe("POST /api/decks/[id]/snapshots", () => {
     );
   });
 
-  it("counts card rows, not copies: ten Forests in one row count once", async () => {
+  it("counts card copies, as the deck list does: ten Forests in one row count ten", async () => {
     await saveSnapshot({ name: "Before the cuts" });
-    expect(createdSnapshot().cardCount).toBe(3);
+    expect(createdSnapshot().cardCount).toBe(12);
   });
 
   it("strips HTML tags from the name and trims it", async () => {
@@ -242,7 +253,7 @@ describe("POST /api/decks/[id]/snapshots", () => {
       cardCount: 99,
       deckId: "deck-9",
     });
-    expect(createdSnapshot()).toMatchObject({ deckId: DECK_ID, cardCount: 3 });
+    expect(createdSnapshot()).toMatchObject({ deckId: DECK_ID, cardCount: 12 });
   });
 
   it.each([
