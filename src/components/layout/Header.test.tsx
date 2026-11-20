@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import React from "react";
@@ -63,6 +63,14 @@ vi.mock("@/lib/deck/store", () => ({
       setActiveDeck: (id: string) => setActiveDeckImpl(id),
     }),
 }));
+
+// The deck buttons arrive through a lazy slot (`HeaderDeckActionsSlot`). The first test that
+// waited for them paid for loading that chunk inside `findByRole`'s one-second wait, about half
+// a second on an idle machine, so a loaded full run timed out. Loading it once here, under the
+// hook's own timeout, leaves each wait with only React's render to cover.
+beforeAll(async () => {
+  await import("./HeaderDeckActions");
+});
 
 describe("Header", () => {
   it("groups desktop destinations in a named primary navigation landmark", async () => {
