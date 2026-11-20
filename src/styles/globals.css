@@ -30,7 +30,8 @@
   --surface: #261f38;
   --surface-elevated: #2e2644;
   --surface-hover: #332b4a;
-  --border: #443a5e;
+  /* Component boundary: 3:1 (WCAG 1.4.11) on every surface, 3.10:1 on --surface-hover. */
+  --border: #8272a8;
   --text-primary: #f6f3ff;
   --text-secondary: #b7a8d8;
   --accent: #7c3aed;
@@ -80,7 +81,8 @@
   --surface: #ffffff;
   --surface-elevated: #ffffff;
   --surface-hover: #efebf8;
-  --border: #e4dcf2;
+  /* Component boundary: 3:1 (WCAG 1.4.11) on every surface, 3.12:1 on --surface-hover. */
+  --border: #8b80a6;
   --text-primary: #1c1433;
   --text-secondary: #5c5470;
   --accent: #7c3aed;

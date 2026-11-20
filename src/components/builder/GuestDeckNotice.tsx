@@ -46,7 +46,7 @@ export function GuestDeckNotice() {
   return (
     <aside className="flex items-center gap-3 border-b border-[var(--border)] bg-[var(--surface-elevated)] px-3 py-2 text-xs text-[var(--text-secondary)] md:px-4">
       <UserPlus
-        className="h-4 w-4 shrink-0 text-[var(--accent)]"
+        className="h-4 w-4 shrink-0 text-[var(--accent-text)]"
         aria-hidden="true"
       />
       <p className="min-w-0 flex-1">

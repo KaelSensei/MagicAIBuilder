@@ -53,7 +53,7 @@ export function ScryfallPrices({ card, className = "" }: ScryfallPricesProps) {
             {t("missing", { currency })}
           </p>
         ) : (
-          <p key={currency} className="text-(--accent)">
+          <p key={currency} className="text-(--accent-text)">
             {format(locale, amount)}
           </p>
         );

@@ -163,7 +163,7 @@ export function GuestDeckClaimOffer({
       )}
     >
       <Archive
-        className="mt-0.5 h-4 w-4 shrink-0 text-[var(--accent)]"
+        className="mt-0.5 h-4 w-4 shrink-0 text-[var(--accent-text)]"
         aria-hidden="true"
       />
       <div className="min-w-0 flex-1">
