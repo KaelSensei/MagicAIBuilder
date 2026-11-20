@@ -356,6 +356,7 @@ Otterly MTG, Mana Grove's `/bracket` command and several Commander companion bot
 - [ ] Explicit, revocable linking between a Discord account and a product account.
 - [ ] No deck mutation from the bot. Read and report only.
 - [ ] State the same uncertainty the product states. A bot reply is not permitted to sound more certain than the web surface.
+- [ ] Added 2026-11-20 (nineteenth pass), for slice 1: the same Discord link may later be a sign-in method, under [I-61](i61-account-security.md)'s linking rules (no linking by email, re-authentication before linking, two-step after sign-in, D-49); linking ships before sign-in. TableCommander: "You can sign in with Discord or Google, or click Create one to make a username and password. All three give you the same account." ([getting started](https://tablecommander.com/getting-started), read 2026-11-20). No Discord sign-in was found at Moxfield, Archidekt, Playgroup, EDHcheck or Convoke (search summary). Today the product offers Google and credentials only (`src/lib/auth/config.ts`).
 
 ### Definition of done
 
