@@ -16,6 +16,8 @@ interface CardSearchListItemProps {
   readonly className?: string;
   readonly onAddToMaybeboard?: (card: ScryfallCard) => void;
   readonly onAddToZone?: (card: ScryfallCard, zone: DeckZone) => void;
+  /** Copies already in each zone, shown on the zone menu. */
+  readonly zoneCounts?: Readonly<Record<DeckZone, number>>;
   readonly isInMaybeboard?: boolean;
 }
 
@@ -59,6 +61,7 @@ export function CardSearchListItem({
   onClick,
   onAddToMaybeboard,
   onAddToZone,
+  zoneCounts,
   isInMaybeboard = false,
   draggable = false,
   className,
@@ -72,8 +75,8 @@ export function CardSearchListItem({
     />
   );
   const menu = onAddToZone ? (
-    <div className="w-36 shrink-0 px-2">
-      <SearchZoneMenu card={card} onAddToZone={onAddToZone} />
+    <div className="w-44 shrink-0 px-2">
+      <SearchZoneMenu card={card} onAddToZone={onAddToZone} zoneCounts={zoneCounts} />
     </div>
   ) : null;
 

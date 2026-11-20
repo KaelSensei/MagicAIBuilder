@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { DeckCard } from "./types";
-import { cardsFromZoneSource, deckFromZoneCards } from "./zone-source";
+import { cardsFromZoneSource, countCopiesByZone, deckFromZoneCards } from "./zone-source";
 import { createEmptyDeck } from "./store-factories";
 
 function card(id: string, zone: DeckCard["zone"], isMaybeboard?: boolean): DeckCard {
@@ -45,6 +45,23 @@ describe("cardsFromZoneSource", () => {
       ["island", "main", false],
       ["ponder", "maybeboard", true],
     ]);
+  });
+});
+
+describe("countCopiesByZone", () => {
+  it("sums copies per zone and ignores a mirror row the deck already holds", () => {
+    const forest = card("forest", "main");
+    const doubled = { ...forest, quantity: 30 };
+    expect(
+      countCopiesByZone({
+        cards: [doubled, card("bolt", "sideboard"), card("ponder", "maybeboard")],
+        maybeboard: [card("ponder", "maybeboard"), card("only-mirror", "main")],
+      })
+    ).toEqual({ main: 30, sideboard: 1, maybeboard: 2 });
+  });
+
+  it("reports an empty deck as zero copies in every zone", () => {
+    expect(countCopiesByZone(null)).toEqual({ main: 0, sideboard: 0, maybeboard: 0 });
   });
 });
 
