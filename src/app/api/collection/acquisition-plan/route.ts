@@ -1,9 +1,11 @@
 // GET /api/collection/acquisition-plan: what the signed-in user still has to buy for their decks.
-// The route reads and authorises; `@/lib/collection/acquisition-plan` decides what each deck needs.
+// The route reads and authorises; `@/lib/collection/acquisition-plan` decides what each deck needs,
+// and which copies each deck's "proxy now" / "buy later" choice defers.
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAuth } from "@/lib/auth/helpers";
 import { prisma } from "@/lib/db/prisma";
+import { groupAcquisitionIntentsByDeck } from "@/lib/collection/acquisition-intent";
 import {
   buildAcquisitionPlan,
   toAcquisitionPlanDeck,
@@ -21,7 +23,7 @@ export async function GET(request: Request) {
     if (selectedId !== null && !z.string().min(1).max(100).safeParse(selectedId).success) {
       return NextResponse.json({ error: "Invalid deck ID" }, { status: 400 });
     }
-    const [decks, ownedCards] = await Promise.all([
+    const [decks, ownedCards, intentRows] = await Promise.all([
       prisma.deck.findMany({
         where: { userId },
         select: {
@@ -46,7 +48,12 @@ export async function GET(request: Request) {
         where: { userId },
         select: { scryfallId: true, quantity: true },
       }),
+      prisma.acquisitionIntent.findMany({
+        where: { userId },
+        select: { deckId: true, scryfallId: true, mode: true },
+      }),
     ]);
+    const intentsByDeck = groupAcquisitionIntentsByDeck(intentRows);
 
     const quantities: Record<string, number> = {};
     for (const card of ownedCards) {
@@ -64,7 +71,10 @@ export async function GET(request: Request) {
       deckCount: selectedDecks.length,
       decks: decks.map((deck) => ({ id: deck.id, name: deck.name })),
       items: buildAcquisitionPlan(
-        selectedDecks.map(toAcquisitionPlanDeck),
+        selectedDecks.map((deck) => ({
+          ...toAcquisitionPlanDeck(deck),
+          intents: intentsByDeck.get(deck.id) ?? {},
+        })),
         quantities
       ),
     });
