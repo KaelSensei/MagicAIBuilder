@@ -80,6 +80,13 @@ export const RECORDED_DECK_COMBOS: readonly ComboFacts[] = [
       conditions: [],
       manaNeeded: "",
     },
+    startZones: {
+      "Hullbreaker Horror": ["battlefield"],
+      "Sol Ring": ["battlefield"],
+    },
+    standaloneResults: ["Infinite colorless mana"],
+    manaValueNeeded: 0,
+    bracketTag: "exhibition",
   },
   {
     id: "742-1295",
@@ -87,6 +94,13 @@ export const RECORDED_DECK_COMBOS: readonly ComboFacts[] = [
     effects: ["Exile your library", "Win the game"],
     isInfinite: true,
     prerequisites: { otherPieces: [], conditions: [], manaNeeded: "{U}{U}{B}" },
+    startZones: {
+      "Demonic Consultation": ["hand"],
+      "Thassa's Oracle": ["hand"],
+    },
+    standaloneResults: ["Win the game"],
+    manaValueNeeded: 3,
+    bracketTag: "ruthless",
   },
   {
     id: "4821-5261",
@@ -105,6 +119,15 @@ export const RECORDED_DECK_COMBOS: readonly ComboFacts[] = [
       ],
       manaNeeded: "",
     },
+    startZones: {
+      "Dramatic Reversal": ["exile"],
+      "Isochron Scepter": ["battlefield"],
+    },
+    standaloneResults: [
+      "Infinite mana nonland permanents you control can produce",
+    ],
+    manaValueNeeded: 0,
+    bracketTag: "spicy",
   },
 ];
 

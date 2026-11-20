@@ -12,10 +12,11 @@ function exportNames(namespace: object): readonly string[] {
 }
 
 describe("the combos entry points", () => {
-  it("index.ts publishes the two-card combo policy, the card-list bounds, its schema and normaliser, and the lookup rate limits", async () => {
+  it("index.ts publishes the two-card combo policy, the result-kind table, the card-list bounds, its schema and normaliser, and the lookup rate limits", async () => {
     expect(exportNames(await import("@/modules/combos"))).toEqual([
       "COMBO_LOOKUP_WINDOW_MS",
       "COMBO_LOOKUPS_PER_CLIENT",
+      "comboResultKind",
       "deckComboQuerySchema",
       "isTwoCardInfiniteCombo",
       "MAX_MAIN_CARDS",

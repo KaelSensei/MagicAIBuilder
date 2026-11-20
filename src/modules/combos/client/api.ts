@@ -9,7 +9,12 @@
  * @module combos/client/api
  */
 import { z } from "zod";
-import type { Combo, ComboPrerequisites } from "@/modules/combos/domain/combo";
+import {
+  COMBO_BRACKET_TAGS,
+  COMBO_ZONES,
+  type Combo,
+  type ComboPrerequisites,
+} from "@/modules/combos/domain/combo";
 import type { DeckComboQuery } from "@/modules/combos/domain/deck-query";
 
 const comboPrerequisitesSchema = z.object({
@@ -26,6 +31,10 @@ const comboSchema = z.object({
   description: z.string(),
   isInfinite: z.boolean(),
   prerequisites: comboPrerequisitesSchema,
+  startZones: z.record(z.string(), z.array(z.enum(COMBO_ZONES))),
+  standaloneResults: z.array(z.string()),
+  manaValueNeeded: z.number().int().nonnegative(),
+  bracketTag: z.enum(COMBO_BRACKET_TAGS).nullable(),
 }) satisfies z.ZodType<Combo>;
 
 const comboLookupResponseSchema = z.object({

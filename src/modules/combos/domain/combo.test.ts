@@ -13,6 +13,13 @@ function combo(overrides: Partial<Combo> = {}): Combo {
     description: "Cast Demonic Consultation naming Thassa's Oracle.",
     isInfinite: true,
     prerequisites: { otherPieces: [], conditions: [], manaNeeded: "{U}{U}{B}" },
+    startZones: {
+      "Demonic Consultation": ["hand"],
+      "Thassa's Oracle": ["hand"],
+    },
+    standaloneResults: ["Win the game"],
+    manaValueNeeded: 3,
+    bracketTag: "ruthless",
     ...overrides,
   };
 }
