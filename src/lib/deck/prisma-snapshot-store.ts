@@ -20,12 +20,17 @@ import type {
   SnapshotStore,
 } from "@/lib/deck/snapshot-store-port";
 
-/** The columns the history list shows; the card list is left out for size. */
+/**
+ * The columns the history list reads. The card list comes too: the history
+ * counts each snapshot's cards from it (`snapshotCardCopies`), because a
+ * snapshot saved before copies were counted stored its row count.
+ */
 const SUMMARY_SELECT = {
   id: true,
   name: true,
   commander: true,
   cardCount: true,
+  cardList: true,
   createdAt: true,
 } as const;
 

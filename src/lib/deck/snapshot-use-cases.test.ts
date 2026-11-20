@@ -53,7 +53,8 @@ describe("saveSnapshot", () => {
         deckId: DECK.id,
         name: "Before the cuts",
         commander: "Atraxa, Praetors' Voice",
-        cardCount: 3,
+        // Atraxa and Sol Ring; the ten sideboard Forests stay out.
+        cardCount: 2,
         cardList: [ATRAXA, SOL_RING, FORESTS],
       }),
     });
@@ -98,6 +99,110 @@ describe("saveSnapshot", () => {
     expect(result).toEqual({ kind: "deck-not-found" });
     expect(fake.storedSnapshots()).toEqual([]);
   });
+});
+
+/**
+ * A 100-card Commander deck stored as 71 rows: the commander, 30 Forests in
+ * one row and 69 other single cards.
+ */
+const HUNDRED_CARDS_IN_71_ROWS = [
+  ATRAXA,
+  deckCard("Forest", { quantity: 30 }),
+  ...Array.from({ length: 69 }, (_, index) => deckCard(`Spell ${index + 1}`)),
+];
+
+/** @returns the card count the history list shows for a snapshot of `cards` */
+async function listedCountOfSnapshot(
+  cards: ReturnType<typeof deckCard>[]
+): Promise<number | undefined> {
+  const fake = inMemorySnapshotStore(DECK, cards);
+  const snapshots = makeSnapshotUseCases(fake.snapshots);
+  await snapshots.saveSnapshot({ deckId: DECK.id, rawName: "Counted" });
+  const [listed] = await snapshots.listSnapshots(DECK.id);
+  return listed?.cardCount;
+}
+
+describe("the card count of a snapshot", () => {
+  it("counts every copy: a snapshot of a deck with 30 Forests in one row counts 100 cards", async () => {
+    const fake = inMemorySnapshotStore(DECK, HUNDRED_CARDS_IN_71_ROWS);
+    const snapshots = makeSnapshotUseCases(fake.snapshots);
+
+    const saved = await snapshots.saveSnapshot({
+      deckId: DECK.id,
+      rawName: "Hundred",
+    });
+    const listed = await snapshots.listSnapshots(DECK.id);
+
+    expect(saved.kind === "saved" && saved.snapshot.cardCount).toBe(100);
+    expect(listed.map((snapshot) => snapshot.cardCount)).toEqual([100]);
+  });
+
+  it("leaves the sideboard and the Considering rows out", async () => {
+    const count = await listedCountOfSnapshot([
+      ATRAXA,
+      SOL_RING,
+      FORESTS,
+      deckCard("Arcane Signet", { quantity: 2, zone: "maybeboard" }),
+    ]);
+
+    expect(count).toBe(2);
+  });
+
+  it("leaves a companion out", async () => {
+    const count = await listedCountOfSnapshot([
+      ATRAXA,
+      SOL_RING,
+      deckCard("Lurrus of the Dream-Den", { category: "companion" }),
+    ]);
+
+    expect(count).toBe(2);
+  });
+
+  it("counts a partner pair as two cards", async () => {
+    const count = await listedCountOfSnapshot([
+      deckCard("Thrasios, Triton Hero", { isCommander: true }),
+      deckCard("Tymna the Weaver", { isPartner: true }),
+      SOL_RING,
+    ]);
+
+    expect(count).toBe(3);
+  });
+
+  it("lists the copies of a snapshot saved when the stored count was its rows", async () => {
+    const { fake, snapshots } = setUp();
+    await fake.snapshots.create({
+      deckId: DECK.id,
+      name: "Saved before copies were counted",
+      cardList: HUNDRED_CARDS_IN_71_ROWS,
+      commander: "Atraxa, Praetors' Voice",
+      cardCount: 71,
+    });
+
+    const [listed] = await snapshots.listSnapshots(DECK.id);
+
+    expect(listed?.cardCount).toBe(100);
+  });
+
+  it.each([
+    ["is not a list", { not: "a list" }],
+    ["holds a card without a name", [{ scryfallId: "x", quantity: 4 }]],
+  ])(
+    "keeps the stored number of a snapshot whose card list %s",
+    async (_case, cardList) => {
+      const { fake, snapshots } = setUp();
+      await fake.snapshots.create({
+        deckId: DECK.id,
+        name: "Unreadable",
+        cardList,
+        commander: null,
+        cardCount: 7,
+      });
+
+      const [listed] = await snapshots.listSnapshots(DECK.id);
+
+      expect(listed?.cardCount).toBe(7);
+    }
+  );
 });
 
 describe("deleteSnapshot", () => {

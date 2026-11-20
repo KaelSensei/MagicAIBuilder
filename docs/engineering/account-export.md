@@ -37,6 +37,8 @@ The contract is `accountArchiveSchema` in `src/lib/account-export/archive-schema
 | `reportsFiled`                    | Deck reports the account filed, with their status                                                                        |
 | `aiUsage`                         | Metered AI calls per key and month (`monthlyCounts`), and each call's route, provider, model, outcome and date (`calls`) |
 
+A snapshot's `cardCount` is the cards it holds, counted as the deck list and the builder's history count them (`snapshotCardCopies` in `src/lib/deck/snapshot-card-count.ts`): every copy in the main zone, plus the commander and the partner; the sideboard, Considering and the companion stay out. It is read from the snapshot's `cardList`, so a snapshot saved when the database stored its row count exports its copies too. When the card list cannot be read, it is the stored number.
+
 `plainText` is the deck as the deck builder's "Plain text" export writes it (`exportPlainText` in `src/lib/deck/export.ts`), so another deckbuilder can import it. It is built from the stored rows by `deckPlainText` in `src/lib/account-export/deck-plain-text.ts`, and a parity test keeps the two identical.
 
 ## What stays out, and why
