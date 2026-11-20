@@ -1,5 +1,6 @@
 import React from "react";
 import { screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { UserMenu } from "./UserMenu";
@@ -31,6 +32,20 @@ vi.mock(
 function renderMenu(locale: "en" | "fr") {
   renderWithIntl(<UserMenu />, { locale });
 }
+
+describe("UserMenu links", () => {
+  it("leads a signed-in player to their statistics (I-60 slice 2)", async () => {
+    renderMenu("fr");
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Menu utilisateur" })
+    );
+
+    expect(
+      screen.getByRole("link", { name: "Mes statistiques" })
+    ).toHaveAttribute("href", "/stats");
+  });
+});
 
 // An account without a display name fell back to the English alt "Avatar".
 describe("UserMenu avatar", () => {

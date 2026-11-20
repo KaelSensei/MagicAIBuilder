@@ -50,6 +50,7 @@ const PRIVATE_PAGES = [
   "/share/some-token",
   "/builder/deck-1",
   "/collection",
+  "/stats",
 ] as const;
 
 /** Locale-free URLs of pages meant to be found. */

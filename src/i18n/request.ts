@@ -39,6 +39,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
   const ruleZero = (await import(`@/messages/${locale}/rule-zero.json`))
     .default;
   const precon = (await import(`@/messages/${locale}/precon.json`)).default;
+  const stats = (await import(`@/messages/${locale}/stats.json`)).default;
 
   return {
     locale,
@@ -63,6 +64,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
       dataAsOf,
       ruleZero,
       precon,
+      stats,
     },
   };
 });

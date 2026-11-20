@@ -1,0 +1,63 @@
+{
+  "eyebrow": "Statistics",
+  "title": "Your decks in {year}",
+  "description": "Counts across your own decks created or changed in the year you pick. Each figure links to the decks behind it. Nothing here compares you with other players.",
+  "loading": "Loading your statistics…",
+  "yearLabel": "Year",
+  "loadFailed": "Your statistics could not be loaded.",
+  "retry": "Try again",
+  "empty": "No deck was created or changed in {year}.",
+  "noCommanderDecks": "No Commander deck was created or changed in {year}, so there are no colour, commander, card or bracket figures.",
+  "ofDecks": "{count, number} of {total, plural, one {# deck} other {# decks}}",
+  "atLeastOfDecks": "at least {count, number} of {total, plural, one {# deck} other {# decks}}",
+  "decksHeader": "Decks",
+  "linksHeader": "Open a deck",
+  "colors": {
+    "caption": "Colours in your Commander decks",
+    "header": "Colour",
+    "W": "White",
+    "U": "Blue",
+    "B": "Black",
+    "R": "Red",
+    "G": "Green",
+    "colorless": "Colourless"
+  },
+  "identities": {
+    "caption": "Colour identities",
+    "header": "Colour identity"
+  },
+  "commanders": {
+    "caption": "Commanders and partner pairs",
+    "header": "Commander",
+    "new": "New this year"
+  },
+  "cardsUsedMost": {
+    "caption": "The ten cards you use most",
+    "note": "Basic lands are left out. A card counts once per deck, whatever its number of copies.",
+    "header": "Card"
+  },
+  "shared": {
+    "caption": "Cards shared across decks",
+    "summary": "{count, plural, one {# card sits} other {# cards sit}} in two or more of your {total, plural, one {# Commander deck} other {# Commander decks}}. The five most shared:",
+    "header": "Card"
+  },
+  "brackets": {
+    "caption": "Brackets",
+    "header": "Bracket",
+    "level": "Bracket {level}",
+    "computedHeader": "Estimated",
+    "targetHeader": "Your target",
+    "comboNote": "Estimates do not check two-card combos, so a deck that holds one may belong in a higher bracket."
+  },
+  "activity": {
+    "caption": "Decks added and changed",
+    "header": "Activity",
+    "added": "Added",
+    "changed": "Changed",
+    "note": "A deck counts as changed when it was saved or snapshotted in the year. Only its last save is kept, so changed decks are a floor."
+  },
+  "formats": {
+    "caption": "Active decks per format",
+    "header": "Format"
+  }
+}
