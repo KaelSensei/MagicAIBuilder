@@ -30,6 +30,7 @@ export const EXPORTED_USER_RELATIONS: Readonly<Record<string, ArchiveSection>> =
     "NotificationPreference.user": "notificationPreferences",
     "PlaytestSession.user": "playtests",
     "PublicDeckFolder.user": "publicDeckFolders",
+    "RuleZeroSheet.owner": "ruleZeroSheets",
     "SavedPublicDeck.user": "savedDecks",
     "UsageCounter.user": "aiUsage",
     "UserFollow.follower": "following",
