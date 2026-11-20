@@ -120,6 +120,7 @@ export const ROUTE_LIMITS: readonly RouteLimitDeclaration[] = [
   unlimited("decks/[id]/snapshots/[snapshotId]"),
   unlimited("decks/[id]/snapshots/[snapshotId]/restore"),
   unlimited("decks/folders"),
+  unlimited("decks/search"),
   unlimited("health"),
   limited("import/moxfield-user", 10),
   limited("import/url", 10),
