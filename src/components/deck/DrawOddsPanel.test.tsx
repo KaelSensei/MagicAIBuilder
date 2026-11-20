@@ -1,7 +1,8 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { renderWithIntl, type TestLocale } from "@/test/render-with-intl";
+import type { Session } from "next-auth";
+import { renderWithProviders, type TestLocale } from "@/test/render";
 import { aDeck } from "@/test/builders/deck";
 import { aDeckCard } from "@/test/builders/card";
 import type { Deck, DeckCard } from "@/lib/deck/types";
@@ -41,8 +42,20 @@ function commanderDeck(extra: readonly DeckCard[] = []): Deck {
   });
 }
 
-function renderPanel(deck: Deck, locale: TestLocale = "en") {
-  return renderWithIntl(<DrawOddsPanel deck={deck} />, { locale });
+/**
+ * Mounts the panel. Without a `session`, no Auth.js provider is mounted, so a
+ * panel that read the session would throw: that is how a guest render proves
+ * the panel reads none.
+ */
+function renderPanel(
+  deck: Deck,
+  locale: TestLocale = "en",
+  session?: Session | null
+) {
+  return renderWithProviders(<DrawOddsPanel deck={deck} />, {
+    locale,
+    session,
+  });
 }
 
 /** The panel, found by its accessible name. */
@@ -55,6 +68,40 @@ function inputValue(label: string): string | null {
   return within(panel())
     .getByText(label, { selector: "dt" })
     .nextElementSibling?.textContent ?? null;
+}
+
+/** The answer the panel announces. */
+function answer(): HTMLElement {
+  return within(panel()).getByRole("status");
+}
+
+/** The "At least" field. */
+function minimumField(): HTMLElement {
+  return within(panel()).getByRole("spinbutton", { name: "At least" });
+}
+
+/** Replaces the "At least" field's text with what the player types. */
+async function typeMinimum(
+  user: ReturnType<typeof userEvent.setup>,
+  text: string
+): Promise<void> {
+  await user.clear(minimumField());
+  await user.type(minimumField(), text);
+}
+
+/**
+ * The answer is a sentence, not a figure: no percentage, and nothing a broken
+ * computation prints in place of one.
+ */
+function expectNoFigure(): void {
+  for (const leak of ["%", "NaN", "Infinity", "Error"]) {
+    expect(answer()).not.toHaveTextContent(leak);
+  }
+}
+
+/** A deck with main-deck cards but no land: 60 distinct creatures. */
+function landlessDeck(): Deck {
+  return aDeck({ format: "modern", cards: spells(60) });
 }
 
 describe("DrawOddsPanel", () => {
@@ -252,5 +299,215 @@ describe("DrawOddsPanel", () => {
         "C’est un dénombrement de mains également probables, pas une partie enregistrée."
       )
     ).toBeVisible();
+  });
+});
+
+describe("DrawOddsPanel, when the question cannot be answered (AC-97-04)", () => {
+  it("says the minimum is more than the cards drawn, instead of 0.0%, when it is above the library size", async () => {
+    const user = userEvent.setup();
+    renderPanel(commanderDeck());
+
+    await typeMinimum(user, "100");
+
+    expect(answer()).toHaveTextContent(
+      "At least 100 is more than the 7 cards drawn."
+    );
+    expectNoFigure();
+    expect(inputValue("At least")).toBe("100");
+  });
+
+  it("says the minimum is more than the cards drawn, instead of 0.0%, when the library holds enough but the hand does not", async () => {
+    const user = userEvent.setup();
+    renderPanel(commanderDeck());
+
+    await typeMinimum(user, "8");
+
+    expect(answer()).toHaveTextContent(
+      "At least 8 is more than the 7 cards drawn."
+    );
+    expectNoFigure();
+  });
+
+  it("counts a minimum of 0 as certain, a known 100.0%, since every hand holds at least zero", async () => {
+    const user = userEvent.setup();
+    renderPanel(commanderDeck());
+
+    await typeMinimum(user, "0");
+
+    expect(answer()).toHaveTextContent("100.0%");
+    expect(inputValue("At least")).toBe("0");
+  });
+
+  it.each([
+    { typed: "2.5", what: "a fraction" },
+    { typed: "-1", what: "a negative count" },
+  ])(
+    "asks for a whole number, instead of a figure, when the minimum is $what",
+    async ({ typed }) => {
+      const user = userEvent.setup();
+      renderPanel(commanderDeck());
+
+      await typeMinimum(user, typed);
+
+      expect(answer()).toHaveTextContent(
+        "Enter a whole number of cards, 0 or more."
+      );
+      expectNoFigure();
+    }
+  );
+
+  it("asks for a whole number, and shows no NaN, when the player types letters into the minimum", async () => {
+    const user = userEvent.setup();
+    renderPanel(commanderDeck());
+
+    await typeMinimum(user, "abc");
+
+    expect(answer()).toHaveTextContent(
+      "Enter a whole number of cards, 0 or more."
+    );
+    expectNoFigure();
+    expect(inputValue("At least")).toBe("not set");
+  });
+
+  it("brings the chance back when the player corrects the minimum", async () => {
+    const user = userEvent.setup();
+    renderPanel(commanderDeck());
+    await typeMinimum(user, "100");
+
+    await typeMinimum(user, "3");
+
+    expect(answer()).toHaveTextContent("50.1%");
+  });
+
+  it("brings the chance back when the player picks a draw the library can cover after one it cannot", async () => {
+    const user = userEvent.setup();
+    renderPanel(aDeck({ cards: [forests(4), ...spells(5)] }));
+    const when = within(panel()).getByRole("combobox", { name: "When" });
+    await user.selectOptions(when, "Turn 3");
+
+    await user.selectOptions(when, "Opening hand");
+
+    // Three or more of 4 lands in 7 of 9 cards:
+    // (C(4,3)·C(5,4) + C(4,4)·C(5,3)) / C(9,7) = (20 + 10) / 36 ≈ 0.83333
+    expect(answer()).toHaveTextContent("83.3%");
+  });
+
+  it("keeps the minimum field's name and focus while the answer turns into a sentence and back", async () => {
+    const user = userEvent.setup();
+    renderPanel(commanderDeck());
+
+    await typeMinimum(user, "100");
+    expect(minimumField()).toHaveFocus();
+
+    await typeMinimum(user, "3");
+    expect(minimumField()).toHaveFocus();
+    expect(minimumField()).toHaveAccessibleName("At least");
+  });
+
+  it("says the minimum is more than the cards drawn in French", async () => {
+    const user = userEvent.setup();
+    renderPanel(commanderDeck(), "fr");
+    const french = panel("Probabilités de pioche");
+    const minimum = within(french).getByRole("spinbutton", {
+      name: "Au moins",
+    });
+
+    await user.clear(minimum);
+    await user.type(minimum, "8");
+
+    expect(within(french).getByRole("status")).toHaveTextContent(
+      "Au moins 8, c’est plus que les 7 cartes piochées."
+    );
+  });
+});
+
+describe("DrawOddsPanel, when the deck holds nothing to count (AC-97-05)", () => {
+  it("says the main deck needs cards, instead of 0%, for a deck with no card at all", () => {
+    renderPanel(aDeck({ cards: [] }));
+
+    expect(answer()).toHaveTextContent(
+      "Add cards to the main deck to see the odds."
+    );
+    expectNoFigure();
+  });
+
+  it("says the main deck needs cards when its only cards sit in the Sideboard and Considering, which are not in the library", () => {
+    renderPanel(
+      aDeck({
+        cards: [
+          { ...forests(10), zone: "sideboard" },
+          aDeckCard({ id: "sol", name: "Sol Ring", zone: "maybeboard" }),
+        ],
+      })
+    );
+
+    expect(answer()).toHaveTextContent(
+      "Add cards to the main deck to see the odds."
+    );
+    expectNoFigure();
+    expect(inputValue("Cards in the library")).toBe("0");
+  });
+
+  it("says no land is counted, instead of claiming 0.0%, when the lands question meets a deck without lands", () => {
+    renderPanel(landlessDeck());
+
+    expect(answer()).toHaveTextContent("No land is counted in the main deck.");
+    expectNoFigure();
+    expect(inputValue("Matching cards")).toBe("0");
+  });
+
+  it("still answers a chosen card's question in a deck without lands", async () => {
+    const user = userEvent.setup();
+    renderPanel(landlessDeck());
+
+    await user.selectOptions(
+      within(panel()).getByRole("combobox", { name: "Looking for" }),
+      "Spell 0"
+    );
+
+    // One copy among 60 cards, seven drawn: 7 / 60 ≈ 0.11667
+    expect(answer()).toHaveTextContent("11.7%");
+  });
+
+  it("says no land is counted in French", () => {
+    renderPanel(landlessDeck(), "fr");
+
+    expect(
+      within(panel("Probabilités de pioche")).getByRole("status")
+    ).toHaveTextContent("Aucun terrain n’est compté dans le deck principal.");
+  });
+});
+
+describe("DrawOddsPanel, for a guest and a signed-in player (AC-97-06)", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  /** The answer and the four inputs of the formula, as the player reads them. */
+  function shownOdds(): readonly (string | null)[] {
+    return [
+      answer().textContent,
+      inputValue("Cards in the library"),
+      inputValue("Matching cards"),
+      inputValue("Cards drawn"),
+      inputValue("At least"),
+    ];
+  }
+
+  it("shows a guest deck the same digits as a signed-in deck with the same cards, without a request or a session", () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+    // No session: no Auth.js provider is mounted, so reading one would throw.
+    const guest = renderPanel({ ...commanderDeck(), id: "guest" });
+    const guestOdds = shownOdds();
+    guest.unmount();
+
+    renderPanel(commanderDeck(), "en", {
+      user: { id: "player-1", name: "Kael" },
+      expires: "2099-01-01T00:00:00.000Z",
+    });
+
+    expect(shownOdds()).toEqual(guestOdds);
+    expect(guestOdds).toEqual(["50.1%", "99", "36", "7", "3"]);
+    expect(fetchSpy).not.toHaveBeenCalled();
   });
 });
