@@ -40,6 +40,12 @@ async function visitSignedOut(pathname: string): Promise<Response | void> {
 }
 
 describe("middleware for a signed-out visitor", () => {
+  it("serves the precon catalogue to a signed-out visitor", async () => {
+    const response = await visitSignedOut("/precons");
+
+    expect(response?.headers.get(SERVED_BY_LOCALE_MIDDLEWARE)).toBe("1");
+  });
+
   it("serves the rules reference pages in every served locale", async () => {
     const gameChangers = await visitSignedOut("/rules/game-changers");
     const comprehensive = await visitSignedOut("/fr/rules/comprehensive");

@@ -1,0 +1,11 @@
+{
+  "title": "Precons Commander",
+  "readOnly": "Listes officielles datées. Lecture seule : rien sur cette page ne modifie une liste.",
+  "empty": "Aucune liste de precon n'a encore été chargée.",
+  "set": "Extension {set}",
+  "released": "Sortie le {date}",
+  "version": "Version {version}",
+  "cards": "{count, plural, one {# carte} other {# cartes}}",
+  "sourceRead": "Source lue le {date}",
+  "source": "Source"
+}
