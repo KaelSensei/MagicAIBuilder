@@ -77,7 +77,7 @@ export function playersCoveredBy(
   creditUsd: number,
   costPerPlayerUsd: number
 ): number {
-  if (!(costPerPlayerUsd > 0)) {
+  if (Number.isNaN(costPerPlayerUsd) || costPerPlayerUsd <= 0) {
     throw new RangeError(
       `A player's cost must be above zero, got ${costPerPlayerUsd}`
     );
