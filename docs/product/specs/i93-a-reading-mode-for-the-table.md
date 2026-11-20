@@ -254,6 +254,7 @@ EDHREC's 6 November 2026 changelog put card names over images on mobile "so they
 - [ ] No life total, no commander-damage tally and no timer. Those stay out.
 - [ ] English and French chrome. Card text follows the printing's language when I-37 slice 12 has stored it, and the oracle text until then.
 - [ ] Added 2026-11-12 (thirteenth pass): a "What to remember" tab that shows [I-99](i99-a-pilot-sheet-and-how-heavy-this-deck-is-to-pilot.md)'s timing blocks for the same card sequence, read-only and in the same large type, with no life total (I-99 slice 13).
+- [ ] Added 2026-11-20 (nineteenth pass): once [I-37](i37-editor-depth.md) slice 12 stores languages, reading mode offers "Oracle text in {interface language}" beside the printed-language text for each non-English copy, so a mixed-language table reads the same card; [I-80](i80-print-shop-file.md) prints the same as an Oracle slip. A 2014 TappedOut reply notes that a partly deaf player needs something to read, not a spoken explanation ([thread](https://tappedout.net/mtg-forum/commander/foreign-language-cards-in-edh/), 2014-02-11), and a 2017 thread suggests printouts "slid behind the card in an opaque sleeve" ([thread](https://tappedout.net/mtg-forum/general/does-using-cards-in-other-languages-makes-you-a-jerk/), 2017-02-09); read 2026-11-20. Old sources, so confidence is medium.
 
 ### Enrichment (2026-11-11)
 

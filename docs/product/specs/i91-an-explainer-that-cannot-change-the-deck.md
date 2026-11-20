@@ -276,6 +276,7 @@ I-02 already answers "why is this card here?" inside a copilot that also propose
 - [ ] The mode has no add, cut, swap or apply control. A test loads the deck, asks both questions, and asserts the card rows are unchanged.
 - [ ] A rules question gets a refusal and a link to the card's rulings when I-47 has them, and to the rules file until then. The mode does not quote a rule it did not look up.
 - [ ] Later, a model may rephrase a deterministic answer. The rephrase is labelled as a model's wording, it may not add a card name that was not in the deterministic answer, and it counts against I-02's allowance. I-70 scores it before it is the default.
+- [ ] Added 2026-11-20 (nineteenth pass): once [I-65](i65-how-this-deck-wins.md) slice 1 ships, the deterministic answer to "why is this card here?" adds the card's I-65 role clauses and the route it serves, each with its source text; once D-10 allows it, it also shows the Tagger tag that matched, tracked by its stable `id` ([tags](https://scryfall.com/docs/api/tags), read 2026-11-20). Today the question is a model call in the copilot (`src/components/deck/DeckQuestionControls.tsx`). Players distrust auto-tags: Archidekt's tags "mix things up sometimes", and "sometimes i don't understand why it tagged certain cards the way it did" (r/EDH, "What deckbuilding website do you use and why?", 84 points, 2026-10-01, [thread](https://www.reddit.com/r/EDH/comments/1wv8mf7/), Arctic Shift snapshot read 2026-11-20). The rule, not a model's reason, answers them.
 
 ### Enrichment (2026-11-11)
 

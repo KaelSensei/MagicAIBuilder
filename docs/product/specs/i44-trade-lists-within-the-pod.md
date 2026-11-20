@@ -592,6 +592,7 @@ Commander players trade with the people they play with, and a deckbuilder alread
 - [ ] Reports for lists and proposals and a free-copies mode, then, after the lawyer answers, an adult declaration with a city opt-in, a store audience and on-demand nearby matches behind a density gate (slices 10–14).
   - Moved 2026-11-10 to the account: the adult declaration is `User.adultDeclaredAt`, one field that I-44, I-56, I-63 and [I-72](i72-growth-loops-referrals-creators-and-return.md) read, instead of a field of `TradeArea`; slice 12 still records it.
 - [ ] Confirmed-partner bands instead of ratings (slice 15), and a continuous match watch only after I-30's decision (slice 16).
+- [ ] Added 2026-11-20 (nineteenth pass): a card search over the have lists visible to the player through the friends and pod audiences, answering "who in my pod has this card" on the web; the non-goal on a Discord command for it stays. BoardGameGeek guilds "aggregate the collections of its members" (BGG wiki, search summary; the page answered HTTP 403), and Archidekt's board item "[Collection] Public collections — Make your collections visible to other users!" (19 points, created 2022-02-04) is archived ([features](https://archidekt.com/features?page=3)); read 2026-11-20. Low confidence: no 2026 player request was found.
   - Proposal notices (slice 9) and the match watch's digest (slice 16) go through [I-63](i63-one-notification-system.md)'s inbox and digest under its "Trade proposals" category, not through a sender of their own.
 
 ### Engineering enablers
