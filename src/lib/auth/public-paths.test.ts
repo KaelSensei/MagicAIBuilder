@@ -12,6 +12,13 @@ describe("the API changelog page", () => {
   });
 });
 
+describe("the player statistics page", () => {
+  it("needs a session in English and in French (I-60 requirement 2.1)", () => {
+    expect(isPublicPagePath("/stats")).toBe(false);
+    expect(isPublicPagePath(stripLocalePrefix("/fr/stats"))).toBe(false);
+  });
+});
+
 describe("the precon catalogue", () => {
   it("is public in English and in French, including a list under that path", () => {
     expect(isPublicPagePath("/precons")).toBe(true);
