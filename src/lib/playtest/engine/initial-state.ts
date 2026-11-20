@@ -13,6 +13,7 @@
 
 import type { DeckCard } from "@/lib/deck/types";
 import { OPENING_HAND_SIZE, STARTING_LIFE } from "@/lib/deck/game-constants";
+import { NO_DESIGNATIONS } from "./designations";
 import { defaultPlaytestDeps, type PlaytestDeps } from "./ports";
 import { shuffleCards } from "./shuffle";
 import type { PlaytestEngine } from "./types";
@@ -60,6 +61,7 @@ export function createPlaytestState(
     // No tally unless the deal says the format uses commander damage (`deal.ts`).
     commanderDamageOpponents: 0,
     commanderDamage: [],
+    designations: NO_DESIGNATIONS,
     diceRolls: [],
     actionLog: [],
     nextActionId: 1,
