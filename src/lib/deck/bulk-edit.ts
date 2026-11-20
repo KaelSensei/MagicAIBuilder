@@ -69,12 +69,14 @@ export type BulkEditResolution =
 
 /**
  * Identifies a decklist line: the same card in another zone is another line.
+ * Bulk edit and deck builds (I-55 1.3) share it, so both agree on which rows
+ * are one line.
  *
  * @param name - card name as written or stored
  * @param zone - zone holding the card
  * @returns the comparison key
  */
-function lineKey(name: string, zone: DeckZone): string {
+export function lineKey(name: string, zone: DeckZone): string {
   return `${zone}\u0000${normalizeImportedName(name)}`;
 }
 
