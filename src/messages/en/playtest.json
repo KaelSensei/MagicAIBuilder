@@ -113,6 +113,25 @@
     "blessing": "{has, select, yes {You have the city's blessing} other {You do not have the city's blessing}}",
     "getBlessing": "Get the city's blessing"
   },
+  "hotkeys": {
+    "open": "Keys",
+    "openHint": "Playtest keys (?)",
+    "title": "Playtest keys",
+    "intro": "Press a key while the focus is not in a text field. Move keys act on the card that has the focus in your hand or on the battlefield. Escape closes this list.",
+    "singleKeysOff": "Single-key shortcuts are off, so only Ctrl+Z and ⌘Z work. Turn them back on from the deck builder's keyboard shortcuts.",
+    "actions": {
+      "draw": "Draw a card",
+      "nextTurn": "Go to the next turn",
+      "shuffle": "Shuffle your library",
+      "untapAll": "Untap all your permanents",
+      "toGraveyard": "Put the focused card into your graveyard",
+      "toExile": "Exile the focused card",
+      "toBattlefield": "Put the focused card onto the battlefield",
+      "toHand": "Return the focused card to your hand",
+      "showKeys": "Show this list",
+      "undo": "Undo the last step of the game"
+    }
+  },
   "dice": {
     "title": "Dice",
     "roll": "Roll d{sides}",
