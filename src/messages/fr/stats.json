@@ -1,0 +1,63 @@
+{
+  "eyebrow": "Statistiques",
+  "title": "Vos decks en {year}",
+  "description": "Des comptes sur vos propres decks créés ou modifiés pendant l’année choisie. Chaque chiffre mène aux decks qui le composent. Rien ici ne vous compare à d’autres joueurs.",
+  "loading": "Chargement de vos statistiques…",
+  "yearLabel": "Année",
+  "loadFailed": "Vos statistiques n’ont pas pu être chargées.",
+  "retry": "Réessayer",
+  "empty": "Aucun deck n’a été créé ou modifié en {year}.",
+  "noCommanderDecks": "Aucun deck Commander n’a été créé ou modifié en {year} : il n’y a donc aucun chiffre sur les couleurs, les commandants, les cartes ou les brackets.",
+  "ofDecks": "{count, number} sur {total, plural, one {# deck} other {# decks}}",
+  "atLeastOfDecks": "au moins {count, number} sur {total, plural, one {# deck} other {# decks}}",
+  "decksHeader": "Decks",
+  "linksHeader": "Ouvrir un deck",
+  "colors": {
+    "caption": "Couleurs de vos decks Commander",
+    "header": "Couleur",
+    "W": "Blanc",
+    "U": "Bleu",
+    "B": "Noir",
+    "R": "Rouge",
+    "G": "Vert",
+    "colorless": "Incolore"
+  },
+  "identities": {
+    "caption": "Identités de couleur",
+    "header": "Identité de couleur"
+  },
+  "commanders": {
+    "caption": "Commandants et paires de partenaires",
+    "header": "Commandant",
+    "new": "Nouveau cette année"
+  },
+  "cardsUsedMost": {
+    "caption": "Les dix cartes que vous jouez le plus",
+    "note": "Les terrains de base sont exclus. Une carte compte une fois par deck, quel que soit son nombre d’exemplaires.",
+    "header": "Carte"
+  },
+  "shared": {
+    "caption": "Cartes partagées entre decks",
+    "summary": "{count, plural, one {# carte figure} other {# cartes figurent}} dans au moins deux de vos {total, plural, one {# deck Commander} other {# decks Commander}}. Les cinq plus partagées :",
+    "header": "Carte"
+  },
+  "brackets": {
+    "caption": "Brackets",
+    "header": "Bracket",
+    "level": "Bracket {level}",
+    "computedHeader": "Estimé",
+    "targetHeader": "Votre objectif",
+    "comboNote": "Les estimations ne vérifient pas les combos à deux cartes : un deck qui en contient un peut relever d’un bracket supérieur."
+  },
+  "activity": {
+    "caption": "Decks ajoutés et modifiés",
+    "header": "Activité",
+    "added": "Ajoutés",
+    "changed": "Modifiés",
+    "note": "Un deck compte comme modifié s’il a été enregistré ou sauvegardé en version pendant l’année. Seul son dernier enregistrement est conservé : les decks modifiés sont donc un minimum."
+  },
+  "formats": {
+    "caption": "Decks actifs par format",
+    "header": "Format"
+  }
+}
