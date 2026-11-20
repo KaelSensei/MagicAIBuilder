@@ -888,6 +888,7 @@
     "source": "Markdown",
     "preview": "Preview",
     "previewEmpty": "Your primer appears here as you type.",
+    "unresolvedCards": "Not in this deck",
     "primerContents": "Primer contents",
     "copyPrimer": "Copy primer",
     "primerCopied": "Primer copied",

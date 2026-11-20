@@ -3,9 +3,10 @@
  *
  * Community context. The link rows state the policy a renderer inherits from the tree: an
  * http(s) destination, in any case or protocol-relative, is an external link; a site path is
- * same-site; any other scheme is refused and only its label survives. The block rows pin what the
- * parser does today for a Markdown it does not support (emphasis, nested lists, `[[card]]`
- * mentions): literal text, until a slice adds the feature.
+ * same-site; any other scheme is refused and only its label survives. A `[[Card Name]]` mention
+ * is a card node holding the name and set code as written; resolving it is the renderer's job.
+ * The block rows pin what the parser does today for a Markdown it does not support (emphasis,
+ * nested lists): literal text, until a slice adds the feature.
  */
 import { describe, expect, it } from "vitest";
 import {
@@ -37,6 +38,12 @@ const refused = (label: string): PrimerInline => ({
   kind: "link",
   label,
   link: { kind: "refused" },
+});
+
+const card = (name: string, setCode: string | null = null): PrimerInline => ({
+  kind: "card",
+  name,
+  setCode,
 });
 
 const paragraph = (...content: readonly PrimerInline[]): PrimerBlock => ({
@@ -157,9 +164,9 @@ describe("parsePrimer blocks", () => {
       [paragraph(text("Play **Sol Ring** on _turn one_."))],
     ],
     [
-      "a [[card]] mention kept as literal text (pinned: not supported)",
+      "a [[card]] mention as a card node between its text runs",
       "Tutor for [[Demonic Tutor]] early.",
-      [paragraph(text("Tutor for [[Demonic Tutor]] early."))],
+      [paragraph(text("Tutor for "), card("Demonic Tutor"), text(" early."))],
     ],
     [
       "raw HTML kept as literal text",
@@ -385,6 +392,78 @@ describe("keyPrimerSiblings", () => {
     expect(
       primerInlineText(parseInline("See [the guide](https://example.com) now"))
     ).toBe("See the guide now");
+  });
+
+  it("reads a card mention as the card's name, without brackets or set code", () => {
+    expect(primerInlineText(parseInline("Keep [[Sol Ring|C21]] up"))).toBe(
+      "Keep Sol Ring up"
+    );
+  });
+});
+
+describe("parseInline card mentions", () => {
+  it("parses [[Sol Ring]] as a card mention, and [[Sol Ring|C21]] keeps the set code", () => {
+    expect(parseInline("Keep [[Sol Ring]] or [[Sol Ring|C21]].")).toEqual([
+      text("Keep "),
+      card("Sol Ring"),
+      text(" or "),
+      card("Sol Ring", "C21"),
+      text("."),
+    ]);
+  });
+
+  it.each<[string, string, readonly PrimerInline[]]>([
+    [
+      "the name and set code trimmed",
+      "[[  Sol Ring | c21 ]]",
+      [card("Sol Ring", "c21")],
+    ],
+    ["an empty set code as none", "[[Sol Ring|]]", [card("Sol Ring")]],
+    [
+      "a blank name as text",
+      "[[  ]] and [[|C21]]",
+      [text("[[  ]] and [[|C21]]")],
+    ],
+    ["a single bracket pair as text", "[Sol Ring]", [text("[Sol Ring]")]],
+    ["an unclosed mention as text", "[[Sol Ring]", [text("[[Sol Ring]")]],
+    [
+      "a second pipe as text",
+      "[[Sol Ring|C21|x]]",
+      [text("[[Sol Ring|C21|x]]")],
+    ],
+    [
+      "markup inside a mention as the name, never as HTML",
+      '[[<img src=x onerror="alert(1)">]]',
+      [card('<img src=x onerror="alert(1)">')],
+    ],
+    [
+      "a javascript: string inside a mention as the name, never as a link",
+      "[[javascript:alert(1)]]",
+      [card("javascript:alert(1)")],
+    ],
+    [
+      "a mention beside a link, each its own node",
+      "[[Sol Ring]] then [guide](/decks)",
+      [card("Sol Ring"), text(" then "), sameSite("guide", "/decks")],
+    ],
+    [
+      "a mention followed by a destination: the mention, then the rest as text",
+      "[[Sol Ring]](https://example.com)",
+      [card("Sol Ring"), text("(https://example.com)")],
+    ],
+    [
+      "a double-faced card's full name",
+      "[[Delver of Secrets // Insectile Aberration]]",
+      [card("Delver of Secrets // Insectile Aberration")],
+    ],
+  ])("parses %s", (_case, line, nodes) => {
+    expect(parseInline(line)).toEqual(nodes);
+  });
+
+  it("keeps a line of 100 000 opening mentions as one text run", () => {
+    const openings = "[[a".repeat(100_000);
+
+    expect(parseInline(openings)).toEqual([text(openings)]);
   });
 });
 
