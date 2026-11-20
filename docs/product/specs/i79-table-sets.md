@@ -141,6 +141,7 @@ Routes: `GET|POST /api/table-sets`; `GET|PATCH|DELETE /api/table-sets/[id]`; `PU
 - A balance score, a grade, or automatic balancing. The product never edits a seat to even the table, and no model proposes swaps here.
 - Another player's deck in a seat before D-89's second stage; co-editing a set (I-20, D-91).
 - Store loaner boxes ([I-41](i41-store-commander-nights.md)) and hosting games online (I-50 exports only).
+- Added 2026-11-20 (nineteenth pass): a Commander cube list with checks over the pool is [I-110](i110-a-commander-cube-the-product-can-check.md)'s, and only if owner decision [D-104](../owner-decisions.md#product-scope-and-non-goals) narrows the cube non-goal. This initiative keeps a table set of complete decks; "a battle box where players draw from one shared deck" stays out either way.
 
 ## Testing strategy
 

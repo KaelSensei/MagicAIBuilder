@@ -158,6 +158,17 @@ An eighteenth pass, on 2026-11-19, read the table and the game around it, learni
 - [I-106](i106-choosing-a-precon-one-product-lines-decks-side-by-side.md) compares one precon line's decks side by side on other initiatives' labelled signals, with no power score (goal 1).
 - [I-107](i107-the-turn-a-goldfish-completes-its-route.md) reports the turn a shuffled, goldfished list completes one declared route, with its seed, n and interval, promoted from the seventeenth pass's line on [I-31](i31-deck-lab.md) (goal 1).
 
+A nineteenth pass, on 2026-11-20, answered the owner's request to "add 10 more features to the roadmap", in the same "roadmap v2" format. Six angles over two waves read collaboration and the social graph; cube, draft and sealed product; AI, capture and integrations; homebrew, Rule 0 and lore; money, time and deck lifecycles; and regional markets, events and physical play. Its review is [section 20 of the competitive landscape](../competitive-landscape.md#20-a-nineteenth-pass-the-shelf-of-decks-gifts-cubes-and-pools-and-signings-2026-11-20). Honest research and the ownership test yielded eight initiatives, not ten; two are missing, and none was padded or split. It also added 75 dated scope lines and 13 boundary lines on 51 existing specs:
+
+- [I-108](i108-decks-built-for-someone-else-the-brief-and-the-handover.md) hands a deck one player built to another account, with the recipient's brief and the checks it passed (goal 1).
+- [I-109](i109-build-requests-a-brief-anyone-can-answer-with-a-list.md) turns a request for a deck into a structured brief volunteers answer through I-108, each delivery checked against it (goal 1).
+- [I-110](i110-a-commander-cube-the-product-can-check.md) checks a Commander cube list, if owner decision D-104 narrows the cube non-goal for that job only (goal 1).
+- [I-111](i111-a-commander-deck-from-a-drafted-or-opened-pool.md) builds and checks a 60-card deck from a drafted or opened pool under CR 903.13f and Box League, promoted from I-42's open question (goal 1).
+- [I-112](i112-singles-or-packs-the-chance-a-booster-holds-what-this-deck-lacks.md) shows the single's price, then the chance a pack holds a deck's missing cards, if D-106 and L-54 allow (goal 1).
+- [I-113](i113-a-project-across-my-own-decks-the-32-colour-identities-and-other-slot-grids.md) fills a grid of slots, such as the 32 colour identities, from the player's own decks (goal 1).
+- [I-114](i114-a-decks-place-in-the-roster-keep-rest-retire-or-take-apart.md) gives each deck a stage (in rotation, resting, retired) that changes how the collection counts it (goal 1).
+- [I-115](i115-cards-to-get-signed-an-events-artists-against-your-copies.md) matches an event's attending artists against the player's copies for a signing (goal 1).
+
 ### Strategic boundaries
 
 - Do not become a generic card database; Scryfall already owns that job.
@@ -231,6 +242,8 @@ The seventeenth pass touches this part too, without changing it. [I-31](i31-deck
 
 The eighteenth pass touches this part too, without changing it. [I-104](i104-league-decks-and-the-change-allowance-between-rounds.md) checks league decks and is not a tournament manager: no standings, points, Elo, pairings or results, and D-101 is the only way that could change. [I-105](i105-creator-content-linked-to-commanders-and-precons.md) links out and hosts, summarises and ranks nothing, so it is neither a news feed nor a publishing platform. [I-106](i106-choosing-a-precon-one-product-lines-decks-side-by-side.md) shows no 1–10 power score. [I-107](i107-the-turn-a-goldfish-completes-its-route.md) carries the seventeenth pass's promise: one declared route, a closed set of route kinds, no opponents and no bracket. A life counter, a turn timer, achievements, a pod finder and a Commander course stay out.
 
+The nineteenth pass touches this part too. The cube line above stands as written: [I-110](i110-a-commander-cube-the-product-can-check.md) asks the owner ([D-104](../owner-decisions.md#product-scope-and-non-goals)) to narrow it to "no draft simulator, no draft hosting, no pack generation, no cube directory" for a checked list only, and until then I-110 is blocked. [I-111](i111-a-commander-deck-from-a-drafted-or-opened-pool.md) builds a deck from a pool and generates no pack, so drafting stays out. [I-112](i112-singles-or-packs-the-chance-a-booster-holds-what-this-deck-lacks.md) would reverse [I-17](i17-precon-path-and-tiered-upgrades.md)'s random-content line and the seventeenth pass's sealed-product reject only if D-106 says yes, with no money total and no sealed link. The custom-card creator, fan-made sets, rendered proxies, an AI opponent, a browser extension on other deck sites, build streaks, a buy-and-sell ledger, a convention companion and an artist or event directory stay out.
+
 Sources are listed in [`competitive-landscape.md`](./competitive-landscape.md). Revalidate a competitor's behavior before implementation. Capabilities change.
 
 ---
@@ -252,8 +265,8 @@ Every initiative's `Status` line uses exactly one word from the table above (nor
 
 **Registers, 2026-11-10, updated 2026-11-11.** Two documents collect what waits on people rather than on code:
 
-- [`owner-decisions.md`](../owner-decisions.md) lists the 103 open decisions only the owner can make, merged from about 300 mentions in the roadmap and the specs, and opens with a "Decide this week" table of the ten that unblock the most work, plus D-87, protecting `dev` and `staging` on GitHub. D-78 and D-79 joined from the ninth pass, D-80 to D-87 from the tenth and D-88 to D-95 from the eleventh and D-96 to D-98 from the thirteenth (2026-11-12). Four answers the owner gave on 2026-11-10 are recorded as [decided](../owner-decisions.md#decided-on-2026-11-10). Added 2026-11-19: D-99 and D-100 joined from the fifteenth pass and D-101 to D-103 from the eighteenth, for 103.
-- [`legal-questions.md`](../legal-questions.md) reduces about 158 lawyer questions from 36 specs to 39, with the ten answers that unblock the most work first. The ninth pass added L-40 to L-48, the tenth L-49 and L-50 and the eleventh L-51 and L-52, for 52, and the thirteenth added (c) to L-18 and (g) to L-21 with no new number; it is research for counsel, not legal advice. Added 2026-11-19: the eighteenth pass added L-53, for 53.
+- [`owner-decisions.md`](../owner-decisions.md) lists the 103 open decisions only the owner can make, merged from about 300 mentions in the roadmap and the specs, and opens with a "Decide this week" table of the ten that unblock the most work, plus D-87, protecting `dev` and `staging` on GitHub. D-78 and D-79 joined from the ninth pass, D-80 to D-87 from the tenth and D-88 to D-95 from the eleventh and D-96 to D-98 from the thirteenth (2026-11-12). Four answers the owner gave on 2026-11-10 are recorded as [decided](../owner-decisions.md#decided-on-2026-11-10). Added 2026-11-19: D-99 and D-100 joined from the fifteenth pass and D-101 to D-103 from the eighteenth, for 103. Added 2026-11-20: D-104 to D-108 joined from the nineteenth, for 108.
+- [`legal-questions.md`](../legal-questions.md) reduces about 158 lawyer questions from 36 specs to 39, with the ten answers that unblock the most work first. The ninth pass added L-40 to L-48, the tenth L-49 and L-50 and the eleventh L-51 and L-52, for 52, and the thirteenth added (c) to L-18 and (g) to L-21 with no new number; it is research for counsel, not legal advice. Added 2026-11-19: the eighteenth pass added L-53, for 53. Added 2026-11-20: the nineteenth added L-54 and L-55, for 55, and (e) and (f) to L-08.
 
 ### Backlog snapshot - 2026-10-20
 
@@ -630,6 +643,16 @@ Both are Next after the numbered Next band, and both have a first slice that can
 
 I-106 is Next after the numbered Next band; I-104, I-105 and I-107 are Later. None is paid for a player's own check, and none is in the 30–50 iteration estimate. Of the seventeenth pass's 33 dated lines, one was promoted (I-31's speed variant, now I-107) and 32 stay as refinements. Owner decisions D-101 to D-103 join the register, which now holds 103, and L-53 joins the legal brief. The glance rows were written by hand; the outside script was not re-run.
 
+**2026-11-20, I-108 to I-115, the shelf of decks, gifts, cubes and pools, and signings:** a nineteenth pass, on the owner's request to "add 10 more features to the roadmap" in the "roadmap v2" format, read r/EDH, r/mtgcube and r/BudgetBrews through Arctic Shift, Wizards' pages and the Comprehensive Rules of 2026-11-06, Scryfall's and MTGJSON's data, CubeCobra, Draftmancer, Playgroup, Archidekt's board, MTG Burrow, Grimoria, Hareruya and creators' articles. The specs read the code on `origin/dev` at `c88bdc7d` (#1631):
+
+- **Only a public deck can be copied into another account (I-108, I-109).** The fork route loads `where: { id, isPublic: true }`; no recipient, offer or brief exists.
+- **No cube, pool or limited format (I-110, I-111).** A deck is a `Deck` with a `format` string; nine formats, none limited.
+- **No booster data (I-112).** I-67 slice 13 plans sealed contents only.
+- **No object across decks and no deck stage (I-113, I-114).** `Deck.folderId` holds one folder; the acquisition plan and the commitment index read every deck forever.
+- **No artist data (I-115).** The catalog card leaves `artist` out.
+
+I-113 and I-114 are Next after the numbered Next band; I-108, I-109, I-111 and I-115 are Later; I-110 and I-112 are Blocked on D-104 and D-106. None is paid, and none is in the 30–50 iteration estimate. The owner asked for ten initiatives; eight held, and the pass reports the two missing rather than pad. Owner decisions D-104 to D-108 join the register, which now holds 108, and L-54 and L-55 join the legal brief. The glance rows were written by hand; the outside script was not re-run.
+
 ---
 
 ## Portfolio View
@@ -927,6 +950,8 @@ I-76 to I-79 fit around that order. [I-77](i77-a-bracket-estimate-players-can-au
 I-102 and I-103 fit around that order the same way, without a number of their own. Unlike I-99 to I-101, each has slices that can start now: I-102 slice 1 reads fields every deck card stores, and I-103 slices 1, 2 and 5 need no migration. Scheduled agents must not pick I-102 slice 0, slice 8 before D-99 or slice 10 before L-22, or I-103 slice 0 or slice 4 before D-100.
 
 I-104 to I-107 fit around that order the same way (added 2026-11-19). [I-106](i106-choosing-a-precon-one-product-lines-decks-side-by-side.md) is Next and starts the day I-17 slice 1 and I-77 slice 1 merge, since every row it shows is another initiative's output. [I-104](i104-league-decks-and-the-change-allowance-between-rounds.md), [I-105](i105-creator-content-linked-to-commanders-and-precons.md) and [I-107](i107-the-turn-a-goldfish-completes-its-route.md) are Later. Scheduled agents must not pick I-104 slice 0 or any slice from 2 before D-101; any I-105 slice before L-53 and D-102; or I-107 slice 0, or slice 3 before D-103. I-104 slice 1 is a pure function a person may build at any time.
+
+I-108 to I-115 fit around that order the same way (added 2026-11-20). [I-113](i113-a-project-across-my-own-decks-the-32-colour-identities-and-other-slot-grids.md) and [I-114](i114-a-decks-place-in-the-roster-keep-rest-retire-or-take-apart.md) are Next: I-113 slice 1 reads I-60's shipped identity rule, and I-114 slice 1 is pure; I-114 slice 2 waits for D-107. The others are Later or Blocked. Scheduled agents must not pick any I-108 slice before D-108; any I-109 slice before D-108, I-108 slice 1, I-38 slices 8 to 12 and D-56; any I-110 slice before D-104; I-111 slices 2 to 5 before D-105; any I-112 slice before D-106 and L-54; or I-114 slice 2 before D-107. I-111 slice 1 and I-115 slice 1 are pure functions a person may build at any time.
 
 I-99 to I-101 fit around that order without a number of their own, as I-80 to I-98 do. [I-99](i99-a-pilot-sheet-and-how-heavy-this-deck-is-to-pilot.md) and [I-100](i100-cards-that-work-against-each-other.md) follow I-78 in spirit: both read I-65 slice 1's clause module, I-99 slice 2 and I-100 slice 1 read I-78 slice 1's classes, and I-99 slice 6 waits for I-15 slice 2's calculated column. Their first slices start the day I-65 slice 1 and I-78 slice 1 merge. [I-101](i101-collecting-goals-beyond-a-set.md) is Later (2027): its slice 1 is pure functions a person may build after I-67 slice 2, and nothing else starts before the owner records gate C as met and answers D-98. Scheduled agents must not pick I-99 slice 0, slice 7 before the owner's wording or slice 12 before D-96; I-100 slice 0, slices 6 and 9 before D-97 or slice 10 before L-22; or any I-101 slice, since each needs the gate or the decision.
 
