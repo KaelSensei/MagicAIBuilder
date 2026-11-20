@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { screen } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import { apiDeckToStoreDeck } from "@/lib/deck/store-factories";
 import type { Deck, DeckCard } from "@/lib/deck/types";
 import { aDeckCard } from "@/test/builders/card";
@@ -181,6 +181,37 @@ describe("HomeDeckCard", () => {
 
     expect(screen.getByText("IA")).toBeInTheDocument();
     expect(screen.queryByText("AI")).not.toBeInTheDocument();
+  });
+});
+
+/**
+ * The deck card on `/decks` with no action in flight, and the two action
+ * callbacks it was given.
+ */
+function renderDeckCard(deck: Deck = makeDeck()) {
+  const onDelete = vi.fn();
+  const onDuplicate = vi.fn();
+  renderWithIntl(
+    <HomeDeckCard
+      deck={deck}
+      onDelete={onDelete}
+      onDuplicate={onDuplicate}
+      deletingId={null}
+      duplicatingId={null}
+    />
+  );
+  return { onDelete, onDuplicate };
+}
+
+// WCAG 4.1.2: a button nested in a link has no reliable role, and the link's
+// name ran the deck name together with "Duplicate" and "Delete".
+describe("HomeDeckCard actions beside its link", () => {
+  it("the deck card's link contains no button, and its accessible name is the deck name", () => {
+    renderDeckCard();
+
+    const link = screen.getByRole("link");
+    expect(link).toHaveAccessibleName("Test Deck");
+    expect(within(link).queryAllByRole("button")).toHaveLength(0);
   });
 });
 
