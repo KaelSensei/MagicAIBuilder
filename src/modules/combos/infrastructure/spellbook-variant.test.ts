@@ -45,6 +45,98 @@ describe("toCombo (Commander Spellbook variant → Combo)", () => {
         conditions: [],
         manaNeeded: "{U}{U}{B}",
       },
+      startZones: {
+        "Demonic Consultation": ["hand"],
+        "Thassa's Oracle": ["hand"],
+      },
+      standaloneResults: ["Win the game"],
+      manaValueNeeded: 3,
+      bracketTag: "ruthless",
+    });
+  });
+
+  describe("the facts the route map reads (I-65 slice 2)", () => {
+    it("keeps only the results Spellbook marks Standalone, in its order", () => {
+      expect(toCombo(recordedVariant("4821-5261")).standaloneResults).toEqual([
+        "Infinite mana nonland permanents you control can produce",
+      ]);
+    });
+
+    it("keeps no result when Spellbook marks none Standalone: the combo is an engine", () => {
+      const variant = recordedVariant("742-1295");
+      const engine = {
+        ...variant,
+        produces: variant.produces.map((produced) => ({
+          ...produced,
+          feature: { ...produced.feature, status: "H" },
+        })),
+      };
+
+      expect(toCombo(engine).standaloneResults).toEqual([]);
+    });
+
+    it("names the zone each card starts in, by card name", () => {
+      expect(toCombo(recordedVariant("4821-5261")).startZones).toEqual({
+        "Dramatic Reversal": ["exile"],
+        "Isochron Scepter": ["battlefield"],
+      });
+    });
+
+    it.each([
+      ["H", "hand"],
+      ["B", "battlefield"],
+      ["C", "commandZone"],
+      ["E", "exile"],
+      ["G", "graveyard"],
+      ["L", "library"],
+    ] as const)("reads the zone letter %s as %s", (letter, zone) => {
+      const variant = recordedVariant("742-1295");
+      const [first] = variant.uses;
+      const oneCard = {
+        ...variant,
+        uses: [{ ...first, zoneLocations: [letter] }],
+      };
+
+      expect(toCombo(oneCard).startZones).toEqual({
+        "Demonic Consultation": [zone],
+      });
+    });
+
+    it("lists every zone a card may start in, and skips a zone letter it does not know", () => {
+      const variant = recordedVariant("742-1295");
+      const [first] = variant.uses;
+      const anyZone = {
+        ...variant,
+        uses: [{ ...first, zoneLocations: ["H", "X", "G"] }],
+      };
+
+      expect(toCombo(anyZone).startZones).toEqual({
+        "Demonic Consultation": ["hand", "graveyard"],
+      });
+    });
+
+    it("reads the mana value Spellbook says the combo needs", () => {
+      expect(toCombo(recordedVariant("513-5034--46")).manaValueNeeded).toBe(0);
+    });
+
+    it.each([
+      ["R", "ruthless"],
+      ["S", "spicy"],
+      ["P", "powerful"],
+      ["O", "oddball"],
+      ["C", "core"],
+      ["E", "exhibition"],
+      ["B", "banned"],
+    ] as const)("reads the bracket tag %s as %s", (letter, tag) => {
+      const variant = { ...recordedVariant("742-1295"), bracketTag: letter };
+
+      expect(toCombo(variant).bracketTag).toBe(tag);
+    });
+
+    it("has no bracket tag when Spellbook sends one it does not know, rather than failing the lookup", () => {
+      const variant = { ...recordedVariant("742-1295"), bracketTag: "Z" };
+
+      expect(toCombo(variant).bracketTag).toBeNull();
     });
   });
 

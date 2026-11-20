@@ -18,6 +18,15 @@ const SCEPTER: Combo = {
     ],
     manaNeeded: "",
   },
+  startZones: {
+    "Dramatic Reversal": ["exile"],
+    "Isochron Scepter": ["battlefield"],
+  },
+  standaloneResults: [
+    "Infinite mana nonland permanents you control can produce",
+  ],
+  manaValueNeeded: 0,
+  bracketTag: "spicy",
 };
 
 const HULLBREAKER: Combo = {
@@ -31,6 +40,13 @@ const HULLBREAKER: Combo = {
     conditions: [],
     manaNeeded: "{1}",
   },
+  startZones: {
+    "Hullbreaker Horror": ["battlefield"],
+    "Sol Ring": ["battlefield"],
+  },
+  standaloneResults: ["Infinite colorless mana"],
+  manaValueNeeded: 0,
+  bracketTag: "exhibition",
 };
 
 const OBSERVED_AT = new Date("2026-11-03T12:00:00.000Z");
