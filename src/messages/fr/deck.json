@@ -205,6 +205,22 @@
     "proxySheets": "Exporter les planches de proxys (Print / PDF)",
     "addCardsForProxy": "Ajoutez des cartes pour exporter les proxys",
     "proxyTooltip": "Exporter des planches de proxys imprimables",
+    "registrationSheet": {
+      "row": "Feuille d’inscription",
+      "print": "Imprimer la feuille d’inscription",
+      "title": "Feuille d’inscription de decklist",
+      "playerName": "Nom et prénom",
+      "event": "Événement",
+      "date": "Date",
+      "signature": "Signature",
+      "deckName": "Nom du deck",
+      "format": "Format",
+      "commander": "Commandant",
+      "companion": "Compagnon",
+      "mainDeck": "Deck principal",
+      "sideboard": "Réserve",
+      "total": "Total : {count}"
+    },
     "notices": {
       "leftOut": "{format} n’exporte pas {count, plural, one {# carte} other {# cartes}}",
       "moved": "{format} place {count, plural, one {# carte} other {# cartes}} dans son deck principal",
