@@ -264,6 +264,23 @@ describe("exportTappedOut", () => {
     const text = exportTappedOut(deck);
     expect(text).toContain("1x Vial Smasher the Fierce *CMDR*");
   });
+
+  it("TappedOut export leaves Considering cards out of the main list", () => {
+    const deck = makeDeck({
+      commander: makeCard("Atraxa, Praetor's Voice"),
+      cards: [makeCard("Sol Ring"), makeCard("Counterspell", 2, { zone: "maybeboard" })],
+    });
+
+    expect(exportTappedOut(deck)).toBe("1x Atraxa, Praetor's Voice *CMDR*\n1x Sol Ring");
+  });
+
+  it("TappedOut export leaves Sideboard cards out of the main list", () => {
+    const deck = makeDeck({
+      cards: [makeCard("Sol Ring"), makeCard("Negate", 3, { zone: "sideboard" })],
+    });
+
+    expect(exportTappedOut(deck)).toBe("1x Sol Ring");
+  });
 });
 
 describe("exportArchidekt", () => {
