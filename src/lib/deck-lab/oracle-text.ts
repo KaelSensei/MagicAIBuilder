@@ -68,7 +68,28 @@ const MANA_ABILITY_SEPARATOR = ": Add ";
  * its land type instead (CR 305.6, in `land-rules.ts`).
  */
 function oracleLines(oracleText: string): readonly string[] {
-  return oracleText.replaceAll(/\([^)]*\)/g, "").split("\n");
+  return withoutParenthesised(oracleText).split("\n");
+}
+
+/**
+ * The text without each "(" and everything up to the next ")". An unclosed "(" is kept, with the
+ * text after it. The `indexOf` scans cover disjoint ranges, so it reads the text once.
+ */
+function withoutParenthesised(text: string): string {
+  const kept: string[] = [];
+  let from = 0;
+  for (
+    let open = text.indexOf("(");
+    open !== -1;
+    open = text.indexOf("(", from)
+  ) {
+    const close = text.indexOf(")", open);
+    if (close === -1) break;
+    kept.push(text.slice(from, open));
+    from = close + 1;
+  }
+  kept.push(text.slice(from));
+  return kept.join("");
 }
 
 /** A number word or numeral, or `undefined` when the word is neither. */
