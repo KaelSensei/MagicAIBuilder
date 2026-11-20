@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { screen } from "@testing-library/react";
+import { act, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { SearchZoneMenu } from "./SearchZoneMenu";
@@ -156,10 +156,10 @@ describe("SearchZoneMenu", () => {
 
     await user.click(screen.getByRole("button", { name: "More zones for Sol Ring" }));
 
-    expect(screen.getByRole("menuitem", { name: "Add Sol Ring to Main, 12 copies" })).toBeTruthy();
-    expect(screen.getByRole("menuitem", { name: "Add Sol Ring to Sideboard, 2 copies" })).toBeTruthy();
+    expect(screen.getByRole("menuitem", { name: "Add Sol Ring to Main. 12 cards already in this zone" })).toBeTruthy();
+    expect(screen.getByRole("menuitem", { name: "Add Sol Ring to Sideboard. 2 cards already in this zone" })).toBeTruthy();
     expect(
-      screen.getByRole("menuitem", { name: "Add Sol Ring to Considering, 0 copies" })
+      screen.getByRole("menuitem", { name: "Add Sol Ring to Considering. 0 cards already in this zone" })
     ).toBeTruthy();
     expect(screen.getByText("Sideboard (2)")).toBeTruthy();
   });
@@ -172,7 +172,32 @@ describe("SearchZoneMenu", () => {
     await user.click(screen.getByRole("button", { name: "Autres zones pour Sol Ring" }));
 
     expect(screen.getByRole("menu", { name: "Zones pour Sol Ring" })).toBeTruthy();
-    expect(screen.getByRole("menuitem", { name: "Ajouter Sol Ring à Réserve, 2 exemplaires" })).toBeTruthy();
+    expect(screen.getByRole("menuitem", { name: "Ajouter Sol Ring à Réserve. 2 cartes déjà dans cette zone" })).toBeTruthy();
     expect(screen.getByText("À considérer (0)")).toBeTruthy();
+  });
+
+  it("leaves the card clear until a pointer can hover, and marks an add", async () => {
+    const user = userEvent.setup();
+    const onAddToZone = vi.fn();
+    renderWithIntl(<SearchZoneMenu card={card("Sol Ring")} onAddToZone={onAddToZone} />);
+
+    expect(screen.getByTestId("zone-tile-chrome").querySelector("[class*='opacity-0']")).toBeTruthy();
+
+    await user.click(screen.getByRole("button", { name: "Add Sol Ring to the main deck" }));
+
+    expect(screen.getByRole("status").textContent).toBe("Added Sol Ring");
+  });
+
+  it("closes the menu when the results scroll", async () => {
+    const user = userEvent.setup();
+    renderMenu(vi.fn());
+    await user.click(screen.getByRole("button", { name: "More zones for Sol Ring" }));
+    expect(screen.getByRole("menu")).toBeTruthy();
+
+    await act(async () => {
+      document.dispatchEvent(new Event("scroll"));
+    });
+
+    expect(screen.queryByRole("menu")).toBeNull();
   });
 });

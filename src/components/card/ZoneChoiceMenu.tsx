@@ -177,7 +177,7 @@ function usePlaceZoneMenu(
   }, [initialFocus, menuRef, triggerRef]);
 }
 
-/** Escape and a pointer press outside the menu or its trigger close it. */
+/** Escape, a scroll of the results, and a pointer press outside the menu close it. */
 function useDismissZoneMenu(
   menuRef: RefObject<HTMLDivElement | null>,
   triggerRef: RefObject<HTMLButtonElement | null>,
@@ -199,9 +199,11 @@ function useDismissZoneMenu(
     }
     document.addEventListener("keydown", onKey, true);
     document.addEventListener("pointerdown", onPointer);
+    document.addEventListener("scroll", onClose, true);
     return () => {
       document.removeEventListener("keydown", onKey, true);
       document.removeEventListener("pointerdown", onPointer);
+      document.removeEventListener("scroll", onClose, true);
     };
   }, [menuRef, onClose, triggerRef]);
 }
@@ -212,7 +214,7 @@ interface ZoneMenuItemsProps {
   readonly onChoose: (zone: DeckZone) => void;
 }
 
-/** One button per zone, named for a screen reader with the copy count when known. */
+/** One button per zone. The count is every card already in that zone, not copies of this result. */
 function ZoneMenuItems({ cardName, zoneCounts, onChoose }: ZoneMenuItemsProps) {
   const t = useTranslations("card");
   return MENU_ZONES.map((zone) => {
