@@ -187,6 +187,8 @@ export const PLAYTEST_COMMAND_GUARDS: Readonly<
   ],
   nextPhase: [whileChoosingBottom],
   nextTurn: [whileChoosingBottom],
+  // CR 701.24c, 701.24d: an empty library is still shuffled, so only the bottom choice blocks.
+  shuffleLibrary: [whileChoosingBottom],
   damage: [
     whileChoosingBottom,
     // CR 107.1b: no one deals negative damage, so it must not become a life gain.
