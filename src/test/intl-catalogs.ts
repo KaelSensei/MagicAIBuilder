@@ -29,6 +29,7 @@ import enRules from "@/messages/en/rules.json";
 import enRuleZero from "@/messages/en/rule-zero.json";
 import enSearch from "@/messages/en/search.json";
 import enSettings from "@/messages/en/settings.json";
+import enStats from "@/messages/en/stats.json";
 import frApi from "@/messages/fr/api.json";
 import frAuth from "@/messages/fr/auth.json";
 import frBuilder from "@/messages/fr/builder.json";
@@ -49,6 +50,7 @@ import frRules from "@/messages/fr/rules.json";
 import frRuleZero from "@/messages/fr/rule-zero.json";
 import frSearch from "@/messages/fr/search.json";
 import frSettings from "@/messages/fr/settings.json";
+import frStats from "@/messages/fr/stats.json";
 
 /**
  * The locales a test can render under: the two `src/i18n/routing.ts` serves
@@ -76,6 +78,7 @@ const CATALOGS: Readonly<Record<TestLocale, AbstractIntlMessages>> = {
     playtestEvidence: enPlaytestEvidence,
     commanderRules: enCommanderRules,
     settings: enSettings,
+    stats: enStats,
     metadata: enMetadata,
     api: enApi,
   },
@@ -98,6 +101,7 @@ const CATALOGS: Readonly<Record<TestLocale, AbstractIntlMessages>> = {
     playtestEvidence: frPlaytestEvidence,
     commanderRules: frCommanderRules,
     settings: frSettings,
+    stats: frStats,
     metadata: frMetadata,
     api: frApi,
   },

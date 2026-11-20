@@ -205,7 +205,10 @@ describe("GET /api/user/stats", () => {
       { format: "commander", deckIds: [ELVES, MARWYN, SHEOLDRED] },
       { format: "modern", deckIds: [MODERN] },
     ]);
-    expect(report.decks).toContainEqual({ id: ELVES, name: `Name of ${ELVES}` });
+    expect(report.decks).toContainEqual({
+      id: ELVES,
+      name: `Name of ${ELVES}`,
+    });
   });
 
   it("a signed-out request gets 401 and another account's decks never appear", async () => {

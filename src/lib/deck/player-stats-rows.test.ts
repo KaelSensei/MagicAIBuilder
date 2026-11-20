@@ -79,7 +79,9 @@ describe("toPlayerStatsDeck", () => {
     });
 
     expect(row?.commanders).toEqual(["Thrasios", "Tymna"]);
-    expect(row?.mainCards).toEqual([{ name: "Sol Ring", typeLine: "Artifact" }]);
+    expect(row?.mainCards).toEqual([
+      { name: "Sol Ring", typeLine: "Artifact" },
+    ]);
     expect(row?.targetBracket).toBe(2);
     expect(row?.snapshotDates).toEqual([CREATED]);
   });
@@ -87,7 +89,11 @@ describe("toPlayerStatsDeck", () => {
   it("estimates a bracket for a Commander deck and none for another format", () => {
     const cards = [aStoredCard({ name: "Ezuri", isCommander: true })];
 
-    const commander = toPlayerStatsDeck({ deck: STORED_DECK, cards, snapshotDates: [] });
+    const commander = toPlayerStatsDeck({
+      deck: STORED_DECK,
+      cards,
+      snapshotDates: [],
+    });
     const modern = toPlayerStatsDeck({
       deck: { ...STORED_DECK, format: "modern" },
       cards,

@@ -57,10 +57,16 @@ const YEAR_PATTERN = /^\d{4}$/;
  * @returns every year from the current one back to the account's first; the
  *   current year alone when the account's date lies ahead of the clock
  */
-export function statsYears(accountCreatedAt: Date, now: Date): readonly number[] {
+export function statsYears(
+  accountCreatedAt: Date,
+  now: Date
+): readonly number[] {
   const current = now.getUTCFullYear();
   const first = Math.min(accountCreatedAt.getUTCFullYear(), current);
-  return Array.from({ length: current - first + 1 }, (_, index) => current - index);
+  return Array.from(
+    { length: current - first + 1 },
+    (_, index) => current - index
+  );
 }
 
 /**

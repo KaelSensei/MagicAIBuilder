@@ -28,6 +28,9 @@ const PRIVATE_PAGE_PATHS: readonly string[] = [
   // This used to be an explicit `allow`, paired with a sitemap that
   // listed every token. Both are gone.
   "/share/",
+  // The signed-in player's own statistics (I-60 slice 2). No trailing slash:
+  // the page is `/stats`, which a `/stats/` rule does not match.
+  "/stats",
 ];
 
 /**
