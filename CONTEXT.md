@@ -255,14 +255,15 @@ closed by MI-07). The commander slug is the community context's (COM-02): see
 ## Deck interchange
 
 Import and export. Context folder: `deck-interchange`. Today: `lib/import/`,
-`lib/deck/{import,export,proxy}.ts`.
+`lib/deck/{import,export,proxy}.ts`, `lib/deck/exports/`.
 
 | Term                 | Meaning                                                                                                                         | Source                | Code today                                                                                                                                                            |
 | -------------------- | ------------------------------------------------------------------------------------------------------------------------------- | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Decklist text**    | A deck written as lines of "quantity name", with optional section headings (commander, companion, deck, sideboard, maybeboard). | Community formats     | `parseTextDecklist` in `lib/deck/import.ts` and `parsePlainTextDecklist` in `lib/import/decklist-parse.ts`. **Mismatch:** two parsers that disagree on some headings. |
 | **Import source**    | A deck site the app can import from by URL: Moxfield, Archidekt, TappedOut, MTGTop8, MTGDecks, AetherHub, EDHREC.               | Product               | `ImportSource`, `detectSource`, `importFromUrl` in `lib/import/url-import.ts`                                                                                         |
 | **Moxfield refusal** | Moxfield refusing an automated request (403, 429 or a challenge page). It is reported, never retried or disguised.              | Product source policy | `MoxfieldRefusedError`, `isMoxfieldRefusal` in `lib/import/moxfield-refusal.ts`                                                                                       |
-| **Export format**    | A text format another tool reads: plain text, Moxfield, Arena, MTGO, TappedOut, Archidekt, MTGGoldfish, EDHREC.                 | Each tool's format    | `exportPlainText`, `exportArena`, … in `lib/deck/export.ts`                                                                                                           |
+| **Export format**    | A text format another tool reads: plain text, Moxfield, Arena, MTGO, TappedOut, Archidekt, MTGGoldfish, EDHREC.                 | Each tool's format    | `exportDeck`, `EXPORT_TARGETS`, `exportPlainText`, … in `lib/deck/export.ts`; one exporter per target in `lib/deck/exports/<target>.ts`                               |
+| **Export notice**    | A note that an export left a card out (`cardDropped`) or put it in another zone (`cardMoved`); no card is lost silently.        | I-50 requirement 1.2  | `ExportNotice` and `ExportResult` in `lib/deck/exports/contract.ts`; shown by `ExportNotices` in the export dialog                                                    |
 | **Proxy sheet**      | A printable page of card images or text for testing a deck.                                                                     | Product               | `buildProxySlots`, `ProxyConfig` in `lib/deck/proxy.ts`                                                                                                               |
 
 ## Collection
