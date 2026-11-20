@@ -160,7 +160,7 @@
   "card": {
     "commander": "Commandant : {name}",
     "noCommander": "Pas encore de commandant",
-    "cardCount": "{count} / 100 cartes",
+    "cardCount": "{counter} cartes",
     "duplicate": "Dupliquer {name}",
     "delete": "Supprimer {name}",
     "manualBracket": "Bracket manuel",

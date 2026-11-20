@@ -24,7 +24,13 @@ import type { Prisma } from "@prisma/client";
  *   deck that also keeps the owner's identity off the link.
  */
 
-/** Card columns the share page renders; owner notes and `zone` are deliberately absent. */
+/**
+ * Card columns the share page renders; owner notes are deliberately absent.
+ * `zone` is read by the page metadata, which counts the deck's cards as the
+ * editor does (`countStoredCardCopies`): the sideboard and the maybeboard stay
+ * out. A zone belongs to the deck, not to its owner, as the fork's select
+ * also holds.
+ */
 const SHARED_DECK_CARD_SELECT = {
   id: true,
   name: true,
@@ -38,6 +44,7 @@ const SHARED_DECK_CARD_SELECT = {
   isCommander: true,
   isPartner: true,
   isGameChanger: true,
+  zone: true,
 } as const satisfies Prisma.DeckCardSelect;
 
 /** Deck columns the share page renders, with every card row; `id` feeds the fork button. */

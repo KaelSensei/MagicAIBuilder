@@ -7,6 +7,7 @@ import type { ApiSharedDeck } from "@/lib/deck/share-types";
 import { findSharedDeckCached } from "@/lib/deck/shared-deck-lookup";
 import { normalizeScryfallImageUrl } from "@/lib/scryfall/images";
 import { commandSlotOf } from "@/lib/deck/bulk-edit-command-zone";
+import { countStoredCardCopies } from "@/lib/deck/stored-card-count";
 import { logger } from "@/lib/logger";
 import { metadataTranslations } from "@/lib/seo/page-metadata";
 
@@ -55,7 +56,8 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 
   const commander = deck.cards.find((c) => commandSlotOf(c) === "commander");
   const partner = deck.cards.find((c) => commandSlotOf(c) === "partner");
-  const cardCount = deck.cards.length;
+  // The editor's count, from the rows already read: no extra query.
+  const cardCount = countStoredCardCopies(deck.cards);
 
   let commanderLabel: string;
   if (!commander) {
