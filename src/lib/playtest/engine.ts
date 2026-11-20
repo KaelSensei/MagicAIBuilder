@@ -15,7 +15,9 @@
  * Randomness and time come in through two ports, `RandomSource` and `Clock`, bundled as
  * `PlaytestDeps`. The transitions that shuffle or stamp a time take them as their optional
  * last argument and default to `defaultPlaytestDeps` (Web Crypto and the system clock), so a
- * test can replay a whole game from a seed (`engine-golden.test.ts`). A command adds the id
+ * test can replay a whole game from a seed (`engine-golden.test.ts`). The probability bench
+ * deals from the same kind of seed through `shuffleWithSeed` (`engine/seeded-rng.ts`, I-21).
+ * A command adds the id
  * source `newId` (`PlaytestCommandDeps`) for the copies and tokens it creates.
  *
  * Rules: the London mulligan and the free multiplayer mulligan (CR 103.5, 103.5c), the
@@ -58,6 +60,7 @@ export type {
 } from "./engine/types";
 
 export { createPlaytestState } from "./engine/initial-state";
+export { createSeededRandom, shuffleWithSeed } from "./engine/seeded-rng";
 
 export {
   applyBottomCards,
