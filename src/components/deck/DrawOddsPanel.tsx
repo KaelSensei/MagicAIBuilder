@@ -9,7 +9,9 @@
  * always shows the same digits. The library comes from `countLibrary`: the
  * main deck only, 99 cards or 98 with a partner (CR 401.1, 903.6). The cards
  * drawn by a turn follow the format's usual table (`cardsDrawnBy`, CR 103.8).
- * A question without an answer names what is missing instead of showing 0%.
+ * A question without an answer names what is missing instead of showing 0%,
+ * and so does one whose 0% a player would misread: a minimum above the cards
+ * drawn, or the lands question in a deck without lands.
  * Not responsible for: the formula (`lib/deck/draw-odds.ts`), the library
  * count (`lib/deck/draw-odds-library.ts`), the draw count
  * (`lib/deck/cards-drawn.ts`) or the controls (`DrawOddsFields`).
@@ -101,11 +103,55 @@ function targetStillInLibrary(
 }
 
 /**
+ * A question the formula answers with a known 0%, but whose zero a player
+ * would read as a measured chance, so the panel names what is wrong instead
+ * (I-97 AC-97-04 and AC-97-05):
+ * - `more-wanted-than-drawn`: the minimum is above the cards drawn, so no hand
+ *   can hold it, such as 100 lands from a 99-card library; the number is
+ *   more likely a typo than a question;
+ * - `no-lands`: the lands question in a deck whose library holds no land.
+ */
+type PanelGap = "more-wanted-than-drawn" | "no-lands";
+
+/** The answer the panel shows: the formula's, or a gap the panel names. */
+type PanelOdds =
+  DrawOdds | { readonly kind: "unknown"; readonly reason: PanelGap };
+
+/**
+ * The formula's answer, unless it is a zero the player would misread (see
+ * `PanelGap`). The formula's own gaps come first, as the player fixes them
+ * first.
+ *
+ * @param question - the counts the formula takes
+ * @param target - what the question counts as a hit
+ */
+function answerOf(
+  question: DrawOddsQuestion,
+  target: DrawOddsTarget
+): PanelOdds {
+  const odds = chanceOfAtLeast(question);
+  if (odds.kind === "unknown") return odds;
+  if (target.kind === "lands" && question.matching === 0) {
+    return { kind: "unknown", reason: "no-lands" };
+  }
+  if (question.minimum > question.drawn) {
+    return { kind: "unknown", reason: "more-wanted-than-drawn" };
+  }
+  return odds;
+}
+
+/**
  * The answer, announced as a status: the chance as a percentage, or, when the
  * question has no answer, what is missing. Never a zero standing in for an
  * unknown value.
  */
-function OddsFigure({ odds }: { readonly odds: DrawOdds }) {
+function OddsFigure({
+  odds,
+  question,
+}: {
+  readonly odds: PanelOdds;
+  readonly question: DrawOddsQuestion;
+}) {
   const t = useTranslations("deck.drawOdds");
   const format = useFormatter();
 
@@ -119,7 +165,10 @@ function OddsFigure({ odds }: { readonly odds: DrawOdds }) {
     case "unknown":
       return (
         <output className="block text-xs text-[var(--text-secondary)]">
-          {t(`gap.${odds.reason}`)}
+          {t(`gap.${odds.reason}`, {
+            minimum: question.minimum,
+            drawn: question.drawn,
+          })}
         </output>
       );
   }
@@ -188,7 +237,7 @@ export function DrawOddsPanel({ deck }: DrawOddsPanelProps) {
     }),
     [library, drawPoint, table, minimumText]
   );
-  const odds = useMemo(() => chanceOfAtLeast(question), [question]);
+  const odds = useMemo(() => answerOf(question, target), [question, target]);
 
   const chooseTarget = useCallback((next: DrawOddsTarget) => {
     setChosenTarget(next);
@@ -215,7 +264,7 @@ export function DrawOddsPanel({ deck }: DrawOddsPanelProps) {
         <DrawOddsPointField point={drawPoint} onChange={setDrawPoint} />
         <DrawOddsMinimumField value={minimumText} onChange={setMinimumText} />
       </div>
-      <OddsFigure odds={odds} />
+      <OddsFigure odds={odds} question={question} />
       <QuestionInputs question={question} />
       {drawPoint.kind === "turn" && (
         <p className={NOTE_CLASS}>{t("drawRule", { table })}</p>
