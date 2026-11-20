@@ -52,7 +52,7 @@
   "otherZones": "Autres zones pour {name}",
   "zoneMenu": "Zones pour {name}",
   "zoneWithCount": "{zone} ({count, number})",
-  "addToZoneCount": "Ajouter {name} à {zone}, {count, plural, one {# exemplaire} other {# exemplaires}}",
+  "addToZoneCount": "Ajouter {name} à {zone}. {count, plural, one {# carte déjà dans cette zone} other {# cartes déjà dans cette zone}}",
   "chooseZone": "Choisir une zone",
   "zoneMain": "Principal",
   "zoneSideboard": "Réserve",
@@ -69,5 +69,6 @@
     "group": "Exemplaires de {name}",
     "add": "Ajouter un exemplaire de {name}",
     "remove": "Retirer un exemplaire de {name}"
-  }
+  },
+  "addedFlash": "Ajout : {name}"
 }

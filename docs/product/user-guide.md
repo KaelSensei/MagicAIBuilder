@@ -62,7 +62,7 @@ Under the deck title, one line names the Comprehensive Rules edition the app shi
 #### Adding Cards
 
 - Click a card to add it to your deck
-- **Add** on a search result puts that card in the main deck. The chevron beside it opens Main, Sideboard and Considering, and shows how many copies are already in each. Arrow keys move through that menu; Escape closes it
+- Hover a search result, or move the keyboard focus onto it, and a **+** adds that card to the main deck. The **…** button opens Main, Sideboard and Considering and shows how many cards are already in each zone. Arrow keys move through that menu; Escape closes it. The card picture stays clear until then. On a screen without hover, the same two buttons sit in the corner of the card. A check marks the card for a moment after it is added. Clicking the picture still opens the card.
 - Drag a card from search into the deck editor
 - The printing selector lets you pick your preferred art. The printing you pick is the one added, even when you own another printing of the card
 - A card added any other way (dragged, imported or suggested) takes a printing you own first, when your collection holds one
