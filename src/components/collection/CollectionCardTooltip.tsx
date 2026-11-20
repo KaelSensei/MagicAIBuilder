@@ -79,7 +79,7 @@ export function CollectionCardTooltip({ card, children }: CollectionCardTooltipP
             />
             {card.price != null && (
               <div className="p-2 bg-(--surface) text-xs text-(--text-secondary)">
-                <span className="text-(--accent)">
+                <span className="text-(--accent-text)">
                   {format.number(card.price, { style: "currency", currency: "USD" })}
                 </span>
               </div>

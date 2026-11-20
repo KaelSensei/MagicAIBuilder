@@ -44,7 +44,7 @@ export function CardRulingsPanel({ cardId }: CardRulingsPanelProps) {
       <button
         type="button"
         onClick={handleLoad}
-        className="text-left text-xs font-medium text-(--accent) hover:underline"
+        className="text-left text-xs font-medium text-(--accent-text) hover:underline"
       >
         {t("show")}
       </button>

@@ -21,11 +21,20 @@ import { join } from "node:path";
  * binding constraint is the surface closest to it in luminance — the dark
  * theme's lightest and the light theme's darkest. Aiming at the obvious
  * extreme instead (pure white, pure black) passes and is wrong.
+ *
+ * `--border` draws the boundary of inputs, buttons, cards and panels, so it is
+ * held to WCAG 2.1 SC 1.4.11 (non-text contrast, 3:1) on the same four
+ * surfaces. The I-13 audit measured #443a5e at 1.51:1 on the dark surface and
+ * #e4dcf2 at 1.33:1 on white (docs/product/specs/i13-visual-direction.md).
+ * There is no lighter decorative divider token: every `--border` use is held
+ * to 3:1.
  */
 
 const GLOBALS_CSS = join(process.cwd(), "src", "styles", "globals.css");
 
 const MIN_RATIO = 4.5;
+/** WCAG 2.1 SC 1.4.11: https://www.w3.org/TR/WCAG21/#non-text-contrast (read 2026-11-20). */
+const MIN_BOUNDARY_RATIO = 3;
 const WHITE = "#ffffff";
 
 /** Surfaces text is painted on, in both themes. */
@@ -126,6 +135,17 @@ describe.each(THEMES)("$name theme tokens", ({ selector }) => {
       ratio,
       `--text-secondary (${foreground}) on ${surfaceToken} (${background}) is ${ratio.toFixed(2)}:1`
     ).toBeGreaterThanOrEqual(MIN_RATIO);
+  });
+
+  it.each(SURFACE_TOKENS)("draws component borders at 3:1 against %s", (surfaceToken) => {
+    const border = colour("--border");
+    const background = colour(surfaceToken);
+    const ratio = contrastRatio(border, background);
+
+    expect(
+      ratio,
+      `--border (${border}) on ${surfaceToken} (${background}) is ${ratio.toFixed(2)}:1`
+    ).toBeGreaterThanOrEqual(MIN_BOUNDARY_RATIO);
   });
 
   it("lifts cards above the canvas", () => {
