@@ -43,6 +43,24 @@ export function cardsFromZoneSource(
 }
 
 /**
+ * Copies in each zone. A card listed both in `cards` and on the legacy
+ * maybeboard mirror is counted once, in the zone `cardsFromZoneSource` keeps.
+ *
+ * @param deck - The open deck, or null when none is loaded
+ * @returns Copies in the main deck, the sideboard and considering
+ */
+export function countCopiesByZone(
+  deck: Pick<Deck, "cards" | "maybeboard"> | null
+): Readonly<Record<DeckZone, number>> {
+  const counts: Record<DeckZone, number> = { main: 0, sideboard: 0, maybeboard: 0 };
+  if (!deck) return counts;
+  for (const card of cardsFromZoneSource(deck)) {
+    counts[card.zone] += card.quantity;
+  }
+  return counts;
+}
+
+/**
  * Stores cards by zone and rebuilds the maybeboard mirror from that zone.
  *
  * @param deck - Deck whose non-card fields are preserved
