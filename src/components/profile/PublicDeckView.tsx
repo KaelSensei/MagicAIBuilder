@@ -173,6 +173,7 @@ export function PublicDeckView({ deck, isSignedIn }: PublicDeckViewProps) {
       {deck.description?.trim() && (
         <PublicDeckPrimer
           description={deck.description}
+          cards={deck.cards}
           labels={{
             contents: t("description.primerContents"),
             copy: t("description.copyPrimer"),

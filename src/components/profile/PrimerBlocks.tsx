@@ -1,13 +1,15 @@
 /**
- * The elements of a parsed primer: a heading, a paragraph or a list, with its text runs and
- * links.
+ * The elements of a parsed primer: a heading, a paragraph or a list, with its text runs, links
+ * and card mentions.
  *
- * Community context, mounted by `PublicDeckPrimer`. The tree comes from
- * `lib/community/primer-markdown`, where every link already carries `classifyUserLink`'s
- * verdict, so this file only chooses elements and attributes: a link to another site opens in a
- * new tab with {@link EXTERNAL_LINK_REL}, a site link opens in the same tab, and a refused link
- * is its label in a `span`.
- * Not responsible for: parsing, the contents bar, or the copy and download actions.
+ * Community context, mounted by `PublicDeckPrimer` and the editor's `DeckPrimerPreview`. The tree
+ * comes from `lib/community/primer-markdown`, where every link already carries
+ * `classifyUserLink`'s verdict, so this file only chooses elements and attributes: a link to
+ * another site opens in a new tab with {@link EXTERNAL_LINK_REL}, a site link opens in the same
+ * tab, and a refused link is its label in a `span`. A card mention the deck holds is a
+ * `PrimerCardLink`, opened like a link to another site; any other mention is its name as text.
+ * Not responsible for: parsing, resolving a mention (`lib/community/primer-card-links`), the
+ * contents bar, or the copy and download actions.
  *
  * @module profile/PrimerBlocks
  */
@@ -16,9 +18,15 @@ import {
   keyPrimerSiblings,
   primerInlineText,
   type PrimerBlock,
+  type PrimerCardMention,
   type PrimerInline,
 } from "@/lib/community/primer-markdown";
+import {
+  resolvePrimerCard,
+  type PrimerCardIndex,
+} from "@/lib/community/primer-card-links";
 import type { UserLink } from "@/lib/community/user-link";
+import { PrimerCardLink } from "./PrimerCardLink";
 
 const PRIMER_LINK_CLASS =
   "font-medium text-[var(--accent-text)] underline underline-offset-2";
@@ -71,19 +79,61 @@ function PrimerLink({
   }
 }
 
-/** The text runs and links of one line, in order. */
+/**
+ * A card mention: a link with a preview when the deck holds the card, else its name as plain
+ * text, without the brackets.
+ */
+function PrimerCardMentionView({
+  mention,
+  cards,
+}: {
+  readonly mention: PrimerCardMention;
+  readonly cards: PrimerCardIndex;
+}): ReactNode {
+  const target = resolvePrimerCard(cards, mention);
+  if (target === null) return mention.name;
+  return (
+    <PrimerCardLink
+      target={target}
+      linkClassName={PRIMER_LINK_CLASS}
+      rel={EXTERNAL_LINK_REL}
+    />
+  );
+}
+
+/** One inline node as its element or text. */
+function PrimerInlineView({
+  node,
+  cards,
+}: {
+  readonly node: PrimerInline;
+  readonly cards: PrimerCardIndex;
+}): ReactNode {
+  switch (node.kind) {
+    case "text":
+      return node.text;
+    case "link":
+      return <PrimerLink label={node.label} link={node.link} />;
+    case "card":
+      return <PrimerCardMentionView mention={node} cards={cards} />;
+    default: {
+      const unhandled: never = node;
+      return unhandled;
+    }
+  }
+}
+
+/** The text runs, links and card mentions of one line, in order. */
 function PrimerInlines({
   content,
+  cards,
 }: {
   readonly content: readonly PrimerInline[];
+  readonly cards: PrimerCardIndex;
 }): ReactNode {
-  return keyPrimerSiblings(content, inlineContent).map(({ key, node }) =>
-    node.kind === "text" ? (
-      node.text
-    ) : (
-      <PrimerLink key={key} label={node.label} link={node.link} />
-    )
-  );
+  return keyPrimerSiblings(content, inlineContent).map(({ key, node }) => (
+    <PrimerInlineView key={key} node={node} cards={cards} />
+  ));
 }
 
 /** What one inline node says, for its sibling key. */
@@ -91,21 +141,28 @@ function inlineContent(node: PrimerInline): string {
   return primerInlineText([node]);
 }
 
-/** One block of the primer as its element: `h2`/`h3`, `ol`/`ul` with its items, or `p`. */
+/**
+ * One block of the primer as its element: `h2`/`h3`, `ol`/`ul` with its items, or `p`.
+ *
+ * @param block - a block of the parsed primer
+ * @param cards - the deck's cards, which its `[[Card Name]]` mentions resolve against
+ */
 export function PrimerBlockView({
   block,
+  cards,
 }: {
   readonly block: PrimerBlock;
+  readonly cards: PrimerCardIndex;
 }): ReactNode {
   switch (block.kind) {
     case "heading":
       return block.level === 3 ? (
         <h3 id={block.id} className={`${HEADING_CLASS} text-sm`}>
-          <PrimerInlines content={block.content} />
+          <PrimerInlines content={block.content} cards={cards} />
         </h3>
       ) : (
         <h2 id={block.id} className={`${HEADING_CLASS} text-base`}>
-          <PrimerInlines content={block.content} />
+          <PrimerInlines content={block.content} cards={cards} />
         </h2>
       );
     case "list": {
@@ -117,7 +174,7 @@ export function PrimerBlockView({
           {keyPrimerSiblings(block.items, primerInlineText).map(
             ({ key, node }) => (
               <li key={key}>
-                <PrimerInlines content={node} />
+                <PrimerInlines content={node} cards={cards} />
               </li>
             )
           )}
@@ -127,7 +184,7 @@ export function PrimerBlockView({
     case "paragraph":
       return (
         <p className="my-2 text-sm leading-6 text-[var(--text-secondary)]">
-          <PrimerInlines content={block.content} />
+          <PrimerInlines content={block.content} cards={cards} />
         </p>
       );
     default: {
