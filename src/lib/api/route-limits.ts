@@ -137,6 +137,7 @@ export const ROUTE_LIMITS: readonly RouteLimitDeclaration[] = [
   unlimited("user/notification-preferences"),
   unlimited("user/onboarding"),
   unlimited("user/profile"),
+  limited("user/stats", 30),
   unlimited("user/username"),
   unlimited("users/[username]"),
   unlimited("v1/collection"),

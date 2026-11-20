@@ -60,11 +60,13 @@ export function createEmptyDeck(
 
 /**
  * Maps one API card onto the store card, rebuilding double faces from stored text.
+ * The player statistics read (`player-stats-rows.ts`) maps stored rows through it too,
+ * so a deck's bracket is computed from the same cards the builder holds.
  *
  * @param card - card row from the deck API
  * @returns the store card
  */
-function apiCardToDeckCard(card: deckApi.ApiDeckCard): DeckCard {
+export function apiCardToDeckCard(card: deckApi.ApiDeckCard): DeckCard {
   const cardFaces = rebuildCardFaces(
     card.scryfallId,
     card.name,
@@ -109,7 +111,7 @@ function apiCardToDeckCard(card: deckApi.ApiDeckCard): DeckCard {
  * @param allCards - cards returned with the deck
  * @returns the four groups
  */
-function partitionApiCards(allCards: readonly deckApi.ApiDeckCard[]) {
+export function partitionApiCards(allCards: readonly deckApi.ApiDeckCard[]) {
   const bySlot = new Map<CommandSlot | null, deckApi.ApiDeckCard[]>();
   for (const card of allCards) {
     const slot = commandSlotOf(card);
