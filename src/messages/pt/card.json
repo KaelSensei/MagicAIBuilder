@@ -52,7 +52,7 @@
   "otherZones": "More zones for {name}",
   "zoneMenu": "Zones for {name}",
   "zoneWithCount": "{zone} ({count, number})",
-  "addToZoneCount": "Add {name} to {zone}, {count, plural, one {# copy} other {# copies}}",
+  "addToZoneCount": "Add {name} to {zone}. {count, plural, one {# card already in this zone} other {# cards already in this zone}}",
   "chooseZone": "Escolher zona",
   "zoneMain": "Principal",
   "zoneSideboard": "Sideboard",
@@ -69,5 +69,6 @@
     "group": "Copies of {name}",
     "add": "Add a copy of {name}",
     "remove": "Remove a copy of {name}"
-  }
+  },
+  "addedFlash": "Added {name}"
 }

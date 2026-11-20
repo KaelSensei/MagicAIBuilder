@@ -75,8 +75,13 @@ export function CardSearchListItem({
     />
   );
   const menu = onAddToZone ? (
-    <div className="w-44 shrink-0 px-2">
-      <SearchZoneMenu card={card} onAddToZone={onAddToZone} zoneCounts={zoneCounts} />
+    <div className="shrink-0 pr-2">
+      <SearchZoneMenu
+        card={card}
+        onAddToZone={onAddToZone}
+        zoneCounts={zoneCounts}
+        placement="row"
+      />
     </div>
   ) : null;
 
