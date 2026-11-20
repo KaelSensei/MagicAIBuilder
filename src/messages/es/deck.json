@@ -102,6 +102,19 @@
     "sessionTimeoutDescription": "La comprobación de la cuenta no terminó. Tus mazos guardados no cambiaron. Inténtalo de nuevo.",
     "profileLoadFailed": "No se pudo actualizar tu perfil. Los mazos guardados siguen disponibles.",
     "createFailed": "No se pudo crear el mazo — {reason}",
+    "cardFilter": {
+      "includeLabel": "Has the card",
+      "excludeLabel": "Leaves out",
+      "placeholder": "Card name, e.g. Sol Ring",
+      "add": "Add",
+      "remove": "Remove {name}",
+      "listFull": "A field takes at most {count} cards.",
+      "searching": "Searching your decks…",
+      "failed": "Your decks could not be searched by card. The full list stays on screen.",
+      "retry": "Try again",
+      "truncated": "Showing the {count} most recently edited decks that match. Name another card to narrow the search.",
+      "searchEmpty": "No deck matches the card filter. Remove a card above, or clear the search, to see more decks."
+    },
     "folders": {
       "all": "All decks",
       "unfiled": "Unfiled",
