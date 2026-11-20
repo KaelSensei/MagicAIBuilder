@@ -12,6 +12,9 @@
  * The format picker (I-42 slice 1) reads the whole deck: before a switch is
  * saved it lists what the cards would break under the new format.
  *
+ * Under the target bracket, `BracketPathList` (I-77 slice 4) lists what
+ * stands between the deck's estimated bracket and that target.
+ *
  * The Theme panel (I-102 slice 3) closes the section: it counts the cards on
  * the player's theme and keeps the theme in its own state, unsaved.
  *
@@ -25,6 +28,7 @@ import { useTranslations } from "next-intl";
 import { getFormatConfig } from "@/lib/deck/formats";
 import { useDeckStore } from "@/lib/deck/store";
 import type { Deck } from "@/lib/deck/types";
+import { BracketPathList } from "./BracketPathList";
 import { DeckBudgetInput } from "./DeckBudgetInput";
 import { DeckDescriptionEditor } from "./DeckDescriptionEditor";
 import { DeckFormatPicker } from "./DeckFormatPicker";
@@ -66,10 +70,13 @@ export function DeckDetailsPanel({ deck }: DeckDetailsPanelProps) {
       <DeckTagsEditor deckId={deck.id} tags={deck.tags} />
       {/* Brackets are a Commander scale; the other formats have none. */}
       {getFormatConfig(deck.format).hasBracketScoring && (
-        <DeckTargetBracketPicker
-          value={deck.targetBracket}
-          onChange={(bracket) => void setTargetBracket(bracket)}
-        />
+        <>
+          <DeckTargetBracketPicker
+            value={deck.targetBracket}
+            onChange={(bracket) => void setTargetBracket(bracket)}
+          />
+          <BracketPathList deck={deck} />
+        </>
       )}
       <DeckBudgetInput
         value={deck.budget}
