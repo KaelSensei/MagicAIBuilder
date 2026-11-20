@@ -28,6 +28,38 @@
     "title": "Détails du deck",
     "targetBracket": "Bracket cible",
     "targetBracketOption": "Bracket {level} : {name}",
+    "bracketPath": {
+      "title": "Pour atteindre le Bracket {target}",
+      "estimate": "Bracket estimé de cette liste : {estimate}.",
+      "cedhIntent": "Le Bracket 5 se déclare, il ne s'estime pas : une liste ne peut pas montrer l'intention cEDH qui le distingue, donc l'estimation s'arrête au Bracket 4.",
+      "noRuleStops": "Aucune règle officielle n'écarte ce deck du Bracket {target}.",
+      "gameChangerFloor": "{allowed, plural, =0 {Le Bracket {target} n'autorise aucun Game Changer.} one {Le Bracket {target} autorise # Game Changer au plus.} other {Le Bracket {target} autorise # Game Changers au plus.}} Cette liste en a {count} : {cards}.",
+      "restrictionFloor": {
+        "twoCardCombos": "Le Bracket {target} n'autorise aucun combo à deux cartes. Cette liste en a {count}, avec {cards}.",
+        "massLandDenial": "Le Bracket {target} n'autorise aucune destruction massive de terrains. Cette liste en a {count} : {cards}.",
+        "extraTurns": "Le Bracket {target} n'autorise aucune carte de tour supplémentaire. Cette liste en a {count} : {cards}."
+      },
+      "comboFloorNotChecked": "Combos à deux cartes : non vérifiés. L'estimation a été faite sans les données de combos.",
+      "tooFewCards": "Cette liste a {count, plural, one {# carte} other {# cartes}} : trop peu de cartes pour la partie heuristique, donc seules les règles officielles ci-dessus fixent l'estimation.",
+      "term": {
+        "ramp": "rampe",
+        "draw": "pioche",
+        "removal": "removal",
+        "winSpeed": "vitesse de victoire",
+        "avgCmc": "valeur de mana moyenne"
+      },
+      "termReads": {
+        "ramp": "Le terme {term} vaut {score} avec {value, plural, one {# carte de rampe} other {# cartes de rampe}} ; à {bound, number} ou moins, il vaudrait {wouldRead}.",
+        "draw": "Le terme {term} vaut {score} avec {value, plural, one {# carte de pioche} other {# cartes de pioche}} ; à {bound, number} ou moins, il vaudrait {wouldRead}.",
+        "removal": "Le terme {term} vaut {score} avec {value, plural, one {# carte de removal} other {# cartes de removal}} ; à {bound, number} ou moins, il vaudrait {wouldRead}.",
+        "boardWipes": "Le terme {term} vaut {score} avec {value, plural, one {# destruction de masse} other {# destructions de masse}} ; à {bound, number} ou moins, il vaudrait {wouldRead}.",
+        "weightedRemoval": "Le terme {term} vaut {score} avec un compte de removal de {value, number}, destructions de masse pondérées ; à {bound, number} ou moins, il vaudrait {wouldRead}.",
+        "avgCmc": "Le terme {term} vaut {score} avec une valeur de mana moyenne de {value, number} ; au-dessus de {bound, number}, il vaudrait {wouldRead}.",
+        "winConditions": "Le terme {term} vaut {score} avec {value, plural, one {# condition de victoire} other {# conditions de victoire}} ; à {bound, number} ou moins, il vaudrait {wouldRead}.",
+        "fastWins": "Le terme {term} vaut {score} avec {value, plural, one {# carte de victoire rapide} other {# cartes de victoire rapide}} ; à {bound, number} ou moins, il vaudrait {wouldRead}."
+      },
+      "termOutOfReach": "Le terme {term} vaut {score} ; aucun de ses comptes ne le ramène seul à {target} ou moins."
+    },
     "budget": "Budget par carte",
     "budgetHint": "En dollars US. Laissez le champ vide pour ne fixer aucune limite.",
     "budgetInvalid": "Saisissez un montant supérieur à zéro, ou laissez le champ vide pour ne fixer aucune limite.",
