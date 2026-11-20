@@ -15,6 +15,7 @@ import { useTranslations } from "next-intl";
 import { useId, type KeyboardEvent, type RefObject } from "react";
 import { ListPlus } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
+import type { PrimerDeckCard } from "@/lib/community/primer-card-links";
 import { DeckPrimerPreview } from "./DeckPrimerPreview";
 
 /** The server's cap on a description: `patchDeckSchema` in `src/lib/validation/deck.ts`. */
@@ -26,6 +27,8 @@ const PANE_BODY_CLASS = "h-[30vh] overflow-y-auto lg:h-[60vh]";
 interface DeckPrimerEditorDialogProps {
   readonly open: boolean;
   readonly draft: string;
+  /** The deck's cards, which the preview links `[[Card Name]]` mentions to. */
+  readonly cards: readonly PrimerDeckCard[];
   /** The source textarea, which the editor focuses when editing starts. */
   readonly textareaRef: RefObject<HTMLTextAreaElement | null>;
   readonly onDraftChange: (draft: string) => void;
@@ -82,6 +85,7 @@ function PrimerSourcePane({
 export function DeckPrimerEditorDialog({
   open,
   draft,
+  cards,
   textareaRef,
   onDraftChange,
   onSave,
@@ -126,8 +130,10 @@ export function DeckPrimerEditorDialog({
           />
           <DeckPrimerPreview
             markdown={draft}
+            cards={cards}
             label={t("description.preview")}
             emptyText={t("description.previewEmpty")}
+            unresolvedLabel={t("description.unresolvedCards")}
             bodyClassName={PANE_BODY_CLASS}
           />
         </div>

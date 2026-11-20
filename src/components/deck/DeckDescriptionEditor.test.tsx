@@ -7,8 +7,15 @@ import { DeckDescriptionEditor } from "./DeckDescriptionEditor";
 
 const updateDeckDescription = vi.fn();
 
+/** The slice of the store the editor reads: the save action, and no deck cards. */
+interface EditorStoreSlice {
+  readonly updateDeckDescription: typeof updateDeckDescription;
+  readonly decks: Readonly<Record<string, undefined>>;
+}
+
 vi.mock("@/lib/deck/store", () => ({
-  useDeckStore: () => ({ updateDeckDescription }),
+  useDeckStore: <T,>(select: (state: EditorStoreSlice) => T): T =>
+    select({ updateDeckDescription, decks: {} }),
 }));
 
 describe("DeckDescriptionEditor", () => {
