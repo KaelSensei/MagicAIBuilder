@@ -24,6 +24,7 @@ import enOnboarding from "@/messages/en/onboarding.json";
 import enPlaytestEvidence from "@/messages/en/playtest-evidence.json";
 import enPlaytest from "@/messages/en/playtest.json";
 import enProfile from "@/messages/en/profile.json";
+import enPrecon from "@/messages/en/precon.json";
 import enRules from "@/messages/en/rules.json";
 import enRuleZero from "@/messages/en/rule-zero.json";
 import enSearch from "@/messages/en/search.json";
@@ -43,6 +44,7 @@ import frOnboarding from "@/messages/fr/onboarding.json";
 import frPlaytestEvidence from "@/messages/fr/playtest-evidence.json";
 import frPlaytest from "@/messages/fr/playtest.json";
 import frProfile from "@/messages/fr/profile.json";
+import frPrecon from "@/messages/fr/precon.json";
 import frRules from "@/messages/fr/rules.json";
 import frRuleZero from "@/messages/fr/rule-zero.json";
 import frSearch from "@/messages/fr/search.json";
@@ -69,6 +71,7 @@ const CATALOGS: Readonly<Record<TestLocale, AbstractIntlMessages>> = {
     ruleZero: enRuleZero,
     collection: enCollection,
     profile: enProfile,
+    precon: enPrecon,
     playtest: enPlaytest,
     playtestEvidence: enPlaytestEvidence,
     commanderRules: enCommanderRules,
@@ -90,6 +93,7 @@ const CATALOGS: Readonly<Record<TestLocale, AbstractIntlMessages>> = {
     ruleZero: frRuleZero,
     collection: frCollection,
     profile: frProfile,
+    precon: frPrecon,
     playtest: frPlaytest,
     playtestEvidence: frPlaytestEvidence,
     commanderRules: frCommanderRules,
