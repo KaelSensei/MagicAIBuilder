@@ -50,4 +50,15 @@ describe("whatItTakes", () => {
       whatItTakes({ payers: 22, conversion: 0, activation: 0.3, churn: 0.1 })
     ).toThrow(RangeError);
   });
+
+  it("refuses a rate that is not a number, as it refuses zero", () => {
+    expect(() =>
+      whatItTakes({
+        payers: 22,
+        conversion: 0.03,
+        activation: Number.NaN,
+        churn: 0.1,
+      })
+    ).toThrow(RangeError);
+  });
 });

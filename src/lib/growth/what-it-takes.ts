@@ -58,7 +58,7 @@ export function whatItTakes(input: GrowthTargetInput): GrowthTarget {
 
 /** A rate the target divides by: zero, negative or `NaN` is refused. */
 function requireAboveZero(rate: string, value: number): void {
-  if (!(value > 0)) {
+  if (Number.isNaN(value) || value <= 0) {
     throw new RangeError(`${rate} must be above zero, got ${value}`);
   }
 }
