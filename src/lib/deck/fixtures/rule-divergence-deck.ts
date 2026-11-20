@@ -170,6 +170,7 @@ function sharedRow(
     category: card.category,
     quantity: card.quantity,
     isGameChanger: card.isGameChanger,
+    zone: card.zone,
     ...flags,
   };
 }
@@ -178,8 +179,9 @@ function sharedRow(
  * The same deck as `GET /api/share/[token]` serves it to `ShareDeckView`:
  * one row per deck card, command zone included, flagged the way the store
  * saves them (a partner row is `isCommander` and `isPartner`; a companion row
- * is neither and has the `companion` category). The share select carries no
- * `zone`, so a "Considering" row looks like a main-deck row.
+ * is neither and has the `companion` category). The share select carries
+ * `zone` for the page metadata's count, but `ShareDeckView` does not read it,
+ * so a "Considering" row still looks like a main-deck row there.
  */
 export function sharedDeckOf(deck: Deck): ApiSharedDeck {
   const commandRows = [

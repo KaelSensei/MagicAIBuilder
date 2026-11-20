@@ -30,7 +30,11 @@ export interface DiscoveryDeckRecord {
    */
   readonly commanderName: string | null;
   readonly updatedAt: Date;
-  /** Every card row of the deck, the commander included. */
+  /**
+   * The deck's cards as the editor counts them: main-zone copies plus the
+   * commander and the partner (`countStoredCardCopies`), so thirty Forests in
+   * one row count thirty.
+   */
   readonly cardCount: number;
   /**
    * The deck's `isCommander` card, or null when the deck has none: before
