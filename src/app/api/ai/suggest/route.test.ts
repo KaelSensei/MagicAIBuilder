@@ -23,7 +23,9 @@ vi.mock(import("@/lib/rate-limit"), () => ({
   checkRateLimit: () => ({ allowed: true, retryAfterMs: 0 }),
 }));
 
+import { readCopilotClaim } from "@/lib/ai/suggestion-claim-read";
 import { logger } from "@/lib/logger";
+import { isRecord } from "@/lib/guards";
 import { resetAiUsageDb } from "@/test/ai-usage-db";
 import { POST } from "./route";
 
@@ -377,6 +379,105 @@ describe("POST /api/ai/suggest", () => {
         }),
       })
     );
+  });
+
+  it("streams a reasoned claim for the model's sentence and checked claims for the card data", async () => {
+    const providerFetch = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          content: [
+            {
+              text: JSON.stringify({
+                suggestions: [
+                  {
+                    name: "Arcane Signet",
+                    reason: "This is legal under CR 903.5 and fixes colours.",
+                    category: "ramp",
+                    priority: "high",
+                    alternatives: [
+                      {
+                        name: "Fellwar Stone",
+                        reason: "A cheaper mana rock.",
+                        dimension: "budget",
+                      },
+                    ],
+                  },
+                ],
+              }),
+            },
+          ],
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          object: "list",
+          not_found: [],
+          data: [
+            {
+              id: "arcane-signet",
+              name: "Arcane Signet",
+              cmc: 2,
+              type_line: "Artifact",
+              color_identity: [],
+              legalities: { commander: "legal" },
+              prices: { usd: "1.25" },
+              game_changer: false,
+            },
+            {
+              id: "fellwar-stone",
+              name: "Fellwar Stone",
+              cmc: 2,
+              type_line: "Artifact",
+              color_identity: [],
+              legalities: { commander: "legal" },
+              prices: { usd: "0.75" },
+              game_changer: false,
+            },
+          ],
+        }),
+      });
+    vi.stubGlobal("fetch", providerFetch);
+
+    const events = await streamedEvents(
+      await POST(suggestRequest({ cardNames: ["Arcane Signet"] }))
+    );
+    const suggestion = events.find(
+      (event) => isRecord(event) && event.type === "suggestion"
+    );
+    if (!isRecord(suggestion) || !isRecord(suggestion.data)) {
+      throw new Error("The route streamed no suggestion.");
+    }
+    const claims = Array.isArray(suggestion.data.claims)
+      ? suggestion.data.claims.map(readCopilotClaim)
+      : [];
+    const alternatives = suggestion.data.alternatives;
+
+    expect(claims[0]).toEqual({
+      kind: "reasoned",
+      text: "This is legal under CR 903.5 and fixes colours.",
+    });
+    expect(claims).toContainEqual(
+      expect.objectContaining({
+        kind: "checked",
+        text: "Already in the deck; Commander allows one copy of a card that is not a basic land",
+        source: "singleton-rule",
+      })
+    );
+    expect(claims.every((claim) => claim !== undefined)).toBe(true);
+    expect(Array.isArray(alternatives)).toBe(true);
+    const alternative = Array.isArray(alternatives)
+      ? alternatives[0]
+      : undefined;
+    if (!isRecord(alternative) || !Array.isArray(alternative.claims)) {
+      throw new Error("The alternative carried no claims.");
+    }
+    expect(alternative.claims.map(readCopilotClaim)[0]).toEqual({
+      kind: "reasoned",
+      text: "A cheaper mana rock.",
+    });
   });
 
   describe("monthly allowance and metering", () => {
