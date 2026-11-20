@@ -58,7 +58,7 @@ Verified on `dev` at `72fbfc1` on 2026-11-10.
 | Initiative                                             | What it says                                                                                                                                                                                               | Resolution                                                                                                                                                                                                            |
 | ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [I-31](i31-deck-lab.md)                                | "Roles are single labels" (line 57); norms use the single `category` (2.5, line 78); its classifier serves mana simulation (2.1)                                                                           | I-31 keeps its lab kinds. Route roles are a separate, multi-label layer that never overwrites `category`. I-31's engine supplies assembly odds (slice 13)                                                             |
-| [I-03](i03-trustworthy-deck-feedback.md)   | Outcome: "the player understands what is wrong with a deck"; combo detection shipped; "Keep warning calculations deterministic"                                                                            | The map is computed feedback in I-03's sense, but states facts and no faults. Whether `scoreWinSpeed` reads route data is for I-03 and the power meter (open question 4)                                              |
+| [I-03](i03-trustworthy-deck-feedback.md)               | Outcome: "the player understands what is wrong with a deck"; combo detection shipped; "Keep warning calculations deterministic"                                                                            | The map is computed feedback in I-03's sense, but states facts and no faults. Whether `scoreWinSpeed` reads route data is for I-03 and the power meter (open question 4)                                              |
 | [I-15](i15-rule-zero-sheets-and-pod-profiles.md)       | Records "how the deck wins" (1.2, line 37), player-stated only (1.3); shows the computed bracket beside it (1.4); non-goal: inferring intent (line 79)                                                     | The declared field stays declared. The route summary appears in the calculated column, the way 1.4 shows the bracket. The owner may copy it into the declared field; the product never does                           |
 | [I-28](i28-commander-deckbuilding-guide-by-bracket.md) | The guide's sections "win conditions and combos" and "how games are actually won" (1.1, 1.2, lines 50–51); rule constants shared with the check (3.1); one shared vocabulary with I-15 and I-27 (line 141) | I-28 owns the official turn expectations and the combo rule; the map displays them from the same constants. I-65 owns the route names, and I-28, I-15 and [I-64](i64-help-centre-and-guidance.md)'s glossary use them |
 | [I-48](i48-official-changes-reach-every-deck.md)       | Maps each `categorizeCard` role to a Scryfall tag (4.3, line 95)                                                                                                                                           | I-48 may use route roles for replacement candidates once slice 3 ships; its table stays valid until then                                                                                                              |
@@ -200,7 +200,7 @@ DeckRouteMap     deckId, inputHash, definitionsVersion, tagsFileDate, spellbookO
 | #   | Slice                                                                                                                                                                                                                                         | Depends on                                                                   |
 | --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
 | 1   | Route kinds, role and answer-class definitions as versioned data with Oracle-pattern and keyword clauses, end rules, fixtures and tests; a shared deck-analysis module that also carries I-76's slot roles and serves I-78 (added 2026-11-11) | —                                                                            |
-| 2   | Read `manaValueNeeded`, `bracketTag`, result status and `zoneLocations` from Spellbook; the tested result-to-route table                                                                                                                      | —                                                                            |
+| 2   | Read `manaValueNeeded`, `bracketTag`, result status and `zoneLocations` from Spellbook; the tested result-to-route table Done (#1608).                                                                                                        | —                                                                            |
 | 3   | `computeRouteMap`: combo and single-card routes, multi-label roles, redundancy, shared cards, finders by reach, protection by coverage                                                                                                        | 1, 2                                                                         |
 | 4   | Turn estimates: mana-only floor, Spellbook speed band, commander hits; the bracket's turn expectation beside them                                                                                                                             | 3; the bracket line waits for I-28 slice 2 and stays hidden until then       |
 | 5   | Common answers attached by the 7.2 conditions, with counts at the file date                                                                                                                                                                   | 3                                                                            |
@@ -665,22 +665,22 @@ Then the player sees an empty state that names what is missing, and the page doe
 
 The player-visible outcome is: a player opens a deck and sees each way it can end a game: the combos Spellbook finds, an alternative win, commander damage, combat, drain, mill, poison or a lock. Each route lists its cards by role with a count, the tutors that can find its pieces, the protection that can defend them, a turn estimate labelled as an estimate and the kinds of cards that commonly stop it. Code computes every fact, and nothing grades the deck.
 
-| State | What the player sees |
-| --- | --- |
-| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
-| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
-| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
-| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
-| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
-| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
-| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
-| English | New controls use the `en` catalogue. |
-| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| State            | What the player sees                                                                                                                                  |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Empty            | A sentence that names what is missing and the next action. No invented row, author, price or score.                                                   |
+| Loading          | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready.                                        |
+| Error            | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there.                                                       |
+| Partial          | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished.                                                 |
+| Stale            | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed.                                             |
+| Guest            | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401.               |
+| Signed-in        | Writes go to that account only. Another player's notes, budget and collection are not in the response.                                                |
+| English          | New controls use the `en` catalogue.                                                                                                                  |
+| French           | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control.                                                         |
 | Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
-| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
-| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
-| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
-| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+| Keyboard         | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes.                         |
+| Screen reader    | Each new control has an accessible name. A status change is announced in words, not only by colour.                                                   |
+| Colour           | A warning and an error differ by text or icon as well as hue, in both themes.                                                                         |
+| Success          | The completed action is confirmed in words. A second identical action does not duplicate the write.                                                   |
 
 ### Alternate paths
 
@@ -739,6 +739,7 @@ Players ask "how does your deck win?" before games with strangers. MagicCon Chic
 **User story.** As a player who has to explain a deck, I want the routes it actually contains, so that the plan in the wizard is not a sentence the list does not support.
 
 **Acceptance.**
+
 - A route is listed only when the required roles are in the deck.
 - Each route names the cards and the definition version.
 - The panel does not call the deck salty, unfair or a threat.
@@ -760,4 +761,3 @@ Players ask "how does your deck win?" before games with strangers. MagicCon Chic
 An aristocrats deck shows a drain route with its payoffs, sacrifice outlets and fodder counted, the tutors that reach a creature, a labelled mana-only estimate beside the bracket's official turn expectation, and the answer classes that stop "dies" triggers; a Spellbook timeout leaves the other routes in place; the same deck gives the same map twice; and no sentence grades the deck.
 
 ---
-

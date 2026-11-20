@@ -191,7 +191,7 @@ CardLegality   computed per deck load: status, reason, listId; not persisted on 
 
 | #   | Slice                                                                                                                                                                                                               | Depends on              |
 | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
-| 1   | Format picker at creation and in deck settings; switching re-validates and removes nothing; labels from catalogues                                                                                                  | —                       |
+| 1   | Format picker at creation and in deck settings; switching re-validates and removes nothing; labels from catalogues Done (#1593).                                                                                    | —                       |
 | 2   | Server-computed legality from Scryfall per deck load, with per-format `restricted` meaning and the fetch date shown _(2026-11-10: I-67 slices 9 and 10 later switch the source to local tables; no new dependency)_ | —                       |
 | 3   | Duel Commander format and the new `FormatConfig` fields: `duel` key, 100 cards, 20 life, no free mulligan, no bracket scoring, banned-as-commander excluded                                                         | 1, 2                    |
 | 4   | Duel Commander playtest: one commander cast from the command zone per game                                                                                                                                          | 3                       |
@@ -536,22 +536,22 @@ Then the player sees an empty state that names what is missing, and the page doe
 
 The player-visible outcome is: a player chooses a deck's format, sees each legality verdict with its named, dated list, and builds and playtests a Duel Commander deck at 20 life with no free mulligan and no banned-as-commander card in the command zone.
 
-| State | What the player sees |
-| --- | --- |
-| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
-| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
-| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
-| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
-| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
-| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
-| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
-| English | New controls use the `en` catalogue. |
-| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| State            | What the player sees                                                                                                                                  |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Empty            | A sentence that names what is missing and the next action. No invented row, author, price or score.                                                   |
+| Loading          | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready.                                        |
+| Error            | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there.                                                       |
+| Partial          | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished.                                                 |
+| Stale            | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed.                                             |
+| Guest            | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401.               |
+| Signed-in        | Writes go to that account only. Another player's notes, budget and collection are not in the response.                                                |
+| English          | New controls use the `en` catalogue.                                                                                                                  |
+| French           | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control.                                                         |
 | Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
-| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
-| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
-| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
-| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+| Keyboard         | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes.                         |
+| Screen reader    | Each new control has an accessible name. A status change is announced in words, not only by colour.                                                   |
+| Colour           | A warning and an error differ by text or icon as well as hue, in both themes.                                                                         |
+| Success          | The completed action is confirmed in words. A second identical action does not duplicate the write.                                                   |
 
 ### Alternate paths
 
@@ -613,6 +613,7 @@ The roadmap lists nine formats as a completed foundation, but no screen lets a p
 **User story.** As a player building a format other than Commander, I want to pick the format and see a dated ban list, so that a Duel Commander list is not saved as Commander.
 
 **Acceptance.**
+
 - Creation and deck settings offer a format.
 - Legality is computed on the server from a dated list.
 - An unknown format is rejected, not treated as Commander.
@@ -634,4 +635,3 @@ The roadmap lists nine formats as a completed foundation, but no screen lets a p
 A player creates a Duel Commander deck, sees each verdict with its list and date, cannot put a banned-as-commander card in the command zone, and playtests at 20 life with no free mulligan; no Duel Commander list lands in a Commander deck unless the player chooses it.
 
 ---
-

@@ -199,24 +199,24 @@ Each slice opens with its focused Red test, per [`tdd-with-ai.md`](../../enginee
 
 ## Delivery slices
 
-| #   | Slice                                                                                                                         | Depends on                                     |
-| --- | ----------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
-| 1   | `resolveBuild` and the diff to a normalised change set, as pure modules with fixtures; statuses; command zone first           | —                                              |
-| 2   | Schema and owner routes; create from main, snapshot or pasted list; main fingerprint and 409                                  | 1                                              |
-| 3   | Build switcher, editing in a build, change markers, "Out of this build", bulk edit on a build                                 | 2                                              |
-| 4   | Differences panel, swap list as text and CSV, zone-aware comparison of builds and snapshots                                   | 2                                              |
-| 5   | Legality, bracket estimate, target and manual bracket and price per build; build count and bracket range in the deck list     | 3                                              |
-| 6   | Held and absorbed in the interface, review route, the 409 on edits with held changes, the after-save notice, reviewed pointer | 3, 5                                           |
-| 7   | Promotion with the preview of other builds; make-main with its invariant; the preview before snapshot restore                 | 6                                              |
-| 8   | Create a build from another owned deck; the near-duplicate suggestion                                                         | 2, 4                                           |
-| 9   | Copies counted as the maximum over builds in `buildAcquisitionPlan`; "assembled separately"                                   | 2; I-16 slice 4 and I-43 slice 7 read the rule |
-| 10  | Playtest a build; sessions filed under that build's snapshots                                                                 | 2                                              |
-| 11  | Shown builds on public and share pages, the canonical link, forking a build, builds in the public comparison                  | 5; I-36 slice 1                                |
-| 12  | Swap kit, swap sheets and switch lists                                                                                        | 4; I-43 slice 5 for lists by place             |
-| 13  | Rule 0 sheet per build, offline download of a build, build on a game seat                                                     | 5; I-15 slice 2, I-19 slice 2, I-35 slice 2    |
-| 14  | I-48 report per build; replacement candidates applied into a build                                                            | 5; I-48 slices 5 and 7                         |
-| 15  | Package applied into a build; an I-17 upgrade tier applied as a build                                                         | 3; I-17 slice 3 for tiers                      |
-| 16  | Paid candidate: fit to a bracket                                                                                              | 5; I-48 slice 7; I-30 slice 0                  |
+| #   | Slice                                                                                                                             | Depends on                                     |
+| --- | --------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| 1   | `resolveBuild` and the diff to a normalised change set, as pure modules with fixtures; statuses; command zone first Done (#1566). | —                                              |
+| 2   | Schema and owner routes; create from main, snapshot or pasted list; main fingerprint and 409                                      | 1                                              |
+| 3   | Build switcher, editing in a build, change markers, "Out of this build", bulk edit on a build                                     | 2                                              |
+| 4   | Differences panel, swap list as text and CSV, zone-aware comparison of builds and snapshots                                       | 2                                              |
+| 5   | Legality, bracket estimate, target and manual bracket and price per build; build count and bracket range in the deck list         | 3                                              |
+| 6   | Held and absorbed in the interface, review route, the 409 on edits with held changes, the after-save notice, reviewed pointer     | 3, 5                                           |
+| 7   | Promotion with the preview of other builds; make-main with its invariant; the preview before snapshot restore                     | 6                                              |
+| 8   | Create a build from another owned deck; the near-duplicate suggestion                                                             | 2, 4                                           |
+| 9   | Copies counted as the maximum over builds in `buildAcquisitionPlan`; "assembled separately"                                       | 2; I-16 slice 4 and I-43 slice 7 read the rule |
+| 10  | Playtest a build; sessions filed under that build's snapshots                                                                     | 2                                              |
+| 11  | Shown builds on public and share pages, the canonical link, forking a build, builds in the public comparison                      | 5; I-36 slice 1                                |
+| 12  | Swap kit, swap sheets and switch lists                                                                                            | 4; I-43 slice 5 for lists by place             |
+| 13  | Rule 0 sheet per build, offline download of a build, build on a game seat                                                         | 5; I-15 slice 2, I-19 slice 2, I-35 slice 2    |
+| 14  | I-48 report per build; replacement candidates applied into a build                                                                | 5; I-48 slices 5 and 7                         |
+| 15  | Package applied into a build; an I-17 upgrade tier applied as a build                                                             | 3; I-17 slice 3 for tiers                      |
+| 16  | Paid candidate: fit to a bracket                                                                                                  | 5; I-48 slice 7; I-30 slice 0                  |
 
 Slices 1 to 7 deliver the core: builds that share a core, an honest difference, and a bracket per build. Slice 9 keeps the shipped acquisition plan right once builds exist. The other slices each wait for the initiative they extend.
 

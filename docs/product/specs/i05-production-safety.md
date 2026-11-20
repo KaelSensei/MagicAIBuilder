@@ -4,7 +4,7 @@
 **Priority:** Now  
 **Depth:** Full
 
-This file is the feature spec. It had no engineering-slice spec before 2026-11-11. It has no delivery-slice table, so the dependency generator does not pick slices from it until one is added.
+This file is the feature spec. It had no engineering-slice spec before 2026-11-11. The delivery-slice table records build order. A slice marked Done has merged to `dev`; the glance table names the lowest-numbered slice that can start now.
 
 ## Feature contract (Full, 2026-11-11)
 
@@ -675,22 +675,22 @@ Then the player sees an empty state that names what is missing, and the page doe
 
 The player-visible outcome is: a broken deployment or regression is detected before users depend on it.
 
-| State | What the player sees |
-| --- | --- |
-| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
-| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
-| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
-| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
-| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
-| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
-| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
-| English | New controls use the `en` catalogue. |
-| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| State            | What the player sees                                                                                                                                  |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Empty            | A sentence that names what is missing and the next action. No invented row, author, price or score.                                                   |
+| Loading          | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready.                                        |
+| Error            | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there.                                                       |
+| Partial          | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished.                                                 |
+| Stale            | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed.                                             |
+| Guest            | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401.               |
+| Signed-in        | Writes go to that account only. Another player's notes, budget and collection are not in the response.                                                |
+| English          | New controls use the `en` catalogue.                                                                                                                  |
+| French           | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control.                                                         |
 | Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
-| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
-| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
-| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
-| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+| Keyboard         | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes.                         |
+| Screen reader    | Each new control has an accessible name. A status change is announced in words, not only by colour.                                                   |
+| Colour           | A warning and an error differ by text or icon as well as hue, in both themes.                                                                         |
+| Success          | The completed action is confirmed in words. A second identical action does not duplicate the write.                                                   |
 
 ### Alternate paths
 
@@ -787,6 +787,22 @@ Speed budgets, the availability objective, alert routing, the off-site database 
 - [ ] Added 2026-11-19 (seventeenth pass): a written advisory policy in `docs/engineering/`, part of this initiative's security posture beside Dependabot. It states response windows by severity; a manual pull request within the window when the only fix is a major version; that a withdrawn advisory closes its tracking item with the withdrawal noted, and that a pull request opened only for it is closed; and that an advisory with no fix is recorded with its reason and a re-check date. Since 2026-10-13, "Dependabot withdraws and removes an alert when the advisory or vulnerability that produced it is no longer valid", the alert webhook has a `withdrawn` action and the API answers "410 Gone" ([GitHub changelog](https://github.blog/changelog/2026-10-13-improved-detection-for-withdrawn-dependabot-alerts), read 2026-11-19). Security updates are created "regardless" of the version-update `ignore` rules (search summary of [GitHub's docs](https://docs.github.com/en/code-security/how-tos/secure-your-supply-chain/manage-your-dependency-security/controlling-dependencies-updated)).
 - [ ] Added 2026-11-19 (seventeenth pass), an owner question before any work: a quarantine for flaky tests, with an owner and an expiry. On its face it conflicts with `docs/engineering/quality-gate.md`, where E2E retries stay at 0 ("Fix the flake, do not pad the gate"), and with the project rule never to delete, skip or weaken a test to get green, so nothing changes without the owner's decision. The proposal: one file lists each quarantined test with its owner, an issue link and an expiry at most 14 days away; a CI check fails when an entry is past its expiry or when the list holds more than five tests; and quarantined tests still run in a separate, non-blocking job, so their history stays visible. Fowler calls quarantine "essential advice" but warns that tests "keep getting thrown into quarantine and forgotten", and he proposes a numeric cap ([article](https://www.martinfowler.com/articles/nonDeterminism.html)); Arkency expires a quarantine after one week ([post](https://blog.arkency.com/weekly-quarantine/)). If the owner says no, the quality gate's rule stands as written.
 
+## Delivery slices
+
+Derived from the named milestones and the seventeenth-pass lines already in this spec. The shared store (M2) is still the open milestone. The route registry that M2's line asked for has merged.
+
+| #   | Slice                                                                                                                                                                                                                    | Depends on |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------- |
+| 1   | Write the shared Scryfall caches on the server only. Both cache routes answer GET, fill a miss from Scryfall, check the body and store under server keys. Done (#1322).                                                  | —          |
+| 2   | Validate `POST /api/ai/suggest` with a bounded schema (M1). Done (#1441).                                                                                                                                                | —          |
+| 3   | One route registry: every API route is declared limited or explicitly unlimited, and a test checks the registry against the route inventory. Done (#1615).                                                               | —          |
+| 4   | M2: keep rate limits in one shared store, and add a per-IP login limit. An edge rule stays a coarse outer guard and is not the limiter. The in-memory counters in `src/lib/rate-limit.ts` are still the store.           | 3          |
+| 5   | A strict script policy: scripts by nonce or by hash, never `unsafe-inline`, with the header asserted per route family. Measure I-71's budgets before and after, because a nonce turns a static page dynamic.             | —          |
+| 6   | A written advisory policy in `docs/engineering/`: response windows by severity, a withdrawn advisory closes its tracking item, and an advisory with no fix records a reason and a re-check date.                         | —          |
+| 7   | A quarantine for flaky tests, with an owner, an issue link and an expiry. This is an owner question; nothing changes until the owner answers, because it conflicts with the quality gate's rule against skipping a test. | — (owner)  |
+
+Slice 4 is the lowest that can start now. Slices 5 and 6 can start beside it. Scheduled agents must not pick slice 7.
+
 ### Blocked or conditional work
 
 - **Prisma 7:** blocked locally by Node 22.11; revisit at Node 22.12+.
@@ -799,6 +815,7 @@ Speed budgets, the availability objective, alert routing, the off-site database 
 **User story.** As a player with an account, I want a deleted account to stay deleted and card images to keep loading after Scryfall's JPEG cut-off, so that the product is safe to keep using.
 
 **Acceptance.**
+
 - Deleting an account expires the session cookie. The next request is signed out.
 - No code path builds a retired Scryfall JPEG size. Stored JPEG-era URLs still render through the WebP path.
 - A shared cache cannot be overwritten by a signed-in caller.
@@ -822,4 +839,3 @@ Speed budgets, the availability objective, alert routing, the off-site database 
 A staging PR cannot merge while type safety, tests, E2E policy, SonarCloud or production health checks are silently bypassed.
 
 ---
-

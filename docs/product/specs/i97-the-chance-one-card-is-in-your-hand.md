@@ -4,7 +4,7 @@
 **Priority:** Next  
 **Depth:** Full
 
-This file is the feature spec. It had no engineering-slice spec before 2026-11-11. It has no delivery-slice table, so the dependency generator does not pick slices from it until one is added.
+This file is the feature spec. It had no engineering-slice spec before 2026-11-11. The delivery-slice table records build order. A slice marked Done has merged to `dev`; the glance table names the lowest-numbered slice that can start now.
 
 ## Feature contract (Full, 2026-11-11)
 
@@ -208,22 +208,22 @@ Then the reported figures match the first run
 
 The player-visible outcome is: a player can ask the chance of drawing at least one copy of a chosen card, or at least K lands, in an opening seven or by a chosen turn, and see the inputs of the formula.
 
-| State | What the player sees |
-| --- | --- |
-| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
-| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
-| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
-| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
-| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
-| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
-| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
-| English | New controls use the `en` catalogue. |
-| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| State            | What the player sees                                                                                                                                  |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Empty            | A sentence that names what is missing and the next action. No invented row, author, price or score.                                                   |
+| Loading          | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready.                                        |
+| Error            | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there.                                                       |
+| Partial          | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished.                                                 |
+| Stale            | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed.                                             |
+| Guest            | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401.               |
+| Signed-in        | Writes go to that account only. Another player's notes, budget and collection are not in the response.                                                |
+| English          | New controls use the `en` catalogue.                                                                                                                  |
+| French           | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control.                                                         |
 | Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
-| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
-| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
-| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
-| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+| Keyboard         | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes.                         |
+| Screen reader    | Each new control has an accessible name. A status change is announced in words, not only by colour.                                                   |
+| Colour           | A warning and an error differ by text or icon as well as hue, in both themes.                                                                         |
+| Success          | The completed action is confirmed in words. A second identical action does not duplicate the write.                                                   |
 
 ### Alternate paths
 
@@ -259,6 +259,7 @@ Moxfield's production JavaScript, captured on 14 May 2026, includes a hypergeome
 **User story.** As a player counting lands, I want the chance of three or more in an opening seven, so that I see the formula and not a simulated game.
 
 **Acceptance.**
+
 - The panel shows the inputs and the probability.
 - Opening the same deck again shows the same digits.
 - The panel says it is a count of equally likely hands, not a recorded game.
@@ -275,9 +276,19 @@ Moxfield's production JavaScript, captured on 14 May 2026, includes a hypergeome
 
 **Open questions.** None. The committed fraction in the test is the contract.
 
+## Delivery slices
+
+The moved record's three scope lines and the definition of done are the panel. The code on `dev` implements them: the pure count, the builder panel, lands or one library card, and the sentence that this is not a recorded game, in English and in French. The generic failure, empty and guest scenarios in the contract were not re-checked here, so the initiative status stays Next.
+
+| #   | Slice                                                                                                                                                                                                                                                                                                                                                                                    | Depends on |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| 1   | The panel asks the chance of at least K lands, or at least one copy of a chosen library card, in an opening seven or by a chosen turn. It shows the inputs and the probability, excludes Considering and Sideboard, uses no `Math.random` and no seed, and says it is a count of equally likely hands. A second open of the same deck shows the same digits. Done (#1398, #1494, #1502). | —          |
+| 2   | Re-check the contract's failure, empty and guest scenarios (AC-97-04, AC-97-05, AC-97-06) against the panel that slice 1 shipped, and close them or record the gap.                                                                                                                                                                                                                      | 1          |
+
+Slice 2 can start now. It is a check of the shipped panel, not a second calculator.
+
 ### Definition of done
 
 The panel for a 99-card deck with 36 lands and an opening seven shows the chance of three or more lands, shows the inputs, and a second open of the same deck shows the same digits.
 
 ---
-

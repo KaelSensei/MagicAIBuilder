@@ -194,7 +194,7 @@ Routes: `POST /api/vitals` (beacon; allowlisted routes and metrics; no identifie
 | #   | Slice                                                                                                                                        | Depends on                          |
 | --- | -------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
 | 0   | Owner decisions: objective, RPO and RTO, export runner and storage account, phone channel, field-data option, Lighthouse as a required check | — (owner; no code)                  |
-| 1   | Destructive-command guard, the production reset section removed, an on-demand export documented                                              | —                                   |
+| 1   | Destructive-command guard, the production reset section removed, an on-demand export documented Done (#1508).                                | —                                   |
 | 2   | Daily encrypted off-site export with manifest, retention, heartbeat and size-drop alert                                                      | 0                                   |
 | 3   | First restore drill, `restore-drills.md`, RTO measured                                                                                       | 2                                   |
 | 4   | Alert routing: phone alert for "down", page check of `/`, Sentry issue alerts by email                                                       | 0; I-52 slice 1                     |
