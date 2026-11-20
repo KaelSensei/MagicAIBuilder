@@ -5,14 +5,21 @@
  * file automatically, which also lets Sentry instrument client-side navigation.
  *
  * Session Replay records only sessions in which an error occurs, with page
- * text, form inputs and media hidden (I-39 requirement 9.1). Not handled here
- * yet: removing share tokens, usernames and query strings from the URLs Sentry
- * receives (I-39 requirement 9.3).
+ * text, form inputs and media hidden (I-39 requirement 9.1). Every URL an
+ * event, a breadcrumb or a replay carries is scrubbed of share tokens,
+ * usernames and query strings before it is sent (I-39 requirement 9.3), except
+ * the page URL in rrweb's own meta event, which Session Replay exposes to no
+ * hook (see `scrubReplayRecordingEvent`).
  *
  * @module instrumentation-client
  */
 
 import * as Sentry from "@sentry/nextjs";
+import {
+  SENTRY_URL_SCRUBBING,
+  scrubReplayEvent,
+  scrubReplayRecordingEvent,
+} from "@/lib/telemetry/sentry-url-scrubbing";
 
 /**
  * Share of ordinary sessions Session Replay records at random: none.
@@ -41,8 +48,18 @@ Sentry.init({
   tracesSampleRate: 0.1,
   replaysSessionSampleRate: RANDOM_SESSION_REPLAY_RATE,
   replaysOnErrorSampleRate: 1.0,
-  integrations: [Sentry.replayIntegration(ERROR_REPLAY_PRIVACY)],
+  integrations: [
+    Sentry.replayIntegration({
+      ...ERROR_REPLAY_PRIVACY,
+      beforeAddRecordingEvent: scrubReplayRecordingEvent,
+    }),
+  ],
+  ...SENTRY_URL_SCRUBBING,
 });
+
+// The replay's own event, with the list of pages it visited, reaches neither
+// `beforeSend` nor `beforeSendTransaction`; event processors do see it.
+Sentry.addEventProcessor(scrubReplayEvent);
 
 /** Reports App Router client-side navigations as Sentry transactions. */
 export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
