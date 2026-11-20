@@ -6,6 +6,8 @@ import { PublicDeckActions } from "./PublicDeckActions";
 const push = vi.fn();
 const forkPublicDeck = vi.fn();
 const fetchMock = vi.fn();
+/** How late the slow server answers: later than the request, well within `findByRole`'s wait. */
+const SLOW_ANSWER_MS = 30;
 
 vi.mock(import("@/i18n/navigation"), async () => {
   const stub = await import("@/test/i18n-navigation-stub");
@@ -56,6 +58,13 @@ describe("PublicDeckActions", () => {
   });
 
   it("saves a public deck to the signed-in player's unfiled library", async () => {
+    // The server answers a little after the request, as it does under a loaded run.
+    fetchMock.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          setTimeout(() => resolve({ ok: true }), SLOW_ANSWER_MS);
+        })
+    );
     renderWithIntl(
       <PublicDeckActions deckId="source" deckName="Original" isSignedIn />
     );
@@ -69,7 +78,9 @@ describe("PublicDeckActions", () => {
         body: JSON.stringify({ folderId: null }),
       })
     );
-    expect(screen.getByRole("button", { name: "Saved deck" })).toBeDefined();
+    expect(
+      await screen.findByRole("button", { name: "Saved deck" })
+    ).toBeDisabled();
   });
 
   it("keeps the deck unsaved when the server rejects the request", async () => {
