@@ -649,6 +649,8 @@
     "generatingDeck": "Generating deck…",
     "tryAgain": "Try again",
     "buildCancelled": "Build was cancelled or failed.",
+    "deckNotSaved": "Your deck was built, but it could not be saved. The build is kept: try saving it again.",
+    "trySavingAgain": "Try saving again",
     "addingCards": "Adicionando cartas ao seu deck…",
     "demoDeckNotice": "Deck de demonstração — nenhum provedor de IA está configurado neste deployment, esta lista é apenas um exemplo.",
     "correctionsTitle": "Checked against card data: {count, plural, one {# correction} other {# corrections}}",
