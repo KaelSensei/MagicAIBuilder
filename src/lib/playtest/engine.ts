@@ -4,8 +4,9 @@
  * Context: playtest. This module is the engine's public surface: it re-exports, by name, what
  * the store, the components and the tests use, and nothing else. The code lives in `engine/`,
  * one module per concern: `ports` (randomness and time), `types`, `shuffle`, `initial-state`
- * (the deal), `mulligan`, `turn`, `life`, `battlefield`, `zones`, `dice`, `action-log` and
- * `history` (undo). Each `apply*` transition is a pure function from one readonly
+ * (the deal), `mulligan`, `turn`, `life`, `commander-damage`, `designations` (player counters,
+ * the monarch, the initiative, the Ring, day and night, the city's blessing), `battlefield`,
+ * `zones`, `dice`, `action-log` and `history` (undo). Each `apply*` transition is a pure function from one readonly
  * `PlaytestEngine` to the next, and returns the same state when the move does not apply.
  * `commands` names every move as a `PlaytestCommand` and reduces it to its transition
  * (`reducePlaytest`); `store.ts` dispatches those commands and holds the current state for the
@@ -50,12 +51,17 @@ export type {
   BattlefieldCard,
   CardZone,
   CommanderDamageTally,
+  DayNight,
+  DayOrNight,
   DiceRoll,
   LifeHistoryEntry,
   Phase,
+  PlayerCounterKind,
+  PlayerDesignations,
   PlaytestActionLogEntry,
   PlaytestEngine,
   PlaytestTokenSpec,
+  ToggledDesignation,
   UndoHistoryEntry,
 } from "./engine/types";
 
@@ -88,6 +94,21 @@ export type {
   CommanderDamageHit,
   OpponentCommanderDamage,
 } from "./engine/commander-damage";
+
+export {
+  applyGainCitysBlessing,
+  applyPlayerCounter,
+  applyRingTempts,
+  applySetDayNight,
+  applyToggleDesignation,
+  hasCitysBlessing,
+  hasLostOnPoison,
+  isAlreadyDayNight,
+  NO_DESIGNATIONS,
+  POISON_TO_LOSE,
+  refusesCounterChange,
+} from "./engine/designations";
+export type { PlayerCounterChange } from "./engine/designations";
 
 export {
   applyAddCounter,
