@@ -156,19 +156,19 @@ Deck            + theme Json? (DeckTheme)                         -- one nullabl
 
 ## Delivery slices
 
-| #   | Slice                                                                                                                                          | Depends on                           |
-| --- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
-| 0   | Owner: the public defaults, the first plane list, and whether art tags are ever used (D-99)                                                    | — (owner)                            |
-| 1   | `HandleKind` v1 on stored fields (creature type, word in name, first letter, word in text, card type); `matchTheme`; `themeCoverage`; fixtures | —                                    |
-| 2   | `Deck.theme`, the owner-only route and its schema; the theme editor in the deck settings                                                       | 1 (migration)                        |
-| 3   | Builder panel "Theme": coverage, on-theme by handle, off-theme by stored category; English and French templates; verdict-word test             | 1                                    |
-| 4   | On-theme alternatives for a role: the visible query, mana-value order, add through the editor                                                  | 3                                    |
-| 5   | The theme line in I-15's calculated column; the guide's Exhibition link                                                                        | 2; I-15 slice 2                      |
-| 6   | Artist, plane or set, watermark and flavour text from I-67's printings; the printing that matched                                              | 1; I-67 slice 2                      |
-| 7   | Roles from I-76 for off-theme cards and "on theme first" in completion                                                                         | 3; I-76 slice 5                      |
-| 8   | Public page: the handles switch and the count switch; projection schema test                                                                   | 2; D-99                              |
-| 9   | I-53 rule types from the handle kinds                                                                                                          | 1; I-53 slice 1                      |
-| 10  | Art tags through I-67 slice 7                                                                                                                  | 6; I-67 slice 7; **Blocked** on L-22 |
+| #   | Slice                                                                                                                                                        | Depends on                           |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------ |
+| 0   | Owner: the public defaults, the first plane list, and whether art tags are ever used (D-99)                                                                  | — (owner)                            |
+| 1   | `HandleKind` v1 on stored fields (creature type, word in name, first letter, word in text, card type); `matchTheme`; `themeCoverage`; fixtures Done (#1539). | —                                    |
+| 2   | `Deck.theme`, the owner-only route and its schema; the theme editor in the deck settings                                                                     | 1 (migration)                        |
+| 3   | Builder panel "Theme": coverage, on-theme by handle, off-theme by stored category; English and French templates; verdict-word test                           | 1                                    |
+| 4   | On-theme alternatives for a role: the visible query, mana-value order, add through the editor                                                                | 3                                    |
+| 5   | The theme line in I-15's calculated column; the guide's Exhibition link                                                                                      | 2; I-15 slice 2                      |
+| 6   | Artist, plane or set, watermark and flavour text from I-67's printings; the printing that matched                                                            | 1; I-67 slice 2                      |
+| 7   | Roles from I-76 for off-theme cards and "on theme first" in completion                                                                                       | 3; I-76 slice 5                      |
+| 8   | Public page: the handles switch and the count switch; projection schema test                                                                                 | 2; D-99                              |
+| 9   | I-53 rule types from the handle kinds                                                                                                                        | 1; I-53 slice 1                      |
+| 10  | Art tags through I-67 slice 7                                                                                                                                | 6; I-67 slice 7; **Blocked** on L-22 |
 
 Slices 1, 3 and 4 need no stored state and no new data source, and slice 1 can start now. Scheduled agents must not pick slice 0 (the owner's), slice 8 before D-99 is committed, or slice 10 before L-22 is answered.
 

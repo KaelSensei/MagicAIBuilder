@@ -91,7 +91,7 @@ PodShare      podSheetId, podId, consentedAt, revokedAt?
 
 | #   | Slice                                                                | Depends on      |
 | --- | -------------------------------------------------------------------- | --------------- |
-| 1   | Sheet model, per-deck create and edit, private only                  | —               |
+| 1   | Sheet model, per-deck create and edit, private only Done (#1612).    | —               |
 | 2   | The computed bracket shown beside declared intent, visibly separated | 1; I-77 slice 1 |
 | 3   | Pod creation, explicit consent share, revoke                         | 1               |
 | 4   | Four-way comparison with the mismatch prompts                        | 2, 3            |
@@ -580,22 +580,22 @@ Then the player sees an empty state that names what is missing, and the page doe
 
 The player-visible outcome is: a playgroup can share intentions and house rules before a game, and can tell those preferences apart from official rules.
 
-| State | What the player sees |
-| --- | --- |
-| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
-| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
-| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
-| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
-| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
-| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
-| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
-| English | New controls use the `en` catalogue. |
-| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| State            | What the player sees                                                                                                                                  |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Empty            | A sentence that names what is missing and the next action. No invented row, author, price or score.                                                   |
+| Loading          | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready.                                        |
+| Error            | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there.                                                       |
+| Partial          | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished.                                                 |
+| Stale            | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed.                                             |
+| Guest            | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401.               |
+| Signed-in        | Writes go to that account only. Another player's notes, budget and collection are not in the response.                                                |
+| English          | New controls use the `en` catalogue.                                                                                                                  |
+| French           | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control.                                                         |
 | Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
-| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
-| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
-| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
-| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+| Keyboard         | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes.                         |
+| Screen reader    | Each new control has an accessible name. A status change is announced in words, not only by colour.                                                   |
+| Colour           | A warning and an error differ by text or icon as well as hue, in both themes.                                                                         |
+| Success          | The completed action is confirmed in words. A second identical action does not duplicate the write.                                                   |
 
 ### Alternate paths
 
@@ -646,7 +646,7 @@ CommanderSalt, DeckCheck DTI and EDHREC salt are the references for describing h
 - [ ] Neighbour changes, 2026-11-11: the computed column shows [I-77](i77-a-bracket-estimate-players-can-audit.md)'s estimate with its method version and audit link, so spec slice 2 waits for I-77 slice 1; it also shows [I-78](i78-what-this-deck-does-to-the-table.md)'s table line and, beside the declared combos, extra turns and resource denial fields, the computed counts with "copy into my sheet", and no declared field is ever filled (1.3). Requirement 1.1 accepts an [I-79](i79-table-sets.md) table set, whose balance view reuses slice 4's layout; a set is one author's decks, not a pod ([D-40](../owner-decisions.md#product-scope-and-non-goals)).
 
 - [ ] Download one `.ics` file for a planned night: the date, the pod's name and a link to the sheet. No Google account and no mail. Recurrence is a later line in the same file, still with no external calendar service.
-**Twelfth pass, 2026-11-11:** the walkthrough that asks the questions one at a time is [I-88](i88-a-pre-game-script-that-fills-the-rule-0-sheet.md). It writes these fields and adds none. Wizards' 21 October 2025 update calls more pregame conversations "the real goal" ([update](https://magic.wizards.com/en/news/announcements/commander-brackets-beta-update-october-21-2025)).
+      **Twelfth pass, 2026-11-11:** the walkthrough that asks the questions one at a time is [I-88](i88-a-pre-game-script-that-fills-the-rule-0-sheet.md). It writes these fields and adds none. Wizards' 21 October 2025 update calls more pregame conversations "the real goal" ([update](https://magic.wizards.com/en/news/announcements/commander-brackets-beta-update-october-21-2025)).
 - [ ] Added 2026-11-12 (thirteenth pass): the calculated column shows [I-99](i99-a-pilot-sheet-and-how-heavy-this-deck-is-to-pilot.md)'s pilot line ("Pilot load: moderate. 9 timed triggers, 4 library searches, 0 extra turns or combats per 99 cards") beside I-77's estimate, I-65's route line and I-78's table line, labelled computed; "copy into my sheet" puts it in the declared speed note. I-99 slice 6 waits for spec slice 2.
 - [ ] Added 2026-11-15 (fifteenth pass): the calculated column shows [I-102](i102-a-theme-you-can-measure.md)'s theme line ("Theme: dragons and Ravnica; 71 of 99 cards on theme"), the handles being the owner's and the count the product's; the declared fields gain "we play Planechase", "we play Archenemy (Commander option)" and "Attractions allowed" for [I-103](i103-planar-scheme-and-attraction-decks-beside-the-commander-deck.md) slice 8.
 - [ ] Added 2026-11-19 (eighteenth pass): two named house rules a pod can pick, each with its source and no recommendation, neither enforced nor timed (the table-companion non-goal stands). (a) "Overtime: after the first elimination, N more turn cycles, then the highest life total wins", N set by the pod, from "A rule 0 change that has vastly improved my group's play experience" (r/EDH, 714 points, 507 comments, 2025-11-20, [thread](https://www.reddit.com/r/EDH/comments/1p20rmj/); Arctic Shift snapshot read 2026-11-19); replies object that life total is a poor tiebreak, so the sheet offers it as the pod's choice. (b) "Seat compensation: the first player skips the first draw; the last player draws one extra", from Playgroup's pre-registered trial: a baseline in which "the first seat won 29.23% of the time and the last seat 21.5%" over 257,261 four-player games, "648 of 3,000 games collected", and a read at 3,000 games or on 31 December 2026 ([experiment](https://playgroup.gg/commander/turn-order/experiment), updated 2026-11-19). The sheet shows rule (b) with no claim until the frozen result exists, then cites it with its n and interval. [I-35](i35-pod-game-log.md) 4.1 already reports results by seat.
@@ -656,6 +656,7 @@ CommanderSalt, DeckCheck DTI and EDHREC salt are the references for describing h
 **User story.** As a player about to sit down, I want a sheet of what we agreed, separate from the official rules, so that a house rule is not mistaken for a ban.
 
 **Acceptance.**
+
 - Intent, combos, extra turns, mass land denial, proxies and house rules are fields, not one blob of text.
 - The sheet is private until an explicit share.
 - A computed column is labelled computed and never overwrites a declared field.
@@ -677,4 +678,3 @@ CommanderSalt, DeckCheck DTI and EDHREC salt are the references for describing h
 Four players can compare consented profiles and see house preferences distinguished from official rules.
 
 ---
-

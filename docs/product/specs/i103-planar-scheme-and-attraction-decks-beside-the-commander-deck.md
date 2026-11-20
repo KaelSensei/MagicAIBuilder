@@ -144,7 +144,7 @@ Deck            + sideDeckOptions Json?                                         
 | --- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
 | 0   | Owner: build side decks at all, the public default, and which kinds ship first (D-100)                                                         | — (owner)                     |
 | 1   | One shared `DeckZone` with the three side zones; the five unions replaced; side zones out of counts, curve, price total, estimate and legality | —                             |
-| 2   | `checkSideDeck` with every rule of section 3 and its CR citation; fixtures                                                                     | —                             |
+| 2   | `checkSideDeck` with every rule of section 3 and its CR citation; fixtures Done (#1540).                                                       | —                             |
 | 3   | Side-card search mode with the visible query; the type gate of 1.2; `Deck.sideDeckOptions`                                                     | 1 (one nullable column)       |
 | 4   | The editor's side-deck board with counts and checks; English and French                                                                        | 1, 2, 3                       |
 | 5   | Text export and import of the three sections, with the preview counts                                                                          | 1                             |

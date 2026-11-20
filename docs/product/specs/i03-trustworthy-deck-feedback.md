@@ -4,7 +4,7 @@
 **Priority:** Now  
 **Depth:** Full
 
-This file is the feature spec. It had no engineering-slice spec before 2026-11-11. It has no delivery-slice table, so the dependency generator does not pick slices from it until one is added.
+This file is the feature spec. It had no engineering-slice spec before 2026-11-11. The delivery-slice table records build order. A slice marked Done has merged to `dev`; the glance table names the lowest-numbered slice that can start now.
 
 ## Feature contract (Full, 2026-11-11)
 
@@ -384,22 +384,22 @@ Then it does not call the deck fair, unfair, salty, or a win rate unless the mov
 
 The player-visible outcome is: the player understands what is wrong with a deck and what action would improve it.
 
-| State | What the player sees |
-| --- | --- |
-| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
-| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
-| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
-| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
-| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
-| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
-| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
-| English | New controls use the `en` catalogue. |
-| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| State            | What the player sees                                                                                                                                  |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Empty            | A sentence that names what is missing and the next action. No invented row, author, price or score.                                                   |
+| Loading          | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready.                                        |
+| Error            | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there.                                                       |
+| Partial          | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished.                                                 |
+| Stale            | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed.                                             |
+| Guest            | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401.               |
+| Signed-in        | Writes go to that account only. Another player's notes, budget and collection are not in the response.                                                |
+| English          | New controls use the `en` catalogue.                                                                                                                  |
+| French           | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control.                                                         |
 | Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
-| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
-| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
-| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
-| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+| Keyboard         | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes.                         |
+| Screen reader    | Each new control has an accessible name. A status change is announced in words, not only by colour.                                                   |
+| Colour           | A warning and an error differ by text or icon as well as hue, in both themes.                                                                         |
+| Success          | The completed action is confirmed in words. A second identical action does not duplicate the write.                                                   |
 
 ### Alternate paths
 
@@ -470,6 +470,7 @@ Nothing in the roadmap entry was dropped. The section below is the initiative te
 **User story.** As a player reading a warning, I want the rule or the source named on the warning, so that I can fix the deck or ignore a preference without guessing.
 
 **Acceptance.**
+
 - Every warning names a rule number, a ban list date, or an external source with its freshness.
 - A Game Changer count uses the current list, not the flag stored when the card was added.
 - No new score appears without that name.
@@ -488,9 +489,30 @@ Nothing in the roadmap entry was dropped. The section below is the initiative te
 
 **Kill criteria.** Stop adding scores if a warning still cannot name its rule or its source.
 
+## Delivery slices
+
+Derived from the contract's acceptance criteria and the moved record's scope items. Checked scope items are Done. An open parent stays a slice even where a child pull request already landed.
+
+| #   | Slice                                                                                                                                                                                                                                                                                                                                                                                                     | Depends on                 |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- |
+| 1   | Replace long warning blocks with dismissible, grouped and actionable warnings, shown beside the card or the deck total. Done (checked scope).                                                                                                                                                                                                                                                             | —                          |
+| 2   | Show the rule or the calculation behind a legality warning on demand, naming the rule number, the ban-list date or the external source (AC-03-01). Done (checked scope).                                                                                                                                                                                                                                  | 1                          |
+| 3   | Separate hard legality errors from strategic suggestions and optional advice. Done (checked scope).                                                                                                                                                                                                                                                                                                       | 1                          |
+| 4   | Add source and freshness labels to external recommendations, and let the player compare the analysis before and after a proposed change. Done (checked scope).                                                                                                                                                                                                                                            | 1                          |
+| 5   | Keep warning calculations deterministic and independent of AI output, including stable ordering. Children landed in #1096, #1094 and #1092; the parent scope item is still open. No new score is added without the name AC-03-03 requires.                                                                                                                                                                | 1                          |
+| 6   | Validate commander and partner mechanics at the deck API, including imported pairs and two printings of the same Oracle card. #1098 and #1131 landed; pairing abilities (Partner with, Background, Friends forever, Doctor's companion) are still the open parent.                                                                                                                                        | —                          |
+| 7   | Treat snow-covered basics as basic lands in copy limits, land counts and every check that names basics.                                                                                                                                                                                                                                                                                                   | 5                          |
+| 8   | Flag cards whose rules text cannot work with this commander, read from Oracle text and the commander's colour identity and type line, labelled apart from recommendations. #1328 covers Arcane Signet, Command Tower and Path of Ancestry under a colourless commander. Creature-type mismatches such as Roaming Throne remain open. The same check labels I-09's recommendations.                        | 5                          |
+| 9   | Version the Game Changers list and the bracket rules as dated data, so the count uses the current list (AC-03-02). I-48 slice 1 owns the version reader and waits for I-28 slice 2. I-48 slice 2 stops trusting the flags stored when the card was added.                                                                                                                                                 | I-48 slice 1; I-28 slice 2 |
+| 10  | Every bracket estimate shows its floors, terms, cards and certainty, links a frozen audit, and states its accuracy against a constant guess. I-77 answers why the estimate is flagged; this initiative keeps the warning text.                                                                                                                                                                            | I-77 slice 2               |
+| 11  | Honour a commander that changes deck construction (CR 903.5e, and CR 113.6n which does not change format legality). One versioned table keyed by Oracle id, read by the identity check, the size check, the stats warning, the AI legality check and builder search. Allowed cards name the rulebreaker. #1557 names the rulebreaker on an off-identity line; the construction exceptions are still open. | 6                          |
+| 12  | Store the pre-game chosen colour (CR 903.4b) on the deck and apply it during construction and the game. Tolabow, Loch Rascal needs it. `chosen-colour-for` is recorded and not applied.                                                                                                                                                                                                                   | 11                         |
+| 13  | Show I-100 slice 6's coherence findings as a warning class beside legality and the #1328 rules check, each naming its rule and its certainty, after D-97.                                                                                                                                                                                                                                                 | 8; I-100 slice 6; D-97     |
+
+Warnings stay on for guests and public decks (AC-03-06). New strings use the `en` and `fr` catalogues (AC-03-07), and a warning is not colour alone (AC-03-08). Slice 5 is the lowest that can start now. Slice 6 can start beside it. Slices 7 and 8 wait for slice 5, and slice 11 waits for slice 6.
+
 ### Definition of done
 
 A player can answer three questions from the editor: "What is invalid?", "Why is it flagged?" and "What should I do next?"
 
 ---
-

@@ -85,13 +85,13 @@ Scope the initiative around those two, not around the translation itself.
 
 ## Delivery slices
 
-| #   | Slice                                                                   | Depends on |
-| --- | ----------------------------------------------------------------------- | ---------- |
-| 1   | Translate route + query display, English, no deck context               | —          |
-| 2   | Editable query, explicit run, empty-state with the query visible        | 1          |
-| 3   | Deck context on generated and edited queries, with the widening warning | 2          |
-| 4   | French support and per-language regression set                          | 1          |
-| 5   | Return-to-syntax control and the disable-context escape hatch           | 3          |
+| #   | Slice                                                                                 | Depends on |
+| --- | ------------------------------------------------------------------------------------- | ---------- |
+| 1   | Translate route + query display, English, no deck context Done (#1369).               | —          |
+| 2   | Editable query, explicit run, empty-state with the query visible Done (#1369).        | 1          |
+| 3   | Deck context on generated and edited queries, with the widening warning Done (#1369). | 2          |
+| 4   | French support and per-language regression set                                        | 1          |
+| 5   | Return-to-syntax control and the disable-context escape hatch                         | 3          |
 
 Slices 1-2-3 are one chain; slice 4 is independent of 2 and 3 and can run in parallel.
 

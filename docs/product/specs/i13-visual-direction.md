@@ -85,7 +85,7 @@ A redesigned slice is not done until all of these hold:
 | #   | Slice                                                                                                      | Depends on |
 | --- | ---------------------------------------------------------------------------------------------------------- | ---------- |
 | 1   | **Token corrections** — borders to 3:1, accent-as-text removed, non-colour status encoding                 | —          |
-| 2   | **Remove the dead 3D stack** and align the README with reality                                             | —          |
+| 2   | **Remove the dead 3D stack** and align the README with reality Done (#1331).                               | —          |
 | 3   | **Rewrite `design-system.md` from the code**, including the lumen layer                                    | 1          |
 | 4   | **Card art in the hero** — a real commander, its colour identity, three cards, with a designed empty state | 1          |
 | 5   | Deck library and navigation in the instrument register                                                     | 1, 3       |
@@ -375,22 +375,22 @@ Then the player sees an empty state that names what is missing, and the page doe
 
 The player-visible outcome is: a player can find, build, understand and share a Commander deck in an interface that feels coherent, distinctive and calm even when card data is dense.
 
-| State | What the player sees |
-| --- | --- |
-| Empty | A sentence that names what is missing and the next action. No invented row, author, price or score. |
-| Loading | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready. |
-| Error | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there. |
-| Partial | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished. |
-| Stale | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed. |
-| Guest | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401. |
-| Signed-in | Writes go to that account only. Another player's notes, budget and collection are not in the response. |
-| English | New controls use the `en` catalogue. |
-| French | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control. |
+| State            | What the player sees                                                                                                                                  |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Empty            | A sentence that names what is missing and the next action. No invented row, author, price or score.                                                   |
+| Loading          | A busy state that keeps the layout still. The previous confirmed content stays until the new content is ready.                                        |
+| Error            | The catalogue message, what was not saved, and a retry. The last confirmed edit is still there.                                                       |
+| Partial          | Known rows are shown. Unknown rows are labelled unknown. A short list is not padded to look finished.                                                 |
+| Stale            | If this feature shows a date, the date is the one that was stored. A missing date is absent, not guessed.                                             |
+| Guest            | A signed-out player sees only what the rollout allows. A control that needs an account explains that, and does not fail with a raw 401.               |
+| Signed-in        | Writes go to that account only. Another player's notes, budget and collection are not in the response.                                                |
+| English          | New controls use the `en` catalogue.                                                                                                                  |
+| French           | New controls use the `fr` catalogue. A French URL does not show a hard-coded English control.                                                         |
 | Dormant catalogs | `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` keep every new key and may reuse the English text until a person reviews them. They are not routed. |
-| Keyboard | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes. |
-| Screen reader | Each new control has an accessible name. A status change is announced in words, not only by colour. |
-| Colour | A warning and an error differ by text or icon as well as hue, in both themes. |
-| Success | The completed action is confirmed in words. A second identical action does not duplicate the write. |
+| Keyboard         | The primary action and every new control can be reached without a pointer. Focus is visible and returns when a dialog closes.                         |
+| Screen reader    | Each new control has an accessible name. A status change is announced in words, not only by colour.                                                   |
+| Colour           | A warning and an error differ by text or icon as well as hue, in both themes.                                                                         |
+| Success          | The completed action is confirmed in words. A second identical action does not duplicate the write.                                                   |
 
 ### Alternate paths
 
@@ -451,6 +451,7 @@ No separate design-reference document was added with these slices. Screenshot re
 **User story.** As a player opening the editor, I want the same deck to be readable in both themes and at a phone width, so that a visual change does not hide a control I used yesterday.
 
 **Acceptance.**
+
 - A changed default view keeps the previous view selectable for at least one release.
 - Light and dark both keep text that meets the contrast bar I-49 measures.
 - Narrow, tablet and wide widths are checked for the journeys this initiative restyles.
@@ -472,4 +473,3 @@ No separate design-reference document was added with these slices. Screenshot re
 The deck-library-to-editor-to-share journey is visually coherent and remains at least as usable as before; accessibility, responsive, performance and regression checks pass, and each redesigned slice has QA acceptance evidence before promotion.
 
 ---
-
