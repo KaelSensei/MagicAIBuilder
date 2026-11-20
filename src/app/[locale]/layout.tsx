@@ -9,7 +9,7 @@ import { notFound } from "next/navigation";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
 import localFont from "next/font/local";
-import { SpeedInsights } from "@vercel/speed-insights/next";
+import { ScrubbedSpeedInsights } from "@/components/layout/ScrubbedSpeedInsights";
 import "@/styles/globals.css";
 import { routing } from "@/i18n/routing";
 import { themeBootScript } from "@/lib/theme/preference";
@@ -118,7 +118,7 @@ export default async function LocaleLayout({
         <NextIntlClientProvider locale={locale} messages={messages}>
           <Providers>{children}</Providers>
         </NextIntlClientProvider>
-        <SpeedInsights />
+        <ScrubbedSpeedInsights />
       </body>
     </html>
   );
