@@ -3,8 +3,9 @@
  *
  * Sociable: the real deck store, the real deck API client and the real
  * Scryfall client run; only `fetch` is replaced, by a recorder that answers
- * every deck request with 200 and a Scryfall ban-list search with the cards
- * `bannedIn` names for that format. A control counts as working when the deck
+ * every deck request with 200, a Scryfall ban-list search with the cards
+ * `bannedIn` names for that format, and the combo lookup with no combo, or
+ * with `combosStatus` when a test makes it fail. A control counts as working when the deck
  * in the store changes and the matching `PATCH /api/decks/[id]` leaves the page.
  */
 import { screen, waitFor, within } from "@testing-library/react";
@@ -58,6 +59,8 @@ interface SentRequest {
 let sent: SentRequest[] = [];
 /** The status the fake server answers every request with. */
 let serverStatus = 200;
+/** The status of the combo lookup, `POST /api/combos`; it finds no combo. */
+let combosStatus = 200;
 
 /** Bodies of the deck metadata saves, in the order they were sent. */
 function deckPatches(): readonly unknown[] {
@@ -98,12 +101,16 @@ function renderPanel(locale: "en" | "fr" = "en") {
 beforeEach(() => {
   sent = [];
   serverStatus = 200;
+  combosStatus = 200;
   bannedIn = {};
   vi.stubGlobal(
     "fetch",
     vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = new URL(String(input), "http://localhost");
       if (url.pathname === "/cards/search") return scryfallBanListAnswer(url);
+      if (url.pathname === "/api/combos") {
+        return Response.json({ combos: [] }, { status: combosStatus });
+      }
       sent.push({
         method: init?.method ?? "GET",
         url: String(input),
@@ -280,6 +287,106 @@ describe("DeckDetailsPanel", () => {
 
       expect(
         within(details).queryByRole("group", { name: "Target bracket" })
+      ).toBeNull();
+    });
+  });
+
+  describe("path to the target bracket", () => {
+    /** Two Game Changers on Wizards' list, as the builder stores them. */
+    const twoGameChangers = ["Rhystic Study", "Smothering Tithe"].map((name) =>
+      aDeckCard({ id: name, name, cmc: 3, isGameChanger: true })
+    );
+
+    /** The lines of the "To reach Bracket N" list, in order. */
+    function pathLines(list: HTMLElement): readonly (string | null)[] {
+      return within(list)
+        .getAllByRole("listitem")
+        .map((item) => item.textContent);
+    }
+
+    it("lists the Game Changers a Bracket 2 target allows none of, under the target picker, before any heuristic line", () => {
+      openDeck({ targetBracket: 2, cards: twoGameChangers });
+      renderPanel();
+      const details = screen.getByRole("region", { name: "Deck details" });
+
+      const list = within(details).getByRole("region", {
+        name: "To reach Bracket 2",
+      });
+      expect(
+        within(list).getByText("Estimated bracket of this list: 3.")
+      ).toBeInTheDocument();
+      expect(pathLines(list)).toEqual([
+        "Bracket 2 allows no Game Changers. This list has 2: Rhystic Study and Smothering Tithe.",
+        "This list has 2 cards: too few cards for the heuristic part, so only the official rules above set the estimate.",
+      ]);
+      const picker = within(details).getByRole("group", {
+        name: "Target bracket",
+      });
+      expect(
+        picker.compareDocumentPosition(list) & Node.DOCUMENT_POSITION_FOLLOWING
+      ).toBeTruthy();
+    });
+
+    it("says only that no official rule stops the deck once the player picks the estimated bracket", async () => {
+      const user = userEvent.setup();
+      openDeck({ targetBracket: 2, cards: twoGameChangers });
+      renderPanel();
+      const details = screen.getByRole("region", { name: "Deck details" });
+
+      await user.click(
+        within(details).getByRole("button", { name: "Bracket 3: Upgraded" })
+      );
+
+      const list = within(details).getByRole("region", {
+        name: "To reach Bracket 3",
+      });
+      expect(pathLines(list)).toEqual([
+        "No official rule stops this deck at Bracket 3.",
+      ]);
+    });
+
+    it("says the combo floor was not checked when the combo lookup fails", async () => {
+      combosStatus = 503;
+      const creatures = Array.from({ length: 8 }, (_, index) =>
+        aDeckCard({ id: `bear-${index}`, name: `Bear ${index}`, cmc: 2 })
+      );
+      openDeck({
+        targetBracket: 2,
+        cards: [...twoGameChangers, ...creatures],
+      });
+      renderPanel();
+      const details = screen.getByRole("region", { name: "Deck details" });
+
+      expect(
+        await within(details).findByText(
+          "Two-card combos: not checked. The estimate was made without combo data."
+        )
+      ).toBeInTheDocument();
+    });
+
+    it("words the list in French", () => {
+      openDeck({ targetBracket: 2, cards: twoGameChangers });
+      renderPanel("fr");
+      const details = screen.getByRole("region", { name: "Détails du deck" });
+
+      const list = within(details).getByRole("region", {
+        name: "Pour atteindre le Bracket 2",
+      });
+      expect(
+        within(list).getByText("Bracket estimé de cette liste : 3.")
+      ).toBeInTheDocument();
+      expect(pathLines(list)[0]).toBe(
+        "Le Bracket 2 n'autorise aucun Game Changer. Cette liste en a 2 : Rhystic Study et Smothering Tithe."
+      );
+    });
+
+    it("shows no path for a format without brackets", () => {
+      openDeck({ format: "modern", cards: twoGameChangers });
+      renderPanel();
+      const details = screen.getByRole("region", { name: "Deck details" });
+
+      expect(
+        within(details).queryByRole("region", { name: /To reach Bracket/ })
       ).toBeNull();
     });
   });
