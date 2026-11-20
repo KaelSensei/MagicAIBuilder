@@ -48,6 +48,7 @@ import { applyUndo } from "./history";
 import { applyDamage, applyHeal } from "./life";
 import { applyBottomCards, applyMulligan } from "./mulligan";
 import { defaultPlaytestCommandDeps, type PlaytestCommandDeps } from "./ports";
+import { applyShuffleLibrary } from "./shuffle-library";
 import { applyDrawCard, applyNextPhase, applyNextTurn } from "./turn";
 import type {
   CardZone,
@@ -74,6 +75,8 @@ export type PlaytestCommand =
   | { readonly type: "nextPhase" }
   /** Start the next turn in its Draw step: untap and draw (CR 502.3, 504.1). */
   | { readonly type: "nextTurn" }
+  /** Shuffle the library, and only the library (CR 701.24a); the order comes from the random port. */
+  | { readonly type: "shuffleLibrary" }
   /** Lose `amount` life for `description`, "damage" when absent (CR 119.3). */
   | {
       readonly type: "damage";
@@ -198,6 +201,8 @@ export function reducePlaytest(
       return applyNextPhase(state, deps);
     case "nextTurn":
       return applyNextTurn(state, deps);
+    case "shuffleLibrary":
+      return applyShuffleLibrary(state, deps);
     case "damage":
       return applyDamage(state, command.amount, command.description, deps);
     case "heal":

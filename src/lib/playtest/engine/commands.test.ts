@@ -32,6 +32,7 @@ import {
   applyRingTempts,
   applyRollDie,
   applySetDayNight,
+  applyShuffleLibrary,
   applyTap,
   applyToggleDesignation,
   applyUndo,
@@ -196,6 +197,12 @@ const ROWS: readonly ReducerRow[] = [
     type: "nextTurn",
     command: () => ({ type: "nextTurn" }),
     expected: (s) => applyNextTurn(s, deps),
+  },
+  {
+    label: "shuffleLibrary shuffles the library",
+    type: "shuffleLibrary",
+    command: () => ({ type: "shuffleLibrary" }),
+    expected: (s) => applyShuffleLibrary(s, deps),
   },
   {
     label: "damage with a cause loses life for that cause",

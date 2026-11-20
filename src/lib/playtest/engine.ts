@@ -4,7 +4,7 @@
  * Context: playtest. This module is the engine's public surface: it re-exports, by name, what
  * the store, the components and the tests use, and nothing else. The code lives in `engine/`,
  * one module per concern: `ports` (randomness and time), `types`, `shuffle`, `initial-state`
- * (the deal), `mulligan`, `turn`, `life`, `commander-damage`, `designations` (player counters,
+ * (the deal), `mulligan`, `turn`, `shuffle-library` (the player's own shuffle), `life`, `commander-damage`, `designations` (player counters,
  * the monarch, the initiative, the Ring, day and night, the city's blessing), `battlefield`,
  * `zones`, `dice`, `action-log` and `history` (undo). Each `apply*` transition is a pure function from one readonly
  * `PlaytestEngine` to the next, and returns the same state when the move does not apply.
@@ -79,6 +79,11 @@ export {
 export type { MulliganTally } from "./engine/mulligan";
 
 export { applyDrawCard, applyNextPhase, applyNextTurn } from "./engine/turn";
+
+export {
+  applyShuffleLibrary,
+  LIBRARY_SHUFFLED_LINE,
+} from "./engine/shuffle-library";
 
 export { applyDamage, applyHeal, hasLostOnLife } from "./engine/life";
 
