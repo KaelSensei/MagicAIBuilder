@@ -7,6 +7,10 @@
  * `expectedVersion` (PATCH: in the JSON body; DELETE: `?expectedVersion=`)
  * and answer 409 when another write landed since the client read the deck;
  * their success bodies carry the deck's new `version`.
+ *
+ * PATCH stores at most the copy limit, as the editor does: a new quantity is
+ * clamped silently to `min(requested, limit)` (`lib/deck/copy-limit-write.ts`),
+ * and the response carries the stored row.
  */
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -15,10 +19,12 @@ import { patchCardRequestSchema } from "@/lib/validation/card";
 import { requireDeckOwner } from "@/lib/auth/helpers";
 import { logger } from "@/lib/logger";
 import { readJsonBody } from "@/lib/api/json-body";
+import { requireCopyRuleDeckOwner } from "@/lib/api/copy-rule-deck-owner";
 import {
   deckWriteResponse,
   readExpectedVersionQuery,
 } from "@/lib/api/versioned-deck-write";
+import { editWithinCopyLimit } from "@/lib/deck/copy-limit-write";
 import { deckRepository } from "@/lib/deck/deck-repository";
 
 type Params = { params: Promise<{ id: string; cardId: string }> };
@@ -61,7 +67,7 @@ export async function DELETE(request: Request, { params }: Params) {
 export async function PATCH(request: Request, { params }: Params) {
   const { id: deckId, cardId } = await params;
   try {
-    const ownership = await requireDeckOwner(deckId);
+    const ownership = await requireCopyRuleDeckOwner(deckId);
     if (ownership.error) return ownership.error;
 
     const card = await prisma.deckCard.findFirst({
@@ -92,7 +98,7 @@ export async function PATCH(request: Request, { params }: Params) {
     const result = await deckRepository.editCard(
       { deckId, expectedVersion },
       cardId,
-      edit
+      editWithinCopyLimit(edit, card, ownership.copyRule)
     );
     return deckWriteResponse(result, ({ value, version }) =>
       NextResponse.json({ ...value, version })

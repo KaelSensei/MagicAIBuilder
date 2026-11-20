@@ -1,4 +1,8 @@
-/** GET lists the signed-in user's decks; POST creates a deck and its cards in one write. */
+/**
+ * GET lists the signed-in user's decks; POST creates a deck and its cards in
+ * one write. POST stores at most the copy limit, as the editor does: each row
+ * is clamped silently to `min(requested, limit)` (`lib/deck/copy-limit-write.ts`).
+ */
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { z } from "zod";
@@ -7,7 +11,14 @@ import { logger } from "@/lib/logger";
 import { ALL_FORMATS } from "@/lib/deck/formats";
 import { readJsonBody } from "@/lib/api/json-body";
 import { sharesOracleIdentity } from "@/lib/deck/commander-pairing";
-import { commandSlotOf } from "@/lib/deck/bulk-edit-command-zone";
+import {
+  commandSlotOf,
+  isCommanderRow,
+} from "@/lib/deck/bulk-edit-command-zone";
+import {
+  cardWithinCopyLimit,
+  storedCopyLimitDeck,
+} from "@/lib/deck/copy-limit-write";
 import { sanitizeDisplayName } from "@/lib/deck/display-name";
 import { deckCardIdSchema, pairingTypeSchema } from "@/lib/validation/deck";
 import { addCardSchema, type AddCardInput } from "@/lib/validation/card";
@@ -89,6 +100,25 @@ function hasOneCommandRowPerSlot(cards: readonly AddCardInput[]): boolean {
 }
 
 /**
+ * The request's rows, each clamped to the copy limit of the deck it creates.
+ * The request holds every fact the rule reads: the format, and the commander
+ * and partner rows whose rulebreaker exceptions apply (CR 903.5e), so no
+ * stored deck is read.
+ *
+ * @param fields - the validated request
+ * @returns the rows to create, in order, with `quantity` from 1 to each card's limit
+ */
+function cardsWithinCopyLimit(fields: CreateDeckInput): AddCardInput[] {
+  const copyRule = storedCopyLimitDeck({
+    format: fields.format,
+    commandZoneNames: fields.cards
+      .filter((card) => isCommanderRow(card))
+      .map((card) => card.name),
+  });
+  return fields.cards.map((card) => cardWithinCopyLimit(card, copyRule));
+}
+
+/**
  * @param fields - the validated request
  * @param name - the request's name with markup stripped
  * @param userId - the session's user
@@ -117,7 +147,7 @@ function buildCreateDeckData(
     isAIGenerated: fields.isAIGenerated ?? false,
     userId,
     idempotencyKey,
-    cards: { create: fields.cards },
+    cards: { create: cardsWithinCopyLimit(fields) },
   };
 }
 
