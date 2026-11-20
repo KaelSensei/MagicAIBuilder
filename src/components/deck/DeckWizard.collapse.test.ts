@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { collapseEntries } from "./DeckWizard";
+import { collapseEntries } from "./built-deck-import";
 import type { BuildCard } from "@/hooks/useAIDeckBuild";
 
 const card = (name: string, quantity: number, category = "other"): BuildCard => ({
