@@ -5,7 +5,8 @@
  *
  * Community context, mounted by `PublicDeckView`. The owner writes the text and every visitor
  * reads it, so it is never parsed as HTML: `lib/community/primer-markdown` parses it into a tree
- * whose links are already classified, and `PrimerBlocks` renders that tree.
+ * whose links are already classified, and `PrimerBlocks` renders that tree, linking each
+ * `[[Card Name]]` mention to the deck card it names.
  * Not responsible for: the Markdown subset or the link policy, which live in `lib/community`.
  *
  * @module profile/PublicDeckPrimer
@@ -17,6 +18,10 @@ import {
   primerHeadings,
   type PrimerHeading,
 } from "@/lib/community/primer-markdown";
+import {
+  primerCardIndex,
+  type PrimerDeckCard,
+} from "@/lib/community/primer-card-links";
 import { PrimerBlockView } from "./PrimerBlocks";
 
 interface PrimerLabels {
@@ -28,8 +33,12 @@ interface PrimerLabels {
 
 interface PublicDeckPrimerProps {
   readonly description: string;
+  /** The deck's cards, which `[[Card Name]]` mentions link to; none when left out. */
+  readonly cards?: readonly PrimerDeckCard[];
   readonly labels?: PrimerLabels;
 }
+
+const NO_CARDS: readonly PrimerDeckCard[] = [];
 
 const DEFAULT_LABELS: PrimerLabels = {
   contents: "Primer contents",
@@ -112,10 +121,12 @@ function PrimerActions({
 /** Render a public deck primer with a safe, focused Markdown subset. */
 export function PublicDeckPrimer({
   description,
+  cards = NO_CARDS,
   labels = DEFAULT_LABELS,
 }: PublicDeckPrimerProps) {
   const blocks = useMemo(() => parsePrimer(description), [description]);
   const headings = useMemo(() => primerHeadings(blocks), [blocks]);
+  const cardIndex = useMemo(() => primerCardIndex(cards), [cards]);
 
   return (
     <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)]/60 px-4 py-4 sm:px-5">
@@ -124,7 +135,11 @@ export function PublicDeckPrimer({
         <PrimerActions description={description} labels={labels} />
       </div>
       {blocks.map((block, index) => (
-        <PrimerBlockView key={`${block.kind}-${index}`} block={block} />
+        <PrimerBlockView
+          key={`${block.kind}-${index}`}
+          block={block}
+          cards={cardIndex}
+        />
       ))}
     </section>
   );

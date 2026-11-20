@@ -6,7 +6,8 @@
  * Context: deck building (ui). It owns the draft and saves through the deck
  * store's `updateDeckDescription`, which sends `PATCH /api/decks/[id]` and
  * restores the previous text on a failed save. `DeckPrimerEditorDialog` draws
- * the editing surface, with the server's 2,000-character cap.
+ * the editing surface, with the server's 2,000-character cap. It reads the deck's cards from the
+ * store, so the preview links `[[Card Name]]` mentions as the public page will.
  *
  * @module deck/DeckDescriptionEditor
  */
@@ -15,12 +16,15 @@ import { useState, useRef, useEffect } from "react";
 import { ChevronDown, ChevronRight, Edit3 } from "lucide-react";
 import { useShallow } from "zustand/react/shallow";
 import { useDeckStore } from "@/lib/deck/store";
+import type { DeckCard } from "@/lib/deck/types";
 import { DeckPrimerEditorDialog } from "./DeckPrimerEditorDialog";
 
 interface DeckDescriptionEditorProps {
   readonly deckId: string;
   readonly description: string | null | undefined;
 }
+
+const NO_CARDS: readonly DeckCard[] = [];
 
 /**
  * Edits the description of one deck.
@@ -45,6 +49,9 @@ export function DeckDescriptionEditor({
       updateDeckDescription: state.updateDeckDescription,
     }))
   );
+  // The card list only, by reference: the preview re-resolves mentions when a card is added or
+  // removed, not on every other store change.
+  const cards = useDeckStore((state) => state.decks[deckId]?.cards) ?? NO_CARDS;
 
   // Sync draft when external description changes
   useEffect(() => {
@@ -139,6 +146,7 @@ export function DeckDescriptionEditor({
       <DeckPrimerEditorDialog
         open={editing}
         draft={draft}
+        cards={cards}
         textareaRef={textareaRef}
         onDraftChange={setDraft}
         onSave={() => void handleSave()}

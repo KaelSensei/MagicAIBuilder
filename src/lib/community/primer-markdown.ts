@@ -4,7 +4,9 @@
  * Community context, pure. A deck's owner writes the primer and every visitor reads it, so the
  * text is never parsed as HTML, and every link in the tree already carries the verdict of
  * {@link classifyUserLink}: a renderer cannot forget to check a destination, because the raw one
- * is not in the tree. `PublicDeckPrimer` renders the tree; nothing here knows about React.
+ * is not in the tree. A `[[Card Name]]` mention carries no destination at all: the renderer
+ * resolves it against the deck's cards (`primer-card-links`). `PublicDeckPrimer` renders the
+ * tree; nothing here knows about React.
  * Not responsible for: the link policy (`lib/community/user-link.ts`) or the elements, classes,
  * `target` and `rel` a renderer chooses.
  *
@@ -12,10 +14,23 @@
  */
 import { classifyUserLink, type UserLink } from "./user-link";
 
-/** A run of text, or a link whose destination has been classified. */
+/**
+ * A `[[Card Name]]` or `[[Card Name|SET]]` mention: the name and set code as written, trimmed.
+ * It holds no destination: the renderer resolves the name against the deck's cards and builds
+ * the link itself, so nothing the author typed inside the brackets can become an `href`.
+ */
+export interface PrimerCardMention {
+  readonly kind: "card";
+  readonly name: string;
+  /** The set code after the `|`, or `null` when the mention names none. */
+  readonly setCode: string | null;
+}
+
+/** A run of text, a link whose destination has been classified, or a card mention. */
 export type PrimerInline =
   | { readonly kind: "text"; readonly text: string }
-  | { readonly kind: "link"; readonly label: string; readonly link: UserLink };
+  | { readonly kind: "link"; readonly label: string; readonly link: UserLink }
+  | PrimerCardMention;
 
 /**
  * A heading of the primer. `text` is the heading exactly as written, link markup included: the
@@ -52,8 +67,9 @@ const LIST_ITEM_LINE = /^(?:([-*])|(\d+)\.)\s(.+)$/;
  * Lines are trimmed, then: a heading line ends the open paragraph or list; a list item ends the
  * open paragraph and, when its marker kind changes (bullet to number or back), the open list;
  * a blank line ends both; any other line ends the open list and joins the open paragraph, whose
- * lines are rendered with a space between them. Nothing else is Markdown: emphasis, raw HTML,
- * code and `[[card]]` mentions stay literal text.
+ * lines are rendered with a space between them. Inline, `[label](destination)` is a link and
+ * `[[Card Name]]` a card mention. Nothing else is Markdown: emphasis, raw HTML and code stay
+ * literal text.
  *
  * @param description - the primer as its owner wrote it; an empty string gives no blocks
  * @returns the blocks in document order; never throws
@@ -149,11 +165,58 @@ export function keyPrimerSiblings<T>(
   });
 }
 
-/** What a run of inline nodes reads as: its text runs and link labels, in order. */
+/**
+ * What a run of inline nodes reads as: its text runs, link labels and mentioned card names, in
+ * order. Sibling keys and the editor preview's block keys read it.
+ */
 export function primerInlineText(content: readonly PrimerInline[]): string {
-  return content
-    .map((node) => (node.kind === "text" ? node.text : node.label))
-    .join("");
+  return content.map(inlineNodeText).join("");
+}
+
+function inlineNodeText(node: PrimerInline): string {
+  switch (node.kind) {
+    case "text":
+      return node.text;
+    case "link":
+      return node.label;
+    case "card":
+      return node.name;
+    default: {
+      const unhandled: never = node;
+      return unhandled;
+    }
+  }
+}
+
+/**
+ * Every card mention in `blocks`, in document order: heading, paragraph and list item content.
+ *
+ * @param blocks - a parsed primer
+ * @returns the mentions, repeats included
+ */
+export function primerCardMentions(
+  blocks: readonly PrimerBlock[]
+): readonly PrimerCardMention[] {
+  return blocks
+    .flatMap(blockInlineRuns)
+    .flat()
+    .filter((node) => node.kind === "card");
+}
+
+function blockInlineRuns(
+  block: PrimerBlock
+): readonly (readonly PrimerInline[])[] {
+  switch (block.kind) {
+    case "heading":
+    case "paragraph":
+      return [block.content];
+    case "list":
+      return block.items;
+    default: {
+      const unhandled: never = block;
+      return unhandled;
+    }
+  }
 }
 
 /** The headings of `blocks`, in document order: what the contents bar lists. */
@@ -193,6 +256,9 @@ export function primerHeadingId(text: string): string {
  * the destination is kept while the first `)` ends it. An unclosed `[` is text, and a `[`
  * inside a label belongs to the label (`[[a](u)` links `[a`).
  *
+ * Links are found first; the text between them is then split into card mentions (see
+ * {@link CARD_MENTION}), so a `[[` that opens a link label stays part of that label.
+ *
  * @returns the runs in order; an empty line gives no nodes
  */
 export function parseInline(text: string): readonly PrimerInline[] {
@@ -200,7 +266,7 @@ export function parseInline(text: string): readonly PrimerInline[] {
   let cursor = 0;
   for (const link of primerLinks(text)) {
     if (link.index > cursor) {
-      nodes.push({ kind: "text", text: text.slice(cursor, link.index) });
+      nodes.push(...parseCardMentions(text.slice(cursor, link.index)));
     }
     nodes.push({
       kind: "link",
@@ -208,6 +274,36 @@ export function parseInline(text: string): readonly PrimerInline[] {
       link: classifyUserLink(link.destination),
     });
     cursor = link.end;
+  }
+  if (cursor < text.length)
+    nodes.push(...parseCardMentions(text.slice(cursor)));
+  return nodes;
+}
+
+/**
+ * `[[name]]` or `[[name|set]]`: neither part may hold a bracket or a pipe, so a second `|` or a
+ * nested `[` leaves the whole mention as text. The excluded characters also end each part, so
+ * a match attempt never scans past the next `[` and a line of openings stays linear.
+ */
+const CARD_MENTION = /\[\[([^[\]|]+)(?:\|([^[\]|]*))?\]\]/g;
+
+/** Splits a run of text into text runs and card mentions; a blank name stays text. */
+function parseCardMentions(text: string): readonly PrimerInline[] {
+  const nodes: PrimerInline[] = [];
+  let cursor = 0;
+  for (const match of text.matchAll(CARD_MENTION)) {
+    const name = match[1].trim();
+    if (name === "") continue;
+    if (match.index > cursor) {
+      nodes.push({ kind: "text", text: text.slice(cursor, match.index) });
+    }
+    const setCode = match[2]?.trim() ?? "";
+    nodes.push({
+      kind: "card",
+      name,
+      setCode: setCode === "" ? null : setCode,
+    });
+    cursor = match.index + match[0].length;
   }
   if (cursor < text.length)
     nodes.push({ kind: "text", text: text.slice(cursor) });
