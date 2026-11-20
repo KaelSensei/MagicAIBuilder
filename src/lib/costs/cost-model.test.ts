@@ -52,6 +52,10 @@ describe("playersCoveredBy", () => {
   it("refuses a cost of zero or less, which no credit runs out on", () => {
     expect(() => playersCoveredBy(20, 0)).toThrow(RangeError);
   });
+
+  it("refuses a cost that is not a number, as it refuses zero", () => {
+    expect(() => playersCoveredBy(20, Number.NaN)).toThrow(RangeError);
+  });
 });
 
 describe("limitHeadroom", () => {

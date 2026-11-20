@@ -117,9 +117,14 @@ export function inMemorySnapshotStore(
           (snapshot) => snapshot.id === snapshotId && snapshot.deckId === deckId
         ) ?? null
       ),
-    remove: (snapshotId) => Promise.resolve(remove(snapshotId)),
-    replaceCards: (deckId, restored) =>
-      Promise.resolve(replaceCards(deckId, restored)),
+    remove: (snapshotId) => {
+      remove(snapshotId);
+      return Promise.resolve();
+    },
+    replaceCards: (deckId, restored) => {
+      replaceCards(deckId, restored);
+      return Promise.resolve();
+    },
   };
 
   const versions: DeckVersionStore = {
