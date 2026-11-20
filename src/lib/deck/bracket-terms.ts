@@ -15,8 +15,10 @@
 import type { DeckStats } from "./analysis-types";
 import type {
   BracketTerm,
+  BracketTermKey,
   TermCard,
   TermInput,
+  TermMeasure,
   TermThreshold,
 } from "./bracket-assessment";
 import { compareTermCards, placementOf } from "./bracket-card-placement";
@@ -48,17 +50,66 @@ function countedCards(deck: Deck): readonly DeckCard[] {
   ];
 }
 
-/** Scores a value 1–4 against rising bounds: one step per bound passed. */
-function scoreRising(value: number, bounds: Bounds): number {
-  if (value <= bounds[0]) return 1;
-  if (value <= bounds[1]) return 2;
-  if (value <= bounds[2]) return 3;
-  return 4;
+/**
+ * How many bounds a threshold's value passes: a rising value passes each
+ * bound it exceeds, a falling one (average mana value) each bound it does not
+ * exceed. Each bound passed is one step of the term's score.
+ */
+function boundsPassed(threshold: TermThreshold): number {
+  const { value, bounds, direction } = threshold;
+  return bounds.filter((bound) =>
+    direction === "higherIsStronger" ? value > bound : value <= bound
+  ).length;
 }
 
-/** Scores an average mana value 1–4 against bounds: lower reads stronger. */
-function scoreFalling(value: number, bounds: Bounds): number {
-  return 5 - scoreRising(value, bounds);
+/** The bounds passed on one measure; none when the term does not read it. */
+type BoundsPassedOn = (measure: TermMeasure) => number;
+
+/**
+ * Win speed: more fast wins than the higher bound read 4, more than the lower
+ * bound read 3, otherwise win conditions above their bound read 2; a fast
+ * curve adds one step to the last three readings.
+ */
+function winSpeedScore(passed: BoundsPassedOn): number {
+  const curveStep = passed("avgCmc");
+  const fastWinSteps = passed("fastWins");
+  if (fastWinSteps >= FAST_WIN_BOUNDS.length) return 4;
+  if (fastWinSteps > 0) return Math.min(4, 3 + curveStep);
+  return 1 + passed("winConditions") + curveStep;
+}
+
+/** How each term turns the bounds its measures pass into a score 1–4. */
+const TERM_SCORERS: Readonly<
+  Record<BracketTermKey, (passed: BoundsPassedOn) => number>
+> = {
+  // High ramp with a low curve reads as a faster deck: the mean of the two.
+  ramp: (passed) => Math.round((2 + passed("ramp") + passed("avgCmc")) / 2),
+  draw: (passed) => 1 + passed("draw"),
+  removal: (passed) => 1 + passed("weightedRemoval"),
+  winSpeed: winSpeedScore,
+  avgCmc: (passed) => 1 + passed("avgCmc"),
+};
+
+/**
+ * Scores one term 1–4 from its thresholds, the way `scoreBracketTerms` does.
+ *
+ * Re-running it with one threshold's value changed tells what the term would
+ * read at another count (I-77 5.2), so the path to a lower bracket never
+ * repeats a bound in its own words.
+ *
+ * @param key - the term
+ * @param thresholds - the term's thresholds, as its `BracketTerm` holds them
+ * @returns the term's score, 1 to 4
+ */
+export function scoreTerm(
+  key: BracketTermKey,
+  thresholds: readonly TermThreshold[]
+): number {
+  const passed: BoundsPassedOn = (measure) => {
+    const threshold = thresholds.find((entry) => entry.measure === measure);
+    return threshold ? boundsPassed(threshold) : 0;
+  };
+  return TERM_SCORERS[key](passed);
 }
 
 function rising(
@@ -100,30 +151,26 @@ function sorted(cards: readonly TermCard[]): readonly TermCard[] {
 }
 
 function rampTerm(stats: DeckStats, counted: readonly DeckCard[]): BracketTerm {
-  // High ramp with a low curve reads as a faster deck.
-  const score = Math.round(
-    (scoreRising(stats.ramp, RAMP_BOUNDS) +
-      scoreFalling(stats.avgCmc, RAMP_CMC_BOUNDS)) /
-      2
-  );
+  const thresholds = [
+    rising("ramp", stats.ramp, RAMP_BOUNDS),
+    falling("avgCmc", stats.avgCmc, RAMP_CMC_BOUNDS),
+  ];
   return {
     key: "ramp",
     inputs: [estimated("ramp", stats.ramp), averageManaValue(stats)],
-    thresholds: [
-      rising("ramp", stats.ramp, RAMP_BOUNDS),
-      falling("avgCmc", stats.avgCmc, RAMP_CMC_BOUNDS),
-    ],
-    score,
+    thresholds,
+    score: scoreTerm("ramp", thresholds),
     cards: sorted(placedIn(counted, ["ramp"])),
   };
 }
 
 function drawTerm(stats: DeckStats, counted: readonly DeckCard[]): BracketTerm {
+  const thresholds = [rising("draw", stats.draw, DRAW_BOUNDS)];
   return {
     key: "draw",
     inputs: [estimated("draw", stats.draw)],
-    thresholds: [rising("draw", stats.draw, DRAW_BOUNDS)],
-    score: scoreRising(stats.draw, DRAW_BOUNDS),
+    thresholds,
+    score: scoreTerm("draw", thresholds),
     cards: sorted(placedIn(counted, ["draw"])),
   };
 }
@@ -133,14 +180,15 @@ function removalTerm(
   counted: readonly DeckCard[]
 ): BracketTerm {
   const weighted = stats.removal + stats.boardWipes * BOARD_WIPE_WEIGHT;
+  const thresholds = [rising("weightedRemoval", weighted, REMOVAL_BOUNDS)];
   return {
     key: "removal",
     inputs: [
       estimated("removal", stats.removal),
       estimated("boardWipes", stats.boardWipes),
     ],
-    thresholds: [rising("weightedRemoval", weighted, REMOVAL_BOUNDS)],
-    score: scoreRising(weighted, REMOVAL_BOUNDS),
+    thresholds,
+    score: scoreTerm("removal", thresholds),
     cards: sorted(placedIn(counted, ["removal", "boardWipe"])),
   };
 }
@@ -172,23 +220,16 @@ function fastWinCards(
   });
 }
 
-function winSpeedScore(
-  fastWins: number,
-  winConditions: number,
-  avgCmc: number
-): number {
-  const curveStep = avgCmc <= FAST_CURVE_BOUND ? 1 : 0;
-  if (fastWins > FAST_WIN_BOUNDS[1]) return 4;
-  if (fastWins > FAST_WIN_BOUNDS[0]) return Math.min(4, 3 + curveStep);
-  if (winConditions > WIN_CONDITION_BOUND) return 2 + curveStep;
-  return 1 + curveStep;
-}
-
 /** Win speed reads main-deck rows, not copies, and leaves the command zone out. */
 function winSpeedTerm(deck: Deck, stats: DeckStats): BracketTerm {
   const main = deck.cards.filter((card) => card.zone === "main");
   const winConditions = placedIn(main, ["winCondition"]);
   const fastWins = fastWinCards(main, winConditions.length > 0);
+  const thresholds = [
+    rising("fastWins", fastWins.length, FAST_WIN_BOUNDS),
+    rising("winConditions", winConditions.length, [WIN_CONDITION_BOUND]),
+    falling("avgCmc", stats.avgCmc, [FAST_CURVE_BOUND]),
+  ];
   return {
     key: "winSpeed",
     inputs: [
@@ -196,23 +237,20 @@ function winSpeedTerm(deck: Deck, stats: DeckStats): BracketTerm {
       estimated("fastWins", fastWins.length),
       averageManaValue(stats),
     ],
-    thresholds: [
-      rising("fastWins", fastWins.length, FAST_WIN_BOUNDS),
-      rising("winConditions", winConditions.length, [WIN_CONDITION_BOUND]),
-      falling("avgCmc", stats.avgCmc, [FAST_CURVE_BOUND]),
-    ],
-    score: winSpeedScore(fastWins.length, winConditions.length, stats.avgCmc),
+    thresholds,
+    score: scoreTerm("winSpeed", thresholds),
     cards: sorted([...winConditions, ...fastWins]),
   };
 }
 
 /** Average mana value alone: every nonland card weighs in, so it names none. */
 function avgCmcTerm(stats: DeckStats): BracketTerm {
+  const thresholds = [falling("avgCmc", stats.avgCmc, AVG_CMC_BOUNDS)];
   return {
     key: "avgCmc",
     inputs: [averageManaValue(stats)],
-    thresholds: [falling("avgCmc", stats.avgCmc, AVG_CMC_BOUNDS)],
-    score: scoreFalling(stats.avgCmc, AVG_CMC_BOUNDS),
+    thresholds,
+    score: scoreTerm("avgCmc", thresholds),
     cards: [],
   };
 }
