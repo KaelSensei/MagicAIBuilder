@@ -306,16 +306,17 @@ Public decks and the people around them. Context folder: `community`. Today: `li
 
 Accounts and access. Context folder: `identity`. Today: `lib/auth/`, `lib/api/`.
 
-| Term            | Meaning                                                                                                      | Source  | Code today                                                                    |
-| --------------- | ------------------------------------------------------------------------------------------------------------ | ------- | ----------------------------------------------------------------------------- |
-| **User**        | A person with an account, signed in with Google or with an email and password.                               | Product | Prisma `User`; Auth.js configuration in `lib/auth/config.ts`                  |
-| **Session**     | A signed-in state, valid 7 days and refreshed every 24 hours. Every authenticated request re-reads the user. | Auth.js | `lib/auth/edge-config.ts`; `requireAuth` in `lib/auth/helpers.ts`             |
-| **Viewer**      | Whoever makes a request, signed in or not; responses that depend on the viewer are never cached for others.  | Product | `lib/api/viewer-request.ts`                                                   |
-| **Deck owner**  | The user a deck belongs to. A deck with no owner is denied to everyone.                                      | Product | `Deck.userId`; `requireDeckOwner` in `lib/auth/helpers.ts`                    |
-| **Moderator**   | A user who may review deck reports.                                                                          | Product | `User.isModerator`; `requireModerator`                                        |
-| **API key**     | A personal secret for the public `/api/v1` API, shown once, stored as a hash, revocable.                     | Product | Prisma `ApiKey`; `mintApiKey`, `API_KEY_PREFIX = "mab_"` in `lib/api/keys.ts` |
-| **Scope**       | What an API key may read: `decks:read`, `collection:read`.                                                   | Product | `API_SCOPES`, `hasScope` in `lib/api/scopes.ts`                               |
-| **Public page** | A page served without a session.                                                                             | Product | `isPublicPagePath` in `lib/auth/public-paths.ts`                              |
+| Term                | Meaning                                                                                                               | Source                   | Code today                                                                               |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------- | ------------------------ | ---------------------------------------------------------------------------------------- |
+| **User**            | A person with an account, signed in with Google or with an email and password.                                        | Product                  | Prisma `User`; Auth.js configuration in `lib/auth/config.ts`                             |
+| **Session**         | A signed-in state, valid 7 days and refreshed every 24 hours. Every authenticated request re-reads the user.          | Auth.js                  | `lib/auth/edge-config.ts`; `requireAuth` in `lib/auth/helpers.ts`                        |
+| **Viewer**          | Whoever makes a request, signed in or not; responses that depend on the viewer are never cached for others.           | Product                  | `lib/api/viewer-request.ts`                                                              |
+| **Deck owner**      | The user a deck belongs to. A deck with no owner is denied to everyone.                                               | Product                  | `Deck.userId`; `requireDeckOwner` in `lib/auth/helpers.ts`                               |
+| **Moderator**       | A user who may review deck reports.                                                                                   | Product                  | `User.isModerator`; `requireModerator`                                                   |
+| **API key**         | A personal secret for the public `/api/v1` API, shown once, stored as a hash, revocable.                              | Product                  | Prisma `ApiKey`; `mintApiKey`, `API_KEY_PREFIX = "mab_"` in `lib/api/keys.ts`            |
+| **Scope**           | What an API key may read: `decks:read`, `collection:read`.                                                            | Product                  | `API_SCOPES`, `hasScope` in `lib/api/scopes.ts`                                          |
+| **Public page**     | A page served without a session.                                                                                      | Product                  | `isPublicPagePath` in `lib/auth/public-paths.ts`                                         |
+| **Account archive** | One JSON file with everything tied to an account, never a credential; each deck also as plain text. Versioned schema. | I-38 7; GDPR Art. 15, 20 | `GET /api/user/export`; `accountArchiveSchema` in `lib/account-export/archive-schema.ts` |
 
 ## Rules reference and site
 
