@@ -1,23 +1,20 @@
 "use client";
 // Export modal with multiple format support
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Copy, Download, Check, Printer } from "lucide-react";
 import { ProxyExportModal } from "./ProxyExportModal";
+import { ExportNotices } from "./ExportNotices";
 import type { Deck } from "@/lib/deck/types";
 import {
+  EXPORT_TARGETS,
+  exportDeck,
   exportPlainText,
-  exportMoxfield,
-  exportArena,
-  exportMTGO,
-  exportTappedOut,
-  exportArchidekt,
-  exportGoldfish,
-  exportEdhrec,
   copyToClipboard,
+  type ExportResult,
+  type ExportTarget,
 } from "@/lib/deck/export";
 import { downloadTextFile } from "@/lib/download-text-file";
-import { underscoreFileStem } from "@/lib/text/slug";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { textAreaShellClassName } from "@/components/ui/Input";
@@ -28,19 +25,9 @@ interface ExportModalProps {
   readonly onClose: () => void;
 }
 
-type ExportFormat =
-  | "moxfield"
-  | "arena"
-  | "mtgo"
-  | "tappedout"
-  | "archidekt"
-  | "goldfish"
-  | "edhrec"
-  | "plaintext";
-
 // Brand names, deliberately not translated. Plain text is not a brand: its
 // label comes from the catalog, shared with the import dialog's tab.
-const BRAND_LABELS: Record<Exclude<ExportFormat, "plaintext">, string> = {
+const BRAND_LABELS: Record<Exclude<ExportTarget, "plaintext">, string> = {
   moxfield: "Moxfield",
   arena: "MTG Arena",
   mtgo: "MTGO",
@@ -50,49 +37,31 @@ const BRAND_LABELS: Record<Exclude<ExportFormat, "plaintext">, string> = {
   edhrec: "EDHRec",
 };
 
-function getExportText(deck: Deck, format: ExportFormat): string {
-  switch (format) {
-    case "moxfield":
-      return exportMoxfield(deck);
-    case "arena":
-      return exportArena(deck);
-    case "mtgo":
-      return exportMTGO(deck);
-    case "tappedout":
-      return exportTappedOut(deck);
-    case "archidekt":
-      return exportArchidekt(deck);
-    case "goldfish":
-      return exportGoldfish(deck);
-    case "edhrec":
-      return exportEdhrec(deck);
-    case "plaintext":
-      return exportPlainText(deck);
-  }
-}
-
 export function ExportModal({ deck, onClose }: ExportModalProps) {
   const t = useTranslations("deck");
-  const [copied, setCopied] = useState<ExportFormat | null>(null);
+  const [copied, setCopied] = useState<ExportTarget | null>(null);
   const [showProxy, setShowProxy] = useState(false);
-  const formatLabel = (format: ExportFormat): string =>
+  const formatLabel = (format: ExportTarget): string =>
     format === "plaintext" ? t("import.tabText") : BRAND_LABELS[format];
+  // Every target's result, built once per deck: the rows show its notices
+  // before the player copies or downloads (I-50 requirement 1.2).
+  const exports = useMemo(
+    () =>
+      EXPORT_TARGETS.map((format) => ({
+        format,
+        result: exportDeck(deck, format),
+      })),
+    [deck]
+  );
 
-  const handleCopy = async (format: ExportFormat) => {
-    const text = getExportText(deck, format);
-    await copyToClipboard(text);
+  const handleCopy = async (format: ExportTarget, result: ExportResult) => {
+    await copyToClipboard(result.content);
     setCopied(format);
     setTimeout(() => setCopied(null), 2000);
   };
 
-  const handleDownload = (format: ExportFormat) => {
-    const text = getExportText(deck, format);
-    const deckName = underscoreFileStem(deck.name);
-    if (format === "mtgo") {
-      downloadTextFile(text, `${deckName}.dek`, "application/xml");
-    } else {
-      downloadTextFile(text, `${deckName}_${format}.txt`);
-    }
+  const handleDownload = (result: ExportResult) => {
+    downloadTextFile(result.content, result.fileName, result.mimeType);
   };
 
   const totalDeckCards =
@@ -108,17 +77,6 @@ export function ExportModal({ deck, onClose }: ExportModalProps) {
     (deck.commander ? 1 : 0) +
     (deck.partner ? 1 : 0);
 
-  const copyFormats: ExportFormat[] = [
-    "moxfield",
-    "arena",
-    "mtgo",
-    "tappedout",
-    "archidekt",
-    "goldfish",
-    "edhrec",
-    "plaintext",
-  ];
-
   return (
     <>
       {showProxy && (
@@ -133,43 +91,52 @@ export function ExportModal({ deck, onClose }: ExportModalProps) {
           <textarea
             readOnly
             value={previewText}
-            className={cn(textAreaShellClassName, "h-36 resize-none font-mono text-xs text-[var(--text-secondary)]")}
+            className={cn(
+              textAreaShellClassName,
+              "h-36 resize-none font-mono text-xs text-[var(--text-secondary)]"
+            )}
           />
         </div>
 
         {/* Export buttons */}
         <div className="px-5 py-4 space-y-2">
-          {copyFormats.map((format) => (
-            <div key={format} className="flex items-center gap-2">
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                onClick={() => handleCopy(format)}
-                className="flex-1 justify-start"
-              >
-                {copied === format ? (
-                  <Check className="w-3.5 h-3.5 text-green-400 shrink-0" />
-                ) : (
-                  <Copy className="w-3.5 h-3.5 text-[var(--text-secondary)] shrink-0" />
-                )}
-                {copied === format
-                  ? t("export.copied")
-                  : t("export.copyFor", { format: formatLabel(format) })}
-              </Button>
-              {/* Every format downloads — MTGO as .dek XML, the rest as .txt */}
-              <Button
-                type="button"
-                variant="primary"
-                size="sm"
-                onClick={() => handleDownload(format)}
-                title={t("export.downloadFormat", {
-                  format: formatLabel(format),
-                })}
-              >
-                <Download className="w-3.5 h-3.5" />
-                {format === "mtgo" ? ".dek" : ".txt"}
-              </Button>
+          {exports.map(({ format, result }) => (
+            <div key={format}>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => handleCopy(format, result)}
+                  className="flex-1 justify-start"
+                >
+                  {copied === format ? (
+                    <Check className="w-3.5 h-3.5 text-green-400 shrink-0" />
+                  ) : (
+                    <Copy className="w-3.5 h-3.5 text-[var(--text-secondary)] shrink-0" />
+                  )}
+                  {copied === format
+                    ? t("export.copied")
+                    : t("export.copyFor", { format: formatLabel(format) })}
+                </Button>
+                {/* Every format downloads — MTGO as .dek XML, the rest as .txt */}
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="sm"
+                  onClick={() => handleDownload(result)}
+                  title={t("export.downloadFormat", {
+                    format: formatLabel(format),
+                  })}
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  {format === "mtgo" ? ".dek" : ".txt"}
+                </Button>
+              </div>
+              <ExportNotices
+                format={formatLabel(format)}
+                notices={result.notices}
+              />
             </div>
           ))}
           {/* Proxy export */}
