@@ -17,10 +17,10 @@
  * @module deck/snapshot-store-port
  */
 import type {
+  CapturableCard,
   CapturableDeck,
   SnapshotContent,
   VersionedSnapshot,
-  DeckVersionCard,
 } from "@/lib/deck/deck-version";
 import type { RestoredDeckCard } from "@/lib/deck/snapshot-restore";
 
@@ -30,16 +30,31 @@ export interface SnapshotSummary {
   readonly name: string;
   /** The commander's name when the snapshot was taken, or null. */
   readonly commander: string | null;
-  /** Card rows, not copies: ten Forests in one row count once. */
+  /**
+   * The cards the snapshot holds, counted as the deck list counts a deck
+   * (`countStoredCardCopies`): every main-zone copy, plus the commander and
+   * the partner; the sideboard, Considering and the companion stay out. Ten
+   * Forests in one row count ten. Read from the card list by
+   * `snapshotCardCopies`, so a snapshot saved when the column held its row
+   * count reads its copies too.
+   */
   readonly cardCount: number;
   readonly createdAt: Date;
 }
 
-/** One saved snapshot, with the deck it belongs to and its stored card list. */
-export interface StoredSnapshot extends SnapshotSummary {
-  readonly deckId: string;
+/**
+ * One saved snapshot as storage lists it: the summary columns and the stored
+ * card list its count is read from. `cardCount` is the stored column: copies
+ * for a snapshot saved since copies were counted, rows for an older one.
+ */
+export interface ListedSnapshot extends SnapshotSummary {
   /** The `DeckSnapshot.cardList` JSON, read back by `restoredDeckCards`. */
   readonly cardList: unknown;
+}
+
+/** One saved snapshot, with the deck it belongs to and its stored card list. */
+export interface StoredSnapshot extends ListedSnapshot {
+  readonly deckId: string;
 }
 
 /** A snapshot to store: its deck, its name and the captured card list. */
@@ -60,7 +75,8 @@ export interface DeckWithCards extends CapturableDeck {
  * The snapshots of the decks, as the snapshot routes use them.
  *
  * An implementation guarantees:
- * - `listSummaries` answers the deck's snapshots, newest first;
+ * - `listSummaries` answers the deck's snapshots, newest first, each with
+ *   its stored card list, so the use case can count its cards;
  * - `findDeckWithCards` and `findInDeck` answer null when nothing matches;
  *   `findInDeck` never answers a snapshot of another deck;
  * - `create` stores the snapshot and answers the stored row;
@@ -70,7 +86,7 @@ export interface DeckWithCards extends CapturableDeck {
  * Not responsible for who may act: the routes check the owner first.
  */
 export interface SnapshotStore {
-  listSummaries(deckId: string): Promise<readonly SnapshotSummary[]>;
+  listSummaries(deckId: string): Promise<readonly ListedSnapshot[]>;
   findDeckWithCards(deckId: string): Promise<DeckWithCards | null>;
   create(snapshot: NewSnapshot): Promise<StoredSnapshot>;
   findInDeck(
@@ -95,7 +111,7 @@ export interface SnapshotStore {
  * - `createSnapshot` stores the snapshot and answers its id.
  */
 export interface DeckVersionStore {
-  listCards(deckId: string): Promise<readonly DeckVersionCard[]>;
+  listCards(deckId: string): Promise<readonly CapturableCard[]>;
   listRecentSnapshots(
     deckId: string,
     limit: number

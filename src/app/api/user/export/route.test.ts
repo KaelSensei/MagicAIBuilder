@@ -178,6 +178,58 @@ describe("GET /api/user/export", () => {
     );
   });
 
+  it("counts each snapshot's card copies as the deck list does, and keeps the stored number of a list it cannot read", async () => {
+    const storedRow = (name: string, overrides: Record<string, unknown>) => ({
+      scryfallId: `printing-${name}`,
+      name,
+      quantity: 1,
+      zone: "main",
+      category: "other",
+      isCommander: false,
+      isPartner: false,
+      ...overrides,
+    });
+    fake.tables.set("deckSnapshot", [
+      {
+        id: "snapshot-rows",
+        deckId: "deck-mine",
+        name: "Saved when rows were counted",
+        cardList: [
+          storedRow("Atraxa, Praetors' Voice", { isCommander: true }),
+          storedRow("Forest", { quantity: 30 }),
+          storedRow("Sol Ring", {}),
+          storedRow("Swords to Plowshares", { zone: "sideboard" }),
+        ],
+        commander: "Atraxa, Praetors' Voice",
+        cardCount: 4,
+        createdAt: new Date("2026-10-01T09:00:00.000Z"),
+      },
+      {
+        id: "snapshot-unreadable",
+        deckId: "deck-mine",
+        name: "Unreadable",
+        cardList: [{ name: "Sol Ring" }],
+        commander: null,
+        cardCount: 2,
+        createdAt: new Date("2026-10-01T09:00:00.000Z"),
+      },
+    ]);
+    signInAs(PLAYER);
+
+    const archive = accountArchiveSchema.parse(await (await GET()).json());
+
+    const counts = Object.fromEntries(
+      (archive.decks[0]?.snapshots ?? []).map((shot) => [
+        shot.name,
+        shot.cardCount,
+      ])
+    );
+    expect(counts).toEqual({
+      "Saved when rows were counted": 32,
+      Unreadable: 2,
+    });
+  });
+
   it("answers a JSON attachment with a dated file name, never cached", async () => {
     signInAs(PLAYER);
 

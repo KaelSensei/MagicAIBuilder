@@ -123,7 +123,8 @@ describe("POST /api/decks/[id]/playtest-sessions — deck versions", () => {
           /^Playtest · \d{4}-\d{2}-\d{2} \d{2}:\d{2} UTC$/
         ),
         commander: "Atraxa, Praetors' Voice",
-        cardCount: VERSION_ONE.length,
+        // Atraxa, Sol Ring and ten Forests: copies, as the deck list counts them.
+        cardCount: 12,
         cardList: VERSION_ONE,
       }),
     ]);

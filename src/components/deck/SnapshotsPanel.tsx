@@ -20,10 +20,17 @@ import {
   restoreSnapshot,
   type SnapshotMeta,
 } from "@/lib/db/snapshot-api";
+import { countDeckCards } from "@/lib/deck/deck-size";
+import type { Deck } from "@/lib/deck/types";
 
 interface SnapshotsPanelProps {
   readonly deckId: string;
-  readonly currentCardCount: number;
+  /**
+   * The deck as the builder holds it now. Its cards are counted as the title bar counts them
+   * (`countDeckCards`), the rule each snapshot's count follows, so an unchanged deck shows no
+   * difference.
+   */
+  readonly currentDeck: Pick<Deck, "cards" | "commander" | "partner">;
   /** Called after a successful restore so the builder can reload the deck */
   readonly onRestore?: () => void;
 }
@@ -35,8 +42,10 @@ function DiffBadge({
   readonly snapshotCount: number;
   readonly currentCount: number;
 }) {
+  const t = useTranslations("deck.snapshots");
   const diff = currentCount - snapshotCount;
   if (diff === 0) return null;
+  const signed = diff > 0 ? `+${diff}` : String(diff);
   return (
     <span
       className={cn(
@@ -46,18 +55,19 @@ function DiffBadge({
           : "bg-red-500/15 text-red-400 border border-red-500/20"
       )}
     >
-      {diff > 0 ? `+${diff}` : diff} cards
+      {t("cardsDiff", { count: Math.abs(diff), signed })}
     </span>
   );
 }
 
 export function SnapshotsPanel({
   deckId,
-  currentCardCount,
+  currentDeck,
   onRestore,
 }: SnapshotsPanelProps) {
   const t = useTranslations("deck");
   const format = useFormatter();
+  const currentCardCount = countDeckCards(currentDeck);
   const [snapshots, setSnapshots] = useState<SnapshotMeta[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -258,8 +268,16 @@ export function SnapshotsPanel({
                             month: "short",
                             day: "numeric",
                             year: "numeric",
-                          })}{" "}
-                          · {snap.cardCount} cards
+                          })}
+                        </span>
+                        <span
+                          aria-hidden="true"
+                          className="text-[10px] text-[var(--text-secondary)]"
+                        >
+                          ·
+                        </span>
+                        <span className="text-[10px] text-[var(--text-secondary)]">
+                          {t("snapshots.cards", { count: snap.cardCount })}
                         </span>
                         {snap.commander && (
                           <span className="text-[10px] text-amber-400 truncate max-w-[100px]">
