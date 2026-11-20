@@ -1,47 +1,69 @@
 "use client";
 /**
- * Split control that adds a search result to a deck zone.
+ * Discreet controls for adding a search result to a deck zone.
  *
- * Card catalog, search results. The primary action adds the card to the main
- * deck in one press. The chevron opens {@link ZoneChoiceMenu} for the main
- * deck, the sideboard and considering, naming the copies already in each zone
- * when the caller counted them. Dragging the card onto a zone tab adds it too.
+ * Card catalog, search results. On a tile the card art stays clear. A pointer
+ * that can hover, or keyboard focus, reveals a soft gradient and two small
+ * icon buttons: add to the main deck, and the zone menu. A device without
+ * hover keeps those buttons as a small badge in the corner. A list row shows
+ * the same two buttons beside the name. The menu is {@link ZoneChoiceMenu}.
  *
- * Not responsible for: whether the card is legal in the zone. The deck store
- * decides that when the card is added.
+ * Not responsible for: opening the card. The image's own click does that.
  *
  * @module card/SearchZoneMenu
  */
-import { useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, type RefObject } from "react";
 import { useTranslations } from "next-intl";
-import { ChevronDown } from "lucide-react";
-import { buttonVariants } from "@/components/ui/Button";
+import { Check, Ellipsis, Plus } from "lucide-react";
 import { cn } from "@/components/ui/utils";
 import type { DeckZone } from "@/lib/deck/types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import { ZoneChoiceMenu, type ZoneMenuInitialFocus } from "@/components/card/ZoneChoiceMenu";
 
+/** How long the check stays on the tile after an add, in milliseconds. */
+const ADDED_FLASH_MS = 1200;
+
+/** A tile overlays the art. A row sits beside the name. */
+export type SearchZonePlacement = "tile" | "row";
+
 interface SearchZoneMenuProps {
   readonly card: ScryfallCard;
   readonly onAddToZone: (card: ScryfallCard, zone: DeckZone) => void;
-  /** Copies already in each zone. Omitted, the menu names the zones only. */
+  /** Cards already in each zone, not copies of this result. */
   readonly zoneCounts?: Readonly<Record<DeckZone, number>>;
+  /** Tile overlay by default. A list row passes `row`. */
+  readonly placement?: SearchZonePlacement;
 }
 
+const ICON_BUTTON =
+  "flex h-7 w-7 items-center justify-center rounded-full border border-white/40 bg-black/45 text-white shadow-[var(--lumen-shadow-sm)] backdrop-blur-sm hover:bg-black/65 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]";
+
 /**
- * Keyboard and pointer control for adding a search result to a zone.
+ * Icon buttons that add a search result without covering the card at rest.
  *
- * @param props - The card, the add callback and the zone counts
- * @returns The primary action and its zone menu
+ * @param props - The card, where the buttons sit, the counts and the add callback
+ * @returns The add button, the zone menu, and a short confirmation
  */
-export function SearchZoneMenu({ card, onAddToZone, zoneCounts }: SearchZoneMenuProps) {
-  const t = useTranslations("card");
+export function SearchZoneMenu({
+  card,
+  onAddToZone,
+  zoneCounts,
+  placement = "tile",
+}: SearchZoneMenuProps) {
   const menuId = useId();
   const triggerRef = useRef<HTMLButtonElement>(null);
   const [openFocus, setOpenFocus] = useState<ZoneMenuInitialFocus | null>(null);
+  const [added, setAdded] = useState(false);
+
+  useEffect(() => {
+    if (!added) return undefined;
+    const timer = setTimeout(() => setAdded(false), ADDED_FLASH_MS);
+    return () => clearTimeout(timer);
+  }, [added]);
 
   function add(zone: DeckZone) {
     onAddToZone(card, zone);
+    setAdded(true);
     const menuWasOpen = openFocus !== null;
     setOpenFocus(null);
     if (menuWasOpen) triggerRef.current?.focus();
@@ -52,63 +74,115 @@ export function SearchZoneMenu({ card, onAddToZone, zoneCounts }: SearchZoneMenu
     triggerRef.current?.focus();
   }
 
-  function open(focus: ZoneMenuInitialFocus) {
-    setOpenFocus(focus);
+  const buttons = (
+    <ZoneActions
+      card={card}
+      added={added}
+      zoneCounts={zoneCounts}
+      menuId={menuId}
+      openFocus={openFocus}
+      triggerRef={triggerRef}
+      onAddMain={() => add("main")}
+      onChoose={add}
+      onClose={close}
+      onOpen={(focus) => setOpenFocus(focus)}
+    />
+  );
+
+  if (placement === "row") {
+    return <div className="flex shrink-0 items-center gap-1">{buttons}</div>;
   }
 
   return (
-    <fieldset className="m-0 flex w-full min-w-0 border-0 p-0 [min-inline-size:0]">
-      <legend className="sr-only">{t("zoneGroup", { name: card.name })}</legend>
+    <div className="pointer-events-none absolute inset-0 z-20" data-testid="zone-tile-chrome">
+      <div
+        aria-hidden
+        data-testid="zone-hover-gradient"
+        className="absolute inset-x-0 bottom-0 hidden h-16 bg-gradient-to-t from-black/75 to-transparent opacity-0 [@media(hover:hover)]:block [@media(hover:hover)]:group-hover/gridcard:opacity-100 [@media(hover:hover)]:group-focus-within/gridcard:opacity-100"
+      />
+      <div
+        className={cn(
+          "pointer-events-auto absolute flex items-center gap-1",
+          "right-1.5 top-1.5",
+          "[@media(hover:hover)]:inset-x-0 [@media(hover:hover)]:bottom-2 [@media(hover:hover)]:top-auto [@media(hover:hover)]:justify-center",
+          "[@media(hover:hover)]:opacity-0",
+          "[@media(hover:hover)]:group-hover/gridcard:opacity-100",
+          "[@media(hover:hover)]:group-focus-within/gridcard:opacity-100"
+        )}
+      >
+        {buttons}
+      </div>
+    </div>
+  );
+}
+
+interface ZoneActionsProps {
+  readonly card: ScryfallCard;
+  readonly added: boolean;
+  readonly zoneCounts?: Readonly<Record<DeckZone, number>>;
+  readonly menuId: string;
+  readonly openFocus: ZoneMenuInitialFocus | null;
+  readonly triggerRef: RefObject<HTMLButtonElement | null>;
+  readonly onAddMain: () => void;
+  readonly onChoose: (zone: DeckZone) => void;
+  readonly onClose: () => void;
+  readonly onOpen: (focus: ZoneMenuInitialFocus) => void;
+}
+
+/** The + and the zone-menu icon, plus the portaled menu and the add confirmation. */
+function ZoneActions(props: ZoneActionsProps) {
+  const t = useTranslations("card");
+  return (
+    <>
       <button
         type="button"
-        className={cn(
-          buttonVariants({ variant: "primary", size: "sm" }),
-          "h-10 min-w-0 flex-1 rounded-r-none px-2 text-xs"
-        )}
-        aria-label={t("addToMain", { name: card.name })}
+        className={ICON_BUTTON}
+        aria-label={t("addToMain", { name: props.card.name })}
         onClick={(event) => {
           event.stopPropagation();
-          add("main");
+          props.onAddMain();
         }}
       >
-        {t("add")}
+        {props.added ? (
+          <Check className="h-3.5 w-3.5" aria-hidden />
+        ) : (
+          <Plus className="h-3.5 w-3.5" aria-hidden />
+        )}
       </button>
       <button
-        ref={triggerRef}
+        ref={props.triggerRef}
         type="button"
-        className={cn(
-          buttonVariants({ variant: "primary", size: "sm" }),
-          "h-10 shrink-0 rounded-l-none border-l border-white/30 px-2"
-        )}
+        className={ICON_BUTTON}
         aria-haspopup="menu"
-        aria-expanded={openFocus !== null}
-        aria-controls={openFocus !== null ? menuId : undefined}
-        aria-label={t("otherZones", { name: card.name })}
+        aria-expanded={props.openFocus !== null}
+        aria-controls={props.openFocus !== null ? props.menuId : undefined}
+        aria-label={t("otherZones", { name: props.card.name })}
         onClick={(event) => {
           event.stopPropagation();
-          if (openFocus !== null) close();
-          else open("first");
+          if (props.openFocus !== null) props.onClose();
+          else props.onOpen("first");
         }}
         onKeyDown={(event) => {
           if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
           event.preventDefault();
           event.stopPropagation();
-          open(event.key === "ArrowUp" ? "last" : "first");
+          props.onOpen(event.key === "ArrowUp" ? "last" : "first");
         }}
       >
-        <ChevronDown className="h-3.5 w-3.5" aria-hidden />
+        <Ellipsis className="h-3.5 w-3.5" aria-hidden />
       </button>
-      {openFocus !== null && (
+      {props.openFocus !== null && (
         <ZoneChoiceMenu
-          id={menuId}
-          cardName={card.name}
-          zoneCounts={zoneCounts}
-          triggerRef={triggerRef}
-          initialFocus={openFocus}
-          onChoose={add}
-          onClose={close}
+          id={props.menuId}
+          cardName={props.card.name}
+          zoneCounts={props.zoneCounts}
+          triggerRef={props.triggerRef}
+          initialFocus={props.openFocus}
+          onChoose={props.onChoose}
+          onClose={props.onClose}
         />
       )}
-    </fieldset>
+      {props.added && <output className="sr-only">{t("addedFlash", { name: props.card.name })}</output>}
+    </>
   );
 }
