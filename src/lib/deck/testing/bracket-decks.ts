@@ -173,5 +173,9 @@ export function aTwoCardInfinite(first: string, second: string): Combo {
     effects: ["Infinite tokens"],
     description: "",
     prerequisites: { otherPieces: [], conditions: [], manaNeeded: "" },
+    startZones: { [first]: ["battlefield"], [second]: ["hand"] },
+    standaloneResults: ["Infinite tokens"],
+    manaValueNeeded: 0,
+    bracketTag: "spicy",
   };
 }
