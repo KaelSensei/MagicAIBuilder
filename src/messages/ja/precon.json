@@ -1,0 +1,11 @@
+{
+  "title": "Commander precons",
+  "readOnly": "Dated official lists. Read only: nothing on this page changes a list.",
+  "empty": "No precon lists have been loaded yet.",
+  "set": "Set {set}",
+  "released": "Released {date}",
+  "version": "Version {version}",
+  "cards": "{count, plural, one {# card} other {# cards}}",
+  "sourceRead": "Source read {date}",
+  "source": "Source"
+}
