@@ -29,9 +29,13 @@ interface ActionButtonProps {
   readonly onClick: (e: React.MouseEvent) => void;
 }
 
-/** Shown on touch screens; hidden on hover-capable pointers until the card is hovered or focused. */
+/**
+ * size-7 is a 28 px target around a 14 px icon (WCAG 2.5.8 asks for 24 px).
+ * Shown on touch screens; hidden on hover-capable pointers until the card is
+ * hovered or holds focus.
+ */
 const ACTION_BUTTON_CLASS =
-  "rounded-[var(--lumen-radius-pill)] p-1 text-[var(--text-secondary)] transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 [@media(hover:hover)]:group-focus-within:opacity-100 disabled:opacity-60";
+  "inline-flex size-7 items-center justify-center rounded-[var(--lumen-radius-pill)] text-[var(--text-secondary)] transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 [@media(hover:hover)]:group-focus-within:opacity-100 disabled:opacity-60";
 
 /** One icon button; a spinner replaces its icon while its action runs. */
 function ActionButton({

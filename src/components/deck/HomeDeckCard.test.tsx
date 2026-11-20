@@ -213,6 +213,17 @@ describe("HomeDeckCard actions beside its link", () => {
     expect(link).toHaveAccessibleName("Test Deck");
     expect(within(link).queryAllByRole("button")).toHaveLength(0);
   });
+
+  // WCAG 2.5.8: a target is at least 24 by 24 CSS px. jsdom computes no
+  // layout and loads no Tailwind, so this reads the size class: size-7 is
+  // 28 px, around a 14 px icon.
+  it("the Delete button is at least 24 px", () => {
+    renderDeckCard();
+
+    expect(
+      screen.getByRole("button", { name: "Delete Test Deck" })
+    ).toHaveClass("size-7");
+  });
 });
 
 describe("HomeDeckCard commander art", () => {
