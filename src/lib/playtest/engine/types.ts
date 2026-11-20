@@ -6,7 +6,8 @@
  * thing the UI (`components/playtest/`) needs to render a game. `PlaytestEnginePatch` is the
  * writable patch a transition hands to `history.ts`; it stays inside `engine/`.
  * Rules: the turn structure the step list flattens (CR 500.1), the table size (CR 800.1),
- * commanders in the command zone (CR 903.6), commander damage (CR 903.10a).
+ * commanders in the command zone (CR 903.6), commander damage (CR 903.10a), player counters
+ * (CR 122.1) and the designations a player or the game can have (CR 725, 726, 731).
  * Not responsible for: the ports (`ports.ts`) or any transition.
  *
  * @module playtest/engine/types
@@ -87,6 +88,33 @@ export interface CommanderDamageTally {
   readonly damage: number;
 }
 
+/** The counters a player can have that the playtest tracks (CR 122.1, 107.14). */
+export type PlayerCounterKind = "poison" | "energy" | "experience";
+
+/** The designations a player either has or not, and an imagined opponent can take away. */
+export type ToggledDesignation = "monarch" | "initiative";
+
+/** The game's day/night designation; it starts as neither (CR 731.1). */
+export type DayNight = "neither" | "day" | "night";
+
+/** What the game can become once play starts: day or night, never back to neither (CR 731.1). */
+export type DayOrNight = Exclude<DayNight, "neither">;
+
+/**
+ * The designations and player counters the player sets by hand; the engine never infers them
+ * from Oracle text. `ringTemptations` counts the times the Ring has tempted the player
+ * (CR 701.54a).
+ */
+export interface PlayerDesignations extends Readonly<
+  Record<PlayerCounterKind, number>
+> {
+  readonly ringTemptations: number;
+  readonly monarch: boolean;
+  readonly initiative: boolean;
+  readonly dayNight: DayNight;
+  readonly citysBlessing: boolean;
+}
+
 /** One die roll the player made; `result` is in `[1, sides]`. */
 export interface DiceRoll {
   readonly sides: number;
@@ -161,6 +189,8 @@ export interface PlaytestEngine {
   readonly commanderDamageOpponents: number;
   /** The tally, one entry per opponent and commander that has dealt damage (CR 903.10a). */
   readonly commanderDamage: readonly CommanderDamageTally[];
+  /** The player's counters and designations, as the player set them (`designations.ts`). */
+  readonly designations: PlayerDesignations;
   readonly diceRolls: readonly DiceRoll[];
   readonly actionLog: readonly PlaytestActionLogEntry[];
   readonly nextActionId: number;

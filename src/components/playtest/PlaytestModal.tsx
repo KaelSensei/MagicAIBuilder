@@ -21,6 +21,7 @@ import { PlaytestDialog } from "@/components/playtest/PlaytestDialog";
 import { PhaseTracker } from "@/components/playtest/PhaseTracker";
 import { LifeTracker } from "@/components/playtest/LifeTracker";
 import { CommanderDamageTally } from "@/components/playtest/CommanderDamageTally";
+import { DesignationsPanel } from "@/components/playtest/DesignationsPanel";
 import { HandZone } from "@/components/playtest/HandZone";
 import { BattlefieldZone } from "@/components/playtest/BattlefieldZone";
 import { GraveyardZone } from "@/components/playtest/GraveyardZone";
@@ -306,6 +307,7 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
                     onUndo={undo}
                   />
                   <CommanderDamageTally engine={engine} onDispatch={dispatch} />
+                  <DesignationsPanel engine={engine} onDispatch={dispatch} />
                 </fieldset>
               </aside>
 
