@@ -117,6 +117,11 @@ const ROUTE_POLICIES: Readonly<
   "decks/[id]/fork": { POST: "session" },
   "decks/[id]/legality": { GET: "deck-owner" },
   "decks/[id]/playtest-sessions": { GET: "deck-owner", POST: "deck-owner" },
+  "decks/[id]/rule-zero": {
+    GET: "deck-owner",
+    POST: "deck-owner",
+    PATCH: "deck-owner",
+  },
   "decks/[id]/share": { POST: "deck-owner", DELETE: "deck-owner" },
   "decks/[id]/snapshots": { GET: "deck-owner", POST: "deck-owner" },
   "decks/[id]/snapshots/[snapshotId]": { DELETE: "deck-owner" },

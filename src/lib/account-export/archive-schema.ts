@@ -107,6 +107,23 @@ const acquisitionIntent = z.strictObject({
   updatedAt: instant,
 });
 
+/** A private Rule 0 sheet: the fields the player declared, not a computed bracket. */
+const ruleZeroSheet = z.strictObject({
+  deckId: z.string(),
+  speed: z.string(),
+  winConditions: z.array(z.string()),
+  hasCombos: z.boolean(),
+  combosNote: z.string(),
+  hasExtraTurns: z.boolean(),
+  extraTurnsNote: z.string(),
+  hasResourceDenial: z.boolean(),
+  resourceDenialNote: z.string(),
+  proxyCount: z.number().int(),
+  houseRules: z.string(),
+  createdAt: instant,
+  updatedAt: instant,
+});
+
 const cardPackage = z.strictObject({
   id: z.string(),
   name: z.string(),
@@ -231,6 +248,7 @@ export const accountArchiveSchema = z.strictObject({
   deckFolders: z.array(folder),
   collection: z.array(collectionCard),
   acquisitionIntents: z.array(acquisitionIntent),
+  ruleZeroSheets: z.array(ruleZeroSheet),
   cardPackages: z.array(cardPackage),
   ratings: z.array(rating),
   votes: z.array(vote),

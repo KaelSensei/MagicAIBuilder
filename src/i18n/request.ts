@@ -4,7 +4,10 @@ import { routing } from "./routing";
 export default getRequestConfig(async ({ requestLocale }) => {
   let locale = await requestLocale;
 
-  if (!locale || !routing.locales.includes(locale as (typeof routing.locales)[number])) {
+  if (
+    !locale ||
+    !routing.locales.includes(locale as (typeof routing.locales)[number])
+  ) {
     locale = routing.defaultLocale;
   }
 
@@ -13,13 +16,17 @@ export default getRequestConfig(async ({ requestLocale }) => {
   const builder = (await import(`@/messages/${locale}/builder.json`)).default;
   const deck = (await import(`@/messages/${locale}/deck.json`)).default;
   const landing = (await import(`@/messages/${locale}/landing.json`)).default;
-  const onboarding = (await import(`@/messages/${locale}/onboarding.json`)).default;
+  const onboarding = (await import(`@/messages/${locale}/onboarding.json`))
+    .default;
   const search = (await import(`@/messages/${locale}/search.json`)).default;
   const rules = (await import(`@/messages/${locale}/rules.json`)).default;
-  const collection = (await import(`@/messages/${locale}/collection.json`)).default;
+  const collection = (await import(`@/messages/${locale}/collection.json`))
+    .default;
   const profile = (await import(`@/messages/${locale}/profile.json`)).default;
   const playtest = (await import(`@/messages/${locale}/playtest.json`)).default;
-  const playtestEvidence = (await import(`@/messages/${locale}/playtest-evidence.json`)).default;
+  const playtestEvidence = (
+    await import(`@/messages/${locale}/playtest-evidence.json`)
+  ).default;
   const card = (await import(`@/messages/${locale}/card.json`)).default;
   const commanderRules = (
     await import(`@/messages/${locale}/commander-rules.json`)
@@ -27,7 +34,10 @@ export default getRequestConfig(async ({ requestLocale }) => {
   const settings = (await import(`@/messages/${locale}/settings.json`)).default;
   const metadata = (await import(`@/messages/${locale}/metadata.json`)).default;
   const api = (await import(`@/messages/${locale}/api.json`)).default;
-  const dataAsOf = (await import(`@/messages/${locale}/data-as-of.json`)).default;
+  const dataAsOf = (await import(`@/messages/${locale}/data-as-of.json`))
+    .default;
+  const ruleZero = (await import(`@/messages/${locale}/rule-zero.json`))
+    .default;
 
   return {
     locale,
@@ -50,6 +60,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
       metadata,
       api,
       dataAsOf,
+      ruleZero,
     },
   };
 });

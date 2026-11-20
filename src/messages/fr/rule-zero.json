@@ -1,0 +1,32 @@
+{
+  "open": "Feuille de règle 0",
+  "title": "Feuille de règle 0",
+  "disclaimer": "Cette feuille enregistre ce que vous avez déclaré. Elle ne garantit pas une partie équilibrée.",
+  "privateNote": "Vous seul pouvez voir cette feuille.",
+  "empty": "Pas encore de feuille. Notez ce que la table doit savoir.",
+  "speed": "Vitesse visée",
+  "speeds": {
+    "exhibition": "Exposition",
+    "core": "Socle",
+    "upgraded": "Amélioré",
+    "optimized": "Optimisé",
+    "cedh": "cEDH",
+    "custom": "Personnalisé"
+  },
+  "winConditions": "Comment le deck gagne",
+  "winConditionsHint": "Une façon par ligne",
+  "combos": "Combos",
+  "extraTurns": "Tours supplémentaires",
+  "resourceDenial": "Déni de ressources",
+  "present": "Présent",
+  "note": "Ce que la table doit savoir",
+  "proxyCount": "Nombre de proxies",
+  "houseRules": "Règles de la table",
+  "save": "Enregistrer la feuille",
+  "saving": "Enregistrement de la feuille",
+  "saved": "Feuille enregistrée",
+  "invalid": "La feuille n'a pas pu être enregistrée. Vérifiez les champs déclarés.",
+  "unavailable": "La feuille n'a pas pu être enregistrée. Réessayez.",
+  "signIn": "Connectez-vous pour écrire une feuille de règle 0.",
+  "loading": "Chargement de la feuille de règle 0"
+}
