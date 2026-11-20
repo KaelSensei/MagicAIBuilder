@@ -100,6 +100,22 @@ export const ACQUISITION_INTENT = {
   updatedAt: true,
 } as const satisfies Prisma.AcquisitionIntentSelect;
 
+export const RULE_ZERO_SHEET = {
+  deckId: true,
+  speed: true,
+  winConditions: true,
+  hasCombos: true,
+  combosNote: true,
+  hasExtraTurns: true,
+  extraTurnsNote: true,
+  hasResourceDenial: true,
+  resourceDenialNote: true,
+  proxyCount: true,
+  houseRules: true,
+  createdAt: true,
+  updatedAt: true,
+} as const satisfies Prisma.RuleZeroSheetSelect;
+
 export const CARD_PACKAGE = {
   id: true,
   name: true,
@@ -245,6 +261,9 @@ export interface AccountRows {
   }>[];
   readonly acquisitionIntents: readonly Prisma.AcquisitionIntentGetPayload<{
     select: typeof ACQUISITION_INTENT;
+  }>[];
+  readonly ruleZeroSheets: readonly Prisma.RuleZeroSheetGetPayload<{
+    select: typeof RULE_ZERO_SHEET;
   }>[];
   readonly cardPackages: readonly Prisma.CardPackageGetPayload<{
     select: typeof CARD_PACKAGE;
