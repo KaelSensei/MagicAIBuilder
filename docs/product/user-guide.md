@@ -70,6 +70,8 @@ Under the three panels, the deck summary bar keeps the deck's figures in view wh
 - A card added any other way (dragged, imported or suggested) takes a printing you own first, when your collection holds one
 - **Cards are added to the active zone** — if you're on the Sideboard tab, clicking or dragging adds there
 
+You can also bring a card in from another site. Drag a card image or a card link from scryfall.com, or a card link from edhrec.com, and drop it anywhere on the builder: a banner says which zone it goes to, and the card lands in the zone the editor shows. To use the keyboard instead, copy the link or a card name, click an empty part of the builder so no text field has focus, and press Ctrl+V (Cmd+V on a Mac). A Scryfall link or image adds that exact printing; an EDHREC link or a name takes a printing you own first. A message names the card that was added, so a wrong match shows at once, and Ctrl+Z (Cmd+Z) undoes it like any add. Links from other sites, Moxfield included, are not read, and a dropped file is not read either: use **Import** for a file. Dropping and pasting are off while a dialog is open.
+
 #### Deck Zones (Main / Sideboard / Considering)
 
 Server requests to open an individual deck stop waiting after 15 seconds rather

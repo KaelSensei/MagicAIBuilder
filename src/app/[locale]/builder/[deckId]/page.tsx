@@ -114,6 +114,7 @@ import {
 import { GuestDeckNotice } from "@/components/builder/GuestDeckNotice";
 import { GUEST_DECK_ID } from "@/lib/deck/guest-deck";
 import { explicitDropZone, preferSmallerDropTarget, searchDropZone } from "@/lib/deck/drop-targets";
+import { ExternalCardDropTarget } from "@/components/builder/ExternalCardDropTarget";
 
 type SearchMode = "name" | "set" | "color";
 
@@ -1281,6 +1282,7 @@ export default function BuilderPage() {
 
       {/* Keyboard shortcuts modal */}
       <KeyboardShortcutsModal />
+      <ExternalCardDropTarget zone={activeZone} />
 
       {/* Playtest modal */}
       {showPlaytest && deck && (
