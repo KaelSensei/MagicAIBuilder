@@ -234,6 +234,24 @@
     "setCommanderFirst": "Set a commander first",
     "partnerTitle": "Search for a {label}"
   },
+  "summary": {
+    "label": "Deck summary",
+    "formatWithBracket": "{format} · Bracket {level}",
+    "formatWithManualBracket": "{format} · Bracket {level}, set by you",
+    "typesToggle": "Types",
+    "typesLabel": "Cards by type",
+    "types": {
+      "creature": "{count, plural, one {# creature} other {# creatures}}",
+      "land": "{count, plural, one {# land} other {# lands}}",
+      "instant": "{count, plural, one {# instant} other {# instants}}",
+      "sorcery": "{count, plural, one {# sorcery} other {# sorceries}}",
+      "artifact": "{count, plural, one {# artifact} other {# artifacts}}",
+      "enchantment": "{count, plural, one {# enchantment} other {# enchantments}}",
+      "planeswalker": "{count, plural, one {# planeswalker} other {# planeswalkers}}",
+      "battle": "{count, plural, one {# battle} other {# battles}}",
+      "other": "{count, plural, one {# other card} other {# other cards}}"
+    }
+  },
   "sort": {
     "fields": {
       "cmc": "CMC",
