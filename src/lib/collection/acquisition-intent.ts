@@ -1,3 +1,11 @@
+/**
+ * A player's saved "proxy now" / "buy later" choice per deck and printing, as
+ * the deck's shopping list sets it and the cross-deck acquisition plan reads it.
+ * Pure: parsing and grouping only; the routes own the reads and writes.
+ *
+ * @module collection/acquisition-intent
+ */
+
 /** How a missing printing is deferred on the buy list. */
 export type AcquisitionMode = "proxy_now" | "buy_later";
 
@@ -60,6 +68,35 @@ export function applyAcquisitionChoice(
   }
   next[scryfallId] = mode;
   return next;
+}
+
+/** A stored intent row as the database returns it: the mode is a free string column. */
+export interface StoredAcquisitionIntent {
+  readonly deckId: string;
+  readonly scryfallId: string;
+  readonly mode: string;
+}
+
+/**
+ * Groups one owner's saved intents by deck, for the cross-deck acquisition plan.
+ *
+ * A row whose mode is not `proxy_now` or `buy_later` is dropped, so its printing
+ * is bought now, as the deck's own shopping list treats it.
+ *
+ * @param rows - the owner's intent rows, across every deck
+ * @returns each deck's modes by printing id; a deck without rows is absent
+ */
+export function groupAcquisitionIntentsByDeck(
+  rows: readonly StoredAcquisitionIntent[]
+): ReadonlyMap<string, Readonly<Record<string, AcquisitionMode>>> {
+  const byDeck = new Map<string, Record<string, AcquisitionMode>>();
+  for (const { deckId, scryfallId, mode } of rows) {
+    if (!isAcquisitionMode(mode)) continue;
+    const deckIntents = byDeck.get(deckId) ?? {};
+    deckIntents[scryfallId] = mode;
+    byDeck.set(deckId, deckIntents);
+  }
+  return byDeck;
 }
 
 /**
