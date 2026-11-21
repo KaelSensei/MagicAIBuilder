@@ -160,7 +160,12 @@ const SOURCE_DECK: Row = {
   feedbackQuestion: "Too few board wipes?",
   userId: OWNER,
   folderId: "folder-private",
+  createdAt: new Date("2025-01-05T08:00:00.000Z"),
+  updatedAt: new Date("2026-06-30T20:00:00.000Z"),
 };
+
+/** The instant the in-memory database stamps a new row with. */
+const FORKED_AT = new Date("2026-11-21T12:00:00.000Z");
 
 const OWNER_ROW: Row = {
   id: OWNER,
@@ -228,7 +233,14 @@ async function createDeck(args: unknown): Promise<Row> {
   }
   const { cards, ...columns } = args.data;
   const id = "deck-fork";
-  const row: Row = { ...DECK_DEFAULTS, ...columns, id };
+  // `createdAt @default(now())` and `updatedAt @updatedAt`: stamped unless given.
+  const row: Row = {
+    ...DECK_DEFAULTS,
+    createdAt: FORKED_AT,
+    updatedAt: FORKED_AT,
+    ...columns,
+    id,
+  };
   const cardRows = records(isRecord(cards) ? cards.create : []).map(
     (card, index): Row => ({
       ...CARD_DEFAULTS,
@@ -378,5 +390,16 @@ describe("POST /api/decks/[id]/fork — what the fork holds", () => {
       feedbackQuestion: null,
     });
     expect(cards.map((card) => card.notes)).toEqual([null, null, null]);
+  });
+
+  // The fork source select reads the public dates (I-92); the copy is a new deck.
+  it("does not copy its source's creation and update dates", async () => {
+    const res = await fork();
+
+    expect(res.status).toBe(201);
+    expect(storedFork().row).toMatchObject({
+      createdAt: FORKED_AT,
+      updatedAt: FORKED_AT,
+    });
   });
 });

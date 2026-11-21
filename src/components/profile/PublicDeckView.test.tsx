@@ -1,6 +1,6 @@
 import React from "react";
 import { screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithIntl } from "@/test/render-with-intl";
 import type { PublicDeck } from "@/lib/deck/public-deck";
 import { PublicDeckView } from "./PublicDeckView";
@@ -40,6 +40,8 @@ const deck: PublicDeck = {
   forkedFromDeckId: null,
   forkedFromDeckName: null,
   forkedFromUserName: null,
+  createdAt: "2026-03-03T09:00:00.000Z",
+  updatedAt: "2026-11-19T12:00:00.000Z",
   isOwner: false,
   cards: [
     {
@@ -135,5 +137,31 @@ describe("PublicDeckView header in French", () => {
     expect(screen.getByText("Bracket 2")).toBeInTheDocument();
     expect(screen.getByText("Généré par IA")).toBeInTheDocument();
     expect(screen.getByText("Anonyme")).toBeInTheDocument();
+  });
+});
+
+// I-92: a visitor sees how current a public list is, from the stored dates only.
+describe("PublicDeckView dates", () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-11-21T12:00:00.000Z"));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("shows a public deck updated on 2026-11-19 as 'Updated 2 days ago' in a time element dated 2026-11-19", () => {
+    renderWithIntl(
+      <PublicDeckView
+        deck={{ ...deck, updatedAt: "2026-11-19T12:00:00.000Z" }}
+        isSignedIn={false}
+      />
+    );
+
+    const updated = screen.getByText("2 days ago");
+    expect(updated.tagName).toBe("TIME");
+    expect(updated).toHaveAttribute("datetime", "2026-11-19T12:00:00.000Z");
+    expect(updated.parentElement).toHaveTextContent("Updated 2 days ago");
   });
 });
