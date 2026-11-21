@@ -363,10 +363,23 @@ const PUBLIC_VIEW = {
   forkedFromDeckId: "deck-0",
   forkedFromDeckName: "Original Atraxa",
   forkedFromUserName: "mentor",
+  createdAt: CREATED_AT.toISOString(),
+  updatedAt: UPDATED_AT.toISOString(),
   user: { id: OWNER, name: "Deck Owner", username: "owner", image: null },
   cards: CARD_ROWS.map(publicCard),
   isOwner: false,
 };
+
+/** Columns only the owner may read; none may reach another viewer. */
+const OWNER_ONLY_COLUMNS = [
+  "folderId",
+  "budget",
+  "tags",
+  "manualBracket",
+  "shareToken",
+  "shareEnabled",
+  "userId",
+] as const;
 
 describe("GET /api/deck/[id] — the public view", () => {
   it("serves an anonymous viewer only the fields the public deck page renders", async () => {
@@ -376,6 +389,23 @@ describe("GET /api/deck/[id] — the public view", () => {
 
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual(PUBLIC_VIEW);
+  });
+
+  it("carries the stored creation and update dates, and still no owner-only field", async () => {
+    signedOut();
+
+    const body: unknown = await (await getDeck()).json();
+
+    expect(body).toMatchObject({
+      createdAt: "2026-10-01T10:00:00.000Z",
+      updatedAt: "2026-11-02T18:30:00.000Z",
+    });
+    for (const column of OWNER_ONLY_COLUMNS) {
+      expect(body).not.toHaveProperty(column);
+    }
+    const cards = isRecord(body) && Array.isArray(body.cards) ? body.cards : [];
+    expect(cards).toHaveLength(CARD_ROWS.length);
+    for (const card of cards) expect(card).not.toHaveProperty("notes");
   });
 
   it("serves a signed-in stranger the same public fields", async () => {
