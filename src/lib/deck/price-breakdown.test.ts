@@ -53,7 +53,10 @@ describe("groupPrice", () => {
   });
 
   it("reports a group with no priced row as unpriced", () => {
-    const cards = [aDeckCard({ id: "a", price: null }), aDeckCard({ id: "b", price: null })];
+    const cards = [
+      aDeckCard({ id: "a", price: null }),
+      aDeckCard({ id: "b", price: null }),
+    ];
 
     expect(groupPrice(cards)).toEqual({ kind: "unpriced", unpricedCopies: 2 });
   });
@@ -63,7 +66,10 @@ describe("groupPrice", () => {
   });
 
   it("counts a card printed at $0.00 as priced", () => {
-    expect(groupPrice([aDeckCard({ price: 0 })])).toEqual({ kind: "priced", subtotal: 0 });
+    expect(groupPrice([aDeckCard({ price: 0 })])).toEqual({
+      kind: "priced",
+      subtotal: 0,
+    });
   });
 });
 
@@ -71,7 +77,12 @@ describe("totalWithoutBasicLands", () => {
   it("subtracts the basic lands from the known total", () => {
     const cards = [
       aDeckCard({ id: "sol", typeLine: "Artifact", price: 403.5 }),
-      aDeckCard({ id: "forest", typeLine: "Basic Land — Forest", price: 0.3, quantity: 30 }),
+      aDeckCard({
+        id: "forest",
+        typeLine: "Basic Land — Forest",
+        price: 0.3,
+        quantity: 30,
+      }),
     ];
 
     expect(totalWithoutBasicLands(cards)).toBe(403.5);
@@ -81,7 +92,11 @@ describe("totalWithoutBasicLands", () => {
     const cards = [
       aDeckCard({ id: "snow", typeLine: "Basic Snow Land — Forest", price: 1 }),
       aDeckCard({ id: "wastes", typeLine: "Basic Land", price: 2 }),
-      aDeckCard({ id: "arbor", typeLine: "Land Creature — Forest Dryad", price: 20 }),
+      aDeckCard({
+        id: "arbor",
+        typeLine: "Land Creature — Forest Dryad",
+        price: 20,
+      }),
     ];
 
     expect(totalWithoutBasicLands(cards)).toBe(20);
@@ -98,7 +113,13 @@ describe("totalWithoutBasicLands", () => {
   });
 
   it("is null when the deck holds no basic land", () => {
-    const cards = [aDeckCard({ id: "arbor", typeLine: "Land Creature — Forest Dryad", price: 20 })];
+    const cards = [
+      aDeckCard({
+        id: "arbor",
+        typeLine: "Land Creature — Forest Dryad",
+        price: 20,
+      }),
+    ];
 
     expect(totalWithoutBasicLands(cards)).toBeNull();
   });

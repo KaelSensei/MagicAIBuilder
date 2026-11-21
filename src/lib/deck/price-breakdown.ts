@@ -60,7 +60,8 @@ export function groupPrice(rows: readonly PricedRow[]): GroupPrice {
     else pricedRows += 1;
   }
 
-  if (unpricedCopies === 0) return { kind: "priced", subtotal: knownTotal(rows) };
+  if (unpricedCopies === 0)
+    return { kind: "priced", subtotal: knownTotal(rows) };
   if (pricedRows === 0) return { kind: "unpriced", unpricedCopies };
   return { kind: "partial", knownSubtotal: knownTotal(rows), unpricedCopies };
 }
@@ -77,7 +78,9 @@ export function groupPrice(rows: readonly PricedRow[]): GroupPrice {
  * @returns the total rounded to cents, or null when no row is a basic land,
  *   since the figure would only repeat the total
  */
-export function totalWithoutBasicLands(rows: readonly PricedRow[]): number | null {
+export function totalWithoutBasicLands(
+  rows: readonly PricedRow[]
+): number | null {
   const nonBasicRows = rows.filter((row) => !isBasicLand(row.typeLine));
   if (nonBasicRows.length === rows.length) return null;
   return knownTotal(nonBasicRows);
