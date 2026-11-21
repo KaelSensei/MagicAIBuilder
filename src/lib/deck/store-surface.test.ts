@@ -64,6 +64,7 @@ const ACTIONS = [
   "moveToMaybeboard",
   "promoteToCommander",
   "reloadActiveDeck",
+  "reloadDeckOnNextOpen",
   "removeCard",
   "removeFromMaybeboard",
   "removeTag",

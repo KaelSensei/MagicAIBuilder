@@ -47,6 +47,7 @@ import {
 import { printingColumns } from "./store-card-faces";
 import { cardsFromZoneSource, deckFromZoneCards } from "./zone-source";
 import { withLoadedCardCount } from "./loaded-card-count";
+import { withDeckToReload } from "./reload-on-next-open";
 import {
   createDeckWriteQueue,
   DroppedDeckWriteError,
@@ -524,6 +525,14 @@ export interface DeckStore {
   forgetGuestDeck: () => void;
   renameDeck: (id: string, name: string) => Promise<void>;
   setActiveDeck: (id: string) => Promise<void>;
+  /**
+   * Makes the next `setActiveDeck(deckId)` read the deck from the server: the
+   * held rows are dropped, as on a listing stub. For a write made outside the
+   * store, such as adding a card to another deck from a row menu.
+   *
+   * @param deckId - a deck that is not open; one not held is left as it is
+   */
+  reloadDeckOnNextOpen: (deckId: string) => void;
   loadDecks: () => Promise<void>;
 
   // Deck description & tags
@@ -1376,6 +1385,10 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       };
     });
     clearGuestDeck();
+  },
+
+  reloadDeckOnNextOpen: (deckId: string) => {
+    set((state) => ({ decks: withDeckToReload(state.decks, deckId) }));
   },
 
   duplicateDeck: async (id: string) => {
