@@ -297,6 +297,14 @@ export function ImportDialog({
     }
   };
 
+  /** Drops the preview of a decklist that just changed, and any lookup still running for it. */
+  const clearPreview = () => {
+    previewRequest.current++;
+    setPreview(null);
+    setPreviewCards(null);
+    setMissingNames([]);
+  };
+
   const handleClose = () => {
     previewRequest.current++;
     setOpen(false);
@@ -392,11 +400,8 @@ export function ImportDialog({
                 placeholder={`Commander\n1 Atraxa, Praetors' Voice\n\nDeck\n1 Sol Ring\n1 Arcane Signet\n...`}
                 value={text}
                 onChange={(e) => {
-                  previewRequest.current++;
+                  clearPreview();
                   setText(e.target.value);
-                  setPreview(null);
-                  setPreviewCards(null);
-                  setMissingNames([]);
                   setStatus("idle");
                   setMessage("");
                 }}
