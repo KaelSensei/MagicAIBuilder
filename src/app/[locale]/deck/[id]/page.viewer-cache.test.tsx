@@ -13,21 +13,34 @@
  * a pass-through, so every run reads anew. The test reads what the page hands
  * its view (`@/test/page-tree`); the view's rendering is pinned by its own
  * tests.
+ *
+ * The last two cases pin the page's other read, the public forks of the deck
+ * (I-08): it reaches the view, and it runs only once the deck is found, so a
+ * missing or hidden deck costs no query on the unindexed `forkedFromDeckId`.
+ * The stub answers `deck.findMany` and `deck.count` with no fork by default;
+ * the store's filter and order are pinned by its contract suite.
  */
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { PublicDeckView } from "@/components/profile/PublicDeckView";
 import { dataCache } from "@/test/data-cache-stand-in";
 import { propsHandedTo } from "@/test/page-tree";
 
-const { mockDeckFindUnique, mockAuth } = vi.hoisted(() => ({
-  mockDeckFindUnique: vi.fn(),
-  mockAuth: vi.fn(),
-}));
+const { mockDeckFindUnique, mockDeckFindMany, mockDeckCount, mockAuth } =
+  vi.hoisted(() => ({
+    mockDeckFindUnique: vi.fn(),
+    mockDeckFindMany: vi.fn(),
+    mockDeckCount: vi.fn(),
+    mockAuth: vi.fn(),
+  }));
 
 vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
   const { stubPrisma } = await import("@/test/prisma-stub");
   return stubPrisma(await importOriginal(), {
-    deck: { findUnique: mockDeckFindUnique },
+    deck: {
+      findUnique: mockDeckFindUnique,
+      findMany: mockDeckFindMany,
+      count: mockDeckCount,
+    },
   });
 });
 // Neither the page nor its read uses the data cache; the stand-in proves it stays so.
@@ -84,10 +97,15 @@ async function ownershipShownTo(viewerId: string | null): Promise<boolean> {
 
 beforeEach(() => {
   mockDeckFindUnique.mockImplementation(deckRowFor);
+  // Nobody forked the deck, unless a case says otherwise.
+  mockDeckFindMany.mockResolvedValue([]);
+  mockDeckCount.mockResolvedValue(0);
 });
 
 afterEach(() => {
   mockDeckFindUnique.mockReset();
+  mockDeckFindMany.mockReset();
+  mockDeckCount.mockReset();
   mockAuth.mockReset();
   dataCache.reset();
 });
@@ -121,4 +139,41 @@ it("reads the deck anew for every viewer and never through the data cache", asyn
   }
   expect(dataCache.wraps).toHaveLength(0);
   expect(dataCache.size).toBe(0);
+});
+
+it("hands the view the public forks of the deck it shows (I-08, AC-08-193)", async () => {
+  mockAuth.mockResolvedValue(null);
+  mockDeckFindMany.mockResolvedValue([
+    {
+      id: "fork-1",
+      name: "Atraxa Toxic",
+      user: { name: "Ana", username: "ana" },
+    },
+  ]);
+  mockDeckCount.mockResolvedValue(1);
+
+  const tree = await PublicDeckPage({
+    params: Promise.resolve({ locale: "en", id: DECK_ROW.id }),
+  });
+
+  expect(propsHandedTo(tree, PublicDeckView)?.inspiredForks).toEqual({
+    forks: [{ id: "fork-1", name: "Atraxa Toxic", author: "Ana" }],
+    total: 1,
+  });
+  expect(mockDeckFindMany).toHaveBeenCalledWith(
+    expect.objectContaining({
+      where: { forkedFromDeckId: DECK_ROW.id, isPublic: true },
+    })
+  );
+});
+
+it("looks for no forks of a deck it cannot find", async () => {
+  mockAuth.mockResolvedValue(null);
+
+  await expect(
+    PublicDeckPage({ params: Promise.resolve({ locale: "en", id: "missing" }) })
+  ).rejects.toThrow();
+
+  expect(mockDeckFindMany).not.toHaveBeenCalled();
+  expect(mockDeckCount).not.toHaveBeenCalled();
 });

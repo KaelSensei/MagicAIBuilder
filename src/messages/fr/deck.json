@@ -13,6 +13,8 @@
     "forkingDeck": "Duplication du deck",
     "forkedFrom": "Copie de <link>{source}</link>",
     "forkSource": "{name} par {author}",
+    "inspirationFor": "{count, plural, one {A inspiré # deck} other {A inspiré # decks}}",
+    "inspirationMore": "{count, plural, one {et # autre} other {et # autres}}",
     "deckShared": "Deck partagé",
     "printGuide": "Imprimer le guide"
   },

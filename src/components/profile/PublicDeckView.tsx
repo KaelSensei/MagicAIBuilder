@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { User, ExternalLink, Link2, Check } from "lucide-react";
 import type { PublicDeck } from "@/lib/deck/public-deck";
+import type { InspiredForks } from "@/lib/deck/inspired-forks";
 import { DeckRatingPanel } from "@/components/community/DeckRatingPanel";
 import { DeckCommentPanel } from "@/components/community/DeckCommentPanel";
 import { PublicDeckPrimer } from "./PublicDeckPrimer";
@@ -28,6 +29,8 @@ interface PublicDeckViewProps {
   readonly deck: PublicDeck;
   /** Anonymous viewers see the aggregate but cannot rate. */
   readonly isSignedIn: boolean;
+  /** The public decks forked from this one, read by the page. */
+  readonly inspiredForks?: InspiredForks;
 }
 
 const BRACKET_COLORS: Record<number, string> = {
@@ -38,7 +41,11 @@ const BRACKET_COLORS: Record<number, string> = {
   5: "text-fuchsia-400 border-fuchsia-400/30 bg-fuchsia-400/10",
 };
 
-export function PublicDeckView({ deck, isSignedIn }: PublicDeckViewProps) {
+export function PublicDeckView({
+  deck,
+  isSignedIn,
+  inspiredForks,
+}: PublicDeckViewProps) {
   const t = useTranslations("deck");
   const [copied, setCopied] = useState(false);
   const commander = deck.cards.find((c) => commandSlotOf(c) === "commander");
@@ -196,6 +203,7 @@ export function PublicDeckView({ deck, isSignedIn }: PublicDeckViewProps) {
               }
             : undefined
         }
+        inspiredForks={inspiredForks}
       />
 
       <FocusedFeedbackPanel
