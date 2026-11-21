@@ -280,6 +280,8 @@ Some screens previously showed a euro sign on those same figures. They were neve
 
 In the shopping list, cards whose price Scryfall does not know are **listed at zero** rather than left out. A buy list that quietly drops a card is a list you cannot shop from — the total simply does not include them.
 
+In the deck list, every group heading ends with the **price of its cards**, under whichever grouping you chose (none, type, mana value or colour), so you can see whether the money sits in the lands, the creatures or the removal. When some cards of a group have no price, the heading shows the known subtotal and how many cards are without a price ("USD 12.40 · 2 without price"); when none has a price, it says "no price" rather than $0. The Deck Price panel adds a second line, **Without basic lands**, under the total value whenever the deck holds a basic land — Snow-Covered lands and Wastes included, Dryad Arbor not — for the price of what you would actually buy if you already own your basics.
+
 ### Mana Alignment
 
 The colour distribution chart tells you what your **spells** cost. The **Mana Alignment** panel tells you whether your **lands** can actually pay for them — in any format, Commander included.

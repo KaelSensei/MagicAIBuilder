@@ -1,6 +1,7 @@
 "use client";
 // Hook that computes the total price of the active deck from the store
 import { useMemo } from "react";
+import { totalWithoutBasicLands } from "@/lib/deck/price-breakdown";
 import { useDeckStore } from "@/lib/deck/store";
 import type { DeckCard } from "@/lib/deck/types";
 
@@ -14,6 +15,11 @@ export interface DeckPriceResult {
   missingPriceCount: number;
   /** Whether the active deck has any cards at all. */
   hasCards: boolean;
+  /**
+   * The same total without the basic lands (CR 205.4c), in USD: what a player
+   * who owns a box of basics would pay. Null when the deck holds no basic land.
+   */
+  totalWithoutBasics: number | null;
 }
 
 function sumCardPrices(cards: readonly DeckCard[]): number {
@@ -37,7 +43,12 @@ export function useDeckPrice(): DeckPriceResult {
 
   const result = useMemo((): DeckPriceResult => {
     if (!activeDeck) {
-      return { totalPrice: 0, missingPriceCount: 0, hasCards: false };
+      return {
+        totalPrice: 0,
+        missingPriceCount: 0,
+        hasCards: false,
+        totalWithoutBasics: null,
+      };
     }
 
     const allCards: DeckCard[] = [...activeDeck.cards];
@@ -50,6 +61,7 @@ export function useDeckPrice(): DeckPriceResult {
       totalPrice: Math.round(rawTotal * 100) / 100,
       missingPriceCount: countMissingPrices(allCards),
       hasCards: allCards.length > 0,
+      totalWithoutBasics: totalWithoutBasicLands(allCards),
     };
   }, [activeDeck]);
 
