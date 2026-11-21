@@ -102,6 +102,19 @@
     "sessionTimeoutDescription": "La vérification du compte ne s'est pas terminée. Vos decks enregistrés sont inchangés. Réessayez.",
     "profileLoadFailed": "Le profil n'a pas pu être actualisé. Les decks enregistrés restent disponibles.",
     "createFailed": "Impossible de créer le deck — {reason}",
+    "cardFilter": {
+      "includeLabel": "Contient la carte",
+      "excludeLabel": "Sans la carte",
+      "placeholder": "Nom de la carte, par ex. Sol Ring",
+      "add": "Ajouter",
+      "remove": "Retirer {name}",
+      "listFull": "Un champ accepte au plus {count} cartes.",
+      "searching": "Recherche dans vos decks…",
+      "failed": "La recherche de vos decks par carte a échoué. La liste complète reste affichée.",
+      "retry": "Réessayer",
+      "truncated": "Voici les {count} decks modifiés le plus récemment qui correspondent. Ajoutez une carte pour affiner la recherche.",
+      "searchEmpty": "Aucun deck ne correspond au filtre de cartes. Retirez une carte ci-dessus, ou videz la recherche, pour voir plus de decks."
+    },
     "folders": {
       "all": "Tous les decks",
       "unfiled": "Sans dossier",

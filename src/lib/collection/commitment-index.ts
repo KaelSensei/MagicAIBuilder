@@ -116,8 +116,22 @@ function addDecks(
   return true;
 }
 
-/** A commander or partner, or a main-deck card that is not a companion. */
-function commits(row: CommitmentDeckRow): boolean {
+/** The columns that decide whether a deck row commits its copies. */
+export type CommittingRow = Pick<
+  CommitmentDeckRow,
+  "zone" | "isCommander" | "isPartner" | "category"
+>;
+
+/**
+ * Whether a deck row's copies are committed to the deck: a commander or
+ * partner, or a main-deck card that is not a companion. Considering and the
+ * sideboard commit nothing, and a companion is outside the deck
+ * (CR 702.139a). The deck library's card search counts the same rows.
+ *
+ * @param row - one deck row, as stored
+ * @returns true when the row's copies are in the deck
+ */
+export function commits(row: CommittingRow): boolean {
   if (row.isCommander || row.isPartner) return true;
   return row.zone === "main" && row.category !== "companion";
 }

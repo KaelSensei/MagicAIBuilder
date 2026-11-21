@@ -24,10 +24,12 @@ import { deckCardIdSchema, pairingTypeSchema } from "@/lib/validation/deck";
 import { addCardSchema, type AddCardInput } from "@/lib/validation/card";
 import { readIdempotencyKey } from "@/lib/api/idempotency-key";
 import { createOnce } from "@/lib/db/create-once";
-import { countDeckCardCopies } from "@/lib/deck/prisma-deck-card-copies";
+import {
+  DECK_LISTING_INCLUDE,
+  DECK_LISTING_MAX_PAGE_SIZE,
+  withCardCopyCounts,
+} from "@/lib/deck/deck-listing-read";
 
-/** Max decks per page for the listing endpoint */
-const MAX_PAGE_SIZE = 50;
 /** Default decks per page */
 const DEFAULT_PAGE_SIZE = 20;
 /** Card rows one create may carry: a full deck, a sideboard and a long maybeboard. */
@@ -151,28 +153,6 @@ function buildCreateDeckData(
   };
 }
 
-/**
- * Adds each deck's card count, as the editor counts it, to a page of the
- * listing: one grouped query for the page, never one per deck.
- * `_count.cards` stays the row count the store tells a listing stub by
- * (`isDeckStub`); `cardCopyCount` is the count the deck list shows.
- *
- * @param decks - the page of decks
- * @returns the same decks, each with its `cardCopyCount`
- */
-async function withCardCopyCounts<D extends { readonly id: string }>(
-  decks: readonly D[]
-): Promise<(D & { readonly cardCopyCount: number })[]> {
-  const copies = await countDeckCardCopies(
-    prisma,
-    decks.map((deck) => deck.id)
-  );
-  return decks.map((deck) => ({
-    ...deck,
-    cardCopyCount: copies.get(deck.id) ?? 0,
-  }));
-}
-
 // GET /api/decks — paginated lightweight listing: commander/partner/companion
 // only, the row count (`_count.cards`) and the card count (`cardCopyCount`)
 export async function GET(request: NextRequest) {
@@ -188,7 +168,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = request.nextUrl;
     const page = Math.max(0, readWholeNumber(searchParams.get("page"), 0));
     const limit = Math.min(
-      MAX_PAGE_SIZE,
+      DECK_LISTING_MAX_PAGE_SIZE,
       Math.max(1, readWholeNumber(searchParams.get("limit"), DEFAULT_PAGE_SIZE))
     );
     const userId = result.session.user.id;
@@ -196,43 +176,7 @@ export async function GET(request: NextRequest) {
     const [decks, total] = await Promise.all([
       prisma.deck.findMany({
         where: { userId },
-        include: {
-          cards: {
-            where: {
-              OR: [
-                { isCommander: true },
-                { isPartner: true },
-                { category: "companion" },
-              ],
-            },
-            select: {
-              id: true,
-              scryfallId: true,
-              name: true,
-              manaCost: true,
-              cmc: true,
-              typeLine: true,
-              oracleText: true,
-              colorIdentity: true,
-              isGameChanger: true,
-              isBanned: true,
-              price: true,
-              imageUri: true,
-              artCropUri: true,
-              category: true,
-              isCommander: true,
-              isPartner: true,
-              power: true,
-              toughness: true,
-              quantity: true,
-              notes: true,
-              zone: true,
-            },
-            distinct: ["scryfallId", "isCommander", "isPartner"],
-            take: 3,
-          },
-          _count: { select: { cards: true } },
-        },
+        include: DECK_LISTING_INCLUDE,
         orderBy: { updatedAt: "desc" },
         skip: page * limit,
         take: limit,

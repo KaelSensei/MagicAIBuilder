@@ -13,7 +13,7 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { useDeckStore } from "@/lib/deck/store";
 import { emptyApiDeck } from "@/test/in-memory-deck-api";
 import { setupMsw } from "@/test/msw";
-import { renderWithIntl } from "@/test/render-with-intl";
+import { renderWithProviders } from "@/test/render";
 
 const push = vi.hoisted(() => vi.fn());
 
@@ -98,7 +98,7 @@ afterEach(() => {
 // The numbered default name was the English template `New Deck ${n}`, stored
 // as the deck's name whatever language its creator used.
 it("names a new deck in the creator's locale", async () => {
-  renderWithIntl(<DecksPage />, { locale: "fr" });
+  renderWithProviders(<DecksPage />, { locale: "fr" });
 
   fireEvent.click(screen.getByRole("button", { name: "Créer un deck" }));
 
@@ -111,7 +111,7 @@ it("names a new deck in the creator's locale", async () => {
 
 it("creates a Commander deck when the player keeps the default format", async () => {
   const user = userEvent.setup();
-  renderWithIntl(<DecksPage />);
+  renderWithProviders(<DecksPage />);
 
   expect(
     screen.getByRole("combobox", { name: "New deck format" })
@@ -125,7 +125,7 @@ it("creates a Commander deck when the player keeps the default format", async ()
 
 it("creates a Brawl deck when the player picks Brawl", async () => {
   const user = userEvent.setup();
-  renderWithIntl(<DecksPage />);
+  renderWithProviders(<DecksPage />);
 
   await user.selectOptions(
     screen.getByRole("combobox", { name: "New deck format" }),
