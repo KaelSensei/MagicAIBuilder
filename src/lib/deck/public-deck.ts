@@ -15,11 +15,27 @@ export type PublicCard = Readonly<PublicDeckRecord["cards"][number]>;
 export type PublicDeckAuthor = Readonly<NonNullable<PublicDeckRecord["user"]>>;
 
 /**
+ * A stored instant as a viewer receives it: an ISO 8601 string, the form JSON
+ * gives a `Date`. The page reads in-process and gets the same form, so no
+ * client type claims a `Date` that the API delivers as a string.
+ */
+export type IsoInstant = string;
+
+/** The deck's stored creation and update instants, as ISO strings. */
+export interface DeckDatesAsIso {
+  readonly createdAt: IsoInstant;
+  readonly updatedAt: IsoInstant;
+}
+
+/**
  * What every viewer of a public deck receives. The owner receives their whole
  * deck, which is a superset of this shape.
  */
-export type PublicDeck = Readonly<Omit<PublicDeckRecord, "cards" | "user">> & {
-  readonly cards: readonly PublicCard[];
-  readonly user: PublicDeckAuthor | null;
-  readonly isOwner: boolean;
-};
+export type PublicDeck = Readonly<
+  Omit<PublicDeckRecord, "cards" | "user" | keyof DeckDatesAsIso>
+> &
+  DeckDatesAsIso & {
+    readonly cards: readonly PublicCard[];
+    readonly user: PublicDeckAuthor | null;
+    readonly isOwner: boolean;
+  };

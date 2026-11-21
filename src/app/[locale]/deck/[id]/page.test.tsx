@@ -48,6 +48,8 @@ const PUBLIC_DECK: PublicDeck = {
   forkedFromDeckId: null,
   forkedFromDeckName: null,
   forkedFromUserName: null,
+  createdAt: "2026-03-03T09:00:00.000Z",
+  updatedAt: "2026-11-19T12:00:00.000Z",
   user: { id: "user-1", name: null, username: "kael", image: null },
 };
 

@@ -41,6 +41,8 @@ const DECK_ROW = {
   isPublic: true,
   name: "Atraxa Superfriends",
   shareToken: "secret-token",
+  createdAt: new Date("2026-03-03T09:00:00.000Z"),
+  updatedAt: new Date("2026-11-19T12:00:00.000Z"),
   cards: [],
   user: { id: OWNER, name: "Deck Owner", username: "owner", image: null },
 };
@@ -99,6 +101,18 @@ it("tells a signed-in stranger who arrives after the owner that the deck is not 
 it("answers nothing, to the owner or anyone else, for a deck id that does not exist", async () => {
   expect(await findDeckForViewer("missing-deck", OWNER)).toBeNull();
   expect(await findDeckForViewer("missing-deck", ANONYMOUS)).toBeNull();
+});
+
+// The page reads in-process and the API sends JSON: both get one form, the
+// ISO string JSON gives, so no client type claims a `Date` it never receives.
+it.each([
+  { viewer: "the owner", viewerId: OWNER },
+  { viewer: "a signed-out reader", viewerId: ANONYMOUS },
+])("hands $viewer the stored dates as ISO strings", async ({ viewerId }) => {
+  const deck = await findDeckForViewer(DECK_ROW.id, viewerId);
+
+  expect(deck?.createdAt).toBe("2026-03-03T09:00:00.000Z");
+  expect(deck?.updatedAt).toBe("2026-11-19T12:00:00.000Z");
 });
 
 it("asks the database on every read and never keeps an answer in the data cache", async () => {
