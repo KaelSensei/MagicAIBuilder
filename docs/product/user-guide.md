@@ -480,6 +480,8 @@ When you have cards in your collection:
 
 This lets you instantly see what you need to buy to complete a deck.
 
+Signed in, each card row in List view also has a **⋯ More actions** menu. **Add to my collection** records one copy of the row's printing, and the row's badge updates at once. **Add to another deck…** opens a list of your other decks, most recently updated first, with a name filter: pick **Main**, **Sideboard** or **Considering**, then a deck, and one copy of the row's printing goes there. When that zone already holds the card, it gets one more copy, up to the card's copy limit (one in Commander, four in constructed); at the limit nothing is added and the dialog says so. The deck you are editing does not change. The list shows your 50 most recently updated decks.
+
 ### Tips
 
 - The **In Collection (xN)** badge counts the exact printing shown, so a card listed by **Only cards I own** may show no badge when you own a different printing
