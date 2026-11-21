@@ -205,6 +205,22 @@
     "proxySheets": "Export Proxy Sheets (Print / PDF)",
     "addCardsForProxy": "Add cards to export proxies",
     "proxyTooltip": "Export print-ready proxy sheets",
+    "registrationSheet": {
+      "row": "Registration sheet",
+      "print": "Print registration sheet",
+      "title": "Decklist registration sheet",
+      "playerName": "Player name",
+      "event": "Event",
+      "date": "Date",
+      "signature": "Signature",
+      "deckName": "Deck name",
+      "format": "Format",
+      "commander": "Commander",
+      "companion": "Companion",
+      "mainDeck": "Main deck",
+      "sideboard": "Sideboard",
+      "total": "Total: {count}"
+    },
     "notices": {
       "leftOut": "{format} leaves out {count, plural, one {# card} other {# cards}}",
       "moved": "{format} moves {count, plural, one {# card} other {# cards}} into its main deck",
