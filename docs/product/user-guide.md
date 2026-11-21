@@ -340,6 +340,8 @@ What the panel counts:
 
 When a question has no answer — an empty main deck, a blank minimum, or a turn that would draw more cards than your library holds — the panel says what is missing instead of showing 0%.
 
+Under the question, **Lands in the opening hand** answers the land questions players ask most, without any input. It gives the lands an opening seven holds on average (a 99-card library with 36 lands averages 2.5), a table of the chance of exactly 0 to 7 lands in that seven, and a table of the chance of having drawn at least N lands by turn N, for turns 1 to 7, which is what a land drop every turn needs. Each chance is rounded to one decimal, so the first table may not add up to exactly 100%. The turns follow the same one-draw-per-turn rule as the question. The section counts the opening seven and the draws only: no mulligan, no ramp and no color, so it does not say whether a spell is castable on curve. With no main-deck card, or no land, it says so instead of showing a table of zeros.
+
 ### Cards in Your Language
 
 When you open the printing selector, the app looks for printings of that card in your interface language and shows the name, type line and rules text as they are actually printed on the card.
