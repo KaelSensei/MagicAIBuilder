@@ -102,6 +102,19 @@
     "sessionTimeoutDescription": "Проверка аккаунта не завершилась. Сохранённые колоды не изменились. Попробуйте снова.",
     "profileLoadFailed": "Профиль не удалось обновить. Сохранённые колоды остаются доступны.",
     "createFailed": "Не удалось создать колоду — {reason}",
+    "cardFilter": {
+      "includeLabel": "Has the card",
+      "excludeLabel": "Leaves out",
+      "placeholder": "Card name, e.g. Sol Ring",
+      "add": "Add",
+      "remove": "Remove {name}",
+      "listFull": "A field takes at most {count} cards.",
+      "searching": "Searching your decks…",
+      "failed": "Your decks could not be searched by card. The full list stays on screen.",
+      "retry": "Try again",
+      "truncated": "Showing the {count} most recently edited decks that match. Name another card to narrow the search.",
+      "searchEmpty": "No deck matches the card filter. Remove a card above, or clear the search, to see more decks."
+    },
     "folders": {
       "all": "All decks",
       "unfiled": "Unfiled",
