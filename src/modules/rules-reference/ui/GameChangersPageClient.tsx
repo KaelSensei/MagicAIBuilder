@@ -6,13 +6,15 @@
  * Rules reference context, `ui/`. A container: it owns the active list, the
  * zoomed card and the card whose printings are open, and composes
  * `useReferenceLists` (the two lists), `usePagedFilteredList` (search, page
- * slice and the `?page=N` URL sync), `ReferenceListTabs`, `PagedCardList`,
+ * slice and the `?page=N` URL sync), `useAddToOpenDeck` (the zoom's add to the
+ * deck open in this session), `ReferenceListTabs`, `PagedCardList`,
  * `CardZoomModal` and the catalog's `PrintingSelectorModal`.
  *
  * @module rules-reference/ui/GameChangersPageClient
  */
 import { useCallback, useState } from "react";
 import { useTranslations } from "next-intl";
+import { useAddToOpenDeck } from "@/modules/rules-reference/client/useAddToOpenDeck";
 import { usePagedFilteredList } from "@/modules/rules-reference/client/usePagedFilteredList";
 import {
   type ReferenceList,
@@ -62,6 +64,7 @@ export function GameChangersPageClient() {
     isError,
   });
   const { goToPage } = paged;
+  const openDeck = useAddToOpenDeck(zoomedCard);
 
   // Another list starts over from page 1.
   const selectList = useCallback(
@@ -90,6 +93,7 @@ export function GameChangersPageClient() {
           onClose={() => setZoomedCard(null)}
           onNavigate={setZoomedCard}
           onOpenPrintings={handleOpenPrintings}
+          openDeck={openDeck}
         />
       )}
 

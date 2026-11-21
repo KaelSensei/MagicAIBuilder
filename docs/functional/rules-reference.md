@@ -40,6 +40,13 @@ Two public pages, reached from each other's tab bar and from nowhere else in the
   to the tile. A card Scryfall has no image for says "No image" instead of a broken picture.
 - **See every printing.** "View all arts" in the zoom opens the card's printing selector with
   every paper printing, newest first.
+- **Add the card to the open deck.** When a deck is open in this session (opened in the builder,
+  or the guest deck), the zoom offers "Add to <deck>". It adds one copy to the main deck exactly
+  as the builder's search does (copy limit, owned printing first, Game Changer and banned flags,
+  saved on the server), then reads "Added to <deck>" and names the deck's count ("In <deck>", or
+  "2 in <deck>" for a basic land or several copies). A press that added nothing never reads
+  "Added"; a failed save shows the usual toast and the button goes back to "Add to <deck>". With
+  no deck open, the zoom says "Open a deck in the builder to add cards from here."
 - **Read it in French.** The tabs, messages and badges are translated; the card names and type
   lines show the French printing when Scryfall has one, English otherwise.
 
@@ -97,28 +104,33 @@ Both pages are read-only. There is no account, no deck and nothing to save.
 All keys live in the `rules` namespace, in `src/messages/<locale>/rules.json` (English and French
 written; the eight other catalogs keep key parity). The pager's labels are in `common.pagination`.
 
-| State                   | What the player sees                                                                                                                   | i18n keys                                                                          |
-| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| Rules page, any chapter | "Comprehensive Rules", "The official Magic: The Gathering Comprehensive Rules. Effective as of {date}."                                | `rules.comprehensive.title`, `.subtitle`, `.effectiveDate`                         |
-| Rules search            | "Search rules", "Search rules and glossary...", "Search results"                                                                       | `rules.comprehensive.search`, `.searchPlaceholder`, `.searchResults`               |
-| Rules search, no match  | "No matching rules found."                                                                                                             | `rules.comprehensive.noResults`                                                    |
-| Rules contents          | "Contents", "Glossary", and the tab "Comprehensive Rules"                                                                              | `rules.comprehensive.contents`, `.glossary`, `.tabLabel`                           |
-| Lists page              | "Game Changers & Banlist", the subtitle crediting Scryfall, the tabs "Game Changers", "Banlist"                                        | `rules.title`, `rules.subtitle`, `rules.tabs.gameChangers`, `rules.tabs.banlist`   |
-| Loading                 | A spinner and "Loading from Scryfall…"                                                                                                 | `rules.loading`                                                                    |
-| Error                   | "Failed to load data from Scryfall. Please try again in a moment."                                                                     | `rules.error`                                                                      |
-| Loaded                  | "{count} cards", "for "{query}"" after a search, the "GC" or "Banned" badge on each tile                                               | `rules.resultsCount`, `rules.resultsFor`, `rules.badges.gc`, `rules.badges.banned` |
-| Empty                   | "No cards found."                                                                                                                      | `rules.noCards`                                                                    |
-| Pager                   | "Previous", "Next", "Page X / Y", labelled "Pagination", "Previous page", "Next page"                                                  | `common.pagination.*`                                                              |
-| Zoom                    | "View {name}" on each tile; "Close", "Close preview", "Previous card", "Next card", "View all arts", "No image", "{current} / {total}" | `rules.zoom.*`                                                                     |
+| State                   | What the player sees                                                                                                                   | i18n keys                                                                           |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| Rules page, any chapter | "Comprehensive Rules", "The official Magic: The Gathering Comprehensive Rules. Effective as of {date}."                                | `rules.comprehensive.title`, `.subtitle`, `.effectiveDate`                          |
+| Rules search            | "Search rules", "Search rules and glossary...", "Search results"                                                                       | `rules.comprehensive.search`, `.searchPlaceholder`, `.searchResults`                |
+| Rules search, no match  | "No matching rules found."                                                                                                             | `rules.comprehensive.noResults`                                                     |
+| Rules contents          | "Contents", "Glossary", and the tab "Comprehensive Rules"                                                                              | `rules.comprehensive.contents`, `.glossary`, `.tabLabel`                            |
+| Lists page              | "Game Changers & Banlist", the subtitle crediting Scryfall, the tabs "Game Changers", "Banlist"                                        | `rules.title`, `rules.subtitle`, `rules.tabs.gameChangers`, `rules.tabs.banlist`    |
+| Loading                 | A spinner and "Loading from Scryfall…"                                                                                                 | `rules.loading`                                                                     |
+| Error                   | "Failed to load data from Scryfall. Please try again in a moment."                                                                     | `rules.error`                                                                       |
+| Loaded                  | "{count} cards", "for "{query}"" after a search, the "GC" or "Banned" badge on each tile                                               | `rules.resultsCount`, `rules.resultsFor`, `rules.badges.gc`, `rules.badges.banned`  |
+| Empty                   | "No cards found."                                                                                                                      | `rules.noCards`                                                                     |
+| Pager                   | "Previous", "Next", "Page X / Y", labelled "Pagination", "Previous page", "Next page"                                                  | `common.pagination.*`                                                               |
+| Zoom                    | "View {name}" on each tile; "Close", "Close preview", "Previous card", "Next card", "View all arts", "No image", "{current} / {total}" | `rules.zoom.*`                                                                      |
+| Zoom, add to open deck  | "Add to {deck}", "Added to {deck}", "In {deck}", "{count} in {deck}", or "Open a deck in the builder to add cards from here."          | `rules.zoom.addToDeck`, `.addedToDeck`, `.inDeck`, `.copiesInDeck`, `.openDeckHint` |
 
 ## Who can do what
 
-Both pages are public and read nothing about the visitor.
+Both pages are public and ask the server nothing about the visitor. The Game Changers zoom reads
+the deck open in this browser session, if any, and adds to it through the deck store, so the
+deck's own save rules apply: a signed-in player's deck is saved by the deck routes, a guest's deck
+stays in the browser.
 
-| Action                                  | Guest | Signed in | Owner | Moderator | API key scope                                                           |
-| --------------------------------------- | ----- | --------- | ----- | --------- | ----------------------------------------------------------------------- |
-| Read the Comprehensive Rules page       | yes   | yes       | yes   | yes       | none: a server-rendered page                                            |
-| Read the Game Changers and banlist page | yes   | yes       | yes   | yes       | none; the shared search cache is a public GET, rate-limited per address |
+| Action                                  | Guest          | Signed in           | Owner | Moderator           | API key scope                                                           |
+| --------------------------------------- | -------------- | ------------------- | ----- | ------------------- | ----------------------------------------------------------------------- |
+| Read the Comprehensive Rules page       | yes            | yes                 | yes   | yes                 | none: a server-rendered page                                            |
+| Read the Game Changers and banlist page | yes            | yes                 | yes   | yes                 | none; the shared search cache is a public GET, rate-limited per address |
+| Add a zoomed card to the open deck      | the guest deck | their own open deck | yes   | their own open deck | none; the deck routes check the session and the owner                   |
 
 ## Not yet
 
