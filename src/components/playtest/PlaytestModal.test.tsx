@@ -486,6 +486,54 @@ describe("PlaytestModal", () => {
     });
   });
 
+  describe("a new-card trial", () => {
+    it("starts with the chosen cards in hand, logs them, and keeps the game out of the recorded sessions", async () => {
+      const user = userEvent.setup();
+      renderModal();
+      const picker = screen.getByRole("group", {
+        name: "Start with these cards",
+      });
+
+      await user.click(
+        within(picker).getByRole("checkbox", { name: "Card c3" })
+      );
+      await user.click(
+        within(picker).getByRole("checkbox", { name: "Card c17" })
+      );
+      await user.click(
+        screen.getByRole("button", { name: /draw opening hand/i })
+      );
+      await user.click(screen.getByRole("button", { name: "Show cards" }));
+
+      expect(
+        screen.getByRole("button", { name: "Card c3" })
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: "Card c17" })
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText("Started with chosen cards: Card c3, Card c17")
+      ).toBeInTheDocument();
+      for (const name of ["Win", "Loss", "Draw"]) {
+        const button = screen.getByRole("button", { name });
+        expect(button).toBeDisabled();
+        expect(button).toHaveAccessibleDescription(
+          "This game started with chosen cards, so it is not saved as a playtest session."
+        );
+      }
+    });
+
+    it("leaves a game without chosen cards recordable", () => {
+      renderModal();
+      start();
+
+      expect(screen.getByRole("button", { name: "Win" })).toBeEnabled();
+      expect(
+        screen.queryByText(/started with chosen cards/i)
+      ).not.toBeInTheDocument();
+    });
+  });
+
   it("clears the session when closed, so it does not reappear later", () => {
     const onClose = vi.fn();
     renderModal(makeDeck(), onClose);
