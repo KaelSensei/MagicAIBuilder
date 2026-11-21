@@ -1,7 +1,8 @@
 "use client";
 /**
  * The action bar of a public deck page: save, fork, share and print, with the
- * credit to the source deck when this one is a fork.
+ * credit to the source deck when this one is a fork and the public forks this
+ * one inspired.
  *
  * Community context (ui). Saving and forking need a signed-in visitor and
  * leave the owner's deck untouched: a save bookmarks it as a saved deck of the
@@ -14,6 +15,8 @@ import { Bookmark, CopyPlus, Printer, Share2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { forkPublicDeck } from "@/lib/db/deck-api";
+import type { InspiredForks } from "@/lib/deck/inspired-forks";
+import { InspiredForksLine } from "./InspiredForksLine";
 
 interface ForkAttribution {
   readonly id: string;
@@ -26,6 +29,8 @@ interface PublicDeckActionsProps {
   readonly deckName: string;
   readonly isSignedIn: boolean;
   readonly forkedFrom?: ForkAttribution;
+  /** The public decks forked from this one, listed beside the credit. */
+  readonly inspiredForks?: InspiredForks;
 }
 
 interface ForkSourceLinkProps {
@@ -66,6 +71,7 @@ export function PublicDeckActions({
   deckName,
   isSignedIn,
   forkedFrom,
+  inspiredForks,
 }: PublicDeckActionsProps) {
   const t = useTranslations("deck");
   const router = useRouter();
@@ -124,20 +130,22 @@ export function PublicDeckActions({
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      {forkedFrom && (
-        <span className="mr-auto text-xs text-[var(--text-secondary)]">
-          {t.rich("public.forkedFrom", {
-            source: forkedFrom.author
-              ? t("public.forkSource", {
-                  name: forkedFrom.name,
-                  author: forkedFrom.author,
-                })
-              : forkedFrom.name,
-            link: forkSourceLinkTag(forkedFrom.id),
-          })}
-        </span>
-      )}
-      {!forkedFrom && <span className="mr-auto" />}
+      <div className="mr-auto flex flex-col gap-1 text-xs text-[var(--text-secondary)]">
+        {forkedFrom && (
+          <span>
+            {t.rich("public.forkedFrom", {
+              source: forkedFrom.author
+                ? t("public.forkSource", {
+                    name: forkedFrom.name,
+                    author: forkedFrom.author,
+                  })
+                : forkedFrom.name,
+              link: forkSourceLinkTag(forkedFrom.id),
+            })}
+          </span>
+        )}
+        <InspiredForksLine inspiredForks={inspiredForks} />
+      </div>
       <button
         type="button"
         onClick={() => void handleSave()}

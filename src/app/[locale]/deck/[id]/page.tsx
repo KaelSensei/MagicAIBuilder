@@ -12,6 +12,7 @@ import { getTranslations } from "next-intl/server";
 import { Header } from "@/components/layout/Header";
 import { PublicDeckView } from "@/components/profile/PublicDeckView";
 import { findDeckForViewer } from "@/lib/deck/deck-for-viewer";
+import { findInspiredForks } from "@/lib/deck/public-fork-store";
 import { commandSlotOf } from "@/lib/deck/bulk-edit-command-zone";
 import { auth } from "@/lib/auth/config";
 
@@ -86,11 +87,18 @@ export default async function PublicDeckPage({ params }: Params) {
   const [deck, session] = await Promise.all([fetchDeckForViewer(id), auth()]);
 
   if (!deck) notFound();
+  // Read once the deck is found, not beside it: `forkedFromDeckId` has no
+  // index, so a missing or hidden deck must not cost the scan. Never rejects.
+  const inspiredForks = await findInspiredForks(deck.id);
 
   return (
     <div className="flex flex-col min-h-screen bg-[var(--background)] text-[var(--text-primary)]">
       <Header />
-      <PublicDeckView deck={deck} isSignedIn={session?.user != null} />
+      <PublicDeckView
+        deck={deck}
+        isSignedIn={session?.user != null}
+        inspiredForks={inspiredForks}
+      />
     </div>
   );
 }
