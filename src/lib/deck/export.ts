@@ -7,7 +7,9 @@
  * callers import from this file only, so the folder can change behind it.
  * Targets: plain text, Moxfield, MTG Arena, MTGO, TappedOut, Archidekt,
  * MTGGoldfish and EDHREC. The `exportX` functions return the text alone,
- * for callers that need no file name or notices.
+ * for callers that need no file name or notices. The printable registration
+ * sheet (`registrationSheetExport`) follows the same contract but also takes
+ * locale labels, so it is not one of `EXPORT_TARGETS`.
  *
  * @module deck/export
  */
@@ -37,6 +39,10 @@ export {
   type ExportSourceZone,
   type ExportTarget,
 } from "./exports/contract";
+export {
+  registrationSheetExport,
+  type RegistrationSheetLabels,
+} from "./exports/registration-sheet";
 
 const EXPORTERS: Readonly<Record<ExportTarget, Exporter>> = {
   moxfield: moxfieldExport,
