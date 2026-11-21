@@ -1,26 +1,13 @@
 "use client";
 // Premium mana curve bar chart — Linear/Vercel dashboard aesthetic
-import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/components/ui/utils";
+import { bucketLabel, ManaCurveBar } from "./ManaCurveBar";
 
 interface ManaCurveProps {
   readonly curve: Readonly<Record<number, number>>;
   readonly className?: string;
 }
-
-// MTG-inspired color palette per CMC bucket
-const CMC_COLORS: Record<number, string> = {
-  0: "#6b7280", // gray (colorless)
-  1: "#10b981", // emerald
-  2: "#3b82f6", // blue
-  3: "#8b5cf6", // violet
-  4: "#f59e0b", // amber
-  5: "#ef4444", // red
-  6: "#ec4899", // pink
-  7: "#64748b", // slate (7+)
-};
 
 // Ghost grid lines at 25%, 50%, 75%, 100% of chart height
 const GRID_LINES = [0.25, 0.5, 0.75, 1];
@@ -28,7 +15,6 @@ const GRID_LINES = [0.25, 0.5, 0.75, 1];
 export function ManaCurve({ curve, className }: ManaCurveProps) {
   const t = useTranslations("deck");
   const buckets = Array.from({ length: 8 }, (_, i) => i);
-  const [hoveredCmc, setHoveredCmc] = useState<number | null>(null);
 
   const maxCount = Math.max(...buckets.map((b) => curve[b] ?? 0), 1);
 
@@ -75,79 +61,14 @@ export function ManaCurve({ curve, className }: ManaCurveProps) {
 
         {/* Bars */}
         <div className="absolute inset-0 flex items-end gap-1.5">
-          {buckets.map((cmc, index) => {
-            const count = curve[cmc] ?? 0;
-            const heightPct = (count / maxCount) * 100;
-            const color = CMC_COLORS[cmc] ?? CMC_COLORS[7];
-            const isHovered = hoveredCmc === cmc;
-
-            return (
-              <button
-                key={cmc}
-                type="button"
-                className="relative flex flex-col items-center flex-1 h-full justify-end bg-transparent border-0 p-0 cursor-default focus:outline-none"
-                aria-label={t("stats.curveBucket", {
-                  cmc: cmc === 7 ? "7+" : String(cmc),
-                  count,
-                })}
-                onMouseEnter={() => setHoveredCmc(cmc)}
-                onMouseLeave={() => setHoveredCmc(null)}
-                onFocus={() => setHoveredCmc(cmc)}
-                onBlur={() => setHoveredCmc(null)}
-              >
-                {/* Tooltip */}
-                <AnimatePresence>
-                  {isHovered && count > 0 && (
-                    <motion.div
-                      className="absolute bottom-full mb-2 whitespace-nowrap z-10 bg-[var(--surface)] border border-[var(--border)] rounded px-2 py-1 text-xs text-[var(--text-primary)] pointer-events-none shadow-lg"
-                      initial={{ opacity: 0, y: 4 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 4 }}
-                      transition={{ duration: 0.15 }}
-                    >
-                      {t("stats.curveBucket", {
-                        cmc: cmc === 7 ? "7+" : String(cmc),
-                        count,
-                      })}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                {/* Bar — positioned from bottom */}
-                <motion.div
-                  className="w-full relative"
-                  style={{
-                    background: `linear-gradient(to bottom, ${color}99, ${color})`,
-                    borderRadius: "4px 4px 0 0",
-                    opacity: isHovered ? 1 : 0.85,
-                  }}
-                  initial={{ height: 0 }}
-                  animate={{ height: `${heightPct}%` }}
-                  transition={{
-                    duration: 0.5,
-                    delay: index * 0.06,
-                    ease: [0.25, 0.46, 0.45, 0.94],
-                  }}
-                >
-                  {/* Count label pinned just above the bar top */}
-                  <AnimatePresence mode="wait">
-                    {count > 0 && (
-                      <motion.span
-                        key={count}
-                        className="absolute left-1/2 -translate-x-1/2 -top-4 text-[10px] font-medium text-[var(--text-secondary)] whitespace-nowrap"
-                        initial={{ opacity: 0, y: 4 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -4 }}
-                        transition={{ duration: 0.2 }}
-                      >
-                        {count}
-                      </motion.span>
-                    )}
-                  </AnimatePresence>
-                </motion.div>
-              </button>
-            );
-          })}
+          {buckets.map((cmc) => (
+            <ManaCurveBar
+              key={cmc}
+              bucket={cmc}
+              count={curve[cmc] ?? 0}
+              maxCount={maxCount}
+            />
+          ))}
         </div>
       </div>
 
@@ -156,7 +77,7 @@ export function ManaCurve({ curve, className }: ManaCurveProps) {
         {buckets.map((cmc) => (
           <div key={cmc} className="flex-1 flex justify-center">
             <span className="text-[10px] text-[var(--text-secondary)]">
-              {cmc === 7 ? "7+" : cmc}
+              {bucketLabel(cmc)}
             </span>
           </div>
         ))}
