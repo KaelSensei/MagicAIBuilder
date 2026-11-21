@@ -41,6 +41,7 @@ import {
   DrawOddsPointField,
   DrawOddsTargetField,
 } from "./DrawOddsFields";
+import { OpeningHandLands } from "./OpeningHandLands";
 
 /** The default question: the deck's lands. */
 const LANDS: DrawOddsTarget = { kind: "lands" };
@@ -269,6 +270,7 @@ export function DrawOddsPanel({ deck }: DrawOddsPanelProps) {
       {drawPoint.kind === "turn" && (
         <p className={NOTE_CLASS}>{t("drawRule", { table })}</p>
       )}
+      <OpeningHandLands deck={deck} table={table} />
       <p className={NOTE_CLASS}>{t("countNotGame")}</p>
     </section>
   );
