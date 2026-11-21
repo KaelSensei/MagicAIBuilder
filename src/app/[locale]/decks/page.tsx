@@ -22,7 +22,14 @@ import { useToastStore } from "@/hooks/useToast";
 import { logger } from "@/lib/logger";
 import { DeckListTable } from "@/components/deck/DeckListTable";
 import { DecksHomeControls } from "@/components/deck/DecksHomeControls";
+import { DeckCardFilterFields } from "@/components/deck/DeckCardFilterFields";
 import { DeckComparisonPanel } from "@/components/deck/DeckComparisonPanel";
+import { useLibraryCardSearch } from "@/hooks/useLibraryCardSearch";
+import {
+  hasCardFilter,
+  librarySourceDecks,
+  NO_CARD_FILTER,
+} from "@/lib/deck/library-card-filter";
 import { DeckFolderControls } from "@/components/deck/DeckFolderControls";
 import { DeckListRefreshNotice } from "@/components/deck/DeckListRefreshNotice";
 import { GuestDeckClaimOffer } from "@/components/deck/GuestDeckClaimOffer";
@@ -71,14 +78,19 @@ export default function DecksPage() {
   const [sortDir, setSortDir] = useState<DecksSortDir>("desc");
   const [folderFilter, setFolderFilter] = useState("all");
   const [query, setQuery] = useState("");
+  const [cardFilter, setCardFilter] = useState(NO_CARD_FILTER);
+  const { search: cardSearch, refresh: refreshCardSearch } =
+    useLibraryCardSearch(cardFilter);
   const deckList = Object.values(decks);
+  // A found card search replaces the loaded page; folder, name and sort follow.
+  const sourceDecks = librarySourceDecks(deckList, cardSearch);
   const sortedDeckList = useMemo(() => {
     const folderFiltered =
       folderFilter === "all"
-        ? deckList
-        : deckList.filter((deck) => (deck.folderId ?? "") === folderFilter);
+        ? sourceDecks
+        : sourceDecks.filter((deck) => (deck.folderId ?? "") === folderFilter);
     return sortDecks(filterDecksByQuery(folderFiltered, query), sortKey, sortDir);
-  }, [deckList, folderFilter, query, sortKey, sortDir]);
+  }, [sourceDecks, folderFilter, query, sortKey, sortDir]);
   // The precedence between the six screens lives in `deriveLibraryView`.
   const libraryView = deriveLibraryView({
     sessionStatus,
@@ -110,11 +122,12 @@ export default function DecksPage() {
       setDeletingId(id);
       try {
         await deleteDeck(id);
+        refreshCardSearch();
       } finally {
         setDeletingId(null);
       }
     },
-    [deleteDeck, t]
+    [deleteDeck, refreshCardSearch, t]
   );
 
   const handleDuplicateDeck = useCallback(
@@ -263,7 +276,9 @@ export default function DecksPage() {
             )}
             {libraryControls}
             <p className="rounded-[var(--lumen-radius-xl)] border border-[var(--border)] bg-[var(--surface)] p-6 text-center text-sm text-[var(--text-secondary)] shadow-[var(--lumen-shadow-sm)]">
-              {t("home.searchEmpty")}
+              {hasCardFilter(cardFilter)
+                ? t("home.cardFilter.searchEmpty")
+                : t("home.searchEmpty")}
             </p>
           </>
         );
@@ -366,15 +381,22 @@ export default function DecksPage() {
           {/* The search box belongs to the two screens that have decks to search. */}
           {(libraryView.kind === "searchEmpty" ||
             libraryView.kind === "ready") && (
-            <div className="relative w-full lg:max-w-sm">
-              <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-[var(--text-secondary)]" />
-              <Input
-                type="search"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder={t("home.searchPlaceholder")}
-                aria-label={t("home.searchPlaceholder")}
-                className="w-full pl-10"
+            <div className="flex w-full flex-col gap-3 lg:max-w-sm">
+              <div className="relative w-full">
+                <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-[var(--text-secondary)]" />
+                <Input
+                  type="search"
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder={t("home.searchPlaceholder")}
+                  aria-label={t("home.searchPlaceholder")}
+                  className="w-full pl-10"
+                />
+              </div>
+              <DeckCardFilterFields
+                filter={cardFilter}
+                onChange={setCardFilter}
+                search={cardSearch}
               />
             </div>
           )}

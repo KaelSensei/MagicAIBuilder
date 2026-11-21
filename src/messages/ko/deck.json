@@ -102,6 +102,19 @@
     "sessionTimeoutDescription": "계정 확인이 끝나지 않았습니다. 저장된 덱은 그대로입니다. 다시 시도하세요.",
     "profileLoadFailed": "프로필을 새로고침하지 못했습니다. 저장된 덱은 계속 사용할 수 있습니다.",
     "createFailed": "덱을 만들지 못했습니다 — {reason}",
+    "cardFilter": {
+      "includeLabel": "Has the card",
+      "excludeLabel": "Leaves out",
+      "placeholder": "Card name, e.g. Sol Ring",
+      "add": "Add",
+      "remove": "Remove {name}",
+      "listFull": "A field takes at most {count} cards.",
+      "searching": "Searching your decks…",
+      "failed": "Your decks could not be searched by card. The full list stays on screen.",
+      "retry": "Try again",
+      "truncated": "Showing the {count} most recently edited decks that match. Name another card to narrow the search.",
+      "searchEmpty": "No deck matches the card filter. Remove a card above, or clear the search, to see more decks."
+    },
     "folders": {
       "all": "All decks",
       "unfiled": "Unfiled",
