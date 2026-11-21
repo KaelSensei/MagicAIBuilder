@@ -68,8 +68,10 @@ export function buildTokenLibrary(
     }
     const emblems = [...card.oracleText.matchAll(EMBLEM_PATTERN)].length;
     if (emblems > 0) {
+      // CR 114.2: "[Player] gets an emblem with [ability]"; each source's emblem has its own
+      // abilities, so it is named after the card, as Scryfall names emblem cards.
       add({
-        name: "Emblem",
+        name: `${card.name} Emblem`,
         power: null,
         colors: [],
         count: emblems * card.quantity,
