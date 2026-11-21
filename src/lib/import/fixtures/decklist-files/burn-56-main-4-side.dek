@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-written in MTGO's .dek layout for the file import tests (I-62): 56 main-deck and 4 sideboard cards. The CatID values are made up; the reader ignores them. -->
+<Deck xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <NetDeckID>0</NetDeckID>
+  <PreconstructedDeckID>0</PreconstructedDeckID>
+  <Cards CatID="38933" Quantity="4" Sideboard="false" Name="Lightning Bolt" Annotation="0" />
+  <Cards CatID="31633" Quantity="4" Sideboard="false" Name="Lava Spike" Annotation="0" />
+  <Cards CatID="26629" Quantity="4" Sideboard="false" Name="Rift Bolt" Annotation="0" />
+  <Cards CatID="53911" Quantity="4" Sideboard="false" Name="Monastery Swiftspear" Annotation="0" />
+  <Cards CatID="38249" Quantity="4" Sideboard="false" Name="Goblin Guide" Annotation="0" />
+  <Cards CatID="49962" Quantity="4" Sideboard="false" Name="Eidolon of the Great Revel" Annotation="0" />
+  <Cards CatID="51158" Quantity="4" Sideboard="false" Name="Boros Charm" Annotation="0" />
+  <Cards CatID="82063" Quantity="4" Sideboard="false" Name="Skewer the Critics" Annotation="0" />
+  <Cards CatID="70156" Quantity="4" Sideboard="false" Name="Light Up the Stage" Annotation="0" />
+  <Cards CatID="39657" Quantity="4" Sideboard="false" Name="Searing Blaze" Annotation="0" />
+  <Cards CatID="63009" Quantity="4" Sideboard="false" Name="Inspiring Vantage" Annotation="0" />
+  <Cards CatID="53875" Quantity="4" Sideboard="false" Name="Sacred Foundry" Annotation="0" />
+  <Cards CatID="74409" Quantity="4" Sideboard="false" Name="Sunbaked Canyon" Annotation="0" />
+  <Cards CatID="70436" Quantity="4" Sideboard="false" Name="Mountain" Annotation="0" />
+  <Cards CatID="34923" Quantity="1" Sideboard="true" Name="Smash to Smithereens" Annotation="0" />
+  <Cards CatID="44227" Quantity="1" Sideboard="true" Name="Path to Exile" Annotation="0" />
+  <Cards CatID="37627" Quantity="1" Sideboard="true" Name="Kor Firewalker" Annotation="0" />
+  <Cards CatID="52169" Quantity="1" Sideboard="true" Name="Deflecting Palm" Annotation="0" />
+</Deck>

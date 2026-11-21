@@ -234,6 +234,23 @@
     }
   },
   "import": {
+    "file": {
+      "choose": "Importer des fichiers…",
+      "hint": ".txt, .dek MTGO ou .csv. Lus dans votre navigateur, jamais envoyés.",
+      "inputLabel": "Fichiers de liste de deck",
+      "read": "{name} lu comme {format, select, text {liste en texte} dek {fichier .dek MTGO} other {fichier CSV}}, {count, plural, one {# ligne} other {# lignes}}.",
+      "replaced": "Le texte des fichiers a remplacé le contenu de la zone.",
+      "unreadable": "{count, plural, one {# ligne illisible} other {# lignes illisibles}} : {lines}.",
+      "unreadableLine": "{file}, ligne {line} (« {content} »)",
+      "tooManyFiles": "Choisissez au plus {limit} fichiers à la fois ; vous en avez choisi {count}.",
+      "tooLarge": "{name} dépasse {limit} Mo : il n'a pas été lu.",
+      "unsupported": "{name} n'est pas un fichier .txt, .dek ou .csv.",
+      "notDek": "{name} n'est pas un deck .dek MTGO : il ne contient aucun élément Cards.",
+      "csvColumns": "{name} n'a aucune colonne que l'import connaît. Quantité : Count, Quantity, Qty ou Amount. Nom : Name ou Card Name. Zone, facultative : Board ou Section.",
+      "tooManyLines": "La liste compte {count} lignes ; l'import en lit au plus {limit}.",
+      "readFailed": "Le navigateur n'a pas pu lire les fichiers.",
+      "unchanged": "La zone de texte n'a pas changé."
+    },
     "title": "Importer une liste de deck",
     "tabText": "Texte brut",
     "tabUrl": "Depuis une URL",
