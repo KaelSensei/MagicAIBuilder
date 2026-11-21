@@ -404,6 +404,20 @@
     "andMore": "+{count} de plus"
   },
   "drawOdds": {
+    "openingLands": {
+      "title": "Terrains dans la main de départ",
+      "average": "{average, plural, one {{average, number, ::.0} terrain en moyenne dans une main de sept} other {{average, number, ::.0} terrains en moyenne dans une main de sept}}",
+      "spreadCaption": "Terrains dans la main de sept",
+      "landsColumn": "Terrains",
+      "chanceColumn": "Probabilité",
+      "landCount": "{lands, plural, one {# terrain} other {# terrains}}",
+      "roundingNote": "Chaque probabilité est arrondie à une décimale : la colonne peut ne pas totaliser exactement 100 %.",
+      "dropsCaption": "N terrains au tour N",
+      "turnColumn": "Tour",
+      "landsByTurn": "{lands, plural, one {# terrain ou plus} other {# terrains ou plus}}",
+      "drawsNote": "Chaque tour compte la main de sept et les pioches déjà faites. {drawRule}",
+      "scopeNote": "Ne compte que la main de sept et les pioches : ni mulligan, ni accélération de mana, ni couleur."
+    },
     "title": "Probabilités de pioche",
     "target": "Chercher",
     "lands": "Terrains",
