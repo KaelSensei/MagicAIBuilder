@@ -1,9 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { requireAuth, findDecks, findCards } = vi.hoisted(() => ({
+const { requireAuth, findDecks, findCards, findIntents } = vi.hoisted(() => ({
   requireAuth: vi.fn(),
   findDecks: vi.fn(),
   findCards: vi.fn(),
+  findIntents: vi.fn(),
 }));
 
 vi.mock(import("@/lib/auth/helpers"), () => ({ requireAuth }));
@@ -12,6 +13,7 @@ vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
   return stubPrisma(await importOriginal(), {
     deck: { findMany: findDecks },
     collectionCard: { findMany: findCards },
+    acquisitionIntent: { findMany: findIntents },
   });
 });
 
@@ -27,6 +29,7 @@ beforeEach(() => {
     { id: "b", name: "Spells", cards: [{ id: "row-b", scryfallId: "ring", name: "Sol Ring", quantity: 1, typeLine: "Artifact", price: 1, zone: "main", isCommander: false, isPartner: false }] },
   ]);
   findCards.mockResolvedValue([{ scryfallId: "ring", quantity: 1 }]);
+  findIntents.mockResolvedValue([]);
 });
 
 describe("GET /api/collection/acquisition-plan", () => {
@@ -36,6 +39,7 @@ describe("GET /api/collection/acquisition-plan", () => {
     expect(response.status).toBe(401);
     expect(findDecks).not.toHaveBeenCalled();
     expect(findCards).not.toHaveBeenCalled();
+    expect(findIntents).not.toHaveBeenCalled();
   });
 
   it("aggregates only the signed-in user's decks and owned copies", async () => {
@@ -57,6 +61,45 @@ describe("GET /api/collection/acquisition-plan", () => {
       deckCount: 1,
       decks: [{ id: "a", name: "Artifacts" }, { id: "b", name: "Spells" }],
       items: [],
+    });
+  });
+
+  describe("each deck's proxy-now and buy-later choices", () => {
+    beforeEach(() => {
+      findCards.mockResolvedValue([]);
+      findIntents.mockResolvedValue([{ deckId: "a", scryfallId: "ring", mode: "proxy_now" }]);
+    });
+
+    it("reads only the signed-in owner's choices and defers the copies they mark", async () => {
+      const response = await GET(request());
+
+      expect(findIntents.mock.calls[0][0].where).toEqual({ userId: "user-1" });
+      expect((await response.json()).items).toEqual([
+        expect.objectContaining({
+          scryfallId: "ring",
+          acquireQuantity: 1,
+          deferredQuantity: 1,
+          deferred: [{ id: "a", name: "Artifacts", mode: "proxy_now", quantity: 1 }],
+        }),
+      ]);
+    });
+
+    it("applies only the selected deck's choices when the plan is filtered", async () => {
+      const response = await GET(request("?deckId=b"));
+
+      expect((await response.json()).items).toEqual([
+        expect.objectContaining({ acquireQuantity: 1, deferredQuantity: 0, deferred: [] }),
+      ]);
+    });
+
+    it("buys a printing whose saved mode it does not know", async () => {
+      findIntents.mockResolvedValue([{ deckId: "a", scryfallId: "ring", mode: "someday" }]);
+
+      const response = await GET(request("?deckId=a"));
+
+      expect((await response.json()).items).toEqual([
+        expect.objectContaining({ acquireQuantity: 1, deferredQuantity: 0 }),
+      ]);
     });
   });
 

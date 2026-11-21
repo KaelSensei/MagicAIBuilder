@@ -5,13 +5,17 @@ import { useLocale, useTranslations } from "next-intl";
 import { ChevronDown, ChevronRight, Download, RefreshCw } from "lucide-react";
 import { z } from "zod";
 import { formatAcquisitionCsv } from "@/lib/collection/acquisition-csv";
+import { summarizeAcquisitionPlan } from "@/lib/collection/acquisition-plan-summary";
 import { downloadTextFile } from "@/lib/download-text-file";
 import { Link } from "@/i18n/navigation";
 import { formatUsdPrice } from "@/i18n/number-format";
 import { cardSurfaceClassName } from "@/components/ui/Card";
 import { fieldShellClassName } from "@/components/ui/Input";
 import { cn } from "@/components/ui/utils";
+import { DeferredPlanGroup } from "./DeferredPlanGroup";
 
+// The two deferred fields default to "nothing deferred" so a response from a server
+// deployed before them still reads as the plan it was: every copy bought now.
 const planSchema = z.object({
   deckCount: z.number().int().nonnegative(),
   decks: z.array(z.object({ id: z.string(), name: z.string() })),
@@ -20,13 +24,20 @@ const planSchema = z.object({
     name: z.string(),
     requiredQuantity: z.number().int().nonnegative(),
     ownedQuantity: z.number().int().nonnegative(),
-    acquireQuantity: z.number().int().positive(),
+    acquireQuantity: z.number().int().nonnegative(),
+    deferredQuantity: z.number().int().nonnegative().default(0),
     price: z.number().nonnegative().nullable(),
     decks: z.array(z.object({
       id: z.string(),
       name: z.string(),
       quantity: z.number().int().positive(),
     })),
+    deferred: z.array(z.object({
+      id: z.string(),
+      name: z.string(),
+      mode: z.enum(["proxy_now", "buy_later"]),
+      quantity: z.number().int().positive(),
+    })).default([]),
   })),
 });
 
@@ -79,16 +90,16 @@ export function AcquisitionPlanPanel() {
     return () => controller.abort();
   }, [open, refreshKey, selectedDeckId]);
 
-  const items = state.status === "ready" ? state.plan.items : [];
-  const missingCount = items.reduce((sum, item) => sum + item.acquireQuantity, 0);
-  const unpricedCount = items.reduce(
-    (sum, item) => sum + (item.price === null ? item.acquireQuantity : 0),
-    0
-  );
-  const knownCost = items.reduce(
-    (sum, item) => sum + (item.price ?? 0) * item.acquireQuantity,
-    0
-  );
+  const allItems = state.status === "ready" ? state.plan.items : [];
+  // Totals, the list and the CSV read the buy-now copies only; deferred copies are listed apart.
+  const {
+    buyNow: items,
+    deferred,
+    missingCount,
+    unpricedCount,
+    knownCost,
+    deferredCount,
+  } = summarizeAcquisitionPlan(allItems);
 
   const exportCsv = () => {
     const csv = formatAcquisitionCsv(items.map((item) => ({
@@ -160,7 +171,7 @@ export function AcquisitionPlanPanel() {
           {state.status === "ready" && state.plan.deckCount === 0 && (
             <p className="text-sm text-[var(--text-secondary)]">{t("noDecks")}</p>
           )}
-          {state.status === "ready" && state.plan.deckCount > 0 && items.length === 0 && (
+          {state.status === "ready" && state.plan.deckCount > 0 && allItems.length === 0 && (
             <p className="text-sm text-[var(--text-secondary)]">{t("complete")}</p>
           )}
           {state.status === "ready" && items.length > 0 && (
@@ -214,6 +225,7 @@ export function AcquisitionPlanPanel() {
               </ul>
             </>
           )}
+          <DeferredPlanGroup items={deferred} copyCount={deferredCount} />
         </div>
       )}
     </section>
