@@ -196,6 +196,27 @@
       }
     }
   },
+  "rowAddElsewhere": {
+    "moreActions": "Plus d’actions pour {name}",
+    "addToCollection": "Ajouter à ma collection",
+    "addToOtherDeck": "Ajouter à un autre deck…",
+    "addedToCollection": "1 exemplaire de {name} ajouté à votre collection",
+    "collectionFailed": "Impossible d’ajouter {name} à votre collection.",
+    "retryCollection": "Réessayer d’ajouter {name} à votre collection",
+    "dialogTitle": "Ajouter {name} à un autre deck",
+    "filterLabel": "Filtrer vos decks par nom",
+    "zoneLabel": "Zone",
+    "loading": "Chargement de vos decks…",
+    "noOtherDeck": "Vous n’avez aucun autre deck.",
+    "noMatch": "Aucun deck ne porte ce nom.",
+    "onlyLatest": "Seuls vos {count} decks modifiés le plus récemment sont affichés.",
+    "listFailed": "Impossible de charger vos decks.",
+    "addFailed": "Impossible d’ajouter {name} à {deck}.",
+    "retry": "Réessayer",
+    "saving": "Ajout en cours…",
+    "atLimit": "{deck} contient déjà le nombre maximal d’exemplaires autorisé",
+    "addedToDeck": "1 exemplaire de {name} ajouté à {deck} ({zone})"
+  },
   "guest": {
     "title": "Deck invité.",
     "description": "Enregistré uniquement dans ce navigateur. Avec un compte, vous pourrez l’y enregistrer et l’ouvrir partout.",
