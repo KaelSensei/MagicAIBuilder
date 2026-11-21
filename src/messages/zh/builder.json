@@ -306,6 +306,11 @@
     "ascending": "(ascending)",
     "descending": "(descending)"
   },
+  "collectionToggle": {
+    "label": "Collection",
+    "hide": "Hide the Owned and Buy badges on the deck's rows",
+    "show": "Show the Owned and Buy badges on the deck's rows"
+  },
   "rulebreakerAdmission": {
     "note": "Allowed by {commander}",
     "reason": {
