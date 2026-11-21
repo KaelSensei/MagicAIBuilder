@@ -21,6 +21,7 @@ export const FIXED_PAGE_NAMESPACES = [
   "collection",
   "rules.comprehensive",
   "rules.gameChangers",
+  "settings.account",
   "settings.apiKeys",
   "settings.notifications",
   "apiChangelog",

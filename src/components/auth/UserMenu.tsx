@@ -11,6 +11,7 @@ import {
   LogIn,
   LogOut,
   User,
+  UserCog,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useOnboardingContext } from "@/components/onboarding/OnboardingProvider";
@@ -124,6 +125,15 @@ export function UserMenu() {
           >
             <KeyRound className="w-4 h-4" />
             {t("userMenu.apiKeys")}
+          </Link>
+
+          <Link
+            href="/settings/account"
+            onClick={handleClose}
+            className="flex items-center gap-2 px-4 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors"
+          >
+            <UserCog className="w-4 h-4" />
+            {t("userMenu.account")}
           </Link>
 
           <button

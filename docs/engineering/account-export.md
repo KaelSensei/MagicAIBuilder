@@ -2,6 +2,8 @@
 
 `GET /api/user/export` returns everything tied to the signed-in account as one JSON file: the **account archive**. This answers an access request (GDPR Art. 15) and lets a player take their data elsewhere (Art. 20). Spec: [I-38 requirement 7](../product/specs/i38-trust-safety-and-user-rights.md#7-full-data-export), slice 4.
 
+Players reach it from **Settings → Account → Download my data** (`/settings/account`, I-38 slice 5). The page calls the route and never `src/lib/account-export/*`: `src/components/settings/account-archive-request.ts` reads the file name from `Content-Disposition` and the wait from `Retry-After`. When a section is added to the archive, update the one-sentence summary in `settings.account.data.contents` in every catalog.
+
 ## The request
 
 | Case                          | Answer                                                                                                                                                                  |

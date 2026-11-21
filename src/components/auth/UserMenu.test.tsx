@@ -45,6 +45,30 @@ describe("UserMenu links", () => {
       screen.getByRole("link", { name: "Mes statistiques" })
     ).toHaveAttribute("href", "/stats");
   });
+
+  it("the menu links to /settings/account (I-38 slice 5)", async () => {
+    renderMenu("en");
+
+    await userEvent.click(screen.getByRole("button", { name: "User menu" }));
+
+    expect(screen.getByRole("link", { name: "Account" })).toHaveAttribute(
+      "href",
+      "/settings/account"
+    );
+  });
+
+  it("names the account link in French", async () => {
+    renderMenu("fr");
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Menu utilisateur" })
+    );
+
+    expect(screen.getByRole("link", { name: "Compte" })).toHaveAttribute(
+      "href",
+      "/settings/account"
+    );
+  });
 });
 
 // An account without a display name fell back to the English alt "Avatar".
