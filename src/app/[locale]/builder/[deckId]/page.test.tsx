@@ -409,12 +409,27 @@ describe("characterization: builder page shell", () => {
     it("names the deck in the title bar and counts the main deck plus the commander out of 100 there and in the editor", async () => {
       await openSavedDeck();
 
-      // The title bar counts "14 / 100"; the deck editor and the stats panel's deck checks "14/100".
+      // The title bar counts "14 / 100"; the deck editor, the stats panel's deck checks and the
+      // deck summary bar "14/100".
       expect(screen.getByText("14 / 100")).toBeInTheDocument();
-      expect(screen.getAllByText("14/100")).toHaveLength(2);
+      expect(screen.getAllByText("14/100")).toHaveLength(3);
       expect(
         screen.getByRole("button", { name: "Talrand Spells" })
       ).toHaveAttribute("title", "Click to rename");
+    });
+
+    it("mounts the deck summary bar under the three panels, with the count, the format and bracket, and the price", async () => {
+      await openSavedDeck();
+
+      const summary = screen.getByRole("region", { name: "Deck summary" });
+      expect(within(summary).getByText("14/100")).toBeInTheDocument();
+      expect(
+        within(summary).getByText(/^Commander · Bracket [1-5]$/)
+      ).toBeInTheDocument();
+      expect(
+        within(summary).getByText(/^USD\s\d+\.\d{2}$/)
+      ).toBeInTheDocument();
+      expect(hiddenBelowLg(summary)).toBe(false);
     });
 
     it("renames the deck from the title bar on Enter", async () => {
@@ -701,7 +716,13 @@ describe("characterization: builder page shell", () => {
         screen.getByRole("link", { name: "Create account" })
       ).toHaveAttribute("href", "/auth/signup?callbackUrl=/builder/guest");
       expect(screen.getByText("0 / 100")).toBeInTheDocument();
-      expect(screen.getAllByText("0/100")).toHaveLength(2);
+      // The deck editor, the deck checks and the deck summary bar.
+      expect(screen.getAllByText("0/100")).toHaveLength(3);
+      expect(
+        within(screen.getByRole("region", { name: "Deck summary" })).getByText(
+          "0/100"
+        )
+      ).toBeInTheDocument();
       expect(deckApiLines()).toEqual([]);
     });
 
