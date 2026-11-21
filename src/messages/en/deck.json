@@ -404,6 +404,20 @@
     "andMore": "+{count} more"
   },
   "drawOdds": {
+    "openingLands": {
+      "title": "Lands in the opening hand",
+      "average": "{average, plural, one {{average, number, ::.0} land on average in an opening seven} other {{average, number, ::.0} lands on average in an opening seven}}",
+      "spreadCaption": "Lands in the opening seven",
+      "landsColumn": "Lands",
+      "chanceColumn": "Chance",
+      "landCount": "{lands, plural, one {# land} other {# lands}}",
+      "roundingNote": "Each chance is rounded to one decimal, so the column may not add up to exactly 100%.",
+      "dropsCaption": "N lands by turn N",
+      "turnColumn": "Turn",
+      "landsByTurn": "{lands, plural, one {# land or more} other {# lands or more}}",
+      "drawsNote": "Each turn counts the opening seven and the draws so far. {drawRule}",
+      "scopeNote": "Counts the opening seven and the draws only: no mulligan, no ramp, no color."
+    },
     "title": "Draw Odds",
     "target": "Looking for",
     "lands": "Lands",
