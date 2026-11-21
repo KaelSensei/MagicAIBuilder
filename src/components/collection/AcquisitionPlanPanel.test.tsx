@@ -12,6 +12,15 @@ const response = (body: unknown, status = 200) =>
     headers: { "Content-Type": "application/json" },
   });
 
+// jsdom's Blob has no `text()`, so the CSV is read back through a FileReader.
+const readBlobText = (blob: Blob) =>
+  new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(reader.error);
+    reader.readAsText(blob);
+  });
+
 afterEach(() => {
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
@@ -125,12 +134,7 @@ describe("AcquisitionPlanPanel", () => {
     const blob = createObjectURL.mock.calls[0]?.[0];
     expect(blob).toBeInstanceOf(Blob);
     if (!(blob instanceof Blob)) throw new Error("Expected a CSV blob");
-    const csv = await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(String(reader.result));
-      reader.onerror = () => reject(reader.error);
-      reader.readAsText(blob);
-    });
+    const csv = await readBlobText(blob);
     expect(csv.split("\n")).toEqual([
       "Name,Quantity,Price (USD),Total (USD),Scryfall ID,Deck allocations",
       '"Sol Ring",1,2,2,"ring-a","Artifacts (3)"',
@@ -139,6 +143,69 @@ describe("AcquisitionPlanPanel", () => {
     expect(click).toHaveBeenCalledOnce();
     expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:acquisition-plan");
     click.mockRestore();
+  });
+
+  describe("copies a deck chose to proxy now or buy later", () => {
+    const planWithDeferredCopies = {
+      deckCount: 2,
+      decks: [{ id: "a", name: "Artifacts" }, { id: "b", name: "Spells" }],
+      items: [
+        {
+          scryfallId: "crypt", name: "Mana Crypt", requiredQuantity: 2, ownedQuantity: 0,
+          acquireQuantity: 1, deferredQuantity: 1, price: 150,
+          decks: [{ id: "a", name: "Artifacts", quantity: 1 }, { id: "b", name: "Spells", quantity: 1 }],
+          deferred: [{ id: "a", name: "Artifacts", mode: "proxy_now", quantity: 1 }],
+        },
+        {
+          scryfallId: "vault", name: "Mana Vault", requiredQuantity: 2, ownedQuantity: 0,
+          acquireQuantity: 0, deferredQuantity: 2, price: 40,
+          decks: [{ id: "b", name: "Spells", quantity: 2 }],
+          deferred: [{ id: "b", name: "Spells", mode: "buy_later", quantity: 2 }],
+        },
+      ],
+    };
+
+    const openPlan = async (locale: "en" | "fr" = "en") => {
+      vi.stubGlobal("fetch", vi.fn().mockResolvedValue(response(planWithDeferredCopies)));
+      const user = userEvent.setup();
+      renderWithIntl(<AcquisitionPlanPanel />, { locale });
+      await user.click(screen.getByRole("button", { name: locale === "en" ? "Acquisition plan" : "Plan d’acquisition" }));
+      return user;
+    };
+
+    it("leaves deferred copies out of the total and the CSV", async () => {
+      const createObjectURL = vi.fn().mockReturnValue("blob:acquisition-plan");
+      Object.defineProperty(URL, "createObjectURL", { configurable: true, value: createObjectURL });
+      Object.defineProperty(URL, "revokeObjectURL", { configurable: true, value: vi.fn() });
+      vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+      const user = await openPlan();
+
+      expect(await screen.findByText("1 to acquire across 2 decks · Known-price subtotal: USD 150.00")).toBeInTheDocument();
+      await user.click(screen.getByRole("button", { name: "Acquisition plan CSV" }));
+      const blob = createObjectURL.mock.calls[0]?.[0];
+      if (!(blob instanceof Blob)) throw new Error("Expected a CSV blob");
+      expect((await readBlobText(blob)).split("\n")).toEqual([
+        "Name,Quantity,Price (USD),Total (USD),Scryfall ID,Deck allocations",
+        '"Mana Crypt",1,150,150,"crypt","Artifacts (1); Spells (1)"',
+      ]);
+    });
+
+    it("lists each deferred copy under its deck's choice, in words", async () => {
+      await openPlan();
+
+      const group = await screen.findByRole("region", { name: "Deferred · 3 copies" });
+      expect(within(group).getByText("Proxy for now — Artifacts")).toBeInTheDocument();
+      expect(within(group).getByText("Buy later — Spells")).toBeInTheDocument();
+      expect(within(group).getByText("Mana Vault")).toBeInTheDocument();
+    });
+
+    it("names the choices in French", async () => {
+      await openPlan("fr");
+
+      const group = await screen.findByRole("region", { name: "Reporté · 3 exemplaires" });
+      expect(within(group).getByText("Proxy pour l’instant — Artifacts")).toBeInTheDocument();
+      expect(within(group).getByText("Acheter plus tard — Spells")).toBeInTheDocument();
+    });
   });
 
   it("loads only when opened and shows the missing copies by deck", async () => {
