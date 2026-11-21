@@ -2,10 +2,14 @@
  * Combined acquisition plan across several decks.
  *
  * Pure: it sorts stored deck rows into command-zone slots, reports what is
- * still missing, and does not change ownership.
+ * still missing, and does not change ownership. Each deck's "proxy now" and
+ * "buy later" choices (saved from that deck's shopping list) move that deck's
+ * missing copies out of the copies to buy and into a deferred share, so the
+ * plan and the deck's shopping list agree on what is bought now.
  */
 import type { DeckCard } from "@/lib/deck/types";
 import { isBasicLand } from "@/lib/scryfall/type-line";
+import type { AcquisitionMode } from "./acquisition-intent";
 
 /** One deck's share of a printing that still has to be acquired. */
 export interface AcquisitionDeckRequirement {
@@ -14,15 +18,32 @@ export interface AcquisitionDeckRequirement {
   readonly quantity: number;
 }
 
-/** A printing the collection does not yet cover across the selected decks. */
+/** One deck's missing copies of a printing that its owner chose to proxy or buy later. */
+export interface AcquisitionDeferral {
+  readonly id: string;
+  readonly name: string;
+  readonly mode: AcquisitionMode;
+  /** Copies of this deck the collection does not cover; never 0. */
+  readonly quantity: number;
+}
+
+/**
+ * A printing the collection does not yet cover across the selected decks.
+ *
+ * `acquireQuantity` counts the copies to buy now; `deferredQuantity` the copies
+ * the player chose to proxy or buy later. A copy is in one of the two, never both,
+ * and at least one of them is above 0.
+ */
 export interface AcquisitionPlanItem {
   readonly scryfallId: string;
   readonly name: string;
   readonly requiredQuantity: number;
   readonly ownedQuantity: number;
   readonly acquireQuantity: number;
+  readonly deferredQuantity: number;
   readonly price: number | null;
   readonly decks: readonly AcquisitionDeckRequirement[];
+  readonly deferred: readonly AcquisitionDeferral[];
 }
 
 /** A deck reduced to the fields the plan reads. */
@@ -32,6 +53,8 @@ export interface AcquisitionPlanDeck {
   readonly cards: readonly AcquisitionPlanCard[];
   readonly commander: AcquisitionPlanCard | null;
   readonly partner: AcquisitionPlanCard | null;
+  /** The owner's saved choice per printing id in this deck; a printing without one is bought now. */
+  readonly intents?: Readonly<Record<string, AcquisitionMode>>;
 }
 
 /** Printing fields needed to count a deck toward the plan. */
@@ -80,11 +103,17 @@ export function toAcquisitionPlanDeck(
   return { id: deck.id, name: deck.name, cards, commander, partner };
 }
 
+/** One deck's share of a printing, with the choice that deck's owner saved for it. */
+interface DeckShare {
+  readonly deck: AcquisitionDeckRequirement;
+  readonly mode: AcquisitionMode | null;
+}
+
 interface PendingRequirement {
   name: string;
   requiredQuantity: number;
   price: number | null;
-  decks: AcquisitionDeckRequirement[];
+  shares: DeckShare[];
 }
 
 interface DeckPrintingNeed {
@@ -131,29 +160,68 @@ function addDeckRequirement(
   scryfallId: string,
   requirement: DeckPrintingNeed
 ): void {
-  const entry = { id: deck.id, name: deck.name, quantity: requirement.quantity };
+  const share: DeckShare = {
+    deck: { id: deck.id, name: deck.name, quantity: requirement.quantity },
+    mode: deck.intents?.[scryfallId] ?? null,
+  };
   const current = requirements.get(scryfallId);
   if (!current) {
     requirements.set(scryfallId, {
       name: requirement.card.name,
       requiredQuantity: requirement.quantity,
       price: requirement.card.price,
-      decks: [entry],
+      shares: [share],
     });
     return;
   }
   current.requiredQuantity += requirement.quantity;
   current.price ??= requirement.card.price;
-  current.decks.push(entry);
+  current.shares.push(share);
+}
+
+/** How a printing's missing copies split between buying now and the deferred decks. */
+interface ChoiceSplit {
+  readonly acquireQuantity: number;
+  readonly deferred: readonly AcquisitionDeferral[];
 }
 
 /**
- * Turns a summed requirement into a buy line, or null when the collection covers it.
+ * Hands the owned copies to the decks' shares, then splits what is left by choice.
+ *
+ * The owned copies go to the decks with no choice first: a deck marked "proxy now"
+ * or "buy later" already has a plan for its copy, so an owned copy given to it
+ * would leave a deck that counts on buying with nothing. What the no-choice decks
+ * leave spare covers the deferred decks in deck order. Each copy is counted once.
+ *
+ * @param shares - each deck's share of one printing, in deck order
+ * @param ownedQuantity - physical copies of that printing
+ * @returns the copies to buy now and each deferred deck's uncovered copies
+ */
+function splitByChoice(shares: readonly DeckShare[], ownedQuantity: number): ChoiceSplit {
+  const buyNowNeed = shares.reduce(
+    (sum, share) => sum + (share.mode === null ? share.deck.quantity : 0),
+    0
+  );
+  let spare = Math.max(0, ownedQuantity - buyNowNeed);
+  const deferred: AcquisitionDeferral[] = [];
+  for (const { deck, mode } of shares) {
+    if (mode === null) continue;
+    const covered = Math.min(spare, deck.quantity);
+    spare -= covered;
+    if (covered < deck.quantity) {
+      deferred.push({ id: deck.id, name: deck.name, mode, quantity: deck.quantity - covered });
+    }
+  }
+  return { acquireQuantity: Math.max(0, buyNowNeed - ownedQuantity), deferred };
+}
+
+/**
+ * Turns a summed requirement into a plan line, or null when the collection covers it.
  *
  * @param scryfallId - printing id
  * @param requirement - summed need across decks
  * @param ownedQuantities - physical copies by printing id
- * @returns the plan line, or null when nothing remains to acquire
+ * @returns the plan line, or null when nothing remains to buy or defer
  */
 function toPlanItem(
   scryfallId: string,
@@ -161,16 +229,19 @@ function toPlanItem(
   ownedQuantities: Readonly<Record<string, number>>
 ): AcquisitionPlanItem | null {
   const ownedQuantity = Math.max(0, ownedQuantities[scryfallId] ?? 0);
-  const acquireQuantity = Math.max(0, requirement.requiredQuantity - ownedQuantity);
-  if (acquireQuantity === 0) return null;
+  const { acquireQuantity, deferred } = splitByChoice(requirement.shares, ownedQuantity);
+  const deferredQuantity = deferred.reduce((sum, share) => sum + share.quantity, 0);
+  if (acquireQuantity === 0 && deferredQuantity === 0) return null;
   return {
     scryfallId,
     name: requirement.name,
     requiredQuantity: requirement.requiredQuantity,
     ownedQuantity,
     acquireQuantity,
+    deferredQuantity,
     price: requirement.price,
-    decks: requirement.decks,
+    decks: requirement.shares.map((share) => share.deck),
+    deferred,
   };
 }
 
@@ -192,7 +263,10 @@ function compareAcquisitionPlan(left: AcquisitionPlanItem, right: AcquisitionPla
 /**
  * Aggregate simultaneous deck requirements without changing collection ownership.
  *
- * @param decks - decks whose mainboards are combined
+ * Each deck's `intents` decide whether its missing copies are bought now or
+ * deferred; a deck without `intents` buys everything it misses.
+ *
+ * @param decks - decks whose mainboards are combined, with their owner's choices
  * @param ownedQuantities - physical copies by printing id
  * @returns printings still missing, most expensive first
  */
