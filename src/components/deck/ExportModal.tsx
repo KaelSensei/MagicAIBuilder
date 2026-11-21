@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Copy, Download, Check, Printer } from "lucide-react";
 import { ProxyExportModal } from "./ProxyExportModal";
 import { ExportNotices } from "./ExportNotices";
+import { RegistrationSheetRow } from "./RegistrationSheetRow";
 import type { Deck } from "@/lib/deck/types";
 import {
   EXPORT_TARGETS,
@@ -139,6 +140,7 @@ export function ExportModal({ deck, onClose }: ExportModalProps) {
               />
             </div>
           ))}
+          <RegistrationSheetRow deck={deck} />
           {/* Proxy export */}
           <div className="pt-2 border-t border-[var(--border)]">
             <Button
