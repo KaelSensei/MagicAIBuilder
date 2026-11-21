@@ -1,4 +1,21 @@
 {
+  "account": {
+    "title": "Compte",
+    "intro": "Votre compte et les données qui lui sont liées.",
+    "loading": "Chargement de votre compte…",
+    "deletionComing": "La suppression de votre compte sera aussi possible depuis cette page.",
+    "data": {
+      "heading": "Télécharger mes données",
+      "contents": "Un fichier JSON avec tout ce qui est lié à votre compte : votre profil, vos decks avec leurs cartes, notes, instantanés et dossiers, votre collection, vos paquets de cartes, évaluations et avis, votes, commentaires, sessions de test, abonnements et abonnés, decks enregistrés, plans d’acquisition, préférences de notification, les noms et dates de vos clés d’API (jamais les clés elles-mêmes), les signalements que vous avez envoyés et votre usage de l’IA.",
+      "free": "C’est gratuit et immédiat, sans demande à qui que ce soit. Vous pouvez le télécharger une fois par heure.",
+      "button": "Télécharger mes données",
+      "busy": "Préparation de votre archive…",
+      "rateLimited": "Vous avez téléchargé vos données il y a moins d’une heure. Vous pourrez les télécharger à nouveau dans {minutes, plural, one {# minute} other {# minutes}}.",
+      "rateLimitedLater": "Vous avez téléchargé vos données il y a moins d’une heure. Vous pourrez les télécharger à nouveau plus tard.",
+      "failed": "Vos données n’ont pas pu être téléchargées. Réessayez dans un instant.",
+      "retry": "Réessayer"
+    }
+  },
   "notifications": {
     "title": "Préférences de notification",
     "intro": "Choisissez les événements communautaires qui pourront vous notifier lorsqu’ils seront disponibles.",

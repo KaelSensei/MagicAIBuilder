@@ -50,6 +50,10 @@
     "description": "Gérez votre collection physique de cartes MTG"
   },
   "settings": {
+    "account": {
+      "title": "Compte — MagicAIBuilder",
+      "description": "Téléchargez tout ce qui est lié à votre compte dans un seul fichier JSON"
+    },
     "apiKeys": {
       "title": "Clés d’API — MagicAIBuilder",
       "description": "Créez et révoquez des clés pour l’API publique de MagicAIBuilder"

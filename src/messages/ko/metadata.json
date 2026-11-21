@@ -50,6 +50,10 @@
     "description": "Manage your physical MTG card collection"
   },
   "settings": {
+    "account": {
+      "title": "Account — MagicAIBuilder",
+      "description": "Download everything tied to your account as one JSON file"
+    },
     "apiKeys": {
       "title": "API Keys — MagicAIBuilder",
       "description": "Create and revoke keys for the MagicAIBuilder public API"
