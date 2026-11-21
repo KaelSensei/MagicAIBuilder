@@ -46,6 +46,8 @@ The eighteenth pass (2026-11-19) adds [I-104](i104-league-decks-and-the-change-a
 
 The nineteenth pass (2026-11-20) adds [I-108](i108-decks-built-for-someone-else-the-brief-and-the-handover.md) to [I-115](i115-cards-to-get-signed-an-events-artists-against-your-copies.md) by hand: 49 slice rows (6, 6, 6, 6, 5, 8, 6 and 6, slice 0 included where the owner decides first). Checks (a) to (h) were applied by reading the eight tables. No dangling slice number and no cycle: the new edges inside the batch run one way (I-109 slices 3 and after wait for I-108 slice 1; I-114 slice 6 waits for I-108 slice 1; I-113 slice 8 waits for I-114 slice 2), and otherwise all eight only consume (I-06, I-08's fork projection and share token, I-10, I-16's declared-list line, I-17 slice 8, I-19, I-21 slice 1, I-26 slices 1 to 3, I-32 slice 2, I-35 slice 6, I-36 slice 1, I-38 slices 8 to 12, I-42's variant data, I-43 slices 4 and 6, I-50, I-53 slices 1 and 8, I-54 slices 1, 2, 3 and 7, I-57, I-58 slice 4, I-59 slice 2, I-60 slices 1 and 2, I-63, I-67 slices 2 and 13, I-72 slice 1, I-77 slice 1, I-89 slice 9, I-102 slice 1). Four slices can start now and join the table below: I-111 slice 1, I-113 slice 1, I-114 slice 1 and I-115 slice 1, each a pure function. The counts table above is not updated.
 
+The twentieth pass (2026-11-21) adds [I-116](i116-public-deck-lists-a-curated-set-of-public-decks-anyone-can-read.md) by hand: 6 slice rows. Slices 1 to 3 need nothing that is not on `dev` (I-36 slices 1 and 2 are done); slice 4 waits for D-109 and I-75 slice 1, slice 5 for I-38 slices 8 and 9, and slice 6 for I-36 slice 10. Slice 1, a pure function, joins the table below. It also numbers I-37's drop from other sites as slice 25, with no new dependency. The counts table above is not updated.
+
 Initiative by initiative, two loops remain: I-45 with I-56 and I-59, and one that the ninth pass widened. I-30 and I-70 now need each other, since I-30 slice 3 waits for I-70's report and I-70 slice 13 writes I-30 slice 1's `AiUsage` fields; so do I-28 and I-64, since I-28 slice 3 runs on I-64 slice 1's pipeline and I-64 slice 2 takes I-28's bracket names; and I-30 slice 9 waits for I-71 slice 12. Those pairs join the earlier loops through I-36, I-37, I-38, I-61, I-63 and I-67 into one of twenty initiatives: I-17, I-28 to I-30, I-34, I-36 to I-40, I-42, I-47, I-48, I-52, I-61, I-63, I-64, I-67, I-70 and I-71. The tenth pass widens it again: I-29 slice 4 now waits for I-75 slice 2, while I-75 waits for I-28, I-30, I-38, I-54, I-63, I-67 and I-69, so I-54, I-69 and I-75 join, for twenty-three initiatives. The eleventh pass widens it to thirty-nine: I-77 slice 14 reads I-15, I-29, I-35, I-41 and I-75 as each lands, while I-15 slice 2 and I-48 slice 2 now wait for I-77 slice 1, and I-76 and I-78 join through I-58, I-65 and I-28. I-02, I-15, I-31, I-32, I-35, I-41, I-43, I-50, I-55, I-57, I-58, I-65, I-68 and I-76 to I-78 join. Each passes through different slices, so no slice waits for itself, and check (b) finds no cycle.
 
 ## Slices that can start now
@@ -100,6 +102,7 @@ Initiative by initiative, two loops remain: I-45 with I-56 and I-59, and one tha
 | I-113 Deck projects | Next | 1: Templates and a pure `fillProject` over I-60's identity rule (added 2026-11-20) |
 | I-114 Deck roster | Next | 1: The stage vocabulary and a pure `stageRules` (added 2026-11-20) |
 | I-115 Cards to get signed | Later | 1: `matchArtists`, pure, on fixtures (added 2026-11-20; by hand, since I-115 is Later) |
+| I-116 Public deck lists | Later | 1: `visibleEntries`, pure, on fixtures (added 2026-11-21; by hand, since I-116 is Later) |
 | I-20 Review                   | Later    | 1: Reviewer role and invitation                                                                                                                                                                                                                                                 |
 | I-21 Probability bench        | Later    | 1: Seeded PRNG and shuffler                                                                                                                                                                                                                                                     |
 | I-23 Pod surface              | Later    | 1: Account linking, revocable                                                                                                                                                                                                                                                   |
@@ -494,7 +497,12 @@ flowchart LR
   I19 --> I115
   I89["I-89 Condition"] --> I115
   I36 --> I115
+  I116["I-116 Public deck lists"]
+  I08 --> I116
+  I36 --> I116
+  I75 --> I116
+  I38 --> I116
   class I06,I08,I13,I14,I15,I16,I17,I19,I28,I30,I31,I32,I34,I37,I38,I39,I42,I46,I47,I48,I49,I50,I52,I54,I55,I56,I57,I58,I60,I61,I62,I63,I64,I65,I66,I67,I68,I69,I70,I71,I72,I73,I75,I76,I77,I78,I99,I100,I102,I103,I106,I113,I114 next
-  class I18,I21,I22,I23,I24,I26,I27,I29,I35,I36,I40,I41,I43,I44,I45,I51,I53,I59,I79,I101,I104,I105,I107,I108,I109,I110,I111,I112,I115 later
+  class I18,I21,I22,I23,I24,I26,I27,I29,I35,I36,I40,I41,I43,I44,I45,I51,I53,I59,I79,I101,I104,I105,I107,I108,I109,I110,I111,I112,I115,I116 later
   class I33 parked
 ```
