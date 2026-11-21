@@ -27,7 +27,9 @@ export function AddToOpenDeckButton({ addition }: AddToOpenDeckButtonProps) {
   const t = useTranslations("rules");
 
   if (addition.kind === "no-open-deck") {
-    return <p className="mt-2 text-xs text-white/60">{t("zoom.openDeckHint")}</p>;
+    return (
+      <p className="mt-2 text-xs text-white/60">{t("zoom.openDeckHint")}</p>
+    );
   }
 
   const { deckName, copies, showCount, justAdded, isAdding, onAdd } = addition;
@@ -41,7 +43,9 @@ export function AddToOpenDeckButton({ addition }: AddToOpenDeckButtonProps) {
         aria-busy={isAdding}
         className="rounded-lg bg-[var(--accent)] px-3 py-1.5 text-xs font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-60"
       >
-        {t(justAdded ? "zoom.addedToDeck" : "zoom.addToDeck", { deck: deckName })}
+        {t(justAdded ? "zoom.addedToDeck" : "zoom.addToDeck", {
+          deck: deckName,
+        })}
       </button>
       <output className="text-xs text-white/70">
         {copies > 0 && t(countKey, { count: copies, deck: deckName })}

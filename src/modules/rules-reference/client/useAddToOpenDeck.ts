@@ -63,7 +63,9 @@ function mainDeckCopies(deck: Deck | null, name: string | undefined): number {
   if (!deck || name === undefined) return 0;
   return deck.cards.reduce(
     (total, card) =>
-      card.name === name && card.zone === "main" ? total + card.quantity : total,
+      card.name === name && card.zone === "main"
+        ? total + card.quantity
+        : total,
     0
   );
 }
@@ -81,7 +83,9 @@ function mainDeckCopies(deck: Deck | null, name: string | undefined): number {
  */
 export function useAddToOpenDeck(card: ScryfallCard | null): OpenDeckAddition {
   const deckName = useDeckStore((state) => openDeck(state)?.name);
-  const copies = useDeckStore((state) => mainDeckCopies(openDeck(state), card?.name));
+  const copies = useDeckStore((state) =>
+    mainDeckCopies(openDeck(state), card?.name)
+  );
   const addCard = useDeckStore((state) => state.addCard);
   const [press, setPress] = useState<Press | null>(null);
 
@@ -90,7 +94,9 @@ export function useAddToOpenDeck(card: ScryfallCard | null): OpenDeckAddition {
     const cardId = card.id;
     setPress({ cardId, copiesBefore: copies, settled: false });
     void addCard(card).finally(() =>
-      setPress((last) => (last?.cardId === cardId ? { ...last, settled: true } : last))
+      setPress((last) =>
+        last?.cardId === cardId ? { ...last, settled: true } : last
+      )
     );
   }, [addCard, card, copies]);
 

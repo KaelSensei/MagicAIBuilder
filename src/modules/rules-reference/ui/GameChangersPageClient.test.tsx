@@ -667,7 +667,10 @@ describe("adding the zoomed card to the open deck", () => {
   async function zoomInto(name: string) {
     const { user } = await openPage();
     await user.click(screen.getByRole("button", { name: `View ${name}` }));
-    return { user, zoom: screen.getByRole("dialog", { name: `${name} — zoom` }) };
+    return {
+      user,
+      zoom: screen.getByRole("dialog", { name: `${name} — zoom` }),
+    };
   }
 
   it("pressing Add adds Rhystic Study to the open deck's main zone and saves it", async () => {
@@ -693,7 +696,9 @@ describe("adding the zoomed card to the open deck", () => {
     const { zoom } = await zoomInto("Rhystic Study");
 
     expect(
-      within(zoom).getByText("Open a deck in the builder to add cards from here.")
+      within(zoom).getByText(
+        "Open a deck in the builder to add cards from here."
+      )
     ).toBeInTheDocument();
     expect(within(zoom).queryByRole("button", { name: /^Add/ })).toBeNull();
     expect(within(zoom).queryByText(/sign in/i)).toBeNull();
@@ -702,7 +707,11 @@ describe("adding the zoomed card to the open deck", () => {
   it("a press that adds nothing does not say Added: a singleton already in the deck stays one copy", async () => {
     openDeckInBuilder({
       cards: [
-        aDeckCard({ id: "row-rhystic", name: "Rhystic Study", typeLine: "Enchantment" }),
+        aDeckCard({
+          id: "row-rhystic",
+          name: "Rhystic Study",
+          typeLine: "Enchantment",
+        }),
       ],
     });
     const { user, zoom } = await zoomInto("Rhystic Study");
@@ -720,7 +729,9 @@ describe("adding the zoomed card to the open deck", () => {
     expect(
       within(zoom).queryByRole("button", { name: `Added to ${DECK_NAME}` })
     ).toBeNull();
-    expect(mainDeckRows("Rhystic Study").map((row) => row.quantity)).toEqual([1]);
+    expect(mainDeckRows("Rhystic Study").map((row) => row.quantity)).toEqual([
+      1,
+    ]);
     expect(deckApi.addCard).not.toHaveBeenCalled();
   });
 
@@ -752,7 +763,9 @@ describe("adding the zoomed card to the open deck", () => {
     useDeckStore.setState({ bannedNames: new Set(["Black Lotus"]) });
     const { user } = await openPage();
     await user.click(tab(BANLIST_TAB));
-    await user.click(await screen.findByRole("button", { name: "View Black Lotus" }));
+    await user.click(
+      await screen.findByRole("button", { name: "View Black Lotus" })
+    );
     const zoom = screen.getByRole("dialog", { name: "Black Lotus — zoom" });
 
     await user.click(
@@ -762,23 +775,31 @@ describe("adding the zoomed card to the open deck", () => {
     expect(
       await within(zoom).findByRole("button", { name: `Added to ${DECK_NAME}` })
     ).toBeInTheDocument();
-    expect(mainDeckRows("Black Lotus").map((row) => row.isBanned)).toEqual([true]);
+    expect(mainDeckRows("Black Lotus").map((row) => row.isBanned)).toEqual([
+      true,
+    ]);
   });
 
   it("adds to the guest deck when a guest has it open, without asking the server", async () => {
     useDeckStore.setState({
-      decks: { [GUEST_DECK_ID]: aDeck({ id: GUEST_DECK_ID, name: "Guest deck" }) },
+      decks: {
+        [GUEST_DECK_ID]: aDeck({ id: GUEST_DECK_ID, name: "Guest deck" }),
+      },
       activeDeckId: GUEST_DECK_ID,
     });
     const { user, zoom } = await zoomInto("Rhystic Study");
 
-    await user.click(within(zoom).getByRole("button", { name: "Add to Guest deck" }));
+    await user.click(
+      within(zoom).getByRole("button", { name: "Add to Guest deck" })
+    );
 
     expect(
       await within(zoom).findByRole("button", { name: "Added to Guest deck" })
     ).toBeInTheDocument();
     expect(
-      useDeckStore.getState().decks[GUEST_DECK_ID]?.cards.map((card) => card.name)
+      useDeckStore
+        .getState()
+        .decks[GUEST_DECK_ID]?.cards.map((card) => card.name)
     ).toEqual(["Rhystic Study"]);
     expect(deckApi.addCard).not.toHaveBeenCalled();
   });
@@ -793,7 +814,10 @@ describe("adding the zoomed card to the open deck", () => {
     );
 
     await waitFor(() =>
-      expect(toasts).toHaveBeenCalledWith("error", "Could not add card. Please retry.")
+      expect(toasts).toHaveBeenCalledWith(
+        "error",
+        "Could not add card. Please retry."
+      )
     );
     expect(
       within(zoom).getByRole("button", { name: `Add to ${DECK_NAME}` })
@@ -807,7 +831,9 @@ describe("adding the zoomed card to the open deck", () => {
 
     await user.tab();
     await user.tab();
-    const add = within(zoom).getByRole("button", { name: `Add to ${DECK_NAME}` });
+    const add = within(zoom).getByRole("button", {
+      name: `Add to ${DECK_NAME}`,
+    });
     expect(add).toHaveFocus();
     await user.keyboard("{Enter}");
 
@@ -820,7 +846,9 @@ describe("adding the zoomed card to the open deck", () => {
     openDeckInBuilder();
     const user = userEvent.setup();
     renderWithProviders(<GameChangersPageClient />, { locale: "fr" });
-    await user.click(await screen.findByRole("button", { name: "Voir Rhystic Study" }));
+    await user.click(
+      await screen.findByRole("button", { name: "Voir Rhystic Study" })
+    );
     const zoom = screen.getByRole("dialog", { name: "Rhystic Study — zoom" });
 
     await user.click(
@@ -828,7 +856,9 @@ describe("adding the zoomed card to the open deck", () => {
     );
 
     expect(
-      await within(zoom).findByRole("button", { name: `Ajoutée à ${DECK_NAME}` })
+      await within(zoom).findByRole("button", {
+        name: `Ajoutée à ${DECK_NAME}`,
+      })
     ).toBeInTheDocument();
     expect(within(zoom).getByText(`Dans ${DECK_NAME}`)).toBeInTheDocument();
   });
