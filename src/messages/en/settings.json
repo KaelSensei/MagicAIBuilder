@@ -1,4 +1,21 @@
 {
+  "account": {
+    "title": "Account",
+    "intro": "Your account and the data tied to it.",
+    "loading": "Loading your account…",
+    "deletionComing": "Deleting your account will also be possible from this page.",
+    "data": {
+      "heading": "Download my data",
+      "contents": "One JSON file with everything tied to your account: your profile, your decks with their cards, notes, snapshots and folders, your collection, card packages, ratings and reviews, votes, comments, playtests, follows and followers, saved decks, acquisition plans, notification preferences, the names and dates of your API keys (never the keys themselves), the reports you filed and your AI usage.",
+      "free": "It is free and ready straight away, with no request to anyone. You can download it once an hour.",
+      "button": "Download my data",
+      "busy": "Preparing your archive…",
+      "rateLimited": "You downloaded your data less than an hour ago. You can download it again in {minutes, plural, one {# minute} other {# minutes}}.",
+      "rateLimitedLater": "You downloaded your data less than an hour ago. You can download it again later.",
+      "failed": "Your data could not be downloaded. Try again in a moment.",
+      "retry": "Retry"
+    }
+  },
   "notifications": {
     "title": "Notification preferences",
     "intro": "Choose which community events can notify you as they become available.",
