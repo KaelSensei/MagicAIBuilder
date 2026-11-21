@@ -3,7 +3,9 @@ import { fireEvent, screen } from "@testing-library/react";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { MainZoneContent } from "./MainZoneContent";
 import type { Deck, DeckCard } from "@/lib/deck/types";
-import type { CardGroup } from "@/lib/deck/sort";
+import { groupCards, type CardGroup, type GroupBy } from "@/lib/deck/sort";
+import { aDeckCard } from "@/test/builders/card";
+import { renderWithProviders } from "@/test/render";
 
 vi.mock("@dnd-kit/core", () => ({
   useDroppable: () => ({ setNodeRef: vi.fn(), isOver: false }),
@@ -290,6 +292,86 @@ describe("MainZoneContent", () => {
         <MainZoneContent {...baseProps} viewMode="list" />
       );
       expect(container).toBeTruthy();
+    });
+  });
+
+  describe("group price subtotal (I-32)", () => {
+    function renderGrouped(cards: DeckCard[], groupBy: GroupBy) {
+      return renderWithProviders(
+        <MainZoneContent
+          {...baseProps}
+          viewMode="list"
+          mainCards={cards}
+          cardGroups={groupCards(cards, groupBy)}
+        />
+      );
+    }
+
+    it("shows the Creature heading's subtotal of a deck grouped by type", () => {
+      const creatures = [
+        aDeckCard({ id: "c1", name: "Craterhoof Behemoth", category: "creature", price: 120.1 }),
+        aDeckCard({ id: "c2", name: "Dockside Extortionist", category: "creature", price: 15 }),
+        aDeckCard({ id: "c3", name: "Llanowar Elves", category: "creature", price: 0.25, quantity: 28 }),
+      ];
+
+      renderGrouped(creatures, "type");
+
+      const heading = screen.getByRole("button", { name: /^creature/i });
+      expect(heading).toHaveTextContent(/30\s*·\s*USD\s142\.10/);
+      expect(heading).toHaveAccessibleName(/creature.*30.*subtotal.*142\.10/i);
+    });
+
+    it("shows the known subtotal and the cards without a price in a partly priced group", () => {
+      const instants = [
+        aDeckCard({ id: "i1", name: "Swords to Plowshares", category: "instant", price: 12.4 }),
+        aDeckCard({ id: "i2", name: "Promo Bolt", category: "instant", price: null }),
+        aDeckCard({ id: "i3", name: "Promo Counterspell", category: "instant", price: null }),
+      ];
+
+      renderGrouped(instants, "type");
+
+      const heading = screen.getByRole("button", { name: /^instant/i });
+      expect(heading).toHaveTextContent(/USD\s12\.40 · 2 without price/);
+      expect(heading).toHaveAccessibleName(/known subtotal.*12\.40, 2 cards without price/i);
+    });
+
+    it("shows 'no price' instead of an amount when no card of the group is priced", () => {
+      const sorceries = [
+        aDeckCard({ id: "s1", name: "Promo Wrath", category: "sorcery", price: null }),
+        aDeckCard({ id: "s2", name: "Promo Tutor", category: "sorcery", price: null }),
+      ];
+
+      renderGrouped(sorceries, "type");
+
+      const heading = screen.getByRole("button", { name: /^sorcer/i });
+      expect(heading).toHaveTextContent("· no price");
+      expect(heading).not.toHaveTextContent(/USD/);
+    });
+
+    it("shows the subtotal under the mana-value grouping too", () => {
+      const twoDrops = [
+        aDeckCard({ id: "m1", name: "Arcane Signet", cmc: 2, price: 1.5 }),
+        aDeckCard({ id: "m2", name: "Fellwar Stone", cmc: 2, price: 0.75 }),
+      ];
+
+      renderGrouped(twoDrops, "cmc");
+
+      expect(screen.getByRole("button", { name: /^2 CMC/ })).toHaveAccessibleName(
+        /2 CMC.*2.*subtotal.*2\.25/i
+      );
+    });
+
+    it("shows one subtotal for the whole list when nothing groups it", () => {
+      const cards = [
+        aDeckCard({ id: "n1", name: "Sol Ring", category: "artifact", price: 2 }),
+        aDeckCard({ id: "n2", name: "Counterspell", category: "instant", price: 1 }),
+      ];
+
+      renderGrouped(cards, "none");
+
+      expect(screen.getByRole("button", { name: /^all cards/i })).toHaveAccessibleName(
+        /subtotal.*3\.00/i
+      );
     });
   });
 });
