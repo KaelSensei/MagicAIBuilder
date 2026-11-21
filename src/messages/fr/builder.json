@@ -309,6 +309,11 @@
     "ascending": "(croissant)",
     "descending": "(décroissant)"
   },
+  "collectionToggle": {
+    "label": "Collection",
+    "hide": "Masquer les badges Possédée et Acheter sur les lignes du deck",
+    "show": "Afficher les badges Possédée et Acheter sur les lignes du deck"
+  },
   "rulebreakerAdmission": {
     "note": "Autorisée par {commander}",
     "reason": {
