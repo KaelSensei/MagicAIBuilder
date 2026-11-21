@@ -944,6 +944,64 @@ I-113 and I-114 are Next after the numbered Next band: I-113's first slice reads
 
 The candidates read and not promoted, and the two promotions tested and declined (Rule 0 exceptions on I-15, a private library filter on I-01), are listed in the roadmap's [nineteenth-pass section](roadmap.md#what-the-nineteenth-pass-checked-and-did-not-promote). Legal questions L-54 and L-55 and owner decisions D-104 to D-108 were added.
 
+## 21. A twentieth pass: Moxfield's new deck editor (2026-11-21)
+
+Read on 21 November 2026, on `dev` at `59208d5c` (#1657), on the owner's request after Moxfield released its new deck editor to everyone on 2026-11-20: "it has changed, there are many new features, we need the same" (translated). Moxfield's own pages refuse automated requests, so the sources are its public Bluesky posts, read through Bluesky's public API, and its YouTube announcement. What the videos show is described as shown, and no more.
+
+### What was checked
+
+About 60 features of the new editor were mapped to the code and to roadmap ids. Ten are being built in a batch of their own and are named "in progress" below; the rest went to one new initiative, dated lines in their owners, or the roadmap's [twentieth-pass rejects](roadmap.md#what-the-twentieth-pass-checked-and-did-not-promote).
+
+| Moxfield's new deck editor (2026-11-20) | Us today |
+| --- | --- |
+| A deck summary bar: count, format and bracket, price, card types | Merged on `dev` (#1656) |
+| A card dragged or pasted from other sites | Scryfall and EDHREC links merged on `dev` (#1657); Archidekt and Moxfield links, images and touch paste are I-37 slice 25 |
+| The curve split into permanents and spells, with a median and a total; a mana value lists its cards | In progress (I-37) |
+| A price subtotal per group, and a total without basic lands | In progress (I-32) |
+| Import from a file | In progress (I-62 slice 1: `.txt`, `.dek`, `.csv`) |
+| A row's card to the collection or another deck | In progress (I-37) |
+| Created and last-updated dates | In progress (I-92) |
+| Delete the deck from the editor | In progress (I-01) |
+| Average lands in an opening hand | In progress (I-97) |
+| Owned and buy badges switched on or off (Paper) | In progress (I-37); MTGO and Arena not promoted |
+| View options with a live preview; more view styles and group keys; the set symbol | I-37 slices 2, 5 and 8 (new line) |
+| Legality in every format in the card panel | I-37 slice 4 (new line) |
+| A paged history with board and action filters, session summaries and a 90-day heatmap | I-37 slices 10 and 11 (new line) |
+| Shortcuts and quantity controls in the card menu | I-37 slice 3 (new line) |
+| Prevent drag and drop on touch screens | I-37 (new line) |
+| Camera card scanning | I-40 slices 6 to 12, gated by D-34 (evidence line) |
+| A card set as the deck image | I-36 slice 14 (new) |
+| Public lists of decks | [I-116](specs/i116-public-deck-lists-a-curated-set-of-public-decks-anyone-can-read.md) (new), behind D-109 |
+| Likes on comments | I-08 (new line; a model change) |
+| Commander Brackets switched off | I-77 (new line) |
+| "N% blinged out" | I-57 (open question) |
+| Every printing updated at once | I-57 slice 9 (evidence line) |
+| Seller buttons in the card preview; a choice of affiliate seller | I-32 (new line) |
+| An assembly checklist | I-43 (new line) |
+| "Discover more" on the deck page | I-75 (new line) |
+| "N% chance to play these on curve" | I-31 slice 5 (evidence line) |
+| Cards in the collection by an event's attending artists | I-115 (evidence line) |
+| Bulk edit, packages, playtest, primer, share, export, compare, snapshots, recommendations, proxies, the registration sheet, odds, colour analysis, the theme | Shipped |
+| Co-authors, a whole deck to the wish list, card tags, quick add, the default Scryfall query, public themes, views, profile links | On the roadmap (I-20, I-56, I-37, I-57, I-75, I-36) |
+| MTGO tix price and deck rental, Arena wildcards, mature content, event QR badges, "laser eyes", a new-editor toggle | Not promoted |
+
+### Verified facts and corrections
+
+Each fact was read once more on 21 November 2026:
+
+- **The release.** Moxfield's post of 2026-11-20: "our new Deck Editor is now live for everyone on Moxfield!", with a video (80 likes, 18 reposts, 11 quotes at reading). Under it, a reply "A scanner! Siiiick" drew Moxfield's "You know it!", and another reads "I see you added a heat map but still can't check out a previous version, revert, restore, fork etc."
+- **The preview.** 2026-09-28: "We've been working on a update to the deck editor on Moxfield and today we wanted to share a sneak peak with you!" (114 likes).
+- **Dropping cards.** 2026-10-29: "There are now three sites you can drag and drop cards from directly in to your decks on Moxfield." (29 likes).
+- **Event artists.** 2026-11-02 and 2026-11-04 link the cards in a player's collection "from artists attending" MagicCon Atlanta.
+- **Public lists.** 2026-11-15: "We have the deck lists live on Moxfield for everyone to check out", linking `moxfield.com/lists/ZKX3N-top-8-world-championship-32`.
+- **The video.** YouTube's oEmbed endpoint returns the title "New Moxfield Deck Editor is now live!" and the author "Moxfield".
+- **Our code.** Deck grouping offers none, type, mana value and colour, and colour folds every multicolour card into one group (`src/lib/deck/sort.ts`); `DeckComment` has no like field and `Deck` no cover field (`prisma/schema.prisma`).
+- **Correction.** I-37's line on cards dragged from other sites cited slice 24, which is the primer's card-link completion; it is now slice 25.
+
+### Where the new initiative sits
+
+[I-116](specs/i116-public-deck-lists-a-curated-set-of-public-decks-anyone-can-read.md) is Later. Its slices 1 to 3 hold only the curator's own public decks and need nothing that is not on `dev`; other players' decks wait for owner decision D-109, and reports on lists for I-38's report slices.
+
 ---
 
 ## Sources
@@ -1646,3 +1704,16 @@ Regional markets, events and physical play:
 - duelcommander.org: <https://duelcommander.org/>
 - Wizards, Commander 1v1: <https://magic.wizards.com/en/formats/commander-1v1>
 - Cardmarket, "What's new", September 2026: <https://www.cardmarket.com/en/Insight/Articles/whats-new-at-cardmarket-9-2026>
+
+Section 21, Moxfield's new deck editor (read 21 November 2026; posts through Bluesky's public API):
+
+- Moxfield on Bluesky: <https://bsky.app/profile/moxfield.com>
+- Moxfield, "our new Deck Editor is now live for everyone", 20 November 2026, with a video: <https://bsky.app/profile/moxfield.com/post/3n2rkohc2oc2j>
+- Moxfield, the deck editor preview, 28 September 2026: <https://bsky.app/profile/moxfield.com/post/3mwlx5e4z7s2m>
+- Moxfield, "three sites you can drag and drop cards from", 29 October 2026: <https://bsky.app/profile/moxfield.com/post/3myzzp3xe2c2r>
+- Moxfield, cards in your collection by artists attending MagicCon Atlanta, 15 October, 2 and 4 November 2026: <https://bsky.app/profile/moxfield.com/post/3mxwrevjkv22s>, <https://bsky.app/profile/moxfield.com/post/3mzdowrwjsw2s>, <https://bsky.app/profile/moxfield.com/post/3mzizvxbgyk2w>
+- Moxfield, the 2026 World Championship Top 8 as a public list, 15 November 2026: <https://bsky.app/profile/moxfield.com/post/3n2cpmndt4s2z>, <https://bsky.app/profile/moxfield.com/post/3n2eqssujbk2s>
+- Moxfield, MagicCon Atlanta account badges, 9 and 11 November 2026: <https://bsky.app/profile/moxfield.com/post/3mzvppw2ss72a>, <https://bsky.app/profile/moxfield.com/post/3n22xb2pfud22>
+- Moxfield, "laser eyes", 23 October 2026: <https://bsky.app/profile/moxfield.com/post/3mykm3ftx5x26>
+- YouTube, "New Moxfield Deck Editor is now live!" (Moxfield): <https://www.youtube.com/watch?v=7c1O84R6n3o>
+- Moxfield, Commander Brackets page (linked, not fetched): <https://moxfield.com/commanderbrackets>
