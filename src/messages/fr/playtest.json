@@ -7,6 +7,18 @@
     "multiplayer": "Partie multijoueur (plus de deux joueurs)",
     "action": "Piocher la main de départ"
   },
+  "trialCards": {
+    "legend": "Commencer avec ces cartes",
+    "hint": "Essaie de nouvelles cartes : choisis jusqu’à {max} cartes du deck principal pour ta main de départ. Le reste de la main est pioché au hasard.",
+    "search": "Rechercher dans le deck principal",
+    "copy": "{name} (exemplaire {copy} sur {copies})",
+    "count": "{count} sur {max} choisies",
+    "limit": "Tu peux choisir jusqu’à {max} cartes.",
+    "chosen": "Choisies : {names}",
+    "emptyDeck": "Le deck principal n’a aucune carte à choisir.",
+    "noMatch": "Aucune carte du deck principal ne correspond à « {query} ».",
+    "recordBlocked": "Cette partie a commencé avec des cartes choisies : elle n’est pas enregistrée comme session de test."
+  },
   "turn": "Tour {turn}",
   "mulliganCount": "{count, plural, one {# mulligan} other {# mulligans}}",
   "handCount": "{count} en main",
