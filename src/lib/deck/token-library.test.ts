@@ -67,7 +67,39 @@ describe("buildTokenLibrary", () => {
         count: 1,
         kind: "token",
       },
-      { name: "Emblem", power: null, colors: [], count: 1, kind: "emblem" },
+      {
+        name: "Garruk Emblem",
+        power: null,
+        colors: [],
+        count: 1,
+        kind: "emblem",
+      },
+    ]);
+  });
+
+  it("names each emblem after the card that gives it (CR 114.2)", () => {
+    const entries = buildTokenLibrary([
+      card(
+        "Elspeth, Sun's Champion",
+        '−7: You get an emblem with "Creatures you control get +2/+2 and have flying."'
+      ),
+      card(
+        "Chandra, Torch of Defiance",
+        '−7: You get an emblem with "Whenever you cast a spell, this emblem deals 5 damage to any target."'
+      ),
+    ]);
+
+    expect(entries).toEqual([
+      expect.objectContaining({
+        name: "Elspeth, Sun's Champion Emblem",
+        kind: "emblem",
+        count: 1,
+      }),
+      expect.objectContaining({
+        name: "Chandra, Torch of Defiance Emblem",
+        kind: "emblem",
+        count: 1,
+      }),
     ]);
   });
 

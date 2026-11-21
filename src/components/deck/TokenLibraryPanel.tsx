@@ -9,19 +9,49 @@ import {
   formatTokenLibrary,
 } from "@/lib/deck/token-library";
 import type { DeckCard } from "@/lib/deck/types";
+import {
+  GamePieceList,
+  useGamePieceLines,
+  type GamePieceLine,
+} from "./GamePieceList";
 
 interface TokenLibraryPanelProps {
   readonly cards: readonly DeckCard[];
 }
 
-/** Display and export the physical game pieces required by a deck. */
+/** The copied or downloaded checklist: the tokens, then the game pieces under their heading. */
+function checklistText(
+  tokenText: string,
+  pieceHeading: string,
+  pieceLines: readonly GamePieceLine[]
+): string {
+  const pieceSection =
+    pieceLines.length === 0
+      ? ""
+      : [pieceHeading, ...pieceLines.map((line) => line.text)].join("\n");
+  return [tokenText, pieceSection]
+    .filter((section) => section !== "")
+    .join("\n\n");
+}
+
+/**
+ * Display and export the physical game pieces required by a deck: its tokens and emblems, then
+ * the designations, dungeons and player counters its cards need. Renders nothing when there is
+ * neither.
+ */
 export function TokenLibraryPanel({ cards }: TokenLibraryPanelProps) {
   const t = useTranslations("deck");
   const [copied, copy] = useCopyToClipboard();
   const entries = buildTokenLibrary(cards);
-  if (entries.length === 0) return null;
+  const pieceLines = useGamePieceLines(cards);
+  if (entries.length === 0 && pieceLines.length === 0) return null;
 
-  const exportText = formatTokenLibrary(entries);
+  const pieceHeading = t("stats.gamePieces");
+  const exportText = checklistText(
+    formatTokenLibrary(entries),
+    pieceHeading,
+    pieceLines
+  );
 
   return (
     <section className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4">
@@ -86,6 +116,7 @@ export function TokenLibraryPanel({ cards }: TokenLibraryPanelProps) {
           </div>
         ))}
       </div>
+      <GamePieceList heading={pieceHeading} lines={pieceLines} />
     </section>
   );
 }
