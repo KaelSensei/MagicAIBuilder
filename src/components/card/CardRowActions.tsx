@@ -18,6 +18,7 @@ import { Crown, Image as ImageIcon, Minus, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { CardNoteInline } from "@/components/card/CardNoteInline";
+import { CardRowMoreMenu } from "@/components/card/CardRowMoreMenu";
 import { PrintingSelectorModal } from "@/components/card/PrintingSelectorModal";
 import { cn } from "@/components/ui/utils";
 import { isCommanderEligible } from "@/lib/deck/commander-eligibility";
@@ -204,7 +205,8 @@ function ChangePrintingButton({ card }: { readonly card: DeckCard }) {
 
 /**
  * The row's edit buttons: the note (when `showNotes` is set), "set as
- * commander" (on a card that can be one) and "change printing".
+ * commander" (on a card that can be one), "change printing", and the "More"
+ * menu that sends the card to the collection or another deck.
  */
 export function CardRowActions({ card, showNotes }: CardRowActionsProps) {
   return (
@@ -218,6 +220,7 @@ export function CardRowActions({ card, showNotes }: CardRowActionsProps) {
       )}
       <SetAsCommanderButton card={card} />
       <ChangePrintingButton card={card} />
+      <CardRowMoreMenu card={card} />
     </>
   );
 }
