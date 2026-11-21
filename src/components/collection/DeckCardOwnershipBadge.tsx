@@ -21,6 +21,7 @@ import {
   useOwnedQuantity,
 } from "@/lib/collection/owned-quantity";
 import type { DeckCard } from "@/lib/deck/types";
+import { useDeckRowPreferencesStore } from "@/lib/ui/deck-row-preferences";
 
 interface DeckCardOwnershipBadgeProps {
   readonly card: Pick<DeckCard, "id" | "scryfallId" | "typeLine" | "quantity">;
@@ -36,7 +37,8 @@ const BADGE_CLASS =
  * Renders nothing while the collection is empty (a guest, a player who has
  * recorded no card, or a collection still loading), so a deck is not covered
  * in Buy badges before there is anything to compare with. Renders nothing for
- * a basic land either.
+ * a basic land either, nor when the player has turned the toolbar's
+ * "Collection" switch off (`deck-row-preferences`).
  */
 export function DeckCardOwnershipBadge({
   card,
@@ -46,7 +48,8 @@ export function DeckCardOwnershipBadge({
   // A row saved without a printing falls back to its own id, as the deck's
   // collection panel does (`getDeckCardStatuses`).
   const ownedQuantity = useOwnedQuantity(card.scryfallId ?? card.id);
-  if (!hasCollection) return null;
+  const shown = useDeckRowPreferencesStore((s) => s.showCollectionBadges);
+  if (!hasCollection || !shown) return null;
 
   const ownership = deckCardOwnership(card, ownedQuantity);
   switch (ownership.kind) {
