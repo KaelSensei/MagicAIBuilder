@@ -1,4 +1,25 @@
 {
+  "rowAddElsewhere": {
+    "moreActions": "More actions for {name}",
+    "addToCollection": "Add to my collection",
+    "addToOtherDeck": "Add to another deck…",
+    "addedToCollection": "Added 1 {name} to your collection",
+    "collectionFailed": "Could not add {name} to your collection.",
+    "retryCollection": "Retry adding {name} to your collection",
+    "dialogTitle": "Add {name} to another deck",
+    "filterLabel": "Filter your decks by name",
+    "zoneLabel": "Zone",
+    "loading": "Loading your decks…",
+    "noOtherDeck": "You have no other deck.",
+    "noMatch": "No deck matches this name.",
+    "onlyLatest": "Only your {count} most recently updated decks are shown.",
+    "listFailed": "Could not load your decks.",
+    "addFailed": "Could not add {name} to {deck}.",
+    "retry": "Retry",
+    "saving": "Adding…",
+    "atLimit": "{deck} already holds the most copies allowed",
+    "addedToDeck": "Added {name} to {deck} ({zone})"
+  },
   "guest": {
     "title": "Guest deck.",
     "description": "Saved in this browser only. Once you have an account, you can save it there and open it anywhere.",
