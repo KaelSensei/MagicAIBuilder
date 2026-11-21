@@ -36,7 +36,11 @@
     "summary": "{count} to acquire across {decks} decks · Known-price subtotal: {cost}",
     "unpriced": "Price unavailable for {count, plural, one {# copy} other {# copies}}",
     "requiredAcrossDecks": "{count, plural, one {# copy} other {# copies}} required across {decks, plural, one {# deck} other {# decks}}",
-    "toAcquire": "{count} to acquire"
+    "toAcquire": "{count} to acquire",
+    "deferredTitle": "Deferred · {count, plural, one {# copy} other {# copies}}",
+    "deferredHint": "Copies you chose to proxy or buy later in a deck's shopping list. They are not in the total or the CSV.",
+    "proxyNowFor": "Proxy for now — {deck}",
+    "buyLaterFor": "Buy later — {deck}"
   },
   "loading": "Loading collection…",
   "loadFailed": "Could not refresh your collection. Your saved cards are unchanged.",
