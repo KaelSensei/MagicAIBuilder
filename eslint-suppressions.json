@@ -888,11 +888,6 @@
       "count": 2
     }
   },
-  "src/components/deck/ManaCurve.tsx": {
-    "max-lines-per-function": {
-      "count": 1
-    }
-  },
   "src/components/deck/MoxfieldProfileImport.tsx": {
     "max-lines": {
       "count": 1
