@@ -1,13 +1,33 @@
 import {
   act,
   fireEvent,
-  render,
+  render as renderUnwrapped,
   screen,
   waitFor,
+  within,
 } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { http, HttpResponse } from "msw";
+import type { ReactElement, ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createEmptyDeck } from "@/lib/deck/store-factories";
 import type { Deck } from "@/lib/deck/types";
+import { aDeck } from "@/test/builders/deck";
+import { emptyApiDeck } from "@/test/in-memory-deck-api";
+import { setupMsw } from "@/test/msw";
+import { aTestQueryClient } from "@/test/render";
+
+/** The page reads the card search through TanStack Query, as the app's providers serve it. */
+function render(ui: ReactElement) {
+  const client = aTestQueryClient();
+  function QueryProvider({ children }: { readonly children: ReactNode }) {
+    return (
+      <QueryClientProvider client={client}>{children}</QueryClientProvider>
+    );
+  }
+  return renderUnwrapped(ui, { wrapper: QueryProvider });
+}
 
 type SessionStatus = "loading" | "authenticated" | "unauthenticated";
 
@@ -324,5 +344,193 @@ describe("DecksPage states (characterization)", () => {
     expect(createDeck).toHaveBeenCalledWith("home.newDeckName", {
       format: "commander",
     });
+  });
+});
+
+/*
+ * The card filter (I-01): the library asks `GET /api/decks/search`, served
+ * here by MSW, for the owner's decks that run or leave out a card, so a deck
+ * beyond the page the store loaded can show. The store holds the loaded page.
+ */
+describe("DecksPage card filter", () => {
+  const server = setupMsw();
+  const LOADED_PAGE = [
+    aDeck({ id: "deck-1", name: "Atraxa Superfriends" }),
+    aDeck({ id: "deck-2", name: "Krenko Goblins" }),
+  ];
+
+  /** Signs the player in with the loaded page of decks in the store. */
+  function signedInWithLoadedPage(): void {
+    session.status = "authenticated";
+    deckStore.decks = Object.fromEntries(
+      LOADED_PAGE.map((entry) => [entry.id, entry])
+    );
+    deckStore.loadError = null;
+    loadDecks.mockImplementation(async () => undefined);
+  }
+
+  /** Serves the card search with `answer`, and records each request's URL. */
+  function serveSearch(answer: () => Response): URL[] {
+    const asked: URL[] = [];
+    server.use(
+      http.get("*/api/decks/search", ({ request }) => {
+        asked.push(new URL(request.url));
+        return answer();
+      })
+    );
+    return asked;
+  }
+
+  /** Types a card name into one of the two fields and adds it. */
+  async function addCard(field: string, name: string): Promise<void> {
+    const user = userEvent.setup();
+    const group = screen.getByRole("group", { name: field });
+    await user.type(within(group).getByRole("textbox"), name);
+    await user.click(
+      within(group).getByRole("button", { name: "home.cardFilter.add" })
+    );
+  }
+
+  /** The names on the deck cards shown. */
+  function shownDeckNames(): readonly (string | null)[] {
+    return screen.queryAllByRole("article").map((card) => card.textContent);
+  }
+
+  beforeEach(() => {
+    signedInWithLoadedPage();
+  });
+
+  it("shows a deck that runs the card although it was not on the loaded page", async () => {
+    const asked = serveSearch(() =>
+      HttpResponse.json({
+        decks: [emptyApiDeck("deck-31", "Edgar's Vampires")],
+        hasMore: false,
+      })
+    );
+    render(<DecksPage />);
+
+    await addCard("home.cardFilter.includeLabel", "Sol Ring");
+
+    await waitFor(() => expect(shownDeckNames()).toEqual(["Edgar's Vampires"]));
+    expect(asked.map((url) => url.searchParams.getAll("card"))).toEqual([
+      ["Sol Ring"],
+    ]);
+  });
+
+  it("asks for the decks that leave the card out", async () => {
+    const asked = serveSearch(() =>
+      HttpResponse.json({
+        decks: [emptyApiDeck("deck-2", "Krenko Goblins")],
+        hasMore: false,
+      })
+    );
+    render(<DecksPage />);
+
+    await addCard("home.cardFilter.excludeLabel", "Sol Ring");
+
+    await waitFor(() => expect(shownDeckNames()).toEqual(["Krenko Goblins"]));
+    expect(asked.map((url) => url.searchParams.getAll("no-card"))).toEqual([
+      ["Sol Ring"],
+    ]);
+  });
+
+  it("combines the card filter with the name search", async () => {
+    serveSearch(() =>
+      HttpResponse.json({
+        decks: [
+          emptyApiDeck("deck-31", "Edgar's Vampires"),
+          emptyApiDeck("deck-32", "Krenko Tokens"),
+        ],
+        hasMore: false,
+      })
+    );
+    render(<DecksPage />);
+    await addCard("home.cardFilter.includeLabel", "Sol Ring");
+    await waitFor(() => expect(shownDeckNames()).toHaveLength(2));
+
+    fireEvent.change(
+      screen.getByRole("searchbox", { name: "home.searchPlaceholder" }),
+      { target: { value: "Krenko" } }
+    );
+
+    expect(shownDeckNames()).toEqual(["Krenko Tokens"]);
+  });
+
+  it("names the card filter when no deck runs the card", async () => {
+    serveSearch(() => HttpResponse.json({ decks: [], hasMore: false }));
+    render(<DecksPage />);
+
+    await addCard("home.cardFilter.includeLabel", "Black Lotus");
+
+    expect(
+      await screen.findByText("home.cardFilter.searchEmpty")
+    ).toBeInTheDocument();
+    expect(screen.queryByText("home.searchEmpty")).toBeNull();
+  });
+
+  it("says when more decks run the card than the page shows", async () => {
+    serveSearch(() =>
+      HttpResponse.json({
+        decks: [emptyApiDeck("deck-31", "Edgar's Vampires")],
+        hasMore: true,
+      })
+    );
+    render(<DecksPage />);
+
+    await addCard("home.cardFilter.includeLabel", "Sol Ring");
+
+    expect(
+      await screen.findByText("home.cardFilter.truncated")
+    ).toBeInTheDocument();
+  });
+
+  it("keeps the library on screen with a catalogue message and a retry when the search fails", async () => {
+    let failing = true;
+    const asked = serveSearch(() =>
+      failing
+        ? HttpResponse.json(
+            { error: "Failed to search decks" },
+            { status: 500 }
+          )
+        : HttpResponse.json({
+            decks: [emptyApiDeck("deck-31", "Edgar's Vampires")],
+            hasMore: false,
+          })
+    );
+    render(<DecksPage />);
+
+    await addCard("home.cardFilter.includeLabel", "Sol Ring");
+
+    expect(
+      await screen.findByText("home.cardFilter.failed")
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/500|Failed to search/)).toBeNull();
+    expect(shownDeckNames()).toEqual(["Atraxa Superfriends", "Krenko Goblins"]);
+
+    failing = false;
+    await userEvent
+      .setup()
+      .click(screen.getByRole("button", { name: "home.cardFilter.retry" }));
+
+    await waitFor(() => expect(shownDeckNames()).toEqual(["Edgar's Vampires"]));
+    expect(asked).toHaveLength(2);
+  });
+
+  it("shows the loaded library again when the last card is removed", async () => {
+    serveSearch(() =>
+      HttpResponse.json({
+        decks: [emptyApiDeck("deck-31", "Edgar's Vampires")],
+        hasMore: false,
+      })
+    );
+    render(<DecksPage />);
+    await addCard("home.cardFilter.includeLabel", "Sol Ring");
+    await waitFor(() => expect(shownDeckNames()).toEqual(["Edgar's Vampires"]));
+
+    await userEvent
+      .setup()
+      .click(screen.getByRole("button", { name: "home.cardFilter.remove" }));
+
+    expect(shownDeckNames()).toEqual(["Atraxa Superfriends", "Krenko Goblins"]);
   });
 });
