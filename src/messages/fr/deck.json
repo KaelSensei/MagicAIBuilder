@@ -999,6 +999,11 @@
     "cardCount": "{count, plural, one {# carte} other {# cartes}}",
     "tagline": "Créateur de decks Commander"
   },
+  "dates": {
+    "created": "Créé le <time>{date}</time>",
+    "updatedAgo": "Mis à jour <time>{ago}</time>",
+    "updatedOn": "Mis à jour le <time>{date}</time>"
+  },
   "sync": {
     "conflictReloaded": "Ce deck a été modifié ailleurs (un autre onglet ou appareil). Il a été rechargé ; refaites votre dernière modification si vous la voulez toujours."
   },

@@ -18,6 +18,7 @@ import { cardSurfaceClassName } from "@/components/ui/Card";
 import { cn } from "@/components/ui/utils";
 import { PublicDeckCards } from "./PublicDeckCards";
 import { DataAsOfLine } from "@/components/deck/DataAsOfLine";
+import { DeckDatesLine } from "@/components/deck/DeckDatesLine";
 import { currentDataAsOfFacts } from "@/lib/deck/data-as-of";
 import {
   commandSlotOf,
@@ -135,6 +136,10 @@ export function PublicDeckView({
                 {t("public.aiGenerated")}
               </span>
             )}
+            <DeckDatesLine
+              createdAt={deck.createdAt}
+              updatedAt={deck.updatedAt}
+            />
           </div>
 
           <DataAsOfLine facts={currentDataAsOfFacts()} />

@@ -251,6 +251,8 @@ The **Deck details** panel opens the right panel (the **Stats** tab on a phone).
 - **Target bracket** (Commander only) — the bracket you are building for, from 1 Exhibition to 5 cEDH. The Game Changers badge and the deck checks measure your deck against it; the bracket score below is the app's own reading of your list.
 - **Budget per card** — the most you want to pay for one card, in US dollars. Type an amount and press Enter or click away; leave the field empty for no limit. When some cards cost more, the stats show how many in a **Budget** box, as **Over budget**.
 
+Under the panel's title, a line says when the deck was **created** and when it was last **updated**, for example "Created Mar 3, 2026 · Updated 2 days ago". An update up to 30 days old reads as relative time; an older one, and the creation date, read as a date in your language. Hover a date to see its full date and time. The update date moves as soon as you change the deck. A public deck's page shows the same two dates to every visitor. The app shows only the dates it stored; when a date is missing it shows nothing rather than a guess.
+
 ### Deck Statistics
 
 The right panel shows:

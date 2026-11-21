@@ -60,6 +60,9 @@ const DECK_ROW = {
   isPublic: true,
   name: "Atraxa Superfriends",
   shareToken: "secret-token",
+  // Non-null in the schema; the deck read sends both on as ISO strings.
+  createdAt: new Date("2026-03-03T09:00:00.000Z"),
+  updatedAt: new Date("2026-11-19T12:00:00.000Z"),
   cards: [],
   user: { id: OWNER, name: "Deck Owner", username: "owner", image: null },
 };
