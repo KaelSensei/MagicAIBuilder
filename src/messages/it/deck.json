@@ -13,6 +13,8 @@
     "forkingDeck": "Forking deck",
     "forkedFrom": "Forked from <link>{source}</link>",
     "forkSource": "{name} by {author}",
+    "inspirationFor": "{count, plural, one {Inspiration for # deck} other {Inspiration for # decks}}",
+    "inspirationMore": "{count, plural, other {and # more}}",
     "deckShared": "Deck shared",
     "printGuide": "Print guide"
   },
