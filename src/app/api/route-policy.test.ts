@@ -127,6 +127,7 @@ const ROUTE_POLICIES: Readonly<
   "decks/[id]/snapshots/[snapshotId]": { DELETE: "deck-owner" },
   "decks/[id]/snapshots/[snapshotId]/restore": { POST: "deck-owner" },
   "decks/folders": { PATCH: "session" },
+  "decks/search": { GET: "session" },
   health: { GET: "public" },
   "import/moxfield-user": { POST: "public" },
   "import/url": { POST: "public" },
