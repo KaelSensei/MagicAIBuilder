@@ -52,6 +52,8 @@ The builder has three panels:
 
 Under the deck title, one line names the Comprehensive Rules edition the app ships, says prices are the USD amount stored with each card, and says card data is not loaded from the daily file. A date the product did not store is left out. The same line is on a public deck. It does not look up a price.
 
+Under the three panels, the deck summary bar keeps the deck's figures in view while you edit: the card count against the format's size, the format with the bracket the Bracket panel shows ("set by you" when you chose it; a format without brackets shows its name only), the total price of the Deck Price panel with the number of cards that have no price, and the counts by card type. Each card counts once, under the first type its front face has in this order: land, creature, planeswalker, battle, artifact, enchantment, instant, sorcery, so an artifact creature is a creature and the counts add up to the card count. On a narrow screen the type counts open from the **Types** button.
+
 #### Searching for Cards
 
 - Use the **Name** tab to search by card name

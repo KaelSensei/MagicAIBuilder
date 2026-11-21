@@ -234,6 +234,24 @@
     "setCommanderFirst": "Choisissez d'abord un commandant",
     "partnerTitle": "Chercher un {label}"
   },
+  "summary": {
+    "label": "Résumé du deck",
+    "formatWithBracket": "{format} · Bracket {level}",
+    "formatWithManualBracket": "{format} · Bracket {level}, choisi par vous",
+    "typesToggle": "Types",
+    "typesLabel": "Cartes par type",
+    "types": {
+      "creature": "{count, plural, one {# créature} other {# créatures}}",
+      "land": "{count, plural, one {# terrain} other {# terrains}}",
+      "instant": "{count, plural, one {# éphémère} other {# éphémères}}",
+      "sorcery": "{count, plural, one {# rituel} other {# rituels}}",
+      "artifact": "{count, plural, one {# artefact} other {# artefacts}}",
+      "enchantment": "{count, plural, one {# enchantement} other {# enchantements}}",
+      "planeswalker": "{count, plural, one {# planeswalker} other {# planeswalkers}}",
+      "battle": "{count, plural, one {# bataille} other {# batailles}}",
+      "other": "{count, plural, one {# autre carte} other {# autres cartes}}"
+    }
+  },
   "sort": {
     "fields": {
       "cmc": "CMC",
