@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { ArrowDownAZ, ArrowUpAZ, Layers } from "lucide-react";
 import { cn } from "@/components/ui/utils";
+import { CollectionBadgesToggle } from "@/components/deck/CollectionBadgesToggle";
 import { useDeckStore } from "@/lib/deck/store";
 import type { SortField, GroupBy } from "@/lib/deck/sort";
 
@@ -110,6 +111,8 @@ export function SortGroupToolbar() {
           </button>
         ))}
       </div>
+
+      <CollectionBadgesToggle />
     </div>
   );
 }
