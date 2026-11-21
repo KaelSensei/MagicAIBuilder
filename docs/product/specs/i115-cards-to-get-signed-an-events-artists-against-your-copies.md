@@ -335,6 +335,7 @@ The organiser tells players to "make a list" and "have your cards pulled"; Archi
 
 - [ ] `matchArtists`, pure (slice 1); the deck panel (slice 2).
 - [ ] Collection and places, print and notes (slice 3); offline (slice 4); mark as signed (slice 5); friends' decks (slice 6).
+- [ ] Added 2026-11-21 (twentieth pass), evidence for the market table: Moxfield also ships this job. Its Bluesky posts of 2026-10-15, 2026-11-02 and 2026-11-04 link "Cards in your Moxfield collection from artists attending" MagicCon Atlanta, apart from "the cards from all the artists attending" ([Bluesky](https://bsky.app/profile/moxfield.com), read 2026-11-21). It reads the collection, as MTG Burrow does; "your printing" apart from "another printing" was not seen there. Slices and order are unchanged.
 
 ### Engineering enablers
 
