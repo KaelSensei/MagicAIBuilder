@@ -8,7 +8,8 @@
  * (CR 103.8a, 103.8c). `dealFrom` shuffles that setup and draws the opening hand of seven
  * (CR 103.5, 903.7) through the engine's `createPlaytestState`. It also settles how many
  * imagined opponents the commander-damage tally offers (CR 903.10a, 903.12h). The store keeps the setup so a
- * reset deals the same deck again, with the choices the session started with.
+ * reset deals the same deck again, with the choices the session started with. A new-card trial
+ * names main-deck copies to start in the opening hand (`trialCardChoices`, `isRandomDeal`).
  *
  * Pure: the shuffle's random source comes in through `deps`, so a test deals a replayable
  * game. Copy ids derive from the deck row's id, not from a random source.
@@ -20,6 +21,7 @@
 
 import type { Deck, DeckCard } from "@/lib/deck/types";
 import { getFormatConfig, type DeckFormat } from "@/lib/deck/formats";
+import { OPENING_HAND_SIZE } from "@/lib/deck/game-constants";
 import type { PlaytestDeps, PlaytestEngine } from "./engine";
 import { createPlaytestState, MAX_IMAGINED_OPPONENTS } from "./engine";
 import { isFirstMulliganFree, isMultiplayerByDefault } from "./free-mulligan";
@@ -41,7 +43,17 @@ export interface PlaytestSetup {
   readonly firstMulliganFree: boolean;
   /** The imagined opponents the commander-damage tally offers; 0 when the format has none. */
   readonly commanderDamageOpponents: number;
+  /**
+   * The main-deck copies a new-card trial starts in the opening hand, never also in `cards`;
+   * empty for a random deal. Kept so a reset deals them again.
+   */
+  readonly trialCards: readonly DeckCard[];
 }
+
+/**
+ * The most copies a new-card trial may choose: a whole opening hand (CR 103.5: seven cards).
+ */
+export const MAX_TRIAL_CARDS = OPENING_HAND_SIZE;
 
 /**
  * How many imagined opponents the commander-damage tally offers in a game of `format`.
@@ -68,6 +80,22 @@ export interface PlaytestOptions {
    * table (`isMultiplayerByDefault`).
    */
   readonly multiplayer?: boolean;
+  /**
+   * The physical copies to start in the opening hand, by the ids `trialCardChoices` gives.
+   * An id that is not a main-deck copy (a commander, the sideboard, the cards being considered)
+   * is ignored, a repeated id counts once, and only the first `MAX_TRIAL_CARDS` count.
+   */
+  readonly trialCardIds?: readonly string[];
+}
+
+/** One main-deck copy a new-card trial can start in the opening hand. */
+export interface TrialCardChoice {
+  /** The physical copy, with the id `PlaytestOptions.trialCardIds` names it by. */
+  readonly card: DeckCard;
+  /** Which copy of its deck row this is, from 1. */
+  readonly copy: number;
+  /** How many copies its deck row holds, so a picker can tell copies apart. */
+  readonly copies: number;
 }
 
 /**
@@ -87,6 +115,71 @@ function physicalCopies(card: DeckCard): readonly DeckCard[] {
   }));
 }
 
+/** The physical copies of the main deck: the sideboard and the cards being considered are not dealt. */
+function mainDeckCopies(cards: readonly DeckCard[]): readonly DeckCard[] {
+  return cards.filter((card) => card.zone === "main").flatMap(physicalCopies);
+}
+
+/**
+ * The copies a new-card trial can start in the opening hand: every physical copy of the main
+ * deck, in deck order. Commanders are not offered, since they start in the command zone
+ * (CR 903.6), nor the sideboard or the cards being considered, which are not dealt.
+ *
+ * @param cards - the deck's rows (`deck.cards`)
+ * @returns one choice per main-deck copy
+ */
+export function trialCardChoices(
+  cards: readonly DeckCard[]
+): readonly TrialCardChoice[] {
+  return cards
+    .filter((card) => card.zone === "main")
+    .flatMap((row) =>
+      physicalCopies(row).map((card, index) => ({
+        card,
+        copy: index + 1,
+        copies: row.quantity,
+      }))
+    );
+}
+
+/**
+ * Whether a setup deals its opening hand at random. A new-card trial does not, so its opening
+ * hand says nothing about the deck's real draws, and the game is not filed as a playtest session.
+ *
+ * @param setup - the retained setup of the session
+ * @returns false when the session started with chosen cards
+ */
+export function isRandomDeal(
+  setup: Pick<PlaytestSetup, "trialCards">
+): boolean {
+  return setup.trialCards.length === 0;
+}
+
+/**
+ * Splits the main-deck copies into the chosen ones, in the order chosen, and the library.
+ *
+ * @param mainDeck - the main deck's physical copies
+ * @param chosenIds - copy ids; unknown and repeated ids are skipped, and only the first
+ *   `MAX_TRIAL_CARDS` known ones count
+ */
+function splitTrialCards(
+  mainDeck: readonly DeckCard[],
+  chosenIds: readonly string[]
+): {
+  readonly trialCards: readonly DeckCard[];
+  readonly library: readonly DeckCard[];
+} {
+  const byId = new Map(mainDeck.map((card) => [card.id, card]));
+  const trialCards = [...new Set(chosenIds)]
+    .flatMap((id) => byId.get(id) ?? [])
+    .slice(0, MAX_TRIAL_CARDS);
+  const chosen = new Set(trialCards.map((card) => card.id));
+  return {
+    trialCards,
+    library: mainDeck.filter((card) => !chosen.has(card.id)),
+  };
+}
+
 /**
  * Splits a deck into the library the engine shuffles and the command zone, and settles the
  * session rules the table size decides.
@@ -94,11 +187,12 @@ function physicalCopies(card: DeckCard): readonly DeckCard[] {
  * `deck.cards` also holds the sideboard and the cards being considered; only the main deck is
  * dealt. The companion is not read at all: `deck.companion` is kept apart from `deck.cards`
  * when the deck loads, and a companion starts outside the game (CR 702.139a). A format without
- * a command zone shuffles any commander slot into the library, as it always has.
+ * a command zone shuffles any commander slot into the library, as it always has. The copies a
+ * new-card trial chose (`options.trialCardIds`) leave the library for `trialCards`.
  *
  * @param deck - the deck being playtested
  * @param options - the player's choices for this session
- * @returns the library cards, the commanders and the session's starting rules
+ * @returns the library cards, the chosen cards, the commanders and the session's starting rules
  */
 export function buildSetup(
   deck: Deck,
@@ -126,18 +220,25 @@ export function buildSetup(
   const commanders = [deck.commander, deck.partner].filter(
     (card): card is DeckCard => card !== null
   );
-  const mainDeck = deck.cards
-    .filter((card) => card.zone === "main")
-    .flatMap(physicalCopies);
+  const { trialCards, library } = splitTrialCards(
+    mainDeckCopies(deck.cards),
+    options.trialCardIds ?? []
+  );
 
   return hasCommander
-    ? { cards: mainDeck, commandZone: commanders, ...rules }
-    : { cards: [...commanders, ...mainDeck], commandZone: [], ...rules };
+    ? { cards: library, commandZone: commanders, trialCards, ...rules }
+    : {
+        cards: [...commanders, ...library],
+        commandZone: [],
+        trialCards,
+        ...rules,
+      };
 }
 
 /**
  * Deals a fresh game from the retained setup: shuffles the library and draws the opening
  * hand of seven (CR 103.5; CR 903.7 in Commander), with the commanders in the command zone.
+ * A new-card trial's chosen cards start the hand and the shuffle fills the rest of the seven.
  *
  * Deterministic for a given `deps.random`: the same source dealing the same setup gives
  * the same hand, which is how a test replays a game.
@@ -158,6 +259,7 @@ export function dealFrom(
       firstMulliganFree: setup.firstMulliganFree,
       commanderDamageOpponents: setup.commanderDamageOpponents,
       commandZone: setup.commandZone,
+      chosenHand: setup.trialCards,
     },
     deps
   );

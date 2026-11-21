@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { X, RotateCcw, Layers } from "lucide-react";
 import { useTranslations } from "next-intl";
-import type { Deck } from "@/lib/deck/types";
+import type { Deck, DeckCard } from "@/lib/deck/types";
 import type { DeckFormat } from "@/lib/deck/formats";
 import type { CardZone } from "@/lib/playtest/engine";
 import {
@@ -33,6 +33,8 @@ import { OpeningHandEvidence } from "@/components/playtest/OpeningHandEvidence";
 import { DiceRoller } from "@/components/playtest/DiceRoller";
 import { PlaytestActionLog } from "@/components/playtest/PlaytestActionLog";
 import { PlaytestKeys } from "@/components/playtest/PlaytestKeys";
+import { TrialCardsPicker } from "@/components/playtest/TrialCardsPicker";
+import { useRecordBlockedReason } from "@/components/playtest/useRecordBlockedReason";
 import { LocalizedDeckTextProvider } from "@/components/card/LocalizedDeckTextContext";
 import { analyzeEngineDrawProgress } from "@/lib/playtest/draw-progress-evidence";
 import { buildTokenLibrary } from "@/lib/deck/token-library";
@@ -49,10 +51,12 @@ const BOARD_GROUP_CLASS = "m-0 min-w-0 space-y-4 border-0 p-0";
 function PlaytestStartScreen({
   deckId,
   format,
+  cards,
   onStart,
 }: {
   readonly deckId: string;
   readonly format: DeckFormat;
+  readonly cards: readonly DeckCard[];
   readonly onStart: (options: PlaytestOptions) => void;
 }) {
   const t = useTranslations("playtest");
@@ -63,6 +67,8 @@ function PlaytestStartScreen({
   const [multiplayer, setMultiplayer] = useState(() =>
     isMultiplayerByDefault(format)
   );
+  // A new-card trial: main-deck copies to start in the opening hand.
+  const [trialCardIds, setTrialCardIds] = useState<readonly string[]>([]);
 
   return (
     <div className="flex flex-col items-center gap-6">
@@ -85,9 +91,14 @@ function PlaytestStartScreen({
           {t("start.multiplayer")}
         </label>
       )}
+      <TrialCardsPicker
+        cards={cards}
+        selected={trialCardIds}
+        onChange={setTrialCardIds}
+      />
       <button
         type="button"
-        onClick={() => onStart({ multiplayer })}
+        onClick={() => onStart({ multiplayer, trialCardIds })}
         className="px-8 py-3 bg-purple-600 hover:bg-purple-500 text-white font-medium rounded-lg transition-colors text-sm shadow-lg shadow-purple-900/50"
       >
         {t("start.action")}
@@ -172,6 +183,7 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
   // A counted mulligan is not finished until the player bottoms its cards
   // (CR 103.5); until then the rest of the board is disabled.
   const choosingBottom = engine !== null && isChoosingBottom(engine);
+  const recordBlockedReason = useRecordBlockedReason(choosingBottom);
 
   // Mulliganing is only meaningful before the game is under way; once a turn has
   // passed or permanents exist, the opening hand is no longer in question.
@@ -251,10 +263,7 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
                 cardsSeen={drawEvidence?.cardsSeen ?? 0}
                 additionalCardsSeen={drawEvidence?.additionalCardsSeen ?? 0}
                 onRecorded={handleClose}
-                // The counts are not settled until the bottom choice is made.
-                blockedReason={
-                  choosingBottom ? t("recordBlockedByMulligan") : undefined
-                }
+                blockedReason={recordBlockedReason}
               />
             )}
             <PlaytestKeys />
@@ -275,6 +284,7 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
             <PlaytestStartScreen
               deckId={deck.id}
               format={deck.format}
+              cards={deck.cards}
               onStart={handleStart}
             />
           </div>

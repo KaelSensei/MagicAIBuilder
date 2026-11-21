@@ -4,11 +4,18 @@
  * keep the cases that go through its actions (reset, tap, move).
  */
 import { describe, it, expect } from "vitest";
-import { buildSetup, dealFrom, type PlaytestOptions } from "./deal";
+import {
+  buildSetup,
+  dealFrom,
+  isRandomDeal,
+  trialCardChoices,
+  type PlaytestOptions,
+} from "./deal";
 import type { PlaytestDeps, PlaytestEngine } from "./engine";
 import type { Deck, DeckCard } from "@/lib/deck/types";
 import { aDeckCard } from "@/test/builders/card";
 import { aDeck } from "@/test/builders/deck";
+import { seededRandom } from "@/test/seeded-random";
 
 function makeCard(id: string, name = id): DeckCard {
   return aDeckCard({
@@ -188,6 +195,137 @@ describe("the session rules the table size decides", () => {
     };
 
     expect(deal(modernDeck).lifeTotal).toBe(20);
+  });
+});
+
+/** A 100-card Commander deck holding the two cards a player has just added. */
+function makeNewCardsDeck(): Deck {
+  const deck = makeForestDeck();
+  return {
+    ...deck,
+    cards: [
+      ...deck.cards.slice(0, -2),
+      makeCard("tithe", "Smothering Tithe"),
+      makeCard("ring", "Sol Ring"),
+    ],
+  };
+}
+
+describe("a new-card trial", () => {
+  it("deals two chosen cards into the opening hand and keeps them out of the library", () => {
+    const engine = deal(makeNewCardsDeck(), {
+      trialCardIds: ["tithe", "ring"],
+    });
+
+    expect({
+      hand: engine.hand.length,
+      chosenInHand: namesIn(engine.hand).filter((name) =>
+        ["Smothering Tithe", "Sol Ring"].includes(name)
+      ),
+      library: engine.library.length,
+      chosenInLibrary: engine.library.filter((card) =>
+        ["tithe", "ring"].includes(card.id)
+      ).length,
+    }).toEqual({
+      hand: 7,
+      chosenInHand: ["Smothering Tithe", "Sol Ring"],
+      library: 99 - 7,
+      chosenInLibrary: 0,
+    });
+  });
+
+  it("refuses an eighth chosen copy: the first seven start in hand, the eighth stays in the library", () => {
+    const chosen = ["c0", "c1", "c2", "c3", "c4", "c5", "c6", "c7"];
+    const engine = deal(makeNewCardsDeck(), { trialCardIds: chosen });
+
+    expect({
+      hand: engine.hand.map((card) => card.id),
+      eighthInLibrary: engine.library.some((card) => card.id === "c7"),
+    }).toEqual({ hand: chosen.slice(0, 7), eighthInLibrary: true });
+  });
+
+  it("deals a row with two copies twice when both copies are chosen", () => {
+    const deck = makeForestDeck();
+    const engine = deal(deck, { trialCardIds: ["forest", "forest#2"] });
+
+    expect(engine.hand.slice(0, 2).map((card) => card.id)).toEqual([
+      "forest",
+      "forest#2",
+    ]);
+    expect(engine.library.some((card) => card.id === "forest#2")).toBe(false);
+  });
+
+  it("never deals a commander from the command zone into the hand", () => {
+    const engine = deal(makeNewCardsDeck(), { trialCardIds: ["cmd", "tithe"] });
+
+    expect({
+      commandZone: namesIn(engine.commandZone),
+      commanderInHand: namesIn(engine.hand).includes("Kenrith"),
+      first: engine.hand[0]?.name,
+    }).toEqual({
+      commandZone: ["Kenrith"],
+      commanderInHand: false,
+      first: "Smothering Tithe",
+    });
+  });
+
+  it("offers only main-deck copies to choose from, one per physical copy", () => {
+    const deck: Deck = {
+      ...makeDeck({ cardCount: 1 }),
+      cards: [
+        { ...makeCard("bolt", "Lightning Bolt"), quantity: 2 },
+        { ...makeCard("sb", "Negate"), zone: "sideboard" },
+        { ...makeCard("mb", "Maybe Card"), zone: "maybeboard" },
+      ],
+    };
+
+    expect(
+      trialCardChoices(deck.cards).map(({ card, copy, copies }) => ({
+        id: card.id,
+        copy,
+        copies,
+      }))
+    ).toEqual([
+      { id: "bolt", copy: 1, copies: 2 },
+      { id: "bolt#2", copy: 2, copies: 2 },
+    ]);
+  });
+
+  it("deals the same hand from the same seed and the same chosen cards", () => {
+    const setup = buildSetup(makeNewCardsDeck(), { trialCardIds: ["tithe"] });
+    const first = dealFrom(setup, { random: seededRandom(7) });
+    const second = dealFrom(setup, { random: seededRandom(7) });
+
+    expect(second.hand.map((card) => card.id)).toEqual(
+      first.hand.map((card) => card.id)
+    );
+    expect(first.hand[0]?.id).toBe("tithe");
+  });
+
+  it("opens the action log with a line naming the chosen cards", () => {
+    const engine = deal(makeNewCardsDeck(), {
+      trialCardIds: ["tithe", "ring"],
+    });
+
+    expect(engine.actionLog).toEqual([
+      {
+        id: 1,
+        turn: 1,
+        phase: "Draw",
+        description: "Started with chosen cards: Smothering Tithe, Sol Ring",
+      },
+    ]);
+    expect(engine.nextActionId).toBe(2);
+  });
+
+  it("keeps a random deal's log empty and its setup random", () => {
+    const setup = buildSetup(makeNewCardsDeck(), {});
+
+    expect(isRandomDeal(setup)).toBe(true);
+    expect(dealFrom(setup, inDeckOrder).actionLog).toEqual([]);
+    expect(
+      isRandomDeal(buildSetup(makeNewCardsDeck(), { trialCardIds: ["ring"] }))
+    ).toBe(false);
   });
 });
 
