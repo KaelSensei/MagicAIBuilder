@@ -213,6 +213,8 @@ In **List mode**, hover a row, or reach its buttons with Tab, to edit the card i
 - The **image** icon opens the **printing selector** for that row; the card keeps its count, zone, category and note, and takes the price of the printing you pick, so deck totals and shopping lists follow it. When the printing you pick has no USD price, its row shows no price.
 - The **note** icon (main deck only) opens a private note on the card. Ctrl+Enter (⌘+Enter on a Mac) or clicking away saves it; Esc cancels. Empty the note and save to delete it.
 
+When your collection holds cards, each row shows an **Owned** or **Buy** badge. The **Collection** switch at the right of the sort toolbar hides these badges on every zone's rows, Sideboard and Considering included, and shows them again. This browser remembers your choice across reloads and decks. The Collection panel and the acquisition plan stay as they are.
+
 #### Setting Your Commander
 
 1. Enable **Commander** mode in the search panel
