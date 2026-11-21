@@ -999,6 +999,11 @@
     "cardCount": "{count, plural, one {# card} other {# cards}}",
     "tagline": "Commander deck builder"
   },
+  "dates": {
+    "created": "Created <time>{date}</time>",
+    "updatedAgo": "Updated <time>{ago}</time>",
+    "updatedOn": "Updated <time>{date}</time>"
+  },
   "sync": {
     "conflictReloaded": "This deck was changed elsewhere (another tab or device). It has been reloaded; redo your last change if you still want it."
   },

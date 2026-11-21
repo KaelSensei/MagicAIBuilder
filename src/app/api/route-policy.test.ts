@@ -322,6 +322,9 @@ function seedTables(): void {
       isPublic: true,
       shareToken: SHARE_TOKEN,
       shareEnabled: true,
+      // Non-null in the schema; the public deck read sends both.
+      createdAt: new Date("2026-03-03T09:00:00.000Z"),
+      updatedAt: new Date("2026-11-19T12:00:00.000Z"),
       cards: [],
     },
   ]);

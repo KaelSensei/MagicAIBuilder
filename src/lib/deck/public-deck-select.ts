@@ -10,8 +10,9 @@ import type { Prisma } from "@prisma/client";
  * every column added to `Deck` or `DeckCard` later. A field reaches a visitor
  * only when a public surface renders it and it is listed here.
  *
- * Read today by the public deck page (`/deck/[id]`: header, primer, fork
- * attribution, focused-feedback request, card list, metadata), by the
+ * Read today by the public deck page (`/deck/[id]`: header, creation and
+ * update dates, primer, fork attribution, focused-feedback request, card
+ * list, metadata), by the
  * community deck comparison (cards matched by Scryfall id, compared by mana
  * value, price, colour identity and role), and, widened by
  * {@link FORK_SOURCE_SELECT}, by a fork.
@@ -42,7 +43,13 @@ export const PUBLIC_DECK_CARD_SELECT = {
   isGameChanger: true,
 } as const satisfies Prisma.DeckCardSelect;
 
-/** Deck columns a public surface renders, with its author and every card row. */
+/**
+ * Deck columns a public surface renders, with its author and every card row.
+ *
+ * The two dates are the stored ones, shown on the page so a visitor can judge
+ * whether the list is current (I-92: a date shown is the one stored, never a
+ * guess). Community discovery already reads public decks' update dates.
+ */
 export const PUBLIC_DECK_SELECT = {
   id: true,
   name: true,
@@ -55,11 +62,17 @@ export const PUBLIC_DECK_SELECT = {
   forkedFromDeckId: true,
   forkedFromDeckName: true,
   forkedFromUserName: true,
+  createdAt: true,
+  updatedAt: true,
   user: { select: PUBLIC_DECK_AUTHOR_SELECT },
   cards: { select: PUBLIC_DECK_CARD_SELECT },
 } as const satisfies Prisma.DeckSelect;
 
-/** A deck row read through {@link PUBLIC_DECK_SELECT}; it has no `Date`, so it is also its JSON. */
+/**
+ * A deck row read through {@link PUBLIC_DECK_SELECT}. Its two dates are
+ * `Date`s, which JSON turns into ISO strings, so viewers receive the
+ * `PublicDeck` shape (`@/lib/deck/public-deck`) instead.
+ */
 export type PublicDeckRecord = Prisma.DeckGetPayload<{
   select: typeof PUBLIC_DECK_SELECT;
 }>;
@@ -86,7 +99,8 @@ const FORK_SOURCE_CARD_SELECT = {
  * public ones, plus the command-zone slots that keep the copy's commander,
  * partner and companion. The owner's budget, bracket override, tags, folder
  * and sharing settings are not read, so a fork can neither copy nor return
- * them.
+ * them. The source's dates are read but not copied: the fork route names the
+ * fields it copies, so a fork gets dates of its own.
  */
 export const FORK_SOURCE_SELECT = {
   ...PUBLIC_DECK_SELECT,
