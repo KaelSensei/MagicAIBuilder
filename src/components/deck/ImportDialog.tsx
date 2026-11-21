@@ -11,6 +11,7 @@ import { fetchInBatches } from "@/lib/deck/batch-fetch";
 import { CardLookupError } from "@/lib/deck/card-lookup-error";
 import { useDeckStore } from "@/lib/deck/store";
 import { ImportFromUrlTab } from "@/components/deck/ImportFromUrlTab";
+import { ImportFileButton } from "@/components/deck/ImportFileButton";
 import { Button } from "@/components/ui/Button";
 import { textAreaShellClassName } from "@/components/ui/Input";
 import { cn } from "@/components/ui/utils";
@@ -297,6 +298,14 @@ export function ImportDialog({
     }
   };
 
+  /** Drops the preview of a decklist that just changed, and any lookup still running for it. */
+  const clearPreview = () => {
+    previewRequest.current++;
+    setPreview(null);
+    setPreviewCards(null);
+    setMissingNames([]);
+  };
+
   const handleClose = () => {
     previewRequest.current++;
     setOpen(false);
@@ -392,18 +401,27 @@ export function ImportDialog({
                 placeholder={`Commander\n1 Atraxa, Praetors' Voice\n\nDeck\n1 Sol Ring\n1 Arcane Signet\n...`}
                 value={text}
                 onChange={(e) => {
-                  previewRequest.current++;
+                  clearPreview();
                   setText(e.target.value);
-                  setPreview(null);
-                  setPreviewCards(null);
-                  setMissingNames([]);
                   setStatus("idle");
                   setMessage("");
                 }}
                 disabled={status === "validating"}
               />
+              <ImportFileButton
+                replacing={text.trim() !== ""}
+                disabled={status === "validating"}
+                onRead={(result) => {
+                  if (result.kind === "read") {
+                    clearPreview();
+                    setText(result.text);
+                  }
+                  setStatus(result.kind === "read" ? "idle" : "error");
+                  setMessage(result.message);
+                }}
+              />
 
-              {preview && <TextImportPreview preview={preview} duplicateNames={duplicateNames} />}
+              {preview &&<TextImportPreview preview={preview} duplicateNames={duplicateNames} />}
               <TextImportFeedback status={status} message={message} missingNames={missingNames} />
               <TextImportActions
                 status={status}
