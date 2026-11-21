@@ -24,6 +24,7 @@ import { ReadonlyURLSearchParams } from "next/navigation";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { GameChangersPageClient } from "./GameChangersPageClient";
 import { useCollectionStore } from "@/lib/collection/store";
+import { clearGuestDeck, GUEST_DECK_ID } from "@/lib/deck/guest-deck";
 import { useDeckStore } from "@/lib/deck/store";
 import type { Deck } from "@/lib/deck/types";
 import type {
@@ -31,9 +32,11 @@ import type {
   ScryfallSearchResponse,
 } from "@/lib/scryfall/types";
 import { aDeck } from "@/test/builders/deck";
+import { aDeckCard } from "@/test/builders/card";
 import { aScryfallCard } from "@/test/builders/scryfall";
 import {
   createInMemoryDeckApi,
+  DeckApiRefusal,
   emptyApiDeck,
 } from "@/test/in-memory-deck-api";
 import { deckApiHandlers } from "@/test/fake-deck-client";
@@ -173,7 +176,12 @@ beforeEach(() => {
   useCollectionStore.setState({ collectionCards: {}, collectionCardsFoil: {} });
   deckApi.reset();
   toasts.mockClear();
-  useDeckStore.setState({ decks: {}, activeDeckId: null, undoStack: [] });
+  useDeckStore.setState({
+    decks: {},
+    activeDeckId: null,
+    undoStack: [],
+    bannedNames: new Set(),
+  });
 });
 
 afterEach(() => {
@@ -634,6 +642,11 @@ describe("adding the zoomed card to the open deck", () => {
   const DECK_ID = "deck-atraxa";
   const DECK_NAME = "Atraxa Superfriends";
 
+  // The store mirrors a held guest deck to localStorage; the next test starts without one.
+  afterEach(() => {
+    clearGuestDeck();
+  });
+
   /** Opens `deck` as the builder does: held by the store, active, and saved on the server. */
   function openDeckInBuilder(overrides: Partial<Deck> = {}): void {
     const deck = aDeck({ id: DECK_ID, name: DECK_NAME, ...overrides });
@@ -674,5 +687,149 @@ describe("adding the zoomed card to the open deck", () => {
         "Rhystic Study",
       ])
     );
+  });
+
+  it("with no deck open in this session, shows the hint and no add button, and asks nobody to sign in", async () => {
+    const { zoom } = await zoomInto("Rhystic Study");
+
+    expect(
+      within(zoom).getByText("Open a deck in the builder to add cards from here.")
+    ).toBeInTheDocument();
+    expect(within(zoom).queryByRole("button", { name: /^Add/ })).toBeNull();
+    expect(within(zoom).queryByText(/sign in/i)).toBeNull();
+  });
+
+  it("a press that adds nothing does not say Added: a singleton already in the deck stays one copy", async () => {
+    openDeckInBuilder({
+      cards: [
+        aDeckCard({ id: "row-rhystic", name: "Rhystic Study", typeLine: "Enchantment" }),
+      ],
+    });
+    const { user, zoom } = await zoomInto("Rhystic Study");
+    expect(within(zoom).getByText(`In ${DECK_NAME}`)).toBeInTheDocument();
+
+    await user.click(
+      within(zoom).getByRole("button", { name: `Add to ${DECK_NAME}` })
+    );
+
+    await waitFor(() =>
+      expect(
+        within(zoom).getByRole("button", { name: `Add to ${DECK_NAME}` })
+      ).toBeEnabled()
+    );
+    expect(
+      within(zoom).queryByRole("button", { name: `Added to ${DECK_NAME}` })
+    ).toBeNull();
+    expect(mainDeckRows("Rhystic Study").map((row) => row.quantity)).toEqual([1]);
+    expect(deckApi.addCard).not.toHaveBeenCalled();
+  });
+
+  it("names the count of a basic land the open deck holds", async () => {
+    const forest = aScryfallCard({
+      id: cardId(904),
+      name: "Forest",
+      type_line: "Basic Land — Forest",
+    });
+    answers.set("is:gamechanger", aPage([forest]));
+    openDeckInBuilder({
+      cards: [
+        aDeckCard({
+          id: "row-forest",
+          name: "Forest",
+          typeLine: "Basic Land — Forest",
+          quantity: 2,
+        }),
+      ],
+    });
+
+    const { zoom } = await zoomInto("Forest");
+
+    expect(within(zoom).getByText(`2 in ${DECK_NAME}`)).toBeInTheDocument();
+  });
+
+  it("adds a banned card from the banlist tab, flagged banned as a search add in the editor is", async () => {
+    openDeckInBuilder();
+    useDeckStore.setState({ bannedNames: new Set(["Black Lotus"]) });
+    const { user } = await openPage();
+    await user.click(tab(BANLIST_TAB));
+    await user.click(await screen.findByRole("button", { name: "View Black Lotus" }));
+    const zoom = screen.getByRole("dialog", { name: "Black Lotus — zoom" });
+
+    await user.click(
+      within(zoom).getByRole("button", { name: `Add to ${DECK_NAME}` })
+    );
+
+    expect(
+      await within(zoom).findByRole("button", { name: `Added to ${DECK_NAME}` })
+    ).toBeInTheDocument();
+    expect(mainDeckRows("Black Lotus").map((row) => row.isBanned)).toEqual([true]);
+  });
+
+  it("adds to the guest deck when a guest has it open, without asking the server", async () => {
+    useDeckStore.setState({
+      decks: { [GUEST_DECK_ID]: aDeck({ id: GUEST_DECK_ID, name: "Guest deck" }) },
+      activeDeckId: GUEST_DECK_ID,
+    });
+    const { user, zoom } = await zoomInto("Rhystic Study");
+
+    await user.click(within(zoom).getByRole("button", { name: "Add to Guest deck" }));
+
+    expect(
+      await within(zoom).findByRole("button", { name: "Added to Guest deck" })
+    ).toBeInTheDocument();
+    expect(
+      useDeckStore.getState().decks[GUEST_DECK_ID]?.cards.map((card) => card.name)
+    ).toEqual(["Rhystic Study"]);
+    expect(deckApi.addCard).not.toHaveBeenCalled();
+  });
+
+  it("on a failed save, shows the store's failure toast and returns the button to Add", async () => {
+    openDeckInBuilder();
+    deckApi.addCard.mockRejectedValueOnce(new DeckApiRefusal(500, "boom"));
+    const { user, zoom } = await zoomInto("Rhystic Study");
+
+    await user.click(
+      within(zoom).getByRole("button", { name: `Add to ${DECK_NAME}` })
+    );
+
+    await waitFor(() =>
+      expect(toasts).toHaveBeenCalledWith("error", "Could not add card. Please retry.")
+    );
+    expect(
+      within(zoom).getByRole("button", { name: `Add to ${DECK_NAME}` })
+    ).toBeEnabled();
+    expect(mainDeckRows("Rhystic Study")).toEqual([]);
+  });
+
+  it("is reached by keyboard inside the zoom and adds on Enter", async () => {
+    openDeckInBuilder();
+    const { user, zoom } = await zoomInto("Rhystic Study");
+
+    await user.tab();
+    await user.tab();
+    const add = within(zoom).getByRole("button", { name: `Add to ${DECK_NAME}` });
+    expect(add).toHaveFocus();
+    await user.keyboard("{Enter}");
+
+    expect(
+      await within(zoom).findByRole("button", { name: `Added to ${DECK_NAME}` })
+    ).toBeInTheDocument();
+  });
+
+  it("speaks French to a French reader", async () => {
+    openDeckInBuilder();
+    const user = userEvent.setup();
+    renderWithProviders(<GameChangersPageClient />, { locale: "fr" });
+    await user.click(await screen.findByRole("button", { name: "Voir Rhystic Study" }));
+    const zoom = screen.getByRole("dialog", { name: "Rhystic Study — zoom" });
+
+    await user.click(
+      within(zoom).getByRole("button", { name: `Ajouter à ${DECK_NAME}` })
+    );
+
+    expect(
+      await within(zoom).findByRole("button", { name: `Ajoutée à ${DECK_NAME}` })
+    ).toBeInTheDocument();
+    expect(within(zoom).getByText(`Dans ${DECK_NAME}`)).toBeInTheDocument();
   });
 });
