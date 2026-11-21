@@ -48,6 +48,7 @@ import { DeckStats } from "@/components/deck/DeckStats";
 import { DrawOddsPanel } from "@/components/deck/DrawOddsPanel";
 import { BracketIndicator } from "@/components/deck/BracketIndicator";
 import { DeckDetailsPanel } from "@/components/deck/DeckDetailsPanel";
+import { DeckSummaryBar } from "@/components/builder/DeckSummaryBar";
 import { SharePopover } from "@/components/deck/SharePopover";
 import { GameChangersBadge } from "@/components/deck/GameChangersBadge";
 import { BanlistAlert } from "@/components/deck/BanlistAlert";
@@ -1273,6 +1274,7 @@ export default function BuilderPage() {
             onSelect={setMobilePanel}
           />
         </div>
+        <DeckSummaryBar deck={deck} bracketScore={bracketScore} />
       </div>
 
       {/* Toast notifications */}
