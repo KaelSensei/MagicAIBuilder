@@ -3,6 +3,9 @@
  * The builder's "Deck details" section: the deck-level settings a player sets
  * once and revisits.
  *
+ * Under the heading, `DeckDatesLine` (I-92) shows when the deck was created
+ * and last updated, read from the store's deck, so an edit moves the update.
+ *
  * Context: deck building (ui), mounted at the top of the builder's analysis
  * sidebar. It composes one small editor per setting; each saves through an
  * optimistic deck store action that restores the previous value on a failed
@@ -30,6 +33,7 @@ import { useDeckStore } from "@/lib/deck/store";
 import type { Deck } from "@/lib/deck/types";
 import { BracketPathList } from "./BracketPathList";
 import { DeckBudgetInput } from "./DeckBudgetInput";
+import { DeckDatesLine } from "./DeckDatesLine";
 import { DeckDescriptionEditor } from "./DeckDescriptionEditor";
 import { DeckFormatPicker } from "./DeckFormatPicker";
 import { DeckTagsEditor } from "./DeckTagsEditor";
@@ -65,6 +69,11 @@ export function DeckDetailsPanel({ deck }: DeckDetailsPanelProps) {
       >
         {t("title")}
       </h2>
+      <DeckDatesLine
+        createdAt={deck.createdAt}
+        updatedAt={deck.updatedAt}
+        className="px-3 pt-2"
+      />
       <DeckFormatPicker deck={deck} />
       <DeckDescriptionEditor deckId={deck.id} description={deck.description} />
       <DeckTagsEditor deckId={deck.id} tags={deck.tags} />
