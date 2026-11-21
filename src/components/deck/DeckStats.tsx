@@ -327,7 +327,7 @@ export function DeckStats({
   return (
     <div className={cn("space-y-3", className)}>
       {/* Mana Curve */}
-      <ManaCurve curve={stats.manaCurve} />
+      <ManaCurve curve={stats.manaCurve} cards={cards} />
 
       {/* Color Distribution */}
       {Object.keys(stats.colorDistribution).length > 0 && (
