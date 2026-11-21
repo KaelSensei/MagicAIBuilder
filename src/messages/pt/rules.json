@@ -23,7 +23,12 @@
     "nextCard": "Next card",
     "viewAllArts": "View all arts",
     "noImage": "No image",
-    "cardPosition": "{current} / {total}"
+    "cardPosition": "{current} / {total}",
+    "addToDeck": "Add to {deck}",
+    "addedToDeck": "Added to {deck}",
+    "copiesInDeck": "{count} in {deck}",
+    "inDeck": "In {deck}",
+    "openDeckHint": "Open a deck in the builder to add cards from here."
   },
   "comprehensive": {
     "tabLabel": "Regras abrangentes",
