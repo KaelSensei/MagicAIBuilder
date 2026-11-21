@@ -41,6 +41,7 @@ describe("useDeckPrice", () => {
     expect(result.current.totalPrice).toBe(0);
     expect(result.current.missingPriceCount).toBe(0);
     expect(result.current.hasCards).toBe(false);
+    expect(result.current.totalWithoutBasics).toBeNull();
   });
 
   it("returns zero totalPrice for empty deck", () => {
@@ -124,5 +125,35 @@ describe("useDeckPrice", () => {
     // 1.005 * 3 = 3.015 → rounded to 3.02 (Math.round(301.5)/100)
     expect(result.current.totalPrice).toBeLessThanOrEqual(3.02);
     expect(result.current.totalPrice).toBeGreaterThanOrEqual(3.01);
+  });
+
+  it("gives the total without basic lands beside the unchanged total", () => {
+    const deck = makeEmptyDeck();
+    deck.commander = makeCard({ id: "cmd", price: 10.0 });
+    const forests = makeCard({ typeLine: "Basic Land — Forest", price: 0.25 });
+    deck.cards = [
+      makeCard({ id: "c1", price: 2.0 }),
+      { ...forests, quantity: 4 },
+    ];
+    useDeckStore.setState({
+      decks: { [deck.id]: deck },
+      activeDeckId: deck.id,
+    });
+    const { result } = renderHook(() => useDeckPrice());
+
+    expect(result.current.totalPrice).toBe(13.0);
+    expect(result.current.totalWithoutBasics).toBe(12.0);
+  });
+
+  it("has no total without basic lands when the deck holds none", () => {
+    const deck = makeEmptyDeck();
+    deck.cards = [makeCard({ id: "c1", price: 2.0 })];
+    useDeckStore.setState({
+      decks: { [deck.id]: deck },
+      activeDeckId: deck.id,
+    });
+    const { result } = renderHook(() => useDeckPrice());
+
+    expect(result.current.totalWithoutBasics).toBeNull();
   });
 });

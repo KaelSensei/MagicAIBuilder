@@ -21,6 +21,7 @@ import { CardImage } from "@/components/card/CardImage";
 import { CardListItem } from "@/components/card/CardListItem";
 import { ColorIdentityViolationLabel } from "@/components/deck/ColorIdentityViolationLabel";
 import { GridZoneCard } from "@/components/deck/GridZoneCard";
+import { GroupPriceSubtotal } from "@/components/deck/GroupPriceSubtotal";
 import { RulebreakerAdmissionNote } from "@/components/deck/RulebreakerAdmissionNote";
 import { gridColsClass } from "@/components/deck/grid-cols";
 import { cn } from "@/components/ui/utils";
@@ -196,6 +197,7 @@ function GenericGroup({
         <span className="text-xs text-[var(--text-secondary)] ml-auto">
           {cards.reduce((sum, c) => sum + c.quantity, 0)}
         </span>
+        <GroupPriceSubtotal cards={cards} />
       </button>
       {!collapsed && (
         <div className="pl-1">
@@ -265,6 +267,7 @@ function DroppableCategory({
         <span className="text-xs text-[var(--text-secondary)] ml-auto">
           {cards.reduce((sum, c) => sum + c.quantity, 0)}
         </span>
+        <GroupPriceSubtotal cards={cards} />
       </button>
 
       {/* Droppable area — always rendered so drag targets exist even when empty */}
