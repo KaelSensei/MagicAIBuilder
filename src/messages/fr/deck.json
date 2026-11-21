@@ -460,6 +460,20 @@
     "copied": "Copié !",
     "exportCsv": "Exporter en CSV"
   },
+  "curve": {
+    "barLabel": "Valeur de mana {cmc} : {permanents, plural, one {# permanent} other {# permanents}}, {spells, plural, one {# sort} other {# sorts}}",
+    "permanents": "Permanents",
+    "spells": "Sorts",
+    "legend": "Parties des barres",
+    "median": "Médiane {value}, ou {withLands} avec les terrains",
+    "total": "Valeur de mana totale {value}",
+    "bucketHeading": "Valeur de mana {cmc} · {count, plural, one {# carte} other {# cartes}}",
+    "split": "{permanents, plural, one {# permanent} other {# permanents}} · {spells, plural, one {# sort} other {# sorts}}",
+    "quantity": "{count}×",
+    "manaValue": "VM {value}",
+    "byColour": "Par couleur",
+    "colourCount": "{colour} : {count}"
+  },
   "bracket": {
     "noData": "Pas encore de données de bracket",
     "score": "Score de bracket",

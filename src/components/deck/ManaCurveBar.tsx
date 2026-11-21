@@ -1,21 +1,34 @@
 "use client";
 /**
- * One bar of the mana curve: its figure and its hover tooltip.
+ * One bar of the mana curve: its figure, its hover tooltip and, when the chart knows the deck's
+ * cards, its permanents and spells stacked, and a pressed state that opens the bar's card list.
+ *
+ * Colour never carries a meaning alone (WCAG 1.4.1): the spells part is striped, the legend names
+ * both parts, and the accessible name gives both counts.
  *
  * @module components/deck/ManaCurveBar
  */
-import { useState } from "react";
+import { useState, type KeyboardEvent } from "react";
 import { useTranslations } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/components/ui/utils";
+import { CURVE_TOP_BUCKET, type CurveParts } from "@/lib/deck/curve-breakdown";
+
+/** What a bar does when the chart knows the deck's cards. */
+export interface CurveBarSelection {
+  readonly parts: CurveParts;
+  readonly pressed: boolean;
+  readonly onToggle: (bucket: number) => void;
+  readonly onClose: () => void;
+}
 
 interface ManaCurveBarProps {
   readonly bucket: number;
   readonly count: number;
   readonly maxCount: number;
+  /** Absent on a chart without cards (the shared deck view): one plain bar, not pressable. */
+  readonly selection?: CurveBarSelection;
 }
-
-/** The top bucket of the curve: it holds every card of mana value 7 or more. */
-const TOP_BUCKET = 7;
 
 // MTG-inspired color palette per CMC bucket
 const CMC_COLORS: Readonly<Record<number, string>> = {
@@ -31,33 +44,100 @@ const CMC_COLORS: Readonly<Record<number, string>> = {
 
 /** A bar's label: "7+" for the top bucket. */
 export function bucketLabel(bucket: number): string {
-  return bucket === TOP_BUCKET ? "7+" : String(bucket);
+  return bucket === CURVE_TOP_BUCKET ? "7+" : String(bucket);
+}
+
+/** The solid fill of the permanents part. */
+export function permanentFill(color: string): string {
+  return `linear-gradient(to bottom, ${color}99, ${color})`;
+}
+
+/** The striped fill of the spells part, so the parts differ by more than colour. */
+export function spellFill(color: string): string {
+  return `repeating-linear-gradient(135deg, ${color}, ${color} 3px, ${color}55 3px, ${color}55 6px)`;
+}
+
+/** The stacked parts of a bar, spells on top; one plain part without a selection. */
+function BarParts({
+  color,
+  count,
+  parts,
+}: {
+  readonly color: string;
+  readonly count: number;
+  readonly parts: CurveParts | undefined;
+}) {
+  const stack = parts
+    ? [
+        { side: "spell", copies: parts.spells, fill: spellFill(color) },
+        {
+          side: "permanent",
+          copies: parts.permanents,
+          fill: permanentFill(color),
+        },
+      ]
+    : [{ side: "all", copies: count, fill: permanentFill(color) }];
+  return (
+    <div
+      className="absolute inset-0 flex flex-col overflow-hidden rounded-t"
+      aria-hidden="true"
+    >
+      {stack.map(({ side, copies, fill }) => (
+        <div
+          key={side}
+          data-part={side}
+          style={{ flexGrow: copies, flexBasis: 0, background: fill }}
+        />
+      ))}
+    </div>
+  );
 }
 
 /**
  * One bar of the mana curve.
  *
- * @param props.bucket - the mana value it counts, 7 for 7 and more
+ * @param props.bucket - the mana value it counts, `CURVE_TOP_BUCKET` for 7 and more
  * @param props.count - its figure, from `buildManaCurve`
  * @param props.maxCount - the tallest bar's figure, which sets the scale
+ * @param props.selection - its parts and pressed state, when the chart knows the deck's cards
  */
-export function ManaCurveBar({ bucket, count, maxCount }: ManaCurveBarProps) {
+export function ManaCurveBar({
+  bucket,
+  count,
+  maxCount,
+  selection,
+}: ManaCurveBarProps) {
   const t = useTranslations("deck");
   const [hovered, setHovered] = useState(false);
-  const label = t("stats.curveBucket", { cmc: bucketLabel(bucket), count });
-  const color = CMC_COLORS[bucket] ?? CMC_COLORS[TOP_BUCKET];
+  const cmc = bucketLabel(bucket);
+  const label = selection
+    ? t("curve.barLabel", { cmc, ...selection.parts })
+    : t("stats.curveBucket", { cmc, count });
+  const color = CMC_COLORS[bucket] ?? CMC_COLORS[CURVE_TOP_BUCKET];
+
+  const onKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
+    if (event.key === "Escape") selection?.onClose();
+  };
 
   return (
     <button
       type="button"
-      className="relative flex flex-col items-center flex-1 h-full justify-end bg-transparent border-0 p-0 cursor-default focus:outline-none"
+      className={cn(
+        "relative flex flex-col items-center flex-1 h-full justify-end bg-transparent border-0 p-0 focus:outline-none",
+        selection
+          ? "cursor-pointer disabled:cursor-default focus-visible:ring-2 focus-visible:ring-[var(--accent)] rounded-t"
+          : "cursor-default"
+      )}
       aria-label={label}
+      aria-pressed={selection?.pressed}
+      disabled={selection !== undefined && count === 0}
+      onClick={() => selection?.onToggle(bucket)}
+      onKeyDown={onKeyDown}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onFocus={() => setHovered(true)}
       onBlur={() => setHovered(false)}
     >
-      {/* Tooltip */}
       <AnimatePresence>
         {hovered && count > 0 && (
           <motion.div
@@ -72,14 +152,9 @@ export function ManaCurveBar({ bucket, count, maxCount }: ManaCurveBarProps) {
         )}
       </AnimatePresence>
 
-      {/* Bar — positioned from bottom */}
       <motion.div
         className="w-full relative"
-        style={{
-          background: `linear-gradient(to bottom, ${color}99, ${color})`,
-          borderRadius: "4px 4px 0 0",
-          opacity: hovered ? 1 : 0.85,
-        }}
+        style={{ opacity: hovered || selection?.pressed ? 1 : 0.85 }}
         initial={{ height: 0 }}
         animate={{ height: `${(count / maxCount) * 100}%` }}
         transition={{
@@ -88,6 +163,7 @@ export function ManaCurveBar({ bucket, count, maxCount }: ManaCurveBarProps) {
           ease: [0.25, 0.46, 0.45, 0.94],
         }}
       >
+        <BarParts color={color} count={count} parts={selection?.parts} />
         {/* Count label pinned just above the bar top */}
         <AnimatePresence mode="wait">
           {count > 0 && (
