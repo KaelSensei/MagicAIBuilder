@@ -247,6 +247,14 @@ Eight specs from a nineteenth pass on 2026-11-20, in the same "roadmap v2" forma
 | [A deck's place in the roster: keep, rest, retire or take apart](i114-a-decks-place-in-the-roster-keep-rest-retire-or-take-apart.md) | I-114 | Next for slices 1–3; never paid | Players with too many decks retire some by hand, while the product counts every deck's copies and missing cards forever |
 | [Cards to get signed: an event's artists against your copies](i115-cards-to-get-signed-an-events-artists-against-your-copies.md) | I-115 | Later, behind I-67 slice 2; never paid | The organiser tells players to list attending artists and pull their cards; two competitors do it free and neither keeps "your printing" apart |
 
+## Public deck lists — added 2026-11-21
+
+One spec from a twentieth pass on 2026-11-21, in the same "roadmap v2" format, on Moxfield's new deck editor of 2026-11-20. Ten of that editor's features are being built in a batch of their own; of the rest, one gap had no owning file. The others are dated lines in their owners, listed in the roadmap's twentieth-pass tables.
+
+| Spec | Initiative | Status | The one-line reason it exists |
+| --- | --- | --- | --- |
+| [Public deck lists: a curated set of public decks anyone can read](i116-public-deck-lists-a-curated-set-of-public-decks-anyone-can-read.md) | I-116 | Later; other players' decks behind D-109; never paid | Moxfield publishes an event's Top 8 as one public list; our decks can be saved privately, pinned by their author and searched, but not gathered into a public, ordered, credited list |
+
 ## Discipline
 
 A spec is a plan, not a record. It does not mark anything shipped — the roadmap's `Status` and its scope checkboxes remain the only source of truth for what exists. Competitor rows are claims read from public pages on a stated date, not evidence; revalidate before a row justifies implementation.
@@ -303,3 +311,5 @@ The seventeenth pass (2026-11-19) added no spec file. It added one dated scope l
 The eighteenth pass (2026-11-19) added [`i104-league-decks-and-the-change-allowance-between-rounds.md`](i104-league-decks-and-the-change-allowance-between-rounds.md), [`i105-creator-content-linked-to-commanders-and-precons.md`](i105-creator-content-linked-to-commanders-and-precons.md), [`i106-choosing-a-precon-one-product-lines-decks-side-by-side.md`](i106-choosing-a-precon-one-product-lines-decks-side-by-side.md) and [`i107-the-turn-a-goldfish-completes-its-route.md`](i107-the-turn-a-goldfish-completes-its-route.md), one file per subject, in the shape of I-102 and I-103. It also added 36 dated scope lines ("Added 2026-11-19 (eighteenth pass)") to 21 specs that own a refinement, a non-goal line on each new file's neighbour (I-17, I-36, I-53, I-65), and replaced the seventeenth pass's speed-variant line on [I-31](i31-deck-lab.md) with a pointer to I-107. The review is [section 19 of the competitive landscape](../competitive-landscape.md#19-an-eighteenth-pass-leagues-creator-content-precon-choice-and-formats-2026-11-19).
 
 The nineteenth pass (2026-11-20) added eight files, I-108 to I-115, in the shape of I-104 and I-106 (see the table above). It also added 75 dated scope lines ("Added 2026-11-20 (nineteenth pass)", or "Corrected") to 48 specs that own a refinement, and 13 boundary lines on the new files' neighbours (I-01, I-06, I-08, I-16, I-17, I-43, I-53, I-56, I-59, I-60, I-67, I-79, I-101), 51 existing specs in all. The I-20 row above was corrected the same day. The review is [section 20 of the competitive landscape](../competitive-landscape.md#20-a-nineteenth-pass-the-shelf-of-decks-gifts-cubes-and-pools-and-signings-2026-11-20).
+
+The twentieth pass (2026-11-21) added one file, I-116, in the shape of I-115 (see the table above). It also added 17 dated scope lines ("Added 2026-11-21 (twentieth pass)") and 3 boundary lines to 11 specs that own a refinement, and corrected I-37's citation of slice 24 for cards dragged from other sites, which is now slice 25. The review is [section 21 of the competitive landscape](../competitive-landscape.md#21-a-twentieth-pass-moxfields-new-deck-editor-2026-11-21).
