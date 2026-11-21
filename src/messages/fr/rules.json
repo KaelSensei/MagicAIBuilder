@@ -23,7 +23,12 @@
     "nextCard": "Carte suivante",
     "viewAllArts": "Voir tous les arts",
     "noImage": "Pas d'image",
-    "cardPosition": "{current} / {total}"
+    "cardPosition": "{current} / {total}",
+    "addToDeck": "Ajouter à {deck}",
+    "addedToDeck": "Ajoutée à {deck}",
+    "copiesInDeck": "{count} dans {deck}",
+    "inDeck": "Dans {deck}",
+    "openDeckHint": "Ouvre un deck dans l'éditeur pour ajouter des cartes depuis cette page."
   },
   "comprehensive": {
     "tabLabel": "Règles complètes",
