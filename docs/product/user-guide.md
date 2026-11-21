@@ -270,6 +270,8 @@ For **non-Commander decks** the panel swaps the Commander benchmarks for checks 
 
 The card count is also measured against your format's real deck size (60 rather than 100), and the Commander-only bracket targets are hidden.
 
+Each bar of the **mana curve** stacks its permanents (solid) and its spells, meaning instants and sorceries (striped); a double-faced card counts by its front face. Above the chart, next to the average, you see the median mana value without and with lands (lands count as 0) and the deck's total mana value. Click a bar, or focus it and press Enter, to list its cards under the chart: each card with its quantity and type line, then the bar's permanents and spells and its cards by colour. The 7+ bar also shows each card's mana value. Click the bar again or press Escape to close the list.
+
 ### Prices and Budgets
 
 **All prices are in US dollars.** They come from Scryfall, which quotes in USD, and nothing in the app converts them. Budget targets are USD too — a budget of 50 means $50.
