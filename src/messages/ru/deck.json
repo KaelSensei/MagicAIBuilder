@@ -769,6 +769,20 @@
     "emptyHint": "Turn on <strong>Companion</strong> in search, then click a Companion card. It stays separate from the Sideboard tab.",
     "clear": "Clear"
   },
+  "curve": {
+    "barLabel": "Mana value {cmc}: {permanents, plural, one {# permanent} other {# permanents}}, {spells, plural, one {# spell} other {# spells}}",
+    "permanents": "Permanents",
+    "spells": "Spells",
+    "legend": "Bar parts",
+    "median": "Median {value}, or {withLands} with lands",
+    "total": "Total mana value {value}",
+    "bucketHeading": "Mana value {cmc} · {count, plural, one {# card} other {# cards}}",
+    "split": "{permanents, plural, one {# permanent} other {# permanents}} · {spells, plural, one {# spell} other {# spells}}",
+    "quantity": "{count}×",
+    "manaValue": "MV {value}",
+    "byColour": "By colour",
+    "colourCount": "{colour}: {count}"
+  },
   "bracket": {
     "noData": "No bracket data yet",
     "score": "Bracket Score",
