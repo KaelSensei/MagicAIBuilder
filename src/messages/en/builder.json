@@ -129,6 +129,18 @@
     "playtest": "Playtest",
     "export": "Export"
   },
+  "deleteDeck": {
+    "button": "Delete deck",
+    "buttonLabel": "Delete",
+    "title": "Delete {name}?",
+    "description": "This cannot be undone.",
+    "cancel": "Cancel",
+    "confirm": "Delete deck",
+    "deleting": "Deleting…",
+    "waitingForSave": "Saving your changes…",
+    "failed": "The deck could not be deleted. Try again.",
+    "deleted": "{name} was deleted"
+  },
   "badges": {
     "cmd": "CMD",
     "comp": "COMP",
