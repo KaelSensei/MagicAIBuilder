@@ -503,6 +503,17 @@ codes are case-insensitive: `2 Negate (mh3) 42` and `2 Negate (MH3) 42` both
 resolve the card name as `Negate`. Commander roles, quantities and secondary
 zones remain intact. This does not select or restore an exact printing.
 
+To import a downloaded decklist without opening it, click **Import from files…**
+under the text box and choose up to 10 files of at most 1 MB each: plain text
+(`.txt`), MTGO decks (`.dek`) or `.csv` files with a header row naming a
+quantity column (`Count`, `Quantity`, `Qty` or `Amount`), a name column (`Name`
+or `Card Name`) and, optionally, a zone column (`Board` or `Section`). The files'
+decklists replace the text box, in the order chosen, and the status line says how
+each file was read and lists any line it could not read, with its file and line
+number. Nothing is set as the commander from a `.dek` file: set it after the
+import. The files are read in your browser and never uploaded; only the card
+names go to Scryfall when you preview.
+
 ### Exporting a Deck
 
 Click **Export** in the deck builder to copy your deck in various formats.

@@ -234,6 +234,23 @@
     }
   },
   "import": {
+    "file": {
+      "choose": "Import from files…",
+      "hint": ".txt, MTGO .dek or .csv. Read in your browser, never uploaded.",
+      "inputLabel": "Decklist files",
+      "read": "Read {name} as {format, select, text {a text decklist} dek {an MTGO .dek file} other {a CSV file}}, {count, plural, one {# line} other {# lines}}.",
+      "replaced": "The files' text replaced what the box held.",
+      "unreadable": "Could not read {count, plural, one {# line} other {# lines}}: {lines}.",
+      "unreadableLine": "{file}, line {line} (“{content}”)",
+      "tooManyFiles": "Choose at most {limit} files at once; you chose {count}.",
+      "tooLarge": "{name} is larger than {limit} MB, so it was not read.",
+      "unsupported": "{name} is not a .txt, .dek or .csv file.",
+      "notDek": "{name} is not an MTGO .dek deck: it has no Cards element.",
+      "csvColumns": "{name} has no column the import knows. Quantity: Count, Quantity, Qty or Amount. Name: Name or Card Name. Zone, optional: Board or Section.",
+      "tooManyLines": "The decklist has {count} lines; the import reads at most {limit}.",
+      "readFailed": "The browser could not read the files.",
+      "unchanged": "The text box was not changed."
+    },
     "title": "Import Decklist",
     "tabText": "Plain Text",
     "tabUrl": "From URL",
