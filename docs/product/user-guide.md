@@ -24,6 +24,8 @@ On mobile devices or with `prefers-reduced-motion`, a clean 2D fallback is shown
 4. Name your deck and it will appear in the deck list
 5. Click the deck to open the builder
 
+To delete the deck you are editing, press **Delete** in the builder's title bar and confirm in the dialog. If a change is still saving, the dialog waits for it first. The deck is deleted for good, and you land back on your deck list. A deck kept in this browser without an account has no Delete button.
+
 ### Format Rules
 
 Each format has different rules that are automatically enforced:
