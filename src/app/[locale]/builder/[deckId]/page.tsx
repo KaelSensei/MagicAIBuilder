@@ -92,6 +92,7 @@ import { CollectionStatsPanel } from "@/components/deck/CollectionStatsPanel";
 import { DeckVisibilityToggle } from "@/components/deck/DeckVisibilityToggle";
 import { DeckSaveIndicator } from "@/components/deck/DeckSaveIndicator";
 import { DeckUnavailableState } from "@/components/deck/DeckUnavailableState";
+import { DeleteDeckButton } from "@/components/builder/DeleteDeckButton";
 import { useSession } from "next-auth/react";
 import { SnapshotsPanel } from "@/components/deck/SnapshotsPanel";
 import { CardPackagesPanel } from "@/components/deck/CardPackagesPanel";
@@ -906,6 +907,7 @@ export default function BuilderPage() {
                 </span>
               </button>
             )}
+            <DeleteDeckButton deckId={deckId} />
             {/* Bulk edit — edit deck as plain text */}
             <BulkEditModal deck={deck}>
               <button

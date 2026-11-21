@@ -129,6 +129,18 @@
     "playtest": "Tester",
     "export": "Exporter"
   },
+  "deleteDeck": {
+    "button": "Supprimer le deck",
+    "buttonLabel": "Supprimer",
+    "title": "Supprimer {name} ?",
+    "description": "Cette action est irréversible.",
+    "cancel": "Annuler",
+    "confirm": "Supprimer le deck",
+    "deleting": "Suppression…",
+    "waitingForSave": "Enregistrement de vos modifications…",
+    "failed": "Le deck n'a pas pu être supprimé. Réessayez.",
+    "deleted": "{name} a été supprimé"
+  },
   "badges": {
     "cmd": "CMD",
     "comp": "COMP",
