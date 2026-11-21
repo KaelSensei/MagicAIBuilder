@@ -132,6 +132,55 @@ afterEach(() => {
 });
 
 describe("DeckDetailsPanel", () => {
+  // I-92: an owner coming back to a deck sees when they last touched it.
+  describe("dates", () => {
+    const NOW = new Date("2026-11-21T12:00:00.000Z");
+
+    beforeEach(() => {
+      vi.useFakeTimers({ toFake: ["Date"] });
+      vi.setSystemTime(NOW);
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("shows when the deck was created and when it was last updated", () => {
+      openDeck({
+        createdAt: new Date("2026-03-03T09:00:00.000Z"),
+        updatedAt: new Date("2026-11-19T12:00:00.000Z"),
+      });
+      renderPanel();
+      const details = screen.getByRole("region", { name: "Deck details" });
+
+      expect(
+        within(details).getByText(/^Created/).parentElement
+      ).toHaveTextContent("Created Mar 3, 2026 · Updated 2 days ago");
+    });
+
+    it("moves the update date to the store's after an edit in this session", async () => {
+      const user = userEvent.setup();
+      openDeck({ updatedAt: new Date("2026-11-19T12:00:00.000Z") });
+      renderPanel();
+      const details = screen.getByRole("region", { name: "Deck details" });
+
+      await user.click(
+        within(details).getByRole("button", { name: "Add tag" })
+      );
+      await user.type(
+        within(details).getByPlaceholderText("tag name…"),
+        "Tokens{Enter}"
+      );
+
+      expect(storedDeck()?.updatedAt).toEqual(NOW);
+      expect(
+        within(details)
+          .getByText(/^Updated/)
+          .querySelector("time")
+      ).toHaveAttribute("datetime", NOW.toISOString());
+    });
+  });
+
   describe("tags", () => {
     it("adds the tag the player types and saves the deck's tags", async () => {
       const user = userEvent.setup();
