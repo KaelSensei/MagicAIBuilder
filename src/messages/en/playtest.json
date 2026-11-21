@@ -7,6 +7,18 @@
     "multiplayer": "Multiplayer game (more than two players)",
     "action": "Draw opening hand"
   },
+  "trialCards": {
+    "legend": "Start with these cards",
+    "hint": "Try new cards: choose up to {max} main-deck cards to start in your opening hand. The rest of the hand is drawn at random.",
+    "search": "Search the main deck",
+    "copy": "{name} (copy {copy} of {copies})",
+    "count": "{count} of {max} chosen",
+    "limit": "You can choose up to {max} cards.",
+    "chosen": "Chosen: {names}",
+    "emptyDeck": "The main deck has no cards to choose.",
+    "noMatch": "No main-deck card matches “{query}”.",
+    "recordBlocked": "This game started with chosen cards, so it is not saved as a playtest session."
+  },
   "turn": "Turn {turn}",
   "mulliganCount": "{count, plural, one {# mulligan} other {# mulligans}}",
   "handCount": "{count} in hand",

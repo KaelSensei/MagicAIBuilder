@@ -398,3 +398,56 @@ describe("createPlaytestStore", () => {
     expect(usePlaytestStore.getState().engine).toBeNull();
   });
 });
+
+describe("a new-card trial in a session", () => {
+  const chosen = ["c3", "c17"];
+  const trialDeps = (seed: number): PlaytestDeps => ({
+    random: seededRandom(seed),
+    clock: { now: () => Date.UTC(2026, 10, 20, 20, 0, 0) },
+  });
+  const startTrial = (seed = 42) => {
+    const store = createPlaytestStore(trialDeps(seed));
+    store.getState().startPlaytest(makeDeck(), { trialCardIds: chosen });
+    return store;
+  };
+  const chosenIn = (cards: readonly DeckCard[] = []) =>
+    cards.filter((card) => chosen.includes(card.id)).map((card) => card.id);
+
+  // CR 103.5: a mulligan shuffles the whole hand back and draws a new seven; only the first
+  // hand is chosen.
+  it("shuffles the chosen cards back into the library on a mulligan", () => {
+    const store = startTrial();
+
+    store.getState().mulligan();
+    const engine = store.getState().engine;
+
+    expect({
+      mulligans: engine?.mulliganCount,
+      hand: engine?.hand.length,
+      library: engine?.library.length,
+      chosenInHand: chosenIn(engine?.hand),
+      chosenInLibrary: chosenIn(engine?.library).length,
+    }).toEqual({
+      mulligans: 1,
+      hand: 7,
+      library: 25 - 7,
+      chosenInHand: [],
+      chosenInLibrary: 2,
+    });
+  });
+
+  it("deals the same chosen cards again on a reset, with the first log line", () => {
+    const store = startTrial();
+    store.getState().mulligan();
+    store.getState().drawCard();
+
+    store.getState().resetPlaytest();
+    const engine = store.getState().engine;
+
+    expect(engine?.hand.slice(0, 2).map((card) => card.id)).toEqual(chosen);
+    expect(chosenIn(engine?.library)).toEqual([]);
+    expect(engine?.actionLog.map((line) => line.description)).toEqual([
+      "Started with chosen cards: Card 3, Card 17",
+    ]);
+  });
+});
