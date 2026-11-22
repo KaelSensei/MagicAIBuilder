@@ -19,6 +19,9 @@
  * - The basic-land test: every copy-limit check calls `isBasicLand` (#1349).
  * - The commander pairing rule: the store, bulk edit and the AI path call
  *   `pairCommanders` / `canPairCommanders` (#1352).
+ * - The deck price scope (B2-40): `computeDeckStats`, `useDeckPrice` and the
+ *   shopping list read `playedDeckCards`, the command zone and the main deck
+ *   (I-32). The "deck price" test below now pins that they agree.
  *
  * @module deck/rule-divergences.characterization.test
  */
@@ -310,12 +313,12 @@ describe("land count", () => {
 });
 
 describe("deck price", () => {
-  it("computeDeckStats currently prices the commander and the main deck, while useDeckPrice adds Considering; neither counts the companion (pinned; see B2-40)", () => {
+  it("computeDeckStats and useDeckPrice both price the commander and the main deck, leaving out Considering; neither counts the companion (B2-40 fixed by I-32)", () => {
     openInStore(DECK, GAME_CHANGER_NAMES);
 
     const { result } = renderHook(() => useDeckPrice());
 
     expect(computeDeckStats(DECK).totalPrice).toBe(33.25);
-    expect(result.current.totalPrice).toBe(83.25);
+    expect(result.current.totalPrice).toBe(33.25);
   });
 });
