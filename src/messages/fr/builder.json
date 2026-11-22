@@ -249,6 +249,7 @@
     "added": "Ajoutée à « {zone} » : {name}",
     "unreadableLink": "Ce lien n’est pas une carte que nous savons lire. Déposez ou collez une carte de Scryfall ou d’EDHREC, ou un nom de carte.",
     "lookupFailed": "La recherche de la carte n’a pas répondu ou n’a trouvé aucune carte. Rien n’a été ajouté.",
+    "atCopyLimit": "{name} a déjà atteint sa limite d’exemplaires en {format}. Rien n’a été ajouté.",
     "file": "Impossible de déposer un fichier ici. Pour ajouter des cartes depuis un fichier, utilisez Importer."
   },
   "mobileTabs": {
