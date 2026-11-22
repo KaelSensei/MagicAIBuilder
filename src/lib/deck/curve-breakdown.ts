@@ -275,7 +275,7 @@ export function curveBucketCards(
   return {
     rows,
     count: rows.reduce((sum, { quantity }) => sum + quantity, 0),
-    parts: rows.reduce(addToParts, NO_PARTS),
+    parts: rows.reduce((parts, card) => addToParts(parts, card), NO_PARTS),
     colours: colourCounts(rows),
   };
 }
