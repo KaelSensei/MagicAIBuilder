@@ -4,6 +4,7 @@
  * Computes missing cards, collection stats, and exportable text
  * from a deck + a set of owned scryfallIds.
  */
+import { playedDeckCards } from "@/lib/deck/played-deck-cards";
 import type { DeckCard } from "@/lib/deck/types";
 import { isBasicLand } from "@/lib/scryfall/type-line";
 
@@ -52,22 +53,6 @@ interface ShoppingListOptions {
   readonly includeBasics?: boolean;
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function collectAllCards(
-  deckCards: readonly DeckCard[],
-  commander: DeckCard | null,
-  partner: DeckCard | null
-): DeckCard[] {
-  const cards: DeckCard[] = [];
-  if (commander) cards.push(commander);
-  if (partner) cards.push(partner);
-  for (const card of deckCards) {
-    if (card.zone === "main") cards.push(card);
-  }
-  return cards;
-}
-
 // ─── Collection status ────────────────────────────────────────────────────────
 
 /**
@@ -84,7 +69,11 @@ export function getDeckCardStatuses(
   const result: DeckCardStatusItem[] = [];
   const remainingPhysical = new Map<string, number>();
   const remainingProxy = new Map<string, number>();
-  for (const card of collectAllCards(deckCards, commander, partner)) {
+  for (const card of playedDeckCards({
+    commander,
+    partner,
+    cards: deckCards,
+  })) {
     const scryfallId = card.scryfallId ?? card.id;
     const isBasic = isBasicLand(card.typeLine);
     const physicalAvailable =
@@ -175,7 +164,7 @@ export function buildShoppingList(
   options?: ShoppingListOptions
 ): ShoppingListItem[] {
   const includeBasics = options?.includeBasics ?? false;
-  const allCards = collectAllCards(deckCards, commander, partner);
+  const allCards = playedDeckCards({ commander, partner, cards: deckCards });
 
   const requirements = new Map<string, ShoppingListItem>();
 
@@ -241,7 +230,11 @@ export function getMissingCollectionCards(
     )
   );
   const missingCards: DeckCard[] = [];
-  for (const card of collectAllCards(deckCards, commander, partner)) {
+  for (const card of playedDeckCards({
+    commander,
+    partner,
+    cards: deckCards,
+  })) {
     const scryfallId = card.scryfallId ?? card.id;
     const quantity = missingById.get(scryfallId);
     if (quantity === undefined) continue;
