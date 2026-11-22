@@ -41,6 +41,7 @@ export interface ExternalCardDropTargetProps {
 export function ExternalCardDropTarget({ zone }: ExternalCardDropTargetProps) {
   const t = useTranslations("builder.externalDrop");
   const tZones = useTranslations("builder.zones");
+  const formatName = useTranslations("deck.format.name");
   const addToast = useToastStore((state) => state.add);
 
   const report = useCallback(
@@ -52,6 +53,15 @@ export function ExternalCardDropTarget({ zone }: ExternalCardDropTargetProps) {
             t("added", {
               name: outcome.cardName,
               zone: tZones(ZONE_LABEL_KEYS[outcome.zone]),
+            })
+          );
+          return;
+        case "at-copy-limit":
+          addToast(
+            "info",
+            t("atCopyLimit", {
+              name: outcome.cardName,
+              format: formatName(outcome.format),
             })
           );
           return;
@@ -68,7 +78,7 @@ export function ExternalCardDropTarget({ zone }: ExternalCardDropTargetProps) {
       const unknown: never = outcome;
       return unknown;
     },
-    [addToast, t, tZones]
+    [addToast, t, tZones, formatName]
   );
 
   const { isDragOver } = useExternalCardDrop({ zone, onOutcome: report });

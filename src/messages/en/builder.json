@@ -249,6 +249,7 @@
     "added": "Added {name} to {zone}",
     "unreadableLink": "This link isn't a card we can read. Drop or paste a card from Scryfall or EDHREC, or a card name.",
     "lookupFailed": "The card lookup did not answer or found no card. Nothing was added.",
+    "atCopyLimit": "{name} is already at its copy limit for {format}. Nothing was added.",
     "file": "Files can't be dropped here. To add cards from a file, use Import."
   },
   "mobileTabs": {
