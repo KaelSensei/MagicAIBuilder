@@ -19,12 +19,9 @@
  * @module components/deck/DrawOddsPanel
  */
 import { useCallback, useId, useMemo, useState } from "react";
-import {
-  useFormatter,
-  useTranslations,
-  type NumberFormatOptions,
-} from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import { cardsDrawnBy, usualTable, type DrawPoint } from "@/lib/deck/cards-drawn";
+import { CHANCE_PERCENT_FORMAT } from "@/lib/deck/chance-percent-format";
 import {
   chanceOfAtLeast,
   type DrawOdds,
@@ -57,17 +54,6 @@ const OPENING_HAND: DrawPoint = { kind: "opening-hand" };
 const DEFAULT_MINIMUM: Readonly<Record<DrawOddsTarget["kind"], number>> = {
   lands: 3,
   card: 1,
-};
-
-/**
- * A chance as a percentage with one decimal, in the reader's locale: "50.1%"
- * in English, "50,1 %" in French. The fixed decimal keeps the digits stable
- * from one open to the next.
- */
-const PERCENT_FORMAT: Readonly<NumberFormatOptions> = {
-  style: "percent",
-  minimumFractionDigits: 1,
-  maximumFractionDigits: 1,
 };
 
 /** A small explanatory line under the figure. */
@@ -160,7 +146,7 @@ function OddsFigure({
     case "known":
       return (
         <output className="block text-lg font-semibold text-[var(--text-primary)]">
-          {format.number(odds.probability, PERCENT_FORMAT)}
+          {format.number(odds.probability, CHANCE_PERCENT_FORMAT)}
         </output>
       );
     case "unknown":

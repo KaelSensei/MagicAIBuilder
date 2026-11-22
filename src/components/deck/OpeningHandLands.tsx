@@ -18,12 +18,9 @@
  * @module components/deck/OpeningHandLands
  */
 import { useId, useMemo } from "react";
-import {
-  useFormatter,
-  useTranslations,
-  type NumberFormatOptions,
-} from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import type { TableSize } from "@/lib/deck/cards-drawn";
+import { CHANCE_PERCENT_FORMAT } from "@/lib/deck/chance-percent-format";
 import {
   countLibrary,
   type DrawOddsTarget,
@@ -38,16 +35,6 @@ import type { Deck } from "@/lib/deck/types";
 
 /** The section counts the deck's lands, whatever the panel's question asks. */
 const LANDS: DrawOddsTarget = { kind: "lands" };
-
-/**
- * A chance as a percentage with one decimal, in the reader's locale, as the
- * panel's own figure shows it: "29.7%" in English, "29,7 %" in French.
- */
-const PERCENT_FORMAT: Readonly<NumberFormatOptions> = {
-  style: "percent",
-  minimumFractionDigits: 1,
-  maximumFractionDigits: 1,
-};
 
 /** A small explanatory line, as under the panel's figure. */
 const NOTE_CLASS =
@@ -93,7 +80,7 @@ function LandSpreadTable({
               {t("landCount", { lands: row.lands })}
             </th>
             <td className={FIGURE_CLASS}>
-              {format.number(row.probability, PERCENT_FORMAT)}
+              {format.number(row.probability, CHANCE_PERCENT_FORMAT)}
             </td>
           </tr>
         ))}
@@ -142,7 +129,7 @@ function LandDropTable({
               {t("openingLands.landsByTurn", { lands: drop.turn })}
             </td>
             <td className={FIGURE_CLASS}>
-              {format.number(drop.probability, PERCENT_FORMAT)}
+              {format.number(drop.probability, CHANCE_PERCENT_FORMAT)}
             </td>
           </tr>
         ))}
