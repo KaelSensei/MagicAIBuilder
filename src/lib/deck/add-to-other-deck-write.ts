@@ -30,7 +30,7 @@ export interface OtherDeckAddition {
 export type OtherDeckAddOutcome =
   /** The copy was stored; `quantity` is the row's stored count. */
   | { readonly kind: "added"; readonly quantity: number }
-  /** The zone's row was at the card's copy limit; nothing was stored. */
+  /** The deck was at the card's copy limit; nothing was stored. */
   | { readonly kind: "atLimit" };
 
 /**

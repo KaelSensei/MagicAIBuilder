@@ -37,7 +37,8 @@ export function withDeckToReload(
 /**
  * The deck as the listing holds it: the command zone, no other row, and a row
  * count above the rows held so `isDeckStub` reads it as a stub. The card
- * count the deck list shows stays the one the rows gave (`cardCopyCount`).
+ * count the deck list shows stays the one the rows gave (`cardCopyCount`)
+ * until the listing is read again, which `useAddToOtherDeck` does at once.
  * The version goes too: a stub vouches for none until its rows are read.
  */
 function asListingStub({ version: _version, ...deck }: Deck): Deck {
