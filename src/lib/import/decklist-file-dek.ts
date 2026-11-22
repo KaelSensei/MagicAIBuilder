@@ -14,6 +14,11 @@
  * bounded patterns over the `Cards` elements, the way `parseTextDecklist`
  * bounds its own, rather than with an XML parser that would need the DOM.
  *
+ * XML comments are dropped before any element is read: MTGO writes none, but
+ * people and other tools comment out a card, and a commented-out card must not
+ * be imported. An unterminated comment hides the rest of the file, as it would
+ * from an XML parser, and is listed as an unreadable line.
+ *
  * @module import/decklist-file-dek
  */
 import {
@@ -39,6 +44,15 @@ const NAMED_ENTITIES: ReadonlyMap<string, string> = new Map([
 ]);
 const QUANTITY = /^\d{1,4}$/;
 const LAST_CODE_POINT = 0x10ffff;
+const COMMENT_OPEN = "<!--";
+const COMMENT_CLOSE = "-->";
+
+/** A file's text without its comments, and the unterminated comment that ended it, if any. */
+interface UncommentedText {
+  readonly text: string;
+  /** The file from the unterminated `<!--` to its end, `null` when every comment closes. */
+  readonly unterminatedComment: string | null;
+}
 
 /**
  * The decklist of an MTGO `.dek` file, or `null` when the file holds no
@@ -46,15 +60,17 @@ const LAST_CODE_POINT = 0x10ffff;
  *
  * @param text - the file's text, line endings already `\n`
  * @returns a `Deck` section, then a `Sideboard` section, each only when it has
- *   cards; an element without a name or a positive quantity is unreadable
+ *   cards; an element without a name or a positive quantity is unreadable, and
+ *   so is an unterminated comment, which hides everything after it
  */
 export function readMtgoDek(text: string): DecklistLines | null {
   const main: string[] = [];
   const sideboard: string[] = [];
   const unreadable: UnreadableLine[] = [];
-  const lineAt = lineCounter(text);
+  const uncommented = withoutComments(text);
+  const lineAt = lineCounter(uncommented.text);
   let elements = 0;
-  for (const element of text.matchAll(CARDS_ELEMENT)) {
+  for (const element of uncommented.text.matchAll(CARDS_ELEMENT)) {
     elements++;
     const attributes = readAttributes(element[1] ?? "");
     const cardLine = cardLineOf(attributes);
@@ -64,8 +80,40 @@ export function readMtgoDek(text: string): DecklistLines | null {
       (isSideboard(attributes) ? sideboard : main).push(cardLine);
     }
   }
+  if (uncommented.unterminatedComment !== null) {
+    unreadable.push(unreadableLine(lineAt(uncommented.text.length), uncommented.unterminatedComment));
+  }
   if (elements === 0) return null;
   return { lines: [...sectionLines("Deck", main), ...sectionLines("Sideboard", sideboard)], unreadable };
+}
+
+/**
+ * Drops every `<!-- … -->` comment in one forward pass, with `indexOf` rather
+ * than a pattern, so a hostile file cannot make it backtrack. Each comment
+ * becomes one space, so it never joins the text around it, followed by the
+ * line breaks it spanned, so later elements keep their line in the file.
+ * As in XML, `<!-->` does not close the comment it opens.
+ */
+function withoutComments(text: string): UncommentedText {
+  const kept: string[] = [];
+  let position = 0;
+  for (let open = text.indexOf(COMMENT_OPEN); open >= 0; open = text.indexOf(COMMENT_OPEN, position)) {
+    const close = text.indexOf(COMMENT_CLOSE, open + COMMENT_OPEN.length);
+    kept.push(text.slice(position, open));
+    if (close < 0) return { text: kept.join(""), unterminatedComment: text.slice(open) };
+    position = close + COMMENT_CLOSE.length;
+    kept.push(" ", "\n".repeat(lineBreaksIn(text, open, position)));
+  }
+  kept.push(text.slice(position));
+  return { text: kept.join(""), unterminatedComment: null };
+}
+
+function lineBreaksIn(text: string, start: number, end: number): number {
+  let count = 0;
+  for (let index = text.indexOf("\n", start); index >= 0 && index < end; index = text.indexOf("\n", index + 1)) {
+    count++;
+  }
+  return count;
 }
 
 function readAttributes(source: string): ReadonlyMap<string, string> {
