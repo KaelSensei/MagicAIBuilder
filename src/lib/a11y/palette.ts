@@ -112,10 +112,21 @@ const HEX_COLOUR = /^#[0-9a-f]{6}$/i;
  * @example contrastRatio("#767676", "#ffffff") // 4.54…, WCAG's reference pair
  */
 export function contrastRatio(foreground: string, background: string): number {
-  const first = relativeLuminance(toLinearRgb(foreground));
-  const second = relativeLuminance(toLinearRgb(background));
+  const first = relativeLuminance(foreground);
+  const second = relativeLuminance(background);
 
   return (Math.max(first, second) + 0.05) / (Math.min(first, second) + 0.05);
+}
+
+/**
+ * WCAG 2.1 relative luminance, from 0 for black to 1 for white. Use it to
+ * order two colours by lightness; use {@link contrastRatio} to judge legibility.
+ *
+ * @param hex - `#rrggbb`, any case
+ * @throws RangeError when `hex` is not `#rrggbb`
+ */
+export function relativeLuminance(hex: string): number {
+  return dot(LUMINANCE_WEIGHTS, toLinearRgb(hex));
 }
 
 /**
@@ -242,10 +253,6 @@ function toHex(linear: readonly number[]): string {
   );
 
   return `#${bytes.join("")}`;
-}
-
-function relativeLuminance(linear: Rgb): number {
-  return dot(LUMINANCE_WEIGHTS, linear);
 }
 
 function toOklab(linear: Rgb): Rgb {

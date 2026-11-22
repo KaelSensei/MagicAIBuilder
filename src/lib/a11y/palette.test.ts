@@ -5,6 +5,7 @@ import {
   PALETTE_THRESHOLDS,
   contrastRatio,
   deltaE,
+  relativeLuminance,
   simulateCvd,
   validatePalette,
 } from "./palette";
@@ -52,6 +53,14 @@ describe("contrastRatio", () => {
       expect(() => contrastRatio(value, WHITE)).toThrow(RangeError);
     }
   );
+});
+
+describe("relativeLuminance", () => {
+  it("runs from 0 for black to 1 for white, mid grey at about a fifth", () => {
+    expect(relativeLuminance(BLACK)).toBe(0);
+    expect(relativeLuminance(WHITE)).toBeCloseTo(1, 10);
+    expect(relativeLuminance("#808080")).toBeCloseTo(0.2159, 4);
+  });
 });
 
 describe("simulateCvd", () => {
