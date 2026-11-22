@@ -3,15 +3,16 @@
  * the real deck client against the in-memory deck API: the other deck is read,
  * the copy limit decides the write, and the open deck is never written.
  */
-import { act } from "@testing-library/react";
+import { act, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
 import type { ApiDeck, ApiDeckCard } from "@/lib/db/deck-api";
-import { apiDeckToStoreDeck } from "@/lib/deck/store-factories";
+import { apiDeckToStoreDeck, deckCardCount } from "@/lib/deck/store-factories";
 import { useDeckStore } from "@/lib/deck/store";
 import type { DeckFormat } from "@/lib/deck/formats";
 import type { DeckCard } from "@/lib/deck/types";
 import { useAddToOtherDeck } from "@/hooks/useAddToOtherDeck";
 import { aDeckCard } from "@/test/builders/card";
+import { aDeck } from "@/test/builders/deck";
 import {
   DeckApiRefusal,
   emptyApiDeck,
@@ -173,6 +174,120 @@ describe("useAddToOtherDeck", () => {
     expect(toasts).not.toHaveBeenCalled();
   });
 
+  it("a Modern deck with 3 Lightning Bolt in the main deck and 1 in the sideboard refuses a fifth copy into the sideboard", async () => {
+    // CR 100.2a, CR 100.4a: a constructed deck and its sideboard together
+    // hold at most four copies of a card.
+    deckApi.seedDeck(
+      savedDeck(
+        "burn",
+        "Burn",
+        [
+          { ...LIGHTNING_BOLT, id: "burn-bolt", quantity: 3 },
+          { ...LIGHTNING_BOLT, id: "burn-bolt-side", zone: "sideboard" },
+        ],
+        "modern"
+      )
+    );
+    const { result } = renderHookWithProviders(() =>
+      useAddToOtherDeck(LIGHTNING_BOLT)
+    );
+
+    await act(() =>
+      result.current.addTo({ id: "burn", name: "Burn" }, "sideboard")
+    );
+
+    expect(result.current.status).toEqual({
+      kind: "atLimit",
+      deckName: "Burn",
+    });
+    expect(deckApi.updateCardQuantity).not.toHaveBeenCalled();
+    expect(deckApi.addCard).not.toHaveBeenCalled();
+    expect(toasts).not.toHaveBeenCalled();
+  });
+
+  it("a Commander deck whose commander is Atraxa refuses Atraxa into its main deck", async () => {
+    // CR 903.5b: one copy of each card across the deck, the command zone
+    // included.
+    const atraxa = aDeckCard({
+      id: "a-atraxa",
+      scryfallId: "atraxa-print",
+      name: "Atraxa, Praetors' Voice",
+      typeLine: "Legendary Creature — Phyrexian Angel Horror",
+    });
+    deckApi.seedDeck({
+      ...savedDeck("superfriends", "Superfriends", []),
+      cards: [
+        {
+          ...apiRow("superfriends", { ...atraxa, id: "superfriends-atraxa" }),
+          isCommander: true,
+        },
+      ],
+    });
+    const { result } = renderHookWithProviders(() => useAddToOtherDeck(atraxa));
+
+    await act(() =>
+      result.current.addTo({ id: "superfriends", name: "Superfriends" }, "main")
+    );
+
+    expect(result.current.status).toEqual({
+      kind: "atLimit",
+      deckName: "Superfriends",
+    });
+    expect(deckApi.addCard).not.toHaveBeenCalled();
+  });
+
+  it("a Modern deck holding 20 basic Mountains still accepts another", async () => {
+    // CR 100.2a: basic lands are exempt from the four-copy limit.
+    const mountain = aDeckCard({
+      id: "a-mountain",
+      scryfallId: "mountain-print",
+      name: "Mountain",
+      typeLine: "Basic Land — Mountain",
+    });
+    deckApi.seedDeck(
+      savedDeck(
+        "burn",
+        "Burn",
+        [{ ...mountain, id: "burn-mountain", quantity: 20 }],
+        "modern"
+      )
+    );
+    const { result } = renderHookWithProviders(() =>
+      useAddToOtherDeck(mountain)
+    );
+
+    await act(() => result.current.addTo({ id: "burn", name: "Burn" }, "main"));
+
+    expect(deckApi.savedDeck("burn")?.cards).toEqual([
+      expect.objectContaining({ id: "burn-mountain", quantity: 21 }),
+    ]);
+  });
+
+  it("a Lightning Bolt in Considering does not count against the four in the deck", async () => {
+    // Considering is not part of the deck, so CR 100.2a does not weigh it.
+    deckApi.seedDeck(
+      savedDeck(
+        "burn",
+        "Burn",
+        [
+          { ...LIGHTNING_BOLT, id: "burn-bolt", quantity: 3 },
+          { ...LIGHTNING_BOLT, id: "burn-bolt-maybe", zone: "maybeboard" },
+        ],
+        "modern"
+      )
+    );
+    const { result } = renderHookWithProviders(() =>
+      useAddToOtherDeck(LIGHTNING_BOLT)
+    );
+
+    await act(() => result.current.addTo({ id: "burn", name: "Burn" }, "main"));
+
+    expect(deckApi.savedDeck("burn")?.cards).toEqual([
+      expect.objectContaining({ id: "burn-bolt", quantity: 4 }),
+      expect.objectContaining({ id: "burn-bolt-maybe", quantity: 1 }),
+    ]);
+  });
+
   it("never claims a copy the route did not store", async () => {
     deckApi.seedDeck(
       savedDeck(
@@ -258,6 +373,40 @@ describe("useAddToOtherDeck", () => {
     expect(deckApi.addCard).not.toHaveBeenCalled();
     expect(deckApi.savedDeck(DECK_A.id)).toEqual(DECK_A);
     expect(toasts).not.toHaveBeenCalled();
+  });
+
+  it("after the add, the deck list shows Kaalia's new card count", async () => {
+    deckApi.seedDeck(savedDeck(KAALIA.id, KAALIA.name, [SOL_RING]));
+    await act(() => useDeckStore.getState().loadDecks());
+    const listedCount = () =>
+      deckCardCount(useDeckStore.getState().decks[KAALIA.id] ?? aDeck());
+    expect(listedCount()).toBe(1);
+    const { result } = renderHookWithProviders(() =>
+      useAddToOtherDeck(SMOTHERING_TITHE)
+    );
+
+    await act(() => result.current.addTo(KAALIA, "main"));
+
+    await waitFor(() => expect(listedCount()).toBe(2));
+  });
+
+  it("after the add, the deck list shows the new count of a deck opened earlier", async () => {
+    const kaalia = savedDeck(KAALIA.id, KAALIA.name, [SOL_RING]);
+    deckApi.seedDeck(kaalia);
+    useDeckStore.setState((state) => ({
+      decks: { ...state.decks, [KAALIA.id]: apiDeckToStoreDeck(kaalia) },
+    }));
+    const { result } = renderHookWithProviders(() =>
+      useAddToOtherDeck(SMOTHERING_TITHE)
+    );
+
+    await act(() => result.current.addTo(KAALIA, "main"));
+
+    await waitFor(() =>
+      expect(
+        deckCardCount(useDeckStore.getState().decks[KAALIA.id] ?? aDeck())
+      ).toBe(2)
+    );
   });
 
   it("after the add, opening Kaalia shows the card", async () => {

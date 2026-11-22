@@ -38,13 +38,27 @@ describe("decideOtherDeckWrite", () => {
   });
 
   it("writes a new row when only another zone holds the card", () => {
+    const burn = aDeck({
+      id: "burn",
+      format: "modern",
+      cards: [{ ...LIGHTNING_BOLT, id: "burn-bolt-side", zone: "sideboard" }],
+    });
+
+    expect(decideOtherDeckWrite(burn, LIGHTNING_BOLT, "main")).toEqual({
+      kind: "addRow",
+    });
+  });
+
+  it("is at the limit when a Commander deck holds the card in its sideboard", () => {
+    // CR 903.5b: one copy of each card; the sideboard counts with the deck
+    // (CR 100.4a).
     const kaalia = aDeck({
       id: "kaalia",
       cards: [{ ...SMOTHERING_TITHE, id: "kaalia-tithe", zone: "sideboard" }],
     });
 
     expect(decideOtherDeckWrite(kaalia, SMOTHERING_TITHE, "main")).toEqual({
-      kind: "addRow",
+      kind: "atLimit",
     });
   });
 

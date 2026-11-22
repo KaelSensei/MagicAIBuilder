@@ -6,7 +6,8 @@
  *
  * Deck-building context, client hook. The write itself is
  * `addCardToOtherDeck`; this hook turns its outcome into the picker's state
- * and the success toast. The open deck is never written.
+ * and the success toast, and has the deck list read again so it shows the
+ * other deck's new card count. The open deck is never written.
  *
  * @module hooks/useAddToOtherDeck
  */
@@ -28,7 +29,7 @@ export interface OtherDeckChoice {
 export type AddToOtherDeckStatus =
   | { readonly kind: "idle" }
   | { readonly kind: "saving" }
-  /** Nothing was written: the zone already holds the most copies allowed. */
+  /** Nothing was written: the deck already holds the most copies allowed. */
   | { readonly kind: "atLimit"; readonly deckName: string }
   /** A read or a write failed; the same add can be tried again. */
   | {
@@ -54,6 +55,7 @@ export const ZONE_LABEL_KEYS: Readonly<Record<DeckZone, string>> = {
 export function useAddToOtherDeck(card: DeckCard) {
   const t = useTranslations("builder");
   const reloadDeckOnNextOpen = useDeckStore((s) => s.reloadDeckOnNextOpen);
+  const loadDecks = useDeckStore((s) => s.loadDecks);
   const [status, setStatus] = useState<AddToOtherDeckStatus>({ kind: "idle" });
 
   const addTo = useCallback(
@@ -72,6 +74,10 @@ export function useAddToOtherDeck(card: DeckCard) {
         // The store may hold the other deck's rows from an earlier open; they
         // no longer match the server's, so the next open reads it again.
         reloadDeckOnNextOpen(deck.id);
+        // The deck list counts a stub from the listing, and the held one
+        // predates the add: read it again so the list shows the server's new
+        // count. A failed read is the listing's own error, not the add's.
+        void loadDecks();
         useToastStore.getState().add(
           "success",
           t("rowAddElsewhere.addedToDeck", {
@@ -88,7 +94,7 @@ export function useAddToOtherDeck(card: DeckCard) {
         return false;
       }
     },
-    [card, reloadDeckOnNextOpen, t]
+    [card, loadDecks, reloadDeckOnNextOpen, t]
   );
 
   return { status, addTo };
