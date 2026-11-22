@@ -15,6 +15,7 @@ import { useDeckStore } from "@/lib/deck/store";
 import { useUIStore } from "@/lib/ui/store";
 import { useShortcutPreferencesStore } from "@/lib/ui/shortcut-preferences";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import { QuickAddPaletteHost } from "@/components/search/QuickAddPaletteHost";
 import type { Deck, DeckCard } from "@/lib/deck/types";
 import { aDeckCard } from "@/test/builders/card";
 import { aDeck } from "@/test/builders/deck";
@@ -45,10 +46,21 @@ function makeDeck(size = 40): Deck {
 const NO_RESULTS: readonly never[] = [];
 const ignoreCard = (): void => undefined;
 
-/** The builder page around the playtest: its global shortcuts are listening. */
+/** No commander, so quick add searches the whole Commander card pool. */
+const COMMANDER_POOL = { legality: "commander", identityClause: "" };
+
+/**
+ * The builder page around the playtest: its global shortcuts are listening, and so is its
+ * quick-add palette, which Ctrl/⌘+K opens.
+ */
 function BuilderWithPlaytest({ deck }: { readonly deck: Deck }) {
   useKeyboardShortcuts({ searchResults: NO_RESULTS, onAddCard: ignoreCard });
-  return <PlaytestModal deck={deck} onClose={ignoreCard} />;
+  return (
+    <>
+      <QuickAddPaletteHost scope={COMMANDER_POOL} onAdd={ignoreCard} />
+      <PlaytestModal deck={deck} onClose={ignoreCard} />
+    </>
+  );
 }
 
 /** Opens the playtest over the builder and deals the opening hand. */
@@ -276,5 +288,15 @@ describe("the builder's shortcuts behind the playtest", () => {
     await user.keyboard("{Control>}s{/Control}");
 
     expect(forceSave).not.toHaveBeenCalled();
+  });
+
+  it("Ctrl+K does not open quick add behind the playtest", async () => {
+    const user = await startGame();
+
+    await user.keyboard("{Control>}k{/Control}");
+
+    expect(
+      screen.queryByRole("dialog", { name: "Quick add" })
+    ).not.toBeInTheDocument();
   });
 });
