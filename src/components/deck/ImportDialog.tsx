@@ -2,7 +2,14 @@
 import { forEachSequential } from "@/lib/async/sequential";
 // Import deck from plain text or URL — Radix Dialog
 // Supports both trigger-based (children) and controlled (open/onOpenChange) usage
-import { useRef, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { useTranslations } from "next-intl";
 import * as Dialog from "@radix-ui/react-dialog";
 import { X, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
@@ -210,6 +217,47 @@ function TextImportActions({ status, text, preview, previewCards, onClose, onPre
   );
 }
 
+/** How long the form keeps its content after closing: the length of the closing animation. */
+const RESET_AFTER_CLOSE_MS = 200;
+
+/**
+ * Schedules `reset` once the closing animation is over, and returns the
+ * function that schedules it.
+ *
+ * A pending reset never outlives the dialog: unmounting cancels it, so no
+ * state update runs on a component that is gone. Reopening before it fires
+ * applies it at once, before the paint, so the reopened dialog shows an empty
+ * form and a late reset cannot wipe what the player types next.
+ *
+ * `reset` must keep its identity across renders.
+ */
+function useResetAfterClose(open: boolean, reset: () => void): () => void {
+  const pendingReset = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined
+  );
+
+  const cancel = useCallback(() => {
+    clearTimeout(pendingReset.current);
+    pendingReset.current = undefined;
+  }, []);
+
+  useEffect(() => cancel, [cancel]);
+
+  useLayoutEffect(() => {
+    if (!open || pendingReset.current === undefined) return;
+    cancel();
+    reset();
+  }, [open, cancel, reset]);
+
+  return useCallback(() => {
+    cancel();
+    pendingReset.current = setTimeout(() => {
+      pendingReset.current = undefined;
+      reset();
+    }, RESET_AFTER_CLOSE_MS);
+  }, [cancel, reset]);
+}
+
 export function ImportDialog({
   children,
   open: controlledOpen,
@@ -306,18 +354,21 @@ export function ImportDialog({
     setMissingNames([]);
   };
 
+  const resetForm = useCallback(() => {
+    setText("");
+    setStatus("idle");
+    setMessage("");
+    setMissingNames([]);
+    setPreview(null);
+    setPreviewCards(null);
+    setActiveTab("text");
+  }, []);
+  const scheduleFormReset = useResetAfterClose(open, resetForm);
+
   const handleClose = () => {
     previewRequest.current++;
     setOpen(false);
-    setTimeout(() => {
-      setText("");
-      setStatus("idle");
-      setMessage("");
-      setMissingNames([]);
-      setPreview(null);
-      setPreviewCards(null);
-      setActiveTab("text");
-    }, 200);
+    scheduleFormReset();
   };
 
   return (
