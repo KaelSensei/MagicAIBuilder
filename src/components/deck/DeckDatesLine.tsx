@@ -14,9 +14,17 @@
  * then as a date; the creation date always reads as a date. "Now" comes from
  * next-intl's `useNow`, so a provider or a test can fix it.
  *
+ * The relative text waits for the hydration. The server renders at one instant
+ * and the browser hydrates at another, so around a unit boundary they would
+ * write "22 hours ago" and "1 day ago", and React would keep the server's stale
+ * text. The server HTML and the hydration therefore show the update as a date,
+ * which does not depend on "now"; the browser switches to the relative text
+ * right after. The layout's provider gets no request-time `now` on purpose: it
+ * would freeze "now" into cached and static pages for every `useNow` caller.
+ *
  * @module components/deck/DeckDatesLine
  */
-import type { ReactNode } from "react";
+import { useSyncExternalStore, type ReactNode } from "react";
 import { useFormatter, useNow, useTranslations } from "next-intl";
 import { cn } from "@/components/ui/utils";
 
@@ -51,19 +59,35 @@ function readsAsRelative(updatedAt: Date, now: Date): boolean {
   );
 }
 
+/** Nothing to undo: whether the line has hydrated never changes back. */
+function unsubscribeFromNothing(): void {
+  // The store below never changes, so there is no listener to remove.
+}
+
+/** Hydration is the only change the store below has, and React handles it. */
+function subscribeToNothing(): () => void {
+  return unsubscribeFromNothing;
+}
+
 /**
- * The `<time>` tag of a dates message, holding the stored instant. Relative
- * text depends on "now", which can differ between the server render and
- * hydration, hence the hydration warning is suppressed on this element only.
+ * False in the server render and in the hydration, true in every render after.
+ * React hydrates with the server snapshot, so both sides render the same text,
+ * then re-renders at once with the browser snapshot; a render that is not a
+ * hydration reads true straight away.
  */
+function useHasHydrated(): boolean {
+  return useSyncExternalStore(
+    subscribeToNothing,
+    () => true,
+    () => false
+  );
+}
+
+/** The `<time>` tag of a dates message, holding the stored instant. */
 function storedTimeTag(instant: Date, title: string) {
   return function storedTime(chunks: ReactNode) {
     return (
-      <time
-        dateTime={instant.toISOString()}
-        title={title}
-        suppressHydrationWarning
-      >
+      <time dateTime={instant.toISOString()} title={title}>
         {chunks}
       </time>
     );
@@ -85,6 +109,7 @@ export function DeckDatesLine({
   const t = useTranslations("deck.dates");
   const format = useFormatter();
   const now = useNow();
+  const hasHydrated = useHasHydrated();
   const created = toInstant(createdAt);
   const updated = toInstant(updatedAt);
   if (created === null && updated === null) return null;
@@ -107,7 +132,7 @@ export function DeckDatesLine({
       {created && updated && <span aria-hidden="true"> · </span>}
       {updated && (
         <span>
-          {readsAsRelative(updated, now)
+          {hasHydrated && readsAsRelative(updated, now)
             ? t.rich("updatedAgo", {
                 ago: format.relativeTime(updated, now),
                 time: timeOf(updated),
