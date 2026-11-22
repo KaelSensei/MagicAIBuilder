@@ -128,5 +128,22 @@
     "invalidDescription": "Décris la carte en quelques mots.",
     "invalidQuery": "Cette description n'a pas produit une requête Scryfall valide. Essaie une formulation plus courte.",
     "failed": "La requête n'a pas pu être écrite. La recherche par syntaxe fonctionne toujours."
+  },
+  "quickAdd": {
+    "open": "Ajout rapide",
+    "title": "Ajout rapide",
+    "placeholder": "Nom, rôle ou texte de règles",
+    "hint": "Entrée ajoute au principal. Maj+Entrée à la réserve. Alt+Entrée à À considérer. Alt+R passe du nom au texte de règles. La palette reste ouverte.",
+    "nameReading": "Nom",
+    "oracleReading": "Texte de règles",
+    "readingGroup": "Comment lire cette ligne",
+    "idle": "Tape au moins deux lettres.",
+    "searching": "Recherche…",
+    "noResults": "Aucune carte pour cette requête.",
+    "error": "La recherche n'a pas abouti.",
+    "added": "Ajout : {name} ({zone}).",
+    "priceUnknown": "Aucun prix",
+    "option": "{name}, {type}",
+    "shortcut": "Ctrl+K ou ⌘K"
   }
 }
