@@ -1,6 +1,6 @@
 # I-116: Public Deck Lists: A Curated Set Of Public Decks Anyone Can Read
 
-> **Initiative:** I-116, proposed for the [roadmap](../roadmap.md) · **Status:** Later — proposed 2026-11-21 · **Priority:** Later; slice 1 is pure and may be built by hand, slice 2 (lists of the owner's own public decks) needs nothing that is not on `dev`, and lists that hold other players' decks wait for owner decision [D-109](../owner-decisions.md#community-and-moderation) · **Paid:** never · **Written 2026-11-21**
+> **Initiative:** I-116, proposed for the [roadmap](../roadmap.md) · **Status:** Later — proposed 2026-11-21 · **Priority:** Later; slice 1 is pure and may be built by hand, slice 2 (lists of the owner's own public decks) needs nothing that is not on `dev`, and lists that hold other players' decks wait for owner decision [D-109](../owner-decisions.md#community-and-moderation) · **D-109 decided 2026-11-22:** yes, on the recommended rule ([register](../owner-decisions.md#decided-on-2026-11-22)); slice 4 follows slice 5's reports · **Paid:** never · **Written 2026-11-21**
 > **Placement:** a named, ordered, public list of public decks that one player curates and anyone can read at one URL: "Top 8 of Saturday's store night", "my five budget decks", "every deck from the 2026 Worlds Top 8". [I-08](i08-share-compare-and-learn.md) owns the private saved-deck folders; [I-36](i36-creator-and-embed-toolkit.md) owns the creator page with up to six pinned decks of the creator's own; [I-75](i75-finding-public-decks.md) owns search and the author's listing switch; [I-41](i41-store-commander-nights.md) owns a store night and never ranks a player. None owns "a public list of decks, possibly by other players, that I curate and share".
 > **Research:** the twentieth pass of 2026-11-21, on the owner's request to match Moxfield's new deck editor. Moxfield blocks automated fetches, so its pages were not read; its public Bluesky posts were read through Bluesky's public API, and every external fact links its entry in [Sources](#sources).
 > **Owns:** the `DeckList` and `DeckListEntry` records, the list page at `/lists/{id}`, the rules that decide which decks a list may hold and when an entry disappears, the author's opt-out from other players' lists, and "Publish this folder" from I-08's saved-deck folders. **Does not own:** deck visibility and forks ([I-08](i08-share-compare-and-learn.md)); the public projection of a deck ([I-36](i36-creator-and-embed-toolkit.md) slice 1); the listing switch and search ([I-75](i75-finding-public-decks.md)); reports and moderation ([I-38](i38-trust-safety-and-user-rights.md)); store nights and leagues ([I-41](i41-store-commander-nights.md), [I-104](i104-league-decks-and-the-change-allowance-between-rounds.md)); embeds ([I-36](i36-creator-and-embed-toolkit.md) §2).
@@ -68,7 +68,7 @@ Verified on `dev` at `59208d5c` (#1657) on 2026-11-21:
 ### 3. Whose decks
 
 3.1 **The curator's own public decks** can always be added.
-3.2 **Another player's public deck** can be added only after D-109 allows it, and only while that deck is listed in search (I-75 requirement 6.2). Its author may turn on "Do not add my decks to other players' lists" in settings; existing entries then disappear.
+3.2 **Another player's public deck** can be added only after D-109 allows it, and only while that deck is listed in search (I-75 requirement 6.2). Its author may turn on "Do not add my decks to other players' lists" in settings; existing entries then disappear. Decided 2026-11-22: D-109 allows it on this rule. Every entry names and links its author, is a reference and never a copy, and disappears when the deck turns private, leaves search, or its author opts out.
 3.3 The author of a deck never needs to act for it to leave a list: 1.2 applies automatically.
 
 ### 4. Surfaces
@@ -120,15 +120,15 @@ User            + excludeFromOtherLists Boolean @default(false)
 | 1   | `visibleEntries`, pure, with solitary tests: visibility, deletion, moderation, search listing, opt-out, order; fixtures only | None (by hand)         |
 | 2   | `DeckList` and `DeckListEntry`, owner routes, `/lists/{id}`; the curator's own public decks only; English and French         | 1                      |
 | 3   | Add a deck from its public page; "Publish as a list" from an I-08 saved-deck folder                                          | 2                      |
-| 4   | Other players' public decks, the listing-switch rule and the author's opt-out                                                | 2; D-109; I-75 slice 1 |
+| 4   | Other players' public decks, the listing-switch rule and the author's opt-out                                                | 2; 5; I-75 slice 1 _(D-109 decided 2026-11-22: reports on lists ship first)_ |
 | 5   | Report a list and moderation state                                                                                           | 2; I-38 slices 8 and 9 |
 | 6   | The curator's public lists on the creator page                                                                               | 2; I-36 slice 10       |
 
-Slice 1 can start now by hand, and slice 2 needs nothing that is not on `dev`. Slice 4 waits for D-109 and I-75 slice 1's `listedInSearch`.
+Slice 1 can start now by hand, and slice 2 needs nothing that is not on `dev`. Slice 4 waits for D-109 and I-75 slice 1's `listedInSearch`. Decided 2026-11-22: the owner answered D-109 with the recommended rule, and reports on lists ship first, so slice 4 now waits for slice 5 and I-75 slice 1.
 
 ## Open questions
 
-1. **Other players' decks (D-109).** May a list hold another player's public deck, and on which rule: listed in search and not opted out (recommended), any public deck, or the curator's own decks only?
+1. **Other players' decks (D-109).** May a list hold another player's public deck, and on which rule: listed in search and not opted out (recommended), any public deck, or the curator's own decks only? Decided 2026-11-22: yes, on the recommended rule ([D-109](../owner-decisions.md#decided-on-2026-11-22)). Only decks listed in search, with an author opt-out; every entry names and links its author, is a reference and never a copy, and disappears when the deck turns private, leaves search, or its author opts out. Reports on lists (slice 5) ship first.
 2. **Notify the author?** Should an author be told when their deck joins someone's list? Recommended: no notice in version 1; the author's opt-out and the listing switch are the controls, and I-63 would own any notice.
 3. **Caps.** Are 100 entries and 50 lists the right bounds? Recommended: start there and read the distribution after 90 days.
 4. **Snapshots.** Should an event's list be able to freeze each deck as it was on the day (a Top 8 "as played")? Recommended: no in version 1; it would copy other players' decks, which 1.1 refuses, and I-104's league decks own a frozen round list.
@@ -240,7 +240,7 @@ The types and routes in [Data model / API](#data-model--api).
 
 ### Rollout and feature flags
 
-Behind an I-69 switch, `community.deckLists`, on with slice 2 for signed-in players. Guests read public and unlisted lists. Slice 4 turns on only after D-109.
+Behind an I-69 switch, `community.deckLists`, on with slice 2 for signed-in players. Guests read public and unlisted lists. Slice 4 turns on only after D-109. Decided 2026-11-22: D-109 is answered; slice 4 turns on after slice 5's reports.
 
 ### Dependencies
 
@@ -322,7 +322,7 @@ This file is the record from the start; the roadmap row for I-116 is a link here
 **Priority:** Later; slices 1 and 2 need nothing that is not on `dev`. Never paid.
 **Impact / effort:** Medium / medium
 **Risk:** Medium. Other players' decks in a list touch attribution and moderation; D-109 and I-38's reporting bound it.
-**Depends on:** nothing for slices 1 and 2; D-109 and I-75 slice 1 for slice 4; I-38 slices 8 and 9 for slice 5; I-36 slice 10 for slice 6.
+**Depends on:** nothing for slices 1 and 2; D-109 and I-75 slice 1 for slice 4; I-38 slices 8 and 9 for slice 5; I-36 slice 10 for slice 6. Decided 2026-11-22: D-109 is answered, and slice 4 also waits for slice 5.
 
 Moxfield publishes event results as public lists of decks (the 2026 World Championship Top 8, posted 2026-11-15), and its announcement video of 2026-11-20 shows lists among the new editor's deck actions.
 
@@ -353,7 +353,7 @@ Moxfield publishes event results as public lists of decks (the 2026 World Champi
 
 **Rollout.** `community.deckLists`, with slice 2; slice 4 after D-109.
 
-**Open questions.** Other players' decks (D-109); notifying authors; caps; frozen snapshots.
+**Open questions.** Other players' decks (D-109, decided 2026-11-22); notifying authors; caps; frozen snapshots.
 
 ### Definition of done
 

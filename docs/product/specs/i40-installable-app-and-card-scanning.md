@@ -1,9 +1,10 @@
 # I-40: Installable App, Phone-First Use And Card Scanning
 
-> **Status:** Proposed · **Priority:** Later, with a no-regret first part (installability and phone journeys, slices 1 to 5) that can ship now · **Written 2026-11-09**
+> **Status:** Proposed · **Priority:** Later, with a no-regret first part (installability and phone journeys, slices 1 to 5) that can ship now · **Written 2026-11-09** · **Moved to Next on 2026-11-22**, after the owner's answer to [D-34](../owner-decisions.md#decided-on-2026-11-22): slices 1 to 5 can start now, and slice 6, the benchmark, is the first scanning slice that can start
 > **Research:** dated notes on store apps, player reviews, web-app platforms, store rules and card recognition. They are not committed, so every external fact links its own source in [Sources](#sources). Legal points are research, not legal advice.
 > **Owns:** the web app manifest and icons, installed-mode presentation (theme colour, safe areas, launch page, install help), the phone-journey test harness, the distribution decision (web app, store wrapper or native), and camera scanning as a source of staged collection rows. **Does not own:** the service worker and the offline deck cache ([I-19](i19-offline-game-night-viewing.md)); the mobile editing toolbar and its labels ([I-37](i37-editor-depth.md)); printing-level ownership ([I-06](i06-collection-and-purchase-planning.md)); the staged import, its commit and its provenance ([I-26](i26-collections-arriving-from-elsewhere.md)); plans, prices and billing ([I-30](i30-business-model-and-paid-tier.md)); visual thresholds ([I-13](i13-visual-direction.md)); local model inference ([I-12](i12-local-ai.md)).
 > **Touches a non-goal:** the roadmap excludes camera scanning, and the [2027 sweep](README.md#what-the-sweep-ruled-out-for-2027) says it "stays a non-goal". This spec keeps that in force until the gates in requirement 6 pass and the owner decides.
+> **Decided 2026-11-22: the owner lifted the non-goal (D-34),** conditionally. Camera scanning is in scope under requirement 6: the benchmark comes first (slice 6), and no scanning code enters `src/` before slice 6's recorded go and slice 7's written answers. The owner still confirms the thresholds of 6.3 and photographs the benchmark set from their own cards.
 
 ## Overview
 
@@ -114,7 +115,7 @@ Verified on `dev` (`61792c1`) on 2026-11-09:
 
 6.1 I-06 printing-level ownership and I-26's staged commit (its slice 3) have shipped.
 6.2 A benchmark under `scripts/research/` measures at least two approaches (art embedding; name and collector-line OCR) on a committed set of at least 300 photos of real cards: sleeved, foil, borderless, old frames, black-bordered and non-English. It reports top-1 and top-3 accuracy at Oracle and printing level with Wilson intervals, latency at the 50th and 95th percentiles in Safari on a named iPhone and Chrome on a named Android, and the index download size. Runs are seeded and reproducible.
-6.3 Proposed go threshold, for the owner to confirm: Oracle top-1 of at least 95% with an interval lower bound of at least 90%, and 95th-percentile latency of at most 1.5 s per card in both browsers. Below it, scanning stays a non-goal and the result is recorded.
+6.3 Proposed go threshold, for the owner to confirm: Oracle top-1 of at least 95% with an interval lower bound of at least 90%, and 95th-percentile latency of at most 1.5 s per card in both browsers. Below it, scanning stays a non-goal and the result is recorded. Still open on 2026-11-22: confirming these thresholds is an owner action under [D-34](../owner-decisions.md#decided-on-2026-11-22).
 6.4 Scryfall answers in writing whether a recognition index derived from its images may be built and served to browsers, and the question joins the lawyer list in [I-30 7.2](i30-business-model-and-paid-tier.md#7-the-legal-gate), together with the art's copyright.
 
 ### 7. Single-card scanning, free
@@ -146,6 +147,7 @@ Verified on `dev` (`61792c1`) on 2026-11-09:
 - Push notifications, badges, install nags and streaks.
 - Any card data behind a paywall.
 - Using a language model to recognise cards. Recognition is a deterministic lookup against an index.
+- Decided 2026-11-22: camera scanning itself is no longer a roadmap non-goal ([D-34](../owner-decisions.md#decided-on-2026-11-22)). The exclusions above still hold.
 
 ## Testing strategy
 
@@ -175,11 +177,13 @@ Verified on `dev` (`61792c1`) on 2026-11-09:
 
 Slices 1 to 5 need no owner decision and can ship now. Slices 6 and 7 are research and correspondence. Scheduled agents must not pick slices 8 to 12 before the owner records the go decision from slice 6 and the answers from slice 7.
 
+Decided 2026-11-22: the owner lifted the scanning non-goal (D-34), so slices 6 to 12 may proceed in this table's order. Slice 6 starts once the owner has photographed the benchmark set and confirmed 6.3's thresholds; slice 7 is [D-10](../owner-decisions.md#d-10-one-letter-to-scryfall)'s letter and the lawyer question. The rule above for slices 8 to 12 is unchanged.
+
 ## Open questions
 
-- **Does scanning leave the non-goal list, conditionally?** The 2027 sweep called it a native-camera capability that ManaBox owns. DeckCheck sells camera scanning with no store app found [7][9], and most of ManaBox's low reviews are about scanning [13], so both reasons are weaker than they were. The owner decides whether slices 6 to 12 may proceed.
+- **Does scanning leave the non-goal list, conditionally?** The 2027 sweep called it a native-camera capability that ManaBox owns. DeckCheck sells camera scanning with no store app found [7][9], and most of ManaBox's low reviews are about scanning [13], so both reasons are weaker than they were. The owner decides whether slices 6 to 12 may proceed. Decided 2026-11-22: yes, conditionally ([D-34](../owner-decisions.md#decided-on-2026-11-22)); the benchmark comes first, and slices 8 to 12 wait for slice 6's go and slice 7's answers.
 - **Can a recognition index derived from Scryfall images be built, served to browsers and used by a paid bulk mode?** This needs Scryfall in writing and the lawyer in I-30 7.2: Scryfall forbids repackaging and paywalling its data, and the art belongs to Wizards [31][33].
-- **What accuracy justifies a web scanner beside free native ones?** The thresholds in 6.3 are a proposal, and the photo set must come from cards the owner can photograph and publish.
+- **What accuracy justifies a web scanner beside free native ones?** The thresholds in 6.3 are a proposal, and the photo set must come from cards the owner can photograph and publish. Still open on 2026-11-22: both are owner actions under D-34.
 - Should `start_url` open the deck library (`/decks`, which sends a signed-out player to sign-in) or the landing page?
 - One manifest with English text, or a per-locale manifest so French players see French shortcuts?
 - Should scanning a physical deck produce a deck list through I-10's import preview, as well as collection rows?
@@ -244,6 +248,7 @@ a player installs MagicAIBuilder to the home screen and uses its main journeys a
 ### Non-goals
 
 - Do not reverse a non-goal already named in the moved record or in the roadmap's strategic boundaries.
+  - Decided 2026-11-22: the owner lifted the scanning non-goal (D-34), so the scanning slices do not reverse it.
 - Do not invent a usage count, a win rate, or a score the moved record does not already cite from a named source.
 
 ### Personas
@@ -335,7 +340,7 @@ Hard waits are in the roadmap dependency table. Slice edges, where this file has
 
 ### Kill criteria
 
-None. This initiative is not in the Now band. Stop it if it would reverse a non-goal in the moved record.
+None. This initiative is not in the Now band. Stop it if it would reverse a non-goal in the moved record. Decided 2026-11-22: camera scanning is no longer one (D-34). Stop the scanning slices if slice 6's benchmark falls below the thresholds the owner confirms for 6.3.
 
 ### Open questions
 
@@ -559,6 +564,7 @@ Players build and check decks on their phones, at the table and at the store. To
 - [ ] After a go: an index built from Scryfall bulk data, a signed-in scan route that stages rows through I-26 with "camera scan" provenance and never picks a printing silently, then bulk mode and server help (slices 8–12).
   - Re-pointed 2026-11-10 to [I-67](i67-one-card-data-pipeline.md) slice 2: the index is built from I-67's printing table, not from a download of its own.
 - [ ] Added 2026-11-19 (seventeenth pass), a proposal for the owner: move slices 1 to 5 (manifest, safe areas, install help, phone journeys in the test gate) from Later to Next, before competitors' native apps settle the habit. An iTunes Search API query on 2026-11-19 (US) returned no app by Moxfield, Archidekt or EDHREC, and Archidekt says it has "no plans" for a native app and points to "Add to Home Screen" ([app page](https://archidekt.com/app), read 2026-11-19). In November 2026, two small Commander competitors went native: EDHcheck's iOS app, version 1.0.0 of 2026-11-11, which sells Premium in the app, and EDHLAB's mobile Commander app ("EDHLAB released a mobile Commander app", r/EDH, 120 points, 55 comments, 2026-11-03, [thread](https://www.reddit.com/r/EDH/comments/1xmsp8o/)). The first question under the EDHLAB post asks to import existing lists (19 points), so [I-62](i62-switching-from-another-site.md)'s imports belong to the same first visit. This line does not change the glance row; the store-wrapper question stays the distribution decision.
+  - Decided 2026-11-22: I-40 moved to Next with the owner's answer to D-34, so slices 1 to 5 are Next. The store-wrapper question is unchanged.
 - [ ] Added 2026-11-19 (seventeenth pass), evidence for [D-34](../owner-decisions.md#product-scope-and-non-goals): the 2027 sweep's reason that scanning is a native-camera capability no longer holds. Playgroup's deck builder lets a signed-in player "point the camera at a fan of cards" from a phone inside its web page; "Scanning is free while it is in beta", and "Once it's out of beta it will be part of the supporter plans" ([deck builder](https://playgroup.gg/commander/deck-builder), read 2026-11-19). ManaBox 4.4.0 (2026-11-16) spent a release on scanner accuracy and still warns that "Some reprints are too similar so they might still require picking the version (For example Sol Ring reprints)" ([iTunes lookup](https://itunes.apple.com/lookup?id=1460407674&country=us)), which supports slice 8's rule that a scan never picks a printing silently. The benchmark gate (slices 6–7) stays the first step.
 - [ ] Added 2026-11-20 (nineteenth pass), evidence for [D-34](../owner-decisions.md#product-scope-and-non-goals): scanning became a crowded commodity in 2026. An iTunes lookup ([lookup](https://itunes.apple.com/lookup?id=1546754798,6759303500,6763615089,6817541736,6751768626,6740892169,6746699358,1460407674,1247645833,1460657155,6504142186&country=us), read 2026-11-20) shows ManaBox 4.4.0 (1,756 ratings), TCGplayer 5.6.0 (19,371), Dragon Shield 8.2.1 (3,753) and six scanner apps first released in 2025 or 2026 with 0 to 11 ratings each. That argues for [I-62](i62-switching-from-another-site.md)'s ManaBox and Moxfield collection presets ahead of a web scanner, as the seventeenth pass proposed; the benchmark gate stands.
 - [ ] Added 2026-11-20 (nineteenth pass), for the open question on scanning a physical deck: SnapDrafter turns "paper Magic: The Gathering decks into clean, organized digital decklists" with "on-device OCR" ([App Store](https://apps.apple.com/ca/app/snapdrafter/id6746699358), 2 ratings, read 2026-11-20), and the open-source `mtgscan` converts "an image containing Magic cards to decklist" ([PyPI](https://pypi.org/project/mtgscan)). Name-line OCR on a photo of laid-out cards is the same recognition stack, behind the same gate; its result lands in [I-10](i10-interoperability-and-integrations.md)'s preview, never straight into the deck. No r/EDH request for photo-to-list import was found (Arctic Shift title searches since 2025-01-01).
