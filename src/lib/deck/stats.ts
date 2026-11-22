@@ -1,5 +1,6 @@
 // Deck statistics computation
-import type { Deck } from "./types";
+import type { Deck, DeckCard } from "./types";
+import { playedDeckCards } from "./played-deck-cards";
 import type { DeckStats } from "./analysis-types";
 import { detectThemes } from "./themes";
 import { extractColorPips } from "@/lib/mana/parse";
@@ -9,7 +10,9 @@ import { buildFormatStats } from "./format-stats";
 import { buildManaAlignment } from "./mana-alignment";
 import { buildTurnOnePlayability } from "./turn-one";
 
-function buildManaCurve(nonLandCards: ReturnType<typeof buildAllCards>): Record<number, number> {
+function buildManaCurve(
+  nonLandCards: readonly DeckCard[]
+): Record<number, number> {
   const manaCurve: Record<number, number> = {};
   for (const card of nonLandCards) {
     const cmc = Math.min(card.cmc, 7);
@@ -18,7 +21,9 @@ function buildManaCurve(nonLandCards: ReturnType<typeof buildAllCards>): Record<
   return manaCurve;
 }
 
-function buildColorDistribution(nonLandCards: ReturnType<typeof buildAllCards>): Record<string, number> {
+function buildColorDistribution(
+  nonLandCards: readonly DeckCard[]
+): Record<string, number> {
   const colorDistribution: Record<string, number> = {};
   for (const card of nonLandCards) {
     if (card.manaCost) {
@@ -37,19 +42,10 @@ function buildColorDistribution(nonLandCards: ReturnType<typeof buildAllCards>):
   return colorDistribution;
 }
 
-function buildAllCards(deck: Deck) {
-  const mainCards = deck.cards.filter((c) => c.zone === "main");
-  return [
-    ...(deck.commander ? [deck.commander] : []),
-    ...(deck.partner ? [deck.partner] : []),
-    ...mainCards,
-  ];
-}
-
 /** Compute comprehensive deck statistics (maybeboard cards are excluded) */
 export function computeDeckStats(deck: Deck): DeckStats {
   const mainCards = deck.cards.filter((c) => c.zone === "main");
-  const allCards = buildAllCards(deck);
+  const allCards = playedDeckCards(deck);
   const nonLandCards = allCards.filter((c) => c.category !== "land");
 
   const manaCurve = buildManaCurve(nonLandCards);
