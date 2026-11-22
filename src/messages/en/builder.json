@@ -139,7 +139,8 @@
     "deleting": "Deleting…",
     "waitingForSave": "Saving your changes…",
     "failed": "The deck could not be deleted. Try again.",
-    "deleted": "{name} was deleted"
+    "deleted": "{name} was deleted",
+    "leaving": "Deck deleted. Opening your decks…"
   },
   "badges": {
     "cmd": "CMD",
