@@ -8,7 +8,8 @@
  * `SnapshotStore`: a deck is read with its saved card rows; a stored
  * snapshot reads back whole; the list is newest first, holds only that
  * deck's snapshots, and carries each one's card list; a snapshot is never found through another deck; a delete
- * removes it; a card replacement leaves exactly the new rows.
+ * removes it; a restore leaves exactly the new rows and the commander
+ * fields they name.
  * `DeckVersionStore`: the saved rows read back; the recent snapshots are
  * newest first, that deck's only, and at most `limit`; a created snapshot is
  * the newest. Callers: `in-memory-snapshot-store.test.ts` and
@@ -22,7 +23,7 @@
 import { expect } from "vitest";
 
 import type { DeckVersionCard } from "@/lib/deck/deck-version";
-import { restoredDeckCards } from "@/lib/deck/snapshot-restore";
+import { restoredDeck, restoredDeckCards } from "@/lib/deck/snapshot-restore";
 import type {
   DeckVersionStore,
   NewSnapshot,
@@ -56,6 +57,8 @@ const OTHER_DECK_ID = "deck-elsewhere";
 const SOL_RING = deckCard("Sol Ring");
 const ARCANE_SIGNET = deckCard("Arcane Signet");
 const FORESTS = deckCard("Forest", { quantity: 10, zone: "sideboard" });
+const TYMNA = deckCard("Tymna the Weaver", { isCommander: true });
+const THRASIOS = deckCard("Thrasios, Triton Hero", { isPartner: true });
 
 /** @returns a snapshot of `deckId` named `name`, holding `cards` */
 function newSnapshot(
@@ -182,9 +185,9 @@ export const SNAPSHOT_STORE_CONTRACT_CASES: readonly SnapshotStoreContractCase[]
       name: "replaces every card row of the deck with the given ones",
       deckCards: [SOL_RING, FORESTS],
       run: async ({ deckId, snapshots }) => {
-        const restored = restoredDeckCards(deckId, [ARCANE_SIGNET, FORESTS]);
+        const restored = restoredDeck(deckId, [ARCANE_SIGNET, FORESTS]);
 
-        await snapshots.replaceCards(deckId, restored);
+        await snapshots.restoreDeck(deckId, restored);
 
         const deck = await snapshots.findDeckWithCards(deckId);
         expect(names(deck?.cards ?? [])).toEqual(["Arcane Signet", "Forest"]);
@@ -194,12 +197,37 @@ export const SNAPSHOT_STORE_CONTRACT_CASES: readonly SnapshotStoreContractCase[]
       },
     },
     {
-      name: "leaves the deck without cards when the replacement is empty",
+      name: "writes the deck's commander and partner with its card rows",
       deckCards: [SOL_RING],
       run: async ({ deckId, snapshots }) => {
-        await snapshots.replaceCards(deckId, []);
+        const restored = restoredDeck(deckId, [TYMNA, THRASIOS, SOL_RING]);
 
-        expect((await snapshots.findDeckWithCards(deckId))?.cards).toEqual([]);
+        await snapshots.restoreDeck(deckId, restored);
+
+        expect(await snapshots.findDeckWithCards(deckId)).toEqual(
+          expect.objectContaining({
+            commanderId: TYMNA.scryfallId,
+            commanderName: TYMNA.name,
+            partnerId: THRASIOS.scryfallId,
+          })
+        );
+      },
+    },
+    {
+      name: "leaves the deck without cards or commander when the replacement is empty",
+      deckCards: [SOL_RING],
+      run: async ({ deckId, snapshots }) => {
+        await snapshots.restoreDeck(deckId, restoredDeck(deckId, []));
+
+        const deck = await snapshots.findDeckWithCards(deckId);
+        expect(deck?.cards).toEqual([]);
+        expect(deck).toEqual(
+          expect.objectContaining({
+            commanderId: null,
+            commanderName: null,
+            partnerId: null,
+          })
+        );
       },
     },
   ];

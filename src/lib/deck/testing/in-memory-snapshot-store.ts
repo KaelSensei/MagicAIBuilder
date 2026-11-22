@@ -12,6 +12,7 @@
  * @module deck/testing/in-memory-snapshot-store
  */
 import type { CapturableCard } from "@/lib/deck/deck-version";
+import type { DeckCommanders, RestoredDeck } from "@/lib/deck/snapshot-restore";
 import type {
   DeckVersionStore,
   DeckWithCards,
@@ -26,9 +27,8 @@ export const FIRST_SNAPSHOT_AT = new Date("2026-11-09T12:00:00Z");
 const ONE_SECOND_MS = 1000;
 
 /** The deck the fake holds, without its card rows. */
-export interface InMemoryDeck {
+export interface InMemoryDeck extends DeckCommanders {
   readonly id: string;
-  readonly commanderId: string | null;
 }
 
 /** Both ports over one in-memory deck, plus the switches a test turns. */
@@ -57,6 +57,7 @@ export function inMemorySnapshotStore(
   deck: InMemoryDeck,
   cards: readonly CapturableCard[]
 ): InMemorySnapshotStore {
+  let savedDeck = deck;
   let savedCards = cards;
   let deckExists = true;
   let stored: StoredSnapshot[] = [];
@@ -82,18 +83,20 @@ export function inMemorySnapshotStore(
 
   const findDeckWithCards = (deckId: string): DeckWithCards | null =>
     deckExists && deckId === deck.id
-      ? { ...deck, cards: [...savedCards] }
+      ? { ...savedDeck, cards: [...savedCards] }
       : null;
 
   const remove = (snapshotId: string): void => {
     stored = stored.filter((snapshot) => snapshot.id !== snapshotId);
   };
 
-  const replaceCards = (
+  const restoreDeck = (
     deckId: string,
-    restored: readonly CapturableCard[]
+    { cards: restoredCards, commanders }: RestoredDeck
   ): void => {
-    if (deckId === deck.id) savedCards = [...restored];
+    if (deckId !== deck.id) return;
+    savedCards = [...restoredCards];
+    savedDeck = { ...savedDeck, ...commanders };
   };
 
   const snapshots: SnapshotStore = {
@@ -122,8 +125,8 @@ export function inMemorySnapshotStore(
       remove(snapshotId);
       return Promise.resolve();
     },
-    replaceCards: (deckId, restored) => {
-      replaceCards(deckId, restored);
+    restoreDeck: (deckId, restored) => {
+      restoreDeck(deckId, restored);
       return Promise.resolve();
     },
   };

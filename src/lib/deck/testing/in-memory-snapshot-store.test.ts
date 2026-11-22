@@ -13,7 +13,12 @@ import {
 import { inMemorySnapshotStore } from "@/lib/deck/testing/in-memory-snapshot-store";
 import type { FakeDeckCard } from "@/test/playtest-db-fake";
 
-const DECK = { id: "deck-1", commanderId: null };
+const DECK = {
+  id: "deck-1",
+  commanderId: null,
+  commanderName: null,
+  partnerId: null,
+};
 
 /** @returns both fake ports over a deck that holds `cards` */
 function harness(cards: readonly FakeDeckCard[]): SnapshotStoreHarness {
