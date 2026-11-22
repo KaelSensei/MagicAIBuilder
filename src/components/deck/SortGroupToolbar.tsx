@@ -34,6 +34,10 @@ const GROUP_OPTIONS: GroupOption[] = [
   { value: "color", labelKey: "color" },
 ];
 
+/**
+ * The Main zone's sort and group buttons, plus the Collection switch in the
+ * List view only. Reads and writes the deck store; takes no props.
+ */
 export function SortGroupToolbar() {
   const t = useTranslations("builder");
   const sortField = useDeckStore((s) => s.sortField);
@@ -42,6 +46,7 @@ export function SortGroupToolbar() {
   const setSortField = useDeckStore((s) => s.setSortField);
   const setSortDirection = useDeckStore((s) => s.setSortDirection);
   const setGroupBy = useDeckStore((s) => s.setGroupBy);
+  const viewMode = useDeckStore((s) => s.deckViewMode);
 
   function handleSortFieldClick(field: SortField) {
     if (field === sortField) {
@@ -112,7 +117,9 @@ export function SortGroupToolbar() {
         ))}
       </div>
 
-      <CollectionBadgesToggle />
+      {/* Only the List view's rows carry the Owned and Buy badges, so the
+          switch would do nothing visible in the Grid view (I-37). */}
+      {viewMode === "list" && <CollectionBadgesToggle />}
     </div>
   );
 }
