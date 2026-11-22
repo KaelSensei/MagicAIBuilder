@@ -2,7 +2,8 @@
  * The "Collection" switch in the list toolbar hides or shows the Owned and Buy
  * badges on the deck's rows (I-37 requirement 6.5, the ownership marker in the
  * List view). The choice is kept in this browser and applies to every zone,
- * although the toolbar shows on the Main zone only.
+ * although the toolbar shows on the Main zone only, and the switch in the List
+ * view only: grid cards carry no such badge.
  *
  * Sociable: the editor, its toolbar, its rows, the deck store, the collection
  * store and the persisted row preferences are the real ones. MSW answers the
@@ -83,11 +84,16 @@ function ownPrintings(...scryfallIds: readonly string[]): void {
 
 /** Opens `deck` in the store and renders the editor on it, in the list view. */
 function renderList(deck: Deck) {
+  renderInView(deck, "list");
+}
+
+/** Opens `deck` in the store and renders the editor on it, in `viewMode`. */
+function renderInView(deck: Deck, viewMode: "grid" | "list") {
   useDeckStore.setState({
     decks: { [deck.id]: deck },
     activeDeckId: deck.id,
     isSyncing: false,
-    deckViewMode: "list",
+    deckViewMode: viewMode,
   });
   renderWithProviders(
     <DndContext>
@@ -201,5 +207,44 @@ describe("the Collection switch on the deck's rows", () => {
     );
 
     expect(screen.queryByText("Buy")).not.toBeInTheDocument();
+  });
+
+  it("offers no switch in the Grid view, where no card shows an Owned or Buy badge", () => {
+    ownPrintings("sol-ring-c21");
+
+    renderInView(aDeck({ cards: [SOL_RING] }), "grid");
+
+    expect(screen.getByRole("button", { name: /^CMC/ })).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Collection" })
+    ).not.toBeInTheDocument();
+  });
+
+  it("keeps the sort and group buttons in the Grid view", () => {
+    ownPrintings("sol-ring-c21");
+
+    renderInView(aDeck({ cards: [SOL_RING] }), "grid");
+
+    expect(screen.getByRole("button", { name: /^CMC/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "By Type" })).toBeInTheDocument();
+  });
+
+  it("keeps the badges hidden after a List, Grid, List round trip", async () => {
+    ownPrintings("sol-ring-c21");
+    renderList(aDeck({ cards: [SOL_RING, COUNTERSPELL] }));
+    await userEvent.click(screen.getByRole("button", { name: "Collection" }));
+
+    await userEvent.click(screen.getByRole("button", { name: "Grid view" }));
+    expect(
+      screen.queryByRole("button", { name: "Collection" })
+    ).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "List view" }));
+
+    expect(screen.queryByText("Owned")).not.toBeInTheDocument();
+    expect(screen.queryByText("Buy")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Collection" })).toHaveAttribute(
+      "aria-pressed",
+      "false"
+    );
   });
 });
