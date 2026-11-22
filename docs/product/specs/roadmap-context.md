@@ -905,7 +905,7 @@ These are the slices the three daily scheduled runs (07:00, 11:00 and 19:00 UTC)
     Give creators deck embeds, link previews that show the deck, video in primers and a public read API, with no tracking and no paid reach. Slices 1 and 2, the public projection and the deck image, are Next since 2026-11-10, because slices of I-46, I-50, I-53, I-55 and I-60 wait for them.
 
 63. **I-40 Installable app, phone-first use and card scanning**
-    Later, with a no-regret first part: a manifest, icons, safe areas, install help and phone-sized E2E and Lighthouse runs (slices 1 to 5). Scanning waits for a benchmark, Scryfall's written answer and the owner's decision.
+    Later, with a no-regret first part: a manifest, icons, safe areas, install help and phone-sized E2E and Lighthouse runs (slices 1 to 5). Scanning waits for a benchmark, Scryfall's written answer and the owner's decision. Decided 2026-11-22: the owner lifted the scanning non-goal (D-34), and I-40 moves to Next; slice 6, the benchmark, is the first scanning slice.
 
 64. **I-41 Store Commander nights and organiser tools**
     Later, with a cheap early part: the pod-pairing policy and an account-free pod planner (slices 1 and 2), which need no schema and store no personal data.
