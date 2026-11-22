@@ -139,7 +139,8 @@
     "deleting": "Suppression…",
     "waitingForSave": "Enregistrement de vos modifications…",
     "failed": "Le deck n'a pas pu être supprimé. Réessayez.",
-    "deleted": "{name} a été supprimé"
+    "deleted": "{name} a été supprimé",
+    "leaving": "Deck supprimé. Ouverture de vos decks…"
   },
   "badges": {
     "cmd": "CMD",
