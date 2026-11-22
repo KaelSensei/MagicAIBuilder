@@ -183,6 +183,7 @@ Routes: `GET|POST /api/trade-lists`; `PATCH|DELETE /api/trade-lists/[id]`; `POST
 - Store stock or buylists in matches. A store is a meeting place here; seller hand-off is I-32's.
 - A venue directory. The store picker lists only the I-41 stores in the player's city where the proposer has checked in ([I-41 non-goals](i41-store-commander-nights.md#non-goals)).
 - Card scanning, which stays a roadmap non-goal. Lists fill from the collection or from text.
+  - Decided 2026-11-22: the owner lifted the roadmap non-goal (D-34); scanning belongs to [I-40](i40-installable-app-and-card-scanning.md), and this spec still builds none.
 - Authenticating or grading cards.
 - Games other than Magic, although SuperSwap and Deckerr cover five or six [2][5].
 - Automatic proposals or auto-accept.
