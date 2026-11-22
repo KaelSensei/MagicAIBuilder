@@ -12,6 +12,7 @@ import {
   curveMedians,
   curvePartsByBucket,
   curveSideOf,
+  manaCurveOf,
   totalManaValue,
 } from "./curve-breakdown";
 
@@ -156,6 +157,75 @@ describe("curvePartsByBucket", () => {
     expect(parts.get(1)).toEqual({ permanents: 2, spells: 0 });
     expect(parts.get(3)).toEqual({ permanents: 0, spells: 1 });
     expect(parts.get(7)).toEqual({ permanents: 2, spells: 0 });
+  });
+});
+
+describe("manaCurveOf", () => {
+  it("gives buildManaCurve's figures: the commander in, lands, the sideboard and Considering out, 7 and more on the top bar", () => {
+    const deck = aDeck({
+      commander: card({
+        name: "Omnath",
+        cmc: 4,
+        typeLine: "Legendary Creature — Elemental",
+        category: "commander",
+      }),
+      cards: [
+        card({
+          name: "Llanowar Elves",
+          cmc: 1,
+          typeLine: "Creature — Elf",
+          category: "ramp",
+          quantity: 2,
+        }),
+        card({ name: "Opt", cmc: 1, typeLine: "Instant", category: "draw" }),
+        card({
+          name: "Forest",
+          typeLine: "Basic Land — Forest",
+          category: "land",
+          quantity: 30,
+        }),
+        card({
+          name: "Emrakul",
+          cmc: 15,
+          typeLine: "Legendary Creature — Eldrazi",
+          category: "creature",
+        }),
+        card({
+          name: "Negate",
+          cmc: 2,
+          typeLine: "Instant",
+          category: "removal",
+          zone: "sideboard",
+        }),
+        card({
+          name: "Cultivate",
+          cmc: 3,
+          typeLine: "Sorcery",
+          category: "ramp",
+          zone: "maybeboard",
+        }),
+      ],
+    });
+    const analysed = [deck.commander, ...deck.cards].filter(
+      (row) => row !== null
+    );
+
+    const curve = manaCurveOf(analysed);
+
+    expect(curve).toEqual({ 1: 3, 4: 1, 7: 1 });
+    expect(curve).toEqual(computeDeckStats(deck).manaCurve);
+  });
+
+  it("is empty for a deck of lands", () => {
+    const lands = [
+      card({
+        name: "Island",
+        typeLine: "Basic Land — Island",
+        category: "land",
+      }),
+    ];
+
+    expect(manaCurveOf(lands)).toEqual({});
   });
 });
 

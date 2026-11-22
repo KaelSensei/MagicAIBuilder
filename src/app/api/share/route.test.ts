@@ -266,7 +266,7 @@ const SHARED_DECK_KEYS = [
   "targetBracket",
 ];
 
-/** The card fields `ShareDeckView` reads, plus the `zone` the page metadata counts by. */
+/** The card fields `ShareDeckView` reads, its mana curve's `zone` and `typeLine` included. */
 const SHARED_CARD_KEYS = [
   "artCropUri",
   "category",
@@ -280,6 +280,7 @@ const SHARED_CARD_KEYS = [
   "manaCost",
   "name",
   "quantity",
+  "typeLine",
   "zone",
 ];
 
@@ -289,6 +290,7 @@ function sharedCard(card: DeckCard) {
     name: card.name,
     manaCost: card.manaCost,
     cmc: card.cmc,
+    typeLine: card.typeLine,
     colorIdentity: card.colorIdentity,
     imageUri: card.imageUri,
     artCropUri: card.artCropUri,

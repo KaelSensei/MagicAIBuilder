@@ -1,7 +1,11 @@
 import React from "react";
 import { screen, within, type RenderResult } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { renderWithIntl } from "@/test/render-with-intl";
+import { renderWithProviders } from "@/test/render";
+import { aDeck } from "@/test/builders/deck";
+import { aDeckCard } from "@/test/builders/card";
 import {
   divergenceCard,
   RULE_DIVERGENCE_DECK,
@@ -43,6 +47,7 @@ function storedCard(
     name,
     manaCost: "",
     cmc: 1,
+    typeLine: "Artifact",
     colorIdentity: [],
     imageUri: `https://cards.scryfall.io/normal/${path}`,
     artCropUri: `https://cards.scryfall.io/art_crop/${path}`,
@@ -89,41 +94,133 @@ describe("ShareDeckView images", () => {
   });
 });
 
-// ─── Characterization: the shared page's numbers against the analysis ─────────
-//
-// `ShareDeckView` computes its own stats panel, mana curve and colour bar from
-// the share rows instead of calling `computeDeckStats`, so a player who shares
-// a deck sees other numbers than the builder showed. The share select has no
-// `zone` column, so "Considering" rows reach the page as main-deck rows
-// (pinned by `api/share/route.test.ts`). These tests render the page for the
-// deck in `lib/deck/fixtures/rule-divergence-deck.ts` and pin both answers
-// side by side; `lib/deck/rule-divergences.characterization.test.ts` pins the
-// rest. B2-41 makes the page use the analysis numbers and flips them. They
-// live in this file because rendering the page needs the `@/i18n/navigation`
-// stub above, and a new file may not add a mock of a repository module
-// (ADR 0005, rule 5).
+// ─── The mana curve: the builder's chart, read-only (I-37) ─────────────────────
 
-const DECK = RULE_DIVERGENCE_DECK;
+/** Two Islands, a creature and an instant at mana value 2: medians 2 and 1, total 4. */
+const TWO_DROP_DECK = aDeck({
+  cards: [
+    aDeckCard({
+      id: "bears",
+      name: "Grizzly Bears",
+      manaCost: "{1}{G}",
+      cmc: 2,
+      typeLine: "Creature — Bear",
+      colorIdentity: ["G"],
+      category: "creature",
+    }),
+    aDeckCard({
+      id: "counterspell",
+      name: "Counterspell",
+      manaCost: "{U}{U}",
+      cmc: 2,
+      typeLine: "Instant",
+      colorIdentity: ["U"],
+      category: "removal",
+    }),
+    aDeckCard({
+      id: "island",
+      name: "Island",
+      typeLine: "Basic Land — Island",
+      colorIdentity: ["U"],
+      category: "land",
+      quantity: 2,
+    }),
+  ],
+});
 
 function renderSharedPage(deck: Deck): RenderResult {
-  return renderWithIntl(<ShareDeckView deck={sharedDeckOf(deck)} />, {
-    locale: "en",
-  });
+  return renderWithProviders(<ShareDeckView deck={sharedDeckOf(deck)} />);
 }
+
+/** The builder's chart for the same deck, as `DeckStats` draws it from `deckAnalysisCards`. */
+function renderBuilderChart(deck: Deck): RenderResult {
+  const analysisCards = [deck.commander, deck.partner, ...deck.cards].filter(
+    (card) => card !== null
+  );
+  return renderWithProviders(
+    <ManaCurve curve={computeDeckStats(deck).manaCurve} cards={analysisCards} />
+  );
+}
+
+/** The roles of every control that could change a deck: none may sit in a read-only list. */
+const EDITING_ROLES = [
+  "button",
+  "link",
+  "textbox",
+  "checkbox",
+  "spinbutton",
+] as const;
+
+/** The mana curve bars that hold cards, as their accessible labels. */
+function filledCurveBars(scope: HTMLElement): readonly string[] {
+  return within(scope)
+    .getAllByRole("button", { name: /^Mana value \d/ })
+    .map((bar) => bar.getAttribute("aria-label") ?? "")
+    .filter((label) => !label.endsWith("0 permanents, 0 spells"));
+}
+
+/** The curve's median line and total mana value line. */
+function curveFigures(scope: HTMLElement): readonly (string | null)[] {
+  return [
+    within(scope).getByText(/^Median /).textContent,
+    within(scope).getByText(/^Total mana value /).textContent,
+  ];
+}
+
+describe("ShareDeckView mana curve", () => {
+  it("splits a mana value's bar into permanents and spells and shows the medians and the total mana value", () => {
+    renderSharedPage(TWO_DROP_DECK);
+
+    expect(
+      screen.getByRole("button", {
+        name: "Mana value 2: 1 permanent, 1 spell",
+      })
+    ).toBeInTheDocument();
+    expect(screen.getByText("Median 2, or 1 with lands")).toBeInTheDocument();
+    expect(screen.getByText("Total mana value 4")).toBeInTheDocument();
+  });
+
+  it("lists a mana value's cards on click, with nothing that edits the deck", async () => {
+    const user = userEvent.setup();
+    renderSharedPage(TWO_DROP_DECK);
+
+    await user.click(
+      screen.getByRole("button", { name: "Mana value 2: 1 permanent, 1 spell" })
+    );
+
+    const list = screen.getByRole("region", { name: "Mana value 2 · 2 cards" });
+    expect(within(list).getByText("Grizzly Bears")).toBeInTheDocument();
+    expect(within(list).getByText("Creature — Bear")).toBeInTheDocument();
+    expect(within(list).getByText("Counterspell")).toBeInTheDocument();
+    expect(within(list).getByText("Instant")).toBeInTheDocument();
+    for (const role of EDITING_ROLES) {
+      expect(within(list).queryAllByRole(role)).toEqual([]);
+    }
+  });
+});
+
+// ─── Characterization: the shared page's numbers against the analysis ─────────
+//
+// `ShareDeckView` computes its own stats panel and colour bar from the share
+// rows instead of calling `computeDeckStats`, so a player who shares a deck
+// sees other numbers than the builder showed. Those figures do not read the
+// rows' `zone`, so "Considering" rows count there as main-deck rows. These
+// tests render the page for the deck in
+// `lib/deck/fixtures/rule-divergence-deck.ts` and pin both answers side by
+// side; `lib/deck/rule-divergences.characterization.test.ts` pins the rest.
+// B2-41 makes the page use the analysis numbers and flips them. The mana curve
+// already draws the builder's chart from the builder's rows (I-37), so its two
+// tests here assert the agreement. They live in this file because rendering the
+// page needs the `@/i18n/navigation` stub above, and a new file may not add a
+// mock of a repository module (ADR 0005, rule 5).
+
+const DECK = RULE_DIVERGENCE_DECK;
 
 /** The value beside a label in the page's Stats panel. */
 function statValue(label: string): string | null {
   const panel = screen.getByRole("heading", { name: "Stats" }).parentElement;
   if (!panel) throw new Error("the Stats panel has no container");
   return within(panel).getByText(label).nextElementSibling?.textContent ?? null;
-}
-
-/** The mana curve buckets that hold cards, as their accessible labels. */
-function filledCurveBuckets(scope: HTMLElement): readonly string[] {
-  return within(scope)
-    .getAllByRole("button", { name: /at CMC/ })
-    .map((bar) => bar.getAttribute("aria-label") ?? "")
-    .filter((label) => !label.startsWith("0 cards"));
 }
 
 /** The colour bar's segments, as "<colour>: <count>". */
@@ -146,19 +243,33 @@ describe("ShareDeckView against computeDeckStats", () => {
     expect(stats.lands).toBe(19);
   });
 
-  it("currently puts the companion and Considering in the mana curve and the average mana value, which computeDeckStats leaves out (pinned; see B2-41)", () => {
+  it("draws the builder's mana curve, without the companion or Considering, with the builder's medians and total (I-37)", () => {
+    const sharedPage = renderSharedPage(DECK);
+    const builderChart = renderBuilderChart(DECK);
+
+    expect(filledCurveBars(sharedPage.container)).toEqual([
+      "Mana value 0: 1 permanent, 0 spells",
+      "Mana value 3: 1 permanent, 2 spells",
+      "Mana value 5: 1 permanent, 0 spells",
+    ]);
+    expect(filledCurveBars(sharedPage.container)).toEqual(
+      filledCurveBars(builderChart.container)
+    );
+    expect(curveFigures(sharedPage.container)).toEqual([
+      "Median 3, or 0 with lands",
+      "Total mana value 14",
+    ]);
+    expect(curveFigures(sharedPage.container)).toEqual(
+      curveFigures(builderChart.container)
+    );
+  });
+
+  it("currently puts the companion and Considering in the Stats panel's average mana value, which computeDeckStats leaves out (pinned; see B2-41)", () => {
     const stats = computeDeckStats(DECK);
 
-    const { container } = renderSharedPage(DECK);
+    renderSharedPage(DECK);
 
-    expect(filledCurveBuckets(container)).toEqual([
-      "1 card at CMC 0",
-      "3 cards at CMC 3",
-      "1 card at CMC 4",
-      "2 cards at CMC 5",
-    ]);
     expect(statValue("Avg. CMC")).toBe("3");
-    expect(stats.manaCurve).toEqual({ 0: 1, 3: 3, 5: 1 });
     expect(stats.avgCmc).toBe(2.25);
   });
 
@@ -183,7 +294,7 @@ describe("ShareDeckView against computeDeckStats", () => {
     expect(stats.draw).toBe(1);
   });
 
-  it("currently floors a half mana value into the 0 bucket, where computeDeckStats keeps a 0.5 key that the builder's chart never draws (pinned; see B2-41)", () => {
+  it("draws no bar for a half mana value, as the builder's chart does not: computeDeckStats keeps a 0.5 key no bucket shows, though the median counts it (pinned; see B2-41)", () => {
     // An Un-set card: Scryfall gives Little Girl a mana value of 0.5.
     const halfManaDeck: Deck = {
       ...DECK,
@@ -204,14 +315,17 @@ describe("ShareDeckView against computeDeckStats", () => {
     const stats = computeDeckStats(halfManaDeck);
 
     const sharedPage = renderSharedPage(halfManaDeck);
-    const builderChart = renderWithIntl(<ManaCurve curve={stats.manaCurve} />, {
-      locale: "en",
-    });
+    const builderChart = renderBuilderChart(halfManaDeck);
 
-    expect(filledCurveBuckets(sharedPage.container)).toEqual([
-      "1 card at CMC 0",
-    ]);
+    expect(filledCurveBars(sharedPage.container)).toEqual([]);
     expect(stats.manaCurve).toEqual({ 0.5: 1 });
-    expect(filledCurveBuckets(builderChart.container)).toEqual([]);
+    expect(filledCurveBars(builderChart.container)).toEqual([]);
+    expect(curveFigures(sharedPage.container)).toEqual([
+      "Median 0.5, or 0.5 with lands",
+      "Total mana value 0.5",
+    ]);
+    expect(curveFigures(sharedPage.container)).toEqual(
+      curveFigures(builderChart.container)
+    );
   });
 });
