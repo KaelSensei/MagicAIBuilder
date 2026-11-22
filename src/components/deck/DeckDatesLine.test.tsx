@@ -7,6 +7,10 @@
 import { screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithIntl } from "@/test/render-with-intl";
+import {
+  hydrateWithIntl,
+  renderToStringWithIntl,
+} from "@/test/hydrate-with-intl";
 import { DeckDatesLine } from "./DeckDatesLine";
 
 const NOW = new Date("2026-11-21T12:00:00.000Z");
@@ -124,5 +128,63 @@ describe("DeckDatesLine", () => {
     );
 
     expect(container).toBeEmptyDOMElement();
+  });
+});
+
+/**
+ * The server renders the line at one instant and the browser hydrates it at
+ * another. Around a unit boundary the relative text differs ("22 hours ago" on
+ * the server, "1 day ago" in the browser), so the line must not depend on
+ * "now" until it has hydrated.
+ */
+describe("DeckDatesLine across the server render and the hydration", () => {
+  const UPDATED = "2026-11-20T13:00:00.000Z";
+  const SERVER_NOW = new Date("2026-11-21T11:00:00.000Z");
+  const BROWSER_NOW = new Date("2026-11-21T14:00:00.000Z");
+
+  it("hydrates with no mismatch when the browser's clock has crossed a unit since the server render", async () => {
+    vi.setSystemTime(SERVER_NOW);
+    const html = renderToStringWithIntl(
+      <DeckDatesLine createdAt={CREATED} updatedAt={UPDATED} />
+    );
+    vi.setSystemTime(BROWSER_NOW);
+
+    const hydrated = await hydrateWithIntl(
+      html,
+      <DeckDatesLine createdAt={CREATED} updatedAt={UPDATED} />
+    );
+
+    expect(hydrated.mismatches).toEqual([]);
+    hydrated.unmount();
+  });
+
+  it("sends the update as a date in the server HTML, so the first paint does not depend on the server's clock", () => {
+    vi.setSystemTime(SERVER_NOW);
+
+    const html = renderToStringWithIntl(<DeckDatesLine updatedAt={UPDATED} />);
+
+    const page = document.createElement("div");
+    page.innerHTML = html;
+    expect(page).toHaveTextContent(/^Updated Nov 20, 2026$/);
+    expect(page.querySelector("time")).toHaveAttribute("datetime", UPDATED);
+  });
+
+  it("reads the update as relative to the viewer's clock once hydrated, keeping its stored instant and full-date title", async () => {
+    vi.setSystemTime(SERVER_NOW);
+    const html = renderToStringWithIntl(<DeckDatesLine updatedAt={UPDATED} />);
+    vi.setSystemTime(BROWSER_NOW);
+
+    const hydrated = await hydrateWithIntl(
+      html,
+      <DeckDatesLine updatedAt={UPDATED} />
+    );
+
+    expect(hydrated.container).toHaveTextContent(/^Updated 1 day ago$/);
+    const time = hydrated.container.querySelector("time");
+    expect(time).toHaveAttribute("datetime", UPDATED);
+    expect(time?.getAttribute("title")).toMatch(
+      /^Friday, November 20, 2026 at 1:00\sPM$/
+    );
+    hydrated.unmount();
   });
 });
