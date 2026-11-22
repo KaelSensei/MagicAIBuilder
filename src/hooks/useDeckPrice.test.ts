@@ -157,3 +157,107 @@ describe("useDeckPrice", () => {
     expect(result.current.totalWithoutBasics).toBeNull();
   });
 });
+
+describe("useDeckPrice counts the deck you buy to play: the main deck and the command zone", () => {
+  const solRing = aDeckCard({ id: "sol-ring", name: "Sol Ring", price: 2 });
+  const sideboardCard = aDeckCard({
+    id: "side",
+    name: "Sideboard Card",
+    price: 5,
+    zone: "sideboard",
+  });
+  const consideredCard = aDeckCard({
+    id: "maybe",
+    name: "Considered Card",
+    price: 7,
+    zone: "maybeboard",
+  });
+
+  function openInStore(deck: Deck): void {
+    useDeckStore.setState({
+      decks: { [deck.id]: deck },
+      activeDeckId: deck.id,
+    });
+  }
+
+  it("leaves the Sideboard and Considering cards out of the deck total", () => {
+    openInStore(
+      aDeck({
+        commander: aDeckCard({ id: "cmd", name: "Commander", price: 10 }),
+        cards: [solRing, sideboardCard, consideredCard],
+      })
+    );
+
+    const { result } = renderHook(() => useDeckPrice());
+
+    expect(result.current.totalPrice).toBe(12);
+  });
+
+  it("leaves a sideboard Island and a sideboard card out of the total without basic lands", () => {
+    openInStore(
+      aDeck({
+        cards: [
+          solRing,
+          aDeckCard({
+            id: "forest",
+            name: "Forest",
+            typeLine: "Basic Land — Forest",
+            price: 0.25,
+          }),
+          aDeckCard({
+            id: "island",
+            name: "Island",
+            typeLine: "Basic Land — Island",
+            price: 0.5,
+            zone: "sideboard",
+          }),
+          sideboardCard,
+        ],
+      })
+    );
+
+    const { result } = renderHook(() => useDeckPrice());
+
+    expect(result.current.totalWithoutBasics).toBe(2);
+  });
+
+  it("does not count a Considering card with no price among the cards without a price", () => {
+    openInStore(
+      aDeck({
+        cards: [
+          aDeckCard({ id: "unpriced", name: "Unpriced Card", price: null }),
+          { ...consideredCard, price: null },
+        ],
+      })
+    );
+
+    const { result } = renderHook(() => useDeckPrice());
+
+    expect(result.current.missingPriceCount).toBe(1);
+  });
+
+  it("shows no total for a deck whose only cards are in Considering, like a deck with no cards", () => {
+    openInStore(
+      aDeck({
+        cards: [
+          consideredCard,
+          aDeckCard({
+            id: "unpriced",
+            name: "Unpriced Card",
+            price: null,
+            zone: "maybeboard",
+          }),
+        ],
+      })
+    );
+
+    const { result } = renderHook(() => useDeckPrice());
+
+    expect(result.current).toEqual({
+      totalPrice: 0,
+      missingPriceCount: 0,
+      hasCards: false,
+      totalWithoutBasics: null,
+    });
+  });
+});
