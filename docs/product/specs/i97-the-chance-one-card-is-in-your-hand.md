@@ -293,6 +293,8 @@ Slice 2 re-checked the shipped panel; it is not a second calculator. `DrawOddsPa
 
 The formula still answers a minimum above the cards drawn with a known 0 (`chanceOfAtLeast`, `src/lib/deck/draw-odds.ts:73-82`); the panel names that case itself. Moving the check into the formula's gaps is left for a later change.
 
+Done 2026-11-21 (#1664), beyond slices 1 and 2, from the twentieth pass's batch: the panel shows the average lands in an opening seven, the exact chance of 0 to 7 lands, and the chance of each land drop on turns 1 to 7, with the same exact count and no randomness.
+
 ### Definition of done
 
 The panel for a 99-card deck with 36 lands and an opening seven shows the chance of three or more lands, shows the inputs, and a second open of the same deck shows the same digits.

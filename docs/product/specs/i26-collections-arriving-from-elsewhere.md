@@ -19,6 +19,7 @@ Where collections actually live:
 - **MTG Arena** — a different inventory with wildcards; ManaForge reads it, and the product's non-goals exclude it.
 
 **The constraint that shapes this spec.** Camera scanning is already a stated non-goal: it is a native-camera capability, ManaBox owns it, and I-06 defers it behind printing-level ownership anyway. Import is therefore not one path among several — it is the **only** honest way this product gets a populated collection.
+Decided 2026-11-22: the owner lifted the scanning non-goal ([D-34](../owner-decisions.md#decided-on-2026-11-22)). Scanning waits for [I-40](i40-installable-app-and-card-scanning.md)'s benchmark and for this spec's staged commit (I-40 requirement 6.1), so import stays the first path.
 
 ## Current state in this codebase
 
@@ -350,7 +351,7 @@ Nothing in the roadmap entry was dropped. The section below is the initiative te
 **Impact / effort:** High / medium
 **Depends on:** I-06 printing-level ownership. Importing at Oracle level would discard exactly the information that makes I-16 and I-06 trustworthy.
 
-Collections already live in ManaBox, Moxfield, Deckbox and in spreadsheets, and ManaBox is the scanner most paper players use. The sweep found collection-to-deck ranking in five products; the precondition for all of it is getting the collection in. The product's own non-goals exclude building a scanner, which makes import the only honest path to a populated collection.
+Collections already live in ManaBox, Moxfield, Deckbox and in spreadsheets, and ManaBox is the scanner most paper players use. The sweep found collection-to-deck ranking in five products; the precondition for all of it is getting the collection in. The product's own non-goals exclude building a scanner, which makes import the only honest path to a populated collection. Decided 2026-11-22: the owner lifted the non-goal (D-34). A scanner, if [I-40](i40-installable-app-and-card-scanning.md)'s benchmark passes, stages rows through this spec's staged commit; import stays the first path.
 
 ### Scope
 
