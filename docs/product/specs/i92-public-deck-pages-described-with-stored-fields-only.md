@@ -251,6 +251,7 @@ Google's spam policy, already cited under I-34, names scaled AI-written pages as
 ### Scope
 
 - [ ] On an indexable public deck, JSON-LD for the name, the commander and the date the deck was updated, and only when those strings are also visible on the page. No FAQ. No generated paragraph. No rating until a later slice shows the same rating in the HTML and in the data.
+  - Partly done 2026-11-22: the stored created and updated dates are visible on the public deck page and in the builder (#1663), so the update date this line needs is now on the page. The JSON-LD itself stays open.
 - [ ] A `noindex` deck page, a share page and a private page emit no JSON-LD.
 - [ ] The strings come from the public projection. `budget`, notes and folder names never appear.
 

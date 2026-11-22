@@ -250,7 +250,7 @@ Eight specs from a nineteenth pass on 2026-11-20, in the same "roadmap v2" forma
 
 ## Public deck lists — added 2026-11-21
 
-One spec from a twentieth pass on 2026-11-21, in the same "roadmap v2" format, on Moxfield's new deck editor of 2026-11-20. Ten of that editor's features are being built in a batch of their own; of the rest, one gap had no owning file. The others are dated lines in their owners, listed in the roadmap's twentieth-pass tables.
+One spec from a twentieth pass on 2026-11-21, in the same "roadmap v2" format, on Moxfield's new deck editor of 2026-11-20. Ten of that editor's features are being built in a batch of their own (merged on 2026-11-21 as #1656 to #1665); of the rest, one gap had no owning file. The others are dated lines in their owners, listed in the roadmap's twentieth-pass tables.
 
 | Spec | Initiative | Status | The one-line reason it exists |
 | --- | --- | --- | --- |

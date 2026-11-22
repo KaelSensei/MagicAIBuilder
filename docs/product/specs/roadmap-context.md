@@ -169,7 +169,7 @@ A nineteenth pass, on 2026-11-20, answered the owner's request to "add 10 more f
 - [I-114](i114-a-decks-place-in-the-roster-keep-rest-retire-or-take-apart.md) gives each deck a stage (in rotation, resting, retired) that changes how the collection counts it (goal 1).
 - [I-115](i115-cards-to-get-signed-an-events-artists-against-your-copies.md) matches an event's attending artists against the player's copies for a signing (goal 1).
 
-A twentieth pass, on 2026-11-21, answered the owner's request to match Moxfield's new deck editor, released to everyone on 2026-11-20 ("it has changed, there are many new features, we need the same"). Ten of its features are being built in a batch of their own. Of the rest, one had no owning file:
+A twentieth pass, on 2026-11-21, answered the owner's request to match Moxfield's new deck editor, released to everyone on 2026-11-20 ("it has changed, there are many new features, we need the same"). Ten of its features are being built in a batch of their own (merged on 2026-11-21 as #1656 to #1665). Of the rest, one had no owning file:
 
 - [I-116](i116-public-deck-lists-a-curated-set-of-public-decks-anyone-can-read.md) publishes a named, ordered list of public decks, each author credited, such as an event's Top 8 (goal 1).
 
@@ -660,7 +660,7 @@ I-106 is Next after the numbered Next band; I-104, I-105 and I-107 are Later. No
 
 I-113 and I-114 are Next after the numbered Next band; I-108, I-109, I-111 and I-115 are Later; I-110 and I-112 are Blocked on D-104 and D-106. None is paid, and none is in the 30–50 iteration estimate. The owner asked for ten initiatives; eight held, and the pass reports the two missing rather than pad. Owner decisions D-104 to D-108 join the register, which now holds 108, and L-54 and L-55 join the legal brief. The glance rows were written by hand; the outside script was not re-run.
 
-**2026-11-21, I-116, public deck lists, and Moxfield's new deck editor:** a twentieth pass, on the owner's request to match the editor Moxfield released to everyone on 2026-11-20, read its Bluesky announcements through Bluesky's public API and its YouTube video, and mapped about 60 of its features to the code on `dev` at `59208d5c` and to roadmap ids. Ten features are being built in their own batch and are not marked Done here. One gap had no owning file: a public list of public decks, which I-08's private folders, I-36's six pinned decks and I-75's search do not cover.
+**2026-11-21, I-116, public deck lists, and Moxfield's new deck editor:** a twentieth pass, on the owner's request to match the editor Moxfield released to everyone on 2026-11-20, read its Bluesky announcements through Bluesky's public API and its YouTube video, and mapped about 60 of its features to the code on `dev` at `59208d5c` and to roadmap ids. Ten features are being built in their own batch and are not marked Done here. Merged on 2026-11-21 as #1656 to #1665; their owners' specs carry the Done and partly-done marks since 2026-11-22. One gap had no owning file: a public list of public decks, which I-08's private folders, I-36's six pinned decks and I-75's search do not cover.
 
 - **No object groups decks across owners (I-116).** `Deck.folderId` holds the owner's own folder, and saved-deck folders are private.
 
