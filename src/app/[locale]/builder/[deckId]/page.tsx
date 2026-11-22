@@ -42,6 +42,7 @@ import { Header } from "@/components/layout/Header";
 import { SearchBar } from "@/components/search/SearchBar";
 import { SearchFilters } from "@/components/search/SearchFilters";
 import { SearchResults } from "@/components/search/SearchResults";
+import { QuickAddPaletteHost } from "@/components/search/QuickAddPaletteHost";
 import { DeckCardCount } from "@/components/deck/DeckCardCount";
 import { DeckEditor } from "@/components/deck/DeckEditor";
 import { DeckStats } from "@/components/deck/DeckStats";
@@ -953,6 +954,13 @@ export default function BuilderPage() {
                 labelClassName="hidden sm:inline"
               />
             )}
+            <QuickAddPaletteHost
+              scope={{
+                legality: getFormatConfig(deck.format).scryfallLegality,
+                identityClause: identityScope.clause,
+              }}
+              onAdd={handleAddToZone}
+            />
             {/* Shortcut list — reachable without "?", which a player can turn off */}
             <KeyboardShortcutsTrigger
               className="rounded-full border border-[var(--border)] px-2.5 py-1.5 transition-all hover:border-[var(--accent)] md:px-3"
