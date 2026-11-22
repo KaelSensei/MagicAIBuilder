@@ -3,15 +3,16 @@
  * the real deck client against the in-memory deck API: the other deck is read,
  * the copy limit decides the write, and the open deck is never written.
  */
-import { act } from "@testing-library/react";
+import { act, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
 import type { ApiDeck, ApiDeckCard } from "@/lib/db/deck-api";
-import { apiDeckToStoreDeck } from "@/lib/deck/store-factories";
+import { apiDeckToStoreDeck, deckCardCount } from "@/lib/deck/store-factories";
 import { useDeckStore } from "@/lib/deck/store";
 import type { DeckFormat } from "@/lib/deck/formats";
 import type { DeckCard } from "@/lib/deck/types";
 import { useAddToOtherDeck } from "@/hooks/useAddToOtherDeck";
 import { aDeckCard } from "@/test/builders/card";
+import { aDeck } from "@/test/builders/deck";
 import {
   DeckApiRefusal,
   emptyApiDeck,
@@ -372,6 +373,40 @@ describe("useAddToOtherDeck", () => {
     expect(deckApi.addCard).not.toHaveBeenCalled();
     expect(deckApi.savedDeck(DECK_A.id)).toEqual(DECK_A);
     expect(toasts).not.toHaveBeenCalled();
+  });
+
+  it("after the add, the deck list shows Kaalia's new card count", async () => {
+    deckApi.seedDeck(savedDeck(KAALIA.id, KAALIA.name, [SOL_RING]));
+    await act(() => useDeckStore.getState().loadDecks());
+    const listedCount = () =>
+      deckCardCount(useDeckStore.getState().decks[KAALIA.id] ?? aDeck());
+    expect(listedCount()).toBe(1);
+    const { result } = renderHookWithProviders(() =>
+      useAddToOtherDeck(SMOTHERING_TITHE)
+    );
+
+    await act(() => result.current.addTo(KAALIA, "main"));
+
+    await waitFor(() => expect(listedCount()).toBe(2));
+  });
+
+  it("after the add, the deck list shows the new count of a deck opened earlier", async () => {
+    const kaalia = savedDeck(KAALIA.id, KAALIA.name, [SOL_RING]);
+    deckApi.seedDeck(kaalia);
+    useDeckStore.setState((state) => ({
+      decks: { ...state.decks, [KAALIA.id]: apiDeckToStoreDeck(kaalia) },
+    }));
+    const { result } = renderHookWithProviders(() =>
+      useAddToOtherDeck(SMOTHERING_TITHE)
+    );
+
+    await act(() => result.current.addTo(KAALIA, "main"));
+
+    await waitFor(() =>
+      expect(
+        deckCardCount(useDeckStore.getState().decks[KAALIA.id] ?? aDeck())
+      ).toBe(2)
+    );
   });
 
   it("after the add, opening Kaalia shows the card", async () => {
