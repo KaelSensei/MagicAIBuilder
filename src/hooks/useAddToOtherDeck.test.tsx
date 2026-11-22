@@ -173,6 +173,120 @@ describe("useAddToOtherDeck", () => {
     expect(toasts).not.toHaveBeenCalled();
   });
 
+  it("a Modern deck with 3 Lightning Bolt in the main deck and 1 in the sideboard refuses a fifth copy into the sideboard", async () => {
+    // CR 100.2a, CR 100.4a: a constructed deck and its sideboard together
+    // hold at most four copies of a card.
+    deckApi.seedDeck(
+      savedDeck(
+        "burn",
+        "Burn",
+        [
+          { ...LIGHTNING_BOLT, id: "burn-bolt", quantity: 3 },
+          { ...LIGHTNING_BOLT, id: "burn-bolt-side", zone: "sideboard" },
+        ],
+        "modern"
+      )
+    );
+    const { result } = renderHookWithProviders(() =>
+      useAddToOtherDeck(LIGHTNING_BOLT)
+    );
+
+    await act(() =>
+      result.current.addTo({ id: "burn", name: "Burn" }, "sideboard")
+    );
+
+    expect(result.current.status).toEqual({
+      kind: "atLimit",
+      deckName: "Burn",
+    });
+    expect(deckApi.updateCardQuantity).not.toHaveBeenCalled();
+    expect(deckApi.addCard).not.toHaveBeenCalled();
+    expect(toasts).not.toHaveBeenCalled();
+  });
+
+  it("a Commander deck whose commander is Atraxa refuses Atraxa into its main deck", async () => {
+    // CR 903.5b: one copy of each card across the deck, the command zone
+    // included.
+    const atraxa = aDeckCard({
+      id: "a-atraxa",
+      scryfallId: "atraxa-print",
+      name: "Atraxa, Praetors' Voice",
+      typeLine: "Legendary Creature — Phyrexian Angel Horror",
+    });
+    deckApi.seedDeck({
+      ...savedDeck("superfriends", "Superfriends", []),
+      cards: [
+        {
+          ...apiRow("superfriends", { ...atraxa, id: "superfriends-atraxa" }),
+          isCommander: true,
+        },
+      ],
+    });
+    const { result } = renderHookWithProviders(() => useAddToOtherDeck(atraxa));
+
+    await act(() =>
+      result.current.addTo({ id: "superfriends", name: "Superfriends" }, "main")
+    );
+
+    expect(result.current.status).toEqual({
+      kind: "atLimit",
+      deckName: "Superfriends",
+    });
+    expect(deckApi.addCard).not.toHaveBeenCalled();
+  });
+
+  it("a Modern deck holding 20 basic Mountains still accepts another", async () => {
+    // CR 100.2a: basic lands are exempt from the four-copy limit.
+    const mountain = aDeckCard({
+      id: "a-mountain",
+      scryfallId: "mountain-print",
+      name: "Mountain",
+      typeLine: "Basic Land — Mountain",
+    });
+    deckApi.seedDeck(
+      savedDeck(
+        "burn",
+        "Burn",
+        [{ ...mountain, id: "burn-mountain", quantity: 20 }],
+        "modern"
+      )
+    );
+    const { result } = renderHookWithProviders(() =>
+      useAddToOtherDeck(mountain)
+    );
+
+    await act(() => result.current.addTo({ id: "burn", name: "Burn" }, "main"));
+
+    expect(deckApi.savedDeck("burn")?.cards).toEqual([
+      expect.objectContaining({ id: "burn-mountain", quantity: 21 }),
+    ]);
+  });
+
+  it("a Lightning Bolt in Considering does not count against the four in the deck", async () => {
+    // Considering is not part of the deck, so CR 100.2a does not weigh it.
+    deckApi.seedDeck(
+      savedDeck(
+        "burn",
+        "Burn",
+        [
+          { ...LIGHTNING_BOLT, id: "burn-bolt", quantity: 3 },
+          { ...LIGHTNING_BOLT, id: "burn-bolt-maybe", zone: "maybeboard" },
+        ],
+        "modern"
+      )
+    );
+    const { result } = renderHookWithProviders(() =>
+      useAddToOtherDeck(LIGHTNING_BOLT)
+    );
+
+    await act(() => result.current.addTo({ id: "burn", name: "Burn" }, "main"));
+
+    expect(deckApi.savedDeck("burn")?.cards).toEqual([
+      expect.objectContaining({ id: "burn-bolt", quantity: 4 }),
+      expect.objectContaining({ id: "burn-bolt-maybe", quantity: 1 }),
+    ]);
+  });
+
   it("never claims a copy the route did not store", async () => {
     deckApi.seedDeck(
       savedDeck(

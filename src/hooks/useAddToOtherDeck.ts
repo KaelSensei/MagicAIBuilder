@@ -28,7 +28,7 @@ export interface OtherDeckChoice {
 export type AddToOtherDeckStatus =
   | { readonly kind: "idle" }
   | { readonly kind: "saving" }
-  /** Nothing was written: the zone already holds the most copies allowed. */
+  /** Nothing was written: the deck already holds the most copies allowed. */
   | { readonly kind: "atLimit"; readonly deckName: string }
   /** A read or a write failed; the same add can be tried again. */
   | {
