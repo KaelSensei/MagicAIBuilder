@@ -956,7 +956,7 @@ export default function BuilderPage() {
             )}
             <QuickAddPaletteHost
               scope={{
-                legality: getFormatConfig(deck?.format ?? "commander").scryfallLegality,
+                legality: getFormatConfig(deck.format).scryfallLegality,
                 identityClause: identityScope.clause,
               }}
               onAdd={handleAddToZone}
