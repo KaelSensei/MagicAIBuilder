@@ -30,6 +30,58 @@ if [[ -n "${CI:-}" ]]; then
   exit 0
 fi
 
+# An unattended run claims its slice by pushing an empty commit before it
+# writes any code (I-74 §3.6, docs/product/specs/i74-a-roadmap-agents-can-execute.md),
+# and that push must not cost a full E2E run. Git gives a pre-push hook one
+# line per pushed ref on stdin: `<local ref> <local sha> <remote ref> <remote sha>`.
+# The suite is skipped only when at least one ref line arrived and no pushed
+# commit changes a file. Anything uncertain keeps the full gate: no ref lines
+# (the script started by hand), a root commit, or a git command that fails.
+readonly ZERO_SHA="0000000000000000000000000000000000000000"
+
+# The commits a push sends for one ref: reachable from the local sha, and from
+# no remote-tracking ref nor the remote's old tip when this clone has it.
+commits_to_push() {
+  local local_sha="$1" remote_sha="$2"
+  local exclude=(--not --remotes)
+  if [[ "$remote_sha" != "$ZERO_SHA" ]] && git cat-file -e "${remote_sha}^{commit}" 2>/dev/null; then
+    exclude+=("$remote_sha")
+  fi
+  git rev-list "$local_sha" "${exclude[@]}"
+}
+
+# A commit changes no file when its tree is its first parent's tree. A root
+# commit has no parent to compare with, so it counts as a change.
+changes_files() {
+  local commit="$1" parent_tree
+  parent_tree="$(git rev-parse --verify -q "${commit}^1^{tree}")" || return 0
+  [[ "$(git rev-parse "${commit}^{tree}")" != "$parent_tree" ]]
+}
+
+# Succeeds when stdin held at least one ref line and every commit the push
+# sends changes no file. Deleting a remote branch sends no commit.
+push_changes_no_file() {
+  [[ -t 0 ]] && return 1
+  local _local_ref local_sha _remote_ref remote_sha commits commit saw_ref=false
+  while read -r _local_ref local_sha _remote_ref remote_sha; do
+    [[ -n "$local_sha" ]] || continue
+    saw_ref=true
+    [[ "$local_sha" == "$ZERO_SHA" ]] && continue
+    commits="$(commits_to_push "$local_sha" "$remote_sha")" || return 1
+    for commit in $commits; do
+      if changes_files "$commit"; then
+        return 1
+      fi
+    done
+  done
+  [[ "$saw_ref" == true ]]
+}
+
+if push_changes_no_file; then
+  echo "ℹ  Every commit in this push changes no file — skipping the e2e pre-push gate (I-74 §3.6)."
+  exit 0
+fi
+
 # Every clone and worktree on this machine shares one compose project
 # (`name: magicaibuilder-e2e`). Two pushes at once replaced each other's
 # containers mid-run on 2026-11-09 and both gates failed with no failing test.
