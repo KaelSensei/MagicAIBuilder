@@ -94,6 +94,8 @@ import { DeckVisibilityToggle } from "@/components/deck/DeckVisibilityToggle";
 import { DeckSaveIndicator } from "@/components/deck/DeckSaveIndicator";
 import { DeckUnavailableState } from "@/components/deck/DeckUnavailableState";
 import { DeleteDeckButton } from "@/components/builder/DeleteDeckButton";
+import { DeckDepartureGate } from "@/components/builder/DeckDepartureGate";
+import { useDeckDeparture } from "@/components/builder/useDeckDeparture";
 import { useSession } from "next-auth/react";
 import { SnapshotsPanel } from "@/components/deck/SnapshotsPanel";
 import { CardPackagesPanel } from "@/components/deck/CardPackagesPanel";
@@ -290,6 +292,8 @@ interface UnavailableBuilderPageProps {
   readonly loadError: ReturnType<typeof useDeckStore.getState>["loadError"];
   readonly setActiveDeck: ReturnType<typeof useDeckStore.getState>["setActiveDeck"];
   readonly loadDecks: ReturnType<typeof useDeckStore.getState>["loadDecks"];
+  /** The page deleted this deck itself and is on its way to the library. */
+  readonly isLeaving: boolean;
 }
 
 function UnavailableBuilderPage({
@@ -300,6 +304,7 @@ function UnavailableBuilderPage({
   loadError,
   setActiveDeck,
   loadDecks,
+  isLeaving,
 }: UnavailableBuilderPageProps) {
   const retry = () => {
     if (activeDeckOpenError) {
@@ -313,12 +318,14 @@ function UnavailableBuilderPage({
     <div className="flex flex-col min-h-screen">
       <Header />
       <div className="flex-1 flex items-center justify-center">
-        <DeckUnavailableState
-          isLoading={isSyncing || (isDeckIncomplete && !activeDeckOpenError && !loadError)}
-          loadError={activeDeckOpenError?.reason ?? loadError}
-          errorSource={activeDeckOpenError ? "deck" : "list"}
-          onRetry={retry}
-        />
+        <DeckDepartureGate isLeaving={isLeaving}>
+          <DeckUnavailableState
+            isLoading={isSyncing || (isDeckIncomplete && !activeDeckOpenError && !loadError)}
+            loadError={activeDeckOpenError?.reason ?? loadError}
+            errorSource={activeDeckOpenError ? "deck" : "list"}
+            onRetry={retry}
+          />
+        </DeckDepartureGate>
       </div>
     </div>
   );
@@ -358,6 +365,7 @@ export default function BuilderPage() {
   const deck = decks[deckId] ?? null;
   const activeDeckOpenError = deckOpenError?.deckId === deckId ? deckOpenError : null;
   const isDeckIncomplete = deck !== null && isDeckStub(deck);
+  const departure = useDeckDeparture();
 
   // Set active deck on mount
   useEffect(() => {
@@ -791,6 +799,7 @@ export default function BuilderPage() {
         loadError={loadError}
         setActiveDeck={setActiveDeck}
         loadDecks={loadDecks}
+        isLeaving={departure.isLeaving}
       />
     );
   }
@@ -908,7 +917,7 @@ export default function BuilderPage() {
                 </span>
               </button>
             )}
-            <DeleteDeckButton deckId={deckId} />
+            <DeleteDeckButton deckId={deckId} departure={departure} />
             {/* Bulk edit — edit deck as plain text */}
             <BulkEditModal deck={deck}>
               <button
