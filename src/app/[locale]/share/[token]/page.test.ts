@@ -68,6 +68,7 @@ function card(
   return {
     manaCost: "",
     cmc: 0,
+    typeLine: "",
     colorIdentity: [],
     imageUri: `https://cards.scryfall.io/normal/${overrides.id}.jpg`,
     artCropUri: "",

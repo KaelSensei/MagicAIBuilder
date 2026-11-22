@@ -164,6 +164,7 @@ function sharedRow(
     name: card.name,
     manaCost: card.manaCost,
     cmc: card.cmc,
+    typeLine: card.typeLine,
     colorIdentity: card.colorIdentity,
     imageUri: card.imageUri,
     artCropUri: card.artCropUri,
@@ -180,8 +181,9 @@ function sharedRow(
  * one row per deck card, command zone included, flagged the way the store
  * saves them (a partner row is `isCommander` and `isPartner`; a companion row
  * is neither and has the `companion` category). The share select carries
- * `zone` for the page metadata's count, but `ShareDeckView` does not read it,
- * so a "Considering" row still looks like a main-deck row there.
+ * `zone` for the page metadata's count and the mana curve, but the rest of
+ * `ShareDeckView` does not read it, so a "Considering" row still looks like a
+ * main-deck row in its stats panel and colour bar.
  */
 export function sharedDeckOf(deck: Deck): ApiSharedDeck {
   const commandRows = [

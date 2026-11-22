@@ -31,6 +31,8 @@ import {
 import { logger } from "@/lib/logger";
 import type { ApiCard, ApiSharedDeck } from "@/lib/deck/share-types";
 import { normalizeScryfallImageUrl } from "@/lib/scryfall/images";
+import { manaCurveOf } from "@/lib/deck/curve-breakdown";
+import { sharedDeckCurveCards } from "@/lib/deck/shared-deck-curve-cards";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -41,16 +43,6 @@ const BRACKET_COLORS: Record<number, string> = {
   4: "text-red-400 bg-red-400/10 border-red-400/30",
   5: "text-fuchsia-400 bg-fuchsia-400/10 border-fuchsia-400/30",
 };
-
-function computeManaCurve(cards: ApiCard[]): Record<number, number> {
-  const curve: Record<number, number> = {};
-  for (const card of cards) {
-    if (card.category === "land") continue;
-    const bucket = Math.min(Math.floor(card.cmc), 7);
-    curve[bucket] = (curve[bucket] ?? 0) + card.quantity;
-  }
-  return curve;
-}
 
 function computeColorDistribution(cards: ApiCard[]): Record<string, number> {
   const dist: Record<string, number> = {};
@@ -150,10 +142,12 @@ export function ShareDeckView({ deck }: ShareDeckViewProps) {
       cat !== "commander" && cat !== "companion" && cardsByCategory[cat]?.length
   );
 
-  const manaCurve = useMemo(
-    () => computeManaCurve([...deck.cards]),
+  // The builder's chart, from the builder's rows: same bars, parts, figures and card lists (I-37).
+  const curveCards = useMemo(
+    () => sharedDeckCurveCards(deck.cards),
     [deck.cards]
   );
+  const manaCurve = useMemo(() => manaCurveOf(curveCards), [curveCards]);
   const colorDist = useMemo(
     () => computeColorDistribution([...deck.cards]),
     [deck.cards]
@@ -434,7 +428,7 @@ export function ShareDeckView({ deck }: ShareDeckViewProps) {
             <h3 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-3">
               {t("share.manaCurve")}
             </h3>
-            <ManaCurve curve={manaCurve} />
+            <ManaCurve curve={manaCurve} cards={curveCards} />
           </div>
 
           {/* Color Distribution */}
