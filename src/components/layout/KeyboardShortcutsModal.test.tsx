@@ -66,6 +66,14 @@ describe("KeyboardShortcutsModal", () => {
     ).toBe(true);
   });
 
+  it("lists Ctrl+K and ⌘K as the quick-add shortcut", () => {
+    renderWithIntl(<KeyboardShortcutsModal />);
+    act(() => useUIStore.getState().setShowKeyboardModal(true));
+
+    const row = screen.getByText("Open quick add").parentElement;
+    expect(row).toHaveTextContent(/⌘K\s*\/\s*Ctrl\+K/);
+  });
+
   it("explains in French what the switch turns off", async () => {
     renderWithIntl(<KeyboardShortcutsModal />, { locale: "fr" });
     act(() => useUIStore.getState().setShowKeyboardModal(true));

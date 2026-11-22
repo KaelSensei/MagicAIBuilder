@@ -62,6 +62,7 @@ Under the three panels, the deck summary bar keeps the deck's figures in view wh
 - Use **By Set** to browse cards from a specific expansion
 - Use **By Color** to browse by color identity
 - Click **Show filters** to filter by CMC, price, color
+- **Quick add** (Ctrl+K, or ⌘K, or the Quick add button in the deck toolbar) is a second way to find a card. Type a name, a role such as ramp or removal (rampe or retrait in French), or switch to rules text with Alt+R. The Scryfall query is shown above the results. Enter adds to the main deck, Shift+Enter to the sideboard and Alt+Enter to considering, and the palette stays open so the next card can be added. When a commander is set, the search stays inside that commander's colours. The Name, By Set and By Color panel is unchanged and remains the search that opens with the builder.
 
 #### Adding Cards
 
@@ -539,7 +540,7 @@ Click **Export** in the deck builder to copy your deck in various formats.
 | Rename deck    | Click the deck name    |
 
 Press **?** in the deck builder, or click **Shortcuts** in its toolbar, to list
-the keyboard shortcuts. Ctrl+Z (⌘Z on macOS) undoes the last deck change, except
+the keyboard shortcuts. Ctrl+K (⌘K on macOS) opens quick add. Ctrl+Z (⌘Z on macOS) undoes the last deck change, except
 while you are typing in a text field such as a card note or the search bar:
 there it undoes your typing instead.
 
