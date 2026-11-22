@@ -15,12 +15,24 @@ import { useToast } from "@/hooks/useToast";
 import { useRouter } from "@/i18n/navigation";
 import { GUEST_DECK_ID } from "@/lib/deck/guest-deck";
 import { useDeckStore } from "@/lib/deck/store";
+import type { DeckDepartureControls } from "@/components/builder/useDeckDeparture";
 
 /** Props of {@link DeleteDeckButton}. */
 export interface DeleteDeckButtonProps {
   /** The deck open in the builder. */
   readonly deckId: string;
+  /**
+   * Tells the page it is leaving before the store drops the deck, and staying if the delete
+   * fails, so the page never reports the deck it deleted as missing. Defaults to doing nothing.
+   */
+  readonly departure?: DeckDepartureControls;
 }
+
+/** The departure of a button used outside the builder page: nothing to tell. */
+const NO_DEPARTURE: DeckDepartureControls = {
+  leave: () => undefined,
+  stay: () => undefined,
+};
 
 /** Where the confirmation stands: not sent yet, on its way, or refused by the server. */
 type DeleteStatus = "idle" | "deleting" | "failed";
@@ -44,7 +56,10 @@ function confirmLabel(status: DeleteStatus, isSaving: boolean): ConfirmLabel {
  * A refused or failed delete keeps the dialog open with a message; the store leaves the deck and
  * its undo history as they were.
  */
-export function DeleteDeckButton({ deckId }: DeleteDeckButtonProps) {
+export function DeleteDeckButton({
+  deckId,
+  departure = NO_DEPARTURE,
+}: DeleteDeckButtonProps) {
   const t = useTranslations("builder.deleteDeck");
   const deckName = useDeckStore((state) => state.decks[deckId]?.name ?? null);
   const isSaving = useDeckStore((state) => state.isSyncing);
@@ -71,9 +86,13 @@ export function DeleteDeckButton({ deckId }: DeleteDeckButtonProps) {
 
   const confirm = async () => {
     setStatus("deleting");
+    // The store drops the deck inside `deleteDeck`, before this function can navigate, so the
+    // page must know it is leaving first.
+    departure.leave();
     try {
       await deleteDeck(deckId);
     } catch {
+      departure.stay();
       setStatus("failed");
       return;
     }
