@@ -12,7 +12,9 @@ import { GUEST_DECK_ID } from "@/lib/deck/guest-deck";
 import { useDeckStore } from "@/lib/deck/store";
 import type { DeckZone } from "@/lib/deck/types";
 import { LIGHTNING_BOLT_NAMED_RECORDED } from "@/lib/scryfall/fixtures/e2e-stand-in-v1";
+import { aDeckCard } from "@/test/builders/card";
 import { aDeck } from "@/test/builders/deck";
+import { aScryfallCard } from "@/test/builders/scryfall";
 import { deckApiHandlers } from "@/test/fake-deck-client";
 import { createInMemoryDeckApi, emptyApiDeck } from "@/test/in-memory-deck-api";
 import { setupMsw } from "@/test/msw";
@@ -24,6 +26,16 @@ const BOLT = LIGHTNING_BOLT_NAMED_RECORDED;
 const BOLT_IMAGE = `https://cards.scryfall.io/normal/front/7/6/${BOLT.id}.jpg?1783903008`;
 const BOLT_PAGE = "https://scryfall.com/card/msc/170/lightning-bolt";
 const BOLT_EDHREC = "https://edhrec.com/cards/lightning-bolt";
+const SOL_RING = aScryfallCard({
+  id: "00000000-0000-4000-8000-00000000501a",
+  name: "Sol Ring",
+  type_line: "Artifact",
+  oracle_text: "{T}: Add {C}{C}.",
+  set: "c21",
+});
+const SOL_RING_PAGE = "https://scryfall.com/card/c21/263/sol-ring";
+const SOL_RING_AT_LIMIT =
+  "Sol Ring is already at its copy limit for Commander. Nothing was added.";
 
 const deckApi = createInMemoryDeckApi();
 const server = setupMsw(
@@ -92,6 +104,36 @@ function openDeck(id = "deck-1"): void {
     gameChangerNames: new Set(),
     bannedNames: new Set(),
   });
+}
+
+/**
+ * Opens a Commander deck that already holds Sol Ring, its one allowed copy (CR 903.5b), and
+ * lets Scryfall's collection lookup answer Sol Ring for its set and number.
+ */
+function openCommanderDeckHoldingSolRing(): void {
+  useDeckStore.setState({
+    decks: {
+      "deck-1": aDeck({
+        id: "deck-1",
+        format: "commander",
+        cards: [
+          aDeckCard({
+            id: "sol-ring",
+            name: "Sol Ring",
+            typeLine: "Artifact",
+            quantity: 1,
+            zone: "main",
+          }),
+        ],
+      }),
+    },
+    activeDeckId: "deck-1",
+  });
+  server.use(
+    http.post("*/cards/collection", () =>
+      HttpResponse.json({ object: "list", not_found: [], data: [SOL_RING] })
+    )
+  );
 }
 
 beforeEach(() => {
@@ -199,6 +241,70 @@ describe("a card dropped from another site", () => {
     expect(zoneCards("main")).toHaveLength(0);
   });
 
+  it("a card already at its copy limit adds nothing and says it is at the limit for the format", async () => {
+    openCommanderDeckHoldingSolRing();
+    renderWithProviders(<ExternalCardDropTarget zone="main" />);
+
+    dropOnBuilder({ entries: { "text/uri-list": SOL_RING_PAGE } });
+
+    await waitFor(() =>
+      expect(toasts).toHaveBeenCalledWith("info", SOL_RING_AT_LIMIT)
+    );
+    expect(zoneCards("main")).toEqual([
+      expect.objectContaining({ name: "Sol Ring", quantity: 1 }),
+    ]);
+    expect(deckApi.addCard).not.toHaveBeenCalled();
+    expect(useDeckStore.getState().undoStack).toEqual([]);
+  });
+
+  it("a card one copy below its limit is still added", async () => {
+    const threeBolts = aDeckCard({
+      id: "bolts",
+      scryfallId: BOLT.id,
+      name: "Lightning Bolt",
+      typeLine: "Instant",
+      quantity: 3,
+      zone: "main",
+    });
+    deckApi.seedDeck({
+      ...emptyApiDeck("deck-1"),
+      format: "modern",
+      cards: [
+        {
+          ...threeBolts,
+          deckId: "deck-1",
+          scryfallId: BOLT.id,
+          notes: null,
+          isCommander: false,
+          isPartner: false,
+        },
+      ],
+    });
+    useDeckStore.setState({
+      decks: {
+        "deck-1": aDeck({
+          id: "deck-1",
+          format: "modern",
+          cards: [threeBolts],
+        }),
+      },
+      activeDeckId: "deck-1",
+    });
+    renderWithProviders(<ExternalCardDropTarget zone="main" />);
+
+    dropOnBuilder({ entries: { "text/uri-list": BOLT_EDHREC } });
+
+    await waitFor(() =>
+      expect(toasts).toHaveBeenCalledWith(
+        "success",
+        "Added Lightning Bolt to Main"
+      )
+    );
+    expect(zoneCards("main")).toEqual([
+      expect.objectContaining({ name: "Lightning Bolt", quantity: 4 }),
+    ]);
+  });
+
   it("a dropped file adds nothing and points to Import", async () => {
     renderWithProviders(<ExternalCardDropTarget zone="main" />);
 
@@ -303,6 +409,21 @@ describe("a card pasted with Ctrl+V or Cmd+V", () => {
       "success",
       "Added Lightning Bolt to Main"
     );
+  });
+
+  it("pasting a card already at its copy limit adds nothing and says it is at the limit for the format", async () => {
+    openCommanderDeckHoldingSolRing();
+    renderWithProviders(<ExternalCardDropTarget zone="main" />);
+
+    pasteOn(document.body, SOL_RING_PAGE);
+
+    await waitFor(() =>
+      expect(toasts).toHaveBeenCalledWith("info", SOL_RING_AT_LIMIT)
+    );
+    expect(zoneCards("main")).toEqual([
+      expect.objectContaining({ name: "Sol Ring", quantity: 1 }),
+    ]);
+    expect(deckApi.addCard).not.toHaveBeenCalled();
   });
 
   it("Ctrl+V in the search field does not add", async () => {

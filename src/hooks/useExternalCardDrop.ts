@@ -7,7 +7,8 @@
  * starts in this document (an image in the search results) is left alone. The payload's strings
  * go to the pure `readExternalCardReference`; the card is looked up through the Scryfall client
  * and its queue, never at the dropped address, and added with the store's `addCard`, which
- * applies the copy limit, the warnings and the undo entry as for any other add.
+ * applies the copy limit, the warnings and the undo entry as for any other add. A card the zone
+ * already holds at its copy limit is reported before the add, since `addCard` skips it silently.
  *
  * Off while a dialog is open, and a paste into a text field stays the field's own.
  *
@@ -19,8 +20,11 @@ import {
   type DroppedPayload,
   type ExternalCardReference,
 } from "@/lib/deck/external-card-link";
+import { commandZoneExceptions } from "@/lib/deck/color-identity";
+import type { DeckFormat } from "@/lib/deck/formats";
+import { deckCopyLimit } from "@/lib/deck/multiples";
 import { useDeckStore } from "@/lib/deck/store";
-import type { DeckZone } from "@/lib/deck/types";
+import type { Deck, DeckZone } from "@/lib/deck/types";
 import { cardsFromZoneSource } from "@/lib/deck/zone-source";
 import {
   getCardById,
@@ -36,6 +40,11 @@ export type ExternalCardDropOutcome =
       readonly kind: "added";
       readonly cardName: string;
       readonly zone: DeckZone;
+    }
+  | {
+      readonly kind: "at-copy-limit";
+      readonly cardName: string;
+      readonly format: DeckFormat;
     }
   | { readonly kind: "unreadable-link" }
   | { readonly kind: "lookup-failed" }
@@ -124,20 +133,41 @@ function lookUp(reference: CardReference): Promise<ScryfallCard> {
   return unknown;
 }
 
-/** Copies of the named card the open deck holds in the zone. */
-function copiesInZone(cardName: string, zone: DeckZone): number {
-  const deck = useDeckStore.getState().getActiveDeck();
-  if (deck === null) return 0;
+/** Copies of the named card the deck holds in the zone. */
+function copiesIn(deck: Deck, cardName: string, zone: DeckZone): number {
   return cardsFromZoneSource(deck)
     .filter((card) => card.name === cardName && card.zone === zone)
     .reduce((total, card) => total + card.quantity, 0);
 }
 
+/** Copies of the named card the open deck holds in the zone. */
+function copiesInZone(cardName: string, zone: DeckZone): number {
+  const deck = useDeckStore.getState().getActiveDeck();
+  return deck === null ? 0 : copiesIn(deck, cardName, zone);
+}
+
+/**
+ * Whether the zone already holds as many copies of the card as the deck may hold, the limit
+ * `addCard` skips the card at: four in a constructed deck (CR 100.2a), one in a singleton deck
+ * (CR 903.5b), more when the card's own text or the commander allows it (CR 903.5e).
+ */
+function isAtCopyLimit(
+  deck: Deck,
+  card: ScryfallCard,
+  zone: DeckZone
+): boolean {
+  const limit = deckCopyLimit(
+    { name: card.name, typeLine: card.type_line, oracleText: card.oracle_text },
+    { format: deck.format, exceptions: commandZoneExceptions(deck) }
+  );
+  return copiesIn(deck, card.name, zone) >= limit;
+}
+
 /**
  * Looks the card up and adds it. A Scryfall printing was chosen by the player, so it is added as
- * an explicit printing; a name takes the add's default (an owned printing first). The add is
- * reported only when the zone gained a copy: `addCard` skips a card at its copy limit silently,
- * and reports a failed save itself.
+ * an explicit printing; a name takes the add's default (an owned printing first). A card already
+ * at its copy limit is reported and not added. The add is reported only when the zone gained a
+ * copy: `addCard` reports a failed save itself.
  */
 async function addReferencedCard(
   reference: CardReference,
@@ -149,6 +179,15 @@ async function addReferencedCard(
     card = await lookUp(reference);
   } catch {
     onOutcome({ kind: "lookup-failed" });
+    return;
+  }
+  const deck = useDeckStore.getState().getActiveDeck();
+  if (deck !== null && isAtCopyLimit(deck, card, zone)) {
+    onOutcome({
+      kind: "at-copy-limit",
+      cardName: card.name,
+      format: deck.format,
+    });
     return;
   }
   const before = copiesInZone(card.name, zone);
