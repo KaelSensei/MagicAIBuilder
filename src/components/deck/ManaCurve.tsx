@@ -3,8 +3,8 @@
  * The mana curve chart of the statistics column — Linear/Vercel dashboard aesthetic.
  *
  * Given the deck's cards, each bar stacks its permanents and spells, and activating a bar lists
- * its cards under the chart (I-37 10.2, 10.3). Without cards (the shared deck view) it draws the
- * plain curve.
+ * its cards under the chart (I-37 10.2, 10.3). The builder and the shared deck view both pass
+ * them; without cards it draws the plain curve. The card list is read-only.
  *
  * @module components/deck/ManaCurve
  */
@@ -29,7 +29,10 @@ import {
 
 interface ManaCurveProps {
   readonly curve: Readonly<Record<number, number>>;
-  /** The builder's deck analysis cards; without them the bars are plain and not pressable. */
+  /**
+   * The builder's deck analysis cards (`sharedDeckCurveCards` on the shared deck view); without
+   * them the bars are plain and not pressable.
+   */
   readonly cards?: readonly DeckCard[];
   readonly className?: string;
 }
