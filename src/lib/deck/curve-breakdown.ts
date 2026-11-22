@@ -117,6 +117,24 @@ export function curvePartsByBucket(
   return parts;
 }
 
+/**
+ * The curve's figures: the copies of each bucket, the sum of its two parts. They equal
+ * `buildManaCurve`'s for the same cards, so a view without the builder's statistics (the shared
+ * deck view) draws the bars its parts and card lists add up to.
+ *
+ * @param cards - the builder's deck analysis cards (commander, partner and every zone)
+ * @returns copies per bucket, for each bucket that holds at least one copy
+ */
+export function manaCurveOf(
+  cards: readonly DeckCard[]
+): Readonly<Record<number, number>> {
+  const curve: Record<number, number> = {};
+  for (const [bucket, { permanents, spells }] of curvePartsByBucket(cards)) {
+    curve[bucket] = permanents + spells;
+  }
+  return curve;
+}
+
 /** A mana value held by a number of copies. */
 interface WeightedValue {
   readonly value: number;
