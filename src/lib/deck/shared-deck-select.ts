@@ -13,7 +13,8 @@ import type { Prisma } from "@prisma/client";
  *
  * Read today by `/share/[token]`: the page metadata (title, description,
  * OpenGraph image) and `ShareDeckView` (header, command zone, card list, card
- * strip, stats panel, mana curve, colour distribution, fork button).
+ * strip, stats panel, mana curve and its card lists, colour distribution, fork
+ * button).
  *
  * Compared with `PUBLIC_DECK_SELECT` (the public deck page), this list:
  * - adds deck `budget`: the stats panel shows the budget row when it is set;
@@ -29,13 +30,16 @@ import type { Prisma } from "@prisma/client";
  * `zone` is read by the page metadata, which counts the deck's cards as the
  * editor does (`countStoredCardCopies`): the sideboard and the maybeboard stay
  * out. A zone belongs to the deck, not to its owner, as the fork's select
- * also holds.
+ * also holds. The mana curve reads `zone` too, and `typeLine` to split each
+ * bar into permanents and spells and to print it in a bar's card list
+ * (I-37); a type line is printed card text, as on the public deck page.
  */
 const SHARED_DECK_CARD_SELECT = {
   id: true,
   name: true,
   manaCost: true,
   cmc: true,
+  typeLine: true,
   colorIdentity: true,
   imageUri: true,
   artCropUri: true,
