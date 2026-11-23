@@ -600,6 +600,11 @@
       "suggestAllowanceExhausted": "Monthly AI suggestions used up ({limit}). They reset on {date}. Everything else keeps working.",
       "spendCeilingReached": "AI features are paused until {date}. Everything else keeps working."
     },
+    "account": {
+      "required": "AI suggestions need an account. Everything else keeps working.",
+      "signUp": "Create account",
+      "signIn": "Sign in"
+    },
     "cardsToAdd": "Cards to Add",
     "cardsToCut": "Cards to Cut",
     "ignored": "{count} ignored",
