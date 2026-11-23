@@ -8,9 +8,9 @@ import { deckCategoryCounts, hashDeckState, buildSuggestPayload } from "@/lib/ai
 import { processStream } from "@/lib/ai/suggestion-stream";
 import type { AIAnalysisOptions, AISuggestionResult } from "@/lib/ai/suggestion-types";
 import {
-  readAiCallDenialResponse,
-  type AiCallDenial,
-} from "@/lib/ai/usage/denial";
+  readAiCallRefusalResponse,
+  type AiCallRefusal,
+} from "@/lib/ai/usage/refusal";
 
 export type { Archetype } from "@/lib/ai/archetypes";
 export type {
@@ -33,7 +33,7 @@ export function useAISuggestions() {
   const [result, setResult] = useState<AISuggestionResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [denial, setDenial] = useState<AiCallDenial | null>(null);
+  const [denial, setDenial] = useState<AiCallRefusal | null>(null);
   const [detectedArchetype, setDetectedArchetype] = useState<Archetype | null>(null);
   const [analysedAt, setAnalysedAt] = useState<Date | null>(null);
   const [ignoredSuggestions, setIgnoredSuggestions] = useState<Set<string>>(new Set());
@@ -93,7 +93,7 @@ export function useAISuggestions() {
         });
 
         if (!response.ok) {
-          setDenial((await readAiCallDenialResponse(response)) ?? null);
+          setDenial((await readAiCallRefusalResponse(response)) ?? null);
           throw new Error(`AI request failed (${response.status})`);
         }
         if (!response.body) throw new Error("No response body");
@@ -133,7 +133,7 @@ export function useAISuggestions() {
     result,
     isLoading,
     error,
-    /** Why the server refused the last analysis before calling a model. */
+    /** Why the last analysis was refused before a model ran: a server denial, or no session. */
     denial,
     analyze,
     invalidateCache,
