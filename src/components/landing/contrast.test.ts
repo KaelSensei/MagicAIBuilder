@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
+import { contrastRatio } from "@/lib/a11y/palette";
+
 /**
  * The landing page used to ship its own gold and Cinzel palette. Small text
  * on those surfaces failed contrast, and the palette ignored the light theme.
@@ -21,31 +23,6 @@ const LAYOUT_SOURCE = readFileSync(
 );
 
 const MIN_RATIO_SMALL_TEXT = 4.5;
-
-/** Relative luminance of a `#rrggbb` colour, per WCAG 2.1. */
-function relativeLuminance(hex: string): number {
-  const channel = (offset: number): number => {
-    const value = Number.parseInt(hex.slice(offset, offset + 2), 16) / 255;
-    return value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
-  };
-
-  return 0.2126 * channel(1) + 0.7152 * channel(3) + 0.0722 * channel(5);
-}
-
-/**
- * WCAG contrast ratio between two `#rrggbb` colours, from 1 to 21.
- *
- * @param foreground - text colour
- * @param background - surface colour
- * @returns the contrast ratio
- */
-function contrastRatio(foreground: string, background: string): number {
-  const first = relativeLuminance(foreground);
-  const second = relativeLuminance(background);
-  const lighter = Math.max(first, second);
-  const darker = Math.min(first, second);
-  return (lighter + 0.05) / (darker + 0.05);
-}
 
 /**
  * Reads `#rrggbb` custom properties from one CSS rule block.
