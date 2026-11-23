@@ -15,7 +15,12 @@ import {
 import { inMemorySnapshotStore } from "@/lib/deck/testing/in-memory-snapshot-store";
 import { deckCard } from "@/test/playtest-db-fake";
 
-const DECK = { id: "deck-1", commanderId: "card-atraxa" };
+const DECK = {
+  id: "deck-1",
+  commanderId: "card-atraxa",
+  commanderName: "Atraxa, Praetors' Voice",
+  partnerId: null,
+};
 const RECORDED_AT = new Date("2026-11-09T14:32:45Z");
 
 const VERSION_ONE = [

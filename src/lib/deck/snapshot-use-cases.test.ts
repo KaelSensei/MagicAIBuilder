@@ -9,12 +9,26 @@ import { makeSnapshotUseCases } from "@/lib/deck/snapshot-use-cases";
 import { inMemorySnapshotStore } from "@/lib/deck/testing/in-memory-snapshot-store";
 import { deckCard } from "@/test/playtest-db-fake";
 
-const DECK = { id: "deck-1", commanderId: "card-atraxa" };
+const DECK = {
+  id: "deck-1",
+  commanderId: "card-atraxa",
+  commanderName: "Atraxa, Praetors' Voice",
+  partnerId: null,
+};
 
 const ATRAXA = deckCard("Atraxa, Praetors' Voice", { isCommander: true });
 const SOL_RING = deckCard("Sol Ring", { notes: "Turn-one play" });
 const FORESTS = deckCard("Forest", { quantity: 10, zone: "sideboard" });
 const ARCANE_SIGNET = deckCard("Arcane Signet");
+const KENRITH = deckCard("Kenrith, the Returned King", { isCommander: true });
+
+/** The deck after its owner swapped Atraxa for Kenrith. */
+const KENRITH_DECK = {
+  id: DECK.id,
+  commanderId: KENRITH.scryfallId,
+  commanderName: KENRITH.name,
+  partnerId: null,
+};
 
 /** @returns the use cases over a fresh fake holding Atraxa, Sol Ring and ten Forests */
 function setUp() {
@@ -270,6 +284,56 @@ describe("restoreSnapshot", () => {
     });
   });
 
+  it("puts back the commander the snapshot was taken under, on the deck as well as in its cards", async () => {
+    const fake = inMemorySnapshotStore(KENRITH_DECK, [KENRITH, SOL_RING]);
+    const snapshots = makeSnapshotUseCases(fake.snapshots);
+    const underAtraxa = await fake.snapshots.create({
+      deckId: DECK.id,
+      name: "Atraxa build",
+      cardList: [ATRAXA, SOL_RING],
+      commander: ATRAXA.name,
+      cardCount: 2,
+    });
+
+    const result = await snapshots.restoreSnapshot({
+      deckId: DECK.id,
+      snapshotId: underAtraxa.id,
+    });
+
+    expect(result).toEqual({
+      kind: "restored",
+      deck: expect.objectContaining({
+        commanderId: ATRAXA.scryfallId,
+        commanderName: ATRAXA.name,
+        partnerId: null,
+      }),
+    });
+  });
+
+  it("clears the deck's commander when the snapshot holds no commander row", async () => {
+    const { fake, snapshots } = setUp();
+    const commanderless = await fake.snapshots.create({
+      deckId: DECK.id,
+      name: "Before a commander",
+      cardList: [SOL_RING],
+      commander: null,
+      cardCount: 1,
+    });
+
+    await snapshots.restoreSnapshot({
+      deckId: DECK.id,
+      snapshotId: commanderless.id,
+    });
+
+    expect(await fake.snapshots.findDeckWithCards(DECK.id)).toEqual(
+      expect.objectContaining({
+        commanderId: null,
+        commanderName: null,
+        partnerId: null,
+      })
+    );
+  });
+
   it("answers snapshot-not-found and leaves the deck as it is", async () => {
     const { fake, snapshots } = setUp();
 
@@ -296,5 +360,11 @@ describe("restoreSnapshot", () => {
       snapshots.restoreSnapshot({ deckId: DECK.id, snapshotId: broken.id })
     ).rejects.toThrow("Snapshot card list is not an array");
     expect(fake.savedCards()).toEqual([ATRAXA, SOL_RING, FORESTS]);
+    expect(await fake.snapshots.findDeckWithCards(DECK.id)).toEqual(
+      expect.objectContaining({
+        commanderId: DECK.commanderId,
+        commanderName: DECK.commanderName,
+      })
+    );
   });
 });
