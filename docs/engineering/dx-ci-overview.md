@@ -137,7 +137,7 @@ Every commit now prints lint-staged's own warning, `Skipping backup because --no
 
 ### Pre-push (Husky)
 
-On every `git push`, `.husky/pre-push` runs `scripts/e2e-pre-push.sh`: the full Playwright suite in Docker (`docker-compose.e2e.yml`). A failing test blocks the push. `SKIP_E2E=1` skips it in an emergency. CI runs the same stack in `e2e.yml`; see [quality-gate.md](quality-gate.md#e2e-gate).
+On every `git push`, `.husky/pre-push` runs `scripts/e2e-pre-push.sh`: the full Playwright suite in Docker (`docker-compose.e2e.yml`). A failing test blocks the push. A push whose commits change no file, such as an empty claim commit, skips the suite. `SKIP_E2E=1` skips it in an emergency. CI runs the same stack in `e2e.yml`; see [quality-gate.md](quality-gate.md#e2e-gate).
 
 ### Useful scripts
 
