@@ -1,7 +1,27 @@
+import { commandSlotOf } from "@/lib/deck/bulk-edit-command-zone";
 import type { DeckZone } from "@/lib/deck/types";
 import { isNonEmptyString, isRecord } from "@/lib/guards";
 
 const DECK_ZONES: readonly DeckZone[] = ["main", "sideboard", "maybeboard"];
+
+/**
+ * The `Deck` columns that name its commanders. They copy the command-zone
+ * rows: community discovery matches `commanderName` in SQL, so they must
+ * change whenever those rows do.
+ */
+export interface DeckCommanders {
+  /** The commander row's Scryfall id, or null without a commander row. */
+  readonly commanderId: string | null;
+  readonly commanderName: string | null;
+  /** The partner row's Scryfall id, or null without a partner row. */
+  readonly partnerId: string | null;
+}
+
+/** A deck rebuilt from a snapshot: its card rows and the commanders they name. */
+export interface RestoredDeck {
+  readonly cards: readonly RestoredDeckCard[];
+  readonly commanders: DeckCommanders;
+}
 
 /** One deck card rebuilt from a snapshot, ready for `deckCard.createMany`. */
 export interface RestoredDeckCard {
@@ -47,6 +67,47 @@ export function restoredDeckCards(
     throw new TypeError("Snapshot card list is not an array");
   }
   return cardList.map((entry) => restoredDeckCard(deckId, entry));
+}
+
+/**
+ * Rebuilds a deck from a snapshot payload: its card rows, and the commander
+ * fields read from those rows, so a snapshot taken under another commander
+ * brings that commander back on the deck too (I-55 requirement 5.6).
+ *
+ * @param deckId - Deck that owns the restored cards.
+ * @param cardList - `DeckSnapshot.cardList` JSON.
+ * @returns The rows to insert and the deck fields to write with them.
+ * @throws when the card list is not a list of cards, before anything is written.
+ */
+export function restoredDeck(deckId: string, cardList: unknown): RestoredDeck {
+  const cards = restoredDeckCards(deckId, cardList);
+  return { cards, commanders: commandersOf(cards) };
+}
+
+/**
+ * The commander fields a set of card rows implies. A row's slot is read with
+ * the flags the deck loader uses (`commandSlotOf`), so a companion is never
+ * taken for a commander. Without a commander row the fields are null: the
+ * restored deck then shows no commander, and its columns must agree.
+ *
+ * @param cards - The deck's card rows.
+ * @returns The commander and partner of those rows.
+ */
+export function commandersOf(
+  cards: readonly RestoredDeckCard[]
+): DeckCommanders {
+  let commander: RestoredDeckCard | undefined;
+  let partner: RestoredDeckCard | undefined;
+  for (const card of cards) {
+    const slot = commandSlotOf(card);
+    if (slot === "commander") commander ??= card;
+    else if (slot === "partner") partner ??= card;
+  }
+  return {
+    commanderId: commander?.scryfallId ?? null,
+    commanderName: commander?.name ?? null,
+    partnerId: partner?.scryfallId ?? null,
+  };
 }
 
 /**
