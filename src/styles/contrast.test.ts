@@ -2,6 +2,8 @@ import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
+import { contrastRatio, relativeLuminance } from "@/lib/a11y/palette";
+
 /**
  * Colour contrast on the application tokens, for both themes.
  *
@@ -44,24 +46,6 @@ const SURFACE_TOKENS = [
   "--surface-elevated",
   "--surface-hover",
 ] as const;
-
-/** Relative luminance of a `#rrggbb` colour, per WCAG 2.1. */
-function relativeLuminance(hex: string): number {
-  const channel = (offset: number): number => {
-    const value = parseInt(hex.slice(offset, offset + 2), 16) / 255;
-    return value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
-  };
-
-  return 0.2126 * channel(1) + 0.7152 * channel(3) + 0.0722 * channel(5);
-}
-
-/** WCAG contrast ratio between two `#rrggbb` colours, from 1 to 21. */
-function contrastRatio(foreground: string, background: string): number {
-  const first = relativeLuminance(foreground);
-  const second = relativeLuminance(background);
-
-  return (Math.max(first, second) + 0.05) / (Math.min(first, second) + 0.05);
-}
 
 const css = readFileSync(GLOBALS_CSS, "utf8");
 
