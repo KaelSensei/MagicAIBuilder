@@ -169,6 +169,8 @@ It now fails with an explicit error when the token is missing.
 
 `SKIP_E2E=1` bypasses the gate in an emergency; say so in the PR. The script also exits early when `CI` is set.
 
+**A push whose commits change no file skips the suite** ([I-74](../product/specs/i74-a-roadmap-agents-can-execute.md) §3.6), so an unattended run's empty claim commit costs no E2E run. The script reads git's ref lines on stdin and compares each pushed commit's tree with its first parent's. A commit counts as pushed when no remote-tracking ref reaches it. It skips only when at least one ref line arrived and no pushed commit changes a file; deleting a remote branch pushes no commit. The full suite still runs when the script is started by hand with no ref lines, for a root commit, or when a git command fails. It prints `Every commit in this push changes no file` when it skips.
+
 **CI runs the same stack** from `.github/workflows/e2e.yml` (owner decision OD-14, 2026-11-10): on PRs into `staging` and `main`, nightly on `dev`, and on demand. It uploads `playwright-report/` and `test-results/` as the `playwright-report` artifact. PRs into `dev` do not run it, to save CI minutes, so a change that reaches `dev` without a local push (a Dependabot PR, a push made with `SKIP_E2E=1`) is first tested by the next nightly run. It is not a required check. GitHub starts scheduled workflows from the default branch only, so the nightly run begins once the workflow is on `main`.
 
 ### The report has to leave the container

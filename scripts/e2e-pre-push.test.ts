@@ -79,6 +79,66 @@ function runScript(ws: Workspace): Promise<number> {
   });
 }
 
+interface PushOutcome {
+  readonly code: number;
+  readonly output: string;
+}
+
+/**
+ * Runs the script the way git's pre-push hook does: one line per pushed ref
+ * on stdin, `<local ref> <local sha> <remote ref> <remote sha>`.
+ */
+function runPush(ws: Workspace, refLines: string): Promise<PushOutcome> {
+  return new Promise((done, fail) => {
+    const child = spawn("bash", ["scripts/e2e-pre-push.sh"], {
+      cwd: ws.root,
+      env: ws.env,
+      stdio: ["pipe", "pipe", "pipe"],
+    });
+    let output = "";
+    child.stdout.on("data", (chunk: Buffer) => (output += chunk.toString()));
+    child.stderr.on("data", (chunk: Buffer) => (output += chunk.toString()));
+    child.on("error", fail);
+    child.on("close", (code) => done({ code: code ?? -1, output }));
+    child.stdin.end(refLines);
+  });
+}
+
+const ZERO_SHA = "0".repeat(40);
+
+function git(ws: Workspace, ...args: readonly string[]): string {
+  return execFileSync(
+    "git",
+    ["-c", "user.name=Gate", "-c", "user.email=gate@example.com", ...args],
+    { cwd: ws.root, encoding: "utf8" }
+  ).trim();
+}
+
+/** Commits one file and records that commit as `origin/dev`, already pushed. */
+function seedRemoteDev(ws: Workspace): string {
+  writeFileSync(join(ws.root, "deck.txt"), "1 Sol Ring\n");
+  git(ws, "add", "deck.txt");
+  git(ws, "commit", "-q", "-m", "feat: a deck");
+  const sha = git(ws, "rev-parse", "HEAD");
+  git(ws, "update-ref", "refs/remotes/origin/dev", sha);
+  return sha;
+}
+
+function commitEmpty(ws: Workspace, message: string): string {
+  git(ws, "commit", "-q", "--allow-empty", "-m", message);
+  return git(ws, "rev-parse", "HEAD");
+}
+
+function commitFileChange(ws: Workspace, line: string): string {
+  writeFileSync(join(ws.root, "deck.txt"), line);
+  git(ws, "commit", "-q", "-am", "feat: change the deck");
+  return git(ws, "rev-parse", "HEAD");
+}
+
+function newBranchPush(localSha: string): string {
+  return `refs/heads/claim ${localSha} refs/heads/claim ${ZERO_SHA}\n`;
+}
+
 /** Start and end times of every `compose up` the fake docker saw. */
 function composeUpIntervals(log: string): readonly Interval[] {
   const starts: bigint[] = [];
@@ -134,4 +194,75 @@ describe("scripts/e2e-pre-push.sh", () => {
     expect(readFileSync(workspace.log, "utf8")).toMatch(/start run --rm/);
     expect(composeUpIntervals(workspace.log)).toHaveLength(1);
   }, 20_000);
+
+  // I-74 §3.6: a run's claim is an empty commit, and it must cost no E2E run.
+  describe("a push whose commits change no file", () => {
+    it("skips the suite and says why when the only new commit is empty", async () => {
+      seedRemoteDev(workspace);
+      const claim = commitEmpty(workspace, "chore(claim): I-74/6");
+
+      const { code, output } = await runPush(workspace, newBranchPush(claim));
+
+      expect(code).toBe(0);
+      expect(composeUpIntervals(workspace.log)).toHaveLength(0);
+      expect(output).toMatch(/changes no file/);
+    }, 20_000);
+
+    it("skips the suite when the push only deletes a remote branch", async () => {
+      const dev = seedRemoteDev(workspace);
+
+      const { code } = await runPush(
+        workspace,
+        `(delete) ${ZERO_SHA} refs/heads/old-claim ${dev}\n`
+      );
+
+      expect(code).toBe(0);
+      expect(composeUpIntervals(workspace.log)).toHaveLength(0);
+    }, 20_000);
+  });
+
+  describe("a push with any file change", () => {
+    it("runs the full suite when a pushed commit changes a file", async () => {
+      seedRemoteDev(workspace);
+      const change = commitFileChange(workspace, "1 Arcane Signet\n");
+
+      const { code } = await runPush(workspace, newBranchPush(change));
+
+      expect(code).toBe(0);
+      expect(composeUpIntervals(workspace.log)).toHaveLength(1);
+    }, 20_000);
+
+    it("runs the full suite when an empty commit sits on a file change", async () => {
+      seedRemoteDev(workspace);
+      commitFileChange(workspace, "1 Arcane Signet\n");
+      const claim = commitEmpty(workspace, "chore(claim): I-74/6");
+
+      const { code } = await runPush(workspace, newBranchPush(claim));
+
+      expect(code).toBe(0);
+      expect(composeUpIntervals(workspace.log)).toHaveLength(1);
+    }, 20_000);
+
+    it("keeps the full suite when a pushed commit cannot be read", async () => {
+      seedRemoteDev(workspace);
+
+      const { code } = await runPush(workspace, newBranchPush("f".repeat(40)));
+
+      expect(code).toBe(0);
+      expect(composeUpIntervals(workspace.log)).toHaveLength(1);
+    }, 20_000);
+
+    it("runs the full suite when an existing branch gains a file change", async () => {
+      const dev = seedRemoteDev(workspace);
+      const change = commitFileChange(workspace, "1 Arcane Signet\n");
+
+      const { code } = await runPush(
+        workspace,
+        `refs/heads/dev ${change} refs/heads/dev ${dev}\n`
+      );
+
+      expect(code).toBe(0);
+      expect(composeUpIntervals(workspace.log)).toHaveLength(1);
+    }, 20_000);
+  });
 });
