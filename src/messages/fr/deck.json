@@ -600,6 +600,11 @@
       "suggestAllowanceExhausted": "Suggestions IA du mois épuisées ({limit}). Elles se renouvellent le {date}. Tout le reste fonctionne normalement.",
       "spendCeilingReached": "Les fonctions IA sont en pause jusqu'au {date}. Tout le reste fonctionne normalement."
     },
+    "account": {
+      "required": "Les suggestions IA demandent un compte. Tout le reste fonctionne normalement.",
+      "signUp": "Créer un compte",
+      "signIn": "Se connecter"
+    },
     "cardsToAdd": "Cartes à ajouter",
     "cardsToCut": "Cartes à retirer",
     "ignored": "{count} ignorées",
