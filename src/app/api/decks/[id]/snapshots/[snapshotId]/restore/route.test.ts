@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
   findDeck: vi.fn(),
   deleteMany: vi.fn(),
   createMany: vi.fn(),
+  updateDeck: vi.fn(),
 }));
 
 vi.mock(import("@/lib/auth/helpers"), () => ({
@@ -23,6 +24,7 @@ vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
           deleteMany: mocks.deleteMany,
           createMany: mocks.createMany,
         },
+        deck: { update: mocks.updateDeck },
       })
     ),
   });
@@ -53,6 +55,7 @@ describe("POST /api/decks/[id]/snapshots/[snapshotId]/restore", () => {
     });
     mocks.deleteMany.mockResolvedValue({ count: 1 });
     mocks.createMany.mockResolvedValue({ count: 1 });
+    mocks.updateDeck.mockResolvedValue({ id: "deck-1" });
     mocks.findDeck.mockResolvedValue({ id: "deck-1", cards: [] });
   });
 
@@ -99,6 +102,27 @@ describe("POST /api/decks/[id]/snapshots/[snapshotId]/restore", () => {
           toughness: "1",
         }),
       ],
+    });
+  });
+
+  it("writes the snapshot's commander and partner onto the deck in the restore transaction", async () => {
+    mocks.findSnapshot.mockResolvedValue(
+      snapshotOf([
+        { scryfallId: "card-tymna", name: "Tymna the Weaver", isCommander: true },
+        { scryfallId: "card-thrasios", name: "Thrasios, Triton Hero", isPartner: true },
+      ])
+    );
+
+    const response = await POST(new Request("http://localhost"), params);
+
+    expect(response.status).toBe(200);
+    expect(mocks.updateDeck).toHaveBeenCalledWith({
+      where: { id: "deck-1" },
+      data: {
+        commanderId: "card-tymna",
+        commanderName: "Tymna the Weaver",
+        partnerId: "card-thrasios",
+      },
     });
   });
 });

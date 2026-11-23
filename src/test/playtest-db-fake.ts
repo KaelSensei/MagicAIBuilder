@@ -3,8 +3,8 @@
  * snapshots and sessions), so tests can follow a run to the stored rows.
  * Supports equality `where`, `orderBy` on `createdAt` and `take`; `select`
  * and `include` are ignored, and a deck comes back with its cards. Card rows
- * can be deleted and created in bulk and a snapshot deleted, as a snapshot
- * restore and delete do.
+ * can be deleted and created in bulk, the deck's commander columns updated
+ * and a snapshot deleted, as a snapshot restore and delete do.
  */
 import { prismaQuery } from "@/test/prisma-query";
 
@@ -34,11 +34,13 @@ export type FakeDeckCard = {
   readonly zone: string;
 };
 
-/** One `Deck` row, reduced to the columns the playtest routes read. */
+/** One `Deck` row, reduced to the columns the playtest and snapshot routes read. */
 export type FakeDeck = {
   readonly id: string;
   readonly userId: string;
   readonly commanderId: string | null;
+  readonly commanderName: string | null;
+  readonly partnerId: string | null;
 };
 
 /** One stored `DeckSnapshot` row. */
@@ -86,6 +88,8 @@ export const FAKE_DECK: FakeDeck = {
   id: "deck-1",
   userId: "owner-1",
   commanderId: null,
+  commanderName: null,
+  partnerId: null,
 };
 
 /**
@@ -195,7 +199,7 @@ function nullableCount(value: unknown): number | null {
  * @returns The Prisma-shaped client plus helpers to seed, edit and inspect it.
  */
 function createPlaytestDb() {
-  const deck = FAKE_DECK;
+  let deck = FAKE_DECK;
   /** Seeded as `FakeDeckCard`s; `createMany` adds the rows it is given as they are. */
   let cards: readonly Row[] = [];
   let snapshots: FakeSnapshot[] = [];
@@ -225,6 +229,19 @@ function createPlaytestDb() {
         Promise.resolve(
           matches(deck, where) ? { ...deck, cards: [...cards] } : null
         ),
+      /** Writes the commander columns, the only ones a restore changes. */
+      update: ({ where, data }: FindArgs & CreateArgs) =>
+        prismaQuery(() => {
+          // Prisma rejects an update that matches no row (P2025).
+          if (!matches(deck, where)) throw new Error("Record to update not found.");
+          deck = {
+            ...deck,
+            commanderId: nullableText(data.commanderId),
+            commanderName: nullableText(data.commanderName),
+            partnerId: nullableText(data.partnerId),
+          };
+          return deck;
+        }),
     },
     deckCard: {
       findMany: ({ where }: FindArgs) =>
@@ -314,6 +331,7 @@ function createPlaytestDb() {
      * @param deckCards - The deck's saved card rows.
      */
     reset(deckCards: readonly FakeDeckCard[]): void {
+      deck = FAKE_DECK;
       cards = deckCards;
       snapshots = [];
       sessions = [];
