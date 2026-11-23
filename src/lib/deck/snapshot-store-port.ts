@@ -22,7 +22,10 @@ import type {
   SnapshotContent,
   VersionedSnapshot,
 } from "@/lib/deck/deck-version";
-import type { RestoredDeckCard } from "@/lib/deck/snapshot-restore";
+import type {
+  DeckCommanders,
+  RestoredDeck,
+} from "@/lib/deck/snapshot-restore";
 
 /** One saved snapshot as the history list shows it, without its card list. */
 export interface SnapshotSummary {
@@ -67,7 +70,7 @@ export interface NewSnapshot extends SnapshotContent {
  * A deck with its saved card rows. The adapter answers the whole row, which
  * the routes return as JSON; the type names only what the use cases read.
  */
-export interface DeckWithCards extends CapturableDeck {
+export interface DeckWithCards extends CapturableDeck, DeckCommanders {
   readonly id: string;
 }
 
@@ -80,7 +83,8 @@ export interface DeckWithCards extends CapturableDeck {
  * - `findDeckWithCards` and `findInDeck` answer null when nothing matches;
  *   `findInDeck` never answers a snapshot of another deck;
  * - `create` stores the snapshot and answers the stored row;
- * - `replaceCards` replaces every card row of the deck, all or nothing;
+ * - `restoreDeck` replaces every card row of the deck and writes its
+ *   commander fields, all or nothing;
  * - each throws whatever the database throws when it is unavailable.
  *
  * Not responsible for who may act: the routes check the owner first.
@@ -94,10 +98,7 @@ export interface SnapshotStore {
     snapshotId: string
   ): Promise<StoredSnapshot | null>;
   remove(snapshotId: string): Promise<void>;
-  replaceCards(
-    deckId: string,
-    cards: readonly RestoredDeckCard[]
-  ): Promise<void>;
+  restoreDeck(deckId: string, restored: RestoredDeck): Promise<void>;
 }
 
 /**

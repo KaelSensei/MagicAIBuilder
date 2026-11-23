@@ -15,7 +15,7 @@
 import { snapshotContent } from "@/lib/deck/deck-version";
 import { sanitizeDisplayName } from "@/lib/deck/display-name";
 import { snapshotCardCopies } from "@/lib/deck/snapshot-card-count";
-import { restoredDeckCards } from "@/lib/deck/snapshot-restore";
+import { restoredDeck } from "@/lib/deck/snapshot-restore";
 import type {
   DeckWithCards,
   ListedSnapshot,
@@ -70,7 +70,8 @@ export interface SnapshotUseCases {
   saveSnapshot(command: SaveSnapshotCommand): Promise<SaveSnapshotResult>;
   deleteSnapshot(ref: SnapshotRef): Promise<DeleteSnapshotResult>;
   /**
-   * Replaces the deck's card rows with the snapshot's, all or nothing.
+   * Replaces the deck's card rows with the snapshot's, and its commander
+   * fields with the ones those rows name, all or nothing.
    *
    * @throws when the stored card list cannot be read; the deck is then left
    *   untouched, because the list is parsed before anything is deleted.
@@ -138,8 +139,7 @@ export function makeSnapshotUseCases(store: SnapshotStore): SnapshotUseCases {
       if (!snapshot) return { kind: "snapshot-not-found" };
 
       // Parse before deleting: a malformed list must not wipe the live deck.
-      const cards = restoredDeckCards(deckId, snapshot.cardList);
-      await store.replaceCards(deckId, cards);
+      await store.restoreDeck(deckId, restoredDeck(deckId, snapshot.cardList));
       return { kind: "restored", deck: await store.findDeckWithCards(deckId) };
     },
   };
