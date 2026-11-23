@@ -132,6 +132,27 @@ describe("useAISuggestions", () => {
     vi.unstubAllGlobals();
   });
 
+  it("says an account is needed when the server refuses a signed-out player", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue(
+          Response.json({ error: "Unauthorized" }, { status: 401 })
+        )
+    );
+
+    const { result } = renderHook(() => useAISuggestions());
+    await act(async () => {
+      await result.current.analyze(makeDeck(), makeStats(), null);
+    });
+
+    expect(result.current.denial).toEqual({ code: "sign_in_required" });
+    expect(result.current.result).toBeNull();
+    expect(result.current.isLoading).toBe(false);
+    vi.unstubAllGlobals();
+  });
+
   it("identifies the owned deck when requesting AI suggestions", async () => {
     const encoder = new TextEncoder();
     const body = new ReadableStream({
