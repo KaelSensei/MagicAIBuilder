@@ -368,6 +368,54 @@ describe("restoreSnapshot", () => {
     );
   });
 
+  it("clears the deck's companion when the snapshot holds no companion row", async () => {
+    const fake = inMemorySnapshotStore(JEGANTHA_DECK, [ATRAXA, JEGANTHA]);
+    const snapshots = makeSnapshotUseCases(fake.snapshots);
+    const companionless = await fake.snapshots.create({
+      deckId: DECK.id,
+      name: "Before a companion",
+      cardList: [ATRAXA, SOL_RING],
+      commander: ATRAXA.name,
+      cardCount: 2,
+    });
+
+    await snapshots.restoreSnapshot({
+      deckId: DECK.id,
+      snapshotId: companionless.id,
+    });
+
+    expect(await fake.snapshots.findDeckWithCards(DECK.id)).toEqual(
+      expect.objectContaining({ companionId: null })
+    );
+  });
+
+  it("keeps the deck's companion when the snapshot's rows carry no category, so cannot name one", async () => {
+    const fake = inMemorySnapshotStore(JEGANTHA_DECK, [ATRAXA, JEGANTHA]);
+    const snapshots = makeSnapshotUseCases(fake.snapshots);
+    const uncategorized = await fake.snapshots.create({
+      deckId: DECK.id,
+      name: "Rows without a category",
+      cardList: [
+        { scryfallId: ATRAXA.scryfallId, name: ATRAXA.name, isCommander: true },
+        { scryfallId: SOL_RING.scryfallId, name: SOL_RING.name },
+      ],
+      commander: ATRAXA.name,
+      cardCount: 2,
+    });
+
+    await snapshots.restoreSnapshot({
+      deckId: DECK.id,
+      snapshotId: uncategorized.id,
+    });
+
+    expect(await fake.snapshots.findDeckWithCards(DECK.id)).toEqual(
+      expect.objectContaining({
+        commanderId: ATRAXA.scryfallId,
+        companionId: JEGANTHA.scryfallId,
+      })
+    );
+  });
+
   it("answers snapshot-not-found and leaves the deck as it is", async () => {
     const { fake, snapshots } = setUp();
 
