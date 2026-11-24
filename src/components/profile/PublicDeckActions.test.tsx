@@ -13,9 +13,12 @@ const fetchMock = vi.fn();
 /** How late the slow server answers: later than the request, well within `findByRole`'s wait. */
 const SLOW_ANSWER_MS = 30;
 
-vi.mock(import("@/i18n/navigation"), async () => {
+// The real localized `Link` stays, so a link's href shows the reader's locale
+// prefix; only the router is stubbed, since no app router is mounted here.
+vi.mock(import("@/i18n/navigation"), async (importOriginal) => {
+  const navigation = await importOriginal();
   const stub = await import("@/test/i18n-navigation-stub");
-  return { ...stub, useRouter: () => ({ ...stub.useRouter(), push }) };
+  return { ...navigation, useRouter: () => ({ ...stub.useRouter(), push }) };
 });
 vi.mock(import("@/lib/db/deck-api"), () => ({
   forkPublicDeck: (id: string) => forkPublicDeck(id),
