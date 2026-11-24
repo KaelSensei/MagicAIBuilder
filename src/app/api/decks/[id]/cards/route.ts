@@ -10,9 +10,12 @@
  * The bulk edit also answers 409 when it names a row the deck no longer
  * holds: the list was edited from an outdated copy.
  *
- * POST and PATCH store at most the copy limit, as the editor does: each added
- * row and each resized row is clamped silently to `min(requested, limit)`
- * (`lib/deck/copy-limit-write.ts`), and the response carries the stored rows.
+ * POST and PATCH store at most the copy limit, as the editor does, counted
+ * across every row of the main deck, the sideboard and the command zone
+ * (`lib/deck/copy-room-write.ts`): each added or resized row is clamped
+ * silently to the room the deck has left, and the response carries the stored
+ * rows. A bulk edit drops an add with no room; a POST with no room stores
+ * nothing and answers 409 (`copyLimitResponse`).
  */
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -26,6 +29,7 @@ import { logger } from "@/lib/logger";
 import { readJsonBody } from "@/lib/api/json-body";
 import { requireCopyRuleDeckOwner } from "@/lib/api/copy-rule-deck-owner";
 import {
+  copyLimitResponse,
   deckWriteResponse,
   readExpectedVersionQuery,
 } from "@/lib/api/versioned-deck-write";
@@ -36,29 +40,11 @@ import {
 } from "@/lib/deck/commander-pairing";
 import { deckRepository } from "@/lib/deck/deck-repository";
 import {
-  cardWithinCopyLimit,
-  changesWithinCopyLimit,
-  type CopiesChange,
-} from "@/lib/deck/copy-limit-write";
-import type { CopyLimitCard } from "@/lib/deck/multiples";
+  addsWithinCopyLimit,
+  rowsWriteWithinCopyLimit,
+} from "@/lib/deck/copy-room-write";
 
 type Params = { params: Promise<{ id: string }> };
-
-/**
- * The card text of the rows a bulk edit resizes, by row id: one query for the
- * whole edit, none when it resizes nothing. A row of another deck is not read.
- */
-async function resizedRows(
-  deckId: string,
-  changes: readonly CopiesChange[]
-): Promise<ReadonlyMap<string, CopyLimitCard>> {
-  if (changes.length === 0) return new Map();
-  const rows = await prisma.deckCard.findMany({
-    where: { deckId, id: { in: changes.map((change) => change.cardId) } },
-    select: { id: true, name: true, typeLine: true, oracleText: true },
-  });
-  return new Map(rows.map((row) => [row.id, row]));
-}
 
 /**
  * A command-zone card must not repeat the Oracle card held by the opposite
@@ -108,9 +94,17 @@ export async function POST(request: Request, { params }: Params) {
       );
     }
 
+    // Weighed against every row the deck holds (CR 100.2a, CR 903.5b); no
+    // room for a single copy stores nothing.
+    const [stored] = addsWithinCopyLimit(
+      [card],
+      ownership.rows,
+      ownership.copyRule
+    );
+    if (stored === undefined) return copyLimitResponse();
     const result = await deckRepository.addCard(
       { deckId, expectedVersion },
-      cardWithinCopyLimit(card, ownership.copyRule)
+      stored
     );
     return deckWriteResponse(result, ({ value, version }) =>
       NextResponse.json({ ...value, version }, { status: 201 })
@@ -168,15 +162,23 @@ export async function PATCH(request: Request, { params }: Params) {
     // The copy limit reads the stored command zone, even when this edit
     // changes it: only a commander with no maximum deck size changes a
     // limit (CR 903.5e), and only above the 99 copies a request may send.
-    const { copyRule } = ownership;
-    const rows = await resizedRows(deckId, quantityChanges);
+    // The copies are counted across every row the edit leaves (CR 100.2a,
+    // CR 903.5b).
+    const rowsWrite = {
+      removeCardIds,
+      clearSlots: clearCommandSlots,
+      quantityChanges,
+      addCards,
+    };
     const result = await deckRepository.applyBulkEdit(
       { deckId, expectedVersion },
       {
-        removeCardIds,
-        quantityChanges: changesWithinCopyLimit(quantityChanges, rows, copyRule),
-        addCards: addCards.map((card) => cardWithinCopyLimit(card, copyRule)),
-        clearSlots: clearCommandSlots,
+        ...rowsWrite,
+        ...rowsWriteWithinCopyLimit(
+          rowsWrite,
+          ownership.rows,
+          ownership.copyRule
+        ),
         fields: commandZone ?? {},
       }
     );

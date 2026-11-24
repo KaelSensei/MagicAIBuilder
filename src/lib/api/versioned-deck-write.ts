@@ -31,6 +31,25 @@ export function staleDeckResponse(): NextResponse {
 }
 
 /**
+ * The answer to a single-row write the deck has no room for: it would put a
+ * card past its copy limit (CR 100.2a, CR 903.5b), so nothing is stored.
+ *
+ * Why 409 and the stale text: the editor never sends a write it cannot fit
+ * (`lib/deck/store.ts`, #1890), so a full deck at the server means the
+ * client's copy is outdated, and the editor already reloads on 409. The
+ * client reads only `error`; `reason` tells a copy-limit refusal from a
+ * version conflict in the logs and for a later client.
+ *
+ * @returns 409 `{ error, reason: "copy-limit" }`
+ */
+export function copyLimitResponse(): NextResponse {
+  return NextResponse.json(
+    { error: STALE_DECK_ERROR, reason: "copy-limit" },
+    { status: 409 }
+  );
+}
+
+/**
  * Answers a versioned deck write.
  *
  * @param onSaved - Builds the success answer; it should carry
