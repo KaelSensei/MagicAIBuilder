@@ -17,10 +17,30 @@ export interface DeckCommanders {
   readonly partnerId: string | null;
 }
 
-/** A deck rebuilt from a snapshot: its card rows and the commanders they name. */
+/**
+ * The companion a snapshot restores. `recorded`: the snapshot's rows say
+ * which companion the deck had, as the Scryfall id of its companion row, or
+ * null when it had none. `unrecorded`: a row lacks the `category` that marks
+ * a companion, so the snapshot cannot say, and the deck keeps its own.
+ */
+export type RestoredCompanion =
+  | { readonly kind: "recorded"; readonly companionId: string | null }
+  | { readonly kind: "unrecorded" };
+
+/** A deck rebuilt from a snapshot: its card rows and the command zone they name. */
 export interface RestoredDeck {
   readonly cards: readonly RestoredDeckCard[];
   readonly commanders: DeckCommanders;
+  readonly companion: RestoredCompanion;
+}
+
+/**
+ * The `Deck` columns a restore writes: the commander fields always, and
+ * `companionId` only when the snapshot recorded the companion. An absent key
+ * is no write in Prisma, so the deck keeps its companion.
+ */
+export interface RestoredDeckFields extends DeckCommanders {
+  readonly companionId?: string | null;
 }
 
 /** One deck card rebuilt from a snapshot, ready for `deckCard.createMany`. */
@@ -71,8 +91,9 @@ export function restoredDeckCards(
 
 /**
  * Rebuilds a deck from a snapshot payload: its card rows, and the commander
- * fields read from those rows, so a snapshot taken under another commander
- * brings that commander back on the deck too (I-55 requirement 5.6).
+ * and companion fields read from those rows, so a snapshot taken under
+ * another commander or companion brings it back on the deck too (I-55
+ * requirement 5.6, I-37).
  *
  * @param deckId - Deck that owns the restored cards.
  * @param cardList - `DeckSnapshot.cardList` JSON.
@@ -81,7 +102,62 @@ export function restoredDeckCards(
  */
 export function restoredDeck(deckId: string, cardList: unknown): RestoredDeck {
   const cards = restoredDeckCards(deckId, cardList);
-  return { cards, commanders: commandersOf(cards) };
+  return {
+    cards,
+    commanders: commandersOf(cards),
+    companion: recordsCompanion(cardList)
+      ? { kind: "recorded", companionId: companionIdOf(cards) }
+      : { kind: "unrecorded" },
+  };
+}
+
+/**
+ * The `Deck` columns to write for a restored deck, shared by every
+ * `SnapshotStore` so the adapter and its fake write the same fields.
+ *
+ * @param restored - The deck rebuilt by {@link restoredDeck}.
+ * @returns The commander fields, plus `companionId` when the snapshot recorded it.
+ */
+export function restoredDeckFields({
+  commanders,
+  companion,
+}: RestoredDeck): RestoredDeckFields {
+  if (companion.kind === "unrecorded") return commanders;
+  return { ...commanders, companionId: companion.companionId };
+}
+
+/**
+ * Whether a snapshot card list says which companion the deck had. A
+ * companion is the row whose `category` is "companion" (`commandSlotOf`), so
+ * only a list whose every row carries a category can say there was none.
+ * Every snapshot the app stored does: snapshots copy whole `DeckCard` rows,
+ * whose `category` column predates them.
+ *
+ * @param cardList - `DeckSnapshot.cardList` JSON, already read as a list.
+ * @returns true when every entry carries a string `category`.
+ */
+function recordsCompanion(cardList: unknown): boolean {
+  return (
+    Array.isArray(cardList) &&
+    cardList.every(
+      (entry) => isRecord(entry) && typeof entry.category === "string"
+    )
+  );
+}
+
+/**
+ * The companion a set of card rows names. CR 702.139a: a companion is
+ * revealed from outside the game, so its row is neither a commander nor a
+ * partner; the slot is read with the deck loader's flags (`commandSlotOf`).
+ *
+ * @param cards - The deck's card rows.
+ * @returns The companion row's Scryfall id, or null without one.
+ */
+function companionIdOf(cards: readonly RestoredDeckCard[]): string | null {
+  return (
+    cards.find((card) => commandSlotOf(card) === "companion")?.scryfallId ??
+    null
+  );
 }
 
 /**

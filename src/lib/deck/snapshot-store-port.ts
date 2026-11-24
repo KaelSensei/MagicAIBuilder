@@ -72,6 +72,8 @@ export interface NewSnapshot extends SnapshotContent {
  */
 export interface DeckWithCards extends CapturableDeck, DeckCommanders {
   readonly id: string;
+  /** The companion row's Scryfall id, or null without a companion. */
+  readonly companionId: string | null;
 }
 
 /**
@@ -83,8 +85,9 @@ export interface DeckWithCards extends CapturableDeck, DeckCommanders {
  * - `findDeckWithCards` and `findInDeck` answer null when nothing matches;
  *   `findInDeck` never answers a snapshot of another deck;
  * - `create` stores the snapshot and answers the stored row;
- * - `restoreDeck` replaces every card row of the deck and writes its
- *   commander fields, all or nothing;
+ * - `restoreDeck` replaces every card row of the deck and writes the deck
+ *   fields `restoredDeckFields` names (commander fields, and the companion
+ *   when the snapshot recorded it), all or nothing;
  * - each throws whatever the database throws when it is unavailable.
  *
  * Not responsible for who may act: the routes check the owner first.

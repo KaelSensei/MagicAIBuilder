@@ -14,6 +14,7 @@ const DECK = {
   commanderId: "card-atraxa",
   commanderName: "Atraxa, Praetors' Voice",
   partnerId: null,
+  companionId: null,
 };
 
 const ATRAXA = deckCard("Atraxa, Praetors' Voice", { isCommander: true });
@@ -28,6 +29,18 @@ const KENRITH_DECK = {
   commanderId: KENRITH.scryfallId,
   commanderName: KENRITH.name,
   partnerId: null,
+  companionId: null,
+};
+
+const LURRUS = deckCard("Lurrus of the Dream-Den", { category: "companion" });
+const JEGANTHA = deckCard("Jegantha, the Wellspring", {
+  category: "companion",
+});
+
+/** The deck after its owner swapped Lurrus for Jegantha as its companion. */
+const JEGANTHA_DECK = {
+  ...DECK,
+  companionId: JEGANTHA.scryfallId,
 };
 
 /** @returns the use cases over a fresh fake holding Atraxa, Sol Ring and ten Forests */
@@ -331,6 +344,27 @@ describe("restoreSnapshot", () => {
         commanderName: null,
         partnerId: null,
       })
+    );
+  });
+
+  it("puts back the companion the snapshot was taken with, on the deck as well as in its cards", async () => {
+    const fake = inMemorySnapshotStore(JEGANTHA_DECK, [ATRAXA, JEGANTHA]);
+    const snapshots = makeSnapshotUseCases(fake.snapshots);
+    const withLurrus = await fake.snapshots.create({
+      deckId: DECK.id,
+      name: "Lurrus build",
+      cardList: [ATRAXA, SOL_RING, LURRUS],
+      commander: ATRAXA.name,
+      cardCount: 2,
+    });
+
+    await snapshots.restoreSnapshot({
+      deckId: DECK.id,
+      snapshotId: withLurrus.id,
+    });
+
+    expect(await fake.snapshots.findDeckWithCards(DECK.id)).toEqual(
+      expect.objectContaining({ companionId: LURRUS.scryfallId })
     );
   });
 
