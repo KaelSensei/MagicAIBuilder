@@ -8,13 +8,15 @@
  * just read, and `useAddToOtherDeck` sends it. Matching follows the store's own
  * add (`addCard` in `store.ts`): one row per card name and zone, so a held row
  * of another printing takes the copy and keeps its printing. The limit counts
- * the copies across the deck, its sideboard and its commanders.
+ * the copies across the deck, its sideboard and its commanders
+ * (`./counted-copies`).
  * Not responsible for: reading or writing the deck, or writing the command
  * zone.
  *
  * @module deck/add-to-other-deck
  */
 import { commandZoneExceptions } from "@/lib/deck/color-identity";
+import { copiesCountedFor } from "@/lib/deck/counted-copies";
 import { deckCopyLimit } from "@/lib/deck/multiples";
 import type { Deck, DeckCard, DeckZone } from "@/lib/deck/types";
 
@@ -58,45 +60,4 @@ export function decideOtherDeckWrite(
   );
   if (!held) return { kind: "addRow" };
   return { kind: "addCopy", rowId: held.id, quantity: held.quantity + 1 };
-}
-
-/** The zones whose rows are part of the deck: Considering is not. */
-const DECK_ZONES: ReadonlySet<DeckZone> = new Set(["main", "sideboard"]);
-
-/**
- * The copies of `name` the copy limit weighs for an add to `zone`. CR 100.4a:
- * the deck and its sideboard together hold at most the limit, so an add to
- * either counts both, and the commanders with them (CR 903.5b: the singleton
- * rule spans the whole deck, the command zone included). Considering
- * (`maybeboard`) is not part of the deck: an add there weighs that zone's row
- * alone, as the store's own add does.
- */
-function copiesCountedFor(
-  deck: OtherDeck,
-  name: string,
-  zone: DeckZone
-): number {
-  if (!DECK_ZONES.has(zone)) return copiesInZones(deck, name, new Set([zone]));
-  return copiesInZones(deck, name, DECK_ZONES) + commandZoneCopies(deck, name);
-}
-
-/** The copies of `name` on the rows of `zones`. */
-function copiesInZones(
-  deck: OtherDeck,
-  name: string,
-  zones: ReadonlySet<DeckZone>
-): number {
-  return deck.cards
-    .filter((row) => row.name === name && zones.has(row.zone))
-    .reduce((copies, row) => copies + row.quantity, 0);
-}
-
-/**
- * The commander and the partner named `name`. The companion stays out: it is
- * not one of the deck's commanders (CR 702.139a), and the store holds it
- * apart from the deck's rows.
- */
-function commandZoneCopies(deck: OtherDeck, name: string): number {
-  return [deck.commander, deck.partner].filter((card) => card?.name === name)
-    .length;
 }
