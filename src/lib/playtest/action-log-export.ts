@@ -1,5 +1,19 @@
-import type { PlaytestActionLogEntry } from "./engine";
+/**
+ * The playtest log summed up turn by turn, and its two exports: the text the player copies or
+ * saves, and the version-3 JSON document.
+ *
+ * Context: playtest. `ActionLogHeader` exports through it and `useActionLogFilter` reads the
+ * turn summaries. Both exports write each line in the player's language through the `lineText`
+ * the caller passes (`useLogMessageText`, #1853); this module writes no sentence of its own.
+ *
+ * @module playtest/action-log-export
+ */
+import type { PlaytestActionLogEntry, PlaytestLogMessage } from "./engine";
 
+/** Turns one recorded log line into its sentence in the player's language. */
+export type LogLineText = (message: PlaytestLogMessage) => string;
+
+/** One turn of the log, with the evidence its lines carry. */
 export interface PlaytestTurnSummary {
   readonly turn: number;
   readonly entries: readonly PlaytestActionLogEntry[];
@@ -10,21 +24,15 @@ export interface PlaytestTurnSummary {
   readonly countersChanged: number;
 }
 
+/** The words of the text export, in the player's language. */
 export interface ActionLogTextFormat {
   readonly title: string;
   readonly turn: (turn: number) => string;
   readonly phase: (phase: PlaytestActionLogEntry["phase"]) => string;
   readonly evidenceTitle: string;
   readonly evidence: (draws: number, mana: number, seen: number) => string;
+  readonly line: LogLineText;
 }
-
-const englishTextFormat: ActionLogTextFormat = {
-  title: "playtest log",
-  turn: (turn) => `Turn ${turn}`,
-  phase: (phase) => phase,
-  evidenceTitle: "Evidence",
-  evidence: (draws, mana, seen) => `${draws} draws, ${mana} mana, ${seen} additional cards seen`,
-};
 
 export function summarizeActionLog(
   entries: readonly PlaytestActionLogEntry[]
@@ -69,10 +77,15 @@ export function summarizeActionLog(
     });
 }
 
+/**
+ * The log as text: a title line, then each turn with its evidence and its lines.
+ *
+ * @param format - the words of the export and each line's text, in the player's language
+ */
 export function exportActionLogText(
   deckName: string,
   entries: readonly PlaytestActionLogEntry[],
-  format: ActionLogTextFormat = englishTextFormat
+  format: ActionLogTextFormat
 ): string {
   const turns = summarizeActionLog(entries).map(
     ({ turn, entries: turnEntries, draws, manaProduced, cardsSeen }) => {
@@ -81,7 +94,10 @@ export function exportActionLogText(
           ? `\n${format.evidenceTitle}: ${format.evidence(draws, manaProduced, cardsSeen)}`
           : "";
       const actions = turnEntries
-        .map((entry) => `- ${format.phase(entry.phase)}: ${entry.description}`)
+        .map(
+          (entry) =>
+            `- ${format.phase(entry.phase)}: ${format.line(entry.message)}`
+        )
         .join("\n");
       return `${format.turn(turn)}${evidence}\n${actions}`;
     }
@@ -89,13 +105,24 @@ export function exportActionLogText(
   return `${deckName} — ${format.title}\n\n${turns.join("\n\n")}`;
 }
 
+/**
+ * The log as the version-3 JSON document: the turn summaries, each line with its `description`
+ * in the player's language rather than the engine's message, so the document keeps the shape
+ * it had when the engine wrote sentences.
+ *
+ * @param lineText - each line's text in the player's language
+ */
 export function exportActionLogJson(
   deckName: string,
-  entries: readonly PlaytestActionLogEntry[]
+  entries: readonly PlaytestActionLogEntry[],
+  lineText: LogLineText
 ): string {
-  return JSON.stringify(
-    { version: 3, deckName, turns: summarizeActionLog(entries) },
-    null,
-    2
-  );
+  const turns = summarizeActionLog(entries).map((summary) => ({
+    ...summary,
+    entries: summary.entries.map(({ message, ...entry }) => ({
+      ...entry,
+      description: lineText(message),
+    })),
+  }));
+  return JSON.stringify({ version: 3, deckName, turns }, null, 2);
 }

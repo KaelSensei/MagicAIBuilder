@@ -100,13 +100,15 @@ function chosenHandLog(
   chosenHand: readonly DeckCard[]
 ): readonly PlaytestActionLogEntry[] {
   if (chosenHand.length === 0) return [];
-  const names = chosenHand.map((card) => card.name).join(", ");
   return [
     {
       id: 1,
       turn: 1,
       phase: "Draw",
-      description: `Started with chosen cards: ${names}`,
+      message: {
+        key: "startedWithChosenCards",
+        params: { cards: chosenHand.map((card) => card.name) },
+      },
     },
   ];
 }

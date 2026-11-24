@@ -27,6 +27,7 @@ import {
   replayWebCrypto,
   seededRandom,
 } from "@/test/seeded-random";
+import { plainEnglishLogFormat } from "@/test/playtest-log-text";
 import { exportActionLogText } from "./action-log-export";
 import {
   applyAddActionLogEntry,
@@ -296,7 +297,7 @@ function playGoldenGame(deps?: PlaytestDeps): string {
     "life history",
     ...life,
     "",
-    exportActionLogText(DECK_NAME, state.actionLog),
+    exportActionLogText(DECK_NAME, state.actionLog, plainEnglishLogFormat()),
   ].join("\n");
 }
 

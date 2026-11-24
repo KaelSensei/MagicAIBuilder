@@ -95,7 +95,9 @@ describe("shuffling the library (CR 701.24a)", () => {
     );
 
     expect(shuffled.actionLog).toHaveLength(before.actionLog.length + 1);
-    expect(shuffled.actionLog.at(-1)?.description).toBe("Library shuffled");
+    expect(shuffled.actionLog.at(-1)?.message).toEqual({
+      key: "libraryShuffled",
+    });
     expect(shuffled.history).toHaveLength(before.history.length + 1);
   });
 
