@@ -79,3 +79,9 @@ jobs:
         env:
           DATABASE_URL: postgresql://user:pass@localhost:5432/test
           SKIP_ENV_VALIDATION: true
+
+      # I-71 slice 7: the gzip first-load JavaScript of each key route against
+      # perf-budgets.json. Byte counts do not depend on timing, so this blocks
+      # without a retry. Raise a budget in that file, with the reason in the PR.
+      - name: Bundle budget
+        run: node scripts/check-bundle-budget.mjs
