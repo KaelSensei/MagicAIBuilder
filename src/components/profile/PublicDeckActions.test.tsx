@@ -152,7 +152,9 @@ describe("PublicDeckActions", () => {
       ).toBeInTheDocument();
     });
 
-    it("credits the source deck and its author", () => {
+    // #1842: a plain anchor dropped the reader's locale, so the credit opened
+    // the source deck in English.
+    it("credits the source deck and its author, linked to its French page", () => {
       renderWithIntl(
         <PublicDeckActions
           deckId="fork"
@@ -164,7 +166,7 @@ describe("PublicDeckActions", () => {
       );
 
       const link = screen.getByRole("link", { name: "Original par Kael" });
-      expect(link).toHaveAttribute("href", "/deck/source");
+      expect(link).toHaveAttribute("href", "/fr/deck/source");
       expect(link.parentElement).toHaveTextContent(
         "Copie de Original par Kael"
       );
