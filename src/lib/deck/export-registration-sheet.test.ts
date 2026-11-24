@@ -52,12 +52,50 @@ const MODERN_DECK: Deck = aDeck({
   ],
 });
 
+/** The commander formats whose command zone keeps the Commander heading. */
+const COMMANDER_HEADED_FORMATS: readonly Deck["format"][] = [
+  "commander",
+  "brawl",
+];
+
 describe("registration sheet export", () => {
   it("prints a Commander deck's two commanders apart and its main deck alphabetically, with no sideboard", () => {
     const { input, labels, expected } = REGISTRATION_SHEET_V1;
 
     expect(registrationSheetExport(input, labels)).toEqual(expected);
   });
+
+  it("heads an Oathbreaker deck's command zone Oathbreaker", () => {
+    const deck = aDeck({
+      format: "oathbreaker",
+      commander: aDeckCard({ id: "ob", name: "Sorin, Vengeful Bloodlord" }),
+      cards: [aDeckCard({ id: "m1", name: "Sol Ring" })],
+    });
+
+    const sections = printedSections(printSheet(deck).content);
+
+    expect(sections.get("Oathbreaker")).toEqual([
+      "1 Sorin, Vengeful Bloodlord",
+    ]);
+    expect(sections.has("Commander")).toBe(false);
+  });
+
+  it.each(COMMANDER_HEADED_FORMATS)(
+    "keeps the Commander heading for a %s deck",
+    (format) => {
+      const deck = aDeck({
+        format,
+        commander: aDeckCard({ id: "cmd", name: "Kenrith, the Returned King" }),
+        cards: [aDeckCard({ id: "m1", name: "Sol Ring" })],
+      });
+
+      const sections = printedSections(printSheet(deck).content);
+
+      expect(sections.get("Commander")).toEqual([
+        "1 Kenrith, the Returned King",
+      ]);
+    }
+  );
 
   it("prints a Modern deck's sideboard, alphabetically with its total", () => {
     const sections = printedSections(printSheet(MODERN_DECK).content);
