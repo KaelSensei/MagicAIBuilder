@@ -117,9 +117,8 @@ function floorLine(
 }
 
 /**
- * The checked floor rows that set a floor above the target, in floor order.
- * A row slice 3 checks (mass land denial, extra turns) joins the list here
- * without a change.
+ * The checked floor rows that set a floor above the target, in floor order,
+ * mass land denial and extra turns (slice 3) included.
  */
 function floorLines(
   assessment: BracketAssessment,
@@ -134,9 +133,7 @@ function floorLines(
 
 /**
  * The combo floor, when the estimate could not check it for lack of combo
- * data (I-77 4.3). A floor this method does not detect yet (mass land denial,
- * extra turns) is a blind spot of the method, which the audit view words
- * (slice 2), not a gap of this deck's data.
+ * data (I-77 4.3).
  */
 function notCheckedLines(
   assessment: BracketAssessment
@@ -238,7 +235,9 @@ function heuristicLines(
  * gives the same lines (I-77 1.5). A target at or above the estimate gets one
  * line saying no official rule stops the deck there (5.4), followed by the
  * unchecked floors, since that holds only for the floors that were checked
- * (4.3). A Bracket 5 target gets only the cEDH line (1.3).
+ * (4.3). A floor row the estimate leaves out (mass land denial, extra turns,
+ * slice 3) can still sit above such a target: its lines then replace that
+ * line. A Bracket 5 target gets only the cEDH line (1.3).
  *
  * @param assessment - an assessment from `explainBracket`
  * @param target - the bracket the player aims for
@@ -249,13 +248,12 @@ export function pathToBracket(
   target: BracketLevel
 ): readonly BracketPathLine[] {
   if (target === CEDH_BRACKET) return [{ kind: "cedhIntent" }];
+  const floors = floorLines(assessment, target);
   const unchecked = notCheckedLines(assessment);
   if (target >= assessment.estimate) {
-    return [{ kind: "noRuleStops", target }, ...unchecked];
+    const stops: readonly BracketPathLine[] =
+      floors.length > 0 ? floors : [{ kind: "noRuleStops", target }];
+    return [...stops, ...unchecked];
   }
-  return [
-    ...floorLines(assessment, target),
-    ...unchecked,
-    ...heuristicLines(assessment, target),
-  ];
+  return [...floors, ...unchecked, ...heuristicLines(assessment, target)];
 }

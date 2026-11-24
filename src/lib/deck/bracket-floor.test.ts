@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { minimumBracket } from "./bracket-floor";
+import { minimumBracket, restrictionFloor } from "./bracket-floor";
 
 /**
  * The lowest bracket whose official rules admit what a deck list shows
@@ -27,4 +27,25 @@ describe("minimumBracket", () => {
   it("never reaches Bracket 5: only the cEDH metagame separates it from Bracket 4", () => {
     expect(minimumBracket({ gameChangers: 40, twoCardCombos: 12 })).toBe(4);
   });
+});
+
+/**
+ * The floor one restriction method version 1 counts but does not let set the
+ * estimate: mass land denial is allowed from Bracket 4, extra turns from
+ * Bracket 2, where they may not be chained (a list cannot show chaining).
+ */
+describe("restrictionFloor", () => {
+  it.each([
+    { rule: "massLandDenial", count: 0, floor: 1 },
+    { rule: "massLandDenial", count: 1, floor: 4 },
+    { rule: "massLandDenial", count: 6, floor: 4 },
+    { rule: "extraTurns", count: 0, floor: 1 },
+    { rule: "extraTurns", count: 1, floor: 2 },
+    { rule: "extraTurns", count: 9, floor: 2 },
+  ] as const)(
+    "$count $rule cards → Bracket $floor",
+    ({ rule, count, floor }) => {
+      expect(restrictionFloor(rule, count)).toBe(floor);
+    }
+  );
 });
