@@ -1,0 +1,13 @@
+{
+  "description": "I-71 slice 7: the largest gzip-compressed first-load JavaScript, in bytes, each key route may ship (spec 2.2). Checked in CI by scripts/check-bundle-budget.mjs after next build. Measured on dev at 43824c9a (2026-11-24) and set to that value plus 10 kB. Raise a budget only here, with the reason in the pull request.",
+  "routes": {
+    "/[locale]/page": 251618,
+    "/[locale]/deck/[id]/page": 339025,
+    "/[locale]/share/[token]/page": 323391,
+    "/[locale]/commanders/[slug]/decks/page": 328725,
+    "/[locale]/builder/[deckId]/page": 572597,
+    "/[locale]/decks/page": 411498,
+    "/[locale]/collection/page": 373697,
+    "/[locale]/auth/signin/page": 239681
+  }
+}
