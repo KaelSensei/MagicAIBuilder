@@ -41,6 +41,7 @@ export const ENGLISH_REGISTRATION_LABELS: RegistrationSheetLabels = {
   deckName: "Deck name",
   format: "Format",
   commander: "Commander",
+  oathbreaker: "Oathbreaker",
   companion: "Companion",
   mainDeck: "Main deck",
   sideboard: "Sideboard",

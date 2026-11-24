@@ -101,6 +101,29 @@ describe("ExportModal registration sheet", () => {
     expect(printed[0]).not.toContain("Counterspell");
   });
 
+  it("heads an Oathbreaker deck's command zone Oathbreaker, not Commandant, in French", async () => {
+    const user = userEvent.setup();
+    const printed = recordPrints();
+    const deck = aDeck({
+      format: "oathbreaker",
+      commander: aDeckCard({ id: "ob", name: "Sorin, Vengeful Bloodlord" }),
+      cards: [aDeckCard({ id: "c1", name: "Sol Ring" })],
+    });
+    renderWithProviders(<ExportModal deck={deck} onClose={vi.fn()} />, {
+      locale: "fr",
+    });
+
+    await user.click(
+      screen.getByRole("button", {
+        name: "Imprimer la feuille d’inscription",
+      })
+    );
+
+    expect(printed).toHaveLength(1);
+    expect(printed[0]).toContain("1 Sorin, Vengeful Bloodlord");
+    expect(printed[0]).not.toContain("Commandant");
+  });
+
   it("names the Considering card the sheet leaves out", () => {
     renderWithProviders(<ExportModal deck={DECK} onClose={vi.fn()} />);
 

@@ -44,6 +44,7 @@ function useRegistrationSheetLabels(): RegistrationSheetLabels {
       deckName: t("deckName"),
       format: t("format"),
       commander: t("commander"),
+      oathbreaker: t("oathbreaker"),
       companion: t("companion"),
       mainDeck: t("mainDeck"),
       sideboard: t("sideboard"),
