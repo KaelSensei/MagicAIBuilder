@@ -24,7 +24,9 @@ import {
   aRampCard,
   aThirtyCardList,
   aTwoCardInfinite,
+  armageddon,
   cards,
+  timeWarp,
 } from "@/lib/deck/testing/bracket-decks";
 
 /** Explains a Commander deck of these cards with the combos Spellbook found. */
@@ -108,22 +110,93 @@ describe("explainBracket — the official floors", () => {
     expect(assessment?.complete).toBe(false);
   });
 
-  it("is complete when Spellbook answered, though mass land denial and extra turns are not detected yet", () => {
+  it("is complete when Spellbook answered, with every official restriction checked", () => {
     const assessment = explain(aCoreList());
 
     expect(assessment.floors.map((row) => [row.rule, row.status])).toEqual([
       ["gameChangers", "checked"],
       ["twoCardCombos", "checked"],
-      ["massLandDenial", "notChecked"],
-      ["extraTurns", "notChecked"],
+      ["massLandDenial", "checked"],
+      ["extraTurns", "checked"],
     ]);
+    expect(assessment.complete).toBe(true);
+  });
+});
+
+describe("explainBracket — mass land denial and extra turns (slice 3)", () => {
+  it("names Armageddon in an estimated mass-land-denial row that sets Bracket 4, leaving the estimate unchanged", () => {
+    const assessment = explain([...aCoreList().slice(0, -1), armageddon()]);
+
+    expect(floorRow(assessment, "massLandDenial")).toEqual({
+      status: "checked",
+      rule: "massLandDenial",
+      count: 1,
+      certainty: "estimated",
+      cards: ["Armageddon"],
+      floor: 4,
+      ruleRef: "wotc-brackets-2025-10-21#massLandDenial",
+    });
+    expect(assessment.floor).toBe(1);
+    expect(assessment.estimate).toBe(2);
+    expect(assessment.decidedBy).toBe("heuristic");
+  });
+
+  it("names Time Warp in an estimated extra-turn row that sets Bracket 2, where extra turns are allowed unchained", () => {
+    const assessment = explain([...aCoreList().slice(0, -1), timeWarp()]);
+
     expect(floorRow(assessment, "extraTurns")).toEqual({
-      status: "notChecked",
+      status: "checked",
       rule: "extraTurns",
-      reason: "notDetectedYet",
+      count: 1,
+      certainty: "estimated",
+      cards: ["Time Warp"],
+      floor: 2,
       ruleRef: "wotc-brackets-2025-10-21#extraTurns",
     });
-    expect(assessment.complete).toBe(true);
+    expect(assessment.floor).toBe(1);
+  });
+
+  it("reads a list with neither as zero cards at Bracket 1 for both rows", () => {
+    const assessment = explain(aCoreList());
+
+    expect(floorRow(assessment, "massLandDenial")).toEqual({
+      status: "checked",
+      rule: "massLandDenial",
+      count: 0,
+      certainty: "estimated",
+      cards: [],
+      floor: 1,
+      ruleRef: "wotc-brackets-2025-10-21#massLandDenial",
+    });
+    expect(floorRow(assessment, "extraTurns")).toMatchObject({
+      count: 0,
+      cards: [],
+      floor: 1,
+    });
+  });
+
+  it("counts a commander that takes extra turns, since the command zone is part of the deck", () => {
+    const deck = aDeck({ cards: aCoreList(), commander: timeWarp() });
+    const assessment = explainBracket({
+      deck,
+      stats: computeDeckStats(deck),
+      comboData: { kind: "found", combos: [], fetchedAt: null },
+    });
+
+    expect(assessment?.floors).toContainEqual(
+      expect.objectContaining({ rule: "extraTurns", cards: ["Time Warp"] })
+    );
+  });
+
+  it("leaves out the sideboard and the Considering list", () => {
+    const assessment = explain([
+      ...aCoreList(),
+      { ...armageddon(), zone: "sideboard" },
+      { ...timeWarp(), zone: "maybeboard" },
+    ]);
+
+    expect(floorRow(assessment, "massLandDenial")).toMatchObject({ count: 0 });
+    expect(floorRow(assessment, "extraTurns")).toMatchObject({ count: 0 });
   });
 });
 
