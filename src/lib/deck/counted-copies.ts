@@ -20,6 +20,17 @@ export type CountedCopiesDeck = Pick<Deck, "commander" | "partner" | "cards">;
 const DECK_ZONES: ReadonlySet<DeckZone> = new Set(["main", "sideboard"]);
 
 /**
+ * Whether the copy limit counts the rows of `zone`: the main deck and the
+ * sideboard do (CR 100.2a, CR 100.4a), Considering does not.
+ *
+ * @param zone - A zone of the deck's rows
+ * @returns `true` for the main deck and the sideboard
+ */
+export function isCountedZone(zone: DeckZone): boolean {
+  return DECK_ZONES.has(zone);
+}
+
+/**
  * The copies of `name` the copy limit weighs for an add to `zone`. An add to
  * the main deck or the sideboard counts both, and the commanders with them;
  * an add to Considering weighs that zone's rows alone.
@@ -34,7 +45,7 @@ export function copiesCountedFor(
   name: string,
   zone: DeckZone
 ): number {
-  if (!DECK_ZONES.has(zone)) return copiesInZones(deck, name, new Set([zone]));
+  if (!isCountedZone(zone)) return copiesInZones(deck, name, new Set([zone]));
   return copiesInZones(deck, name, DECK_ZONES) + commandZoneCopies(deck, name);
 }
 

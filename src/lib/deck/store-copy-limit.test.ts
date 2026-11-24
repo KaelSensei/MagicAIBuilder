@@ -15,7 +15,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import type { DeckFormat } from "@/lib/deck/formats";
 import { useDeckStore } from "@/lib/deck/store";
-import type { DeckCard } from "@/lib/deck/types";
+import type { Deck, DeckCard, DeckZone } from "@/lib/deck/types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import { aDeckCard } from "@/test/builders/card";
 import { aDeck } from "@/test/builders/deck";
@@ -80,8 +80,13 @@ function searchResult(card: DeckCard): ScryfallCard {
 
 /** Opens a deck of `format` holding these rows as the active deck. */
 function openDeck(format: DeckFormat, ...cards: DeckCard[]): void {
+  openDeckOf({ format, cards });
+}
+
+/** Opens a deck with these facts (format, rows, commander) as the active deck. */
+function openDeckOf(deck: Partial<Deck>): void {
   useDeckStore.setState({
-    decks: { [DECK_ID]: aDeck({ id: DECK_ID, format, cards }) },
+    decks: { [DECK_ID]: aDeck({ ...deck, id: DECK_ID }) },
     activeDeckId: DECK_ID,
     isSyncing: false,
     gameChangerNames: new Set(),
@@ -226,6 +231,174 @@ describe("stepping a card's quantity (updateCardQuantity)", () => {
   });
 });
 
+// CR 100.2a: a constructed deck and its sideboard together hold at most four
+// cards of one name; CR 903.5b: a Commander deck holds one, its command zone
+// included. The editor counts every row (every printing) of the main deck, the
+// sideboard and the command zone; Considering is not part of the deck.
+describe("counting a card across every row and zone of the deck (I-37)", () => {
+  /** The same card on another row: another zone, another printing, or both. */
+  function onRow(
+    card: DeckCard,
+    { id, zone = "main" }: { readonly id: string; readonly zone?: DeckZone }
+  ): DeckCard {
+    return { ...card, id, zone, isMaybeboard: zone === "maybeboard" };
+  }
+
+  /** Copies of `name` on every row of `zones`. */
+  function copiesIn(name: string, ...zones: DeckZone[]): number {
+    return (useDeckStore.getState().decks[DECK_ID]?.cards ?? [])
+      .filter((card) => card.name === name && zones.includes(card.zone))
+      .reduce((total, card) => total + card.quantity, 0);
+  }
+
+  it("refuses a fifth Lightning Bolt from search when a Modern deck holds three in Main and one in the Sideboard", async () => {
+    openDeck(
+      "modern",
+      bolt(3),
+      onRow(bolt(1), { id: "bolt-side", zone: "sideboard" })
+    );
+
+    await useDeckStore.getState().addCard(searchResult(bolt(1)));
+
+    expect(copiesIn("Lightning Bolt", "main", "sideboard")).toBe(4);
+    expect(deckApi.updateCardQuantity).not.toHaveBeenCalled();
+    expect(deckApi.addCard).not.toHaveBeenCalled();
+  });
+
+  it("refuses a deck card into the Sideboard when a Modern deck holds four Lightning Bolt in Main", async () => {
+    openDeck("modern", bolt(4));
+
+    await useDeckStore
+      .getState()
+      .addDeckCard(onRow(bolt(1), { id: "bolt-new", zone: "sideboard" }));
+
+    expect(copiesIn("Lightning Bolt", "main", "sideboard")).toBe(4);
+    expect(deckApi.addCard).not.toHaveBeenCalled();
+  });
+
+  it("gives a first add only the copies the other zone leaves room for", async () => {
+    openDeck("modern", onRow(bolt(3), { id: "bolt-side", zone: "sideboard" }));
+
+    await useDeckStore
+      .getState()
+      .addCard(searchResult(bolt(1)), { quantity: 4 });
+
+    expect(copiesIn("Lightning Bolt", "main")).toBe(1);
+    expect(deckApi.addCard.mock.lastCall?.[1]?.quantity).toBe(1);
+  });
+
+  it("keeps two printings at two copies each when either row of a Modern deck is raised", async () => {
+    openDeck("modern", bolt(2), onRow(bolt(2), { id: "bolt-m10" }));
+    const { updateCardQuantity } = useDeckStore.getState();
+
+    await updateCardQuantity("row-Lightning Bolt", 1);
+    await updateCardQuantity("bolt-m10", 1);
+
+    expect(copiesIn("Lightning Bolt", "main")).toBe(4);
+    expect(deckApi.updateCardQuantity).not.toHaveBeenCalled();
+  });
+
+  it("stops a quantity raise at the room the other printing leaves", async () => {
+    openDeck("modern", bolt(1), onRow(bolt(1), { id: "bolt-m10" }));
+
+    await useDeckStore.getState().updateCardQuantity("bolt-m10", 5);
+
+    expect(copiesIn("Lightning Bolt", "main")).toBe(4);
+    expect(deckApi.updateCardQuantity).toHaveBeenLastCalledWith(
+      { deckId: DECK_ID },
+      "bolt-m10",
+      3
+    );
+  });
+
+  it("always lowers a row by the step asked, even past the limit", async () => {
+    openDeck("modern", bolt(3), onRow(bolt(3), { id: "bolt-side", zone: "sideboard" }));
+
+    await useDeckStore.getState().updateCardQuantity("bolt-side", -1);
+
+    expect(copiesIn("Lightning Bolt", "sideboard")).toBe(2);
+  });
+
+  it("refuses to move a Considering copy into Main when the deck holds the limit", async () => {
+    openDeck("modern", bolt(4), onRow(bolt(1), { id: "bolt-maybe", zone: "maybeboard" }));
+
+    await useDeckStore.getState().moveCardToZone("bolt-maybe", "main");
+
+    expect(copiesIn("Lightning Bolt", "main", "sideboard")).toBe(4);
+    expect(copiesIn("Lightning Bolt", "maybeboard")).toBe(1);
+    expect(deckApi.updateCardZone).not.toHaveBeenCalled();
+  });
+
+  it("moves a Considering copy into Main while the deck has room", async () => {
+    openDeck("modern", bolt(3), onRow(bolt(1), { id: "bolt-maybe", zone: "maybeboard" }));
+
+    await useDeckStore.getState().moveCardToZone("bolt-maybe", "main");
+
+    expect(copiesIn("Lightning Bolt", "main")).toBe(4);
+    expect(deckApi.updateCardZone).toHaveBeenCalledTimes(1);
+  });
+
+  it("moves a copy between Main and the Sideboard at the limit", async () => {
+    openDeck("modern", bolt(3), onRow(bolt(1), { id: "bolt-side", zone: "sideboard" }));
+
+    await useDeckStore.getState().moveCardToZone("bolt-side", "main");
+
+    expect(copiesIn("Lightning Bolt", "main")).toBe(4);
+    expect(deckApi.updateCardZone).toHaveBeenCalledTimes(1);
+  });
+
+  it("moves a copy into Considering at the limit", async () => {
+    openDeck("modern", bolt(4));
+
+    await useDeckStore.getState().moveCardToZone("row-Lightning Bolt", "maybeboard");
+
+    expect(copiesIn("Lightning Bolt", "maybeboard")).toBe(4);
+  });
+
+  it("adds a copy to Considering when the deck holds the limit", async () => {
+    openDeck("modern", bolt(4));
+
+    await useDeckStore
+      .getState()
+      .addCard(searchResult(bolt(1)), { zone: "maybeboard" });
+
+    expect(copiesIn("Lightning Bolt", "maybeboard")).toBe(1);
+    expect(copiesIn("Lightning Bolt", "main")).toBe(4);
+  });
+
+  // CR 903.5b: the singleton rule counts the commander in the command zone.
+  it("refuses a Commander deck's commander as a card in Main", async () => {
+    const krenko = row("Krenko, Mob Boss", 1, {
+      typeLine: "Legendary Creature — Goblin Warrior",
+      oracleText: "{T}: Create X 1/1 red Goblin creature tokens.",
+    });
+    openDeckOf({ format: "commander", commander: krenko });
+
+    await useDeckStore.getState().addCard(searchResult(krenko));
+
+    expect(copiesIn("Krenko, Mob Boss", "main")).toBe(0);
+    expect(deckApi.addCard).not.toHaveBeenCalled();
+  });
+
+  // CR 100.2a: basic lands are exempt; CR 101.1: so is a card whose text allows any number.
+  it("lets a Modern deck raise a basic Mountain and Relentless Rats held in both zones past four", async () => {
+    openDeck(
+      "modern",
+      mountain(4),
+      onRow(mountain(4), { id: "mountain-side", zone: "sideboard" }),
+      rats(3),
+      onRow(rats(3), { id: "rats-side", zone: "sideboard" })
+    );
+    const { updateCardQuantity } = useDeckStore.getState();
+
+    await updateCardQuantity("row-Mountain", 1);
+    await updateCardQuantity("row-Relentless Rats", 1);
+
+    expect(copiesIn("Mountain", "main", "sideboard")).toBe(9);
+    expect(copiesIn("Relentless Rats", "main", "sideboard")).toBe(7);
+  });
+});
+
 // The first add of a card clamps the copies it asks for to the same limit an
 // edit clamps to, silently, as `updateCardQuantity` does.
 describe("the first add of a card", () => {
@@ -321,8 +494,9 @@ describe("the quantity clamps the store applies today", () => {
     expect(deckApi.addCard).not.toHaveBeenCalled();
   });
 
-  it("counts copies per zone: a Commander deck takes a Sol Ring in the sideboard beside the main-deck one", async () => {
-    // CR 903.5b limits the deck; the sideboard row is matched separately.
+  it("counts copies across zones: a Commander deck refuses a Sol Ring in the sideboard beside the main-deck one", async () => {
+    // CR 903.5b limits the whole deck, so the sideboard row counts with the
+    // main-deck one (I-37; this test pinned the per-zone count before).
     openDeck("commander", solRing(1));
 
     await useDeckStore
@@ -333,9 +507,7 @@ describe("the quantity clamps the store applies today", () => {
       .getState()
       .decks[DECK_ID]?.cards.filter((card) => card.name === "Sol Ring")
       .map((card) => [card.zone, card.quantity]);
-    expect(rows).toEqual([
-      ["main", 1],
-      ["sideboard", 1],
-    ]);
+    expect(rows).toEqual([["main", 1]]);
+    expect(deckApi.addCard).not.toHaveBeenCalled();
   });
 });

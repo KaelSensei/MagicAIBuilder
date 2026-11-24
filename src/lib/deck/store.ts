@@ -23,6 +23,7 @@ import {
   deckCopyLimit,
   type CopyLimitCard,
 } from "@/lib/deck/multiples";
+import { copiesCountedFor, isCountedZone } from "@/lib/deck/counted-copies";
 import * as deckApi from "@/lib/db/deck-api";
 import {
   DeckApiError,
@@ -165,6 +166,45 @@ function copyLimit(
   card: CopyLimitCard
 ): number {
   return deckCopyLimit(card, { format: deck.format, exceptions: commandZoneExceptions(deck) });
+}
+
+/**
+ * The copies of `card` the deck may still take in `zone`: its copy limit less
+ * the copies already counted there. CR 100.2a: the main deck and the sideboard
+ * together hold at most four; CR 903.5b: a Commander deck holds one, its
+ * command zone included. Every row of the name counts, whatever its printing;
+ * Considering is weighed alone (`copiesCountedFor`). Zero or less when full.
+ */
+function copyRoom(deck: Deck, card: CopyLimitCard, zone: DeckZone): number {
+  const counted = { cards: uniqueDeckCards(deck), commander: deck.commander, partner: deck.partner };
+  return copyLimit(deck, card) - copiesCountedFor(counted, card.name, zone);
+}
+
+/**
+ * A row's copies after a step of `delta`: a raise stops at the room the deck
+ * has left (`copyRoom`), a lowering always goes through and keeps one copy.
+ */
+function steppedQuantity(quantity: number, delta: number, room: number): number {
+  if (delta <= 0) return Math.max(1, quantity + delta);
+  return quantity + Math.max(0, Math.min(delta, room));
+}
+
+/** A row moving from one zone to another. */
+interface ZoneMove {
+  readonly card: DeckCard;
+  readonly from: DeckZone;
+  readonly to: DeckZone;
+}
+
+/**
+ * Whether a move would put the deck past the card's copy limit. Only a row
+ * entering the deck from Considering adds copies the limit counts (CR 100.2a,
+ * CR 903.5b); a move between the main deck and the sideboard, or into
+ * Considering, never does.
+ */
+function moveExceedsCopyLimit(deck: Deck, { card, from, to }: ZoneMove): boolean {
+  if (isCountedZone(from) || !isCountedZone(to)) return false;
+  return card.quantity > copyRoom(deck, card, to);
 }
 
 /**
@@ -1749,19 +1789,19 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
 
     const isBasic = isBasicLand(card.type_line);
 
-    const max = copyLimit(deck, {
+    const room = copyRoom(deck, {
       name: card.name,
       typeLine: card.type_line,
       oracleText: card.oracle_text,
-    });
+    }, zone);
+    // At the limit across every row and zone the limit counts → skip
+    if (room < 1) return;
     const exists = uniqueDeckCards(deck).find(
       (c) => c.name === card.name && c.zone === zone
     );
     if (exists) {
       // Basic land already present — skip (caller should pass quantity on first add)
       if (isBasic) return;
-      // Already at max → skip
-      if (exists.quantity >= max) return;
       // Can add more → increment quantity
       await get().updateCardQuantity(exists.id, 1);
       return;
@@ -1770,7 +1810,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     const selectedCard = await printingToAdd(card, printing);
     const deckCard = makeDeckCard(selectedCard);
     // The first add clamps to the copy limit, as an edit does (CR 100.2a, CR 903.5b).
-    deckCard.quantity = copiesWithinLimit(quantity, max);
+    deckCard.quantity = copiesWithinLimit(quantity, room);
     // Apply target zone (sideboard / maybeboard / main)
     deckCard.zone = zone;
     deckCard.isMaybeboard = zone === "maybeboard";
@@ -1844,12 +1884,12 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     if (!activeDeckId) return;
     const deck = decks[activeDeckId];
     if (!deck) return;
-    const max = copyLimit(deck, card);
+    const room = copyRoom(deck, card, card.zone);
+    if (room < 1) return;
     const exists = uniqueDeckCards(deck).find(
       (c) => c.name === card.name && c.zone === card.zone
     );
     if (exists) {
-      if (exists.quantity >= max) return;
       await get().updateCardQuantity(exists.id, 1);
       return;
     }
@@ -1859,7 +1899,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     const enriched = {
       ...(ownedPrinting ? makeDeckCard(ownedPrinting) : card),
       category: card.category,
-      quantity: copiesWithinLimit(card.quantity, max),
+      quantity: copiesWithinLimit(card.quantity, room),
       zone: card.zone,
       isGameChanger: gameChangerNames.has(card.name),
       isBanned: bannedNames.has(card.name),
@@ -2052,8 +2092,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     const card = uniqueDeckCards(deck).find((c) => c.id === cardId);
     if (!card) return;
 
-    const max = copyLimit(deck, card);
-    const newQty = copiesWithinLimit(card.quantity + delta, max);
+    const newQty = steppedQuantity(card.quantity, delta, copyRoom(deck, card, card.zone));
     if (newQty === card.quantity) return;
     const writeKey = `${activeDeckId}:${cardId}`;
     const previousWrite = pendingQuantityWrites.get(writeKey);
@@ -2258,10 +2297,12 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     const mirror = stored
       ? undefined
       : deck.maybeboard.find((card) => card.id === cardId);
-    if (!stored && !mirror) return;
+    const moved = stored ?? mirror;
+    if (!moved) return;
     const currentZone = stored?.zone ?? "maybeboard";
     const persistedZone = stored?.zone ?? mirror?.zone ?? "main";
     if (currentZone === zone && persistedZone === zone) return;
+    if (moveExceedsCopyLimit(deck, { card: moved, from: currentZone, to: zone })) return;
 
     const key = `${activeDeckId}:${cardId}`;
     const pending = pendingZoneWrites.get(key) ?? {
