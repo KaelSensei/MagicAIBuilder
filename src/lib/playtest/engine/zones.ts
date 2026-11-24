@@ -4,7 +4,8 @@
  * Context: playtest, the engine. Every drag, "send to graveyard", "cast from the command
  * zone" or "put back on top" in `components/playtest/` is one `applyMoveToZone`. A card
  * entering the battlefield becomes a `BattlefieldCard`; one leaving it drops that state.
- * Rules: only a commander may enter the command zone (CR 903.9).
+ * Rules: a move to the zone the card is already in is no move (CR 400.7); only a commander may
+ * enter the command zone (CR 903.9).
  * Not responsible for: the draw (`turn.ts`), the mulligan's shuffle (`mulligan.ts`) or what
  * happens to a permanent that stays on the battlefield (`battlefield.ts`).
  *
@@ -177,8 +178,25 @@ function describeMove(name: string, from: CardZone, to: CardZone): string {
 }
 
 /**
+ * True when a move names the zone the card is already in as its destination.
+ *
+ * CR 400.7: a zone change is a move "from one zone to another", so a card sent to its own zone
+ * has not moved; `applyMoveToZone` refuses it rather than log a move that did not happen.
+ *
+ * @param move - the zone the card leaves and the zone it would enter
+ * @returns whether both are the same zone
+ */
+export function isSameZoneMove(move: {
+  readonly from: CardZone;
+  readonly to: CardZone;
+}): boolean {
+  return move.from === move.to;
+}
+
+/**
  * Moves one card between playtest zones.
  *
+ * A move to the zone the card is already in changes nothing (CR 400.7).
  * A session copy that leaves the battlefield is removed instead of relocated.
  * A card taken from the library is recorded as seen. Only a commander may
  * enter the command zone (CR 903.9).
@@ -197,7 +215,7 @@ export function applyMoveToZone(
   to: CardZone,
   deps: PlaytestDeps = defaultPlaytestDeps
 ): PlaytestEngine {
-  if (isChoosingBottom(state)) return state;
+  if (isChoosingBottom(state) || isSameZoneMove({ from, to })) return state;
   if (to === "command" && !state.commanderIds.includes(cardId)) return state;
   const removed = takeFromZone(state, from, cardId);
   if (!removed) return state;
