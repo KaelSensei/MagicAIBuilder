@@ -8,7 +8,8 @@
  * the checks the engine does not make today (`PLAYTEST_COMMAND_KNOWN_GAPS`), which a structural
  * change must keep not making until their own fix lands.
  * Rules: the London mulligan waits for its bottom cards (CR 103.5) and has a limit (CR 103.5);
- * only a commander enters the command zone (CR 903.9); damage is never negative (CR 107.1b);
+ * a card is not moved to the zone it is in (CR 400.7); only a commander enters the command zone
+ * (CR 903.9); damage is never negative (CR 107.1b);
  * only Commander tallies commander damage (CR 903.10a, 903.12h).
  * Not responsible for: applying a command (`commands.ts`).
  *
@@ -36,6 +37,7 @@ import { isNegativeDamage } from "./life";
 import { isChoosingBottom, maxMulligans } from "./mulligan";
 import { defaultPlaytestCommandDeps, type PlaytestCommandDeps } from "./ports";
 import type { CardZone, PlaytestEngine } from "./types";
+import { isSameZoneMove } from "./zones";
 
 // ─── Guards ───────────────────────────────────────────────────────────────
 /** Why a command changes nothing today; one name per condition a transition checks. */
@@ -57,6 +59,7 @@ export type PlaytestGuardReason =
   | "not-on-battlefield"
   | "id-taken"
   | "not-a-commander"
+  | "same-zone"
   | "not-in-zone"
   | "bad-die"
   | "blank-note"
@@ -250,6 +253,8 @@ export const PLAYTEST_COMMAND_GUARDS: Readonly<
   untapAll: [whileChoosingBottom],
   moveToZone: [
     whileChoosingBottom,
+    // CR 400.7: a zone change goes from one zone to another; the card's own zone is no move.
+    guard("moveToZone", "same-zone", (_state, move) => isSameZoneMove(move)),
     // CR 903.9: only a commander may enter the command zone.
     guard(
       "moveToZone",

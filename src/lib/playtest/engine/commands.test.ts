@@ -531,6 +531,16 @@ function blockedScenario(
         state: applySetDayNight(base, "night", deps),
         command: { type: "setDayNight", dayNight: "night" },
       };
+    case "same-zone":
+      return {
+        state: base,
+        command: {
+          type: "moveToZone",
+          cardId: handId(base),
+          from: "hand",
+          to: "hand",
+        },
+      };
     case "not-in-zone":
       return {
         state: base,
@@ -673,6 +683,25 @@ describe("damage amounts through the reducer", () => {
     expect(
       playtestCommandBlockReason(state, { type: "damage", amount: 0 }, deps)
     ).toBeNull();
+  });
+});
+
+// CR 400.7: a zone change is a move from one zone to another; #1836 closed the same-zone move.
+describe("a move to the zone the card is already in, through the reducer", () => {
+  it("returns the very same state, names same-zone, and logs nothing", () => {
+    const state = baseState();
+    const sameZone: PlaytestCommand = {
+      type: "moveToZone",
+      cardId: permanentId(state),
+      from: "battlefield",
+      to: "battlefield",
+    };
+
+    const result = reducePlaytest(state, sameZone, deps);
+
+    expect(result).toBe(state);
+    expect(result.actionLog).toHaveLength(state.actionLog.length);
+    expect(playtestCommandBlockReason(state, sameZone, deps)).toBe("same-zone");
   });
 });
 
