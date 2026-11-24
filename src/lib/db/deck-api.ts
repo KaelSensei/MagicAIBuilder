@@ -230,6 +230,29 @@ export async function fetchDeck(id: string): Promise<ApiDeck> {
   }
 }
 
+/**
+ * JSON request headers, with `Idempotency-Key` when a key is given: `POST /api/decks` then keeps
+ * the key with the deck and answers that deck to any later request carrying it.
+ */
+function createHeaders(idempotencyKey?: string): Record<string, string> {
+  return idempotencyKey === undefined
+    ? { "Content-Type": "application/json" }
+    : { "Content-Type": "application/json", "Idempotency-Key": idempotencyKey };
+}
+
+/**
+ * Creates an empty deck.
+ *
+ * With an `idempotencyKey`, repeating the request with the same key returns the
+ * deck the first request wrote instead of writing a second one, so a retry
+ * after a lost response is safe.
+ *
+ * @param name - the deck's name
+ * @param opts - the deck's fields, and `idempotencyKey`: the same value for
+ *   every attempt at the same deck (8–128 of `A-Za-z0-9_.:-`)
+ * @returns the created deck, or the one an earlier attempt with the key created
+ * @throws When the server refuses or fails the create
+ */
 export async function createDeck(
   name: string,
   opts?: {
@@ -240,12 +263,14 @@ export async function createDeck(
     commanderName?: string | null;
     partnerId?: string | null;
     isAIGenerated?: boolean;
+    idempotencyKey?: string;
   }
 ): Promise<ApiDeck> {
+  const { idempotencyKey, ...fields } = opts ?? {};
   const res = await fetch("/api/decks", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name, ...opts }),
+    headers: createHeaders(idempotencyKey),
+    body: JSON.stringify({ name, ...fields }),
   });
   if (!res.ok) await handleApiError(res, "createDeck");
   return res.json();
@@ -285,10 +310,7 @@ export async function createDeckWithCards(
 ): Promise<ApiDeck> {
   const res = await fetch("/api/decks", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Idempotency-Key": idempotencyKey,
-    },
+    headers: createHeaders(idempotencyKey),
     body: JSON.stringify(body),
   });
   if (!res.ok) await handleApiError(res, "createDeckWithCards");

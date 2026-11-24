@@ -558,13 +558,19 @@ export interface DeckStore {
    * guest deck instead.
    *
    * @param name - The deck's name
-   * @param opts - `format`, Commander when left out; `isAIGenerated`
+   * @param opts - `format`, Commander when left out; `isAIGenerated`;
+   *   `idempotencyKey`, the same for every attempt at the same deck, so a
+   *   retry after a lost answer opens the deck the server already stored
    * @returns The id of the deck now active
    * @throws When the server refuses or fails the creation
    */
   createDeck: (
     name: string,
-    opts?: { isAIGenerated?: boolean; format?: DeckFormat }
+    opts?: {
+      isAIGenerated?: boolean;
+      format?: DeckFormat;
+      idempotencyKey?: string;
+    }
   ) => Promise<string>;
   duplicateDeck: (id: string) => Promise<string>;
   deleteDeck: (id: string) => Promise<void>;
@@ -1390,6 +1396,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       const apiDeck = await deckApi.createDeck(name, {
         isAIGenerated: opts?.isAIGenerated,
         format: opts?.format,
+        idempotencyKey: opts?.idempotencyKey,
       });
       const deck = createEmptyDeck(apiDeck.id, apiDeck.name, opts?.format);
       deck.createdAt = new Date(apiDeck.createdAt);
