@@ -9,8 +9,10 @@
  *
  * When the server cannot create the deck, the built deck is held so the player can save it again:
  * a fresh build would cost another AI build from the player's allowance and another model call.
- * Only the creation is retried. Once the deck exists, a retry would create a second deck, so later
- * failures still throw to the wizard.
+ * Each built deck gets one idempotency key, and every attempt to create it sends that key: when the
+ * server stored the deck but its answer was lost, saving again answers the stored deck instead of
+ * creating a second one (#1855). Only the creation is retried; later failures still throw to the
+ * wizard.
  *
  * @module deck/use-built-deck-save
  */
@@ -35,6 +37,12 @@ export interface BuiltDeck {
 export interface CorrectedDeck {
   readonly deckId: string;
   readonly corrections: BuildResult["corrections"];
+}
+
+/** A built deck and the idempotency key every attempt to create it sends. */
+interface DeckToCreate {
+  readonly deck: BuiltDeck;
+  readonly idempotencyKey: string;
 }
 
 /** What the wizard reads from, and asks of, the save step. */
@@ -83,15 +91,20 @@ export function useBuiltDeckSave(
   const [correctedDeck, setCorrectedDeck] = useState<CorrectedDeck | null>(
     null
   );
-  const [unsavedDeck, setUnsavedDeck] = useState<BuiltDeck | null>(null);
+  const [unsavedDeck, setUnsavedDeck] = useState<DeckToCreate | null>(null);
 
   /** The new deck's id, or null when the server refused it and the deck is now held. */
-  const createOrHold = async (deck: BuiltDeck): Promise<string | null> => {
+  const createOrHold = async (
+    attempt: DeckToCreate
+  ): Promise<string | null> => {
     try {
-      return await createDeck(deck.name, { isAIGenerated: true });
+      return await createDeck(attempt.deck.name, {
+        isAIGenerated: true,
+        idempotencyKey: attempt.idempotencyKey,
+      });
     } catch (err) {
       logger.error("Deck create error", "DeckWizard", err);
-      setUnsavedDeck(deck);
+      setUnsavedDeck(attempt);
       return null;
     }
   };
@@ -120,15 +133,19 @@ export function useBuiltDeckSave(
     onComplete(deckId);
   };
 
-  const save = async (deck: BuiltDeck): Promise<void> => {
+  const store = async (attempt: DeckToCreate): Promise<void> => {
     setUnsavedDeck(null);
-    const deckId = await createOrHold(deck);
+    const deckId = await createOrHold(attempt);
     if (deckId === null) return;
-    await fill(deckId, deck.result);
+    await fill(deckId, attempt.deck.result);
   };
 
+  // A new build is a new deck, so it gets a new key; a retry resends the held one.
+  const save = (deck: BuiltDeck): Promise<void> =>
+    store({ deck, idempotencyKey: crypto.randomUUID() });
+
   const retry = (): Promise<void> =>
-    unsavedDeck ? save(unsavedDeck) : Promise.resolve();
+    unsavedDeck ? store(unsavedDeck) : Promise.resolve();
 
   const reset = useCallback(() => {
     setImportedCount(0);

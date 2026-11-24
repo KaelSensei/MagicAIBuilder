@@ -69,6 +69,7 @@ it("names the generated deck in the creator's locale", async () => {
   await waitFor(() =>
     expect(store.createDeck).toHaveBeenCalledWith("Deck IA — Contrôle", {
       isAIGenerated: true,
+      idempotencyKey: expect.any(String),
     })
   );
 });

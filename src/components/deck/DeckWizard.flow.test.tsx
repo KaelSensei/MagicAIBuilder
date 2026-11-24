@@ -171,6 +171,23 @@ let autocompleteQueries: string[] = [];
 let cardsInFlight = 0;
 let mostCardsInFlight = 0;
 
+/**
+ * The row `POST /api/decks` answers for a new deck; the route defaults a missing targetBracket to
+ * 3 and budget to null (`createDeckFieldsSchema`).
+ */
+function storedDeckRow(id: string, body: z.infer<typeof NamedBody>) {
+  return {
+    id,
+    name: body.name,
+    targetBracket: 3,
+    budget: null,
+    isAIGenerated: body.isAIGenerated === true,
+    createdAt: "2026-11-11T12:00:00.000Z",
+    updatedAt: "2026-11-11T12:00:00.000Z",
+    cards: [],
+  };
+}
+
 /** "METHOD path" for the app's routes, "METHOD scryfall path" for Scryfall. */
 function describeRequest(request: Request): string {
   const url = new URL(request.url);
@@ -201,24 +218,10 @@ const handlers = [
     collectionNames.push(names);
     return HttpResponse.json(collectionAnswer(names));
   }),
-  // POST /api/decks answers the stored row; the route defaults a missing
-  // targetBracket to 3 and budget to null (`createDeckFieldsSchema`).
   http.post("/api/decks", async ({ request }) => {
     const body = NamedBody.parse(await request.json());
     deckBodies.push(body);
-    return HttpResponse.json(
-      {
-        id: DECK_ID,
-        name: body.name,
-        targetBracket: 3,
-        budget: null,
-        isAIGenerated: body.isAIGenerated === true,
-        createdAt: "2026-11-11T12:00:00.000Z",
-        updatedAt: "2026-11-11T12:00:00.000Z",
-        cards: [],
-      },
-      { status: 201 }
-    );
+    return HttpResponse.json(storedDeckRow(DECK_ID, body), { status: 201 });
   }),
   http.patch("/api/decks/:id", async ({ request, params }) => {
     const patch = z.record(z.string(), z.unknown()).parse(await request.json());
@@ -264,10 +267,24 @@ const handlers = [
 const onComplete = vi.fn<(deckId: string) => void>();
 const onClose = vi.fn<() => void>();
 
+/** The rendered wizard, so a test can close and reopen it as the decks page does. */
+let renderedWizard: ReturnType<typeof renderWithProviders> | null = null;
+
 function renderWizard(): void {
-  renderWithProviders(
+  renderedWizard = renderWithProviders(
     <DeckWizard open onClose={onClose} onComplete={onComplete} />
   );
+}
+
+/** Closes the wizard and opens it again, still mounted, as the decks page does for a new build. */
+async function reopenWizard(): Promise<void> {
+  renderedWizard?.rerender(
+    <DeckWizard open={false} onClose={onClose} onComplete={onComplete} />
+  );
+  renderedWizard?.rerender(
+    <DeckWizard open onClose={onClose} onComplete={onComplete} />
+  );
+  await screen.findByRole("heading", { name: HEADINGS.budget });
 }
 
 const HEADINGS = {
@@ -308,6 +325,11 @@ async function answerUpToCommander(
 ): Promise<void> {
   renderWizard();
   await screen.findByRole("heading", { name: HEADINGS.budget });
+  await answerOpenWizardUpToCommander(answers);
+}
+
+/** From the budget step of the open wizard, answers the first four steps. */
+async function answerOpenWizardUpToCommander(answers: Answers): Promise<void> {
   fireEvent.click(screen.getByRole("button", { name: answers.budget }));
   await continueTo(HEADINGS.colors);
   for (const color of answers.colors)
@@ -373,6 +395,38 @@ describe("DeckWizard flow (characterization)", () => {
       )
     );
   }
+  /**
+   * Serves deck creates as the route does (`createOnce` in `POST /api/decks`): a request whose
+   * `Idempotency-Key` already created a deck answers that deck instead of storing a second one.
+   * With `loseFirstAnswer`, the first create is stored but its answer never reaches the browser,
+   * as on a dropped connection.
+   *
+   * @returns the ids of the decks the server stores, in order, filled as requests arrive
+   */
+  function serveDeckCreatesAsTheRoute(
+    options: { readonly loseFirstAnswer?: boolean } = {}
+  ): readonly string[] {
+    const storedIds: string[] = [];
+    const idByKey = new Map<string, string>();
+    server.use(
+      http.post("/api/decks", async ({ request }) => {
+        const body = NamedBody.parse(await request.json());
+        const key = request.headers.get("Idempotency-Key");
+        const earlierId = key === null ? undefined : idByKey.get(key);
+        if (earlierId !== undefined) {
+          return HttpResponse.json(storedDeckRow(earlierId, body));
+        }
+        const id = `deck-ai-${storedIds.length + 1}`;
+        storedIds.push(id);
+        if (key !== null) idByKey.set(key, id);
+        if (options.loseFirstAnswer === true && storedIds.length === 1) {
+          return HttpResponse.error();
+        }
+        return HttpResponse.json(storedDeckRow(id, body), { status: 201 });
+      })
+    );
+    return storedIds;
+  }
   server.events.on("request:start", ({ request }) => {
     sent.push(describeRequest(request));
   });
@@ -389,6 +443,7 @@ describe("DeckWizard flow (characterization)", () => {
   beforeEach(() => {
     localStorage.clear();
     useDeckStore.setState(useDeckStore.getInitialState(), true);
+    renderedWizard = null;
     sent = [];
     buildBodies = [];
     deckBodies = [];
@@ -882,6 +937,40 @@ describe("DeckWizard flow (characterization)", () => {
       );
       expect(storedCard("Island")?.quantity).toBe(30);
       expect(onComplete).toHaveBeenCalledTimes(1);
+    });
+
+    it("saving again after a lost answer opens the deck the first save stored, and stores no second deck", async () => {
+      const storedDeckIds = serveDeckCreatesAsTheRoute({
+        loseFirstAnswer: true,
+      });
+      await generateDeck();
+
+      fireEvent.click(
+        await screen.findByRole("button", { name: TRY_SAVING_AGAIN })
+      );
+
+      await waitFor(() => expect(onComplete).toHaveBeenCalledTimes(1));
+      expect(storedDeckIds).toEqual([DECK_ID]);
+      expect(onComplete).toHaveBeenCalledWith(DECK_ID);
+      expect(buildBodies).toHaveLength(1);
+    });
+
+    it("stores a new build as a new deck after a saved one", async () => {
+      const storedDeckIds = serveDeckCreatesAsTheRoute();
+      await generateDeck();
+      await waitForDeckOpened();
+
+      await reopenWizard();
+      await answerOpenWizardUpToCommander(CONTROL_BRACKET_3);
+      fireEvent.click(
+        screen.getByRole("button", { name: "Skip — let the AI choose" })
+      );
+      await screen.findByRole("heading", { name: HEADINGS.plan });
+      generate();
+
+      await waitFor(() => expect(onComplete).toHaveBeenCalledTimes(2));
+      expect(storedDeckIds).toEqual([DECK_ID, "deck-ai-2"]);
+      expect(onComplete).toHaveBeenLastCalledWith("deck-ai-2");
     });
 
     it("saving again shows the build's corrections before opening the deck", async () => {
