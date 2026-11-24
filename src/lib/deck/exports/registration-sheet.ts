@@ -34,7 +34,10 @@ export interface RegistrationSheetLabels {
   readonly signature: string;
   readonly deckName: string;
   readonly format: string;
+  /** The command-zone heading of every commander format but Oathbreaker. */
   readonly commander: string;
+  /** The command-zone heading of an Oathbreaker deck. */
+  readonly oathbreaker: string;
   readonly companion: string;
   readonly mainDeck: string;
   readonly sideboard: string;
@@ -101,6 +104,18 @@ function commandZoneLines(deck: Deck): SheetLine[] {
   );
 }
 
+/**
+ * The command zone's heading. An Oathbreaker deck's command-zone card is its
+ * Oathbreaker, not a commander (https://oathbreakermtg.org/rules/, read
+ * 2026-11-24); every other format calls it a commander (CR 903.3).
+ */
+function commandZoneHeading(
+  deck: Deck,
+  labels: RegistrationSheetLabels
+): string {
+  return deck.format === "oathbreaker" ? labels.oathbreaker : labels.commander;
+}
+
 function companionLines(deck: Deck): SheetLine[] {
   return deck.companion ? [{ name: deck.companion.name, quantity: 1 }] : [];
 }
@@ -157,7 +172,7 @@ function cardSections(
   const sideboard = allowsSideboard(deck) ? zoneLines(deck, "sideboard") : [];
   const sections: CardSection[] = [
     {
-      heading: labels.commander,
+      heading: commandZoneHeading(deck, labels),
       lines: commandZoneLines(deck),
       counted: false,
     },
