@@ -312,7 +312,11 @@ describe("counting a card across every row and zone of the deck (I-37)", () => {
   });
 
   it("always lowers a row by the step asked, even past the limit", async () => {
-    openDeck("modern", bolt(3), onRow(bolt(3), { id: "bolt-side", zone: "sideboard" }));
+    openDeck(
+      "modern",
+      bolt(3),
+      onRow(bolt(3), { id: "bolt-side", zone: "sideboard" })
+    );
 
     await useDeckStore.getState().updateCardQuantity("bolt-side", -1);
 
@@ -320,7 +324,11 @@ describe("counting a card across every row and zone of the deck (I-37)", () => {
   });
 
   it("refuses to move a Considering copy into Main when the deck holds the limit", async () => {
-    openDeck("modern", bolt(4), onRow(bolt(1), { id: "bolt-maybe", zone: "maybeboard" }));
+    openDeck(
+      "modern",
+      bolt(4),
+      onRow(bolt(1), { id: "bolt-maybe", zone: "maybeboard" })
+    );
 
     await useDeckStore.getState().moveCardToZone("bolt-maybe", "main");
 
@@ -330,7 +338,11 @@ describe("counting a card across every row and zone of the deck (I-37)", () => {
   });
 
   it("moves a Considering copy into Main while the deck has room", async () => {
-    openDeck("modern", bolt(3), onRow(bolt(1), { id: "bolt-maybe", zone: "maybeboard" }));
+    openDeck(
+      "modern",
+      bolt(3),
+      onRow(bolt(1), { id: "bolt-maybe", zone: "maybeboard" })
+    );
 
     await useDeckStore.getState().moveCardToZone("bolt-maybe", "main");
 
@@ -339,7 +351,11 @@ describe("counting a card across every row and zone of the deck (I-37)", () => {
   });
 
   it("moves a copy between Main and the Sideboard at the limit", async () => {
-    openDeck("modern", bolt(3), onRow(bolt(1), { id: "bolt-side", zone: "sideboard" }));
+    openDeck(
+      "modern",
+      bolt(3),
+      onRow(bolt(1), { id: "bolt-side", zone: "sideboard" })
+    );
 
     await useDeckStore.getState().moveCardToZone("bolt-side", "main");
 
@@ -350,7 +366,9 @@ describe("counting a card across every row and zone of the deck (I-37)", () => {
   it("moves a copy into Considering at the limit", async () => {
     openDeck("modern", bolt(4));
 
-    await useDeckStore.getState().moveCardToZone("row-Lightning Bolt", "maybeboard");
+    await useDeckStore
+      .getState()
+      .moveCardToZone("row-Lightning Bolt", "maybeboard");
 
     expect(copiesIn("Lightning Bolt", "maybeboard")).toBe(4);
   });
