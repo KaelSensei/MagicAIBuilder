@@ -36,6 +36,33 @@ function admits(
 }
 
 /**
+ * An official restriction method version 1 counts on a list but does not let
+ * set the estimate: I-77 slice 10 brings mass land denial in through the
+ * method-change gate.
+ */
+export type CountedRestriction = "massLandDenial" | "extraTurns";
+
+/**
+ * Finds the lowest official bracket whose rules admit this many cards under
+ * one restriction. A bracket that allows extra turns but not their chaining
+ * admits them: a list cannot show chaining, a blind spot of the estimate.
+ *
+ * @param rule - mass land denial or extra turns
+ * @param count - the cards of the deck under that restriction, 0 or more
+ * @returns the floor that restriction alone sets, never above 4
+ */
+export function restrictionFloor(
+  rule: CountedRestriction,
+  count: number
+): BracketLevel {
+  return (
+    BRACKET_LEVELS.find(
+      (level) => count === 0 || BRACKET_DEFINITIONS[level][rule] !== "none"
+    ) ?? HIGHEST_RULE_SET
+  );
+}
+
+/**
  * Finds the lowest official bracket whose rules admit a deck's Game Changers
  * and two-card combos. Thematic exceptions are not assumed: they are agreed at
  * the table, not read from a list.
