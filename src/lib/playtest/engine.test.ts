@@ -344,6 +344,19 @@ describe("applyMoveToZone", () => {
     expect(next.battlefield).toHaveLength(0);
     expect(next.graveyard).toHaveLength(1);
   });
+
+  it("changes nothing and logs nothing when a card is moved to the zone it is already in", () => {
+    const state = makeState();
+    const cardId = state.hand[0].id;
+
+    const next = applyMoveToZone(state, cardId, "hand", "hand");
+
+    expect(next).toBe(state);
+    expect(next.hand.map((card) => card.id)).toEqual(
+      state.hand.map((card) => card.id)
+    );
+    expect(next.actionLog).toHaveLength(state.actionLog.length);
+  });
 });
 
 // ─── Command zone ─────────────────────────────────────────────────────────────
