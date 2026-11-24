@@ -40,6 +40,7 @@
         "extraTurns": "Bracket {target} allows no extra-turn cards. This list has {count}: {cards}."
       },
       "comboFloorNotChecked": "Two-card combos: not checked. The estimate was made without combo data.",
+      "comboFloorPending": "Two-card combos: still being checked. The estimate does not count them yet.",
       "tooFewCards": "This list has {count, plural, one {# card} other {# cards}}: too few cards for the heuristic part, so only the official rules above set the estimate.",
       "term": {
         "ramp": "ramp",

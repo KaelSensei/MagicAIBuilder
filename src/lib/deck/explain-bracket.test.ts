@@ -110,6 +110,24 @@ describe("explainBracket — the official floors", () => {
     expect(assessment?.complete).toBe(false);
   });
 
+  it("reads the two-card-combo floor as not checked yet, and the audit as incomplete, while the combo lookup is pending", () => {
+    const deck = aDeck({ cards: aCoreList() });
+    const assessment = explainBracket({
+      deck,
+      stats: computeDeckStats(deck),
+      comboData: { kind: "pending" },
+    });
+
+    expect(assessment?.floors).toContainEqual({
+      status: "notChecked",
+      rule: "twoCardCombos",
+      reason: "comboLookupPending",
+      ruleRef: "wotc-brackets-2025-10-21#twoCardCombos",
+    });
+    expect(assessment?.comboSource).toEqual({ kind: "pending" });
+    expect(assessment?.complete).toBe(false);
+  });
+
   it("is complete when Spellbook answered, with every official restriction checked", () => {
     const assessment = explain(aCoreList());
 

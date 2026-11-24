@@ -42,7 +42,7 @@ export interface BadgedCount {
 /**
  * Where the two-card-combo floor read its combos: Commander Spellbook, with
  * the fetch date when the caller knows it and the variant ids found, or
- * nothing when the lookup failed (I-77 4.3).
+ * nothing while the lookup has not answered or once it failed (I-77 4.3).
  */
 export type ComboSource =
   | {
@@ -50,6 +50,7 @@ export type ComboSource =
       readonly fetchedAt: string | null;
       readonly variantIds: readonly string[];
     }
+  | { readonly kind: "pending" }
   | { readonly kind: "unavailable" };
 
 /**
@@ -58,7 +59,8 @@ export type ComboSource =
  * A `checked` row names its count, the cards behind it and the lowest bracket
  * whose rules admit that count; method version 1 lets only the Game Changer
  * and two-card-combo rows set the estimate (mass land denial waits for slice
- * 10). A `notChecked` row says why it is empty: the combo lookup failed.
+ * 10). A `notChecked` row says why it is empty: the combo lookup has not
+ * answered yet, or it failed.
  * `ruleRef` names the rules version and the restriction it reads.
  */
 export type BracketFloorRow =
@@ -74,7 +76,7 @@ export type BracketFloorRow =
   | {
       readonly status: "notChecked";
       readonly rule: BracketRestriction;
-      readonly reason: "comboDataUnavailable";
+      readonly reason: "comboLookupPending" | "comboDataUnavailable";
       readonly ruleRef: string;
     };
 
