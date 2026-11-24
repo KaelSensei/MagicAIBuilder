@@ -24,7 +24,9 @@ import {
   aRemovalCard,
   aThirtyCardList,
   aTwoCardInfinite,
+  armageddon,
   cards,
+  timeWarp,
 } from "@/lib/deck/testing/bracket-decks";
 import type { DeckCard } from "@/lib/deck/types";
 import { aDeckCard } from "@/test/builders/card";
@@ -262,6 +264,45 @@ describe("pathToBracket — other floors", () => {
         count: 1,
         cards: ["Chatterfang, Squirrel General", "Pitiless Plunderer"],
       },
+    ]);
+  });
+
+  it("lists extra-turn cards first for a Bracket 1 target, which allows none", () => {
+    const [first] = path([...aCoreList().slice(0, -1), timeWarp()], 1);
+
+    expect(first).toEqual({
+      kind: "restrictionFloor",
+      rule: "extraTurns",
+      target: 1,
+      count: 1,
+      cards: ["Time Warp"],
+    });
+  });
+
+  it("does not list extra-turn cards for a Bracket 2 target, which allows them unchained", () => {
+    const lines = path([...aCoreList().slice(0, -1), timeWarp()], 2);
+
+    expect(lines).toEqual([{ kind: "noRuleStops", target: 2 }]);
+  });
+
+  it("names mass land denial for a target at the estimate, since it sets no part of the estimate yet", () => {
+    const list = [...aCoreList().slice(0, -1), armageddon()];
+
+    expect(assess(list).estimate).toBe(2);
+    expect(path(list, 2)).toEqual([
+      {
+        kind: "restrictionFloor",
+        rule: "massLandDenial",
+        target: 2,
+        count: 1,
+        cards: ["Armageddon"],
+      },
+    ]);
+  });
+
+  it("says no official rule stops a list with Armageddon at Bracket 4", () => {
+    expect(path([...aCoreList().slice(0, -1), armageddon()], 4)).toEqual([
+      { kind: "noRuleStops", target: 4 },
     ]);
   });
 

@@ -91,6 +91,35 @@ export function drannithMagistrate(): DeckCard {
   });
 }
 
+/**
+ * Armageddon, the mass land denial card Wizards names first, read as a board
+ * wipe ("destroy all") by the classifier.
+ */
+export function armageddon(): DeckCard {
+  return aDeckCard({
+    id: "mld-armageddon",
+    name: "Armageddon",
+    cmc: 4,
+    typeLine: "Sorcery",
+    oracleText: "Destroy all lands.",
+    colorIdentity: ["W"],
+    category: "boardWipe",
+  });
+}
+
+/** Time Warp, an extra-turn sorcery, read as a plain sorcery by the classifier. */
+export function timeWarp(): DeckCard {
+  return aDeckCard({
+    id: "turn-time-warp",
+    name: "Time Warp",
+    cmc: 5,
+    typeLine: "Sorcery",
+    oracleText: "Target player takes an extra turn after this one.",
+    colorIdentity: ["U"],
+    category: "sorcery",
+  });
+}
+
 /** `count` cards from `make`, numbered from 0. */
 export function cards(
   count: number,

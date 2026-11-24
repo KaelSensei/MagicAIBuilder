@@ -11,10 +11,12 @@
  *   encoded in `BRACKET_DEFINITIONS` and read by `minimumBracket`);
  * - the heuristic: the mean of five product terms (`bracket-terms.ts`).
  *
+ * Mass land denial and extra turns get their own floor rows (slice 3), read
+ * from Oracle text, but method version 1 leaves them out of the estimate.
+ *
  * Brackets are Wizards' format guideline, not Comprehensive Rules. Pure: no
  * clock, no network, no store. Not responsible for wording the audit (slice
- * 2), mass land denial and extra turns (slice 3) or the path to a lower
- * bracket (slice 4).
+ * 2) or the path to a lower bracket (slice 4).
  *
  * @module deck/explain-bracket
  */
@@ -35,9 +37,18 @@ import {
   type ComboSource,
   type HeuristicPart,
 } from "./bracket-assessment";
-import { minimumBracket } from "./bracket-floor";
+import {
+  minimumBracket,
+  restrictionFloor,
+  type CountedRestriction,
+} from "./bracket-floor";
+import {
+  extraTurnCards,
+  massLandDenialCards,
+} from "./bracket-restriction-cards";
 import { scoreBracketTerms } from "./bracket-terms";
 import { getFormatConfig } from "./formats";
+import { playedDeckCards } from "./played-deck-cards";
 import { sortedUniqueNames } from "./sorted-unique-names";
 import type { Deck } from "./types";
 
@@ -111,11 +122,33 @@ function twoCardComboRow(twoCardCombos: readonly Combo[]): BracketFloorRow {
   };
 }
 
-function notChecked(
-  rule: BracketRestriction,
-  reason: "comboDataUnavailable" | "notDetectedYet"
+/**
+ * Mass land denial and extra turns are read by our Oracle-text rules, so the
+ * count is estimated (I-77 3.1). Method version 1 shows the floor the row
+ * sets but leaves it out of the estimate (slice 3, "number unchanged").
+ */
+function countedRestrictionRow(
+  rule: CountedRestriction,
+  restrictionCards: readonly string[]
 ): BracketFloorRow {
-  return { status: "notChecked", rule, reason, ruleRef: ruleRef(rule) };
+  return {
+    status: "checked",
+    rule,
+    count: restrictionCards.length,
+    certainty: "estimated",
+    cards: restrictionCards,
+    floor: restrictionFloor(rule, restrictionCards.length),
+    ruleRef: ruleRef(rule),
+  };
+}
+
+function comboDataUnavailableRow(): BracketFloorRow {
+  return {
+    status: "notChecked",
+    rule: "twoCardCombos",
+    reason: "comboDataUnavailable",
+    ruleRef: ruleRef("twoCardCombos"),
+  };
 }
 
 function twoCardCombosIn(comboData: ComboData): readonly Combo[] {
@@ -125,17 +158,18 @@ function twoCardCombosIn(comboData: ComboData): readonly Combo[] {
 }
 
 function floorRows(
+  deck: Deck,
   stats: DeckStats,
   comboData: ComboData
 ): readonly BracketFloorRow[] {
+  const played = playedDeckCards(deck);
   return [
     gameChangerRow(stats),
     comboData.kind === "found"
       ? twoCardComboRow(twoCardCombosIn(comboData))
-      : notChecked("twoCardCombos", "comboDataUnavailable"),
-    // Slice 3 detects these; method version 1 does not read them.
-    notChecked("massLandDenial", "notDetectedYet"),
-    notChecked("extraTurns", "notDetectedYet"),
+      : comboDataUnavailableRow(),
+    countedRestrictionRow("massLandDenial", massLandDenialCards(played)),
+    countedRestrictionRow("extraTurns", extraTurnCards(played)),
   ];
 }
 
@@ -239,7 +273,7 @@ export function explainBracket(
     methodVersion: BRACKET_METHOD_VERSION,
     rulesVersionId: BRACKET_RULES_VERSION,
     comboSource: comboSourceOf(comboData),
-    floors: floorRows(stats, comboData),
+    floors: floorRows(deck, stats, comboData),
     floor,
     heuristicPart,
     estimate: scored
