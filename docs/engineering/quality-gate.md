@@ -12,6 +12,7 @@
 | `npx tsc --noEmit`                                      | `ci.yml`                                                        | a type error                                                                                                    |
 | `pnpm test:coverage`                                    | `ci.yml`                                                        | a failing test, or coverage under a layer floor in `src/modules/` (see _Coverage_; no file matches a floor yet) |
 | `pnpm build`                                            | `ci.yml`                                                        | a build error                                                                                                   |
+| `node scripts/check-bundle-budget.mjs`                  | `ci.yml`, after the build                                       | a key route's gzip first-load JavaScript over its budget in `perf-budgets.json`, or missing from the build      |
 | Playwright suite in Docker (`scripts/e2e-pre-push.sh`)  | `.husky/pre-push`; CI in `e2e.yml` (see _E2E gate_)             | a failing E2E test blocks the push; `e2e.yml` is not required                                                   |
 
 Branch protection, read with `gh api` on 2026-11-10: `main` requires the check `Lint, Typecheck, Test, Build` and an up-to-date branch. `dev` and `staging` have no protection rule; their PRs run the same check, and it must be green before a merge.

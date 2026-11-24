@@ -61,6 +61,7 @@ pnpm install --frozen-lockfile
 → npx tsc --noEmit
 → pnpm test:coverage                         (vitest; fails under a layer floor in src/modules/)
 → pnpm build
+→ node scripts/check-bundle-budget.mjs       (gzip first-load JS per key route against perf-budgets.json)
 ```
 
 ### `sonar.yml` — Quality analysis (advisory)
