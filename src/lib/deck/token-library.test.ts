@@ -1,7 +1,23 @@
 import { describe, expect, it } from "vitest";
 
+import { aDeckCard } from "@/test/builders/card";
+import { aScryfallCard } from "@/test/builders/scryfall";
+
+import { makeDeckCard, rebuildCardFaces } from "./store-card-faces";
 import { buildTokenLibrary, formatTokenLibrary } from "./token-library";
 import type { DeckCard } from "./types";
+
+/** The faces of Liliana, Heretical Healer // Liliana, Defiant Necromancer, as Scryfall prints them. */
+const LILIANA_FRONT = {
+  name: "Liliana, Heretical Healer",
+  oracleText:
+    "Lifelink\nWhenever another nontoken creature you control dies, exile Liliana, Heretical Healer, then return her to the battlefield transformed under her owner's control. If you do, create a 2/2 black Zombie creature token.",
+};
+const LILIANA_BACK = {
+  name: "Liliana, Defiant Necromancer",
+  oracleText:
+    '+2: Each player discards a card.\n−X: Return target nonlegendary creature card with mana value X from your graveyard to the battlefield.\n−8: You get an emblem with "Whenever a creature dies, return it to the battlefield under your control at the beginning of the next end step."',
+};
 
 function card(name: string, oracleText: string): DeckCard {
   return {
@@ -99,6 +115,61 @@ describe("buildTokenLibrary", () => {
         name: "Chandra, Torch of Defiance Emblem",
         kind: "emblem",
         count: 1,
+      }),
+    ]);
+  });
+
+  it("names a double-faced card's emblem after the face that gives it, not the whole card (CR 114.2, CR 712.1)", () => {
+    const liliana = aDeckCard({
+      name: `${LILIANA_FRONT.name} // ${LILIANA_BACK.name}`,
+      oracleText: `${LILIANA_FRONT.oracleText} // ${LILIANA_BACK.oracleText}`,
+      cardFaces: rebuildCardFaces(
+        "liliana",
+        `${LILIANA_FRONT.name} // ${LILIANA_BACK.name}`,
+        "Legendary Creature — Human Cleric // Legendary Planeswalker — Liliana",
+        "{1}{B}{B} // ",
+        `${LILIANA_FRONT.oracleText} // ${LILIANA_BACK.oracleText}`
+      ),
+    });
+
+    const emblems = buildTokenLibrary([liliana]).filter(
+      (entry) => entry.kind === "emblem"
+    );
+
+    expect(emblems).toEqual([
+      {
+        name: "Liliana, Defiant Necromancer Emblem",
+        power: null,
+        colors: [],
+        count: 1,
+        kind: "emblem",
+      },
+    ]);
+  });
+
+  it("counts the emblems of a double-faced card added from Scryfall from its faces' rules text", () => {
+    const liliana = {
+      ...makeDeckCard(
+        aScryfallCard({
+          name: `${LILIANA_FRONT.name} // ${LILIANA_BACK.name}`,
+          layout: "transform",
+          card_faces: [
+            { name: LILIANA_FRONT.name, oracle_text: LILIANA_FRONT.oracleText },
+            { name: LILIANA_BACK.name, oracle_text: LILIANA_BACK.oracleText },
+          ],
+        })
+      ),
+      quantity: 2,
+    };
+
+    const emblems = buildTokenLibrary([liliana]).filter(
+      (entry) => entry.kind === "emblem"
+    );
+
+    expect(emblems).toEqual([
+      expect.objectContaining({
+        name: "Liliana, Defiant Necromancer Emblem",
+        count: 2,
       }),
     ]);
   });

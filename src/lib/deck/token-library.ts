@@ -66,21 +66,44 @@ export function buildTokenLibrary(
         kind: "token",
       });
     }
-    const emblems = [...card.oracleText.matchAll(EMBLEM_PATTERN)].length;
-    if (emblems > 0) {
-      // CR 114.2: "[Player] gets an emblem with [ability]"; each source's emblem has its own
-      // abilities, so it is named after the card, as Scryfall names emblem cards.
-      add({
-        name: `${card.name} Emblem`,
+    emblemEntries(card).forEach(add);
+  }
+
+  return [...entries.values()];
+}
+
+/**
+ * The parts of a card whose rules text can give an emblem: each face of a double-faced card
+ * (CR 712.1: each face is its own Magic card face, with its own name and abilities), or the card
+ * itself when it has one face.
+ */
+function emblemSources(
+  card: DeckCard
+): readonly Pick<DeckCard, "name" | "oracleText">[] {
+  return card.cardFaces ?? [card];
+}
+
+/**
+ * The emblems a card's copies give, one entry per face that gives any.
+ *
+ * CR 114.2: "[Player] gets an emblem with [ability]". The emblem comes from the ability that
+ * creates it, so it is named after the face that has that ability, as Scryfall names emblem
+ * cards ("Liliana, Defiant Necromancer Emblem", not the whole "Front // Back" name).
+ */
+function emblemEntries(card: DeckCard): readonly TokenLibraryEntry[] {
+  return emblemSources(card).flatMap((source) => {
+    const emblems = [...source.oracleText.matchAll(EMBLEM_PATTERN)].length;
+    if (emblems === 0) return [];
+    return [
+      {
+        name: `${source.name} Emblem`,
         power: null,
         colors: [],
         count: emblems * card.quantity,
         kind: "emblem",
-      });
-    }
-  }
-
-  return [...entries.values()];
+      },
+    ];
+  });
 }
 
 /** Format a deterministic checklist that can be copied or saved with a deck. */
