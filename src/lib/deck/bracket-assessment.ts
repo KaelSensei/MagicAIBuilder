@@ -28,7 +28,8 @@ export const BRACKET_METHOD_VERSION = 1;
  *   Changers, card count, average mana value);
  * - `sourced`: taken from a named dataset on a date;
  * - `estimated`: matched by our Oracle-text rules (ramp, draw, removal,
- *   wipes, win conditions, the "infinite" and "two-card" readings).
+ *   wipes, win conditions, the "infinite" and "two-card" readings, mass
+ *   land denial and extra turns).
  */
 export type Certainty = "exact" | "sourced" | "estimated";
 
@@ -55,9 +56,9 @@ export type ComboSource =
  * One official restriction of the floor block (I-77 2.1).
  *
  * A `checked` row names its count, the cards behind it and the lowest bracket
- * whose rules admit that count. A `notChecked` row says why it is empty:
- * the combo lookup failed, or this method version does not detect the
- * restriction yet (mass land denial and extra turns wait for slice 3).
+ * whose rules admit that count; method version 1 lets only the Game Changer
+ * and two-card-combo rows set the estimate (mass land denial waits for slice
+ * 10). A `notChecked` row says why it is empty: the combo lookup failed.
  * `ruleRef` names the rules version and the restriction it reads.
  */
 export type BracketFloorRow =
@@ -73,7 +74,7 @@ export type BracketFloorRow =
   | {
       readonly status: "notChecked";
       readonly rule: BracketRestriction;
-      readonly reason: "comboDataUnavailable" | "notDetectedYet";
+      readonly reason: "comboDataUnavailable";
       readonly ruleRef: string;
     };
 
