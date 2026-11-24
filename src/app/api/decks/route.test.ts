@@ -548,6 +548,22 @@ describe("POST /api/decks with cards and an idempotency key", () => {
     );
   });
 
+  it("returns the deck an earlier request with the same key wrote for an empty AI deck, as the wizard creates it", async () => {
+    authed();
+    mockFindFirst.mockResolvedValueOnce(EXISTING);
+
+    const response = await POST(
+      createRequest(
+        { name: "AI Deck — Control", isAIGenerated: true },
+        { "Idempotency-Key": "0b6c1a52-2f4e-4c1e-9a5d-6f1f3c2b7e90" }
+      )
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({ id: EXISTING.id });
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
   it("returns the winner's deck when a concurrent request with the same key wrote first", async () => {
     authed();
     mockFindFirst.mockResolvedValueOnce(null).mockResolvedValueOnce(EXISTING);
