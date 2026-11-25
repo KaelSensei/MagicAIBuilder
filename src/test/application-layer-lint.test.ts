@@ -28,11 +28,20 @@ const USE_CASE_FILE = join(
   "src/modules/example/application/do-something.ts"
 );
 
+/**
+ * How long loading the repository's ESLint configuration may take: about 1.2 s on an idle
+ * machine, several times that in a loaded full run, where it exceeded a test's 5 s (#1640).
+ */
+const CONFIG_LOAD_TIMEOUT_MS = 60_000;
+
 let eslint: ESLint;
 
-beforeAll(() => {
+// The first lint loads the configuration, its parser and its plugins. Doing it here, under the
+// hook's own timeout, leaves each test with only its own lint to time.
+beforeAll(async () => {
   eslint = new ESLint({ cwd: REPO_ROOT });
-});
+  await eslint.lintText("", { filePath: USE_CASE_FILE });
+}, CONFIG_LOAD_TIMEOUT_MS);
 
 /** The rule ids ESLint reports for `source` linted as a use case, in order. */
 async function rulesReportedFor(source: string): Promise<readonly string[]> {
