@@ -559,7 +559,7 @@ describe("PlaytestModal", () => {
         screen.getByRole("button", { name: "Card c17" })
       ).toBeInTheDocument();
       expect(
-        screen.getByText("Started with chosen cards: Card c3, Card c17")
+        screen.getByText("Started with chosen cards: Card c3 and Card c17")
       ).toBeInTheDocument();
       for (const name of ["Win", "Loss", "Draw"]) {
         const button = screen.getByRole("button", { name });
