@@ -3,6 +3,7 @@
 import { useFormatter, useTranslations } from "next-intl";
 import { cn } from "@/components/ui/utils";
 import { WHOLE_PERCENT_FORMAT } from "@/lib/deck/chance-percent-format";
+import { AVERAGE_MANA_VALUE_FORMAT } from "@/lib/deck/average-mana-value";
 import type { BracketLevel, DeckCard } from "@/lib/deck/types";
 import type { DeckStats } from "@/lib/deck/analysis-types";
 import type { DeckFormat } from "@/lib/deck/formats";
@@ -312,6 +313,7 @@ export function DeckStats({
   className,
 }: DeckStatsProps) {
   const t = useTranslations("deck");
+  const formatter = useFormatter();
 
   if (!stats) {
     return (
@@ -335,7 +337,11 @@ export function DeckStats({
   return (
     <div className={cn("space-y-3", className)}>
       {/* Mana Curve */}
-      <ManaCurve curve={stats.manaCurve} cards={cards} />
+      <ManaCurve
+        curve={stats.manaCurve}
+        averageManaValue={stats.avgCmc}
+        cards={cards}
+      />
 
       {/* Color Distribution */}
       {Object.keys(stats.colorDistribution).length > 0 && (
@@ -388,7 +394,7 @@ export function DeckStats({
           )}
           <StatRow
             label={t("stats.avgCmc")}
-            value={stats.avgCmc.toFixed(2)}
+            value={formatter.number(stats.avgCmc, AVERAGE_MANA_VALUE_FORMAT)}
             status={stats.avgCmc <= 3.5 ? "ok" : "warn"}
           />
           {stats.bannedCards.length > 0 && (

@@ -25,7 +25,10 @@ import { CategoryFilter, DeckCardStrip } from "./DeckPreviewChrome";
 import type { CardCategory } from "@/lib/deck/types";
 import { CATEGORY_LABELS, CATEGORY_ORDER } from "@/lib/deck/categories";
 import { commandSlotOf } from "@/lib/deck/bulk-edit-command-zone";
-import { averageManaValue } from "@/lib/deck/average-mana-value";
+import {
+  AVERAGE_MANA_VALUE_FORMAT,
+  averageManaValue,
+} from "@/lib/deck/average-mana-value";
 import { logger } from "@/lib/logger";
 import type { ApiCard, ApiSharedDeck } from "@/lib/deck/share-types";
 import { normalizeScryfallImageUrl } from "@/lib/scryfall/images";
@@ -372,7 +375,10 @@ export function ShareDeckView({ deck }: ShareDeckViewProps) {
                 value={`${deck.targetBracket}`}
               />
               <StatRow label={t("share.totalCards")} value={`${totalCards}`} />
-              <StatRow label={t("share.avgCmc")} value={avgCmc.toFixed(2)} />
+              <StatRow
+                label={t("share.avgCmc")}
+                value={format.number(avgCmc, AVERAGE_MANA_VALUE_FORMAT)}
+              />
               <StatRow
                 label={t("stats.lands")}
                 value={`${deck.cards.filter((c) => c.category === "land").length}`}
@@ -415,6 +421,7 @@ export function ShareDeckView({ deck }: ShareDeckViewProps) {
           {/* Mana Curve: the chart's own title is the panel's heading, at the Stats panel's level. */}
           <ManaCurve
             curve={manaCurve}
+            averageManaValue={avgCmc}
             cards={curveCards}
             titleAs="h3"
             className={cardSurfaceClassName}
