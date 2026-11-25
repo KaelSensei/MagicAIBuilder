@@ -9,7 +9,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ApiDeck } from "@/lib/db/deck-api";
 import type { DeckCard } from "@/lib/deck/types";
-import { installFakeDeckClient } from "@/test/fake-deck-client";
+import { DeckApiRefusal, installFakeDeckClient } from "@/test/fake-deck-client";
 import { recordToasts } from "@/test/toast-recorder";
 
 import { useDeckStore } from "./store";
@@ -93,6 +93,7 @@ describe("reloadActiveDeck", () => {
       activeDeckId: null,
       isSyncing: false,
       undoStack: [],
+      deckOpenError: null,
     });
   });
 
@@ -113,5 +114,50 @@ describe("reloadActiveDeck", () => {
     expect(useDeckStore.getState().undoStack).toEqual([]);
     expect(useDeckStore.getState().isSyncing).toBe(false);
     expect(toastAdd).not.toHaveBeenCalled();
+  });
+
+  // Deleted from another tab or device: the rows held describe a deck the
+  // server no longer has, so the builder shows "Deck not found" (I-01).
+  it("drops a deck the server no longer has and records it as not found, without a refresh toast", async () => {
+    mockFetchDeck.mockResolvedValueOnce(apiDeck("Old Card", "main"));
+    await useDeckStore.getState().setActiveDeck("deck-1");
+    useDeckStore.setState({
+      undoStack: [
+        { type: "REMOVE_CARD", deckId: "deck-1", card: REMOVED_CARD },
+      ],
+    });
+    mockFetchDeck.mockRejectedValueOnce(
+      new DeckApiRefusal(404, "Deck not found")
+    );
+
+    await useDeckStore.getState().reloadActiveDeck();
+
+    const state = useDeckStore.getState();
+    expect(state.decks["deck-1"]).toBeUndefined();
+    expect(state.deckOpenError).toEqual(
+      expect.objectContaining({ deckId: "deck-1", kind: "not-found" })
+    );
+    expect(state.undoStack).toEqual([]);
+    expect(state.isSyncing).toBe(false);
+    expect(toastAdd).not.toHaveBeenCalled();
+  });
+
+  it("keeps the deck and says the refresh failed when the server fails", async () => {
+    mockFetchDeck.mockResolvedValueOnce(apiDeck("Old Card", "main"));
+    await useDeckStore.getState().setActiveDeck("deck-1");
+    mockFetchDeck.mockRejectedValueOnce(
+      new DeckApiRefusal(500, "Failed to load deck")
+    );
+
+    await useDeckStore.getState().reloadActiveDeck();
+
+    const state = useDeckStore.getState();
+    expect(state.decks["deck-1"]?.cards).toEqual([
+      expect.objectContaining({ name: "Old Card" }),
+    ]);
+    expect(state.deckOpenError).toBeNull();
+    expect(toastAdd).toHaveBeenCalledWith("error", {
+      key: "deck.sync.refreshFailed",
+    });
   });
 });

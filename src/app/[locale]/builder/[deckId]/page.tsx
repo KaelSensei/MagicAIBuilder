@@ -352,16 +352,17 @@ export default function BuilderPage() {
   const updateCardCategory = useDeckStore((s) => s.updateCardCategory);
   const moveCardToZone = useDeckStore((s) => s.moveCardToZone);
   const renameDeck = useDeckStore((s) => s.renameDeck);
-  const duplicateDeck = useDeckDuplication();
   const swapCardPrinting = useDeckStore((s) => s.swapCardPrinting);
   const addToMaybeboard = useDeckStore((s) => s.addToMaybeboard);
-  const handleDuplicate = useCallback(() => {
-    void duplicateDeck(deckId);
-  }, [duplicateDeck, deckId]);
   const setManualBracket = useDeckStore((s) => s.setManualBracket);
   const decks = useDeckStore((s) => s.decks);
   const loadDecks = useDeckStore((s) => s.loadDecks);
   const reloadActiveDeck = useDeckStore((s) => s.reloadActiveDeck);
+  // A deck deleted elsewhere: reading it again turns the page into "Deck not found".
+  const duplicateDeck = useDeckDuplication({ onMissing: reloadActiveDeck });
+  const handleDuplicate = useCallback(() => {
+    void duplicateDeck(deckId);
+  }, [duplicateDeck, deckId]);
   const loadError = useDeckStore((s) => s.loadError);
   const deckOpenError = useDeckStore((s) => s.deckOpenError);
   const isSyncing = useDeckStore((s) => s.isSyncing);

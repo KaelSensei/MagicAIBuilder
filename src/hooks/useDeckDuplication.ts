@@ -7,6 +7,10 @@
  * this hook tells the player: the copy's name on success, and why the copy
  * failed otherwise (I-01).
  *
+ * A deck deleted from another tab or device cannot be copied, and the page
+ * that still shows it is out of date. This hook owns that rule; each page
+ * says what refreshing means for it.
+ *
  * @module hooks/useDeckDuplication
  */
 import { useCallback } from "react";
@@ -17,18 +21,34 @@ import {
   useDeckFailureReport,
 } from "@/hooks/useDeckFailureReport";
 import { useToastStore } from "@/hooks/useToast";
+import { deckRequestFailureOf } from "@/lib/deck/deck-request-failure";
 import { useDeckStore } from "@/lib/deck/store";
+
+/** What a page does around a duplicate. */
+export interface DeckDuplicationOptions {
+  /**
+   * Refreshes what the page shows after the server answered that the deck no
+   * longer exists. It must not reject. Pass a stable function, as the
+   * returned action changes with it.
+   */
+  readonly onMissing: () => Promise<void>;
+}
 
 /**
  * Returns the duplicate action: copies the deck, announces the copy by name
  * and opens it in the builder.
  *
  * A failure is logged with its raw error and told in a toast; the player stays
- * where they were. The returned promise never rejects.
+ * where they were. When the deck no longer exists, the page is also refreshed
+ * through `onMissing`, so it stops offering the deck. The returned promise
+ * never rejects.
  *
+ * @param options - what the page does when the deck no longer exists
  * @returns a function from the deck's id to whether the copy was made
  */
-export function useDeckDuplication(): (deckId: string) => Promise<boolean> {
+export function useDeckDuplication({
+  onMissing,
+}: DeckDuplicationOptions): (deckId: string) => Promise<boolean> {
   const t = useTranslations("common");
   const router = useRouter();
   const duplicateDeck = useDeckStore((s) => s.duplicateDeck);
@@ -44,9 +64,10 @@ export function useDeckDuplication(): (deckId: string) => Promise<boolean> {
         return true;
       } catch (error) {
         reportFailure("duplicateDeck", error);
+        if (deckRequestFailureOf(error) === "missing") void onMissing();
         return false;
       }
     },
-    [addToast, duplicateDeck, reportFailure, router, t]
+    [addToast, duplicateDeck, onMissing, reportFailure, router, t]
   );
 }
