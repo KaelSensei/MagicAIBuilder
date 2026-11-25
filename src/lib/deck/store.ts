@@ -417,6 +417,33 @@ async function reloadAfterConflict(deckId: string): Promise<void> {
 }
 
 /**
+ * The store without a deck the server no longer has, recording why it could
+ * not be read.
+ *
+ * The builder shows "Deck not found", with the way back to the decks, for a
+ * deck it does not hold whose open error is `not-found`: the state a failed
+ * open already leaves (I-01). The undo entries name the deck's rows, so they
+ * go with it.
+ *
+ * @param state - the store now
+ * @param openError - the `not-found` reading of the server's refusal
+ * @returns the slice of the store to set
+ */
+function withoutMissingDeck(
+  state: DeckStore,
+  openError: DeckOpenError
+): Pick<DeckStore, "decks" | "undoStack" | "deckOpenError"> {
+  const { [openError.deckId]: _missing, ...decks } = state.decks;
+  return {
+    decks,
+    undoStack: state.undoStack.filter(
+      (action) => action.deckId !== openError.deckId
+    ),
+    deckOpenError: openError,
+  };
+}
+
+/**
  * Tells the player about a write the server did not save, once the caller
  * has rolled its change back. A write refused as stale (409) reloads the deck
  * and shows the conflict message in place of `message`; a write dropped by
@@ -1429,6 +1456,12 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     } catch (err) {
       logger.error("Unexpected error", "reloadActiveDeck", err);
       if (!get().decks[activeDeckId]) return;
+      const openError = deckOpenErrorFrom(activeDeckId, err);
+      if (openError.kind === "not-found") {
+        // Deleted elsewhere: drop the rows held so the builder shows "Deck not found", as on open.
+        set((state) => withoutMissingDeck(state, openError));
+        return;
+      }
       useToastStore.getState().add("error", DECK_FAILURE_TOASTS.refresh);
     } finally {
       set({ isSyncing: hasPendingSaves() });
