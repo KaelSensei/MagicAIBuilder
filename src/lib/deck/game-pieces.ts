@@ -64,11 +64,28 @@ const PIECE_PATTERNS: readonly (readonly [GamePieceKind, RegExp])[] = [
 /**
  * Reminder text sits in parentheses and only summarizes a rule (CR 207.2a). Flavour text never
  * reaches here: Scryfall serves it apart from the Oracle text (CR 207.2b).
+ *
+ * A reminder runs from an opening parenthesis to the first closing one after it, and an opening
+ * parenthesis that never closes keeps the rest of the text: the matches of `/\([^)]*\)/g`. A scan
+ * replaces that expression, which re-read the rest of the text from every unclosed parenthesis
+ * (quadratic time, SonarCloud S8786).
  */
-const REMINDER_TEXT = /\([^)]*\)/g;
+function withoutReminderText(text: string): string {
+  let kept = "";
+  let cursor = 0;
+  let open = text.indexOf("(");
+  while (open !== -1) {
+    const close = text.indexOf(")", open);
+    if (close === -1) break;
+    kept += text.slice(cursor, open);
+    cursor = close + 1;
+    open = text.indexOf("(", cursor);
+  }
+  return kept + text.slice(cursor);
+}
 
 function rulesTextOf(card: DeckCard): string {
-  return card.oracleText.replaceAll(REMINDER_TEXT, "");
+  return withoutReminderText(card.oracleText);
 }
 
 /**

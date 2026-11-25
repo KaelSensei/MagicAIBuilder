@@ -16,11 +16,11 @@
  */
 import { randomUUID } from "node:crypto";
 import { PrismaClient } from "@prisma/client";
-import { afterAll, beforeAll, describe } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { prismaPublicForkStore } from "./public-fork-store";
 import {
-  describePublicForkStoreContract,
+  PUBLIC_FORK_STORE_CONTRACT_CASES,
   type DeckSeed,
   type PublicForkStoreHarness,
 } from "./testing/public-fork-store-contract";
@@ -94,6 +94,14 @@ describe.skipIf(databaseUrl === undefined)(
       await client.$disconnect();
     });
 
-    describePublicForkStoreContract(() => prismaHarness(client, seeded));
+    describe("PublicForkStore contract", () => {
+      for (const contractCase of PUBLIC_FORK_STORE_CONTRACT_CASES) {
+        it(contractCase.name, async () => {
+          await expect(
+            contractCase.run(prismaHarness(client, seeded))
+          ).resolves.toBeUndefined();
+        });
+      }
+    });
   }
 );

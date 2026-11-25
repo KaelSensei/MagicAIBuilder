@@ -5,12 +5,14 @@
  * It pins what every `PublicForkStore` must answer for "which public decks
  * were forked from this one": only public forks, only direct ones, the most
  * recently updated first, at most `limit` of them with the true count, and
- * each with its author's public name. Callers:
- * `in-memory-public-fork-store.test.ts` and `public-fork-store.prisma.test.ts`.
+ * each with its author's public name. It is a table of named cases,
+ * {@link PUBLIC_FORK_STORE_CONTRACT_CASES}; each caller registers one `it` per
+ * case. Callers: `in-memory-public-fork-store.test.ts` and
+ * `public-fork-store.prisma.test.ts`.
  *
  * @module deck/testing/public-fork-store-contract
  */
-import { describe, expect, it } from "vitest";
+import { expect } from "vitest";
 
 import type { PublicForkStore } from "@/lib/deck/inspired-forks";
 
@@ -36,6 +38,18 @@ export interface PublicForkStoreHarness {
   readonly store: PublicForkStore;
   /** Stores `seed` as a new deck. @returns the new deck's id */
   readonly seedDeck: (seed: DeckSeed) => Promise<string>;
+}
+
+/** One expectation of the public fork store contract: a behaviour sentence and the check that proves it. */
+export interface PublicForkStoreContractCase {
+  /** The test name each contract test file registers the case under. */
+  readonly name: string;
+  /**
+   * Seeds and asserts through a fresh harness; rejects on a broken contract.
+   * The real database keeps every row, so each case filters by a source it
+   * seeded.
+   */
+  readonly run: (harness: PublicForkStoreHarness) => Promise<void>;
 }
 
 /**
@@ -65,114 +79,120 @@ async function seedSource(harness: PublicForkStoreHarness): Promise<string> {
 }
 
 /**
- * Declares the contract cases.
+ * Every case of the `PublicForkStore` contract, in the order the test files
+ * register them.
  *
- * @param makeHarness - builds the adapter under test; called once per case,
- *   so a case never sees another case's rows through the fake. The real
- *   database keeps every row, so each case filters by a source it seeded.
+ * Each test file declares its own `it` per case, building a fresh harness for
+ * each, so a case never sees another case's rows through the fake, and the
+ * tests are visible in the file that runs them: SonarCloud (S2187) and a
+ * reader both see a test file with tests, not a single call into a shared
+ * `describe`.
  */
-export function describePublicForkStoreContract(
-  makeHarness: () => PublicForkStoreHarness
-): void {
-  describe("PublicForkStore contract", () => {
-    it("lists a deck's public forks, most recently updated first, and leaves out a private fork", async () => {
-      const harness = makeHarness();
-      const sourceId = await seedSource(harness);
-      const fork = (name: string, isPublic: boolean, day: number) =>
-        harness.seedDeck(
-          aDeckSeed({
-            name,
-            isPublic,
-            forkedFromDeckId: sourceId,
-            updatedAt: dayOf(day),
-          })
-        );
-      const olderId = await fork("Older fork", true, 1);
-      await fork("Private fork", false, 3);
-      const newerId = await fork("Newer fork", true, 2);
-
-      const forks = await harness.store.publicForksOf(sourceId, 10);
-
-      expect(forks).toEqual({
-        forks: [
-          { id: newerId, name: "Newer fork", author: "Kael" },
-          { id: olderId, name: "Older fork", author: "Kael" },
-        ],
-        total: 2,
-      });
-    });
-
-    it("leaves out a fork of a fork: it is listed on its own source only", async () => {
-      const harness = makeHarness();
-      const sourceId = await seedSource(harness);
-      const forkId = await harness.seedDeck(
-        aDeckSeed({ name: "First fork", forkedFromDeckId: sourceId })
-      );
-      const grandchildId = await harness.seedDeck(
-        aDeckSeed({ name: "Fork of the fork", forkedFromDeckId: forkId })
-      );
-
-      const onSource = await harness.store.publicForksOf(sourceId, 10);
-      const onFork = await harness.store.publicForksOf(forkId, 10);
-
-      expect(onSource.forks.map((listed) => listed.id)).toEqual([forkId]);
-      expect(onFork.forks.map((listed) => listed.id)).toEqual([grandchildId]);
-    });
-
-    it("returns at most `limit` forks, the most recent, and still counts every public fork", async () => {
-      const harness = makeHarness();
-      const sourceId = await seedSource(harness);
-      const forkIds = await Promise.all(
-        [1, 2, 3, 4].map((day) =>
+export const PUBLIC_FORK_STORE_CONTRACT_CASES: readonly PublicForkStoreContractCase[] =
+  [
+    {
+      name: "lists a deck's public forks, most recently updated first, and leaves out a private fork",
+      run: async (harness) => {
+        const sourceId = await seedSource(harness);
+        const fork = (name: string, isPublic: boolean, day: number) =>
           harness.seedDeck(
             aDeckSeed({
-              name: `Fork ${day}`,
+              name,
+              isPublic,
               forkedFromDeckId: sourceId,
               updatedAt: dayOf(day),
             })
-          )
-        )
-      );
+          );
+        const olderId = await fork("Older fork", true, 1);
+        await fork("Private fork", false, 3);
+        const newerId = await fork("Newer fork", true, 2);
 
-      const forks = await harness.store.publicForksOf(sourceId, 3);
+        const forks = await harness.store.publicForksOf(sourceId, 10);
 
-      expect(forks.total).toBe(4);
-      expect(forks.forks.map((listed) => listed.id)).toEqual(
-        forkIds.slice(1).reverse()
-      );
-    });
-
-    it("names each fork's author by name, then username, and nobody for a deck without an owner", async () => {
-      const harness = makeHarness();
-      const sourceId = await seedSource(harness);
-      const seedFork = (author: SeedAuthor | null, day: number) =>
-        harness.seedDeck(
-          aDeckSeed({
-            forkedFromDeckId: sourceId,
-            updatedAt: dayOf(day),
-            author,
-          })
+        expect(forks).toEqual({
+          forks: [
+            { id: newerId, name: "Newer fork", author: "Kael" },
+            { id: olderId, name: "Older fork", author: "Kael" },
+          ],
+          total: 2,
+        });
+      },
+    },
+    {
+      name: "leaves out a fork of a fork: it is listed on its own source only",
+      run: async (harness) => {
+        const sourceId = await seedSource(harness);
+        const forkId = await harness.seedDeck(
+          aDeckSeed({ name: "First fork", forkedFromDeckId: sourceId })
         );
-      await seedFork({ name: "Ana", username: null }, 3);
-      await seedFork({ name: null, username: "bo-public-fork-contract" }, 2);
-      await seedFork(null, 1);
+        const grandchildId = await harness.seedDeck(
+          aDeckSeed({ name: "Fork of the fork", forkedFromDeckId: forkId })
+        );
 
-      const forks = await harness.store.publicForksOf(sourceId, 10);
+        const onSource = await harness.store.publicForksOf(sourceId, 10);
+        const onFork = await harness.store.publicForksOf(forkId, 10);
 
-      expect(forks.forks.map((listed) => listed.author)).toEqual([
-        "Ana",
-        "bo-public-fork-contract",
-        null,
-      ]);
-    });
+        expect(onSource.forks.map((listed) => listed.id)).toEqual([forkId]);
+        expect(onFork.forks.map((listed) => listed.id)).toEqual([grandchildId]);
+      },
+    },
+    {
+      name: "returns at most `limit` forks, the most recent, and still counts every public fork",
+      run: async (harness) => {
+        const sourceId = await seedSource(harness);
+        const forkIds = await Promise.all(
+          [1, 2, 3, 4].map((day) =>
+            harness.seedDeck(
+              aDeckSeed({
+                name: `Fork ${day}`,
+                forkedFromDeckId: sourceId,
+                updatedAt: dayOf(day),
+              })
+            )
+          )
+        );
 
-    it("lists nothing and counts zero for a deck nobody forked", async () => {
-      const harness = makeHarness();
-      const sourceId = await seedSource(harness);
+        const forks = await harness.store.publicForksOf(sourceId, 3);
 
-      const forks = await harness.store.publicForksOf(sourceId, 10);
+        expect(forks.total).toBe(4);
+        expect(forks.forks.map((listed) => listed.id)).toEqual(
+          forkIds.slice(1).reverse()
+        );
+      },
+    },
+    {
+      name: "names each fork's author by name, then username, and nobody for a deck without an owner",
+      run: async (harness) => {
+        const sourceId = await seedSource(harness);
+        const seedFork = (author: SeedAuthor | null, day: number) =>
+          harness.seedDeck(
+            aDeckSeed({
+              forkedFromDeckId: sourceId,
+              updatedAt: dayOf(day),
+              author,
+            })
+          );
+        await seedFork({ name: "Ana", username: null }, 3);
+        await seedFork({ name: null, username: "bo-public-fork-contract" }, 2);
+        await seedFork(null, 1);
 
-      expect(forks).toEqual({ forks: [], total: 0 });
-    });
-  });
-}
+        const forks = await harness.store.publicForksOf(sourceId, 10);
+
+        expect(forks.forks.map((listed) => listed.author)).toEqual([
+          "Ana",
+          "bo-public-fork-contract",
+          null,
+        ]);
+      },
+    },
+    {
+      name: "lists nothing and counts zero for a deck nobody forked",
+      run: async (harness) => {
+        const sourceId = await seedSource(harness);
+
+        const forks = await harness.store.publicForksOf(sourceId, 10);
+
+        expect(forks).toEqual({ forks: [], total: 0 });
+      },
+    },
+  ];
