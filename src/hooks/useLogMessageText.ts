@@ -10,7 +10,7 @@
  * @module hooks/useLogMessageText
  */
 import { useCallback } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import type { PlaytestLogMessage } from "@/lib/playtest/engine";
 import { logMessageText } from "@/lib/playtest/action-log-text";
 
@@ -20,9 +20,10 @@ import { logMessageText } from "@/lib/playtest/action-log-text";
  */
 export function useLogMessageText(): (message: PlaytestLogMessage) => string {
   const t = useTranslations("playtest.log.entries");
+  const locale = useLocale();
   return useCallback(
     (message: PlaytestLogMessage) =>
-      logMessageText(message, (key, values) => t(key, values)),
-    [t]
+      logMessageText(message, (key, values) => t(key, values), locale),
+    [t, locale]
   );
 }

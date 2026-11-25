@@ -84,7 +84,7 @@ describe("TrialCardsPicker", () => {
     );
 
     expect(
-      screen.getByText("Chosen: Smothering Tithe, Lightning Bolt")
+      screen.getByText("Chosen: Smothering Tithe and Lightning Bolt")
     ).toBeInTheDocument();
     expect(screen.getByText("2 of 7 chosen")).toBeInTheDocument();
     expect(screen.getByLabelText("chosen ids")).toHaveTextContent(
@@ -176,6 +176,43 @@ describe("TrialCardsPicker", () => {
       screen.getByText("The main deck has no cards to choose.")
     ).toBeInTheDocument();
     expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
+  });
+
+  it("joins two chosen cards with “et” in French", async () => {
+    const { user } = renderPicker(DECK_CARDS, "fr");
+
+    await user.click(
+      screen.getByRole("checkbox", { name: "Smothering Tithe" })
+    );
+    await user.click(screen.getByRole("checkbox", { name: "Sol Ring" }));
+
+    expect(
+      screen.getByText("Choisies : Smothering Tithe et Sol Ring")
+    ).toBeInTheDocument();
+  });
+
+  it("lists three chosen cards with a final “and” in English", async () => {
+    const { user } = renderPicker();
+
+    await user.click(
+      screen.getByRole("checkbox", { name: "Smothering Tithe" })
+    );
+    await user.click(screen.getByRole("checkbox", { name: "Sol Ring" }));
+    await user.click(
+      screen.getByRole("checkbox", { name: "Lightning Bolt (copy 1 of 2)" })
+    );
+
+    expect(
+      screen.getByText("Chosen: Smothering Tithe, Sol Ring, and Lightning Bolt")
+    ).toBeInTheDocument();
+  });
+
+  it("names a single chosen card on its own", async () => {
+    const { user } = renderPicker(DECK_CARDS, "fr");
+
+    await user.click(screen.getByRole("checkbox", { name: "Sol Ring" }));
+
+    expect(screen.getByText("Choisies : Sol Ring")).toBeInTheDocument();
   });
 
   it("speaks French", () => {
