@@ -261,6 +261,13 @@
     "validating": "Validating {count} cards with Scryfall...",
     "importSuccess": "Successfully imported {count} cards.",
     "importFailed": "Failed to import cards.",
+    "nothingAdded": "No card was added to the deck.",
+    "refused": {
+      "title": "Cards the deck refused ({count}):",
+      "atCopyLimit": "{name}: already at its copy limit for {format}",
+      "basicLandHeld": "{name}: this basic land is already in the deck, so its quantity was left as it was",
+      "commandZone": "{name}: could not take its place in the command zone"
+    },
     "lookupFailed": "The card lookup did not answer. Nothing was imported; try again.",
     "close": "Close",
     "cancel": "Cancel",
