@@ -6,6 +6,9 @@ vi.mock(import("@/lib/scryfall/client"), () => ({ getCardCollection }));
 import { verifyPackageCards } from "./verified-package-cards";
 import { previewCardPackage } from "./card-package-preview";
 
+/** A deck that holds no card yet. */
+const EMPTY_DECK = { commander: null, partner: null, cards: [] };
+
 describe("verifyPackageCards", () => {
   beforeEach(() => vi.clearAllMocks());
 
@@ -19,9 +22,9 @@ describe("verifyPackageCards", () => {
       colorIdentity: [], isBanned: false, isBasicLand: false,
     }], "vintage");
     const preview = previewCardPackage(cards, {
-      format: "vintage", commanderColorIdentity: [], existingCards: existingQuantity === 0 ? [] : [
-        { name: "Restricted Spell", quantity: existingQuantity, isBasicLand: false },
-      ],
+      format: "vintage", commanderColorIdentity: [], deck: { commander: null, partner: null, cards: existingQuantity === 0 ? [] : [
+        { name: "Restricted Spell", quantity: existingQuantity, zone: "main" },
+      ] },
     });
     expect(preview.cards[0]?.status).toBe("blocked");
     expect(preview.cards[0]?.issues).toContainEqual({
@@ -39,7 +42,7 @@ describe("verifyPackageCards", () => {
       colorIdentity: [], isBanned: true, isBasicLand: false,
     }], "vintage");
     expect(previewCardPackage(cards, {
-      format: "vintage", commanderColorIdentity: [], existingCards: [],
+      format: "vintage", commanderColorIdentity: [], deck: EMPTY_DECK,
     }).cards[0]?.status).toBe("ready");
   });
 
@@ -54,7 +57,7 @@ describe("verifyPackageCards", () => {
       colorIdentity: ["B"], isBanned: false, isBasicLand: false,
     }], "commander");
     const preview = previewCardPackage(cards, {
-      format: "commander", commanderColorIdentity: ["B"], existingCards: [],
+      format: "commander", commanderColorIdentity: ["B"], deck: EMPTY_DECK,
     });
     expect(preview.cards[0]?.status).toBe("ready");
     expect(preview.cards[0]?.quantity).toBe(20);
@@ -89,7 +92,7 @@ describe("verifyPackageCards", () => {
     const preview = previewCardPackage(cards, {
       format: "commander",
       commanderColorIdentity: ["G"],
-      existingCards: [],
+      deck: EMPTY_DECK,
     });
     expect(preview.cards[0]?.status).toBe("ready");
   });
@@ -107,7 +110,7 @@ describe("verifyPackageCards", () => {
     };
     const cards = await verifyPackageCards([forgedCard], "commander");
     const preview = previewCardPackage(cards, {
-      format: "commander", commanderColorIdentity: ["U"], existingCards: [],
+      format: "commander", commanderColorIdentity: ["U"], deck: EMPTY_DECK,
     });
     expect(preview.cards[0]?.issues).toContainEqual({
       kind: "singleton", message: "Counterspell exceeds the singleton limit",
