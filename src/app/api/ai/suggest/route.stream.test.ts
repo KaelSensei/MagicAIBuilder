@@ -66,7 +66,12 @@ const EVIDENCE = z.object({
   role: z.string(),
   synergy: z.string(),
   manaValue: z.number().nullable(),
-  curveImpact: z.string(),
+  curve: z
+    .object({
+      position: z.enum(["below", "near", "above"]),
+      deckAverage: z.number(),
+    })
+    .nullable(),
   colorIdentity: z.array(z.string()),
   colorCompatible: z.boolean().nullable(),
   commanderLegal: z.boolean().nullable(),
@@ -365,7 +370,7 @@ describe("POST /api/ai/suggest event stream", () => {
           evidence: {
             synergy: "Protects Talrand.",
             manaValue: 1,
-            curveImpact: "Below the deck average (1.91)",
+            curve: { position: "below", deckAverage: expect.closeTo(1.91, 2) },
             colorIdentity: ["U"],
             colorCompatible: true,
             commanderLegal: true,

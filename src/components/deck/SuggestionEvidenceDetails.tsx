@@ -10,7 +10,10 @@ import {
 } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
 
-import type { SuggestionEvidence } from "@/lib/ai/suggestion-evidence";
+import type {
+  CurvePosition,
+  SuggestionEvidence,
+} from "@/lib/ai/suggestion-evidence";
 import { cn } from "@/components/ui/utils";
 
 function titleCase(value: string): string {
@@ -19,6 +22,50 @@ function titleCase(value: string): string {
     .replace(/^./, (letter) => letter.toUpperCase());
 }
 
+/** The `deck.ai.evidence` message that words a curve position. */
+function curveMessageKey(
+  position: CurvePosition
+): "curveBelow" | "curveNear" | "curveAbove" {
+  switch (position) {
+    case "below":
+      return "curveBelow";
+    case "near":
+      return "curveNear";
+    case "above":
+      return "curveAbove";
+    default: {
+      const unhandled: never = position;
+      return unhandled;
+    }
+  }
+}
+
+/**
+ * The curve line in the player's language: the card's mana value and where it
+ * sits against the deck average, both in the locale's number format, or
+ * "unknown" when the card was not found.
+ */
+function useCurveLine({
+  manaValue,
+  curve,
+}: Pick<SuggestionEvidence, "manaValue" | "curve">): string {
+  const t = useTranslations("deck.ai.evidence");
+  const format = useFormatter();
+  if (curve === null || manaValue === null) return t("curveUnknown");
+  return t(curveMessageKey(curve.position), {
+    manaValue: format.number(manaValue),
+    average: format.number(curve.deckAverage, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }),
+  });
+}
+
+/**
+ * The checked facts beside one AI suggestion: role, curve position, colour
+ * fit, Commander legality and price, each worded in the player's language and
+ * number format. An unknown fact reads as unknown, never as a negative.
+ */
 export function SuggestionEvidenceDetails({
   evidence,
 }: {
@@ -39,6 +86,7 @@ export function SuggestionEvidenceDetails({
   if (evidence.commanderLegal !== null) {
     legalStatus = evidence.commanderLegal ? t("commanderLegal") : t("commanderIllegal");
   }
+  const curveLine = useCurveLine(evidence);
 
   return (
     <div className="mt-2 rounded-md border border-[var(--border)]/80 bg-[var(--surface)]/60 p-2">
@@ -60,9 +108,7 @@ export function SuggestionEvidenceDetails({
         </span>
         <span className="flex items-center gap-1">
           <Gauge className="h-3 w-3 shrink-0" />
-          {evidence.manaValue === null
-            ? evidence.curveImpact
-            : `MV ${evidence.manaValue} · ${evidence.curveImpact}`}
+          {curveLine}
         </span>
         <span
           className={cn(
