@@ -10,6 +10,11 @@
     "createFailed": "デッキを作成できませんでした。",
     "createSignedOut": "Your session has ended. Sign in again to create a deck."
   },
+  "deckDelete": {
+    "failed": "Could not delete the deck. Please try again.",
+    "signedOut": "Your session has ended. Sign in again to delete a deck.",
+    "alreadyDeleted": "This deck had already been deleted."
+  },
   "deckDuplicate": {
     "succeeded": "Deck duplicated: “{name}”",
     "failed": "Could not duplicate the deck. Please try again.",
