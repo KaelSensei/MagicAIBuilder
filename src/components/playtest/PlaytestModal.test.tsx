@@ -1,6 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { useState } from "react";
-import { screen, fireEvent, waitFor, within } from "@testing-library/react";
+import {
+  act,
+  screen,
+  fireEvent,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { PlaytestModal } from "./PlaytestModal";
 import { usePlaytestStore } from "@/lib/playtest/store";
@@ -208,6 +214,47 @@ describe("PlaytestModal", () => {
     expect(
       screen.getByRole("button", { name: /mulligan.*new seven, 1 to the bottom/i })
     ).toBeEnabled();
+  });
+
+  // #1853: the engine logs data, the log speaks the player's language.
+  describe("the action log in French", () => {
+    function startInFrench() {
+      renderWithProviders(
+        <PlaytestModal deck={makeDeck()} onClose={vi.fn()} />,
+        { locale: "fr" }
+      );
+      fireEvent.click(
+        screen.getByRole("button", { name: /piocher la main de départ/i })
+      );
+    }
+
+    it("reads a free mulligan in French", () => {
+      startInFrench();
+
+      fireEvent.click(
+        screen.getByRole("button", { name: /mulligan.*gratuit/i })
+      );
+
+      expect(
+        screen.getByText("Mulligan gratuit : nouvelle main de sept cartes")
+      ).toBeInTheDocument();
+    });
+
+    it("reads a move in French, with the zone names and the card name as printed", () => {
+      startInFrench();
+      const card = usePlaytestStore.getState().engine?.hand[0];
+      if (card === undefined) throw new Error("the deal gave no hand");
+
+      act(() => {
+        usePlaytestStore.getState().moveToZone(card.id, "hand", "graveyard");
+      });
+
+      expect(
+        screen.getByText(
+          `Tu as déplacé ${card.name} de ta main vers ton cimetière`
+        )
+      ).toBeInTheDocument();
+    });
   });
 
   describe("choosing whether the game is multiplayer", () => {

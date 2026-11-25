@@ -16,6 +16,12 @@ import { isChoosingBottom } from "./mulligan";
 import { type Clock, defaultPlaytestDeps, type PlaytestDeps } from "./ports";
 import type { LifeHistoryEntry, PlaytestEngine } from "./types";
 
+/**
+ * The cause a loss of life records when the caller names none. It is an identifier the life
+ * history keeps; the log line for it is worded by the player's locale (`lostLife`, #1853).
+ */
+const DEFAULT_DAMAGE_CAUSE = "damage";
+
 // ─── Life history ─────────────────────────────────────────────────────────
 /**
  * The life-history entry for one change of the life total (CR 119.3): `delta` is negative for
@@ -71,13 +77,14 @@ export function isNegativeDamage(amount: number): boolean {
  * `applyHeal`. Damage of 0 is still recorded, as it always was.
  *
  * @param amount - the life lost; below 0 changes nothing
- * @param description - what caused the loss, kept in the history and the log line
+ * @param description - what caused the loss, kept in the history. The default cause logs a line
+ * the player's locale words ("damage"); any other cause is the caller's words, shown as given.
  * @param deps - `clock` stamps the history entry and the undo entry
  */
 export function applyDamage(
   state: PlaytestEngine,
   amount: number,
-  description = "damage",
+  description = DEFAULT_DAMAGE_CAUSE,
   deps: PlaytestDeps = defaultPlaytestDeps
 ): PlaytestEngine {
   if (isChoosingBottom(state)) return state;
@@ -90,7 +97,10 @@ export function applyDamage(
       lifeTotal: newLife,
       lifeHistory: [...state.lifeHistory, entry],
     },
-    description: `Lost ${amount} life: ${description}`,
+    message:
+      description === DEFAULT_DAMAGE_CAUSE
+        ? { key: "lostLife", params: { amount } }
+        : { key: "lostLifeTo", params: { amount, cause: description } },
     evidence: { kind: "life", lifeDelta: -amount },
   });
 }
@@ -119,7 +129,7 @@ export function applyHeal(
       lifeTotal: state.lifeTotal + amount,
       lifeHistory: [...state.lifeHistory, entry],
     },
-    description: `Gained ${amount} life`,
+    message: { key: "gainedLife", params: { amount } },
     evidence: { kind: "life", lifeDelta: amount },
   });
 }

@@ -284,9 +284,10 @@ describe("usePlaytestStore", () => {
     if (entryId === undefined) return;
 
     usePlaytestStore.getState().editLogEntry(entryId, "Made three mana");
-    expect(usePlaytestStore.getState().engine?.actionLog.at(-1)?.description).toBe(
-      "Made three mana"
-    );
+    expect(usePlaytestStore.getState().engine?.actionLog.at(-1)?.message).toEqual({
+      key: "note",
+      params: { text: "Made three mana" },
+    });
     usePlaytestStore.getState().removeLogEntry(entryId);
     expect(usePlaytestStore.getState().engine?.actionLog).toEqual([]);
   });
@@ -446,8 +447,8 @@ describe("a new-card trial in a session", () => {
 
     expect(engine?.hand.slice(0, 2).map((card) => card.id)).toEqual(chosen);
     expect(chosenIn(engine?.library)).toEqual([]);
-    expect(engine?.actionLog.map((line) => line.description)).toEqual([
-      "Started with chosen cards: Card 3, Card 17",
+    expect(engine?.actionLog.map((line) => line.message)).toEqual([
+      { key: "startedWithChosenCards", params: { cards: ["Card 3", "Card 17"] } },
     ]);
   });
 });

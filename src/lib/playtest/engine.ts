@@ -60,6 +60,7 @@ export type {
   PlayerDesignations,
   PlaytestActionLogEntry,
   PlaytestEngine,
+  PlaytestLogMessage,
   PlaytestTokenSpec,
   ToggledDesignation,
   UndoHistoryEntry,
@@ -80,10 +81,7 @@ export type { MulliganTally } from "./engine/mulligan";
 
 export { applyDrawCard, applyNextPhase, applyNextTurn } from "./engine/turn";
 
-export {
-  applyShuffleLibrary,
-  LIBRARY_SHUFFLED_LINE,
-} from "./engine/shuffle-library";
+export { applyShuffleLibrary } from "./engine/shuffle-library";
 
 export { applyDamage, applyHeal, hasLostOnLife } from "./engine/life";
 
@@ -132,6 +130,7 @@ export {
   applyEditActionLogEntry,
   applyRecordMana,
   applyRemoveActionLogEntry,
+  noteMessage,
 } from "./engine/action-log";
 
 export { applyUndo } from "./engine/history";
