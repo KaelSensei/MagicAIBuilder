@@ -315,6 +315,8 @@
     "saved": "{count, plural, one {# carte enregistrée avec succès.} other {# cartes enregistrées avec succès.}}",
     "saveFailed": "Échec de l’enregistrement des modifications.",
     "lookupFailed": "Rien n’a été enregistré — la recherche des cartes n’a pas répondu. Votre liste est conservée ; réessayez l’enregistrement.",
+    "signedOut": "Rien n’a été enregistré — votre session a expiré. Reconnectez-vous pour enregistrer vos modifications.",
+    "conflictReloaded": "Rien n’a été enregistré — ce deck a été modifié ailleurs et a été rechargé. Vérifiez la liste, puis refaites vos modifications.",
     "unknownCards": "Rien n’a été enregistré — aucune carte trouvée pour : {names}",
     "invalidPartner": "Rien n’a été enregistré — {name} ne peut pas être associé à ce commandant.",
     "invalidCompanion": "Rien n’a été enregistré — {name} ne peut pas être le compagnon de ce deck.",
