@@ -1,6 +1,6 @@
 "use client";
 // Bulk Edit modal — edit the entire deck as plain text, Moxfield-style
-import { useState, useEffect, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import * as Dialog from "@radix-ui/react-dialog";
 import { X, Loader2, CheckCircle2, AlertCircle, FileText } from "lucide-react";
@@ -18,7 +18,7 @@ import type { Deck } from "@/lib/deck/types";
 import { cardsFromZoneSource } from "@/lib/deck/zone-source";
 import { logger } from "@/lib/logger";
 import { buildScryfallNameIndex } from "@/lib/scryfall/name-index";
-import { bulkEditFailureMessageKey } from "./bulk-edit-failure";
+import { bulkEditFailureMessageKey, isDeckConflict } from "./bulk-edit-failure";
 
 interface BulkEditModalProps {
   readonly deck: Deck;
@@ -39,6 +39,19 @@ function getStatusTextClass(status: SaveStatus): string {
   if (status === "error") return "text-red-400";
   if (status === "done") return "text-green-400";
   return "text-[var(--text-secondary)]";
+}
+
+/**
+ * The list the dialog shows before the player types. Every row the save
+ * compares against is listed, so none can vanish unseen.
+ */
+function deckListText(deck: Deck): string {
+  return exportToText(
+    deck.commander,
+    deck.partner,
+    cardsFromZoneSource(deck),
+    deck.companion
+  );
 }
 
 interface SaveStatusMessageProps {
@@ -76,20 +89,28 @@ function SaveStatusMessage({ status, message }: SaveStatusMessageProps) {
 export function BulkEditModal({ deck, children }: BulkEditModalProps) {
   const t = useTranslations("deck");
   const [open, setOpen] = useState(false);
-  const [text, setText] = useState("");
+  // What the player typed, or null while they have typed nothing since the
+  // dialog opened. The store replaces the deck object whenever a save answers
+  // with a new version or a queued row write settles; typed text must outlive
+  // those, while an untouched list follows them to show the deck as it is.
+  const [typedText, setTypedText] = useState<string | null>(null);
   const [status, setStatus] = useState<SaveStatus>("idle");
   const [message, setMessage] = useState("");
 
   const activeDeckId = useDeckStore((s) => s.activeDeckId);
   const applyBulkEdit = useDeckStore((s) => s.applyBulkEdit);
 
-  // Pre-fill textarea with current deck content whenever the modal opens.
-  // Every row the save compares against is listed, so none can vanish unseen.
-  useEffect(() => {
-    if (open) {
-      setText(exportToText(deck.commander, deck.partner, cardsFromZoneSource(deck), deck.companion));
-    }
-  }, [open, deck]);
+  const deckText = useMemo(
+    () => (open ? deckListText(deck) : ""),
+    [open, deck]
+  );
+  const text = typedText ?? deckText;
+
+  /** Opens the dialog on the deck as it is now, dropping text typed before a close. */
+  const handleOpen = () => {
+    setTypedText(null);
+    setOpen(true);
+  };
 
   /** Explains why the edited list cannot be saved as written. */
   function rejectionMessage(rejection: BulkEditRejection): string {
@@ -164,9 +185,11 @@ export function BulkEditModal({ deck, children }: BulkEditModalProps) {
       }, 1200);
     } catch (err) {
       // The thrown text is diagnostic: it goes to the log, never on screen
-      // (I-01). After a stale copy the store has reloaded the deck behind the
-      // dialog, so saving again plans the list on the deck as it now is.
+      // (I-01). After a stale copy the store reloads the deck behind the
+      // dialog: the list goes back to the deck, and follows the reload if it
+      // lands later, so the player redoes their changes on the deck as it is.
       logger.error("Unexpected error", "BulkEditModal.save", err);
+      if (isDeckConflict(err)) setTypedText(null);
       setStatus("error");
       setMessage(t(bulkEditFailureMessageKey(err)));
     }
@@ -177,7 +200,6 @@ export function BulkEditModal({ deck, children }: BulkEditModalProps) {
     setTimeout(() => {
       setStatus("idle");
       setMessage("");
-      // Do not reset text — it will be re-populated on next open
     }, 200);
   };
 
@@ -187,7 +209,7 @@ export function BulkEditModal({ deck, children }: BulkEditModalProps) {
   return (
     <Dialog.Root
       open={open}
-      onOpenChange={(v) => (v ? setOpen(true) : handleClose())}
+      onOpenChange={(v) => (v ? handleOpen() : handleClose())}
     >
       <Dialog.Trigger asChild>{children}</Dialog.Trigger>
 
@@ -225,7 +247,7 @@ export function BulkEditModal({ deck, children }: BulkEditModalProps) {
               className="w-full flex-1 min-h-[55vh] bg-[var(--background)] border border-[var(--border)] rounded px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] resize-none focus:outline-none focus:border-[var(--accent)] font-mono leading-relaxed"
               placeholder={`Commander\n1 Atraxa, Praetors' Voice\n\nDeck\n1 Sol Ring\n1 Arcane Signet\n4 Forest\n...`}
               value={text}
-              onChange={(e) => setText(e.target.value)}
+              onChange={(e) => setTypedText(e.target.value)}
               disabled={status === "saving"}
               spellCheck={false}
             />
