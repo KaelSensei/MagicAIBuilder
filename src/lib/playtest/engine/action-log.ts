@@ -14,7 +14,7 @@
 import { pushHistory } from "./history";
 import { isChoosingBottom } from "./mulligan";
 import { defaultPlaytestDeps, type PlaytestDeps } from "./ports";
-import type { PlaytestEngine } from "./types";
+import type { PlaytestEngine, PlaytestLogMessage } from "./types";
 
 // ─── Editable action log ─────────────────────────────────────────────────
 /**
@@ -33,7 +33,20 @@ export function applyAddActionLogEntry(
   if (isChoosingBottom(state)) return state;
   const normalized = description.trim();
   if (normalized === "") return state;
-  return pushHistory(state, deps.clock, { patch: {}, description: normalized });
+  return pushHistory(state, deps.clock, {
+    patch: {},
+    message: noteMessage(normalized),
+  });
+}
+
+/**
+ * The message of a line the player wrote: a note, or a line they rewrote. Its text is theirs and
+ * is shown as typed in every locale.
+ *
+ * @param text - the player's text, already trimmed
+ */
+export function noteMessage(text: string): PlaytestLogMessage {
+  return { key: "note", params: { text } };
 }
 
 /**
@@ -53,13 +66,13 @@ export function applyRecordMana(
   if (!Number.isInteger(amount) || amount < 1 || amount > 100) return state;
   return pushHistory(state, deps.clock, {
     patch: {},
-    description: `Produced ${amount} mana`,
+    message: { key: "producedMana", params: { amount } },
     evidence: { kind: "mana", amount },
   });
 }
 
 /**
- * Rewrites the text of one log line.
+ * Rewrites the text of one log line; the line becomes a note holding the player's text.
  *
  * The edited line loses its `kind` and amounts: once the player has changed what it says, it
  * no longer counts as a draw, mana, life or counter evidence. The edit is undoable but writes
@@ -84,7 +97,7 @@ export function applyEditActionLogEntry(
         if (entry.id !== entryId) return entry;
         return {
           ...entry,
-          description: normalized,
+          message: noteMessage(normalized),
           kind: undefined,
           amount: undefined,
           lifeDelta: undefined,

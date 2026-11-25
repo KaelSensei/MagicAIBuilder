@@ -37,17 +37,19 @@ export function applyTap(
   deps: PlaytestDeps = defaultPlaytestDeps
 ): PlaytestEngine {
   if (isChoosingBottom(state)) return state;
-  const exists = state.battlefield.some((c) => c.id === cardId);
-  if (!exists) return state;
+  const permanent = state.battlefield.find((card) => card.id === cardId);
+  if (!permanent) return state;
 
   const updated = state.battlefield.map((c) =>
     c.id === cardId ? { ...c, tapped: !c.tapped } : c
   );
 
-  const permanent = state.battlefield.find((card) => card.id === cardId);
   return pushHistory(state, deps.clock, {
     patch: { battlefield: updated },
-    description: `${permanent?.tapped ? "Untapped" : "Tapped"} ${permanent?.name ?? "card"}`,
+    message: {
+      key: permanent.tapped ? "untapped" : "tapped",
+      params: { card: permanent.name },
+    },
   });
 }
 
@@ -81,7 +83,7 @@ export function applyUntapAll(
   if (isChoosingBottom(state)) return state;
   return pushHistory(state, deps.clock, {
     patch: { battlefield: untapAll(state.battlefield) },
-    description: "Untapped all permanents",
+    message: { key: "untappedAll" },
   });
 }
 
@@ -120,7 +122,7 @@ export function applyCreateCardCopy(
 
   return pushHistory(state, deps.clock, {
     patch: { battlefield: [...state.battlefield, copy] },
-    description: `Created a copy of ${source.name}`,
+    message: { key: "createdCopy", params: { card: source.name } },
   });
 }
 
@@ -190,7 +192,7 @@ export function applyCreateToken(
 
   return pushHistory(state, deps.clock, {
     patch: { battlefield: [...state.battlefield, battlefieldToken] },
-    description: `Created ${name}`,
+    message: { key: "created", params: { card: name } },
   });
 }
 
@@ -221,7 +223,10 @@ export function applyAddCounter(
 
   return pushHistory(state, deps.clock, {
     patch: { battlefield: updated },
-    description: `${amount >= 0 ? "Added" : "Removed"} a counter ${amount >= 0 ? "to" : "from"} ${permanent.name}`,
+    message: {
+      key: amount >= 0 ? "counterAdded" : "counterRemoved",
+      params: { card: permanent.name },
+    },
     evidence: { kind: "counter", counterDelta: amount },
   });
 }

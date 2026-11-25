@@ -121,6 +121,107 @@ export interface DiceRoll {
   readonly result: number;
 }
 
+// The parameter shapes are type aliases, not interfaces, so each one is assignable to
+// `LogMessageValues` (`action-log-text.ts`) and is rendered without a per-key cast.
+
+/** A log line that names one card, by the name its card data gives (never translated). */
+type CardLogParams = { readonly card: string };
+
+/** A log line that names several cards, in the order the move took them. */
+type CardsLogParams = { readonly cards: readonly string[] };
+
+/** A log line about one amount: life lost or gained, or mana produced. */
+type AmountLogParams = { readonly amount: number };
+
+/**
+ * What one log line says, as data: a message key and its parameters, never a sentence.
+ *
+ * The engine writes the key; the UI renders it through next-intl from the `playtest.log.entries`
+ * catalog of the player's locale (`action-log-text.ts`), so the same game reads in every
+ * language (#1853). Parameters are numbers, card names as the card data gives them, and
+ * identifiers (zones, steps, counter kinds, day or night) the catalog spells out. A `note` is the
+ * player's own text, shown as typed.
+ */
+export type PlaytestLogMessage =
+  | { readonly key: "note"; readonly params: { readonly text: string } }
+  | { readonly key: "startedWithChosenCards"; readonly params: CardsLogParams }
+  | { readonly key: "freeMulligan" }
+  | { readonly key: "mulligan"; readonly params: { readonly toBottom: number } }
+  | { readonly key: "bottomed"; readonly params: CardsLogParams }
+  | {
+      readonly key:
+        | "drewCard"
+        | "drewFirstTurnCard"
+        | "untappedAll"
+        | "libraryShuffled"
+        | "gotCitysBlessing"
+        | "becameMonarch"
+        | "opponentBecameMonarch"
+        | "tookInitiative"
+        | "opponentTookInitiative";
+    }
+  | {
+      readonly key: "startedTurn" | "startedTurnAndDrew";
+      readonly params: { readonly turn: number };
+    }
+  | {
+      readonly key: "advancedToPhase";
+      readonly params: { readonly phase: Phase };
+    }
+  | {
+      readonly key:
+        | "tapped"
+        | "untapped"
+        | "createdCopy"
+        | "created"
+        | "counterAdded"
+        | "counterRemoved"
+        | "removedCopy"
+        | "castFromCommandZone"
+        | "returnedToCommandZone";
+      readonly params: CardLogParams;
+    }
+  | {
+      readonly key: "moved";
+      readonly params: CardLogParams & {
+        readonly from: CardZone;
+        readonly to: CardZone;
+      };
+    }
+  | {
+      readonly key: "rolledDie";
+      readonly params: { readonly sides: number; readonly result: number };
+    }
+  | {
+      readonly key: "lostLife" | "gainedLife" | "producedMana";
+      readonly params: AmountLogParams;
+    }
+  | {
+      readonly key: "lostLifeTo";
+      readonly params: AmountLogParams & { readonly cause: string };
+    }
+  | {
+      readonly key: "commanderDamage";
+      readonly params: CardLogParams &
+        AmountLogParams & { readonly opponent: number; readonly total: number };
+    }
+  | {
+      readonly key: "playerCountersGained" | "playerCountersLost";
+      readonly params: {
+        readonly counter: PlayerCounterKind;
+        readonly count: number;
+        readonly total: number;
+      };
+    }
+  | {
+      readonly key: "dayNightBegan" | "dayNightSwapped";
+      readonly params: { readonly to: DayOrNight };
+    }
+  | {
+      readonly key: "ringTempted";
+      readonly params: { readonly total: number };
+    };
+
 /**
  * One line of the action log, the record of the game the player can read, edit and export.
  *
@@ -133,7 +234,7 @@ export interface PlaytestActionLogEntry {
   readonly id: number;
   readonly turn: number;
   readonly phase: Phase;
-  readonly description: string;
+  readonly message: PlaytestLogMessage;
   readonly kind?: "draw" | "cardSeen" | "mana" | "life" | "counter";
   readonly amount?: number;
   readonly lifeDelta?: number;

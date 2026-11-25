@@ -34,6 +34,6 @@ export function applyRollDie(
 
   return pushHistory(state, deps.clock, {
     patch: { diceRolls: [...state.diceRolls, { sides, result }].slice(-10) },
-    description: `Rolled d${sides}: ${result}`,
+    message: { key: "rolledDie", params: { sides, result } },
   });
 }

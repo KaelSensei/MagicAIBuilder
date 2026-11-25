@@ -6,7 +6,8 @@
  * Playtest context, UI. Owns the copy status only. The exports always cover
  * the whole log, whatever the filter shows, and are named after the deck
  * through `fileStem`. The text export is translated; the JSON export is the
- * version-3 document of `action-log-export.ts`.
+ * version-3 document of `action-log-export.ts`. Both write each line in the
+ * player's language (`useLogMessageText`).
  *
  * @module playtest/ActionLogHeader
  */
@@ -19,6 +20,7 @@ import {
   exportActionLogText,
   type ActionLogTextFormat,
 } from "@/lib/playtest/action-log-export";
+import { useLogMessageText } from "@/hooks/useLogMessageText";
 import { downloadTextFile } from "@/lib/download-text-file";
 import { fileStem } from "@/lib/text/slug";
 
@@ -61,6 +63,7 @@ function CopyOutcome({ status }: { readonly status: CopyStatus }) {
 export function ActionLogHeader({ deckName, entries }: ActionLogHeaderProps) {
   const t = useTranslations("playtest.log");
   const phaseLabel = useTranslations("playtest.phases");
+  const lineText = useLogMessageText();
   const [copyStatus, setCopyStatus] = useState<CopyStatus>("idle");
   const textFormat: ActionLogTextFormat = {
     title: t("title"),
@@ -68,6 +71,7 @@ export function ActionLogHeader({ deckName, entries }: ActionLogHeaderProps) {
     phase: (phase) => phaseLabel(phase),
     evidenceTitle: t("evidenceTitle"),
     evidence: (draws, mana, seen) => t("evidence", { draws, mana, seen }),
+    line: lineText,
   };
   const stem = fileStem(deckName);
 
@@ -114,7 +118,7 @@ export function ActionLogHeader({ deckName, entries }: ActionLogHeaderProps) {
               type="button"
               onClick={() =>
                 downloadTextFile(
-                  exportActionLogJson(deckName, entries),
+                  exportActionLogJson(deckName, entries, lineText),
                   `${stem}-playtest.json`,
                   "application/json"
                 )
