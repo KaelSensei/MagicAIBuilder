@@ -720,7 +720,7 @@ describe("POST /api/decks with cards — copy limit", () => {
     expect(createdCopies("Seven Dwarves")).toEqual([7]);
   });
 
-  it("reads the format the request names: a Modern deck keeps four Lightning Bolts and stops a fifth", async () => {
+  it("reads the format the request names: a Modern deck keeps four Lightning Bolts and stores no fifth in the sideboard (CR 100.2a)", async () => {
     await POST(
       createRequest({
         name: "Burn",
@@ -732,6 +732,42 @@ describe("POST /api/decks with cards — copy limit", () => {
       })
     );
 
-    expect(createdCopies("Lightning Bolt")).toEqual([4, 4]);
+    expect(createdCopies("Lightning Bolt")).toEqual([4]);
+  });
+
+  it("counts two printings together: three and three Lightning Bolts store as three and one", async () => {
+    await POST(
+      createRequest({
+        name: "Burn",
+        format: "modern",
+        cards: [
+          { ...LIGHTNING_BOLT, quantity: 3 },
+          {
+            ...LIGHTNING_BOLT,
+            scryfallId: "77777777-7777-4777-8777-777777777777",
+            quantity: 3,
+          },
+        ],
+      })
+    );
+
+    expect(createdCopies("Lightning Bolt")).toEqual([3, 1]);
+  });
+
+  it("counts the commander first: its name in the 99 is not stored (CR 903.5b)", async () => {
+    const atraxa = {
+      scryfallId: "d0d33d52-3d28-4635-b985-51e126289259",
+      name: "Atraxa, Praetors' Voice",
+      typeLine: "Legendary Creature — Phyrexian Angel Horror",
+      category: "creature",
+    };
+    await POST(
+      createRequest({
+        name: "Atraxa",
+        cards: [atraxa, { ...atraxa, category: "commander", isCommander: true }],
+      })
+    );
+
+    expect(createdCopies(atraxa.name)).toEqual([1]);
   });
 });

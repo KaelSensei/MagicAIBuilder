@@ -11,10 +11,25 @@
  *
  * @module deck/counted-copies
  */
-import type { Deck, DeckZone } from "./types";
+import type { DeckZone } from "./types";
 
-/** The deck facts the count reads: its rows and its command zone. */
-export type CountedCopiesDeck = Pick<Deck, "commander" | "partner" | "cards">;
+/** A row the count reads: its card name, zone and copies. */
+export interface CountedRow {
+  readonly name: string;
+  readonly zone: DeckZone;
+  readonly quantity: number;
+}
+
+/**
+ * The deck facts the count reads: its rows and its command zone. A loaded
+ * `Deck` is one, and so is a deck read from stored rows: the editor and the
+ * server count with the same rule.
+ */
+export interface CountedCopiesDeck {
+  readonly commander: { readonly name: string } | null;
+  readonly partner: { readonly name: string } | null;
+  readonly cards: readonly CountedRow[];
+}
 
 /** The zones whose rows are part of the deck: Considering is not. */
 const DECK_ZONES: ReadonlySet<DeckZone> = new Set(["main", "sideboard"]);
