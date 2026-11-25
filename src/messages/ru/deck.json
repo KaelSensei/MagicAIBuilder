@@ -977,7 +977,17 @@
     "blocked": "Blocked",
     "apply": "Add {count, plural, one {# card} other {# cards}}",
     "applying": "Adding…",
-    "loadError": "This action failed. Please try again."
+    "loadError": "This action failed. Please try again.",
+    "cardLabel": "{name} ({status})",
+    "issues": {
+      "banned": "Banned in this format",
+      "colorIdentity": "Outside the commander's color identity",
+      "singleton": "Already in the deck",
+      "copyLimit": "Copy limit reached",
+      "unknown": "Cannot be added"
+    },
+    "applied": "{added, plural, one {# card} other {# cards}} added to the main deck.",
+    "appliedPartly": "{added, plural, one {# card} other {# cards}} added to the main deck. {blocked, plural, one {# card was} other {# cards were}} not added because your deck changed since the preview."
   },
   "feedback": {
     "title": "Feedback wanted",

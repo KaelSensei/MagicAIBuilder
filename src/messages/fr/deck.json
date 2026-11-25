@@ -977,7 +977,17 @@
     "blocked": "Bloquée",
     "apply": "Ajouter {count, plural, one {# carte} other {# cartes}}",
     "applying": "Ajout…",
-    "loadError": "Cette action a échoué. Réessayez."
+    "loadError": "Cette action a échoué. Réessayez.",
+    "cardLabel": "{name} ({status})",
+    "issues": {
+      "banned": "Bannie dans ce format",
+      "colorIdentity": "Hors de l’identité couleur du commandant",
+      "singleton": "Déjà dans le deck",
+      "copyLimit": "Limite d’exemplaires atteinte",
+      "unknown": "Ne peut pas être ajoutée"
+    },
+    "applied": "{added, plural, one {# carte ajoutée} other {# cartes ajoutées}} au deck principal.",
+    "appliedPartly": "{added, plural, one {# carte ajoutée} other {# cartes ajoutées}} au deck principal. {blocked, plural, one {# carte n’a pas été ajoutée} other {# cartes n’ont pas été ajoutées}}, car votre deck a changé depuis l’aperçu."
   },
   "feedback": {
     "title": "Avis recherchés",
