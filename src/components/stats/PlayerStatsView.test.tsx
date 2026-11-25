@@ -7,7 +7,7 @@
  * over slice 1's `countPlayerStats`); only the network boundary (`fetch`) is
  * stubbed where the browser reads the route.
  */
-import { screen, waitFor, within } from "@testing-library/react";
+import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { PlayerStatsDeck } from "@/lib/deck/player-stats";
@@ -118,7 +118,10 @@ describe("PlayerStatsView", () => {
     await userEvent.selectOptions(screen.getByLabelText("Year"), "2025");
 
     await waitFor(() =>
-      expect(fetchStats).toHaveBeenCalledWith("/api/user/stats?year=2025")
+      expect(fetchStats).toHaveBeenCalledWith(
+        "/api/user/stats?year=2025",
+        expect.objectContaining({ signal: expect.any(AbortSignal) })
+      )
     );
     expect(
       await screen.findByRole("heading", { name: "Your decks in 2025" })
@@ -148,4 +151,52 @@ describe("PlayerStatsView", () => {
       })
     ).toBeVisible();
   });
+
+  it("gives up on statistics that stall for 15 seconds and offers the retry (I-04)", async () => {
+    const fetchStats = vi
+      .fn<typeof fetch>()
+      .mockImplementationOnce(answerOnlyWhenAborted)
+      .mockResolvedValueOnce(Response.json(twelveDecksSevenGreen()));
+    vi.stubGlobal("fetch", fetchStats);
+
+    vi.useFakeTimers();
+    try {
+      renderWithProviders(
+        <PlayerStatsView initialReport={null} initialYear={2026} />
+      );
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(14_999);
+      });
+      expect(screen.queryByRole("alert")).toBeNull();
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1);
+        // TanStack Query publishes the failure on its own zero-delay timer.
+        await vi.runOnlyPendingTimersAsync();
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Your statistics could not be loaded."
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "Try again" }));
+
+    expect(
+      await screen.findByRole("table", {
+        name: "Colours in your Commander decks",
+      })
+    ).toBeVisible();
+  });
 });
+
+/** A `fetch` that never answers: it only fails once its signal aborts. */
+function answerOnlyWhenAborted(
+  _input: RequestInfo | URL,
+  init?: RequestInit
+): Promise<Response> {
+  return new Promise((_, reject) => {
+    init?.signal?.addEventListener("abort", () => reject(init.signal?.reason));
+  });
+}

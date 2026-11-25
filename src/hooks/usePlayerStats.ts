@@ -11,6 +11,7 @@
  * @module hooks/usePlayerStats
  */
 import { useQuery } from "@tanstack/react-query";
+import { withRequestDeadline } from "@/lib/async/request-deadline";
 import type { PlayerStatsReport } from "@/lib/deck/player-stats-report";
 
 /**
@@ -49,12 +50,18 @@ export function usePlayerStats(
   });
 }
 
-/** Reads one year from the route; any non-2xx answer is an error. */
-async function fetchPlayerStats(year: number): Promise<PlayerStatsReport> {
-  const response = await fetch(`/api/user/stats?year=${year}`);
-  if (!response.ok) {
-    throw new Error(`Player stats failed (${response.status})`);
-  }
-  const report: PlayerStatsReport = await response.json();
-  return report;
+/**
+ * Reads one year from the route; any non-2xx answer is an error, and so is a
+ * read still unanswered after the request deadline (I-04), so the page offers
+ * its retry instead of loading forever.
+ */
+function fetchPlayerStats(year: number): Promise<PlayerStatsReport> {
+  return withRequestDeadline(async (signal) => {
+    const response = await fetch(`/api/user/stats?year=${year}`, { signal });
+    if (!response.ok) {
+      throw new Error(`Player stats failed (${response.status})`);
+    }
+    const report: PlayerStatsReport = await response.json();
+    return report;
+  });
 }

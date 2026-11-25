@@ -9,10 +9,16 @@
  * try/catch (B2-13), so a database failure reaches the browser as Next's own
  * HTML 500 page, which is the "not JSON" case below.
  */
-import { screen, waitFor, within } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { http, HttpResponse } from "msw";
-import { describe, expect, it } from "vitest";
+import { delay, http, HttpResponse } from "msw";
+import { describe, expect, it, vi } from "vitest";
 import { setupMsw } from "@/test/msw";
 import { renderWithProviders } from "@/test/render";
 import { NotificationPreferencesPanel } from "./NotificationPreferencesPanel";
@@ -122,6 +128,119 @@ describe("NotificationPreferencesPanel — when the read fails", () => {
       expect(control).toBeEnabled();
       expect(control).toBeChecked();
     }
+  });
+});
+
+/**
+ * Moves the fake clock on by `ms` under act: the abort and the panel's state
+ * updates land inside the advanced timers.
+ */
+async function advanceBy(ms: number): Promise<void> {
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(ms);
+  });
+}
+
+/** Renders the panel under fake timers, runs `steps`, and restores real timers. */
+async function withFakeClock(steps: () => Promise<void>): Promise<void> {
+  vi.useFakeTimers();
+  try {
+    renderWithProviders(<NotificationPreferencesPanel />);
+    await steps();
+  } finally {
+    vi.useRealTimers();
+  }
+}
+
+describe("NotificationPreferencesPanel — when the read stalls (I-04)", () => {
+  it("stops waiting after 15 seconds and shows the alert with a retry", async () => {
+    server.use(
+      http.get(ENDPOINT, async () => {
+        await delay("infinite");
+        return HttpResponse.json(ALL_ON);
+      })
+    );
+
+    await withFakeClock(() => advanceBy(15_000));
+
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent(ERROR_TEXT);
+    expect(
+      within(alert).getByRole("button", { name: "Retry" })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("Loading your preferences…")
+    ).not.toBeInTheDocument();
+  });
+
+  it("keeps waiting for an answer that comes just before the deadline", async () => {
+    server.use(
+      http.get(ENDPOINT, async () => {
+        await delay(14_000);
+        return HttpResponse.json(ALL_ON);
+      })
+    );
+
+    await withFakeClock(async () => {
+      await advanceBy(14_000);
+      await advanceBy(5_000);
+    });
+
+    await waitFor(() => {
+      for (const control of controls()) expect(control).toBeChecked();
+    });
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  it("loads the preferences when the retry after a stalled read is answered", async () => {
+    server.use(
+      http.get(
+        ENDPOINT,
+        async () => {
+          await delay("infinite");
+          return HttpResponse.json(ALL_ON);
+        },
+        { once: true }
+      )
+    );
+    await withFakeClock(() => advanceBy(15_000));
+    const alert = await screen.findByRole("alert");
+
+    await userEvent.click(within(alert).getByRole("button", { name: "Retry" }));
+
+    await waitFor(() =>
+      expect(screen.queryByRole("alert")).not.toBeInTheDocument()
+    );
+    for (const control of controls()) {
+      expect(control).toBeEnabled();
+      expect(control).toBeChecked();
+    }
+  });
+
+  it("gives the retry its own 15 seconds when it stalls too", async () => {
+    server.use(
+      http.get(ENDPOINT, async () => {
+        await delay("infinite");
+        return HttpResponse.json(ALL_ON);
+      })
+    );
+
+    await withFakeClock(async () => {
+      await advanceBy(15_000);
+      // fireEvent, not userEvent: userEvent waits on timers this test has frozen.
+      act(() => {
+        fireEvent.click(
+          within(screen.getByRole("alert")).getByRole("button", {
+            name: "Retry",
+          })
+        );
+      });
+      expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+      expect(screen.getByText("Loading your preferences…")).toBeVisible();
+      await advanceBy(15_000);
+    });
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(ERROR_TEXT);
   });
 });
 
