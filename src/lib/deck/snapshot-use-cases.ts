@@ -70,8 +70,10 @@ export interface SnapshotUseCases {
   saveSnapshot(command: SaveSnapshotCommand): Promise<SaveSnapshotResult>;
   deleteSnapshot(ref: SnapshotRef): Promise<DeleteSnapshotResult>;
   /**
-   * Replaces the deck's card rows with the snapshot's, and its commander
-   * fields with the ones those rows name, all or nothing.
+   * Replaces the deck's card rows with the snapshot's, and its commander and
+   * companion fields with the ones those rows name, all or nothing. A
+   * snapshot whose rows carry no category cannot name a companion, so the
+   * deck keeps its own (`restoredDeck`).
    *
    * @throws when the stored card list cannot be read; the deck is then left
    *   untouched, because the list is parsed before anything is deleted.

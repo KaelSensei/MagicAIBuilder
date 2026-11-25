@@ -125,4 +125,35 @@ describe("POST /api/decks/[id]/snapshots/[snapshotId]/restore", () => {
       },
     });
   });
+
+  it("writes the snapshot's companion onto the deck in the restore transaction", async () => {
+    mocks.findSnapshot.mockResolvedValue(
+      snapshotOf([
+        {
+          scryfallId: "card-tymna",
+          name: "Tymna the Weaver",
+          category: "commander",
+          isCommander: true,
+        },
+        {
+          scryfallId: "card-lurrus",
+          name: "Lurrus of the Dream-Den",
+          category: "companion",
+        },
+      ])
+    );
+
+    const response = await POST(new Request("http://localhost"), params);
+
+    expect(response.status).toBe(200);
+    expect(mocks.updateDeck).toHaveBeenCalledWith({
+      where: { id: "deck-1" },
+      data: {
+        commanderId: "card-tymna",
+        commanderName: "Tymna the Weaver",
+        partnerId: null,
+        companionId: "card-lurrus",
+      },
+    });
+  });
 });

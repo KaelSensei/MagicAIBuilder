@@ -41,6 +41,7 @@ export type FakeDeck = {
   readonly commanderId: string | null;
   readonly commanderName: string | null;
   readonly partnerId: string | null;
+  readonly companionId: string | null;
 };
 
 /** One stored `DeckSnapshot` row. */
@@ -90,6 +91,7 @@ export const FAKE_DECK: FakeDeck = {
   commanderId: null,
   commanderName: null,
   partnerId: null,
+  companionId: null,
 };
 
 /**
@@ -229,7 +231,10 @@ function createPlaytestDb() {
         Promise.resolve(
           matches(deck, where) ? { ...deck, cards: [...cards] } : null
         ),
-      /** Writes the commander columns, the only ones a restore changes. */
+      /**
+       * Writes the commander and companion columns, the only ones a restore
+       * changes. An absent `companionId` is no write, as in Prisma.
+       */
       update: ({ where, data }: FindArgs & CreateArgs) =>
         prismaQuery(() => {
           // Prisma rejects an update that matches no row (P2025).
@@ -239,6 +244,10 @@ function createPlaytestDb() {
             commanderId: nullableText(data.commanderId),
             commanderName: nullableText(data.commanderName),
             partnerId: nullableText(data.partnerId),
+            companionId:
+              "companionId" in data
+                ? nullableText(data.companionId)
+                : deck.companionId,
           };
           return deck;
         }),
