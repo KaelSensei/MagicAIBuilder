@@ -5,8 +5,8 @@
  * Each method is the Prisma call the snapshot and playtest-session routes made
  * before DB-01, with the same `where`, `orderBy`, `take`, `select` and
  * `include`, so the routes' Prisma stubs answer it unchanged. Restore deletes
- * and re-creates the card rows and writes the deck's commander fields in one
- * interactive transaction. Both pass the
+ * and re-creates the card rows and writes the deck's commander and companion
+ * fields in one interactive transaction. Both pass the
  * contract suite in `testing/snapshot-store-contract.ts`, run by
  * `prisma-snapshot-store.test.ts`.
  *
@@ -15,6 +15,7 @@
 import "server-only";
 import type { Prisma, PrismaClient } from "@prisma/client";
 
+import { restoredDeckFields } from "@/lib/deck/snapshot-restore";
 import type {
   DeckVersionStore,
   NewSnapshot,
@@ -82,13 +83,16 @@ export function prismaSnapshotStore(client: PrismaClient): SnapshotStore {
       await client.deckSnapshot.delete({ where: { id: snapshotId } });
     },
 
-    async restoreDeck(deckId, { cards, commanders }) {
+    async restoreDeck(deckId, restored) {
       await client.$transaction(async (tx) => {
         await tx.deckCard.deleteMany({ where: { deckId } });
-        if (cards.length > 0) {
-          await tx.deckCard.createMany({ data: [...cards] });
+        if (restored.cards.length > 0) {
+          await tx.deckCard.createMany({ data: [...restored.cards] });
         }
-        await tx.deck.update({ where: { id: deckId }, data: { ...commanders } });
+        await tx.deck.update({
+          where: { id: deckId },
+          data: restoredDeckFields(restored),
+        });
       });
     },
   };

@@ -9,7 +9,7 @@
  * snapshot reads back whole; the list is newest first, holds only that
  * deck's snapshots, and carries each one's card list; a snapshot is never found through another deck; a delete
  * removes it; a restore leaves exactly the new rows and the commander
- * fields they name.
+ * fields they name, and the companion when they can name it.
  * `DeckVersionStore`: the saved rows read back; the recent snapshots are
  * newest first, that deck's only, and at most `limit`; a created snapshot is
  * the newest. Callers: `in-memory-snapshot-store.test.ts` and
@@ -59,6 +59,7 @@ const ARCANE_SIGNET = deckCard("Arcane Signet");
 const FORESTS = deckCard("Forest", { quantity: 10, zone: "sideboard" });
 const TYMNA = deckCard("Tymna the Weaver", { isCommander: true });
 const THRASIOS = deckCard("Thrasios, Triton Hero", { isPartner: true });
+const LURRUS = deckCard("Lurrus of the Dream-Den", { category: "companion" });
 
 /** @returns a snapshot of `deckId` named `name`, holding `cards` */
 function newSnapshot(
@@ -210,6 +211,49 @@ export const SNAPSHOT_STORE_CONTRACT_CASES: readonly SnapshotStoreContractCase[]
             commanderName: TYMNA.name,
             partnerId: THRASIOS.scryfallId,
           })
+        );
+      },
+    },
+    {
+      name: "writes the deck's companion with its card rows",
+      deckCards: [SOL_RING],
+      run: async ({ deckId, snapshots }) => {
+        await snapshots.restoreDeck(
+          deckId,
+          restoredDeck(deckId, [TYMNA, SOL_RING, LURRUS])
+        );
+
+        expect(await snapshots.findDeckWithCards(deckId)).toEqual(
+          expect.objectContaining({ companionId: LURRUS.scryfallId })
+        );
+      },
+    },
+    {
+      name: "clears the deck's companion when the rows name none",
+      deckCards: [SOL_RING],
+      run: async ({ deckId, snapshots }) => {
+        await snapshots.restoreDeck(deckId, restoredDeck(deckId, [LURRUS]));
+
+        await snapshots.restoreDeck(deckId, restoredDeck(deckId, [SOL_RING]));
+
+        expect(await snapshots.findDeckWithCards(deckId)).toEqual(
+          expect.objectContaining({ companionId: null })
+        );
+      },
+    },
+    {
+      name: "keeps the deck's companion when the rows cannot name one",
+      deckCards: [SOL_RING],
+      run: async ({ deckId, snapshots }) => {
+        await snapshots.restoreDeck(deckId, restoredDeck(deckId, [LURRUS]));
+
+        await snapshots.restoreDeck(
+          deckId,
+          restoredDeck(deckId, [{ scryfallId: "scryfall-x", name: "X" }])
+        );
+
+        expect(await snapshots.findDeckWithCards(deckId)).toEqual(
+          expect.objectContaining({ companionId: LURRUS.scryfallId })
         );
       },
     },
