@@ -280,6 +280,8 @@
   "summary": {
     "label": "Résumé du deck",
     "formatWithBracket": "{format} · Bracket {level}",
+    "formatWithBracketCombosPending": "{format} · Bracket {level} (combos pas encore vérifiés)",
+    "formatWithBracketCombosNotChecked": "{format} · Bracket {level} (combos non vérifiés)",
     "formatWithManualBracket": "{format} · Bracket {level}, choisi par vous",
     "typesToggle": "Types",
     "typesLabel": "Cartes par type",

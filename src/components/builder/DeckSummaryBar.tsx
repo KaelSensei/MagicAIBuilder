@@ -21,6 +21,7 @@ import type { BracketLevel } from "@/lib/constants/brackets";
 import type { BracketScore } from "@/lib/deck/analysis-types";
 import { countDeckCards, deckSizeRuleInFormat } from "@/lib/deck/deck-size";
 import { countDeckCardTypes } from "@/lib/deck/deck-type-counts";
+import type { ComboData } from "@/lib/deck/explain-bracket";
 import { getFormatConfig } from "@/lib/deck/formats";
 import { isDeckStub } from "@/lib/deck/store-factories";
 import type { Deck } from "@/lib/deck/types";
@@ -31,6 +32,12 @@ export interface DeckSummaryBarProps {
   readonly deck: Deck | null;
   /** The deck's bracket estimate (`useBracketScore`), `null` when there is none */
   readonly bracketScore: BracketScore | null;
+  /**
+   * The state of the deck's combo lookup (`comboDataOf`), the one the bracket badge reads. While
+   * it is `pending` or `unavailable` the estimate counts no combo, and the bar says so; absent
+   * reads as `found`.
+   */
+  readonly comboData?: ComboData;
 }
 
 /**
@@ -39,7 +46,11 @@ export interface DeckSummaryBarProps {
  * @param props - See {@link DeckSummaryBarProps}
  * @returns the bar, a `section` labelled "Deck summary"
  */
-export function DeckSummaryBar({ deck, bracketScore }: DeckSummaryBarProps) {
+export function DeckSummaryBar({
+  deck,
+  bracketScore,
+  comboData,
+}: DeckSummaryBarProps) {
   const t = useTranslations("builder.summary");
   // A listing stub holds only its command zone: its figures would be wrong until it loads.
   if (!deck || isDeckStub(deck)) return null;
@@ -56,28 +67,46 @@ export function DeckSummaryBar({ deck, bracketScore }: DeckSummaryBarProps) {
         separator="/"
         className="font-medium"
       />
-      <FormatAndBracket deck={deck} bracketScore={bracketScore} />
+      <FormatAndBracket
+        deck={deck}
+        bracketScore={bracketScore}
+        comboData={comboData}
+      />
       <DeckPrice />
       <TypeCounts deck={deck} />
     </section>
   );
 }
 
+/**
+ * The catalogue key of an estimated bracket for each combo lookup state, worded as the badge's
+ * `ComboLookupNote` words it (`builder.details.bracketPath.comboFloorPending` and
+ * `comboFloorNotChecked`), in the bar's shorter form.
+ */
+const ESTIMATE_KEY = {
+  found: "formatWithBracket",
+  pending: "formatWithBracketCombosPending",
+  unavailable: "formatWithBracketCombosNotChecked",
+} as const satisfies Readonly<Record<ComboData["kind"], string>>;
+
 /** The deck's format, with the bracket the builder shows for it. */
 function FormatAndBracket({
   deck,
   bracketScore,
+  comboData,
 }: {
   readonly deck: Deck;
   readonly bracketScore: BracketScore | null;
+  readonly comboData: ComboData | undefined;
 }) {
   const t = useTranslations("builder.summary");
   const format = useTranslations("deck.format.name")(deck.format);
   const bracket = shownBracket(deck, bracketScore);
   if (!bracket) return <span>{format}</span>;
+  // The player's own bracket is a choice, not an estimate: the combo lookup does not change it.
   const key = bracket.setByPlayer
     ? "formatWithManualBracket"
-    : "formatWithBracket";
+    : ESTIMATE_KEY[comboData?.kind ?? "found"];
   return <span>{t(key, { format, level: bracket.level })}</span>;
 }
 

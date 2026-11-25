@@ -1313,7 +1313,11 @@ export default function BuilderPage() {
             onSelect={setMobilePanel}
           />
         </div>
-        <DeckSummaryBar deck={deck} bracketScore={bracketScore} />
+        <DeckSummaryBar
+          deck={deck}
+          bracketScore={bracketScore}
+          comboData={comboData}
+        />
       </div>
 
       {/* Toast notifications */}

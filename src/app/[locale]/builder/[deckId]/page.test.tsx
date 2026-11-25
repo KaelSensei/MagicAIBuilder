@@ -664,6 +664,81 @@ describe("characterization: builder page shell", () => {
     });
   });
 
+  describe("the deck summary bar's bracket and the combo lookup", () => {
+    /**
+     * The saved deck with five more spells: Talrand and nine main-deck rows reach the ten names
+     * the combo lookup (`useCombos`) waits for before it asks `POST /api/combos`.
+     */
+    function aDeckTheComboLookupChecks(): ApiDeck {
+      const cantrips = ["Ponder", "Preordain", "Brainstorm", "Opt", "Consider"];
+      return savedDeck({
+        cards: [
+          ...savedDeck().cards,
+          ...cantrips.map((name) =>
+            row(name, { manaCost: "{U}", cmc: 1, typeLine: "Sorcery" })
+          ),
+        ],
+      });
+    }
+
+    /** The format and bracket line of the deck summary bar. */
+    function summaryBracket(): HTMLElement {
+      return within(
+        screen.getByRole("region", { name: "Deck summary" })
+      ).getByText(/^Commander · Bracket/);
+    }
+
+    it("says the bracket does not count combos yet while the lookup has not answered, then reads as before", async () => {
+      const comboLookup = heldUntilReleased(() =>
+        HttpResponse.json({ combos: [] })
+      );
+      server.use(
+        http.get("/api/decks/:id", () =>
+          HttpResponse.json(aDeckTheComboLookupChecks())
+        ),
+        http.post("/api/combos", comboLookup.handler)
+      );
+
+      await openSavedDeck();
+      await waitFor(() =>
+        expect(sent.map((request) => request.line)).toContain(
+          "POST /api/combos"
+        )
+      );
+
+      expect(summaryBracket()).toHaveTextContent(
+        /^Commander · Bracket [1-5] \(combos not checked yet\)$/
+      );
+
+      act(() => comboLookup.release());
+
+      await waitFor(() =>
+        expect(summaryBracket()).toHaveTextContent(
+          /^Commander · Bracket [1-5]$/
+        )
+      );
+    });
+
+    it("says the bracket was made without the combo check once the lookup failed", async () => {
+      server.use(
+        http.get("/api/decks/:id", () =>
+          HttpResponse.json(aDeckTheComboLookupChecks())
+        ),
+        http.post("/api/combos", () =>
+          HttpResponse.json({ error: "Spellbook unavailable" }, { status: 502 })
+        )
+      );
+
+      await openSavedDeck();
+
+      await waitFor(() =>
+        expect(summaryBracket()).toHaveTextContent(
+          /^Commander · Bracket [1-5] \(combos not checked\)$/
+        )
+      );
+    });
+  });
+
   describe("when the deck cannot be opened", () => {
     it("offers 'Try again' after a 503 and opens the deck once the retry succeeds", async () => {
       let attempts = 0;
