@@ -17,7 +17,7 @@ import { z } from "zod";
 import type { DeckComment, DeckCommentThread } from "@/lib/community/comments";
 import { COMMUNITY_READ_TIMEOUT_MS } from "@/lib/community/community-client";
 import { setupMsw } from "@/test/msw";
-import { renderWithProviders } from "@/test/render";
+import { renderWithProviders, type TestLocale } from "@/test/render";
 
 vi.mock(
   import("@/i18n/navigation"),
@@ -175,14 +175,19 @@ afterEach(() => {
 });
 
 function renderPanel(
-  props: { readonly isOwner?: boolean; readonly isSignedIn?: boolean } = {}
+  props: {
+    readonly isOwner?: boolean;
+    readonly isSignedIn?: boolean;
+    readonly locale?: TestLocale;
+  } = {}
 ) {
   return renderWithProviders(
     <DeckCommentPanel
       deckId="deck-1"
       isOwner={props.isOwner ?? false}
       isSignedIn={props.isSignedIn ?? false}
-    />
+    />,
+    { locale: props.locale }
   );
 }
 
@@ -248,6 +253,26 @@ describe("DeckCommentPanel", () => {
     expect(sentWrites()).toEqual([
       { method: "POST", path: DECK_COMMENTS, body: { body: "Nice curve!" } },
     ]);
+  });
+
+  // WCAG 2.2 SC 1.3.1 and 4.1.2: a placeholder is not a label, so the
+  // comment box carries its own name from the catalogue.
+  it("names the comment box for a screen reader", async () => {
+    serveStream([]);
+    renderPanel({ isSignedIn: true });
+
+    expect(
+      await screen.findByRole("textbox", { name: "Your comment" })
+    ).toHaveAttribute("placeholder", "Ask a question or share a thought…");
+  });
+
+  it("names the comment box in French", async () => {
+    serveStream([]);
+    renderPanel({ isSignedIn: true, locale: "fr" });
+
+    expect(
+      await screen.findByRole("textbox", { name: "Votre commentaire" })
+    ).toBeInTheDocument();
   });
 
   it("offers edit and delete only on the viewer's own comments", async () => {

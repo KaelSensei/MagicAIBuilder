@@ -41,6 +41,9 @@ export function CommentForm({
       <textarea
         value={body}
         onChange={(event) => setBody(event.target.value)}
+        // The design has no room for a visible label above every reply and
+        // edit box, and a placeholder is no name (WCAG 2.2 SC 4.1.2).
+        aria-label={t("fieldLabel")}
         placeholder={t("placeholder")}
         maxLength={MAX_COMMENT_LENGTH}
         rows={3}
