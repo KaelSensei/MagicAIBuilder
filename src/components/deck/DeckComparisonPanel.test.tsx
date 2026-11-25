@@ -1,5 +1,7 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { aDeckCard } from "@/test/builders/card";
+import { renderWithProviders } from "@/test/render";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { DeckComparisonPanel } from "./DeckComparisonPanel";
 
@@ -132,5 +134,47 @@ describe("DeckComparisonPanel", () => {
     expect(screen.getByText("1 → 0")).toBeDefined();
     expect(screen.getByText("Removal")).toBeDefined();
     expect(screen.getByText("0 → 1")).toBeDefined();
+  });
+
+  it("prices each deck without its Sideboard and Considering cards", async () => {
+    const decksById = new Map([
+      [
+        "deck-a",
+        [
+          aDeckCard({ id: "sol-ring", name: "Sol Ring", price: 2 }),
+          aDeckCard({
+            id: "rest",
+            name: "Rest in Peace",
+            price: 7,
+            zone: "sideboard",
+          }),
+        ],
+      ],
+      [
+        "deck-b",
+        [
+          aDeckCard({ id: "signet", name: "Arcane Signet", price: 1 }),
+          aDeckCard({
+            id: "cyclonic",
+            name: "Cyclonic Rift",
+            price: 30,
+            zone: "maybeboard",
+          }),
+        ],
+      ],
+    ]);
+    renderWithProviders(
+      <DeckComparisonPanel
+        decks={[
+          { id: "deck-a", name: "Control" },
+          { id: "deck-b", name: "Midrange" },
+        ]}
+        loadDeck={async (id) => ({ cards: decksById.get(id) ?? [] })}
+      />
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Compare decks" }));
+
+    expect(await screen.findByText("$2.00 → $1.00")).toBeDefined();
   });
 });
