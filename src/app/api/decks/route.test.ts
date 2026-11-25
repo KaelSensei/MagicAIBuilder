@@ -6,6 +6,29 @@ import {
   storedHundredCardDeck,
 } from "@/test/deck-card-group-by-fake";
 import { deckCard, type FakeDeckCard } from "@/test/playtest-db-fake";
+import { aScryfallCard } from "@/test/builders/scryfall";
+import type { ScryfallCard } from "@/lib/scryfall/types";
+import type { PairingCard } from "@/lib/deck/partner-abilities";
+import {
+  ATRAXA,
+  ATREUS,
+  BJORNA,
+  CECILY,
+  CLARA_OSWALD,
+  DONATELLO,
+  ELLIE,
+  JOEL,
+  KRATOS,
+  LEONARDO,
+  PIR,
+  RAISED_BY_GIANTS,
+  SEFRIS,
+  TENTH_DOCTOR,
+  THRASIOS,
+  TOOTHY,
+  TYMNA,
+  WILSON,
+} from "@/lib/deck/fixtures/partner-cards";
 
 const {
   mockFindMany,
@@ -447,6 +470,149 @@ describe("POST /api/decks", () => {
 
     expect(response.status).toBe(401);
     expect(mockCreate).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * A new deck's commander and partner pass the same pair rules as the
+ * command-zone route (CR 702.124, CR 903.3): the refusal comes from
+ * `commandPairRefusal`, with the cards as Scryfall answers for them.
+ */
+describe("POST /api/decks — commander pairing", () => {
+  const COMMANDER_PRINTING = "11111111-1111-4111-8111-111111111111";
+  const PARTNER_PRINTING = "22222222-2222-4222-8222-222222222222";
+
+  /** One pair per partner ability `pairing.ts` handles, each with its CR rule. */
+  const ALLOWED_PAIRS = [
+    { rule: "702.124h, Partner", commander: TYMNA, partner: THRASIOS },
+    { rule: "702.124j, Partner with", commander: PIR, partner: TOOTHY },
+    { rule: "702.124i, Friends forever", commander: BJORNA, partner: CECILY },
+    { rule: "702.124i, Survivors", commander: ELLIE, partner: JOEL },
+    { rule: "702.124i, Father & son", commander: KRATOS, partner: ATREUS },
+    {
+      rule: "702.124i, Character select",
+      commander: LEONARDO,
+      partner: DONATELLO,
+    },
+    {
+      rule: "702.124k, Choose a Background",
+      commander: WILSON,
+      partner: RAISED_BY_GIANTS,
+    },
+    {
+      rule: "702.124k, a Background in the commander slot",
+      commander: RAISED_BY_GIANTS,
+      partner: WILSON,
+    },
+    {
+      rule: "702.124m, Doctor's companion",
+      commander: CLARA_OSWALD,
+      partner: TENTH_DOCTOR,
+    },
+  ];
+
+  /** A Scryfall printing of a pairing fixture, as its own Oracle card. */
+  function printingOf(card: PairingCard, id: string): ScryfallCard {
+    return aScryfallCard({
+      id,
+      oracle_id: `oracle-of-${id}`,
+      name: card.name,
+      type_line: card.typeLine,
+      oracle_text: card.oracleText,
+    });
+  }
+
+  /** Posts a new deck whose two command slots hold these cards. */
+  function createWithPair(
+    commander: PairingCard,
+    partner: PairingCard
+  ): Promise<Response> {
+    mockGetCardCollection.mockResolvedValue({
+      data: [
+        printingOf(commander, COMMANDER_PRINTING),
+        printingOf(partner, PARTNER_PRINTING),
+      ],
+      not_found: [],
+    });
+    return POST(
+      createRequest({
+        name: "Pair",
+        commanderId: COMMANDER_PRINTING,
+        commanderName: commander.name,
+        partnerId: PARTNER_PRINTING,
+      })
+    );
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    authed();
+    mockCreate.mockImplementation(
+      ({ data }: { data: Record<string, unknown> }) =>
+        Promise.resolve({ id: "deck-1", ...data, cards: [] })
+    );
+  });
+
+  it("refuses two legends with no partner ability and creates no deck (CR 702.124)", async () => {
+    const response = await createWithPair(ATRAXA, SEFRIS);
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({
+      error: "Commander and partner cannot share the command zone",
+    });
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
+  it.each(ALLOWED_PAIRS)(
+    "creates a deck whose pair is allowed by CR $rule",
+    async ({ commander, partner }) => {
+      const response = await createWithPair(commander, partner);
+
+      expect(response.status).toBe(201);
+      expect(mockCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            commanderId: COMMANDER_PRINTING,
+            partnerId: PARTNER_PRINTING,
+          }),
+        })
+      );
+    }
+  );
+
+  it("creates a deck with a commander only, without looking a pair up", async () => {
+    const response = await POST(
+      createRequest({ name: "Solo", commanderId: COMMANDER_PRINTING })
+    );
+
+    expect(response.status).toBe(201);
+    expect(mockGetCardCollection).not.toHaveBeenCalled();
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          commanderId: COMMANDER_PRINTING,
+          partnerId: null,
+        }),
+      })
+    );
+  });
+
+  it("does not judge a pair whose printing Scryfall does not return, as the command-zone route does", async () => {
+    mockGetCardCollection.mockResolvedValue({
+      data: [printingOf(ATRAXA, COMMANDER_PRINTING)],
+      not_found: [{ id: PARTNER_PRINTING }],
+    });
+
+    const response = await POST(
+      createRequest({
+        name: "Unknown partner",
+        commanderId: COMMANDER_PRINTING,
+        partnerId: PARTNER_PRINTING,
+      })
+    );
+
+    expect(response.status).toBe(201);
+    expect(mockCreate).toHaveBeenCalledOnce();
   });
 });
 
