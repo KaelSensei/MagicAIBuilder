@@ -13,6 +13,7 @@
  */
 import { categorizeCard } from "./categories";
 import type { TermCard } from "./bracket-assessment";
+import { compareByNameThenId } from "./card-name-order";
 import type { CardCategory, DeckCard } from "./types";
 
 /**
@@ -74,8 +75,7 @@ export function placementOf(card: DeckCard): TermCard {
  */
 export function compareTermCards(left: TermCard, right: TermCard): number {
   return (
-    left.name.localeCompare(right.name, "en") ||
-    left.cardId.localeCompare(right.cardId, "en") ||
+    compareByNameThenId(left, right) ||
     ruleIdOf(left).localeCompare(ruleIdOf(right), "en")
   );
 }
