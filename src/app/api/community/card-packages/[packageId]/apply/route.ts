@@ -1,6 +1,13 @@
 /**
  * Card package apply API
  * POST /api/community/card-packages/:packageId/apply — adds the accepted, still-legal package cards to a deck
+ *
+ * When it adds at least one card, the rows and the deck's next version
+ * (`deckVersionStep`) commit in one transaction, so another tab that read the
+ * deck before the apply is refused (409) on its next card write. The step is
+ * unconditional: the apply is a whole-deck action that takes no version from
+ * the client, and the server reads the deck itself. An apply that adds no
+ * card writes nothing and leaves the version alone.
  */
 
 import { NextResponse } from "next/server";
@@ -10,6 +17,7 @@ import { requireAuth } from "@/lib/auth/helpers";
 import { commandZoneNamesOf, previewCardPackage } from "@/lib/community/card-package-preview";
 import { verifyPackageCards } from "@/lib/community/verified-package-cards";
 import { prisma } from "@/lib/db/prisma";
+import { deckVersionStep } from "@/lib/deck/deck-repository";
 import { ALL_FORMATS } from "@/lib/deck/formats";
 import { isCommanderRow } from "@/lib/deck/bulk-edit-command-zone";
 import { logger } from "@/lib/logger";
@@ -115,9 +123,10 @@ export async function POST(request: Request, context: RouteContext) {
           zone: "main",
         })),
       }),
+      // Unconditional: the apply takes no version from the client.
       prisma.deck.update({
         where: { id: body.data.deckId },
-        data: { updatedAt: new Date() },
+        data: deckVersionStep(),
       }),
     ]);
     return NextResponse.json({ addedCount: createResult.count, blockedCount: preview.blockedCount });

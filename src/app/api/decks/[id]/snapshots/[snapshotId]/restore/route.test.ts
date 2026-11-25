@@ -122,6 +122,8 @@ describe("POST /api/decks/[id]/snapshots/[snapshotId]/restore", () => {
         commanderId: "card-tymna",
         commanderName: "Tymna the Weaver",
         partnerId: "card-thrasios",
+        version: { increment: 1 },
+        updatedAt: expect.any(Date),
       },
     });
   });
@@ -153,6 +155,8 @@ describe("POST /api/decks/[id]/snapshots/[snapshotId]/restore", () => {
         commanderName: "Tymna the Weaver",
         partnerId: null,
         companionId: "card-lurrus",
+        version: { increment: 1 },
+        updatedAt: expect.any(Date),
       },
     });
   });
