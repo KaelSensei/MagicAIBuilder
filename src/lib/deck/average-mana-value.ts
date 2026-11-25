@@ -9,6 +9,17 @@
  * @module deck/average-mana-value
  */
 
+/**
+ * Number format options for the average: exactly two decimals, in the caller's locale, so 4.75
+ * reads "4.75" in English and "4,75" in French, and 0 keeps its "0.00". The Stats panel, the mana
+ * curve and the shared deck view all write the average with it, so the same figure never reads
+ * differently in two places. Pass it to `Intl.NumberFormat` or next-intl's `format.number`.
+ */
+export const AVERAGE_MANA_VALUE_FORMAT = {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+} as const satisfies Intl.NumberFormatOptions;
+
 /** The fields of a deck row the average reads; the store's and the share link's rows both fit. */
 export interface ManaValueRow {
   readonly zone: string;

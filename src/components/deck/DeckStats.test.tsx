@@ -5,9 +5,13 @@ import {
   renderWithProviders,
   type TestLocale,
 } from "@/test/render";
+import { aDeck } from "@/test/builders/deck";
+import { aDeckCard } from "@/test/builders/card";
 import { DeckStats } from "./DeckStats";
 import type { DeckStats as DeckStatsData } from "@/lib/deck/analysis-types";
 import type { DeckFormat } from "@/lib/deck/formats";
+import type { Deck } from "@/lib/deck/types";
+import { computeDeckStats } from "@/lib/deck/stats";
 import type { FormatStats } from "@/lib/deck/format-stats";
 import type { ManaAlignment } from "@/lib/deck/mana-alignment";
 import type { TurnOnePlayability } from "@/lib/deck/turn-one";
@@ -309,6 +313,116 @@ describe("DeckStats", () => {
       // Anchored to a colour name: "Any one-drop" is the headline, not a row.
       expect(screen.queryByText(/^(White|Blue|Black|Red|Green) one-drop$/)).toBeNull();
       expect(screen.getByText("Any one-drop")).toBeDefined();
+    });
+  });
+
+  describe("average mana value (I-37)", () => {
+    /** Three 2-drops and Emrakul, the Promised End (13) under The Gitrog Monster (5): 19 / 4. */
+    const COMMANDER_DECK = aDeck({
+      commander: aDeckCard({
+        id: "gitrog",
+        name: "The Gitrog Monster",
+        cmc: 5,
+        typeLine: "Legendary Creature — Frog Horror",
+        category: "creature",
+      }),
+      cards: [
+        aDeckCard({
+          id: "bears",
+          name: "Grizzly Bears",
+          cmc: 2,
+          typeLine: "Creature — Bear",
+          category: "creature",
+        }),
+        aDeckCard({
+          id: "counterspell",
+          name: "Counterspell",
+          cmc: 2,
+          typeLine: "Instant",
+          category: "removal",
+        }),
+        aDeckCard({
+          id: "signet",
+          name: "Arcane Signet",
+          cmc: 2,
+          typeLine: "Artifact",
+          category: "ramp",
+        }),
+        aDeckCard({
+          id: "emrakul",
+          name: "Emrakul, the Promised End",
+          cmc: 13,
+          typeLine: "Legendary Creature — Eldrazi",
+          category: "creature",
+        }),
+      ],
+    });
+
+    /** Renders the panel as the builder does: the deck's stats, and its analysis cards with the commander. */
+    function renderDeckStats(deck: Deck, locale: TestLocale = "en") {
+      const analysisCards = [deck.commander, ...deck.cards].filter(
+        (card) => card !== null
+      );
+      return renderWithProviders(
+        <DeckStats
+          stats={computeDeckStats(deck)}
+          format={deck.format}
+          cards={analysisCards}
+          targetBracket={3}
+        />,
+        { locale }
+      );
+    }
+
+    /** The value beside a label in the Deck checks panel. */
+    function panelValue(label: string): string | null {
+      return (
+        screen.getByText(label).parentElement?.nextElementSibling
+          ?.textContent ?? null
+      );
+    }
+
+    it("shows the panel's average under the curve: the commander left out, a 13-drop counted at 13", () => {
+      renderDeckStats(COMMANDER_DECK);
+
+      expect(panelValue("Avg CMC")).toBe("4.75");
+      expect(screen.getByText(/^Avg CMC: /).textContent).toBe("Avg CMC: 4.75");
+    });
+
+    it("keeps the commander and the 13-drop on the curve's bars", () => {
+      renderDeckStats(COMMANDER_DECK);
+
+      expect(
+        screen.getByRole("button", {
+          name: "Mana value 2: 2 permanents, 1 spell",
+        })
+      ).toBeEnabled();
+      expect(
+        screen.getByRole("button", {
+          name: "Mana value 5: 1 permanent, 0 spells",
+        })
+      ).toBeEnabled();
+      expect(
+        screen.getByRole("button", {
+          name: "Mana value 7+: 1 permanent, 0 spells",
+        })
+      ).toBeEnabled();
+    });
+
+    it("writes both averages with a decimal comma for a French reader", () => {
+      renderDeckStats(COMMANDER_DECK, "fr");
+
+      expect(panelValue("CMC moyen")).toBe("4,75");
+      expect(screen.getByText(/^CMC moyen : /).textContent).toBe(
+        "CMC moyen : 4,75"
+      );
+    });
+
+    it("shows 0.00 in the panel and a dash under the curve for an empty deck", () => {
+      renderDeckStats(aDeck());
+
+      expect(panelValue("Avg CMC")).toBe("0.00");
+      expect(screen.getByText(/^Avg CMC: /).textContent).toBe("Avg CMC: —");
     });
   });
 });
