@@ -14,14 +14,12 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { readJsonBody } from "@/lib/api/json-body";
 import { requireAuth } from "@/lib/auth/helpers";
-import { commandZoneNamesOf, previewCardPackage } from "@/lib/community/card-package-preview";
+import { PACKAGE_ZONE, packagePreviewContextOf, previewCardPackage } from "@/lib/community/card-package-preview";
 import { verifyPackageCards } from "@/lib/community/verified-package-cards";
 import { prisma } from "@/lib/db/prisma";
 import { deckVersionStep } from "@/lib/deck/deck-repository";
 import { ALL_FORMATS } from "@/lib/deck/formats";
-import { isCommanderRow } from "@/lib/deck/bulk-edit-command-zone";
 import { logger } from "@/lib/logger";
-import { isBasicLand } from "@/lib/scryfall/type-line";
 
 const ApplyRequestSchema = z.object({
   deckId: z.string().min(1).max(50),
@@ -57,7 +55,7 @@ export async function POST(request: Request, context: RouteContext) {
         format: true,
         cards: { select: {
           name: true, quantity: true, isCommander: true, isPartner: true,
-          typeLine: true, colorIdentity: true,
+          typeLine: true, colorIdentity: true, zone: true, category: true,
         } },
       },
     });
@@ -78,27 +76,15 @@ export async function POST(request: Request, context: RouteContext) {
       return NextResponse.json({ error: "Card package not found" }, { status: 404 });
     }
 
-    const commanderColors = new Set<string>();
-    for (const card of deck.cards) {
-      if (isCommanderRow(card)) {
-        for (const color of card.colorIdentity) commanderColors.add(color);
-      }
-    }
     const acceptedIds = new Set(body.data.acceptedScryfallIds);
     const acceptedCards = await verifyPackageCards(
       cardPackage.cards.filter((card) => acceptedIds.has(card.scryfallId)),
       format.data
     );
-    const preview = previewCardPackage(acceptedCards, {
-      format: format.data,
-      commanderColorIdentity: [...commanderColors],
-      commandZoneNames: commandZoneNamesOf(deck.cards),
-      existingCards: deck.cards.map((card) => ({
-        name: card.name,
-        quantity: card.quantity,
-        isBasicLand: isBasicLand(card.typeLine),
-      })),
-    });
+    const preview = previewCardPackage(
+      acceptedCards,
+      packagePreviewContextOf(format.data, deck.cards)
+    );
     const readyCards = acceptedCards.filter(
       (_card, index) => preview.cards[index]?.status === "ready"
     );
@@ -120,7 +106,7 @@ export async function POST(request: Request, context: RouteContext) {
           typeLine: card.typeLine,
           cmc: card.manaValue,
           category: card.isBasicLand ? "land" : "other",
-          zone: "main",
+          zone: PACKAGE_ZONE,
         })),
       }),
       // Unconditional: the apply takes no version from the client.
