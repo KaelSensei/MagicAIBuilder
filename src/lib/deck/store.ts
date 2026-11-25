@@ -24,6 +24,7 @@ import {
   type CopyLimitCard,
 } from "@/lib/deck/multiples";
 import { copiesCountedFor, isCountedZone } from "@/lib/deck/counted-copies";
+import { deleteOnServer, type DeckDeletion } from "@/lib/deck/deck-deletion";
 import * as deckApi from "@/lib/db/deck-api";
 import {
   DeckApiError,
@@ -650,7 +651,18 @@ export interface DeckStore {
    *   its status; the fetch error when the network fails
    */
   duplicateDeck: (id: string) => Promise<DuplicatedDeck>;
-  deleteDeck: (id: string) => Promise<void>;
+  /**
+   * Deletes a saved deck on the server, then drops it from the store with its
+   * undo history, and clears the active deck if it was this one. A deck the
+   * server no longer has counts as deleted (`deleteOnServer`). Raises no
+   * toast: the caller tells the player (`useDeckDeletion`).
+   *
+   * @returns `deleted`, or `alreadyDeleted` when the server answered 404
+   * @throws DeckApiError when the server refuses or fails the delete for
+   *   another reason, carrying its status; the fetch error when the network
+   *   fails. The deck then stays as it was.
+   */
+  deleteDeck: (id: string) => Promise<DeckDeletion>;
   /**
    * Drops the guest deck from memory and from this browser, once an account
    * holds a copy. Memory goes first: the guest deck is written back to the
@@ -1589,7 +1601,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
   deleteDeck: async (id: string) => {
     set({ isSyncing: true });
     try {
-      await deckApi.deleteDeck(id);
+      const deletion = await deleteOnServer(() => deckApi.deleteDeck(id));
       set((state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars -- destructuring to omit the deleted deck from state
         const { [id]: _removed, ...rest } = state.decks;
@@ -1599,6 +1611,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
           undoStack: state.undoStack.filter((action) => action.deckId !== id),
         };
       });
+      return deletion;
     } finally {
       set({ isSyncing: hasPendingSaves() });
     }

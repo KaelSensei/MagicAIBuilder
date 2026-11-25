@@ -9,9 +9,10 @@
  */
 import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, onTestFinished, vi } from "vitest";
 import { GUEST_DECK_ID } from "@/lib/deck/guest-deck";
 import { useDeckStore, type DeckAction } from "@/lib/deck/store";
+import { logger } from "@/lib/logger";
 import { aDeckCard } from "@/test/builders/card";
 import { aDeck } from "@/test/builders/deck";
 import {
@@ -149,6 +150,86 @@ describe("DeleteDeckButton", () => {
     expect(useDeckStore.getState().undoStack).toEqual([LAST_ADDITION]);
     expect(push).not.toHaveBeenCalled();
     expect(toasts).not.toHaveBeenCalled();
+  });
+
+  it("a server failure keeps the dialog open with the message, and the raw error goes to the log once", async () => {
+    const logError = vi
+      .spyOn(logger, "error")
+      .mockImplementation(() => undefined);
+    onTestFinished(() => logError.mockRestore());
+    api.deleteDeck.mockRejectedValueOnce(
+      new DeckApiRefusal(500, "Failed to delete deck")
+    );
+    const user = userEvent.setup();
+    renderWithProviders(<DeleteDeckButton deckId={ATRAXA_ID} />);
+
+    const dialog = await openDialog(user);
+    await user.click(
+      within(dialog).getByRole("button", { name: "Delete deck" })
+    );
+
+    expect(await within(dialog).findByRole("alert")).toHaveTextContent(
+      "The deck could not be deleted. Try again."
+    );
+    expect(dialog).not.toHaveTextContent("HTTP 500");
+    expect(useDeckStore.getState().decks[ATRAXA_ID]?.name).toBe(ATRAXA_NAME);
+    expect(push).not.toHaveBeenCalled();
+    expect(logError).toHaveBeenCalledOnce();
+    expect(logError).toHaveBeenCalledWith(
+      "Unexpected error",
+      "deleteDeck",
+      expect.objectContaining({
+        message: "[deleteDeck] HTTP 500: Failed to delete deck",
+      })
+    );
+  });
+
+  it("a French player whose session ended is asked to sign in again", async () => {
+    const logError = vi
+      .spyOn(logger, "error")
+      .mockImplementation(() => undefined);
+    onTestFinished(() => logError.mockRestore());
+    api.deleteDeck.mockRejectedValueOnce(
+      new DeckApiRefusal(401, "Unauthorized")
+    );
+    const user = userEvent.setup();
+    renderWithProviders(<DeleteDeckButton deckId={ATRAXA_ID} />, {
+      locale: "fr",
+    });
+
+    await user.click(screen.getByRole("button", { name: "Supprimer le deck" }));
+    const dialog = await screen.findByRole("dialog", {
+      name: `Supprimer ${ATRAXA_NAME} ?`,
+    });
+    await user.click(
+      within(dialog).getByRole("button", { name: "Supprimer le deck" })
+    );
+
+    expect(await within(dialog).findByRole("alert")).toHaveTextContent(
+      "Votre session a expiré. Reconnectez-vous pour supprimer un deck."
+    );
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  // What the player asked for is already true: the deck is gone.
+  it("a deck already deleted elsewhere opens /decks and says it was already gone", async () => {
+    api.deleteDeck.mockRejectedValueOnce(
+      new DeckApiRefusal(404, "Deck not found")
+    );
+    const user = userEvent.setup();
+    renderWithProviders(<DeleteDeckButton deckId={ATRAXA_ID} />);
+
+    const dialog = await openDialog(user);
+    await user.click(
+      within(dialog).getByRole("button", { name: "Delete deck" })
+    );
+
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/decks"));
+    expect(useDeckStore.getState().decks[ATRAXA_ID]).toBeUndefined();
+    expect(useDeckStore.getState().undoStack).toEqual([]);
+    expect(toasts.mock.calls).toEqual([
+      ["info", "This deck had already been deleted."],
+    ]);
   });
 
   it("the guest deck shows no button", () => {
