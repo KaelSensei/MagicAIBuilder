@@ -194,7 +194,7 @@ describe("useDeckStore — addTag / removeTag", () => {
 });
 
 describe("useDeckStore — failed tag saves", () => {
-  const RETRY_TOAST = "Could not save deck tags. Please retry.";
+  const RETRY_TOAST = { key: "deck.sync.tagsFailed" };
 
   beforeEach(() => {
     vi.clearAllMocks();
