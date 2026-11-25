@@ -1,6 +1,10 @@
 import { describe, it, expect, vi } from "vitest";
 import { screen, within } from "@testing-library/react";
-import { renderWithIntl } from "@/test/render-with-intl";
+import {
+  renderWithIntl,
+  renderWithProviders,
+  type TestLocale,
+} from "@/test/render";
 import { DeckStats } from "./DeckStats";
 import type { DeckStats as DeckStatsData } from "@/lib/deck/analysis-types";
 import type { DeckFormat } from "@/lib/deck/formats";
@@ -76,9 +80,14 @@ function makeStats(overrides: Partial<DeckStatsData> = {}): DeckStatsData {
   };
 }
 
-function renderStats(stats: DeckStatsData | null, format: DeckFormat = "commander") {
-  return renderWithIntl(
-    <DeckStats stats={stats} format={format} targetBracket={3} />
+function renderStats(
+  stats: DeckStatsData | null,
+  format: DeckFormat = "commander",
+  locale: TestLocale = "en"
+) {
+  return renderWithProviders(
+    <DeckStats stats={stats} format={format} targetBracket={3} />,
+    { locale }
   );
 }
 
@@ -169,6 +178,17 @@ describe("DeckStats", () => {
       );
       expect(screen.getByText("7 · 19%")).toBeDefined();
     });
+
+    it("writes the threat and interaction shares the French way for a French reader", () => {
+      renderStats(
+        makeStats({ totalCards: 60, formatStats: makeFormatStats() }),
+        "modern",
+        "fr"
+      );
+      // Intl writes the French percent sign after a narrow no-break space.
+      expect(screen.getByText(/^20 · 40\s%$/u)).toBeDefined();
+      expect(screen.getByText(/^10 · 20\s%$/u)).toBeDefined();
+    });
   });
 
   describe("mana alignment", () => {
@@ -216,6 +236,18 @@ describe("DeckStats", () => {
       expect(screen.getByText("4/16 sources · 80% of pips")).toBeDefined();
     });
 
+    it("writes the pip share the French way for a French reader", () => {
+      renderStats(
+        makeStats({ manaAlignment: makeAlignment() }),
+        "commander",
+        "fr"
+      );
+      // Intl writes the French percent sign after a narrow no-break space.
+      expect(
+        screen.getByText(/^20\/20 sources · 100\s% des pips$/u)
+      ).toBeDefined();
+    });
+
     it("lists colourless-only lands separately when the deck runs any", () => {
       renderStats(makeStats({ manaAlignment: makeAlignment({ colorlessSources: 3 }) }));
       expect(screen.getByText("Colourless only")).toBeDefined();
@@ -249,6 +281,17 @@ describe("DeckStats", () => {
     it("shows the colour-blind chance as a whole percentage", () => {
       renderStats(makeStats({ turnOnePlayability: makePlayability() }));
       expect(screen.getByText("62%")).toBeDefined();
+    });
+
+    it("writes the turn-one chances the French way for a French reader", () => {
+      renderStats(
+        makeStats({ turnOnePlayability: makePlayability() }),
+        "commander",
+        "fr"
+      );
+      // Intl writes the French percent sign after a narrow no-break space.
+      expect(screen.getByText(/^62\s%$/u)).toBeDefined();
+      expect(screen.getByText(/^51\s%$/u)).toBeDefined();
     });
 
     it("names the colour on each per-colour row", () => {
