@@ -25,6 +25,7 @@ import {
   searchResultsView,
   type SearchResultsPhase,
 } from "./search-results-view";
+import { searchFailureMessageKey } from "./search-failure";
 
 interface SearchResultsProps {
   readonly cards: readonly ScryfallCard[];
@@ -81,7 +82,8 @@ function PhaseIcon({ phase }: { readonly phase: SearchResultsPhase }) {
 }
 
 /**
- * Shows, in this order of precedence: a spinner while loading, the error, a "Collection only"
+ * Shows, in this order of precedence: a spinner while loading, why the search failed in the
+ * player's words (`search-failure.ts`; never the thrown message), a "Collection only"
  * notice when there was no collection to filter by, an empty state, or the cards with their count.
  * The status line between them is one `<output>` that every state keeps mounted.
  */
@@ -117,7 +119,7 @@ export function SearchResults(props: SearchResultsProps) {
         </output>
         {phase === "failed" && error ? (
           <p role="alert" className="text-sm">
-            {error.message}
+            {t(searchFailureMessageKey(error))}
           </p>
         ) : null}
         {phase === "empty" ? (
