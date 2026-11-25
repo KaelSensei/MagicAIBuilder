@@ -449,6 +449,8 @@ export function ImportDialog({
                   so a localised example would show input the parser rejects. */}
               <textarea
                 className={cn(textAreaShellClassName, "h-48 resize-none font-mono")}
+                // The sample list is no name (WCAG 2.2 SC 1.3.1, 4.1.2).
+                aria-label={t("import.fieldLabel")}
                 placeholder={`Commander\n1 Atraxa, Praetors' Voice\n\nDeck\n1 Sol Ring\n1 Arcane Signet\n...`}
                 value={text}
                 onChange={(e) => {

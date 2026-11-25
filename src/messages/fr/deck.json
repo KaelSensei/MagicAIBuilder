@@ -267,6 +267,7 @@
     "cancel": "Annuler",
     "import": "Importer",
     "previewDecklist": "Prévisualiser la liste",
+    "fieldLabel": "Liste de deck à importer",
     "moxfieldRefused": "Moxfield a refusé la requête de MagicAIBuilder : ce deck ne peut donc pas être récupéré d’ici. Pour l’importer quand même, ouvrez le deck sur moxfield.com, utilisez Export pour copier la liste en texte, puis collez-la dans l’onglet {tab}.",
     "moxfieldProfiles": {
       "title": "Profils Moxfield",
@@ -319,6 +320,7 @@
     "unknownCards": "Rien n’a été enregistré — aucune carte trouvée pour : {names}",
     "invalidPartner": "Rien n’a été enregistré — {name} ne peut pas être associé à ce commandant.",
     "invalidCompanion": "Rien n’a été enregistré — {name} ne peut pas être le compagnon de ce deck.",
+    "fieldLabel": "Liste de deck",
     "lineCount": "{count, plural, one {# ligne} other {# lignes}}",
     "save": "Enregistrer",
     "savedButton": "Enregistré !"

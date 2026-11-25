@@ -93,6 +93,26 @@ it("labels a secondary-zone preview row in French", async () => {
   expect(screen.getByText("1 × Negate").closest("li")).toHaveTextContent("Réserve");
 });
 
+// WCAG 2.2 SC 1.3.1 and 4.1.2: the placeholder is an English sample list,
+// not a label, so the text box carries its own name from the catalogue.
+it("names the decklist text box for a screen reader", () => {
+  renderWithIntl(<ImportDialog open onOpenChange={vi.fn()} />);
+
+  expect(
+    screen.getByRole("textbox", { name: "Decklist to import" })
+  ).toHaveAttribute("placeholder", expect.stringContaining("Sol Ring"));
+});
+
+it("names the decklist text box in French", () => {
+  renderWithIntl(<ImportDialog open onOpenChange={vi.fn()} />, {
+    locale: "fr",
+  });
+
+  expect(
+    screen.getByRole("textbox", { name: "Liste de deck à importer" })
+  ).toBeInTheDocument();
+});
+
 it("discards a stale preview when the pasted list changes", async () => {
   fetchInBatches.mockResolvedValueOnce([]);
   renderWithIntl(<ImportDialog open onOpenChange={vi.fn()} />);
