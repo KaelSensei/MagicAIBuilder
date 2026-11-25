@@ -389,6 +389,8 @@ const TRACKED: readonly SavePath[] = [
   { call: "renameDeck", route: PATCH_DECK, run: (s) => s.renameDeck(DECK_ID, "Goblin Horde") },
   { call: "setManualBracket", route: PATCH_DECK, run: (s) => s.setManualBracket(3) },
   { call: "setBudget", route: PATCH_DECK, run: (s) => s.setBudget(150) },
+  { call: "updateDeckDescription", route: PATCH_DECK, run: (s) => s.updateDeckDescription(DECK_ID, "Go wide") },
+  { call: "setTargetBracket", route: PATCH_DECK, run: (s) => s.setTargetBracket(3) },
 ];
 
 /** Raise the flag, but are not counted: another write settling first clears it. */
@@ -400,10 +402,8 @@ const UNTRACKED: readonly SavePath[] = [
   { call: "setCompanion", route: PATCH_COMMAND_ZONE, run: (s) => s.setCompanion(LURRUS) },
   { call: "addDeckCard", route: POST_CARD, run: (s) => s.addDeckCard(ARCANE_SIGNET) },
   { call: "swapCardPrinting", route: patchCard(SOL_RING), run: (s) => s.swapCardPrinting(SOL_RING.id, SOL_RING_PRINTING) },
-  { call: "updateDeckDescription", route: PATCH_DECK, run: (s) => s.updateDeckDescription(DECK_ID, "Go wide") },
   { call: "addTag", route: PATCH_DECK, run: (s) => s.addTag(DECK_ID, "haste") },
   { call: "removeTag", route: PATCH_DECK, run: (s) => s.removeTag(DECK_ID, "tokens") },
-  { call: "setTargetBracket", route: PATCH_DECK, run: (s) => s.setTargetBracket(3) },
   { call: "applyBulkEdit", route: `PATCH ${CARDS_ROUTE}`, run: (s) => s.applyBulkEdit(BULK_EDIT_REMOVING_SOL_RING) },
   { call: "createDeck", route: "POST /api/decks", run: (s) => s.createDeck("Elves") },
   { call: "duplicateDeck", route: `POST ${DECK_ROUTE}/duplicate`, run: (s) => s.duplicateDeck(DECK_ID) },
