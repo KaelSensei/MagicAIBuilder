@@ -20,10 +20,7 @@
  * @param locale - a BCP 47 locale tag, such as next-intl's current locale
  * @returns the names as one phrase
  */
-export function cardListText(
-  names: readonly string[],
-  locale: string
-): string {
+export function cardListText(names: readonly string[], locale: string): string {
   return new Intl.ListFormat(locale, {
     style: "long",
     type: "conjunction",
