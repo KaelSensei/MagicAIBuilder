@@ -17,7 +17,7 @@ describe("BlockedSuggestions", () => {
               role: "draw",
               synergy: "Strong draw",
               manaValue: 2,
-              curveImpact: "Below average",
+              curve: { position: "below", deckAverage: 3 },
               colorIdentity: ["R"],
               colorCompatible: false,
               commanderLegal: true,

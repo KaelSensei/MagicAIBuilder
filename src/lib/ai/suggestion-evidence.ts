@@ -33,6 +33,19 @@ export interface SuggestionEvidenceContext {
   readonly commandZoneNames?: readonly string[];
 }
 
+/** Where a card's mana value sits against the deck's average mana value. */
+export type CurvePosition = "below" | "near" | "above";
+
+/**
+ * A card's place on the deck's curve, as data: the panel words it in the
+ * player's language and number format.
+ */
+export interface SuggestionCurve {
+  readonly position: CurvePosition;
+  /** The deck's average mana value, unrounded */
+  readonly deckAverage: number;
+}
+
 /**
  * The facts streamed beside one suggestion. `null` means the fact is unknown
  * (no card, or Scryfall gave no value), never "false". `verified` is true only
@@ -42,7 +55,7 @@ export interface SuggestionEvidence {
   readonly role: string;
   readonly synergy: string;
   readonly manaValue: number | null;
-  readonly curveImpact: string;
+  readonly curve: SuggestionCurve | null;
   readonly colorIdentity: readonly string[];
   readonly colorCompatible: boolean | null;
   readonly commanderLegal: boolean | null;
@@ -50,22 +63,22 @@ export interface SuggestionEvidence {
   readonly verified: boolean;
 }
 
-function curveImpact(manaValue: number, averageCmc: number): string {
-  if (manaValue < averageCmc - 0.25) {
-    return `Below the deck average (${averageCmc.toFixed(2)})`;
-  }
-  if (manaValue > averageCmc + 0.25) {
-    return `Above the deck average (${averageCmc.toFixed(2)})`;
-  }
-  return `Near the deck average (${averageCmc.toFixed(2)})`;
+/** How far from the deck average a mana value still counts as "near", either way. */
+const NEAR_AVERAGE_MARGIN = 0.25;
+
+function curvePosition(manaValue: number, deckAverage: number): CurvePosition {
+  if (manaValue < deckAverage - NEAR_AVERAGE_MARGIN) return "below";
+  if (manaValue > deckAverage + NEAR_AVERAGE_MARGIN) return "above";
+  return "near";
 }
 
 /**
  * The evidence for one suggested card.
  *
  * Without a card, it keeps the model's role and rationale and marks every
- * checked fact unknown and the evidence unverified. The curve is "near" the
- * deck average within a quarter of a mana either way.
+ * checked fact unknown and the evidence unverified. The curve compares the
+ * card's mana value (Scryfall's `cmc`, CR 202.3) with the deck average: it is
+ * "near" within a quarter of a mana either way, the boundaries included.
  *
  * @param card - the card's Scryfall data; `undefined` when the lookup did not find it
  */
@@ -79,7 +92,7 @@ export function buildSuggestionEvidence(
       role: suggestion.category,
       synergy: suggestion.reason,
       manaValue: null,
-      curveImpact: "Mana value unavailable",
+      curve: null,
       colorIdentity: [],
       colorCompatible: null,
       commanderLegal: null,
@@ -98,7 +111,10 @@ export function buildSuggestionEvidence(
     role: suggestion.category,
     synergy: suggestion.reason,
     manaValue: card.cmc,
-    curveImpact: curveImpact(card.cmc, context.averageCmc),
+    curve: {
+      position: curvePosition(card.cmc, context.averageCmc),
+      deckAverage: context.averageCmc,
+    },
     colorIdentity: card.color_identity,
     colorCompatible: !isOutsideDeckIdentity(identityRule, {
       colorIdentity: card.color_identity,

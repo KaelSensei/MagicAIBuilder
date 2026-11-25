@@ -35,7 +35,7 @@ describe("buildSuggestionEvidence", () => {
       role: "ramp",
       synergy: "Fixes colors while accelerating the commander.",
       manaValue: 2,
-      curveImpact: "Below the deck average (3.40)",
+      curve: { position: "below", deckAverage: 3.4 },
       colorIdentity: [],
       colorCompatible: true,
       commanderLegal: true,
@@ -78,6 +78,8 @@ describe("buildSuggestionEvidence", () => {
       expect.objectContaining({
         role: "draw",
         synergy: "Provider rationale.",
+        manaValue: null,
+        curve: null,
         commanderLegal: null,
         colorCompatible: null,
         priceUsd: null,
@@ -85,6 +87,27 @@ describe("buildSuggestionEvidence", () => {
       })
     );
   });
+
+  it.each([
+    { manaValue: 2, deckAverage: 3, position: "below" },
+    { manaValue: 3, deckAverage: 3.26, position: "below" },
+    { manaValue: 3, deckAverage: 3.25, position: "near" },
+    { manaValue: 3, deckAverage: 3, position: "near" },
+    { manaValue: 3, deckAverage: 2.75, position: "near" },
+    { manaValue: 3, deckAverage: 2.74, position: "above" },
+    { manaValue: 4, deckAverage: 3, position: "above" },
+  ])(
+    "places mana value $manaValue against a deck average of $deckAverage as $position",
+    ({ manaValue, deckAverage, position }) => {
+      const evidence = buildSuggestionEvidence(
+        { name: "Arcane Signet", reason: "Ramp.", category: "ramp" },
+        card({ cmc: manaValue }),
+        { deckColors: [], averageCmc: deckAverage }
+      );
+
+      expect(evidence.curve).toEqual({ position, deckAverage });
+    }
+  );
 });
 
 describe("suggestionLookupNames", () => {

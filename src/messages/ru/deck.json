@@ -536,7 +536,11 @@
       "incompatible": "outside color identity",
       "commanderLegal": "Commander legal",
       "commanderIllegal": "Not Commander legal",
-      "unknown": "Unknown"
+      "unknown": "Unknown",
+      "curveBelow": "Mana value {manaValue} · below the deck average ({average})",
+      "curveNear": "Mana value {manaValue} · near the deck average ({average})",
+      "curveAbove": "Mana value {manaValue} · above the deck average ({average})",
+      "curveUnknown": "Mana value unknown"
     }
   },
   "combos": {
