@@ -209,8 +209,9 @@ describe("ShareDeckView mana curve", () => {
 // `lib/deck/fixtures/rule-divergence-deck.ts` and pin both answers side by
 // side; `lib/deck/rule-divergences.characterization.test.ts` pins the rest.
 // B2-41 makes the page use the analysis numbers and flips them. The mana curve
-// already draws the builder's chart from the builder's rows (I-37), so its two
-// tests here assert the agreement. They live in this file because rendering the
+// already draws the builder's chart from the builder's rows, and the Stats
+// panel's average mana value reads the builder's rule (I-37), so those tests
+// here assert the agreement. They live in this file because rendering the
 // page needs the `@/i18n/navigation` stub above, and a new file may not add a
 // mock of a repository module (ADR 0005, rule 5).
 
@@ -264,13 +265,13 @@ describe("ShareDeckView against computeDeckStats", () => {
     );
   });
 
-  it("currently puts the companion and Considering in the Stats panel's average mana value, which computeDeckStats leaves out (pinned; see B2-41)", () => {
+  it("shows the builder's average mana value in the Stats panel, without the companion or Considering (I-37)", () => {
     const stats = computeDeckStats(DECK);
 
     renderSharedPage(DECK);
 
-    expect(statValue("Avg. CMC")).toBe("3");
     expect(stats.avgCmc).toBe(2.25);
+    expect(statValue("Avg. CMC")).toBe(stats.avgCmc.toFixed(2));
   });
 
   it("currently draws the colour bar from colour identity, one per row with lands and the command zone, where computeDeckStats counts mana symbols per copy of each nonland card (pinned; see B2-41)", () => {

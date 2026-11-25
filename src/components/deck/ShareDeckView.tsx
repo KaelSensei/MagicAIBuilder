@@ -24,10 +24,8 @@ import { filterCardsByCategory } from "@/lib/deck/deck-preview";
 import { CategoryFilter, DeckCardStrip } from "./DeckPreviewChrome";
 import type { CardCategory } from "@/lib/deck/types";
 import { CATEGORY_LABELS, CATEGORY_ORDER } from "@/lib/deck/categories";
-import {
-  commandSlotOf,
-  isCommanderRow,
-} from "@/lib/deck/bulk-edit-command-zone";
+import { commandSlotOf } from "@/lib/deck/bulk-edit-command-zone";
+import { averageManaValue } from "@/lib/deck/average-mana-value";
 import { logger } from "@/lib/logger";
 import type { ApiCard, ApiSharedDeck } from "@/lib/deck/share-types";
 import { normalizeScryfallImageUrl } from "@/lib/scryfall/images";
@@ -52,16 +50,6 @@ function computeColorDistribution(cards: ApiCard[]): Record<string, number> {
     }
   }
   return dist;
-}
-
-function computeAvgCmc(cards: ApiCard[]): number {
-  const nonLands = cards.filter(
-    (c) => c.category !== "land" && !isCommanderRow(c)
-  );
-  if (nonLands.length === 0) return 0;
-  const total = nonLands.reduce((sum, c) => sum + c.cmc * c.quantity, 0);
-  const count = nonLands.reduce((sum, c) => sum + c.quantity, 0);
-  return count > 0 ? Math.round((total / count) * 100) / 100 : 0;
 }
 
 // ─── Card row ─────────────────────────────────────────────────────────────────
@@ -152,7 +140,8 @@ export function ShareDeckView({ deck }: ShareDeckViewProps) {
     () => computeColorDistribution([...deck.cards]),
     [deck.cards]
   );
-  const avgCmc = useMemo(() => computeAvgCmc([...deck.cards]), [deck.cards]);
+  // The builder's rule on the builder's rows: the deck's own rows, the command zone set apart (I-37).
+  const avgCmc = useMemo(() => averageManaValue(mainCards), [mainCards]);
   const totalCards = deck.cards.length;
   const gameChangers = deck.cards.filter((c) => c.isGameChanger);
 
@@ -383,7 +372,7 @@ export function ShareDeckView({ deck }: ShareDeckViewProps) {
                 value={`${deck.targetBracket}`}
               />
               <StatRow label={t("share.totalCards")} value={`${totalCards}`} />
-              <StatRow label={t("share.avgCmc")} value={`${avgCmc}`} />
+              <StatRow label={t("share.avgCmc")} value={avgCmc.toFixed(2)} />
               <StatRow
                 label={t("stats.lands")}
                 value={`${deck.cards.filter((c) => c.category === "land").length}`}
