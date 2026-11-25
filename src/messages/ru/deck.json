@@ -103,7 +103,6 @@
     "sessionTimeoutTitle": "Сессия проверялась слишком долго",
     "sessionTimeoutDescription": "Проверка аккаунта не завершилась. Сохранённые колоды не изменились. Попробуйте снова.",
     "profileLoadFailed": "Профиль не удалось обновить. Сохранённые колоды остаются доступны.",
-    "createFailed": "Не удалось создать колоду — {reason}",
     "cardFilter": {
       "includeLabel": "Has the card",
       "excludeLabel": "Leaves out",

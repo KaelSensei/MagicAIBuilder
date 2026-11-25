@@ -25,9 +25,8 @@ import { useRouter } from "@/i18n/navigation";
 import { ImportDialog } from "@/components/deck/ImportDialog";
 import type { HeaderDeckActionsUiState } from "@/components/layout/header-deck-actions-state";
 import { Button } from "@/components/ui/Button";
-import { useToastStore } from "@/hooks/useToast";
+import { useDeckCreateFailureReport } from "@/hooks/useDeckCreateFailureReport";
 import { useDeckStore } from "@/lib/deck/store";
-import { logger } from "@/lib/logger";
 
 /** Where the actions sit. The layouts differ only in button spacing. */
 export type HeaderDeckActionsLayout = "desktop" | "mobile";
@@ -69,31 +68,6 @@ const LAYOUTS: Record<HeaderDeckActionsLayout, LayoutConfig> = {
 };
 
 /**
- * Logs a failed deck creation and tells the player why, in a toast.
- *
- * Logging alone made the button look inert: it spun, the request failed, and
- * the player was left on the same screen with no explanation.
- */
-function useCreateFailureReport() {
-  const t = useTranslations("common");
-  const addToast = useToastStore((s) => s.add);
-
-  return useCallback(
-    (operation: string, error: unknown) => {
-      logger.error("Unexpected error", operation, error);
-      addToast(
-        "error",
-        t("nav.createFailed", {
-          reason:
-            error instanceof Error ? error.message : t("nav.unknownError"),
-        })
-      );
-    },
-    [addToast, t]
-  );
-}
-
-/**
  * Creates a deck named in the player's locale and opens it in the builder.
  *
  * Refuses a second press while one creation is pending. On failure the
@@ -103,7 +77,7 @@ function useNewDeck(pending: boolean, onUiStateChange: UiStateChange) {
   const t = useTranslations("common");
   const router = useRouter();
   const createDeck = useDeckStore((s) => s.createDeck);
-  const reportFailure = useCreateFailureReport();
+  const reportFailure = useDeckCreateFailureReport();
 
   return useCallback(async () => {
     if (pending) return;
@@ -132,7 +106,7 @@ function useImportFromHome(pending: boolean, onUiStateChange: UiStateChange) {
   const format = useFormatter();
   const createDeck = useDeckStore((s) => s.createDeck);
   const setActiveDeck = useDeckStore((s) => s.setActiveDeck);
-  const reportFailure = useCreateFailureReport();
+  const reportFailure = useDeckCreateFailureReport();
 
   return useCallback(async () => {
     if (pending) return;

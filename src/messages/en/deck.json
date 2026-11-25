@@ -103,7 +103,6 @@
     "sessionTimeoutTitle": "Your session took too long",
     "sessionTimeoutDescription": "The account check did not finish. Your saved decks are unchanged. Try again.",
     "profileLoadFailed": "Your profile could not be refreshed. Saved decks stay available.",
-    "createFailed": "Could not create the deck — {reason}",
     "cardFilter": {
       "includeLabel": "Has the card",
       "excludeLabel": "Leaves out",

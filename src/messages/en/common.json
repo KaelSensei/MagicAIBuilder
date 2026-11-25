@@ -7,8 +7,8 @@
     "newDeck": "New Deck",
     "import": "Import",
     "importedDeck": "Imported Deck — {date}",
-    "createFailed": "Could not create the deck — {reason}",
-    "unknownError": "unknown error"
+    "createFailed": "Could not create the deck. Please try again.",
+    "createSignedOut": "Your session has ended. Sign in again to create a deck."
   },
   "theme": {
     "toggle": "Toggle theme",
