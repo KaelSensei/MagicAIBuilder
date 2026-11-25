@@ -33,6 +33,7 @@
     "refresh": "Refresh plan",
     "noDecks": "Create a deck to start a purchase plan.",
     "complete": "All cards needed for these decks are in your collection.",
+    "nothingToBuyNow": "Nothing to buy now: every missing copy is deferred.",
     "summary": "{count} to acquire across {decks} decks · Known-price subtotal: {cost}",
     "unpriced": "Price unavailable for {count, plural, one {# copy} other {# copies}}",
     "requiredAcrossDecks": "{count, plural, one {# copy} other {# copies}} required across {decks, plural, one {# deck} other {# decks}}",
