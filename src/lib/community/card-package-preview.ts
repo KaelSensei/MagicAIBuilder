@@ -6,6 +6,9 @@
  * the deck's rule (`lib/deck/color-identity`, CR 903.5c and a rulebreaker
  * commander's exceptions, CR 903.5e), and the copy limit is the deck's
  * (`deckCopyLimit`, CR 903.5b). A ban is never lifted (CR 113.6n).
+ * The copies the limit weighs are the editor's count for an add to the main
+ * deck (`copiesCountedFor`): the main deck, the sideboard and the command zone
+ * (CR 100.2a, CR 100.4a, CR 903.5b), never Considering.
  *
  * @module community/card-package-preview
  */
@@ -18,6 +21,9 @@ import type { DeckFormat } from "@/lib/deck/formats";
 import { getFormatConfig } from "@/lib/deck/formats";
 import { deckCopyLimit } from "@/lib/deck/multiples";
 import { isCommanderRow } from "@/lib/deck/bulk-edit-command-zone";
+import { copiesCountedFor, type CountedCopiesDeck } from "@/lib/deck/counted-copies";
+import { countedDeckOf, type CopiesRow } from "@/lib/deck/copy-room-write";
+import type { DeckZone } from "@/lib/deck/types";
 
 export interface PackagePreviewCard {
   readonly scryfallId: string;
@@ -34,16 +40,14 @@ export interface PackagePreviewCard {
   readonly manaValue?: number;
 }
 
-export interface ExistingPreviewCard {
-  readonly name: string;
-  readonly quantity: number;
-  readonly isBasicLand: boolean;
-}
+/** The zone a package's cards go to: the apply route writes them there. */
+export const PACKAGE_ZONE: DeckZone = "main";
 
 export interface PackagePreviewContext {
   readonly format: DeckFormat;
   readonly commanderColorIdentity: readonly string[];
-  readonly existingCards: readonly ExistingPreviewCard[];
+  /** The deck's rows with their zones, and its commander and partner, as the copy limit counts them */
+  readonly deck: CountedCopiesDeck;
   /** The commander's and partner's names, for a rulebreaker's exceptions (CR 903.5e) */
   readonly commandZoneNames?: readonly string[];
 }
@@ -116,6 +120,34 @@ export function commandZoneNamesOf(
   return cards.filter(isCommanderRow).map((card) => card.name);
 }
 
+/** A stored deck row as the package preview reads it: its copies, zone, slot flags and colours. */
+export interface PackageDeckRow extends CopiesRow {
+  readonly colorIdentity: readonly string[];
+}
+
+/**
+ * The preview context of a stored deck. The preview and apply routes both
+ * build it here, so the cards a player sees as ready are the cards the apply
+ * adds.
+ *
+ * @param format - The deck's format, already parsed
+ * @param rows - Every stored row of the deck, command zone included
+ * @returns The context `previewCardPackage` reads
+ */
+export function packagePreviewContextOf(
+  format: DeckFormat,
+  rows: readonly PackageDeckRow[]
+): PackagePreviewContext {
+  // CR 903.4: the commanders' colour identity bounds the deck.
+  const commanderColors = rows.filter(isCommanderRow).flatMap((row) => row.colorIdentity);
+  return {
+    format,
+    commanderColorIdentity: [...new Set(commanderColors)],
+    commandZoneNames: commandZoneNamesOf(rows),
+    deck: countedDeckOf(rows),
+  };
+}
+
 export function previewCardPackage(
   cards: readonly PackagePreviewCard[],
   context: PackagePreviewContext
@@ -125,15 +157,15 @@ export function previewCardPackage(
     colors: new Set([...context.commanderColorIdentity, "C"]),
     exceptions: commanderNameExceptions(context.commandZoneNames ?? []),
   };
+  // A ready card's copies count against the package's later cards of its name.
   const quantities = new Map<string, number>();
-  for (const card of context.existingCards) {
-    quantities.set(card.name, (quantities.get(card.name) ?? 0) + card.quantity);
-  }
+  const heldCopies = (name: string) =>
+    quantities.get(name) ?? copiesCountedFor(context.deck, name, PACKAGE_ZONE);
   const previews: PackageCardPreview[] = [];
   let readyCount = 0;
 
   for (const card of cards) {
-    const quantity = (quantities.get(card.name) ?? 0) + card.quantity;
+    const quantity = heldCopies(card.name) + card.quantity;
     const issues = previewCardIssues(card, context, identity, quantity);
     if (issues.length === 0) {
       quantities.set(card.name, quantity);
