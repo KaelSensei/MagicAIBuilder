@@ -285,6 +285,33 @@ describe("ShareDeckView against computeDeckStats", () => {
     expect(statValue("Avg. CMC")).toBe(stats.avgCmc.toFixed(2));
   });
 
+  it("shows the Stats panel's average under the mana curve, not an average of the bars (I-37)", () => {
+    renderSharedPage(DECK);
+
+    expect(statValue("Avg. CMC")).toBe("2.25");
+    expect(screen.getByText(/^Avg CMC: /).textContent).toBe("Avg CMC: 2.25");
+  });
+
+  it("writes both averages with a decimal comma for a French reader (I-37)", () => {
+    renderWithProviders(<ShareDeckView deck={sharedDeckOf(DECK)} />, {
+      locale: "fr",
+    });
+
+    expect(screen.getByText("CMC moy.").nextElementSibling?.textContent).toBe(
+      "2,25"
+    );
+    expect(screen.getByText(/^CMC moyen : /).textContent).toBe(
+      "CMC moyen : 2,25"
+    );
+  });
+
+  it("shows 0.00 in the Stats panel and a dash under the mana curve for an empty deck", () => {
+    renderSharedPage(aDeck());
+
+    expect(statValue("Avg. CMC")).toBe("0.00");
+    expect(screen.getByText(/^Avg CMC: /).textContent).toBe("Avg CMC: —");
+  });
+
   it("currently draws the colour bar from colour identity, one per row with lands and the command zone, where computeDeckStats counts mana symbols per copy of each nonland card (pinned; see B2-41)", () => {
     const stats = computeDeckStats(DECK);
 
