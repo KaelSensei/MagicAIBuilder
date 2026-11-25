@@ -166,6 +166,12 @@ describe("PATCH /api/decks/[id]/cards/[cardId]", () => {
       name: "Forest",
       typeLine: "Basic Land — Forest",
       oracleText: "",
+      // The columns the copy count reads, as every stored row holds them.
+      zone: "main",
+      quantity: 1,
+      isCommander: false,
+      isPartner: false,
+      category: "land",
     });
     const request = new Request("http://localhost/api/decks/deck-1/cards/card-1", {
       method: "PATCH",
