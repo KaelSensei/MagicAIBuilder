@@ -66,6 +66,13 @@ export type BracketPathLine =
       readonly kind: "comboFloorNotChecked";
     }
   | {
+      /**
+       * The two-card-combo floor is not checked yet: the combo lookup has not
+       * answered, so the estimate does not count combos for now (I-77 4.3).
+       */
+      readonly kind: "comboFloorPending";
+    }
+  | {
       /** A list under 60 cards: its terms do not count (I-77 2.6). */
       readonly kind: "tooFewCards";
       readonly deckSize: number;
@@ -103,6 +110,7 @@ interface Crossing {
 }
 
 type CheckedFloorRow = Extract<BracketFloorRow, { status: "checked" }>;
+type NotCheckedFloorRow = Extract<BracketFloorRow, { status: "notChecked" }>;
 
 function floorLine(
   row: CheckedFloorRow,
@@ -131,18 +139,24 @@ function floorLines(
   );
 }
 
+/** The line each reason for an unchecked floor gives. */
+const NOT_CHECKED_LINE: Readonly<
+  Record<NotCheckedFloorRow["reason"], BracketPathLine>
+> = {
+  comboLookupPending: { kind: "comboFloorPending" },
+  comboDataUnavailable: { kind: "comboFloorNotChecked" },
+};
+
 /**
  * The combo floor, when the estimate could not check it for lack of combo
- * data (I-77 4.3).
+ * data: the lookup has not answered yet, or it failed (I-77 4.3).
  */
 function notCheckedLines(
   assessment: BracketAssessment
 ): readonly BracketPathLine[] {
-  const comboDataMissing = assessment.floors.some(
-    (row) =>
-      row.status === "notChecked" && row.reason === "comboDataUnavailable"
+  return assessment.floors.flatMap((row) =>
+    row.status === "notChecked" ? [NOT_CHECKED_LINE[row.reason]] : []
   );
-  return comboDataMissing ? [{ kind: "comboFloorNotChecked" }] : [];
 }
 
 /**

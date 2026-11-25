@@ -40,6 +40,7 @@
         "extraTurns": "Le Bracket {target} n'autorise aucune carte de tour supplémentaire. Cette liste en a {count} : {cards}."
       },
       "comboFloorNotChecked": "Combos à deux cartes : non vérifiés. L'estimation a été faite sans les données de combos.",
+      "comboFloorPending": "Combos à deux cartes : vérification en cours. L'estimation ne les compte pas encore.",
       "tooFewCards": "Cette liste a {count, plural, one {# carte} other {# cartes}} : trop peu de cartes pour la partie heuristique, donc seules les règles officielles ci-dessus fixent l'estimation.",
       "term": {
         "ramp": "rampe",
