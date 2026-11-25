@@ -9,9 +9,9 @@
  * always shows the same digits. The library comes from `countLibrary`: the
  * main deck only, 99 cards or 98 with a partner (CR 401.1, 903.6). The cards
  * drawn by a turn follow the format's usual table (`cardsDrawnBy`, CR 103.8).
- * A question without an answer names what is missing instead of showing 0%,
- * and so does one whose 0% a player would misread: a minimum above the cards
- * drawn, or the lands question in a deck without lands.
+ * A question without an answer names what is missing instead of showing 0%:
+ * the formula's gaps, a minimum above the cards drawn among them, and the
+ * lands question in a deck without lands, whose 0% a player would misread.
  * Not responsible for: the formula (`lib/deck/draw-odds.ts`), the library
  * count (`lib/deck/draw-odds-library.ts`), the draw count
  * (`lib/deck/cards-drawn.ts`) or the controls (`DrawOddsFields`).
@@ -25,6 +25,7 @@ import { CHANCE_PERCENT_FORMAT } from "@/lib/deck/chance-percent-format";
 import {
   chanceOfAtLeast,
   type DrawOdds,
+  type DrawOddsGap,
   type DrawOddsQuestion,
 } from "@/lib/deck/draw-odds";
 import {
@@ -90,24 +91,35 @@ function targetStillInLibrary(
 }
 
 /**
- * A question the formula answers with a known 0%, but whose zero a player
- * would read as a measured chance, so the panel names what is wrong instead
- * (I-97 AC-97-04 and AC-97-05):
- * - `more-wanted-than-drawn`: the minimum is above the cards drawn, so no hand
- *   can hold it, such as 100 lands from a 99-card library; the number is
- *   more likely a typo than a question;
- * - `no-lands`: the lands question in a deck whose library holds no land.
+ * Why the panel shows no figure: one of the formula's gaps, or `no-lands`,
+ * the lands question in a deck whose library holds no land. The formula
+ * answers that one with a known 0%, but a player would read the zero as a
+ * measured chance (I-97 AC-97-05).
  */
-type PanelGap = "more-wanted-than-drawn" | "no-lands";
+type PanelGap = DrawOddsGap | "no-lands";
 
 /** The answer the panel shows: the formula's, or a gap the panel names. */
 type PanelOdds =
   DrawOdds | { readonly kind: "unknown"; readonly reason: PanelGap };
 
+/** The panel's translator, scoped to the draw-odds messages. */
+type DrawOddsTranslate = ReturnType<typeof useTranslations<"deck.drawOdds">>;
+
 /**
- * The formula's answer, unless it is a zero the player would misread (see
- * `PanelGap`). The formula's own gaps come first, as the player fixes them
- * first.
+ * Whether the player must fix the formula's gap before a missing land
+ * matters. Every gap but `more-wanted-than-drawn` does: with no land in the
+ * library, no minimum, however low, gets a land into the hand, so `no-lands`
+ * names the deeper fix.
+ *
+ * @param odds - the formula's answer
+ */
+function comesBeforeNoLands(odds: DrawOdds): boolean {
+  return odds.kind === "unknown" && odds.reason !== "more-wanted-than-drawn";
+}
+
+/**
+ * The formula's answer, unless the lands question meets a deck without lands
+ * (see `PanelGap`). The gaps come in the order the player fixes them.
  *
  * @param question - the counts the formula takes
  * @param target - what the question counts as a hit
@@ -117,14 +129,41 @@ function answerOf(
   target: DrawOddsTarget
 ): PanelOdds {
   const odds = chanceOfAtLeast(question);
-  if (odds.kind === "unknown") return odds;
+  if (comesBeforeNoLands(odds)) return odds;
   if (target.kind === "lands" && question.matching === 0) {
     return { kind: "unknown", reason: "no-lands" };
   }
-  if (question.minimum > question.drawn) {
-    return { kind: "unknown", reason: "more-wanted-than-drawn" };
-  }
   return odds;
+}
+
+/**
+ * The sentence that names a gap. Only the minimum above the cards drawn
+ * quotes the counts, so the player sees which number to change.
+ *
+ * @param reason - why the panel shows no figure
+ * @param question - the counts the sentence may quote
+ * @param t - the draw-odds translator
+ */
+function gapSentence(
+  reason: PanelGap,
+  question: DrawOddsQuestion,
+  t: DrawOddsTranslate
+): string {
+  switch (reason) {
+    case "empty-library":
+    case "more-drawn-than-library":
+    case "more-matching-than-library":
+    case "not-a-card-count":
+    case "no-lands":
+      return t(`gap.${reason}`);
+    case "more-wanted-than-drawn":
+      return t("gap.more-wanted-than-drawn", {
+        minimum: question.minimum,
+        drawn: question.drawn,
+      });
+  }
+  const _exhaustive: never = reason;
+  return _exhaustive;
 }
 
 /**
@@ -152,10 +191,7 @@ function OddsFigure({
     case "unknown":
       return (
         <output className="block text-xs text-[var(--text-secondary)]">
-          {t(`gap.${odds.reason}`, {
-            minimum: question.minimum,
-            drawn: question.drawn,
-          })}
+          {gapSentence(odds.reason, question, t)}
         </output>
       );
   }
