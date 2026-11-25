@@ -283,12 +283,22 @@ describe("duplicating a deck", () => {
     return screen.findByRole("button", { name: `Duplicate ${ORIGINAL.name}` });
   }
 
+  /** How many times the page read the deck list. */
+  let listings = 0;
+
   beforeEach(() => {
     session.status = "authenticated";
+    listings = 0;
     server.use(
-      http.get("/api/decks", () =>
-        HttpResponse.json({ decks: [ORIGINAL], total: 1, page: 0, limit: 20 })
-      )
+      http.get("/api/decks", () => {
+        listings += 1;
+        return HttpResponse.json({
+          decks: [ORIGINAL],
+          total: 1,
+          page: 0,
+          limit: 20,
+        });
+      })
     );
   });
 
@@ -368,6 +378,48 @@ describe("duplicating a deck", () => {
       ])
     );
     expect(push).not.toHaveBeenCalled();
+  });
+
+  // The toast said the deck was gone while the list still offered it, with
+  // its Duplicate, Open and Delete (I-01).
+  it("takes the deck off the list when the server says it no longer exists", async () => {
+    refuseDuplication(404, "Deck not found");
+    const duplicate = await openLibrary();
+    server.use(
+      http.get("/api/decks", () =>
+        HttpResponse.json({ decks: [], total: 0, page: 0, limit: 20 })
+      )
+    );
+
+    fireEvent.click(duplicate);
+
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("button", { name: `Duplicate ${ORIGINAL.name}` })
+      ).not.toBeInTheDocument()
+    );
+    expect(toastTexts()).toEqual([
+      "This deck no longer exists, so it cannot be duplicated.",
+    ]);
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  it("keeps the list as it is, without reading it again, when the server fails", async () => {
+    refuseDuplication(500, "Failed to duplicate deck");
+    const duplicate = await openLibrary();
+    const listingsBefore = listings;
+
+    fireEvent.click(duplicate);
+
+    await waitFor(() =>
+      expect(toastTexts()).toEqual([
+        "Could not duplicate the deck. Please try again.",
+      ])
+    );
+    // The toast is raised before the page clears its spinner, so wait for it.
+    await waitFor(() => expect(duplicate).toBeEnabled());
+    expect(listings).toBe(listingsBefore);
+    expect(duplicate).toBeInTheDocument();
   });
 
   it("announces the copy by name in French and opens it in the builder", async () => {
