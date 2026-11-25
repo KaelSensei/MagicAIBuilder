@@ -35,7 +35,11 @@ import {
   deckOpenErrorFrom,
   type DeckOpenError,
 } from "@/lib/deck/deck-open-error";
-import { useToastStore } from "@/hooks/useToast";
+import {
+  DECK_FAILURE_TOASTS,
+  openFailureToast,
+} from "@/lib/deck/failure-toasts";
+import { useToastStore, type ToastMessage } from "@/hooks/useToast";
 import { logger } from "@/lib/logger";
 import {
   isBannedCompanionInCommander,
@@ -404,9 +408,7 @@ async function reloadAfterConflict(deckId: string): Promise<void> {
     useToastStore.getState().add("warning", CONFLICT_TOAST);
   } catch (err) {
     logger.error("Unexpected error", "reloadAfterConflict", err);
-    useToastStore
-      .getState()
-      .add("error", "Could not refresh deck. Please retry.");
+    useToastStore.getState().add("error", DECK_FAILURE_TOASTS.refresh);
   }
 }
 
@@ -419,19 +421,29 @@ async function reloadAfterConflict(deckId: string): Promise<void> {
  *
  * @param deckId - the deck written
  * @param error - what the write threw
- * @param message - the failure toast for an ordinary failure; absent when the
- *   write has never reported one
+ * @param message - the failure toast for an ordinary failure, as words or a
+ *   catalogue key; absent when the write has never reported one
  */
 async function settleFailedWrite(
   deckId: string,
   error: unknown,
-  message?: string
+  message?: ToastMessage
 ): Promise<void> {
   if (error instanceof DroppedDeckWriteError) return;
   if (isStaleDeckRefusal(error)) {
     await deckWrites.recover(deckId, () => reloadAfterConflict(deckId));
     return;
   }
+  reportFailure(message);
+}
+
+/**
+ * Raises the error toast of a failure, when it has one.
+ *
+ * @param message - the toast, or `undefined` for a failure the screen already
+ *   reports (a deck the server does not have shows "Deck not found")
+ */
+function reportFailure(message: ToastMessage | undefined): void {
   if (message !== undefined) useToastStore.getState().add("error", message);
 }
 
@@ -746,9 +758,7 @@ function restoreTagsAfterFailedSave(
       [save.deckId]: { ...currentDeck, tags: save.previous },
     },
   });
-  useToastStore
-    .getState()
-    .add("error", "Could not save deck tags. Please retry.");
+  useToastStore.getState().add("error", DECK_FAILURE_TOASTS.tags);
 }
 
 /**
@@ -1285,9 +1295,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     } catch (err) {
       logger.error("Unexpected error", "forceSave", err);
       if (!get().decks[activeDeckId]) return;
-      useToastStore
-        .getState()
-        .add("error", "Could not refresh deck. Please retry.");
+      useToastStore.getState().add("error", DECK_FAILURE_TOASTS.refresh);
     } finally {
       set({ isSyncing: hasPendingSaves() });
     }
@@ -1311,9 +1319,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     } catch (err) {
       logger.error("Unexpected error", "reloadActiveDeck", err);
       if (!get().decks[activeDeckId]) return;
-      useToastStore
-        .getState()
-        .add("error", "Could not refresh deck. Please retry.");
+      useToastStore.getState().add("error", DECK_FAILURE_TOASTS.refresh);
     } finally {
       set({ isSyncing: hasPendingSaves() });
     }
@@ -1525,9 +1531,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         };
       });
       if (get().decks[id]) {
-        useToastStore
-          .getState()
-          .add("error", "Could not rename deck. Please retry.");
+        useToastStore.getState().add("error", DECK_FAILURE_TOASTS.rename);
       }
     } finally {
       pendingRenameWrites -= 1;
@@ -1568,10 +1572,9 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       }));
     } catch (err) {
       logger.error("Unexpected error", "setActiveDeck.lazyLoad", err);
-      set({ deckOpenError: deckOpenErrorFrom(id, err) });
-      useToastStore
-        .getState()
-        .add("error", "Could not open deck. Please try again.");
+      const openError = deckOpenErrorFrom(id, err);
+      set({ deckOpenError: openError });
+      reportFailure(openFailureToast(openError));
     }
   },
 
@@ -1605,9 +1608,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         };
       });
       if (get().decks[deckId]) {
-        useToastStore
-          .getState()
-          .add("error", "Could not save deck description. Please retry.");
+        useToastStore.getState().add("error", DECK_FAILURE_TOASTS.description);
       }
     } finally {
       set({ isSyncing: hasPendingSaves() });
@@ -2054,7 +2055,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
           ),
         };
       });
-      await settleFailedWrite(activeDeckId, err, "Could not remove card. Please retry.");
+      await settleFailedWrite(activeDeckId, err, DECK_FAILURE_TOASTS.cardRemoval);
     } finally {
       pendingCardAdditionsAndRemovals -= 1;
       set({ isSyncing: hasPendingSaves() });
@@ -2508,7 +2509,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         failures.find(isStaleDeckRefusal) ??
         failures.find((failure) => !(failure instanceof DroppedDeckWriteError));
       if (reported !== undefined && get().decks[activeDeckId]) {
-        await settleFailedWrite(activeDeckId, reported, "Could not remove card. Please retry.");
+        await settleFailedWrite(activeDeckId, reported, DECK_FAILURE_TOASTS.cardRemoval);
       }
       pendingBulkRemovals -= 1;
       set({ isSyncing: hasPendingSaves() });
@@ -2554,7 +2555,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       if (get().decks[activeDeckId]) {
         useToastStore
           .getState()
-          .add("error", "Could not save target bracket. Please retry.");
+          .add("error", DECK_FAILURE_TOASTS.targetBracket);
       }
     } finally {
       set({ isSyncing: hasPendingSaves() });
@@ -2601,7 +2602,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       if (get().decks[activeDeckId]) {
         useToastStore
           .getState()
-          .add("error", "Could not save manual bracket. Please retry.");
+          .add("error", DECK_FAILURE_TOASTS.manualBracket);
       }
     } finally {
       pendingManualBracketWrites -= 1;
@@ -2644,9 +2645,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         };
       });
       if (get().decks[activeDeckId]) {
-        useToastStore
-          .getState()
-          .add("error", "Could not save deck budget. Please retry.");
+        useToastStore.getState().add("error", DECK_FAILURE_TOASTS.budget);
       }
     } finally {
       pendingBudgetWrites -= 1;
