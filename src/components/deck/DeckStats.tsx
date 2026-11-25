@@ -1,7 +1,8 @@
 "use client";
 // Live stats panel with bracket-aware benchmarks
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import { cn } from "@/components/ui/utils";
+import { WHOLE_PERCENT_FORMAT } from "@/lib/deck/chance-percent-format";
 import type { BracketLevel, DeckCard } from "@/lib/deck/types";
 import type { DeckStats } from "@/lib/deck/analysis-types";
 import type { DeckFormat } from "@/lib/deck/formats";
@@ -154,9 +155,13 @@ function statusFromBenchmark(status: BenchmarkStatus): StatusLevel {
   return status === "on-target" ? "ok" : "warn";
 }
 
-/** @returns a 0–1 share rendered as a whole percentage */
-function asPercent(ratio: number): string {
-  return `${Math.round(ratio * 100)}%`;
+/**
+ * @returns a writer of a 0–1 share as a whole percentage in the reader's
+ * locale: "45%" in English, "45 %" in French.
+ */
+function useAsPercent(): (ratio: number) => string {
+  const format = useFormatter();
+  return (ratio) => format.number(ratio, WHOLE_PERCENT_FORMAT);
 }
 
 /**
@@ -171,6 +176,7 @@ function FormatStatsPanel({
   readonly formatLabel: string;
 }) {
   const t = useTranslations("deck");
+  const asPercent = useAsPercent();
 
   return (
     <div className="rounded-lg bg-[var(--surface)] border border-[var(--border)] p-4">
@@ -218,6 +224,7 @@ function ManaAlignmentPanel({
   readonly alignment: ManaAlignment;
 }) {
   const t = useTranslations("deck");
+  const asPercent = useAsPercent();
 
   return (
     <div className="rounded-lg bg-[var(--surface)] border border-[var(--border)] p-4">
@@ -265,6 +272,7 @@ function TurnOnePanel({
   readonly playability: TurnOnePlayability;
 }) {
   const t = useTranslations("deck");
+  const asPercent = useAsPercent();
 
   return (
     <div className="rounded-lg bg-[var(--surface)] border border-[var(--border)] p-4">
