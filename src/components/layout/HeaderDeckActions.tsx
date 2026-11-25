@@ -15,6 +15,12 @@
  * mounted, only hidden by CSS on small screens, and the dialog is a portal, so
  * it shows from there on every viewport.
  *
+ * Both buttons stay disabled until this module has hydrated. The server HTML
+ * holds them, but their click handlers arrive only with this lazy chunk, so a
+ * press before then did nothing at all: no request, no spinner, no message
+ * (I-01). A disabled button tells the player, and Playwright's `click()`, to
+ * wait.
+ *
  * @module layout/HeaderDeckActions
  */
 
@@ -26,6 +32,7 @@ import { ImportDialog } from "@/components/deck/ImportDialog";
 import type { HeaderDeckActionsUiState } from "@/components/layout/header-deck-actions-state";
 import { Button } from "@/components/ui/Button";
 import { useDeckCreateFailureReport } from "@/hooks/useDeckCreateFailureReport";
+import { useHasHydrated } from "@/hooks/useHasHydrated";
 import { useDeckStore } from "@/lib/deck/store";
 
 /** Where the actions sit. The layouts differ only in button spacing. */
@@ -166,6 +173,8 @@ export function HeaderDeckActions({
 }: HeaderDeckActionsProps) {
   const t = useTranslations("common");
   const { importOpen, isCreatingDeck, isCreatingImportDeck } = uiState;
+  // Before the hydration the buttons have no handler yet (see the module header).
+  const waitingForCode = !useHasHydrated();
   const layoutConfig = LAYOUTS[layout];
   const newDeck = useNewDeck(isCreatingDeck, onUiStateChange);
   const importFromHome = useImportFromHome(
@@ -191,7 +200,7 @@ export function HeaderDeckActions({
     <Button
       variant="secondary"
       onClick={press(deckId ? openImport : importFromHome)}
-      disabled={isCreatingImportDeck}
+      disabled={waitingForCode || isCreatingImportDeck}
       className={layoutConfig.importClassName}
     >
       <ActionIcon pending={isCreatingImportDeck} icon={Upload} />
@@ -212,7 +221,7 @@ export function HeaderDeckActions({
       )}
       <Button
         onClick={press(newDeck)}
-        disabled={isCreatingDeck}
+        disabled={waitingForCode || isCreatingDeck}
         className={layoutConfig.newDeckClassName}
       >
         <ActionIcon pending={isCreatingDeck} icon={Plus} />
