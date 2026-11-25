@@ -12,6 +12,7 @@ import { useCallback, useMemo, useState } from "react";
 import { useFormatter, useTranslations } from "next-intl";
 import { cn } from "@/components/ui/utils";
 import type { DeckCard } from "@/lib/deck/types";
+import { AVERAGE_MANA_VALUE_FORMAT } from "@/lib/deck/average-mana-value";
 import {
   curveMedians,
   curvePartsByBucket,
@@ -29,6 +30,11 @@ import {
 
 interface ManaCurveProps {
   readonly curve: Readonly<Record<number, number>>;
+  /**
+   * The deck's average mana value (`averageManaValue`), shown beside the title: the Stats panel's
+   * own figure, not an average of the bars. Without it the chart shows no average.
+   */
+  readonly averageManaValue?: number;
   /**
    * The builder's deck analysis cards (`sharedDeckCurveCards` on the shared deck view); without
    * them the bars are plain and not pressable.
@@ -53,19 +59,29 @@ const GRID_LINES = [0.25, 0.5, 0.75, 1];
 /** The legend's neutral swatch colour: the bars change colour by bucket, the parts by fill. */
 const LEGEND_COLOR = "#94a3b8";
 
-/** Weighted average CMC of the curve's copies. */
-function averageOf(curve: Readonly<Record<number, number>>): string {
-  const { totalCards, totalMana } = BUCKETS.reduce(
-    (acc, cmc) => {
-      const count = curve[cmc] ?? 0;
-      return {
-        totalCards: acc.totalCards + count,
-        totalMana: acc.totalMana + count * cmc,
-      };
-    },
-    { totalCards: 0, totalMana: 0 }
+/**
+ * The deck's average mana value beside the chart's title, as its caller computed it: the bars
+ * count the commanders and cap at 7+, so an average of the bars would disagree with the Stats
+ * panel's (I-37). An empty curve has nothing to average and shows a dash.
+ */
+function CurveAverage({
+  curve,
+  value,
+}: {
+  readonly curve: Readonly<Record<number, number>>;
+  readonly value: number;
+}) {
+  const t = useTranslations("deck");
+  const format = useFormatter();
+  const hasCopies = BUCKETS.some((bucket) => (curve[bucket] ?? 0) > 0);
+  const shown = hasCopies
+    ? format.number(value, AVERAGE_MANA_VALUE_FORMAT)
+    : "—";
+  return (
+    <span className="text-xs text-[var(--text-secondary)] tabular-nums">
+      {t("stats.avgCmcInline", { value: shown })}
+    </span>
   );
-  return totalCards > 0 ? (totalMana / totalCards).toFixed(1) : "—";
 }
 
 /** The medians, without and with lands, and the total mana value of the deck's cards. */
@@ -152,11 +168,13 @@ function useCurveSelection(cards: readonly DeckCard[] | undefined) {
  * The mana curve chart.
  *
  * @param props.curve - copies per bucket, from `buildManaCurve`
+ * @param props.averageManaValue - the deck's average, from `averageManaValue`; none shown without it
  * @param props.cards - the builder's deck analysis cards, for the parts and the card lists
  * @param props.titleAs - the title's element; a paragraph unless the page's outline needs a heading
  */
 export function ManaCurve({
   curve,
+  averageManaValue,
   cards,
   titleAs: Title = "p",
   className,
@@ -177,9 +195,9 @@ export function ManaCurve({
         <Title className="text-xs font-semibold text-[var(--text-primary)] uppercase tracking-widest">
           {t("stats.manaCurve")}
         </Title>
-        <span className="text-xs text-[var(--text-secondary)] tabular-nums">
-          {t("stats.avgCmcInline", { value: averageOf(curve) })}
-        </span>
+        {averageManaValue !== undefined && (
+          <CurveAverage curve={curve} value={averageManaValue} />
+        )}
       </div>
       {cards && <CurveFigures cards={cards} />}
 
