@@ -18,8 +18,8 @@ import { HomeDeckCard } from "@/components/deck/HomeDeckCard";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { useDeckStore } from "@/lib/deck/store";
-import { useDeckCreateFailureReport } from "@/hooks/useDeckCreateFailureReport";
-import { logger } from "@/lib/logger";
+import { useDeckCreateFailureReport } from "@/hooks/useDeckFailureReport";
+import { useDeckDuplication } from "@/hooks/useDeckDuplication";
 import { DeckListTable } from "@/components/deck/DeckListTable";
 import { DecksHomeControls } from "@/components/deck/DecksHomeControls";
 import { DeckCardFilterFields } from "@/components/deck/DeckCardFilterFields";
@@ -56,15 +56,9 @@ export default function DecksPage() {
   const { status: sessionStatus, timedOut, retry: retrySession } = useBoundedSession();
   const { initializationStatus, retryInitialization } = useInitContext();
   const router = useRouter();
-  const {
-    decks,
-    createDeck,
-    loadDecks,
-    isSyncing,
-    deleteDeck,
-    duplicateDeck,
-    loadError,
-  } = useDeckStore();
+  const { decks, createDeck, loadDecks, isSyncing, deleteDeck, loadError } =
+    useDeckStore();
+  const duplicateDeck = useDeckDuplication();
   const reportCreateFailure = useDeckCreateFailureReport();
   const [isLoading, setIsLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -134,16 +128,10 @@ export default function DecksPage() {
       e.preventDefault();
       e.stopPropagation();
       setDuplicatingId(id);
-
-      try {
-        const newId = await duplicateDeck(id);
-        router.push(`/builder/${newId}`);
-      } catch (error) {
-        logger.error("Unexpected error", "handleDuplicateDeck", error);
-        setDuplicatingId(null);
-      }
+      // On success the builder opens on the copy, so the spinner stays.
+      if (!(await duplicateDeck(id))) setDuplicatingId(null);
     },
-    [duplicateDeck, router]
+    [duplicateDeck]
   );
 
   const handleNewDeck = useCallback(async () => {
