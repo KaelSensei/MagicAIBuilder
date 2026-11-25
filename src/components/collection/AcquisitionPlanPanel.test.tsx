@@ -194,17 +194,26 @@ describe("AcquisitionPlanPanel", () => {
       await openPlan();
 
       const group = await screen.findByRole("region", { name: "Deferred · 3 copies" });
-      expect(within(group).getByText("Proxy for now — Artifacts")).toBeInTheDocument();
-      expect(within(group).getByText("Buy later — Spells")).toBeInTheDocument();
+      // The deck's name is a link inside the label, so the label's own text stops before it.
+      expect(within(group).getByText(/^Proxy for now —/)).toHaveTextContent("Proxy for now — Artifacts");
+      expect(within(group).getByText(/^Buy later —/)).toHaveTextContent("Buy later — Spells");
       expect(within(group).getByText("Mana Vault")).toBeInTheDocument();
+    });
+
+    it("links each deferred copy's deck to its builder, as the buy-now list does", async () => {
+      await openPlan();
+
+      const group = await screen.findByRole("region", { name: "Deferred · 3 copies" });
+      expect(within(group).getByRole("link", { name: "Artifacts" })).toHaveAttribute("href", "/builder/a");
+      expect(within(group).getByRole("link", { name: "Spells" })).toHaveAttribute("href", "/builder/b");
     });
 
     it("names the choices in French", async () => {
       await openPlan("fr");
 
       const group = await screen.findByRole("region", { name: "Reporté · 3 exemplaires" });
-      expect(within(group).getByText("Proxy pour l’instant — Artifacts")).toBeInTheDocument();
-      expect(within(group).getByText("Acheter plus tard — Spells")).toBeInTheDocument();
+      expect(within(group).getByText(/^Proxy pour l’instant —/)).toHaveTextContent("Proxy pour l’instant — Artifacts");
+      expect(within(group).getByText(/^Acheter plus tard —/)).toHaveTextContent("Acheter plus tard — Spells");
     });
   });
 

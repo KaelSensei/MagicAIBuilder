@@ -2,12 +2,15 @@
 /**
  * The acquisition plan's "Deferred" group: copies a deck's owner chose to proxy
  * now or buy later in that deck's shopping list. Read-only; the choice is
- * changed in the deck, not here. The choice is named in words, never by colour.
+ * changed in the deck, not here, so each deck's name links to its builder, as
+ * in the buy-now list. The choice is named in words, never by colour.
  *
  * @module components/collection/DeferredPlanGroup
  */
+import type { ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import type { AcquisitionMode } from "@/lib/collection/acquisition-intent";
+import { DeckBuilderLink } from "./DeckBuilderLink";
 
 /** One deck's deferred copies of a printing, as the plan route answers them. */
 export interface DeferredPlanDeck {
@@ -37,6 +40,17 @@ const LABEL_KEY: Readonly<
   proxy_now: "proxyNowFor",
   buy_later: "buyLaterFor",
 };
+
+/**
+ * The `<link>` tag handler of `proxyNowFor` and `buyLaterFor`: the deck's name
+ * links to its builder, where the deferred choice is changed. It is built out
+ * here, so the group declares no component while it renders (Sonar S6478).
+ */
+function deckBuilderLinkTag(deckId: string) {
+  return function renderDeckBuilderLink(chunks: ReactNode) {
+    return <DeckBuilderLink deckId={deckId}>{chunks}</DeckBuilderLink>;
+  };
+}
 
 /**
  * Lists the deferred copies by printing, each under its deck's choice.
@@ -73,7 +87,12 @@ export function DeferredPlanGroup({
             </p>
             {item.deferred.map((deck) => (
               <p key={deck.id} className="text-xs text-[var(--text-secondary)]">
-                <span>{t(LABEL_KEY[deck.mode], { deck: deck.name })}</span>
+                <span>
+                  {t.rich(LABEL_KEY[deck.mode], {
+                    deck: deck.name,
+                    link: deckBuilderLinkTag(deck.id),
+                  })}
+                </span>
                 <span className="ml-1">
                   {usage("copies", { count: deck.quantity })}
                 </span>
