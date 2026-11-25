@@ -451,9 +451,9 @@ describe("characterization: builder page shell", () => {
       expect(
         within(summary).getByText(/^Commander · Bracket [1-5]$/)
       ).toBeInTheDocument();
-      expect(
-        within(summary).getByText(/^USD\s\d+\.\d{2}$/)
-      ).toBeInTheDocument();
+      // No row of the saved deck has a price, so the bar says so rather than "USD 0.00" (I-01).
+      expect(within(summary).getByText("Price unknown")).toBeInTheDocument();
+      expect(within(summary).queryByText(/USD/)).not.toBeInTheDocument();
       expect(hiddenBelowLg(summary)).toBe(false);
     });
 
