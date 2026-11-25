@@ -33,7 +33,7 @@ describe("useDeckStore.loadDecks — failure reporting", () => {
 
     await useDeckStore.getState().setActiveDeck("deck-1");
 
-    expect(toastAdd).toHaveBeenCalledWith("error", expect.any(String));
+    expect(toastAdd).toHaveBeenCalledWith("error", { key: "deck.sync.openFailed" });
     expect(useDeckStore.getState().decks).toEqual({});
     expect(useDeckStore.getState().deckOpenError).toEqual({
       deckId: "deck-1",
