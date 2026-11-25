@@ -87,6 +87,32 @@ describe("SnapshotsPanel", () => {
     ).toBeDefined();
   });
 
+  // WCAG 2.2 SC 1.3.1 and 4.1.2 (I-04 accessibility bundle 4): a placeholder
+  // is not a name, so the snapshot's name field carries its own.
+  it("names the snapshot's name field for a screen reader and keeps the example as its placeholder", async () => {
+    const user = userEvent.setup();
+    renderWithIntl(<SnapshotsPanel deckId={DECK_ID} currentDeck={aDeck()} />);
+
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(
+      screen.getByRole("textbox", { name: "Snapshot name" })
+    ).toHaveAttribute("placeholder", 'e.g. "v1 budget"');
+  });
+
+  it("names the snapshot's name field in French", async () => {
+    const user = userEvent.setup();
+    renderWithIntl(<SnapshotsPanel deckId={DECK_ID} currentDeck={aDeck()} />, {
+      locale: "fr",
+    });
+
+    await user.click(screen.getByRole("button", { name: "Sauvegarder" }));
+
+    expect(
+      screen.getByRole("textbox", { name: "Nom du snapshot" })
+    ).toBeInTheDocument();
+  });
+
   it("reads a snapshot of the deck as 100 cards and shows no difference against the unchanged deck", async () => {
     serveSnapshotHolding(100);
     const user = userEvent.setup();

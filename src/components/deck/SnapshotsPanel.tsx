@@ -186,6 +186,9 @@ export function SnapshotsPanel({
                   if (e.key === "Enter") void handleSave();
                   if (e.key === "Escape") setShowSavePopover(false);
                 }}
+                // The caption above names the action, not the field, and a
+                // placeholder is no name (WCAG 2.2 SC 1.3.1 and 4.1.2).
+                aria-label={t("snapshots.nameLabel")}
                 placeholder={t("snapshots.placeholder")}
                 maxLength={100}
                 className="w-full text-xs bg-[var(--background)] border border-[var(--border)] rounded px-2 py-1.5 text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] outline-none focus:border-[var(--accent)]"
