@@ -312,7 +312,10 @@ describe("a new-card trial", () => {
         id: 1,
         turn: 1,
         phase: "Draw",
-        description: "Started with chosen cards: Smothering Tithe, Sol Ring",
+        message: {
+          key: "startedWithChosenCards",
+          params: { cards: ["Smothering Tithe", "Sol Ring"] },
+        },
       },
     ]);
     expect(engine.nextActionId).toBe(2);

@@ -16,6 +16,7 @@ import type {
   PlaytestActionLogEntry,
   PlaytestEngine,
   PlaytestEnginePatch,
+  PlaytestLogMessage,
   UndoHistoryEntry,
 } from "./types";
 
@@ -54,10 +55,10 @@ export type ActionLogEvidence = Partial<
 export interface Transition {
   readonly patch: PlaytestEnginePatch;
   /**
-   * The log line. A transition without one (an edit of the log itself) still gets its undo
-   * entry; an empty string counts as no line.
+   * What the log line says, as a message key and its parameters (#1853). A transition without
+   * one (an edit of the log itself) still gets its undo entry.
    */
-  readonly description?: string;
+  readonly message?: PlaytestLogMessage;
   readonly evidence?: ActionLogEvidence;
 }
 
@@ -97,15 +98,15 @@ function appendLogLine(
   transition: Transition
 ): Pick<PlaytestEngine, "nextActionId"> &
   Partial<Pick<PlaytestEngine, "actionLog">> {
-  const { patch, description } = transition;
+  const { patch, message } = transition;
   const priorLog = patch.actionLog ?? state.actionLog;
   const priorNextId = patch.nextActionId ?? state.nextActionId;
-  if (!description) return { nextActionId: priorNextId };
+  if (message === undefined) return { nextActionId: priorNextId };
 
   return {
     actionLog: [
       ...priorLog,
-      logLine(state, priorNextId, { ...transition, description }),
+      logLine(state, priorNextId, { ...transition, message }),
     ],
     nextActionId: priorNextId + 1,
   };
@@ -115,14 +116,14 @@ function appendLogLine(
 function logLine(
   state: PlaytestEngine,
   id: number,
-  line: Transition & { readonly description: string }
+  line: Transition & { readonly message: PlaytestLogMessage }
 ): PlaytestActionLogEntry {
   const evidence = line.evidence ?? {};
   return {
     id,
     turn: evidence.turn ?? state.turn,
     phase: evidence.phase ?? state.phase,
-    description: line.description,
+    message: line.message,
     ...(evidence.kind ? { kind: evidence.kind } : {}),
     ...(evidence.amount ? { amount: evidence.amount } : {}),
     ...(evidence.lifeDelta !== undefined

@@ -21,6 +21,7 @@ import type {
   CardZone,
   PlaytestEngine,
   PlaytestEnginePatch,
+  PlaytestLogMessage,
 } from "./types";
 
 // ─── Move to zone ─────────────────────────────────────────────────────────
@@ -163,18 +164,23 @@ function placeInZone(
 }
 
 /**
- * Describes a move for the action log.
+ * The log message of a move: a commander that leaves the command zone for the battlefield was
+ * cast (CR 903.8), one that enters it was returned (CR 903.9), any other card moved.
  *
- * @param name - name of the card moved
- * @param from - zone the card left
- * @param to - zone the card entered
- * @returns the log line
+ * @param card - name of the card moved
+ * @param move - the zone the card left and the zone it entered
+ * @returns the message the action log renders
  */
-function describeMove(name: string, from: CardZone, to: CardZone): string {
+function moveMessage(
+  card: string,
+  move: { readonly from: CardZone; readonly to: CardZone }
+): PlaytestLogMessage {
+  const { from, to } = move;
   if (from === "command" && to === "battlefield")
-    return `Cast ${name} from the command zone`;
-  if (to === "command") return `Returned ${name} to the command zone`;
-  return `Moved ${name} from ${from} to ${to}`;
+    return { key: "castFromCommandZone", params: { card } };
+  if (to === "command")
+    return { key: "returnedToCommandZone", params: { card } };
+  return { key: "moved", params: { card, from, to } };
 }
 
 /**
@@ -224,20 +230,20 @@ export function applyMoveToZone(
   if (isSessionCopyLeavingPlay(card, to)) {
     return pushHistory(state, deps.clock, {
       patch: updates,
-      description: `Removed ${card.name} from the battlefield`,
+      message: { key: "removedCopy", params: { card: card.name } },
     });
   }
 
   placeInZone(state, updates, to, card);
-  const description = describeMove(card.name, from, to);
+  const message = moveMessage(card.name, { from, to });
   if (from === "library") {
     return pushHistory(state, deps.clock, {
       patch: updates,
-      description,
+      message,
       evidence: { kind: "cardSeen" },
     });
   }
-  return pushHistory(state, deps.clock, { patch: updates, description });
+  return pushHistory(state, deps.clock, { patch: updates, message });
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────

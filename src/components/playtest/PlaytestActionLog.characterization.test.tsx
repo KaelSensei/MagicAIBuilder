@@ -9,8 +9,19 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithIntl } from "@/test/render-with-intl";
-import type { PlaytestActionLogEntry } from "@/lib/playtest/engine";
+import {
+  noteMessage,
+  type PlaytestActionLogEntry,
+} from "@/lib/playtest/engine";
 import { PlaytestActionLog } from "./PlaytestActionLog";
+
+/** A free-text line the player wrote, as the log records it. */
+function note(
+  entry: Omit<PlaytestActionLogEntry, "message">,
+  text: string
+): PlaytestActionLogEntry {
+  return { ...entry, message: noteMessage(text) };
+}
 
 /** What the download link looked like at the moment it was clicked. */
 interface SavedFile {
@@ -64,7 +75,7 @@ function readText(blob: Blob): Promise<string> {
 }
 
 const ONE_ENTRY: readonly PlaytestActionLogEntry[] = [
-  { id: 1, turn: 2, phase: "Main1", description: "Made mana" },
+  note({ id: 1, turn: 2, phase: "Main1" }, "Made mana"),
 ];
 
 function renderLog(
@@ -116,7 +127,9 @@ describe("PlaytestActionLog export files (characterization)", () => {
       turns: [
         {
           turn: 2,
-          entries: ONE_ENTRY,
+          entries: [
+            { id: 1, turn: 2, phase: "Main1", description: "Made mana" },
+          ],
           draws: 0,
           manaProduced: 0,
           cardsSeen: 0,
@@ -225,9 +238,9 @@ describe("PlaytestActionLog composer (characterization)", () => {
 describe("PlaytestActionLog rows (characterization)", () => {
   it("lists the newest action first", () => {
     renderLog([
-      { id: 1, turn: 1, phase: "Draw", description: "First" },
-      { id: 2, turn: 1, phase: "Main1", description: "Second" },
-      { id: 3, turn: 2, phase: "Draw", description: "Third" },
+      note({ id: 1, turn: 1, phase: "Draw" }, "First"),
+      note({ id: 2, turn: 1, phase: "Main1" }, "Second"),
+      note({ id: 3, turn: 2, phase: "Draw" }, "Third"),
     ]);
 
     const rows = screen.getAllByRole("listitem").map((row) => row.textContent);
@@ -285,10 +298,10 @@ describe("PlaytestActionLog filters (characterization)", () => {
 
   it("offers the phases of the selected turn only", () => {
     renderLog([
-      { id: 1, turn: 1, phase: "Draw", description: "First draw" },
-      { id: 2, turn: 1, phase: "Main1", description: "First spell" },
-      { id: 3, turn: 2, phase: "Combat", description: "Attack" },
-      { id: 4, turn: 2, phase: "Main2", description: "Second spell" },
+      note({ id: 1, turn: 1, phase: "Draw" }, "First draw"),
+      note({ id: 2, turn: 1, phase: "Main1" }, "First spell"),
+      note({ id: 3, turn: 2, phase: "Combat" }, "Attack"),
+      note({ id: 4, turn: 2, phase: "Main2" }, "Second spell"),
     ]);
 
     fireEvent.click(screen.getByRole("button", { name: "Turn 2" }));
@@ -302,8 +315,8 @@ describe("PlaytestActionLog filters (characterization)", () => {
 
   it("hides the turn evidence while every action is a free-form note", () => {
     renderLog([
-      { id: 1, turn: 1, phase: "Draw", description: "A note" },
-      { id: 2, turn: 2, phase: "Draw", description: "Another note" },
+      note({ id: 1, turn: 1, phase: "Draw" }, "A note"),
+      note({ id: 2, turn: 2, phase: "Draw" }, "Another note"),
     ]);
 
     expect(screen.queryByLabelText("Turn evidence")).not.toBeInTheDocument();

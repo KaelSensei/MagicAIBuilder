@@ -27,7 +27,7 @@ type HandAndLibrary = Pick<PlaytestEngine, "hand" | "library">;
  * (CR 504.1) and every draw outside it go through here.
  *
  * Pure: returns new zones and leaves the given ones unchanged. Returns the same zones when the
- * library is empty; what an empty library means (no log line, a shorter description) is each
+ * library is empty; what an empty library means (no log line, a line without the draw) is each
  * caller's decision.
  */
 export function drawTop(zones: HandAndLibrary): HandAndLibrary {
@@ -54,7 +54,7 @@ export function applyDrawCard(
 
   return pushHistory(state, deps.clock, {
     patch: drawTop(state),
-    description: "Drew a card",
+    message: { key: "drewCard" },
     evidence: { kind: "draw" },
   });
 }
@@ -104,7 +104,7 @@ function takeFirstTurnDraw(state: PlaytestEngine): AfterFirstTurnDraw {
         id: nextActionId,
         turn: state.turn,
         phase: state.phase,
-        description: "Drew a card for turn 1",
+        message: { key: "drewFirstTurnCard" },
         kind: "draw",
       },
     ],
@@ -140,7 +140,7 @@ export function applyNextPhase(
         phase: "Untap" as const,
         battlefield: untapAll(state.battlefield),
       },
-      description: `Started turn ${nextTurn}`,
+      message: { key: "startedTurn", params: { turn: nextTurn } },
       evidence: { turn: nextTurn, phase: "Untap" },
     });
   }
@@ -151,7 +151,7 @@ export function applyNextPhase(
   const firstTurnDraw = state.phase === "Draw" ? takeFirstTurnDraw(state) : {};
   return pushHistory(state, deps.clock, {
     patch: { ...firstTurnDraw, phase: nextPhase },
-    description: `Advanced to ${nextPhase}`,
+    message: { key: "advancedToPhase", params: { phase: nextPhase } },
   });
 }
 
@@ -186,9 +186,10 @@ export function applyNextTurn(
       phase: "Draw" as const,
       battlefield: untapAll(state.battlefield),
     },
-    description: drawsForNewTurn
-      ? `Started turn ${nextTurn} and drew a card`
-      : `Started turn ${nextTurn}`,
+    message: {
+      key: drawsForNewTurn ? "startedTurnAndDrew" : "startedTurn",
+      params: { turn: nextTurn },
+    },
     evidence: {
       turn: nextTurn,
       phase: "Draw",

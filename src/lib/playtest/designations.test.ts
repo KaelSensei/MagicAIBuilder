@@ -123,10 +123,11 @@ describe("day and night", () => {
     );
 
     expect(
-      after.actionLog
-        .slice(dealt.actionLog.length)
-        .map((line) => line.description)
-    ).toEqual(["It became night", "Night became day"]);
+      after.actionLog.slice(dealt.actionLog.length).map((line) => line.message)
+    ).toEqual([
+      { key: "dayNightBegan", params: { to: "night" } },
+      { key: "dayNightSwapped", params: { to: "day" } },
+    ]);
   });
 });
 
@@ -152,9 +153,10 @@ describe("the monarch, the initiative and the Ring", () => {
     const after = play(dealt, { type: "ringTempts" }, { type: "ringTempts" });
 
     expect(after.designations.ringTemptations).toBe(2);
-    expect(after.actionLog.at(-1)?.description).toBe(
-      "The Ring tempted you (2 in total)"
-    );
+    expect(after.actionLog.at(-1)?.message).toEqual({
+      key: "ringTempted",
+      params: { total: 2 },
+    });
   });
 });
 
@@ -211,17 +213,24 @@ describe("every change is one step", () => {
     );
 
     expect(
-      after.actionLog
-        .slice(dealt.actionLog.length)
-        .map((line) => line.description)
+      after.actionLog.slice(dealt.actionLog.length).map((line) => line.message)
     ).toEqual([
-      "Gained 2 poison counters (2 in total)",
-      "Gained 3 energy counters (3 in total)",
-      "Lost 1 energy counter (2 in total)",
-      "Became the monarch",
-      "An opponent became the monarch",
-      "Took the initiative",
-      "Got the city's blessing",
+      {
+        key: "playerCountersGained",
+        params: { counter: "poison", count: 2, total: 2 },
+      },
+      {
+        key: "playerCountersGained",
+        params: { counter: "energy", count: 3, total: 3 },
+      },
+      {
+        key: "playerCountersLost",
+        params: { counter: "energy", count: 1, total: 2 },
+      },
+      { key: "becameMonarch" },
+      { key: "opponentBecameMonarch" },
+      { key: "tookInitiative" },
+      { key: "gotCitysBlessing" },
     ]);
   });
 

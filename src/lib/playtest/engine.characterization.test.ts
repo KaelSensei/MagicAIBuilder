@@ -170,7 +170,7 @@ describe("mulligan timing", () => {
     expect(late.actionLog.at(-1)).toMatchObject({
       turn: 3,
       phase: "Draw",
-      description: "Free mulligan: drew a new seven",
+      message: { key: "freeMulligan" },
     });
   });
 
@@ -186,11 +186,14 @@ describe("mulligan timing", () => {
     const secondKept = applyBottomCards(second, ids(second.hand.slice(0, 2)));
 
     expect(secondKept.hand).toHaveLength(5);
-    expect(secondKept.actionLog.map((entry) => entry.description)).toEqual([
-      "Mulligan: drew a new seven, 1 card to put on the bottom",
-      `Put ${first.hand[0].name} on the bottom of the library`,
-      "Mulligan: drew a new seven, 2 cards to put on the bottom",
-      `Put ${second.hand[0].name}, ${second.hand[1].name} on the bottom of the library`,
+    expect(secondKept.actionLog.map((entry) => entry.message)).toEqual([
+      { key: "mulligan", params: { toBottom: 1 } },
+      { key: "bottomed", params: { cards: [first.hand[0].name] } },
+      { key: "mulligan", params: { toBottom: 2 } },
+      {
+        key: "bottomed",
+        params: { cards: [second.hand[0].name, second.hand[1].name] },
+      },
     ]);
   });
 });
@@ -239,7 +242,7 @@ describe("turn and step progression", () => {
       id: 1,
       turn: 1,
       phase: "Upkeep",
-      description: "Advanced to Draw",
+      message: { key: "advancedToPhase", params: { phase: "Draw" } },
     });
   });
 
@@ -313,9 +316,10 @@ describe("leaving the battlefield", () => {
 
       expect(next.battlefield).toEqual([]);
       expect(ids(next[zone])).not.toContain("copy-1");
-      expect(next.actionLog.at(-1)?.description).toBe(
-        "Removed Sol Ring from the battlefield"
-      );
+      expect(next.actionLog.at(-1)?.message).toEqual({
+        key: "removedCopy",
+        params: { card: "Sol Ring" },
+      });
     }
   );
 
@@ -353,14 +357,15 @@ describe("leaving the battlefield", () => {
 
     expect(next.battlefield[0].counters).toBe(0);
     expect(next.actionLog.at(-1)).toMatchObject({
-      description: "Removed a counter from Card p1",
+      message: { key: "counterRemoved", params: { card: "Card p1" } },
       counterDelta: -1,
     });
   });
 });
 
-// The engine writes its log lines in English; the export and the UI show them
-// as they are (pinned; see B2-45, which turns them into translated events).
+// The engine records each log line as a message key and its parameters; the UI
+// renders it in the player's language (B2-45, #1853). The English text of each
+// key is pinned in `ActionLogEntryRow.test.tsx`.
 describe("action log lines", () => {
   const bolt = makeCard("bolt", "Lightning Bolt");
   const forest = makeCard("forest", "Forest");
@@ -398,17 +403,30 @@ describe("action log lines", () => {
     [
       "drawing",
       applyDrawCard,
-      { turn: 2, phase: "Main1", description: "Drew a card", kind: "draw" },
+      {
+        turn: 2,
+        phase: "Main1",
+        message: { key: "drewCard" },
+        kind: "draw",
+      },
     ],
     [
       "advancing a step",
       applyNextPhase,
-      { turn: 2, phase: "Main1", description: "Advanced to Combat" },
+      {
+        turn: 2,
+        phase: "Main1",
+        message: { key: "advancedToPhase", params: { phase: "Combat" } },
+      },
     ],
     [
       "wrapping End into the next turn",
       (s) => applyNextPhase({ ...s, phase: "End" }),
-      { turn: 3, phase: "Untap", description: "Started turn 3" },
+      {
+        turn: 3,
+        phase: "Untap",
+        message: { key: "startedTurn", params: { turn: 3 } },
+      },
     ],
     [
       "starting the next turn",
@@ -416,14 +434,18 @@ describe("action log lines", () => {
       {
         turn: 3,
         phase: "Draw",
-        description: "Started turn 3 and drew a card",
+        message: { key: "startedTurnAndDrew", params: { turn: 3 } },
         kind: "draw",
       },
     ],
     [
       "starting the next turn with no library",
       (s) => applyNextTurn({ ...s, library: [] }),
-      { turn: 3, phase: "Draw", description: "Started turn 3" },
+      {
+        turn: 3,
+        phase: "Draw",
+        message: { key: "startedTurn", params: { turn: 3 } },
+      },
     ],
     [
       "taking damage",
@@ -431,7 +453,7 @@ describe("action log lines", () => {
       {
         turn: 2,
         phase: "Main1",
-        description: "Lost 3 life: damage",
+        message: { key: "lostLife", params: { amount: 3 } },
         kind: "life",
         lifeDelta: -3,
       },
@@ -442,7 +464,7 @@ describe("action log lines", () => {
       {
         turn: 2,
         phase: "Main1",
-        description: "Lost 2 life: combat",
+        message: { key: "lostLifeTo", params: { amount: 2, cause: "combat" } },
         kind: "life",
         lifeDelta: -2,
       },
@@ -453,7 +475,7 @@ describe("action log lines", () => {
       {
         turn: 2,
         phase: "Main1",
-        description: "Gained 4 life",
+        message: { key: "gainedLife", params: { amount: 4 } },
         kind: "life",
         lifeDelta: 4,
       },
@@ -461,17 +483,25 @@ describe("action log lines", () => {
     [
       "tapping",
       (s) => applyTap(s, "elves"),
-      { turn: 2, phase: "Main1", description: "Tapped Llanowar Elves" },
+      {
+        turn: 2,
+        phase: "Main1",
+        message: { key: "tapped", params: { card: "Llanowar Elves" } },
+      },
     ],
     [
       "untapping",
       (s) => applyTap(applyTap(s, "elves"), "elves"),
-      { turn: 2, phase: "Main1", description: "Untapped Llanowar Elves" },
+      {
+        turn: 2,
+        phase: "Main1",
+        message: { key: "untapped", params: { card: "Llanowar Elves" } },
+      },
     ],
     [
       "untapping everything",
       applyUntapAll,
-      { turn: 2, phase: "Main1", description: "Untapped all permanents" },
+      { turn: 2, phase: "Main1", message: { key: "untappedAll" } },
     ],
     [
       "playing a card",
@@ -479,7 +509,10 @@ describe("action log lines", () => {
       {
         turn: 2,
         phase: "Main1",
-        description: "Moved Forest from hand to battlefield",
+        message: {
+          key: "moved",
+          params: { card: "Forest", from: "hand", to: "battlefield" },
+        },
       },
     ],
     [
@@ -488,7 +521,10 @@ describe("action log lines", () => {
       {
         turn: 2,
         phase: "Main1",
-        description: "Moved Sol Ring from library to hand",
+        message: {
+          key: "moved",
+          params: { card: "Sol Ring", from: "library", to: "hand" },
+        },
         kind: "cardSeen",
       },
     ],
@@ -498,7 +534,7 @@ describe("action log lines", () => {
       {
         turn: 2,
         phase: "Main1",
-        description: "Cast Kenrith from the command zone",
+        message: { key: "castFromCommandZone", params: { card: "Kenrith" } },
       },
     ],
     [
@@ -513,7 +549,7 @@ describe("action log lines", () => {
       {
         turn: 2,
         phase: "Main1",
-        description: "Returned Kenrith to the command zone",
+        message: { key: "returnedToCommandZone", params: { card: "Kenrith" } },
       },
     ],
     [
@@ -522,23 +558,35 @@ describe("action log lines", () => {
       {
         turn: 2,
         phase: "Main1",
-        description: "Created a copy of Llanowar Elves",
+        message: { key: "createdCopy", params: { card: "Llanowar Elves" } },
       },
     ],
     [
       "creating a token",
       (s) => applyCreateToken(s, soldier, "token-1"),
-      { turn: 2, phase: "Main1", description: "Created 1/1 Soldier token" },
+      {
+        turn: 2,
+        phase: "Main1",
+        message: { key: "created", params: { card: "1/1 Soldier token" } },
+      },
     ],
     [
       "creating an emblem",
       (s) => applyCreateToken(s, emblem, "emblem-1"),
-      { turn: 2, phase: "Main1", description: "Created Elspeth Emblem" },
+      {
+        turn: 2,
+        phase: "Main1",
+        message: { key: "created", params: { card: "Elspeth Emblem" } },
+      },
     ],
     [
       "rolling a die",
       (s) => applyRollDie(s, 20, 17),
-      { turn: 2, phase: "Main1", description: "Rolled d20: 17" },
+      {
+        turn: 2,
+        phase: "Main1",
+        message: { key: "rolledDie", params: { sides: 20, result: 17 } },
+      },
     ],
     [
       "producing mana",
@@ -546,7 +594,7 @@ describe("action log lines", () => {
       {
         turn: 2,
         phase: "Main1",
-        description: "Produced 3 mana",
+        message: { key: "producedMana", params: { amount: 3 } },
         kind: "mana",
         amount: 3,
       },
@@ -557,7 +605,7 @@ describe("action log lines", () => {
       {
         turn: 2,
         phase: "Main1",
-        description: "Added a counter to Llanowar Elves",
+        message: { key: "counterAdded", params: { card: "Llanowar Elves" } },
         kind: "counter",
         counterDelta: 2,
       },
@@ -565,7 +613,11 @@ describe("action log lines", () => {
     [
       "writing a note",
       (s) => applyAddActionLogEntry(s, "  Opponent concedes  "),
-      { turn: 2, phase: "Main1", description: "Opponent concedes" },
+      {
+        turn: 2,
+        phase: "Main1",
+        message: { key: "note", params: { text: "Opponent concedes" } },
+      },
     ],
   ])("logs %s exactly", (_, act, line) => {
     const next = act(game());
@@ -587,9 +639,10 @@ describe("action log lines", () => {
 
     const kept = applyBottomCards(pending, ["sol", "bolt"]);
 
-    expect(kept.actionLog.at(-1)?.description).toBe(
-      "Put Sol Ring, Lightning Bolt on the bottom of the library"
-    );
+    expect(kept.actionLog.at(-1)?.message).toEqual({
+      key: "bottomed",
+      params: { cards: ["Sol Ring", "Lightning Bolt"] },
+    });
   });
 
   it("edits a line in place: no new line, no new id, evidence cleared", () => {
@@ -598,7 +651,12 @@ describe("action log lines", () => {
     const edited = applyEditActionLogEntry(mana, 1, "Tapped two lands");
 
     expect(edited.actionLog).toEqual([
-      { id: 1, turn: 2, phase: "Main1", description: "Tapped two lands" },
+      {
+        id: 1,
+        turn: 2,
+        phase: "Main1",
+        message: { key: "note", params: { text: "Tapped two lands" } },
+      },
     ]);
     expect(edited.nextActionId).toBe(2);
     expect(applyUndo(edited)).toBe(mana);

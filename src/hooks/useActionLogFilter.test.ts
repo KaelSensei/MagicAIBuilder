@@ -1,6 +1,9 @@
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import type { PlaytestActionLogEntry } from "@/lib/playtest/engine";
+import {
+  noteMessage,
+  type PlaytestActionLogEntry,
+} from "@/lib/playtest/engine";
 import { useActionLogFilter } from "./useActionLogFilter";
 
 const ENTRIES: readonly PlaytestActionLogEntry[] = [
@@ -8,13 +11,19 @@ const ENTRIES: readonly PlaytestActionLogEntry[] = [
     id: 1,
     turn: 2,
     phase: "Main1",
-    description: "Second spell",
+    message: noteMessage("Second spell"),
     kind: "mana",
     amount: 2,
   },
-  { id: 2, turn: 1, phase: "Draw", description: "First draw", kind: "draw" },
-  { id: 3, turn: 1, phase: "Main1", description: "First spell" },
-  { id: 4, turn: 2, phase: "Draw", description: "Second draw" },
+  {
+    id: 2,
+    turn: 1,
+    phase: "Draw",
+    message: noteMessage("First draw"),
+    kind: "draw",
+  },
+  { id: 3, turn: 1, phase: "Main1", message: noteMessage("First spell") },
+  { id: 4, turn: 2, phase: "Draw", message: noteMessage("Second draw") },
 ];
 
 describe("useActionLogFilter", () => {
@@ -85,7 +94,7 @@ describe("useActionLogFilter", () => {
 
     const { result: notesOnly } = renderHook(() =>
       useActionLogFilter([
-        { id: 9, turn: 3, phase: "End", description: "A note" },
+        { id: 9, turn: 3, phase: "End", message: noteMessage("A note") },
       ])
     );
     expect(notesOnly.current.visibleSummaries).toEqual([]);
