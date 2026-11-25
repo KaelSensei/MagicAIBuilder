@@ -197,6 +197,17 @@ describe("ShareDeckView mana curve", () => {
       expect(within(list).queryAllByRole(role)).toEqual([]);
     }
   });
+
+  it("titles the chart once, as a heading at the level of the Stats panel's", () => {
+    renderSharedPage(TWO_DROP_DECK);
+
+    expect(screen.getAllByText("Mana Curve")).toEqual([
+      screen.getByRole("heading", { level: 3, name: "Mana Curve" }),
+    ]);
+    expect(
+      screen.getByRole("heading", { level: 3, name: "Stats" })
+    ).toBeInTheDocument();
+  });
 });
 
 // ─── Characterization: the shared page's numbers against the analysis ─────────

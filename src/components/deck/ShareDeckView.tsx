@@ -412,13 +412,13 @@ export function ShareDeckView({ deck }: ShareDeckViewProps) {
             </div>
           </div>
 
-          {/* Mana Curve */}
-          <div className={cn(cardSurfaceClassName, "p-4")}>
-            <h3 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-3">
-              {t("share.manaCurve")}
-            </h3>
-            <ManaCurve curve={manaCurve} cards={curveCards} />
-          </div>
+          {/* Mana Curve: the chart's own title is the panel's heading, at the Stats panel's level. */}
+          <ManaCurve
+            curve={manaCurve}
+            cards={curveCards}
+            titleAs="h3"
+            className={cardSurfaceClassName}
+          />
 
           {/* Color Distribution */}
           <div className={cn(cardSurfaceClassName, "p-4")}>
