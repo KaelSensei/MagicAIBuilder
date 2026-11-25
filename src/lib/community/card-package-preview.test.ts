@@ -167,4 +167,40 @@ describe("previewCardPackage counts a stored deck's copies like the editor", () 
 
     expect(preview.cards[0]).toMatchObject({ status: "ready", issues: [] });
   });
+
+  it.each(["main", "sideboard"] as const)("still blocks a Sol Ring the deck holds in its %s zone", (zone) => {
+    const context = packagePreviewContextOf("commander", [
+      commanderRow,
+      storedRow({ id: "ring", name: "Sol Ring", typeLine: "Artifact", zone }),
+    ]);
+
+    const preview = previewCardPackage([solRing], context);
+
+    expect(preview.cards[0]).toMatchObject({
+      status: "blocked", issues: [{ kind: "singleton", message: "Sol Ring exceeds the singleton limit" }],
+    });
+  });
+
+  it("still blocks a package copy of the deck's own commander", () => {
+    const context = packagePreviewContextOf("commander", [commanderRow]);
+
+    const preview = previewCardPackage([
+      { scryfallId: "talrand", name: "Talrand, Sky Summoner", quantity: 1, colorIdentity: ["U"], isBanned: false,
+        isBasicLand: false, typeLine: "Legendary Creature — Merfolk Wizard" },
+    ], context);
+
+    expect(preview.cards[0]?.issues.map((issue) => issue.kind)).toEqual(["singleton"]);
+  });
+
+  it("lets a 4-copy deck with three Counterspells in Considering take one more", () => {
+    const context = packagePreviewContextOf("modern", [
+      storedRow({ id: "spell", name: "Counterspell", typeLine: "Instant", zone: "maybeboard", quantity: 3 }),
+    ]);
+
+    const preview = previewCardPackage([
+      { scryfallId: "spell", name: "Counterspell", quantity: 1, colorIdentity: ["U"], isBanned: false, isBasicLand: false },
+    ], context);
+
+    expect(preview.cards[0]?.status).toBe("ready");
+  });
 });

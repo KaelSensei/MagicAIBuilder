@@ -143,6 +143,28 @@ describe("POST /api/community/card-packages/[packageId]/apply", () => {
     })] });
   });
 
+  // Considering is not part of the deck: the package's copy counts against the
+  // main deck, the sideboard and the command zone only (CR 903.5b).
+  it("adds a Sol Ring to the main deck when the deck only holds one in Considering", async () => {
+    mockDeckFindFirst.mockResolvedValue({ format: "commander", cards: [
+      { name: "Blue Commander", quantity: 1, isCommander: true, isPartner: false, typeLine: "Legendary Creature", colorIdentity: ["U"], zone: "main", category: "commander" },
+      { name: "Sol Ring", quantity: 1, isCommander: false, isPartner: false, typeLine: "Artifact", colorIdentity: [], zone: "maybeboard", category: "artifact" },
+    ] });
+    mockPackageFindFirst.mockResolvedValue({ cards: [
+      { scryfallId: "ready", name: "Sol Ring", quantity: 1, colorIdentity: [], isBanned: false, isBasicLand: false, imageUri: "ring.jpg" },
+    ] });
+    mockGetCardCollection.mockResolvedValue({ data: [
+      { id: "ready", name: "Sol Ring", cmc: 1, color_identity: [], type_line: "Artifact", legalities: { commander: "legal" }, image_uris: {} },
+    ], not_found: [] });
+
+    const response = await POST(request(), context);
+
+    expect(await response.json()).toEqual({ addedCount: 1, blockedCount: 0 });
+    expect(mockCreateMany).toHaveBeenCalledWith({ data: [expect.objectContaining({
+      name: "Sol Ring", quantity: 1, zone: "main",
+    })] });
+  });
+
   it("refuses a deck whose stored format this build does not support", async () => {
     mockDeckFindFirst.mockResolvedValue({ format: "historic", cards: [] });
     const response = await POST(request(), context);
