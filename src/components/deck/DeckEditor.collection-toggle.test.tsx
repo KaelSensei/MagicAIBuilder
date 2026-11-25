@@ -316,6 +316,26 @@ describe("the Owned and Buy badges on the Grid view's cards", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("marks a Considering card shown as a grid card, as its list row is marked", async () => {
+    ownPrintings("sol-ring-c21");
+    renderInView(
+      aDeck({
+        cards: [SOL_RING, { ...COUNTERSPELL, zone: "maybeboard" }],
+      }),
+      "grid"
+    );
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Considering (1)" })
+    );
+
+    expect(
+      screen.getByText(
+        "Buy: 1 more copy of this printing needed, 0 in your collection"
+      )
+    ).toBeInTheDocument();
+  });
+
   // CR 205.4c: a land with the basic supertype is basic; the deck never needs to buy one.
   it("never asks to buy a basic land shown as a grid card", () => {
     ownPrintings("sol-ring-c21");

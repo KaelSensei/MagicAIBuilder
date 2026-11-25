@@ -21,9 +21,9 @@ interface GridCardOwnershipBadgeProps {
 /**
  * Overlays the card's Owned or Buy badge on its image.
  *
- * The parent must be positioned (`relative`) and wrap the image alone, so the
- * badge lands on the art whatever the tile shows under the image. Renders
- * nothing whenever the list row's badge would not show.
+ * The parent must be positioned (`relative`) and hold nothing in the flow but
+ * the image, so the badge lands on the art whatever the tile shows under the
+ * image. Renders nothing whenever the list row's badge would not show.
  */
 export function GridCardOwnershipBadge({ card }: GridCardOwnershipBadgeProps) {
   return (
