@@ -39,10 +39,10 @@
   },
   "src/app/[locale]/decks/page.new-deck.test.tsx": {
     "no-restricted-syntax": {
-      "count": 11
+      "count": 10
     },
     "vitest/prefer-import-in-mock": {
-      "count": 2
+      "count": 1
     }
   },
   "src/app/[locale]/decks/page.test.tsx": {
