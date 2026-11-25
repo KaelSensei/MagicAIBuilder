@@ -3,7 +3,9 @@
  * one write. POST stores at most the copy limit, as the editor does, counted
  * across every row of the deck: each row is clamped silently to the room the
  * rows before it leave, and a row with no room is not created
- * (`lib/deck/copy-room-write.ts`).
+ * (`lib/deck/copy-room-write.ts`). POST refuses a commander and partner that
+ * cannot share the command zone, as the command-zone route does
+ * (`lib/deck/commander-pairing.ts`, CR 702.124).
  */
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
@@ -12,7 +14,10 @@ import { requireAuth } from "@/lib/auth/helpers";
 import { logger } from "@/lib/logger";
 import { ALL_FORMATS } from "@/lib/deck/formats";
 import { readJsonBody } from "@/lib/api/json-body";
-import { sharesOracleIdentity } from "@/lib/deck/commander-pairing";
+import {
+  commandPairRefusal,
+  type CommandSlotIds,
+} from "@/lib/deck/commander-pairing";
 import {
   commandSlotOf,
   isCommanderRow,
@@ -34,6 +39,11 @@ import {
 const DEFAULT_PAGE_SIZE = 20;
 /** Card rows one create may carry: a full deck, a sideboard and a long maybeboard. */
 const MAX_CREATE_CARDS = 500;
+/**
+ * The stored slots `commandPairRefusal` falls back on: a deck being created
+ * has none, so the request's own commander and partner are the whole pair.
+ */
+const NEW_DECK_SLOTS: CommandSlotIds = { commanderId: null, partnerId: null };
 
 /**
  * Reads a whole-number query parameter, falling back when it is not one.
@@ -224,12 +234,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid input", details: parsed.error.issues.map((i) => i.message) }, { status: 400 });
     }
     const { name: rawName, commanderId, partnerId } = parsed.data;
-    if (commanderId && commanderId === partnerId) {
-      return NextResponse.json({ error: "Commander and partner must be different cards" }, { status: 400 });
-    }
-    if (commanderId && partnerId && await sharesOracleIdentity(commanderId, partnerId)) {
-      return NextResponse.json({ error: "Commander and partner must be different cards" }, { status: 400 });
-    }
+    // The same pair rules as PATCH …/command-zone (CR 903.5b, CR 702.124).
+    const refusal = await commandPairRefusal(
+      { commanderId: commanderId ?? null, partnerId: partnerId ?? null },
+      NEW_DECK_SLOTS
+    );
+    if (refusal) return NextResponse.json({ error: refusal }, { status: 400 });
     const sanitizedName = sanitizeDisplayName(rawName, MAX_DECK_NAME_LENGTH);
     if (!sanitizedName) {
       return NextResponse.json({ error: "name is required" }, { status: 400 });
