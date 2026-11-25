@@ -280,6 +280,8 @@
   "summary": {
     "label": "Deck summary",
     "formatWithBracket": "{format} · Bracket {level}",
+    "formatWithBracketCombosPending": "{format} · Bracket {level} (combos not checked yet)",
+    "formatWithBracketCombosNotChecked": "{format} · Bracket {level} (combos not checked)",
     "formatWithManualBracket": "{format} · Bracket {level}, set by you",
     "typesToggle": "Types",
     "typesLabel": "Cards by type",
