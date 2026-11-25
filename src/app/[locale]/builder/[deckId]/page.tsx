@@ -1,7 +1,7 @@
 "use client";
 // Main builder view — 3-panel layout: Search | DeckEditor | Stats
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import {
   DndContext,
@@ -40,6 +40,7 @@ import { useUIStore } from "@/lib/ui/store";
 import { useBracketScore } from "@/hooks/useBracketScore";
 import { useCardSearchResults } from "@/hooks/useCardSearchResults";
 import { useCopyLimitNotice } from "@/hooks/useCopyLimitNotice";
+import { useDeckDuplication } from "@/hooks/useDeckDuplication";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { Header } from "@/components/layout/Header";
 import { SearchBar } from "@/components/search/SearchBar";
@@ -338,7 +339,6 @@ export default function BuilderPage() {
   const t = useTranslations("builder");
   const searchLocale = toSearchLocale(useLocale());
   const params = useParams();
-  const router = useRouter();
   const deckId = params.deckId as string;
   const { data: sessionData, status: sessionStatus } = useSession();
 
@@ -352,13 +352,12 @@ export default function BuilderPage() {
   const updateCardCategory = useDeckStore((s) => s.updateCardCategory);
   const moveCardToZone = useDeckStore((s) => s.moveCardToZone);
   const renameDeck = useDeckStore((s) => s.renameDeck);
-  const duplicateDeck = useDeckStore((s) => s.duplicateDeck);
+  const duplicateDeck = useDeckDuplication();
   const swapCardPrinting = useDeckStore((s) => s.swapCardPrinting);
   const addToMaybeboard = useDeckStore((s) => s.addToMaybeboard);
-  const handleDuplicate = useCallback(async () => {
-    const newId = await duplicateDeck(deckId);
-    router.push(`/builder/${newId}`);
-  }, [duplicateDeck, deckId, router]);
+  const handleDuplicate = useCallback(() => {
+    void duplicateDeck(deckId);
+  }, [duplicateDeck, deckId]);
   const setManualBracket = useDeckStore((s) => s.setManualBracket);
   const decks = useDeckStore((s) => s.decks);
   const loadDecks = useDeckStore((s) => s.loadDecks);

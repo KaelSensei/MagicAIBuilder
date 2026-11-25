@@ -10,6 +10,12 @@
     "createFailed": "无法创建套牌。",
     "createSignedOut": "Your session has ended. Sign in again to create a deck."
   },
+  "deckDuplicate": {
+    "succeeded": "Deck duplicated: “{name}”",
+    "failed": "Could not duplicate the deck. Please try again.",
+    "signedOut": "Your session has ended. Sign in again to duplicate a deck.",
+    "missing": "This deck no longer exists, so it cannot be duplicated."
+  },
   "theme": {
     "toggle": "切换主题",
     "switchToLight": "使用浅色主题",

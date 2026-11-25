@@ -40,6 +40,7 @@ vi.mock(import("@/lib/db/deck-api"), () => ({
   }),
   updateDeck: vi.fn().mockResolvedValue({}),
   deleteDeck: vi.fn().mockResolvedValue(undefined),
+  duplicateDeck: vi.fn(),
   addCard: vi.fn().mockResolvedValue({
     id: "saved-db-id",
     deckId: "deck-1",
@@ -93,6 +94,7 @@ vi.mock(import("@/hooks/useToast"), async (importOriginal) => {
 import * as deckApi from "@/lib/db/deck-api";
 import type { Deck, DeckCard } from "@/lib/deck/types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
+import { emptyApiDeck } from "@/test/in-memory-deck-api";
 
 const { useDeckStore } = await import("@/lib/deck/store");
 
@@ -1602,10 +1604,9 @@ describe("useDeckStore — duplicateDeck", () => {
       page: 0,
       limit: 20,
     });
-    global.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve({ id: "deck-2", name: "Test Deck (copy)" }),
-    }) as unknown as typeof fetch;
+    vi.mocked(deckApi.duplicateDeck).mockResolvedValue(
+      emptyApiDeck("deck-2", "Test Deck (copy)")
+    );
   });
 
   it("sets activeDeckId to the new deck id", async () => {
@@ -1613,11 +1614,10 @@ describe("useDeckStore — duplicateDeck", () => {
     expect(useDeckStore.getState().activeDeckId).toBe("deck-2");
   });
 
-  it("calls /api/decks/:id/duplicate with POST", async () => {
+  // It used to call `fetch` itself, which hid the answered status (I-01).
+  it("asks the deck client to copy the deck", async () => {
     await useDeckStore.getState().duplicateDeck("deck-1");
-    expect(global.fetch).toHaveBeenCalledWith("/api/decks/deck-1/duplicate", {
-      method: "POST",
-    });
+    expect(deckApi.duplicateDeck).toHaveBeenCalledWith("deck-1");
   });
 });
 
