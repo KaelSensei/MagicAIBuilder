@@ -739,6 +739,7 @@
     "save": "Sauvegarder",
     "saveSnapshot": "Sauvegarder un snapshot",
     "placeholder": "ex. « v1 budget »",
+    "nameLabel": "Nom du snapshot",
     "cancel": "Annuler",
     "noSnapshots": "Aucun snapshot. Sauvegardez-en un ci-dessus !",
     "cards": "{count, plural, one {# carte} other {# cartes}}",
