@@ -20,7 +20,9 @@ describe("in-memory public fork store", () => {
   describe("PublicForkStore contract", () => {
     for (const contractCase of PUBLIC_FORK_STORE_CONTRACT_CASES) {
       it(contractCase.name, async () => {
-        await expect(contractCase.run(inMemoryHarness())).resolves.toBeUndefined();
+        await expect(
+          contractCase.run(inMemoryHarness())
+        ).resolves.toBeUndefined();
       });
     }
   });

@@ -176,7 +176,9 @@ describe("gamePiecesOf", () => {
       ],
     ])("%s", (_case, oracleText, kinds) => {
       expect(
-        gamePiecesOf([cardNamed("Pinned Card", oracleText)]).map((entry) => entry.kind)
+        gamePiecesOf([cardNamed("Pinned Card", oracleText)]).map(
+          (entry) => entry.kind
+        )
       ).toEqual(kinds);
     });
 
