@@ -39,8 +39,8 @@
     "toAcquire": "{count} to acquire",
     "deferredTitle": "Deferred · {count, plural, one {# copy} other {# copies}}",
     "deferredHint": "Copies you chose to proxy or buy later in a deck's shopping list. They are not in the total or the CSV.",
-    "proxyNowFor": "Proxy for now — {deck}",
-    "buyLaterFor": "Buy later — {deck}"
+    "proxyNowFor": "Proxy for now — <link>{deck}</link>",
+    "buyLaterFor": "Buy later — <link>{deck}</link>"
   },
   "loading": "Loading collection…",
   "loadFailed": "Could not refresh your collection. Your saved cards are unchanged.",
