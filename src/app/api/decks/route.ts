@@ -1,7 +1,9 @@
 /**
  * GET lists the signed-in user's decks; POST creates a deck and its cards in
- * one write. POST stores at most the copy limit, as the editor does: each row
- * is clamped silently to `min(requested, limit)` (`lib/deck/copy-limit-write.ts`).
+ * one write. POST stores at most the copy limit, as the editor does, counted
+ * across every row of the deck: each row is clamped silently to the room the
+ * rows before it leave, and a row with no room is not created
+ * (`lib/deck/copy-room-write.ts`).
  */
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
@@ -15,10 +17,8 @@ import {
   commandSlotOf,
   isCommanderRow,
 } from "@/lib/deck/bulk-edit-command-zone";
-import {
-  cardWithinCopyLimit,
-  storedCopyLimitDeck,
-} from "@/lib/deck/copy-limit-write";
+import { storedCopyLimitDeck } from "@/lib/deck/copy-limit-write";
+import { addsWithinCopyLimit } from "@/lib/deck/copy-room-write";
 import { sanitizeDisplayName } from "@/lib/deck/display-name";
 import { deckCardIdSchema, pairingTypeSchema } from "@/lib/validation/deck";
 import { addCardSchema, type AddCardInput } from "@/lib/validation/card";
@@ -102,13 +102,16 @@ function hasOneCommandRowPerSlot(cards: readonly AddCardInput[]): boolean {
 }
 
 /**
- * The request's rows, each clamped to the copy limit of the deck it creates.
- * The request holds every fact the rule reads: the format, and the commander
- * and partner rows whose rulebreaker exceptions apply (CR 903.5e), so no
- * stored deck is read.
+ * The request's rows within the copy limit of the deck it creates, counted
+ * across every row of the main deck, the sideboard and the command zone
+ * (CR 100.2a, CR 903.5b): a row is clamped to the room the rows before it
+ * leave, and a row with no room is not created. The request holds every fact
+ * the rule reads: the format, and the commander and partner rows whose
+ * rulebreaker exceptions apply (CR 903.5e), so no stored deck is read.
  *
  * @param fields - the validated request
- * @returns the rows to create, in order, with `quantity` from 1 to each card's limit
+ * @returns the rows to create, in order, with `quantity` from 1 to each
+ *   card's room
  */
 function cardsWithinCopyLimit(fields: CreateDeckInput): AddCardInput[] {
   const copyRule = storedCopyLimitDeck({
@@ -117,7 +120,7 @@ function cardsWithinCopyLimit(fields: CreateDeckInput): AddCardInput[] {
       .filter((card) => isCommanderRow(card))
       .map((card) => card.name),
   });
-  return fields.cards.map((card) => cardWithinCopyLimit(card, copyRule));
+  return [...addsWithinCopyLimit(fields.cards, [], copyRule)];
 }
 
 /**

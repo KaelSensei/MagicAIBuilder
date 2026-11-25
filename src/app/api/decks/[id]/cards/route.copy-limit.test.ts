@@ -130,13 +130,14 @@ describe("POST /api/decks/[id]/cards — copy limit", () => {
     });
   });
 
-  it("keeps four Lightning Bolts in a Modern deck and stops a fifth (CR 100.2a)", async () => {
+  it("keeps four Lightning Bolts in a Modern deck and refuses a second row of them (CR 100.2a)", async () => {
     deckCardsDb.reset([], MODERN_DECK);
 
     await post({ ...LIGHTNING_BOLT, quantity: 4 });
-    await post({ ...LIGHTNING_BOLT, quantity: 5 });
+    const second = await post({ ...LIGHTNING_BOLT, quantity: 5 });
 
-    expect(storedCopies("Lightning Bolt")).toEqual([4, 4]);
+    expect(second.status).toBe(409);
+    expect(storedCopies("Lightning Bolt")).toEqual([4]);
   });
 
   it("keeps thirty Forests, a basic land, in a Commander deck", async () => {
