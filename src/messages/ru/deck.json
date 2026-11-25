@@ -315,6 +315,8 @@
     "saved": "{count, plural, one {Saved # card successfully.} other {Saved # cards successfully.}}",
     "saveFailed": "Failed to save changes.",
     "lookupFailed": "Nothing was saved — the card lookup did not answer. Your list is kept; try saving again.",
+    "signedOut": "Nothing was saved — your session has ended. Sign in again to save your changes.",
+    "conflictReloaded": "Nothing was saved — this deck was changed elsewhere and has been reloaded. Check the list, then make your changes again.",
     "unknownCards": "Nothing was saved — no card found for: {names}",
     "invalidPartner": "Nothing was saved — {name} cannot be paired with this commander.",
     "invalidCompanion": "Nothing was saved — {name} cannot be this deck’s companion.",

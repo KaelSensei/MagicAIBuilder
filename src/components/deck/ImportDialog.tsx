@@ -15,8 +15,8 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { X, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { parseTextDecklist } from "@/lib/deck/import";
 import { fetchInBatches } from "@/lib/deck/batch-fetch";
-import { CardLookupError } from "@/lib/deck/card-lookup-error";
 import { useDeckStore } from "@/lib/deck/store";
+import { logger } from "@/lib/logger";
 import { ImportFromUrlTab } from "@/components/deck/ImportFromUrlTab";
 import { ImportFileButton } from "@/components/deck/ImportFileButton";
 import { Button } from "@/components/ui/Button";
@@ -302,19 +302,14 @@ export function ImportDialog({
       setStatus(missingNames.length > 0 ? "warning" : "done");
       setMessage(t("import.importSuccess", { count: added }));
     } catch (err) {
+      // Unreachable through the store, whose writes catch their own failures
+      // and raise their own toasts; a fault here still shows no thrown text,
+      // which is diagnostic and goes to the log (I-01).
+      logger.error("Unexpected error", "ImportDialog.import", err);
       setStatus("error");
-      setMessage(err instanceof Error ? err.message : t("import.importFailed"));
+      setMessage(t("import.importFailed"));
     }
   };
-
-  /**
-   * Explains a preview that threw: the card lookup's failure in the player's
-   * words, any other error as it reports itself.
-   */
-  function previewFailureMessage(error: unknown): string {
-    if (error instanceof CardLookupError) return t("import.lookupFailed");
-    return error instanceof Error ? error.message : t("import.importFailed");
-  }
 
   const handlePreview = async () => {
     const parsed = parseTextDecklist(text);
@@ -341,8 +336,13 @@ export function ImportDialog({
       setMessage("");
     } catch (err) {
       if (requestId !== previewRequest.current) return;
+      // Only the card lookup can fail here, and `fetchInBatches` reports any
+      // Scryfall failure (timeout, network, 5xx) as a CardLookupError, so the
+      // lookup sentence fits whatever was thrown. The thrown text is
+      // diagnostic and goes to the log (I-01).
+      logger.error("Unexpected error", "ImportDialog.preview", err);
       setStatus("error");
-      setMessage(previewFailureMessage(err));
+      setMessage(t("import.lookupFailed"));
     }
   };
 
