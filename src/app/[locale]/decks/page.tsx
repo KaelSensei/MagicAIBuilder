@@ -18,7 +18,7 @@ import { HomeDeckCard } from "@/components/deck/HomeDeckCard";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { useDeckStore } from "@/lib/deck/store";
-import { useToastStore } from "@/hooks/useToast";
+import { useDeckCreateFailureReport } from "@/hooks/useDeckCreateFailureReport";
 import { logger } from "@/lib/logger";
 import { DeckListTable } from "@/components/deck/DeckListTable";
 import { DecksHomeControls } from "@/components/deck/DecksHomeControls";
@@ -65,8 +65,7 @@ export default function DecksPage() {
     duplicateDeck,
     loadError,
   } = useDeckStore();
-  // Fine-grained selector: `add` is stable, so it can sit in a useCallback dep.
-  const addToast = useToastStore((state) => state.add);
+  const reportCreateFailure = useDeckCreateFailureReport();
   const [isLoading, setIsLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
@@ -159,15 +158,7 @@ export default function DecksPage() {
       const id = await createDeck(name, { format: newDeckFormat });
       router.push(`/builder/${id}`);
     } catch (error) {
-      // Logging alone made the button look inert: it spun, the request 500'd,
-      // and the user was left on the same screen with no explanation.
-      logger.error("Unexpected error", "handleNewDeck", error);
-      addToast(
-        "error",
-        t("home.createFailed", {
-          reason: error instanceof Error ? error.message : "unknown error",
-        })
-      );
+      reportCreateFailure("handleNewDeck", error);
       setIsCreating(false);
     }
   }, [
@@ -177,7 +168,7 @@ export default function DecksPage() {
     newDeckFormat,
     router,
     t,
-    addToast,
+    reportCreateFailure,
   ]);
 
   const handleGuestDeckSaved = useCallback(() => {

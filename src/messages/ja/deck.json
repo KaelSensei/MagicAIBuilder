@@ -103,7 +103,6 @@
     "sessionTimeoutTitle": "セッションの確認に時間がかかりすぎました",
     "sessionTimeoutDescription": "アカウント確認が完了しませんでした。保存したデッキはそのままです。もう一度試してください。",
     "profileLoadFailed": "プロフィールを更新できませんでした。保存したデッキは引き続き使えます。",
-    "createFailed": "デッキを作成できませんでした — {reason}",
     "cardFilter": {
       "includeLabel": "Has the card",
       "excludeLabel": "Leaves out",

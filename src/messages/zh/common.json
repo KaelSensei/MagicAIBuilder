@@ -7,8 +7,8 @@
     "newDeck": "New Deck",
     "import": "Import",
     "importedDeck": "Imported Deck — {date}",
-    "createFailed": "无法创建套牌 — {reason}",
-    "unknownError": "未知错误"
+    "createFailed": "无法创建套牌。",
+    "createSignedOut": "Your session has ended. Sign in again to create a deck."
   },
   "theme": {
     "toggle": "切换主题",
