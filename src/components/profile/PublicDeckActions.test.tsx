@@ -13,9 +13,12 @@ const fetchMock = vi.fn();
 /** How late the slow server answers: later than the request, well within `findByRole`'s wait. */
 const SLOW_ANSWER_MS = 30;
 
-vi.mock(import("@/i18n/navigation"), async () => {
+// The real localized `Link` stays, so a link's href shows the reader's locale
+// prefix; only the router is stubbed, since no app router is mounted here.
+vi.mock(import("@/i18n/navigation"), async (importOriginal) => {
+  const navigation = await importOriginal();
   const stub = await import("@/test/i18n-navigation-stub");
-  return { ...stub, useRouter: () => ({ ...stub.useRouter(), push }) };
+  return { ...navigation, useRouter: () => ({ ...stub.useRouter(), push }) };
 });
 vi.mock(import("@/lib/db/deck-api"), () => ({
   forkPublicDeck: (id: string) => forkPublicDeck(id),
@@ -149,7 +152,9 @@ describe("PublicDeckActions", () => {
       ).toBeInTheDocument();
     });
 
-    it("credits the source deck and its author", () => {
+    // #1842: a plain anchor dropped the reader's locale, so the credit opened
+    // the source deck in English.
+    it("credits the source deck and its author, linked to its French page", () => {
       renderWithIntl(
         <PublicDeckActions
           deckId="fork"
@@ -161,7 +166,7 @@ describe("PublicDeckActions", () => {
       );
 
       const link = screen.getByRole("link", { name: "Original par Kael" });
-      expect(link).toHaveAttribute("href", "/deck/source");
+      expect(link).toHaveAttribute("href", "/fr/deck/source");
       expect(link.parentElement).toHaveTextContent(
         "Copie de Original par Kael"
       );
