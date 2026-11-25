@@ -4,7 +4,16 @@ import userEvent from "@testing-library/user-event";
 import React from "react";
 import { useToastStore } from "@/hooks/useToast";
 import { DeckApiError } from "@/lib/db/deck-api-answer";
+import {
+  hydrateWithIntl,
+  renderToStringWithIntl,
+} from "@/test/hydrate-with-intl";
 import { renderWithIntl } from "@/test/render-with-intl";
+import {
+  IDLE_HEADER_DECK_ACTIONS,
+  type HeaderDeckActionsUiState,
+} from "./header-deck-actions-state";
+import type { HeaderDeckActionsLayout } from "./HeaderDeckActions";
 
 let createDeckImpl: (name: string) => Promise<string> = async (_name: string) =>
   "deck-0";
@@ -366,5 +375,108 @@ describe("Header deck creation failures", () => {
     );
     expect(importButton).toBeEnabled();
     expect(setActiveDeck).not.toHaveBeenCalled();
+  });
+});
+
+/*
+ * The server HTML held both deck buttons enabled, but their click handlers only
+ * exist once the lazy chunk has loaded and hydrated. A press in that window did
+ * nothing: no request, no spinner, no message (I-01; the `openBuilder` E2E
+ * flake of 2026-11-12 and 2026-11-25). The buttons now stay disabled until the
+ * code that answers them is there.
+ */
+describe("Header deck actions before hydration", () => {
+  const LAYOUTS: readonly HeaderDeckActionsLayout[] = ["desktop", "mobile"];
+
+  /** The two deck buttons, by their accessible names, inside `container`. */
+  function deckButtons(container: HTMLElement) {
+    const scope = within(container);
+    return {
+      newDeck: scope.getByRole("button", { name: "New Deck" }),
+      importButton: scope.getByRole("button", { name: "Import" }),
+    };
+  }
+
+  /** The actions as `Header` mounts them, with a fixed UI state. */
+  async function deckActions(
+    layout: HeaderDeckActionsLayout,
+    uiState: HeaderDeckActionsUiState = IDLE_HEADER_DECK_ACTIONS
+  ) {
+    const { HeaderDeckActions } = await import("./HeaderDeckActions");
+    return (
+      <HeaderDeckActions
+        layout={layout}
+        uiState={uiState}
+        onUiStateChange={vi.fn()}
+      />
+    );
+  }
+
+  /** Server HTML parsed into a detached element, as the browser receives it. */
+  function parsed(html: string): HTMLElement {
+    const container = document.createElement("div");
+    container.innerHTML = html;
+    return container;
+  }
+
+  it.each(LAYOUTS)(
+    "server-renders New Deck and Import disabled in the %s layout, so an early press is not lost",
+    async (layout) => {
+      const html = renderToStringWithIntl(await deckActions(layout));
+
+      const { newDeck, importButton } = deckButtons(parsed(html));
+      expect(newDeck).toBeDisabled();
+      expect(importButton).toBeDisabled();
+    }
+  );
+
+  it.each(LAYOUTS)(
+    "enables both once the %s layout has hydrated, with no hydration mismatch",
+    async (layout) => {
+      const ui = await deckActions(layout);
+      const html = renderToStringWithIntl(ui);
+
+      const hydrated = await hydrateWithIntl(html, ui);
+
+      expect(hydrated.mismatches).toEqual([]);
+      const { newDeck, importButton } = deckButtons(hydrated.container);
+      expect(newDeck).toBeEnabled();
+      expect(importButton).toBeEnabled();
+      hydrated.unmount();
+    }
+  );
+
+  it("enables both at once in a render that is not a hydration", async () => {
+    const { container } = renderWithIntl(await deckActions("desktop"));
+
+    const { newDeck, importButton } = deckButtons(container);
+    expect(newDeck).toBeEnabled();
+    expect(importButton).toBeEnabled();
+  });
+
+  it("still disables only New Deck while a deck is being created", async () => {
+    const { container } = renderWithIntl(
+      await deckActions("desktop", {
+        ...IDLE_HEADER_DECK_ACTIONS,
+        isCreatingDeck: true,
+      })
+    );
+
+    const { newDeck, importButton } = deckButtons(container);
+    expect(newDeck).toBeDisabled();
+    expect(importButton).toBeEnabled();
+  });
+
+  it("still disables only Import while it creates the deck to import into", async () => {
+    const { container } = renderWithIntl(
+      await deckActions("desktop", {
+        ...IDLE_HEADER_DECK_ACTIONS,
+        isCreatingImportDeck: true,
+      })
+    );
+
+    const { newDeck, importButton } = deckButtons(container);
+    expect(newDeck).toBeEnabled();
+    expect(importButton).toBeDisabled();
   });
 });
