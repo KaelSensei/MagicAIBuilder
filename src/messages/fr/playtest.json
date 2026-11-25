@@ -130,7 +130,7 @@
     "openHint": "Touches du test de jeu (?)",
     "title": "Touches du test de jeu",
     "intro": "Appuie sur une touche quand le focus n’est pas dans un champ de texte. Les touches de déplacement agissent sur la carte qui a le focus dans ta main ou sur le champ de bataille. Échap ferme cette liste.",
-    "singleKeysOff": "Les raccourcis à une touche sont désactivés : seuls Ctrl+Z et ⌘Z fonctionnent. Réactive-les depuis les raccourcis clavier de l’éditeur de deck.",
+    "singleKeysOff": "Les raccourcis à une touche sont désactivés : seuls Ctrl+Z et ⌘Z fonctionnent. Réactive-les avec l’interrupteur ci-dessous.",
     "actions": {
       "draw": "Piocher une carte",
       "nextTurn": "Passer au tour suivant",
