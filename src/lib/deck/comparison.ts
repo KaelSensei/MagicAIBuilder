@@ -1,4 +1,16 @@
-import type { CardCategory } from "./types";
+/**
+ * Compares two decks: the cards they share or not, and deck-level signals
+ * (curve, price, colours, strategic roles).
+ *
+ * The price is the price of the deck you play, by the builder's own rules
+ * (`partitionApiCards` for the command zone, `playedDeckCards` for the rest),
+ * so the comparison and the builder's total agree on the same deck (I-37).
+ *
+ * @module deck/comparison
+ */
+import { playedDeckCards } from "./played-deck-cards";
+import { partitionApiCards } from "./store-factories";
+import type { CardCategory, DeckZone } from "./types";
 
 export interface ComparableDeckCard {
   readonly scryfallId?: string;
@@ -6,11 +18,20 @@ export interface ComparableDeckCard {
   readonly quantity: number;
 }
 
+/**
+ * One deck row as a deck API sends it. The zone and the command-zone flags
+ * place it in the deck you play; an absent one reads as its column default
+ * (`prisma/schema.prisma`: zone "main", not a commander, not a partner). The
+ * public allowlist (`PUBLIC_DECK_CARD_SELECT`) sends no zone.
+ */
 export interface ComparableDeckProfileCard extends ComparableDeckCard {
   readonly cmc: number;
   readonly price: number | null;
   readonly colorIdentity: readonly string[];
   readonly category: CardCategory;
+  readonly zone?: DeckZone;
+  readonly isCommander?: boolean;
+  readonly isPartner?: boolean;
 }
 
 export type StrategicCardRole = Extract<
@@ -134,12 +155,46 @@ function roundMetric(value: number): number {
   return Math.round(value * 100) / 100;
 }
 
+/** A row with its zone and command-zone flags read, absent ones as their column defaults. */
+function withStoredDefaults(card: ComparableDeckProfileCard) {
+  return {
+    ...card,
+    zone: card.zone ?? "main",
+    isCommander: card.isCommander ?? false,
+    isPartner: card.isPartner ?? false,
+  };
+}
+
+/**
+ * The price of the deck you play: the commander, the partner and the main
+ * deck, as the builder totals it (`useDeckPrice`).
+ *
+ * CR 903.5a: a Commander deck counts its commander among its cards. CR 100.4:
+ * a sideboard is held outside the deck; Considering is the builder's
+ * shortlist, not a game zone. CR 702.139a: a companion starts outside the
+ * game, so it is not part of the deck either.
+ */
+function playedDeckPrice(cards: readonly ComparableDeckProfileCard[]): number {
+  const { commanderCard, partnerCard, deckCards } = partitionApiCards(
+    cards.map(withStoredDefaults)
+  );
+  const played = playedDeckCards({
+    commander: commanderCard,
+    partner: partnerCard,
+    cards: deckCards,
+  });
+  let price = 0;
+  for (const card of played) {
+    price += Math.max(0, card.price ?? 0) * Math.max(0, card.quantity);
+  }
+  return roundMetric(price);
+}
+
 function profileTotals(
   cards: readonly ComparableDeckProfileCard[]
 ): DeckProfileTotals {
   let quantity = 0;
   let totalCmc = 0;
-  let price = 0;
   const colors = new Set<string>();
   const roles = new Map<StrategicCardRole, number>();
 
@@ -147,7 +202,6 @@ function profileTotals(
     const cardQuantity = Math.max(0, card.quantity);
     quantity += cardQuantity;
     totalCmc += Math.max(0, card.cmc) * cardQuantity;
-    price += Math.max(0, card.price ?? 0) * cardQuantity;
     for (const color of card.colorIdentity) colors.add(color);
     if (isStrategicRole(card.category)) {
       roles.set(card.category, (roles.get(card.category) ?? 0) + cardQuantity);
@@ -156,7 +210,7 @@ function profileTotals(
 
   return {
     averageCmc: quantity === 0 ? 0 : roundMetric(totalCmc / quantity),
-    price: roundMetric(price),
+    price: playedDeckPrice(cards),
     colors,
     roles,
   };
@@ -165,8 +219,11 @@ function profileTotals(
 /**
  * Compare deterministic deck-level signals that explain why two lists play differently.
  *
- * @param left Cards in the first deck.
- * @param right Cards in the second deck.
+ * Each price counts the deck you play only: the commander, the partner and
+ * the main deck. The curve, colours and roles still read every row given.
+ *
+ * @param left Every row of the first deck, in any zone.
+ * @param right Every row of the second deck, in any zone.
  * @returns Weighted curve, price, and color-identity differences.
  */
 export function compareDeckProfiles(
