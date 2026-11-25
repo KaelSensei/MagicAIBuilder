@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { DeckApiError } from "@/lib/db/deck-api-answer";
-import { deckCreateFailureOf } from "@/lib/deck/deck-create-failure";
+import { deckRequestFailureOf } from "@/lib/deck/deck-request-failure";
 
-describe("deckCreateFailureOf", () => {
+describe("deckRequestFailureOf", () => {
   it("reads a 401 answer as an ended session", () => {
     expect(
-      deckCreateFailureOf(new DeckApiError("createDeck", 401, "Unauthorized"))
+      deckRequestFailureOf(new DeckApiError("createDeck", 401, "Unauthorized"))
     ).toBe("signed-out");
   });
 
@@ -18,6 +18,6 @@ describe("deckCreateFailureOf", () => {
     ["a network failure", new TypeError("Failed to fetch")],
     ["a thrown value that is not an error", "boom"],
   ])("reads %s as a failure the player can only retry", (_case, error) => {
-    expect(deckCreateFailureOf(error)).toBe("failed");
+    expect(deckRequestFailureOf(error)).toBe("failed");
   });
 });

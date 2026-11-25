@@ -18,7 +18,7 @@ import { HomeDeckCard } from "@/components/deck/HomeDeckCard";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { useDeckStore } from "@/lib/deck/store";
-import { useDeckCreateFailureReport } from "@/hooks/useDeckCreateFailureReport";
+import { useDeckCreateFailureReport } from "@/hooks/useDeckFailureReport";
 import { logger } from "@/lib/logger";
 import { DeckListTable } from "@/components/deck/DeckListTable";
 import { DecksHomeControls } from "@/components/deck/DecksHomeControls";
