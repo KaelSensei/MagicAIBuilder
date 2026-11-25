@@ -667,7 +667,11 @@
       "incompatible": "hors identité couleur",
       "commanderLegal": "Légal en Commander",
       "commanderIllegal": "Non légal en Commander",
-      "unknown": "Inconnu"
+      "unknown": "Inconnu",
+      "curveBelow": "Valeur de mana {manaValue} · sous la moyenne du deck ({average})",
+      "curveNear": "Valeur de mana {manaValue} · proche de la moyenne du deck ({average})",
+      "curveAbove": "Valeur de mana {manaValue} · au-dessus de la moyenne du deck ({average})",
+      "curveUnknown": "Valeur de mana inconnue"
     }
   },
   "combos": {
