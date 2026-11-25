@@ -146,12 +146,26 @@ describe("the commander-damage tally", () => {
 
     expect(after.actionLog.slice(dealt.actionLog.length)).toEqual([
       expect.objectContaining({
-        description:
-          "Opponent 3 took 5 combat damage from Kenrith, the Returned King (5 in total)",
+        message: {
+          key: "commanderDamage",
+          params: {
+            opponent: 3,
+            amount: 5,
+            card: "Kenrith, the Returned King",
+            total: 5,
+          },
+        },
       }),
       expect.objectContaining({
-        description:
-          "Opponent 3 took 4 combat damage from Kenrith, the Returned King (9 in total)",
+        message: {
+          key: "commanderDamage",
+          params: {
+            opponent: 3,
+            amount: 4,
+            card: "Kenrith, the Returned King",
+            total: 9,
+          },
+        },
       }),
     ]);
   });

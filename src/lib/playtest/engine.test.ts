@@ -114,7 +114,9 @@ describe("applyDrawCard", () => {
   });
 
   it("records the draw in the action log", () => {
-    expect(applyDrawCard(makeState()).actionLog.at(-1)?.description).toBe("Drew a card");
+    expect(applyDrawCard(makeState()).actionLog.at(-1)?.message).toEqual({
+      key: "drewCard",
+    });
     expect(applyDrawCard(makeState()).actionLog.at(-1)?.kind).toBe("draw");
   });
 });
@@ -190,8 +192,8 @@ describe("first-turn draw", () => {
 
     expect(main.phase).toBe("Main1");
     expect(ids(main.hand)).toEqual(ids(duel.hand));
-    expect(main.actionLog.map((entry) => entry.description)).toEqual([
-      "Advanced to Main1",
+    expect(main.actionLog.map((entry) => entry.message)).toEqual([
+      { key: "advancedToPhase", params: { phase: "Main1" } },
     ]);
   });
 
@@ -203,10 +205,15 @@ describe("first-turn draw", () => {
         id: 1,
         turn: 1,
         phase: "Draw",
-        description: "Drew a card for turn 1",
+        message: { key: "drewFirstTurnCard" },
         kind: "draw",
       },
-      { id: 2, turn: 1, phase: "Draw", description: "Advanced to Main1" },
+      {
+        id: 2,
+        turn: 1,
+        phase: "Draw",
+        message: { key: "advancedToPhase", params: { phase: "Main1" } },
+      },
     ]);
     expect(main.nextActionId).toBe(3);
   });
@@ -224,14 +231,14 @@ describe("first-turn draw", () => {
         id: 1,
         turn: 1,
         phase: "Draw",
-        description: "Drew a card for turn 1",
+        message: { key: "drewFirstTurnCard" },
         kind: "draw",
       },
       {
         id: 2,
         turn: 2,
         phase: "Draw",
-        description: "Started turn 2 and drew a card",
+        message: { key: "startedTurnAndDrew", params: { turn: 2 } },
         kind: "draw",
       },
     ]);
@@ -254,8 +261,8 @@ describe("first-turn draw", () => {
     const main = applyNextPhase(empty);
 
     expect(ids(main.hand)).toEqual(ids(empty.hand));
-    expect(main.actionLog.map((entry) => entry.description)).toEqual([
-      "Advanced to Main1",
+    expect(main.actionLog.map((entry) => entry.message)).toEqual([
+      { key: "advancedToPhase", params: { phase: "Main1" } },
     ]);
   });
 });
@@ -372,7 +379,10 @@ describe("command zone", () => {
 
     expect(next.commandZone).toEqual([]);
     expect(next.battlefield.map((card) => card.name)).toEqual(["Kenrith"]);
-    expect(next.actionLog.at(-1)?.description).toBe("Cast Kenrith from the command zone");
+    expect(next.actionLog.at(-1)?.message).toEqual({
+      key: "castFromCommandZone",
+      params: { card: "Kenrith" },
+    });
   });
 
   it("returns the commander from the graveyard to the command zone (CR 903.9a)", () => {
@@ -383,7 +393,10 @@ describe("command zone", () => {
 
     expect(next.graveyard).toEqual([]);
     expect(next.commandZone.map((card) => card.name)).toEqual(["Kenrith"]);
-    expect(next.actionLog.at(-1)?.description).toBe("Returned Kenrith to the command zone");
+    expect(next.actionLog.at(-1)?.message).toEqual({
+      key: "returnedToCommandZone",
+      params: { card: "Kenrith" },
+    });
   });
 
   it("puts a cast commander back in the command zone on undo", () => {
@@ -581,10 +594,17 @@ describe("editable action log", () => {
   it("adds, edits and removes a manual session entry", () => {
     const added = applyAddActionLogEntry(makeState(), "Produced three green mana");
     const entry = added.actionLog[0];
-    expect(entry).toMatchObject({ turn: 1, phase: "Draw", description: "Produced three green mana" });
+    expect(entry).toMatchObject({
+      turn: 1,
+      phase: "Draw",
+      message: { key: "note", params: { text: "Produced three green mana" } },
+    });
 
     const edited = applyEditActionLogEntry(added, entry.id, "Produced four green mana");
-    expect(edited.actionLog[0]?.description).toBe("Produced four green mana");
+    expect(edited.actionLog[0]?.message).toEqual({
+      key: "note",
+      params: { text: "Produced four green mana" },
+    });
 
     const removed = applyRemoveActionLogEntry(edited, entry.id);
     expect(removed.actionLog).toEqual([]);
@@ -690,10 +710,11 @@ describe("applyMulligan in a multiplayer format", () => {
     const free = applyMulligan(multiplayerState());
     const counted = applyMulligan(free);
 
-    expect(free.actionLog.at(-1)?.description).toBe("Free mulligan: drew a new seven");
-    expect(counted.actionLog.at(-1)?.description).toBe(
-      "Mulligan: drew a new seven, 1 card to put on the bottom"
-    );
+    expect(free.actionLog.at(-1)?.message).toEqual({ key: "freeMulligan" });
+    expect(counted.actionLog.at(-1)?.message).toEqual({
+      key: "mulligan",
+      params: { toBottom: 1 },
+    });
   });
 });
 
@@ -793,9 +814,10 @@ describe("applyBottomCards", () => {
 
     const kept = applyBottomCards(pendingSeven, [chosen.id]);
 
-    expect(kept.actionLog.at(-1)?.description).toBe(
-      `Put ${chosen.name} on the bottom of the library`
-    );
+    expect(kept.actionLog.at(-1)?.message).toEqual({
+      key: "bottomed",
+      params: { cards: [chosen.name] },
+    });
   });
 
   it("undoes back to the pending seven, then out of the mulligan", () => {

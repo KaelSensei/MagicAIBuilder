@@ -141,7 +141,10 @@ export function applyCommanderDamage(
     patch: {
       commanderDamage: withTotal(state.commanderDamage, { ...hit, total }),
     },
-    description: `Opponent ${hit.opponent} took ${hit.amount} combat damage from ${name} (${total} in total)`,
+    message: {
+      key: "commanderDamage",
+      params: { opponent: hit.opponent, amount: hit.amount, card: name, total },
+    },
   });
 }
 
