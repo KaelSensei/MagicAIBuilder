@@ -3,6 +3,10 @@
   "clearLabel": "Effacer la recherche",
   "searching": "Recherche…",
   "noResults": "Aucune carte trouvée. Essaie une autre recherche.",
+  "failure": {
+    "unavailable": "La recherche de cartes est indisponible pour le moment. Réessayez dans un instant.",
+    "rejectedQuery": "Scryfall n’a pas pu lire cette recherche. Vérifiez sa syntaxe."
+  },
   "resultCount": "{count, number} résultats",
   "gridView": "Vue grille",
   "listView": "Vue liste",
