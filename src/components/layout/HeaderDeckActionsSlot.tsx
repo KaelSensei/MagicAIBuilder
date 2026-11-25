@@ -18,7 +18,8 @@ import dynamic from "next/dynamic";
  * `HeaderDeckActions`, loaded on demand, with the same props.
  *
  * Until the chunk arrives the slot renders nothing: the server HTML already
- * holds the buttons, so a placeholder would only matter before hydration.
+ * holds the buttons, disabled until `HeaderDeckActions` hydrates, so a press
+ * before its handlers exist is refused visibly instead of lost.
  */
 export const HeaderDeckActionsSlot = dynamic(
   () =>

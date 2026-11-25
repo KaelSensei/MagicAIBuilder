@@ -60,6 +60,13 @@ export async function suppressOnboarding(page: Page): Promise<void> {
  *
  * Same shape as the fix for the playtest flake (#466), which waited for a
  * seeded card rather than for the modal's frame.
+ *
+ * The press itself waits for the header's "New Deck" to be enabled. The server
+ * HTML renders it disabled until `HeaderDeckActions` has hydrated, and
+ * Playwright's `click()` waits for an enabled element, so the press can no
+ * longer land before its handler exists. Before that, a click right after
+ * `goto` sent no `POST /api/decks` and `waitForURL` timed out (I-01; pre-push
+ * runs of 2026-11-12 and 2026-11-25).
  */
 export async function openBuilder(page: Page): Promise<void> {
   await suppressOnboarding(page);
