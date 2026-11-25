@@ -9,10 +9,17 @@ import type { BracketScore } from "@/lib/deck/analysis-types";
 import { BRACKET_DEFINITIONS, BRACKET_LEVELS } from "@/lib/constants/brackets";
 import { minimumBracket } from "@/lib/deck/bracket-floor";
 import { AlertTriangle, Zap, X, Infinity } from "lucide-react";
+import type { ComboData } from "@/lib/deck/explain-bracket";
+import { ComboLookupNote } from "./ComboLookupNote";
 import { GroupedDeckWarnings } from "./GroupedDeckWarnings";
 
 interface BracketIndicatorProps {
   readonly score: BracketScore | null;
+  /**
+   * The deck's combo lookup, from `comboDataOf`: pending or failed adds a note
+   * that the score does not count combos (issue #1840).
+   */
+  readonly comboData?: ComboData;
   readonly targetBracket?: BracketLevel;
   readonly manualBracket?: BracketLevel | null;
   readonly onManualBracketChange?: (bracket: BracketLevel | null) => void;
@@ -86,6 +93,7 @@ function MiniBar({
 
 export function BracketIndicator({
   score,
+  comboData,
   targetBracket,
   manualBracket,
   onManualBracketChange,
@@ -310,6 +318,8 @@ export function BracketIndicator({
           />
         ))}
       </div>
+
+      <ComboLookupNote comboData={comboData} />
 
       {/* 2-card infinite combo badge — none in Brackets 1–2, none before turn 6 in Bracket 3 */}
       {score.twoCardInfiniteCombos > 0 && (

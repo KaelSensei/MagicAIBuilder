@@ -31,6 +31,7 @@ import { currentDataAsOfFacts } from "@/lib/deck/data-as-of";
 import { useDeckStore } from "@/lib/deck/store";
 import { isDeckStub } from "@/lib/deck/store-factories";
 import { computeDeckStats } from "@/lib/deck/stats";
+import { comboDataOf } from "@/lib/deck/combo-data-of";
 import { countDeckCards, deckSizeRuleInFormat } from "@/lib/deck/deck-size";
 import { addNamedCardToZone } from "@/lib/deck/ai-add-card";
 import { logger } from "@/lib/logger";
@@ -409,6 +410,11 @@ export default function BuilderPage() {
     dataUpdatedAt: combosUpdatedAt,
   } = useCombos(deck);
   const bracketScore = useBracketScore(deck, combos);
+  const comboData = comboDataOf({
+    data: combos,
+    isLoading: combosLoading,
+    isError: combosUnavailable,
+  });
   const {
     result: aiResult,
     isLoading: aiLoading,
@@ -1218,6 +1224,7 @@ export default function BuilderPage() {
 
             <BracketIndicator
               score={bracketScore}
+              comboData={comboData}
               targetBracket={deck.targetBracket}
               manualBracket={deck.manualBracket}
               onManualBracketChange={(b) => setManualBracket(b)}
