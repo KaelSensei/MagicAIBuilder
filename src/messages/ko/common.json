@@ -7,8 +7,8 @@
     "newDeck": "New Deck",
     "import": "Import",
     "importedDeck": "Imported Deck — {date}",
-    "createFailed": "덱을 만들지 못했습니다 — {reason}",
-    "unknownError": "알 수 없는 오류"
+    "createFailed": "덱을 만들지 못했습니다.",
+    "createSignedOut": "Your session has ended. Sign in again to create a deck."
   },
   "theme": {
     "toggle": "테마 전환",

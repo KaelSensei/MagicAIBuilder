@@ -103,7 +103,6 @@
     "sessionTimeoutTitle": "会话检查耗时过长",
     "sessionTimeoutDescription": "账户检查没有完成。已保存的套牌没有变化。请重试。",
     "profileLoadFailed": "无法刷新个人资料。已保存的套牌仍然可用。",
-    "createFailed": "无法创建套牌 — {reason}",
     "cardFilter": {
       "includeLabel": "Has the card",
       "excludeLabel": "Leaves out",

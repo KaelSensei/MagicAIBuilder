@@ -103,7 +103,6 @@
     "sessionTimeoutTitle": "세션 확인이 너무 오래 걸렸습니다",
     "sessionTimeoutDescription": "계정 확인이 끝나지 않았습니다. 저장된 덱은 그대로입니다. 다시 시도하세요.",
     "profileLoadFailed": "프로필을 새로고침하지 못했습니다. 저장된 덱은 계속 사용할 수 있습니다.",
-    "createFailed": "덱을 만들지 못했습니다 — {reason}",
     "cardFilter": {
       "includeLabel": "Has the card",
       "excludeLabel": "Leaves out",

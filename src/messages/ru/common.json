@@ -7,8 +7,8 @@
     "newDeck": "New Deck",
     "import": "Import",
     "importedDeck": "Imported Deck — {date}",
-    "createFailed": "Не удалось создать колоду — {reason}",
-    "unknownError": "неизвестная ошибка"
+    "createFailed": "Не удалось создать колоду.",
+    "createSignedOut": "Your session has ended. Sign in again to create a deck."
   },
   "theme": {
     "toggle": "Сменить тему",
