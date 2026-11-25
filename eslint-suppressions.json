@@ -1446,9 +1446,6 @@
     }
   },
   "src/lib/deck/stats.ts": {
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 1
-    },
     "max-depth": {
       "count": 1
     }
