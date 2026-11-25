@@ -7,7 +7,11 @@
 //
 // @module deck/store-factories
 import type { Deck, DeckCard } from "./types";
-import { commandSlotOf, type CommandSlot } from "./bulk-edit-command-zone";
+import {
+  commandSlotOf,
+  type CommandSlot,
+  type CommandSlotFlags,
+} from "./bulk-edit-command-zone";
 import type * as deckApi from "@/lib/db/deck-api";
 import { parseBracketLevel } from "@/lib/constants/brackets";
 import { rebuildCardFaces } from "./store-card-faces";
@@ -107,12 +111,16 @@ export function apiCardToDeckCard(card: deckApi.ApiDeckCard): DeckCard {
  *
  * Each row's slot is read by `commandSlotOf`, the rule the server clears
  * slots by. A partner whose name matches the commander is dropped.
+ * It reads only the slot flags and the name, so any stored row shape works:
+ * the deck comparison partitions the rows it is handed the same way.
  *
  * @param allCards - cards returned with the deck
- * @returns the four groups
+ * @returns the four groups, each holding the rows it was given
  */
-export function partitionApiCards(allCards: readonly deckApi.ApiDeckCard[]) {
-  const bySlot = new Map<CommandSlot | null, deckApi.ApiDeckCard[]>();
+export function partitionApiCards<
+  Row extends CommandSlotFlags & { readonly name: string },
+>(allCards: readonly Row[]) {
+  const bySlot = new Map<CommandSlot | null, Row[]>();
   for (const card of allCards) {
     const slot = commandSlotOf(card);
     const group = bySlot.get(slot) ?? [];
