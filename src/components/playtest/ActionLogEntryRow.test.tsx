@@ -2,8 +2,9 @@
  * Every kind of line the playtest engine logs, rendered by the row in English and in French.
  *
  * The engine records a message key and its parameters (#1853). The English column is the sentence
- * the engine wrote before, word for word, so English reads exactly as it did; the French column
- * is the catalog's wording. Card names stay as the card data gives them in both.
+ * the engine wrote before, word for word, except that a list of cards now reads "A and B" (#1854);
+ * the French column is the catalog's wording, with "A et B". Card names stay as the card data
+ * gives them in both.
  */
 import { screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
@@ -23,8 +24,8 @@ const LINES: readonly Line[] = [
       key: "startedWithChosenCards",
       params: { cards: ["Smothering Tithe", "Sol Ring"] },
     },
-    en: "Started with chosen cards: Smothering Tithe, Sol Ring",
-    fr: "Partie commencée avec les cartes choisies : Smothering Tithe, Sol Ring",
+    en: "Started with chosen cards: Smothering Tithe and Sol Ring",
+    fr: "Partie commencée avec les cartes choisies : Smothering Tithe et Sol Ring",
   },
   {
     message: { key: "freeMulligan" },
@@ -46,8 +47,8 @@ const LINES: readonly Line[] = [
       key: "bottomed",
       params: { cards: ["Sol Ring", "Lightning Bolt"] },
     },
-    en: "Put Sol Ring, Lightning Bolt on the bottom of the library",
-    fr: "Tu as mis Sol Ring, Lightning Bolt au-dessous de ta bibliothèque",
+    en: "Put Sol Ring and Lightning Bolt on the bottom of the library",
+    fr: "Tu as mis Sol Ring et Lightning Bolt au-dessous de ta bibliothèque",
   },
   {
     message: { key: "drewCard" },
