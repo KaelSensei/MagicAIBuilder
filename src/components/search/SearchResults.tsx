@@ -41,28 +41,10 @@ interface SearchResultsProps {
  * Shows, in this order of precedence: a spinner while loading, the error, a "Collection only"
  * notice when there was no collection to filter by, an empty state, or the cards with their count.
  */
-export function SearchResults({
-  cards,
-  isLoading,
-  error,
-  totalCards,
-  onCardClick,
-  onAddToMaybeboard,
-  onAddToZone,
-  draggable = false,
-  collectionOnly,
-  executedQuery,
-}: SearchResultsProps) {
+export function SearchResults(props: SearchResultsProps) {
+  const { cards, isLoading, error, totalCards, collectionOnly, executedQuery } =
+    props;
   const t = useTranslations("search");
-  const viewMode = useDeckStore((s) => s.searchViewMode);
-  const setViewMode = useDeckStore((s) => s.setSearchViewMode);
-  const activeDeck = useDeckStore((s) =>
-    s.activeDeckId ? s.decks[s.activeDeckId] : null
-  );
-  const maybeboardNames = new Set(
-    activeDeck?.maybeboard.map((c) => c.name) ?? []
-  );
-  const zoneCounts = useMemo(() => countCopiesByZone(activeDeck), [activeDeck]);
 
   if (isLoading) {
     return (
@@ -123,63 +105,95 @@ export function SearchResults({
             </p>
           )
         )}
-        <div className="flex items-center gap-1 ml-auto">
-          <button
-            type="button"
-            onClick={() => setViewMode("grid")}
-            className={`p-1 rounded transition-colors ${
-              viewMode === "grid"
-                ? "text-[var(--accent-text)]"
-                : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-            }`}
-            title={t("gridView")}
-            aria-label={t("gridView")}
-          >
-            <LayoutGrid className="w-3.5 h-3.5" />
-          </button>
-          <button
-            type="button"
-            onClick={() => setViewMode("list")}
-            className={`p-1 rounded transition-colors ${
-              viewMode === "list"
-                ? "text-[var(--accent-text)]"
-                : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-            }`}
-            title={t("listView")}
-            aria-label={t("listView")}
-          >
-            <List className="w-3.5 h-3.5" />
-          </button>
-        </div>
+        <ViewModeToggle />
       </div>
       {coverageNote}
+      <ResultCards {...props} />
+    </div>
+  );
+}
 
-      {viewMode === "grid" ? (
-        <CardGrid
-          cards={cards}
-          onCardClick={onCardClick}
+/** Switches the list between card images and compact rows. */
+function ViewModeToggle() {
+  const t = useTranslations("search");
+  const viewMode = useDeckStore((s) => s.searchViewMode);
+  const setViewMode = useDeckStore((s) => s.setSearchViewMode);
+  return (
+    <div className="flex items-center gap-1 ml-auto">
+      <button
+        type="button"
+        onClick={() => setViewMode("grid")}
+        className={`p-1 rounded transition-colors ${
+          viewMode === "grid"
+            ? "text-[var(--accent-text)]"
+            : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+        }`}
+        title={t("gridView")}
+        aria-label={t("gridView")}
+      >
+        <LayoutGrid className="w-3.5 h-3.5" />
+      </button>
+      <button
+        type="button"
+        onClick={() => setViewMode("list")}
+        className={`p-1 rounded transition-colors ${
+          viewMode === "list"
+            ? "text-[var(--accent-text)]"
+            : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+        }`}
+        title={t("listView")}
+        aria-label={t("listView")}
+      >
+        <List className="w-3.5 h-3.5" />
+      </button>
+    </div>
+  );
+}
+
+/** The cards, as a grid or as rows, each marked with its copies in the active deck. */
+function ResultCards({
+  cards,
+  onCardClick,
+  onAddToMaybeboard,
+  onAddToZone,
+  draggable = false,
+}: SearchResultsProps) {
+  const viewMode = useDeckStore((s) => s.searchViewMode);
+  const activeDeck = useDeckStore((s) =>
+    s.activeDeckId ? s.decks[s.activeDeckId] : null
+  );
+  const maybeboardNames = new Set(
+    activeDeck?.maybeboard.map((c) => c.name) ?? []
+  );
+  const zoneCounts = useMemo(() => countCopiesByZone(activeDeck), [activeDeck]);
+
+  if (viewMode === "grid") {
+    return (
+      <CardGrid
+        cards={cards}
+        onCardClick={onCardClick}
+        onAddToMaybeboard={onAddToMaybeboard}
+        onAddToZone={onAddToZone}
+        zoneCounts={zoneCounts}
+        maybeboardNames={maybeboardNames}
+        draggable={draggable}
+      />
+    );
+  }
+  return (
+    <div className="px-1 py-1">
+      {cards.map((card) => (
+        <CardSearchListItem
+          key={card.id}
+          card={card}
+          onClick={onCardClick}
           onAddToMaybeboard={onAddToMaybeboard}
           onAddToZone={onAddToZone}
           zoneCounts={zoneCounts}
-          maybeboardNames={maybeboardNames}
+          isInMaybeboard={maybeboardNames.has(card.name)}
           draggable={draggable}
         />
-      ) : (
-        <div className="px-1 py-1">
-          {cards.map((card) => (
-            <CardSearchListItem
-              key={card.id}
-              card={card}
-              onClick={onCardClick}
-              onAddToMaybeboard={onAddToMaybeboard}
-              onAddToZone={onAddToZone}
-              zoneCounts={zoneCounts}
-              isInMaybeboard={maybeboardNames.has(card.name)}
-              draggable={draggable}
-            />
-          ))}
-        </div>
-      )}
+      ))}
     </div>
   );
 }
