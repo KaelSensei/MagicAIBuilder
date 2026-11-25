@@ -1,9 +1,9 @@
 /**
- * The "Collection" switch in the list toolbar hides or shows the Owned and Buy
- * badges on the deck's rows (I-37 requirement 6.5, the ownership marker in the
- * List view). The choice is kept in this browser and applies to every zone,
- * although the toolbar shows on the Main zone only, and the switch in the List
- * view only: grid cards carry no such badge.
+ * The "Collection" switch in the toolbar hides or shows the Owned and Buy
+ * badges on the deck's rows and grid cards (I-37 requirement 6.5, the
+ * ownership marker). The choice is kept in this browser and applies to every
+ * zone and to both the List and Grid views, although the toolbar shows on the
+ * Main zone only.
  *
  * Sociable: the editor, its toolbar, its rows, the deck store, the collection
  * store and the persisted row preferences are the real ones. MSW answers the
@@ -209,15 +209,15 @@ describe("the Collection switch on the deck's rows", () => {
     expect(screen.queryByText("Buy")).not.toBeInTheDocument();
   });
 
-  it("offers no switch in the Grid view, where no card shows an Owned or Buy badge", () => {
+  it("offers the switch in the Grid view too, now that grid cards carry the badges", () => {
     ownPrintings("sol-ring-c21");
 
     renderInView(aDeck({ cards: [SOL_RING] }), "grid");
 
-    expect(screen.getByRole("button", { name: /^CMC/ })).toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: "Collection" })
-    ).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Collection" })).toHaveAttribute(
+      "aria-pressed",
+      "true"
+    );
   });
 
   it("keeps the sort and group buttons in the Grid view", () => {
@@ -235,9 +235,11 @@ describe("the Collection switch on the deck's rows", () => {
     await userEvent.click(screen.getByRole("button", { name: "Collection" }));
 
     await userEvent.click(screen.getByRole("button", { name: "Grid view" }));
-    expect(
-      screen.queryByRole("button", { name: "Collection" })
-    ).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Collection" })).toHaveAttribute(
+      "aria-pressed",
+      "false"
+    );
+    expect(screen.queryByText("Owned")).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "List view" }));
 
     expect(screen.queryByText("Owned")).not.toBeInTheDocument();
@@ -265,5 +267,70 @@ describe("the Owned and Buy badges on the Grid view's cards", () => {
     expect(
       screen.getByText("Owned: 1 copy of this printing in your collection")
     ).toBeInTheDocument();
+  });
+
+  it("asks to buy a grid card the collection does not hold, named as on its list row", () => {
+    ownPrintings("sol-ring-c21");
+
+    renderInView(aDeck({ cards: [SOL_RING, COUNTERSPELL] }), "grid");
+
+    expect(screen.getByText("Buy")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Buy: 1 more copy of this printing needed, 0 in your collection"
+      )
+    ).toBeInTheDocument();
+  });
+
+  it("hides every grid badge when the switch is turned off in the Grid view", async () => {
+    ownPrintings("sol-ring-c21");
+    renderInView(aDeck({ cards: [SOL_RING, COUNTERSPELL] }), "grid");
+
+    await userEvent.click(screen.getByRole("button", { name: "Collection" }));
+
+    expect(screen.queryByText("Owned")).not.toBeInTheDocument();
+    expect(screen.queryByText("Buy")).not.toBeInTheDocument();
+  });
+
+  it("carries a choice made in the Grid view over to the List view", async () => {
+    ownPrintings("sol-ring-c21");
+    renderInView(aDeck({ cards: [SOL_RING] }), "grid");
+    await userEvent.click(screen.getByRole("button", { name: "Collection" }));
+
+    await userEvent.click(screen.getByRole("button", { name: "List view" }));
+
+    expect(screen.queryByText("Owned")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Collection" })).toHaveAttribute(
+      "aria-pressed",
+      "false"
+    );
+  });
+
+  it("shows no badge and no switch in the Grid view while the collection is empty, as for a guest", () => {
+    renderInView(aDeck({ cards: [SOL_RING, COUNTERSPELL] }), "grid");
+
+    expect(screen.getByRole("button", { name: /^CMC/ })).toBeInTheDocument();
+    expect(screen.queryByText("Buy")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Collection" })
+    ).not.toBeInTheDocument();
+  });
+
+  // CR 205.4c: a land with the basic supertype is basic; the deck never needs to buy one.
+  it("never asks to buy a basic land shown as a grid card", () => {
+    ownPrintings("sol-ring-c21");
+    const forest = aDeckCard({
+      id: "row-forest",
+      scryfallId: "forest-printing",
+      name: "Forest",
+      typeLine: "Basic Land — Forest",
+      category: "land",
+      quantity: 30,
+    });
+
+    renderInView(aDeck({ cards: [SOL_RING, forest] }), "grid");
+
+    expect(screen.getByText("Owned")).toBeInTheDocument();
+    expect(screen.queryByText("Buy")).not.toBeInTheDocument();
   });
 });
