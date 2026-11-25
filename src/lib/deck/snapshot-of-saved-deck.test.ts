@@ -20,6 +20,7 @@ const DECK = {
   commanderId: "card-atraxa",
   commanderName: "Atraxa, Praetors' Voice",
   partnerId: null,
+  companionId: null,
 };
 const RECORDED_AT = new Date("2026-11-09T14:32:45Z");
 

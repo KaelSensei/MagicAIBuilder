@@ -12,7 +12,11 @@
  * @module deck/testing/in-memory-snapshot-store
  */
 import type { CapturableCard } from "@/lib/deck/deck-version";
-import type { DeckCommanders, RestoredDeck } from "@/lib/deck/snapshot-restore";
+import {
+  restoredDeckFields,
+  type DeckCommanders,
+  type RestoredDeck,
+} from "@/lib/deck/snapshot-restore";
 import type {
   DeckVersionStore,
   DeckWithCards,
@@ -29,6 +33,7 @@ const ONE_SECOND_MS = 1000;
 /** The deck the fake holds, without its card rows. */
 export interface InMemoryDeck extends DeckCommanders {
   readonly id: string;
+  readonly companionId: string | null;
 }
 
 /** Both ports over one in-memory deck, plus the switches a test turns. */
@@ -90,13 +95,10 @@ export function inMemorySnapshotStore(
     stored = stored.filter((snapshot) => snapshot.id !== snapshotId);
   };
 
-  const restoreDeck = (
-    deckId: string,
-    { cards: restoredCards, commanders }: RestoredDeck
-  ): void => {
+  const restoreDeck = (deckId: string, restored: RestoredDeck): void => {
     if (deckId !== deck.id) return;
-    savedCards = [...restoredCards];
-    savedDeck = { ...savedDeck, ...commanders };
+    savedCards = [...restored.cards];
+    savedDeck = { ...savedDeck, ...restoredDeckFields(restored) };
   };
 
   const snapshots: SnapshotStore = {
