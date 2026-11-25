@@ -14,6 +14,7 @@ import {
   readAnsweredVersion,
   type VersionedAnswer,
 } from "@/lib/db/deck-api-answer";
+import { withRequestDeadline } from "@/lib/async/request-deadline";
 import type { DeckWriteTarget } from "@/lib/deck/deck-repository-port";
 import type {
   Deck,
@@ -206,28 +207,20 @@ export async function fetchDecks(
     page: String(page),
     limit: String(limit),
   });
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 15_000);
-  try {
-    const res = await fetch(`/api/decks?${params}`, { signal: controller.signal });
+  return withRequestDeadline<ApiDeckListResponse>(async (signal) => {
+    const res = await fetch(`/api/decks?${params}`, { signal });
     if (!res.ok) await handleApiError(res, "fetchDecks");
     return await res.json();
-  } finally {
-    clearTimeout(timeout);
-  }
+  });
 }
 
 export async function fetchDeck(id: string): Promise<ApiDeck> {
   if (isGuestDeckId(id)) return getGuestApiDeck();
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 15_000);
-  try {
-    const res = await fetch(`/api/decks/${id}`, { signal: controller.signal });
+  return withRequestDeadline<ApiDeck>(async (signal) => {
+    const res = await fetch(`/api/decks/${id}`, { signal });
     if (!res.ok) await handleApiError(res, "fetchDeck");
     return await res.json();
-  } finally {
-    clearTimeout(timeout);
-  }
+  });
 }
 
 /**
