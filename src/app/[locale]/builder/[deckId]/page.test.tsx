@@ -267,10 +267,10 @@ function renderBuilder(
   return { push };
 }
 
-/** Opens the saved deck and waits for its title bar. */
-async function openSavedDeck(): Promise<void> {
+/** Opens the saved deck, waits for its title bar and returns the deck's name heading there. */
+async function openSavedDeck(): Promise<HTMLElement> {
   renderBuilder(DECK_ID, PLAYER);
-  await screen.findByRole("heading", { level: 1, name: "Talrand Spells" });
+  return screen.findByRole("heading", { level: 1, name: "Talrand Spells" });
 }
 
 /**
@@ -433,14 +433,17 @@ describe("characterization: builder page shell", () => {
     });
 
     it("renames the deck from the title bar on Enter", async () => {
-      await openSavedDeck();
-
-      await userEvent.click(
-        screen.getByRole("button", { name: "Talrand Spells" })
-      );
+      // The player clicks the deck name, the title bar's heading. Finding the rename button by
+      // role and name computed the name of every button on the page (122, about 300 ms), which
+      // helped this test past Vitest's 5 s under a loaded full run. "names the deck in the title
+      // bar…" above pins that button, named "Talrand Spells" and titled "Click to rename".
+      await userEvent.click(await openSavedDeck());
       const name = screen.getByRole("textbox", { name: "Click to rename" });
       await userEvent.clear(name);
-      await userEvent.type(name, "Talrand Tempo{Enter}");
+      // Pasted, then Enter: the name draft is state of the whole page, so typing the name key by
+      // key re-rendered every panel once per key.
+      await userEvent.paste("Talrand Tempo");
+      await userEvent.keyboard("{Enter}");
 
       expect(
         await screen.findByRole("heading", { level: 1, name: "Talrand Tempo" })
