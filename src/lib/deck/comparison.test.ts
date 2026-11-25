@@ -234,8 +234,135 @@ describe("compareDeckProfiles prices the deck you play", () => {
 
     expect([result.leftPrice, result.rightPrice]).toEqual([2, 2]);
   });
+});
 
-  it("currently reads every zone for the curve, colours and roles (pinned; see the I-37 follow-up)", () => {
+describe("compareDeckProfiles reads the curve, colours and roles of the deck you play", () => {
+  const playedCards = [
+    aDeckCard({ id: "sol-ring", name: "Sol Ring", cmc: 1, category: "ramp" }),
+    aDeckCard({
+      id: "counterspell",
+      name: "Counterspell",
+      cmc: 2,
+      colorIdentity: ["U"],
+      category: "removal",
+    }),
+  ];
+
+  it("shows the same average mana value when one deck also shortlists 30 seven-drops in Considering", () => {
+    const considering = Array.from({ length: 30 }, (_, index) =>
+      aDeckCard({
+        id: `seven-drop-${index}`,
+        name: `Seven-drop ${index}`,
+        cmc: 7,
+        zone: "maybeboard",
+      })
+    );
+
+    const result = compareDeckProfiles(
+      [...playedCards, ...considering],
+      playedCards
+    );
+
+    expect([result.leftAverageCmc, result.rightAverageCmc]).toEqual([1.5, 1.5]);
+  });
+
+  it("adds no colour for a sideboard card of a colour the main deck lacks", () => {
+    const result = compareDeckProfiles(
+      [
+        ...playedCards,
+        aDeckCard({
+          id: "rest",
+          name: "Rest in Peace",
+          cmc: 2,
+          colorIdentity: ["W"],
+          category: "removal",
+          zone: "sideboard",
+        }),
+      ],
+      playedCards
+    );
+
+    expect([result.onlyLeftColors, result.onlyRightColors]).toEqual([[], []]);
+  });
+
+  it("changes no role count for a ramp card in Considering", () => {
+    const result = compareDeckProfiles(
+      [
+        ...playedCards,
+        aDeckCard({
+          id: "cultivate",
+          name: "Cultivate",
+          cmc: 3,
+          colorIdentity: ["G"],
+          category: "ramp",
+          zone: "maybeboard",
+        }),
+      ],
+      playedCards
+    );
+
+    expect(result.roleDifferences).toEqual([]);
+  });
+
+  it("leaves the companion out of the curve, colours and roles", () => {
+    const result = compareDeckProfiles(
+      [
+        ...playedCards,
+        aDeckCard({
+          id: "lurrus",
+          name: "Lurrus of the Dream-Den",
+          cmc: 3,
+          colorIdentity: ["W", "B"],
+          category: "companion",
+        }),
+      ],
+      playedCards
+    );
+
+    expect(result).toMatchObject({
+      leftAverageCmc: 1.5,
+      onlyLeftColors: [],
+      roleDifferences: [],
+    });
+  });
+
+  it("still counts the commander and the partner in the curve, colours and roles", () => {
+    const result = compareDeckProfiles(
+      [
+        {
+          ...aDeckCard({
+            id: "tymna",
+            name: "Tymna the Weaver",
+            cmc: 3,
+            colorIdentity: ["W", "B"],
+            category: "draw",
+          }),
+          isCommander: true,
+        },
+        {
+          ...aDeckCard({
+            id: "thrasios",
+            name: "Thrasios, Triton Hero",
+            cmc: 2,
+            colorIdentity: ["G", "U"],
+            category: "draw",
+          }),
+          isCommander: true,
+          isPartner: true,
+        },
+        ...playedCards,
+      ],
+      playedCards
+    );
+
+    expect(result).toMatchObject({
+      leftAverageCmc: 2,
+      onlyLeftColors: ["W", "B", "G"],
+      roleDifferences: [{ role: "draw", leftQuantity: 2, rightQuantity: 0 }],
+    });
+  });
+
+  it("leaves a sideboard card out of the curve, colours and roles (was pinned reading every zone until I-31)", () => {
     const result = compareDeckProfiles(
       [
         aDeckCard({
@@ -263,10 +390,8 @@ describe("compareDeckProfiles prices the deck you play", () => {
       ]
     );
 
-    expect(result.leftAverageCmc).toBe(2);
-    expect(result.onlyLeftColors).toEqual(["W"]);
-    expect(result.roleDifferences).toEqual([
-      { role: "removal", leftQuantity: 1, rightQuantity: 0 },
-    ]);
+    expect(result.leftAverageCmc).toBe(1);
+    expect(result.onlyLeftColors).toEqual([]);
+    expect(result.roleDifferences).toEqual([]);
   });
 });
