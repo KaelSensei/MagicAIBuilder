@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Keyboard } from "lucide-react";
 import { useUIStore } from "@/lib/ui/store";
 import { useShortcutPreferencesStore } from "@/lib/ui/shortcut-preferences";
+import { PLAYTEST_SHOW_KEYS_HOTKEY } from "@/lib/playtest/hotkeys";
 import { Modal, ModalTitle } from "@/components/ui/Modal";
 import { cn } from "@/components/ui/utils";
 
@@ -44,6 +45,24 @@ function Keybadge({ label }: KeybadgeProps) {
 }
 
 /**
+ * The line that closes the list: the playtest has keys of its own, and its cheat sheet opens
+ * with the key and the button the playtest itself uses, read from there so the two agree.
+ */
+function PlaytestKeysPointer() {
+  const t = useTranslations("common");
+  const tPlaytestKeys = useTranslations("playtest.hotkeys");
+
+  return (
+    <p className="pt-3 text-xs text-[var(--text-secondary)]">
+      {t("shortcuts.playtestPointer", {
+        key: PLAYTEST_SHOW_KEYS_HOTKEY.labels.join(" / "),
+        button: tPlaytestKeys("open"),
+      })}
+    </p>
+  );
+}
+
+/**
  * The off switch for shortcuts pressed without Ctrl or ⌘, which speech-input
  * and screen-reader users need (WCAG 2.2 SC 2.1.4).
  */
@@ -77,7 +96,10 @@ function SingleKeyShortcutsSwitch() {
   );
 }
 
-/** The shortcut list and its single-key switch, opened by `?` or the ⌨ trigger. */
+/**
+ * The shortcut list, its pointer to the playtest's own keys, and its single-key switch, opened
+ * by `?` or the ⌨ trigger.
+ */
 export function KeyboardShortcutsModal() {
   const t = useTranslations("common");
   const showKeyboardModal = useUIStore((s) => s.showKeyboardModal);
@@ -130,6 +152,7 @@ export function KeyboardShortcutsModal() {
             </div>
           </div>
         ))}
+        <PlaytestKeysPointer />
       </div>
 
       <SingleKeyShortcutsSwitch />

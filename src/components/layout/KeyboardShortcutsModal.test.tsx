@@ -83,4 +83,30 @@ describe("KeyboardShortcutsModal", () => {
     });
     expect(toggle).toHaveAccessibleDescription(/sans Ctrl ni ⌘/);
   });
+
+  it("ends the list with a line saying the playtest has its own keys, shown by ? or its Keys button", () => {
+    renderWithIntl(<KeyboardShortcutsModal />);
+    act(() => useUIStore.getState().setShowKeyboardModal(true));
+
+    const pointer = screen.getByText(
+      "The playtest has its own keys: press ? or its Keys button there to list them."
+    );
+    const lastEntry = screen.getByText("Open quick add");
+    expect(
+      lastEntry.compareDocumentPosition(pointer) &
+        Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
+    expect(pointer.querySelector("kbd")).toBeNull();
+  });
+
+  it("points to the playtest's keys in French", () => {
+    renderWithIntl(<KeyboardShortcutsModal />, { locale: "fr" });
+    act(() => useUIStore.getState().setShowKeyboardModal(true));
+
+    expect(
+      screen.getByText(
+        "Le test de jeu a ses propres touches : appuyez sur ? ou sur son bouton Touches pour les afficher."
+      )
+    ).toBeInTheDocument();
+  });
 });
