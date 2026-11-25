@@ -191,6 +191,21 @@ describe("DeckSummaryBar", () => {
     ).toBeInTheDocument();
   });
 
+  it("says the price is unknown, with the cards that have none, when no played card has a price", () => {
+    renderBar(
+      aDeck({
+        commander: { ...TALRAND, price: null },
+        cards: rows(2, "Instant", null),
+      })
+    );
+
+    expect(within(bar()).getByText("Price unknown")).toBeInTheDocument();
+    expect(
+      within(bar()).getByText("3 cards without price data")
+    ).toBeInTheDocument();
+    expect(within(bar()).queryByText(/0\.00/)).not.toBeInTheDocument();
+  });
+
   it("changes the count, the price and the type counts when the player adds a card", async () => {
     openInStore(aFullDeck({ cards: aFullDeck().cards.slice(0, 30) }));
     renderWithProviders(<StoreDeckSummaryBar deckId="deck-1" />);

@@ -75,6 +75,54 @@ describe("DeckPriceDisplay", () => {
     expect(rowFor("Without basic lands")).toHaveTextContent(/USD\s25\.00/);
   });
 
+  it("says the price is unknown, with no total and no second line, when no played card has a price", () => {
+    openDeckWith([
+      aDeckCard({ id: "sol", typeLine: "Artifact", price: null }),
+      aDeckCard({
+        id: "island",
+        typeLine: "Basic Land — Island",
+        price: null,
+        quantity: 30,
+      }),
+    ]);
+
+    renderWithProviders(<DeckPriceDisplay />);
+
+    expect(rowFor("Total value")).toHaveTextContent("Price unknown");
+    expect(screen.queryByText(/0\.00/)).not.toBeInTheDocument();
+    expect(screen.queryByText("Without basic lands")).not.toBeInTheDocument();
+    expect(screen.getByText("2 cards without price data")).toBeInTheDocument();
+  });
+
+  it("shows the known total and counts the cards without a price in a partly priced deck", () => {
+    openDeckWith([
+      aDeckCard({ id: "sol", typeLine: "Artifact", price: 2 }),
+      aDeckCard({ id: "unpriced", typeLine: "Instant", price: null }),
+    ]);
+
+    renderWithProviders(<DeckPriceDisplay />);
+
+    expect(rowFor("Total value")).toHaveTextContent(/USD\s2\.00/);
+    expect(screen.getByText("1 card without price data")).toBeInTheDocument();
+  });
+
+  it("says the price is unknown in French", () => {
+    openDeckWith([aDeckCard({ id: "sol", typeLine: "Artifact", price: null })]);
+
+    renderWithProviders(<DeckPriceDisplay />, { locale: "fr" });
+
+    expect(rowFor("Valeur totale")).toHaveTextContent("Prix inconnu");
+    expect(screen.getByText("1 carte sans prix")).toBeInTheDocument();
+  });
+
+  it("shows nothing for a deck with no card", () => {
+    openDeckWith([]);
+
+    const { container } = renderWithProviders(<DeckPriceDisplay />);
+
+    expect(container).toBeEmptyDOMElement();
+  });
+
   it("writes the second line in French", () => {
     openDeckWith([
       aDeckCard({ id: "sol", typeLine: "Artifact", price: 5 }),
