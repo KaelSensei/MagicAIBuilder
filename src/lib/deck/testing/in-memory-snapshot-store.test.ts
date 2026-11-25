@@ -18,6 +18,7 @@ const DECK = {
   commanderId: null,
   commanderName: null,
   partnerId: null,
+  companionId: null,
 };
 
 /** @returns both fake ports over a deck that holds `cards` */
