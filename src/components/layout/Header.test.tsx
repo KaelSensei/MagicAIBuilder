@@ -3,6 +3,7 @@ import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import React from "react";
 import { useToastStore } from "@/hooks/useToast";
+import { DeckApiError } from "@/lib/db/deck-api-answer";
 import { renderWithIntl } from "@/test/render-with-intl";
 
 let createDeckImpl: (name: string) => Promise<string> = async (_name: string) =>
@@ -290,7 +291,9 @@ describe("Header deck actions and mobile menu (characterization)", () => {
 
 /*
  * A failed creation used to reject unhandled: the button spun, then came back,
- * and the player saw nothing. The header now reports it in a toast.
+ * and the player saw nothing. The header then reported it in a toast that
+ * carried the client's diagnostic text ("— [createDeck] HTTP 500: …"); it now
+ * says so in the player's language, as the decks page does (I-01).
  */
 describe("Header deck creation failures", () => {
   beforeEach(() => {
@@ -298,21 +301,21 @@ describe("Header deck creation failures", () => {
     useToastStore.setState({ toasts: [] });
   });
 
-  it("tells the player why New Deck failed and lets them try again", async () => {
+  it("says New Deck failed in French, with no HTTP status, and lets them try again", async () => {
     createDeckImpl = async () => {
-      throw new Error("HTTP 500");
+      throw new DeckApiError("createDeck", 500, "Failed to create deck");
     };
     const { Header } = await import("./Header");
 
-    renderWithIntl(React.createElement(Header));
-    const newDeck = await screen.findByRole("button", { name: "New Deck" });
+    renderWithIntl(React.createElement(Header), { locale: "fr" });
+    const newDeck = await screen.findByRole("button", { name: "Nouveau deck" });
     await userEvent.click(newDeck);
 
     await waitFor(() =>
       expect(useToastStore.getState().toasts).toEqual([
         expect.objectContaining({
           type: "error",
-          message: "Could not create the deck — HTTP 500",
+          message: "Impossible de créer le deck. Réessayez.",
         }),
       ])
     );
@@ -320,7 +323,28 @@ describe("Header deck creation failures", () => {
     expect(router.push).not.toHaveBeenCalled();
   });
 
-  it("tells the player why Import failed, without activating a deck", async () => {
+  it("asks the player to sign in again when New Deck meets an ended session", async () => {
+    createDeckImpl = async () => {
+      throw new DeckApiError("createDeck", 401, "Unauthorized");
+    };
+    const { Header } = await import("./Header");
+
+    renderWithIntl(React.createElement(Header));
+    await userEvent.click(
+      await screen.findByRole("button", { name: "New Deck" })
+    );
+
+    await waitFor(() =>
+      expect(useToastStore.getState().toasts).toEqual([
+        expect.objectContaining({
+          type: "error",
+          message: "Your session has ended. Sign in again to create a deck.",
+        }),
+      ])
+    );
+  });
+
+  it("says Import failed, without activating a deck", async () => {
     createDeckImpl = async () => {
       throw new Error("HTTP 503");
     };
@@ -336,7 +360,7 @@ describe("Header deck creation failures", () => {
       expect(useToastStore.getState().toasts).toEqual([
         expect.objectContaining({
           type: "error",
-          message: "Could not create the deck — HTTP 503",
+          message: "Could not create the deck. Please try again.",
         }),
       ])
     );

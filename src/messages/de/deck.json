@@ -103,7 +103,6 @@
     "sessionTimeoutTitle": "Die Sitzung hat zu lange gedauert",
     "sessionTimeoutDescription": "Die Kontoprüfung wurde nicht fertig. Deine gespeicherten Decks sind unverändert. Versuche es erneut.",
     "profileLoadFailed": "Das Profil konnte nicht aktualisiert werden. Gespeicherte Decks bleiben verfügbar.",
-    "createFailed": "Deck konnte nicht erstellt werden — {reason}",
     "cardFilter": {
       "includeLabel": "Has the card",
       "excludeLabel": "Leaves out",

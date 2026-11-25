@@ -103,7 +103,6 @@
     "sessionTimeoutTitle": "La sesión tardó demasiado",
     "sessionTimeoutDescription": "La comprobación de la cuenta no terminó. Tus mazos guardados no cambiaron. Inténtalo de nuevo.",
     "profileLoadFailed": "No se pudo actualizar tu perfil. Los mazos guardados siguen disponibles.",
-    "createFailed": "No se pudo crear el mazo — {reason}",
     "cardFilter": {
       "includeLabel": "Has the card",
       "excludeLabel": "Leaves out",

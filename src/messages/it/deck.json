@@ -103,7 +103,6 @@
     "sessionTimeoutTitle": "La sessione ha impiegato troppo tempo",
     "sessionTimeoutDescription": "Il controllo dell'account non è terminato. I mazzi salvati non sono cambiati. Riprova.",
     "profileLoadFailed": "Il profilo non è stato aggiornato. I mazzi salvati restano disponibili.",
-    "createFailed": "Impossibile creare il mazzo — {reason}",
     "cardFilter": {
       "includeLabel": "Has the card",
       "excludeLabel": "Leaves out",
