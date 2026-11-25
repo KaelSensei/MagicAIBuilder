@@ -25,7 +25,7 @@ import {
   within,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { http, HttpResponse, type JsonBodyType } from "msw";
+import { http, HttpResponse, type HttpHandler, type JsonBodyType } from "msw";
 import type { Session } from "next-auth";
 import { AppRouterContext } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import { PathParamsContext } from "next/dist/shared/lib/hooks-client-context.shared-runtime";
@@ -50,7 +50,7 @@ import { useDeckStore } from "@/lib/deck/store";
 import { EMPTY_SEARCH_RESPONSE, type ScryfallCard } from "@/lib/scryfall/types";
 import { useUIStore } from "@/lib/ui/store";
 import { setupMsw } from "@/test/msw";
-import { renderWithProviders } from "@/test/render";
+import { renderWithProviders, type TestLocale } from "@/test/render";
 import BuilderPage from "./page";
 
 // eslint-disable-next-line no-restricted-syntax -- the one seam left; the header says why and what removes it
@@ -245,7 +245,8 @@ function heldUntilReleased(answer: () => Response): {
 /** Renders the page at `/en/builder/<deckId>` the way the app router mounts it. */
 function renderBuilder(
   deckId: string,
-  session: Session | null
+  session: Session | null,
+  locale: TestLocale = "en"
 ): { readonly push: (href: string) => void } {
   const push = vi.fn<(href: string) => void>();
   const router = {
@@ -258,13 +259,26 @@ function renderBuilder(
   };
   renderWithProviders(
     <AppRouterContext.Provider value={router}>
-      <PathParamsContext.Provider value={{ locale: "en", deckId }}>
+      <PathParamsContext.Provider value={{ locale, deckId }}>
         <BuilderPage />
       </PathParamsContext.Provider>
     </AppRouterContext.Provider>,
-    { session: session }
+    { session: session, locale }
   );
   return { push };
+}
+
+/** Handlers that answer the deck's own request with `status` and the route's `error` text, and an empty listing. */
+function deckAnsweredWith(
+  status: number,
+  error: string
+): readonly HttpHandler[] {
+  return [
+    http.get("/api/decks/:id", () => HttpResponse.json({ error }, { status })),
+    http.get("/api/decks", () =>
+      HttpResponse.json({ decks: [], total: 0, page: 0, limit: 20 })
+    ),
+  ];
 }
 
 /** Opens the saved deck, waits for its title bar and returns the deck's name heading there. */
@@ -658,15 +672,36 @@ describe("characterization: builder page shell", () => {
       ).toBeInTheDocument();
     });
 
-    it("currently answers a deck the server does not find with 'Something went wrong' and a retry, not 'Deck not found' (pinned)", async () => {
-      server.use(
-        http.get("/api/decks/:id", () =>
-          HttpResponse.json({ error: "Deck not found" }, { status: 404 })
-        ),
-        http.get("/api/decks", () =>
-          HttpResponse.json({ decks: [], total: 0, page: 0, limit: 20 })
-        )
-      );
+    it("says 'Deck not found' with a way back to the decks and no retry when the server does not find the deck (I-01)", async () => {
+      server.use(...deckAnsweredWith(404, "Deck not found"));
+
+      renderBuilder(DECK_ID, PLAYER);
+
+      expect(await screen.findByText("Deck not found")).toBeInTheDocument();
+      expect(
+        screen.getByRole("link", { name: "Back to My Decks" })
+      ).toHaveAttribute("href", "/decks");
+      expect(
+        screen.queryByRole("button", { name: "Try again" })
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByText("Something went wrong")
+      ).not.toBeInTheDocument();
+    });
+
+    it("says the deck was not found in the player's language (I-01)", async () => {
+      server.use(...deckAnsweredWith(404, "Deck not found"));
+
+      renderBuilder(DECK_ID, PLAYER, "fr");
+
+      expect(await screen.findByText("Deck introuvable")).toBeInTheDocument();
+      expect(
+        screen.getByRole("link", { name: "Retour à mes decks" })
+      ).toHaveAttribute("href", "/decks");
+    });
+
+    it("keeps 'Something went wrong' and its retry when the server fails to answer the deck (I-01)", async () => {
+      server.use(...deckAnsweredWith(500, "Failed to fetch deck"));
 
       renderBuilder(DECK_ID, PLAYER);
 
@@ -677,9 +712,6 @@ describe("characterization: builder page shell", () => {
         screen.getByRole("button", { name: "Try again" })
       ).toBeInTheDocument();
       expect(screen.queryByText("Deck not found")).not.toBeInTheDocument();
-      expect(
-        screen.getByRole("link", { name: "Back to My Decks" })
-      ).toHaveAttribute("href", "/decks");
     });
 
     it("currently reports a failed deck listing while the deck itself is still loading (pinned)", async () => {
