@@ -53,6 +53,8 @@ export function useBracketPathText(
         });
       case "comboFloorNotChecked":
         return t("comboFloorNotChecked");
+      case "comboFloorPending":
+        return t("comboFloorPending");
       case "tooFewCards":
         return t("tooFewCards", { count: line.deckSize });
       case "term":

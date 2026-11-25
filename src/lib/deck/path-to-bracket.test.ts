@@ -221,6 +221,15 @@ describe("pathToBracket — what the estimate could not check", () => {
     ]);
   });
 
+  it("a combo lookup still pending says the combo floor is being checked, never that it was not checked", () => {
+    expect(
+      pathToBracket(assess(aStrongList(), { kind: "pending" }), 4)
+    ).toEqual([
+      { kind: "noRuleStops", target: 4 },
+      { kind: "comboFloorPending" },
+    ]);
+  });
+
   it("a list under 60 cards lists its floors only, then says it has too few cards for the heuristic part", () => {
     const lines = path(
       [...aThirtyCardList(), aGameChanger("Smothering Tithe")],

@@ -147,6 +147,53 @@ describe("BracketIndicator official brackets", () => {
   });
 });
 
+// Issue #1840: the badge reads the same combo lookup as the "To reach
+// Bracket N" list, through `comboDataOf`, and says the same thing about it.
+describe("BracketIndicator combo lookup", () => {
+  const PENDING =
+    "Two-card combos: still being checked. The estimate does not count them yet.";
+  const FAILED =
+    "Two-card combos: not checked. The estimate was made without combo data.";
+
+  it("says combos are still being checked while the lookup has not answered", () => {
+    renderWithIntl(
+      <BracketIndicator score={score} comboData={{ kind: "pending" }} />
+    );
+    expect(screen.getByText(PENDING)).toBeInTheDocument();
+    expect(screen.queryByText(FAILED)).toBeNull();
+  });
+
+  it("says combos were not checked once the lookup fails", () => {
+    renderWithIntl(
+      <BracketIndicator score={score} comboData={{ kind: "unavailable" }} />
+    );
+    expect(screen.getByText(FAILED)).toBeInTheDocument();
+    expect(screen.queryByText(PENDING)).toBeNull();
+  });
+
+  it("adds no note once the lookup answered", () => {
+    renderWithIntl(
+      <BracketIndicator
+        score={score}
+        comboData={{ kind: "found", combos: [], fetchedAt: null }}
+      />
+    );
+    expect(screen.queryByText(/^Two-card combos:/)).toBeNull();
+  });
+
+  it("says combos are being checked in French", () => {
+    renderWithIntl(
+      <BracketIndicator score={score} comboData={{ kind: "pending" }} />,
+      { locale: "fr" }
+    );
+    expect(
+      screen.getByText(
+        "Combos à deux cartes : vérification en cours. L'estimation ne les compte pas encore."
+      )
+    ).toBeInTheDocument();
+  });
+});
+
 const BRACKET_CATALOG = z.object({
   bracket: z.object({
     name: z.record(z.string(), z.string()),
