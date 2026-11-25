@@ -48,7 +48,7 @@ export function moveZoneFocus(
     return;
   }
   if (direction === "last") {
-    items[items.length - 1]?.focus();
+    items.at(-1)?.focus();
     return;
   }
   const active = document.activeElement;
