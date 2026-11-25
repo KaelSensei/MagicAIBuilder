@@ -51,6 +51,8 @@ export async function POST(request: Request, context: RouteContext) {
             isPartner: true,
             typeLine: true,
             colorIdentity: true,
+            zone: true,
+            category: true,
           },
         },
       },

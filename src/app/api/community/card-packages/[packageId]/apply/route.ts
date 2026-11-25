@@ -14,7 +14,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { readJsonBody } from "@/lib/api/json-body";
 import { requireAuth } from "@/lib/auth/helpers";
-import { packagePreviewContextOf, previewCardPackage } from "@/lib/community/card-package-preview";
+import { PACKAGE_ZONE, packagePreviewContextOf, previewCardPackage } from "@/lib/community/card-package-preview";
 import { verifyPackageCards } from "@/lib/community/verified-package-cards";
 import { prisma } from "@/lib/db/prisma";
 import { deckVersionStep } from "@/lib/deck/deck-repository";
@@ -55,7 +55,7 @@ export async function POST(request: Request, context: RouteContext) {
         format: true,
         cards: { select: {
           name: true, quantity: true, isCommander: true, isPartner: true,
-          typeLine: true, colorIdentity: true,
+          typeLine: true, colorIdentity: true, zone: true, category: true,
         } },
       },
     });
@@ -106,7 +106,7 @@ export async function POST(request: Request, context: RouteContext) {
           typeLine: card.typeLine,
           cmc: card.manaValue,
           category: card.isBasicLand ? "land" : "other",
-          zone: "main",
+          zone: PACKAGE_ZONE,
         })),
       }),
       // Unconditional: the apply takes no version from the client.
