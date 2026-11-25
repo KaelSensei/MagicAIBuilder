@@ -276,7 +276,7 @@ describe("colour identity", () => {
       {
         format: "commander",
         commanderColorIdentity: ["G", "U"],
-        existingCards: [],
+        deck: { commander: null, partner: null, cards: [] },
       }
     );
 
