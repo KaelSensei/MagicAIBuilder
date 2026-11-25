@@ -1,11 +1,15 @@
 /**
  * Pins the exact message of `DeckApiError`, which the store's error tests and
- * the logs read as `[operation] HTTP <status>: <detail>`, and its 409 reading
- * as a stale-deck refusal.
+ * the logs read as `[operation] HTTP <status>: <detail>`, its 409 reading
+ * as a stale-deck refusal and its 401 reading as an ended session.
  */
 import { describe, expect, it } from "vitest";
 
-import { DeckApiError, isStaleDeckRefusal } from "@/lib/db/deck-api-answer";
+import {
+  DeckApiError,
+  isSignedOutRefusal,
+  isStaleDeckRefusal,
+} from "@/lib/db/deck-api-answer";
 
 describe("DeckApiError", () => {
   it("reads `[operation] HTTP <status>: <detail>` when the route sent its own error text", () => {
@@ -30,5 +34,17 @@ describe("isStaleDeckRefusal", () => {
     expect(isStaleDeckRefusal(new DeckApiError("updateDeck", 409))).toBe(true);
     expect(isStaleDeckRefusal(new DeckApiError("updateDeck", 400))).toBe(false);
     expect(isStaleDeckRefusal(new Error("HTTP 409"))).toBe(false);
+  });
+});
+
+describe("isSignedOutRefusal", () => {
+  it("reads only a deck API 401 as an ended session", () => {
+    expect(isSignedOutRefusal(new DeckApiError("createSnapshot", 401))).toBe(
+      true
+    );
+    expect(isSignedOutRefusal(new DeckApiError("createSnapshot", 403))).toBe(
+      false
+    );
+    expect(isSignedOutRefusal(new Error("HTTP 401"))).toBe(false);
   });
 });

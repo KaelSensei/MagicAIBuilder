@@ -6,6 +6,7 @@ import {
   restoreSnapshot,
   SNAPSHOT_LIST_TIMEOUT_MS,
 } from "./snapshot-api";
+import { DeckApiError } from "./deck-api-answer";
 
 function mockFetch(data: unknown, ok = true, status = 200) {
   vi.stubGlobal(
@@ -115,6 +116,16 @@ describe("createSnapshot", () => {
       })
     );
     await expect(createSnapshot("deck-1", "bad")).rejects.toThrow("Failed to create snapshot");
+  });
+
+  it("rejects with the answered status, so an ended session (401) can be told apart", async () => {
+    mockFetch({ error: "Unauthorized" }, false, 401);
+    await expect(createSnapshot("deck-1", "v1")).rejects.toEqual(
+      new DeckApiError("createSnapshot", 401, "Unauthorized")
+    );
+    await expect(createSnapshot("deck-1", "v1")).rejects.toMatchObject({
+      status: 401,
+    });
   });
 });
 
