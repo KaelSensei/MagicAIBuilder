@@ -5,8 +5,10 @@
  * Each method is the Prisma call the snapshot and playtest-session routes made
  * before DB-01, with the same `where`, `orderBy`, `take`, `select` and
  * `include`, so the routes' Prisma stubs answer it unchanged. Restore deletes
- * and re-creates the card rows and writes the deck's commander and companion
- * fields in one interactive transaction. Both pass the
+ * and re-creates the card rows, writes the deck's commander and companion
+ * fields and moves the deck to its next version (`deckVersionStep`) in one
+ * interactive transaction, so a tab that read the deck before the restore is
+ * refused on its next card write. Both pass the
  * contract suite in `testing/snapshot-store-contract.ts`, run by
  * `prisma-snapshot-store.test.ts`.
  *
@@ -15,6 +17,7 @@
 import "server-only";
 import type { Prisma, PrismaClient } from "@prisma/client";
 
+import { deckVersionStep } from "@/lib/deck/deck-repository";
 import { restoredDeckFields } from "@/lib/deck/snapshot-restore";
 import type {
   DeckVersionStore,
@@ -89,9 +92,10 @@ export function prismaSnapshotStore(client: PrismaClient): SnapshotStore {
         if (restored.cards.length > 0) {
           await tx.deckCard.createMany({ data: [...restored.cards] });
         }
+        // Unconditional: the restore takes no version from the client.
         await tx.deck.update({
           where: { id: deckId },
-          data: restoredDeckFields(restored),
+          data: { ...restoredDeckFields(restored), ...deckVersionStep() },
         });
       });
     },
