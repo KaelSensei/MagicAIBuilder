@@ -63,31 +63,45 @@ describe("QuickAddPaletteHost", () => {
     await user.click(screen.getByRole("button", { name: "Quick add" }));
     await user.type(screen.getByRole("combobox", { name: "Quick add" }), "Sol");
 
-    expect(await screen.findByRole("button", { name: /Sol Ring/ })).toBeTruthy();
+    expect(
+      await screen.findByRole("button", { name: /Sol Ring/ })
+    ).toBeTruthy();
     expect(searched.at(-1)).toBe("name:/Sol/ legal:commander id<=UG");
 
     await user.keyboard("{Enter}");
-    expect(onAdd).toHaveBeenCalledWith(expect.objectContaining({ name: "Sol Ring" }), "main");
+    expect(onAdd).toHaveBeenCalledWith(
+      expect.objectContaining({ name: "Sol Ring" }),
+      "main"
+    );
     expect(screen.getByRole("dialog", { name: "Quick add" })).toBeTruthy();
   });
 
   it("says when the search fails and does not add a card", async () => {
     server.use(
-      http.get("/api/cache/search", () => new HttpResponse(null, { status: 500 })),
-      http.get("https://api.scryfall.com/cards/search", () => new HttpResponse(null, { status: 500 }))
+      http.get(
+        "/api/cache/search",
+        () => new HttpResponse(null, { status: 500 })
+      ),
+      http.get(
+        "https://api.scryfall.com/cards/search",
+        () => new HttpResponse(null, { status: 500 })
+      )
     );
     const user = userEvent.setup();
     const onAdd = vi.fn();
     renderWithProviders(
-      <QuickAddPaletteHost scope={{ legality: "commander", identityClause: "" }} onAdd={onAdd} />
+      <QuickAddPaletteHost
+        scope={{ legality: "commander", identityClause: "" }}
+        onAdd={onAdd}
+      />
     );
 
     await user.click(screen.getByRole("button", { name: "Quick add" }));
     await user.type(screen.getByRole("combobox", { name: "Quick add" }), "zz");
 
-    expect(await screen.findByRole("alert", {}, { timeout: 8000 })).toHaveTextContent(
-      "The search could not be completed."
-    );
+    expect(
+      await screen.findByRole("alert", {}, { timeout: 8000 })
+    ).toHaveTextContent("The search could not be completed.");
     await user.keyboard("{Enter}");
     expect(onAdd).not.toHaveBeenCalled();
   });

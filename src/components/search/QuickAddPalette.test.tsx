@@ -4,11 +4,17 @@ import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { renderWithIntl } from "@/test/render-with-intl";
 import type { DeckZone } from "@/lib/deck/types";
-import type { QuickAddReading, QuickAddScope } from "@/lib/search/quick-add-query";
+import type {
+  QuickAddReading,
+  QuickAddScope,
+} from "@/lib/search/quick-add-query";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import { QuickAddPalette, type QuickAddPhase } from "./QuickAddPalette";
 
-const SIMIC: QuickAddScope = { legality: "commander", identityClause: "id<=UG" };
+const SIMIC: QuickAddScope = {
+  legality: "commander",
+  identityClause: "id<=UG",
+};
 
 function card(id: string, name: string): ScryfallCard {
   return {
@@ -29,7 +35,9 @@ function Harness(props: {
   readonly initialReading?: QuickAddReading;
 }) {
   const [text, setText] = useState("sol");
-  const [reading, setReading] = useState<QuickAddReading>(props.initialReading ?? "name");
+  const [reading, setReading] = useState<QuickAddReading>(
+    props.initialReading ?? "name"
+  );
   const [open, setOpen] = useState(true);
   return (
     <QuickAddPalette
@@ -54,13 +62,17 @@ describe("QuickAddPalette", () => {
     const solRing = card("sol", "Sol Ring");
     renderWithIntl(<Harness cards={[solRing]} phase="results" onAdd={onAdd} />);
 
-    expect(screen.getByText("Query: name:/sol/ legal:commander id<=UG")).toBeTruthy();
+    expect(
+      screen.getByText("Query: name:/sol/ legal:commander id<=UG")
+    ).toBeTruthy();
     await user.click(screen.getByRole("combobox", { name: "Quick add" }));
     await user.keyboard("{Enter}");
 
     expect(onAdd).toHaveBeenCalledWith(solRing, "main");
     expect(screen.getByRole("dialog", { name: "Quick add" })).toBeTruthy();
-    expect(screen.getByRole("status").textContent).toBe("Added Sol Ring to Main.");
+    expect(screen.getByRole("status").textContent).toBe(
+      "Added Sol Ring to Main."
+    );
   });
 
   it("adds to the sideboard with Shift+Enter and to considering with Alt+Enter", async () => {
@@ -83,7 +95,9 @@ describe("QuickAddPalette", () => {
     const onAdd = vi.fn();
     const solRing = card("sol", "Sol Ring");
     const arcane = card("signet", "Arcane Signet");
-    renderWithIntl(<Harness cards={[solRing, arcane]} phase="results" onAdd={onAdd} />);
+    renderWithIntl(
+      <Harness cards={[solRing, arcane]} phase="results" onAdd={onAdd} />
+    );
 
     await user.click(screen.getByRole("combobox", { name: "Quick add" }));
     await user.keyboard("{ArrowDown}{Enter}");
@@ -130,12 +144,23 @@ describe("QuickAddPalette", () => {
   });
 
   it("uses the French catalogue", () => {
-    renderWithIntl(<Harness cards={[card("sol", "Sol Ring")]} phase="results" onAdd={vi.fn()} />, {
-      locale: "fr",
-    });
+    renderWithIntl(
+      <Harness
+        cards={[card("sol", "Sol Ring")]}
+        phase="results"
+        onAdd={vi.fn()}
+      />,
+      {
+        locale: "fr",
+      }
+    );
 
     expect(screen.getByRole("dialog", { name: "Ajout rapide" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Texte de règles" })).toBeTruthy();
-    expect(screen.getByText("Requête : name:/sol/ legal:commander id<=UG")).toBeTruthy();
+    expect(
+      screen.getByRole("button", { name: "Texte de règles" })
+    ).toBeTruthy();
+    expect(
+      screen.getByText("Requête : name:/sol/ legal:commander id<=UG")
+    ).toBeTruthy();
   });
 });
