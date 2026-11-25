@@ -1,8 +1,11 @@
+import type { ComponentProps } from "react";
 import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { SessionProvider } from "next-auth/react";
 import { SearchResults } from "./SearchResults";
 import { renderWithIntl } from "@/test/render-with-intl";
+import { renderWithProviders } from "@/test/render";
+import { aScryfallCard } from "@/test/builders/scryfall";
 import type { CollectionOnlyState } from "@/hooks/useCardSearchResults";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 
@@ -124,5 +127,102 @@ describe("SearchResults with Collection only on", () => {
     expect(screen.getByRole("status").textContent).toBe(
       "Ta collection est vide. Ajoutes-y des cartes : ce filtre n'affichera alors que les cartes que tu possèdes."
     );
+  });
+});
+
+/** The props of a search in flight or settled; each test overrides what its state needs. */
+function searchProps(
+  overrides: Partial<ComponentProps<typeof SearchResults>> = {}
+): ComponentProps<typeof SearchResults> {
+  return { cards: [], isLoading: false, error: null, ...overrides };
+}
+
+/** Renders the results as a guest: a listed card's quick add reads the session. */
+function renderSearch(props: ComponentProps<typeof SearchResults>) {
+  return renderWithProviders(<SearchResults {...props} />, { session: null });
+}
+
+describe("SearchResults announces the search to a screen-reader player", () => {
+  it("says it is searching, then how many cards came back", () => {
+    const { rerender } = renderSearch(searchProps({ isLoading: true }));
+    expect(screen.getByRole("status").textContent).toBe("Searching…");
+
+    rerender(
+      <SearchResults
+        {...searchProps({
+          cards: [aScryfallCard({ name: "Sol Ring" })],
+          totalCards: 42,
+        })}
+      />
+    );
+
+    expect(screen.getByRole("status").textContent).toBe("42 results");
+  });
+
+  it("keeps the same status region mounted from searching to the results, so the change is announced", () => {
+    const { rerender } = renderSearch(searchProps({ isLoading: true }));
+    const whileSearching = screen.getByRole("status");
+
+    rerender(
+      <SearchResults
+        {...searchProps({ cards: [aScryfallCard()], totalCards: 1 })}
+      />
+    );
+
+    expect(screen.getByRole("status")).toBe(whileSearching);
+    expect(whileSearching).toBeInstanceOf(HTMLOutputElement);
+    expect(whileSearching).toHaveAttribute("aria-live", "polite");
+    expect(whileSearching).toHaveAttribute("aria-atomic", "true");
+  });
+
+  it("says that nothing matched, politely", () => {
+    renderSearch(searchProps({ totalCards: 0 }));
+
+    expect(screen.getByRole("status").textContent).toBe(
+      "No cards found. Try a different search."
+    );
+  });
+
+  it("announces a failed search as an alert and leaves the polite region silent", () => {
+    renderSearch(searchProps({ error: new Error("Scryfall is unavailable.") }));
+
+    expect(screen.getByRole("alert").textContent).toBe(
+      "Scryfall is unavailable."
+    );
+    expect(screen.getByRole("status").textContent).toBe("");
+  });
+
+  it("says how many owned cards a Collection only search kept", () => {
+    renderSearch(
+      searchProps({
+        cards: [
+          aScryfallCard({ name: "Sol Ring" }),
+          aScryfallCard({
+            id: "00000000-0000-4000-8000-000000000002",
+            name: "Command Tower",
+          }),
+        ],
+        totalCards: 3214,
+        collectionOnly: {
+          kind: "scanned",
+          scannedCards: 3214,
+          totalMatches: 3214,
+          complete: true,
+        },
+      })
+    );
+
+    expect(screen.getByRole("status").textContent).toBe("2 cards you own");
+  });
+
+  it("announces in French to a French player", () => {
+    renderWithProviders(
+      <SearchResults
+        {...searchProps({ cards: [aScryfallCard()], totalCards: 42 })}
+      />,
+      { session: null, locale: "fr" }
+    );
+
+    expect(screen.getByRole("status").textContent).toBe("42 résultats");
   });
 });
