@@ -89,11 +89,10 @@ function checkSwaps(
   lists: LeagueListPair
 ): AllowancePartReport {
   const changed = changedCopies(lists.previous, lists.next);
-  const outgoing = countedLines(changed.out, part.commanderCounts);
-  const incoming = countedLines(changed.in, part.commanderCounts);
+  const swapped = part.commanderCounts ? changed : withoutCommanders(changed);
   const exempt = part.basicsExempt
-    ? pairBasics(outgoing, incoming)
-    : { pairs: [], out: outgoing, in: incoming };
+    ? pairBasics(swapped.out, swapped.in)
+    : { pairs: [], out: swapped.out, in: swapped.in };
   const pairs = [...exempt.pairs, ...zipPairs(exempt.out, exempt.in, false)];
   const counted = pairs.filter((pair) => !pair.exempt).length;
   return {
@@ -135,11 +134,19 @@ function checkPool(
   };
 }
 
-function countedLines(
-  lines: readonly CopyLine[],
-  commanderCounts: boolean
-): readonly CopyLine[] {
-  return commanderCounts ? lines : lines.filter((line) => !line.commander);
+/** The copies that left and arrived, as `changedCopies` sorts them. */
+type ChangedCopies = ReturnType<typeof changedCopies>;
+
+/**
+ * The changed copies without the commanders, for a host whose swaps part does
+ * not count a commander leaving or arriving (`commanderCounts` false).
+ */
+function withoutCommanders(changed: ChangedCopies): ChangedCopies {
+  const isDeckCard = (line: CopyLine) => !line.commander;
+  return {
+    out: changed.out.filter(isDeckCard),
+    in: changed.in.filter(isDeckCard),
+  };
 }
 
 function uniqueOutside(

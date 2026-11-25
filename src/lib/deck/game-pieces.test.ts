@@ -147,6 +147,53 @@ describe("gamePiecesOf", () => {
     expect(gamePiecesOf([cardNamed(name, oracleText)])).toEqual([]);
   });
 
+  describe("reading past reminder text (CR 207.2a; pinned before the S8786 rewrite)", () => {
+    it.each<readonly [string, string, readonly GamePieceKind[]]>([
+      [
+        "drops each reminder on a line and keeps the rules text between them",
+        "Flying (The monarch draws a card.) When this creature enters, you take the initiative. Haste (You become the monarch.)",
+        ["initiative"],
+      ],
+      [
+        "ends a reminder at its first closing parenthesis, even past another opening one",
+        "Flying (Reminder (nested) you become the monarch.)",
+        ["monarch"],
+      ],
+      [
+        "keeps the text after an opening parenthesis that never closes",
+        "Haste (When this creature enters, you become the monarch.",
+        ["monarch"],
+      ],
+      [
+        "keeps the text before a closing parenthesis that never opened",
+        "When this creature enters, you become the monarch.) Flying (The initiative.)",
+        ["monarch"],
+      ],
+      [
+        "drops an empty reminder",
+        "Vigilance () you get an experience counter.",
+        ["experience"],
+      ],
+    ])("%s", (_case, oracleText, kinds) => {
+      expect(
+        gamePiecesOf([cardNamed("Pinned Card", oracleText)]).map(
+          (entry) => entry.kind
+        )
+      ).toEqual(kinds);
+    });
+
+    it("reads a long line of unclosed parentheses in linear time", () => {
+      const oracleText = `${"(".repeat(50_000)} you become the monarch.`;
+
+      const startedAt = performance.now();
+      const pieces = gamePiecesOf([cardNamed("Long Card", oracleText)]);
+      const elapsedMs = performance.now() - startedAt;
+
+      expect(pieces).toEqual([{ kind: "monarch", cardNames: ["Long Card"] }]);
+      expect(elapsedMs).toBeLessThan(500);
+    });
+  });
+
   it("lists a piece once with every card that needs it, in name order", () => {
     expect(
       gamePiecesOf([QUEEN_MARCHESA, PALACE_JAILER, QUEEN_MARCHESA])
