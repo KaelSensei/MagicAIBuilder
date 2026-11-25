@@ -596,6 +596,7 @@
     "analysedAgo": "Analysé {time}",
     "addCommanderHint": "Ajoutez un commandant pour obtenir des suggestions",
     "retry": "Réessayer",
+    "loadFailed": "Les suggestions n'ont pas pu être chargées.",
     "limits": {
       "buildAllowanceExhausted": "Constructions IA du mois épuisées ({limit}). Elles se renouvellent le {date}. Vous pouvez toujours construire un deck à la main.",
       "suggestAllowanceExhausted": "Suggestions IA du mois épuisées ({limit}). Elles se renouvellent le {date}. Tout le reste fonctionne normalement.",
