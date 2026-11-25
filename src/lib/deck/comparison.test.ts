@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { aDeckCard } from "@/test/builders/card";
 import { compareDeckCards, compareDeckProfiles } from "./comparison";
 
 describe("compareDeckCards", () => {
@@ -137,5 +138,135 @@ describe("compareDeckProfiles", () => {
     );
 
     expect(result.roleDifferences).toEqual([]);
+  });
+});
+
+describe("compareDeckProfiles prices the deck you play", () => {
+  it("leaves the Sideboard and Considering cards out of each deck's price", () => {
+    const result = compareDeckProfiles(
+      [
+        aDeckCard({ id: "sol-ring", name: "Sol Ring", price: 2 }),
+        aDeckCard({
+          id: "rest",
+          name: "Rest in Peace",
+          price: 7,
+          zone: "sideboard",
+        }),
+      ],
+      [
+        aDeckCard({ id: "signet", name: "Arcane Signet", price: 1 }),
+        aDeckCard({
+          id: "cyclonic",
+          name: "Cyclonic Rift",
+          price: 30,
+          zone: "maybeboard",
+        }),
+      ]
+    );
+
+    expect([result.leftPrice, result.rightPrice]).toEqual([2, 1]);
+  });
+
+  it("counts the commander and the partner with the main deck", () => {
+    const result = compareDeckProfiles(
+      [
+        {
+          ...aDeckCard({ id: "tymna", name: "Tymna the Weaver", price: 4 }),
+          isCommander: true,
+        },
+        {
+          ...aDeckCard({
+            id: "thrasios",
+            name: "Thrasios, Triton Hero",
+            price: 3,
+          }),
+          isCommander: true,
+          isPartner: true,
+        },
+        aDeckCard({ id: "sol-ring", name: "Sol Ring", price: 2 }),
+      ],
+      [aDeckCard({ id: "signet", name: "Arcane Signet", price: 1 })]
+    );
+
+    expect(result.leftPrice).toBe(9);
+  });
+
+  it("leaves the companion out, as the builder's total does", () => {
+    const result = compareDeckProfiles(
+      [
+        aDeckCard({
+          id: "lurrus",
+          name: "Lurrus of the Dream-Den",
+          price: 5,
+          category: "companion",
+        }),
+        aDeckCard({ id: "sol-ring", name: "Sol Ring", price: 2 }),
+      ],
+      [aDeckCard({ id: "signet", name: "Arcane Signet", price: 1 })]
+    );
+
+    expect(result.leftPrice).toBe(2);
+  });
+
+  it("counts a row sent without a zone as a main-deck row", () => {
+    const result = compareDeckProfiles(
+      [
+        {
+          name: "Sol Ring",
+          quantity: 1,
+          cmc: 1,
+          price: 2,
+          colorIdentity: [],
+          category: "ramp",
+        },
+      ],
+      [
+        {
+          name: "Arcane Signet",
+          quantity: 2,
+          cmc: 2,
+          price: 1,
+          colorIdentity: [],
+          category: "ramp",
+        },
+      ]
+    );
+
+    expect([result.leftPrice, result.rightPrice]).toEqual([2, 2]);
+  });
+
+  it("currently reads every zone for the curve, colours and roles (pinned; see the I-37 follow-up)", () => {
+    const result = compareDeckProfiles(
+      [
+        aDeckCard({
+          id: "sol-ring",
+          name: "Sol Ring",
+          cmc: 1,
+          category: "ramp",
+        }),
+        aDeckCard({
+          id: "rest",
+          name: "Rest in Peace",
+          cmc: 3,
+          colorIdentity: ["W"],
+          category: "removal",
+          zone: "sideboard",
+        }),
+      ],
+      [
+        aDeckCard({
+          id: "signet",
+          name: "Arcane Signet",
+          cmc: 2,
+          category: "ramp",
+        }),
+      ]
+    );
+
+    expect(result.leftAverageCmc).toBe(2);
+    expect(result.onlyLeftColors).toEqual(["W"]);
+    expect(result.roleDifferences).toEqual([
+      { role: "removal", leftQuantity: 1, rightQuantity: 0 },
+    ]);
   });
 });

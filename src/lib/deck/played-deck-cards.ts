@@ -10,11 +10,18 @@
  */
 import type { DeckCard } from "./types";
 
+/**
+ * What the rule reads of a main-deck row: its zone. A builder card has one,
+ * and so does a deck API row, so the deck comparison prices a stored deck by
+ * the same rule as the builder.
+ */
+export type PlayedDeckRow = Pick<DeckCard, "zone">;
+
 /** The parts of a deck that decide which of its cards are played. */
-export interface PlayedDeckSource {
-  readonly commander: DeckCard | null;
-  readonly partner: DeckCard | null;
-  readonly cards: readonly DeckCard[];
+export interface PlayedDeckSource<Card extends PlayedDeckRow = DeckCard> {
+  readonly commander: Card | null;
+  readonly partner: Card | null;
+  readonly cards: readonly Card[];
 }
 
 /**
@@ -27,10 +34,12 @@ export interface PlayedDeckSource {
  * zone, so neither counts.
  *
  * @param deck - A deck, or the commander, partner and rows of one
- * @returns A new array; the deck is not changed
+ * @returns A new array of the same rows; the deck is not changed
  */
-export function playedDeckCards(deck: PlayedDeckSource): readonly DeckCard[] {
-  const played: DeckCard[] = [];
+export function playedDeckCards<Card extends PlayedDeckRow>(
+  deck: PlayedDeckSource<Card>
+): readonly Card[] {
+  const played: Card[] = [];
   if (deck.commander) played.push(deck.commander);
   if (deck.partner) played.push(deck.partner);
   for (const card of deck.cards) {
