@@ -1,3 +1,12 @@
+/**
+ * The single deck a signed-out player builds, kept in this browser's
+ * `localStorage` until they sign in and claim it (`guest-claim.ts`).
+ *
+ * Storage is best effort: when the browser blocks it or it is full, the guest
+ * deck lives in memory for the visit and nothing throws.
+ *
+ * @module lib/deck/guest-deck
+ */
 import type { Deck } from "./types";
 
 export const GUEST_DECK_ID = "guest";
@@ -80,22 +89,60 @@ export function deserializeGuestDeck(value: string | null): Deck | null {
   }
 }
 
-/** Reads the single guest deck from this browser. */
+/**
+ * Runs one operation on this browser's storage, or returns `fallback` when
+ * there is no browser or the browser refuses.
+ *
+ * Browsers throw rather than return: reading `window.localStorage` throws a
+ * `SecurityError` when site data is blocked (third-party or "block all
+ * cookies" settings, some embedded views), and `setItem` throws a
+ * `QuotaExceededError` when the quota is full and in some private modes. The
+ * guest deck is a convenience, so a refusal means "nothing stored" and the
+ * builder keeps the deck in memory for the visit.
+ */
+function withGuestStorage<T>(
+  operation: (storage: Storage) => T,
+  fallback: T
+): T {
+  if (typeof window === "undefined") return fallback;
+  try {
+    return operation(window.localStorage);
+  } catch {
+    return fallback;
+  }
+}
+
+/**
+ * Reads the single guest deck from this browser.
+ *
+ * @returns the saved deck, or null when none is saved, the value is malformed
+ *   or the browser blocks storage
+ */
 export function loadGuestDeck(): Deck | null {
-  if (typeof window === "undefined") return null;
-  return deserializeGuestDeck(
-    window.localStorage.getItem(GUEST_DECK_STORAGE_KEY)
+  return withGuestStorage(
+    (storage) => deserializeGuestDeck(storage.getItem(GUEST_DECK_STORAGE_KEY)),
+    null
   );
 }
 
-/** Persists the single guest deck in this browser. */
+/**
+ * Persists the single guest deck in this browser. Does nothing when the
+ * browser blocks storage or the quota is full: the deck stays in memory only.
+ *
+ * @param deck - the guest deck to keep
+ */
 export function saveGuestDeck(deck: Deck): void {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(GUEST_DECK_STORAGE_KEY, serializeGuestDeck(deck));
+  withGuestStorage((storage) => {
+    storage.setItem(GUEST_DECK_STORAGE_KEY, serializeGuestDeck(deck));
+  }, undefined);
 }
 
-/** Removes the guest deck from this browser, once an account holds a copy. */
+/**
+ * Removes the guest deck from this browser, once an account holds a copy.
+ * Does nothing when the browser blocks storage, which then holds no copy.
+ */
 export function clearGuestDeck(): void {
-  if (typeof window === "undefined") return;
-  window.localStorage.removeItem(GUEST_DECK_STORAGE_KEY);
+  withGuestStorage((storage) => {
+    storage.removeItem(GUEST_DECK_STORAGE_KEY);
+  }, undefined);
 }
