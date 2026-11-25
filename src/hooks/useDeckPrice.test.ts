@@ -88,7 +88,7 @@ describe("useDeckPrice", () => {
     expect(result.current.totalPrice).toBe(18.0);
   });
 
-  it("treats null price as zero in the sum", () => {
+  it("leaves a card with no price out of a partly priced total and counts it apart", () => {
     const deck = makeEmptyDeck();
     deck.cards = [
       makeCard({ id: "c1", price: null, quantity: 1 }),
@@ -112,6 +112,43 @@ describe("useDeckPrice", () => {
     const { result } = renderHook(() => useDeckPrice());
 
     expect(result.current.missingPriceCount).toBe(2);
+  });
+
+  it("gives no total, rather than 0, when no played card has a known price (I-01)", () => {
+    const deck = makeEmptyDeck();
+    deck.commander = makeCard({ id: "cmd", price: null });
+    deck.cards = [
+      makeCard({ id: "c1", price: null, quantity: 2 }),
+      makeCard({ id: "forest", typeLine: "Basic Land — Forest", price: null }),
+    ];
+    useDeckStore.setState({
+      decks: { [deck.id]: deck },
+      activeDeckId: deck.id,
+    });
+    const { result } = renderHook(() => useDeckPrice());
+
+    expect(result.current).toEqual({
+      totalPrice: null,
+      missingPriceCount: 3,
+      hasCards: true,
+      totalWithoutBasics: null,
+    });
+  });
+
+  it("gives a total of 0 for a deck whose only known price is $0", () => {
+    const deck = makeEmptyDeck();
+    deck.cards = [
+      makeCard({ id: "c1", price: null }),
+      makeCard({ id: "c2", price: 0 }),
+    ];
+    useDeckStore.setState({
+      decks: { [deck.id]: deck },
+      activeDeckId: deck.id,
+    });
+    const { result } = renderHook(() => useDeckPrice());
+
+    expect(result.current.totalPrice).toBe(0);
+    expect(result.current.missingPriceCount).toBe(1);
   });
 
   it("rounds the total to 2 decimal places", () => {
@@ -259,5 +296,19 @@ describe("useDeckPrice counts the deck you buy to play: the main deck and the co
       hasCards: false,
       totalWithoutBasics: null,
     });
+  });
+
+  it("gives no total when only Sideboard and Considering cards have a price", () => {
+    openInStore(
+      aDeck({
+        commander: aDeckCard({ id: "cmd", name: "Commander", price: null }),
+        cards: [sideboardCard, consideredCard],
+      })
+    );
+
+    const { result } = renderHook(() => useDeckPrice());
+
+    expect(result.current.totalPrice).toBeNull();
+    expect(result.current.missingPriceCount).toBe(1);
   });
 });
