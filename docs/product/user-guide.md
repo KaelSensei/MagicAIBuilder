@@ -448,7 +448,7 @@ The `/collection` page shows:
 
 - **Unique Cards** — how many distinct cards you own
 - **Total Cards** — total physical copies across all entries
-- **Total Value** — estimated value based on purchase prices entered
+- **Total Value** — each entry's quantity times its saved price, added up, in US dollars. The saved price is the Scryfall USD market price the app had for that printing when you first added it, or when you last changed its printing. It is not a purchase price, and it does not follow the market afterwards. It is the regular (non-foil) price, even for a foil copy, and an entry with no price counts as zero.
 
 Switch between **Grid view** (card art) and **List view** (table with quantity controls) using the icons in the top right.
 
