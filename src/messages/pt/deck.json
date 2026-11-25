@@ -103,7 +103,6 @@
     "sessionTimeoutTitle": "A sessão demorou demais",
     "sessionTimeoutDescription": "A verificação da conta não terminou. Os decks salvos não mudaram. Tente novamente.",
     "profileLoadFailed": "O perfil não pôde ser atualizado. Os decks salvos continuam disponíveis.",
-    "createFailed": "Não foi possível criar o deck — {reason}",
     "cardFilter": {
       "includeLabel": "Has the card",
       "excludeLabel": "Leaves out",
