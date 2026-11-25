@@ -63,6 +63,11 @@ import {
 } from "./deck-write-queue";
 import type { BulkEdit } from "./bulk-edit";
 import {
+  createDeckDetailSaves,
+  type DeckDetailField,
+  type DetailSave,
+} from "./deck-detail-saves";
+import {
   commandZoneOf,
   restoreCommanderAfterFailedSave,
   restorePartnerAfterFailedSave,
@@ -346,12 +351,11 @@ interface PendingCategoryWrite {
 
 const pendingCategoryWrites = new Map<string, PendingCategoryWrite>();
 
-let pendingManualBracketWrites = 0;
-let pendingBudgetWrites = 0;
+/** The name, description, brackets and budget saves still running, per deck. */
+const deckDetailSaves = createDeckDetailSaves();
 let pendingFormatWrites = 0;
 let pendingBulkRemovals = 0;
 let pendingCardAdditionsAndRemovals = 0;
-let pendingRenameWrites = 0;
 
 /**
  * The decks map with one deck's version replaced; the map itself when the
@@ -507,12 +511,10 @@ function hasPendingSaves(): boolean {
     pendingZoneWrites.size > 0 ||
     pendingNotesWrites.size > 0 ||
     pendingCategoryWrites.size > 0 ||
-    pendingManualBracketWrites > 0 ||
-    pendingBudgetWrites > 0 ||
+    deckDetailSaves.hasPending() ||
     pendingFormatWrites > 0 ||
     pendingBulkRemovals > 0 ||
-    pendingCardAdditionsAndRemovals > 0 ||
-    pendingRenameWrites > 0
+    pendingCardAdditionsAndRemovals > 0
   );
 }
 
@@ -710,7 +712,6 @@ export interface DeckStore {
 }
 
 let latestDeckListRequest = 0;
-const latestRenameRequests = new Map<string, symbol>();
 const latestTagSaves = new Map<string, symbol>();
 
 /** A tag save that may still need to be undone. */
@@ -855,6 +856,100 @@ function commanderCardOf(
 interface StoreAccess {
   readonly set: StoreApi<DeckStore>["setState"];
   readonly get: () => DeckStore;
+}
+
+/** A save of one deck detail through the whole-deck PATCH. */
+interface DeckDetailEdit<Field extends DeckDetailField> {
+  readonly deckId: string;
+  readonly field: Field;
+  readonly value: Deck[Field];
+  /** The same change, as the request carries it. */
+  readonly patch: deckApi.DeckMetadataPatch;
+  /** What a failure tells the player, while the deck is still held. */
+  readonly failureToast: ToastMessage;
+  /** The store action, for the log. */
+  readonly action: string;
+}
+
+/** The decks map with one detail of one deck set, or the state itself when the deck is gone. */
+function withDeckDetail<Field extends DeckDetailField>(
+  state: Pick<DeckStore, "decks">,
+  edit: Pick<DeckDetailEdit<Field>, "deckId" | "field" | "value">
+): Pick<DeckStore, "decks"> {
+  const deck = state.decks[edit.deckId];
+  if (!deck) return state;
+  return {
+    decks: {
+      ...state.decks,
+      [edit.deckId]: { ...deck, [edit.field]: edit.value },
+    },
+  };
+}
+
+/**
+ * Settles a failed detail save: the detail goes back to the newest value
+ * still being saved, else to its last saved one (`deck-detail-saves.ts`),
+ * unless a newer edit already replaced the failed value.
+ */
+function rollBackDeckDetail<Field extends DeckDetailField>(
+  { set, get }: StoreAccess,
+  edit: DeckDetailEdit<Field>,
+  save: DetailSave<Deck[Field]>
+): void {
+  const deck = get().decks[edit.deckId];
+  const rollback = save.failed(deck ? deck[edit.field] : edit.value);
+  if (rollback.kind === "keep") return;
+  set((state) => withDeckDetail(state, { ...edit, value: rollback.value }));
+}
+
+/**
+ * Saves one deck detail optimistically. A failure rolls the detail back
+ * (`rollBackDeckDetail`) and tells the player while the deck is still held;
+ * the save indicator stays on until every running save has settled.
+ *
+ * @param store - Store update and read
+ * @param edit - The deck, the detail, its new value and what a failure says
+ */
+async function saveDeckDetail<Field extends DeckDetailField>(
+  store: StoreAccess,
+  edit: DeckDetailEdit<Field>
+): Promise<void> {
+  const deck = store.get().decks[edit.deckId];
+  if (!deck) return;
+  const save = deckDetailSaves.begin({ ...edit, shown: deck[edit.field] });
+  store.set((state) => ({
+    decks: {
+      ...state.decks,
+      [edit.deckId]: {
+        ...deck,
+        [edit.field]: edit.value,
+        updatedAt: new Date(),
+      },
+    },
+  }));
+  store.set({ isSyncing: true });
+  try {
+    await deckApi.updateDeck(edit.deckId, edit.patch);
+    save.succeeded();
+  } catch (err) {
+    logger.error("Unexpected error", edit.action, err);
+    rollBackDeckDetail(store, edit, save);
+    if (store.get().decks[edit.deckId]) {
+      useToastStore.getState().add("error", edit.failureToast);
+    }
+  } finally {
+    store.set({ isSyncing: hasPendingSaves() });
+  }
+}
+
+/** {@link saveDeckDetail} on the open deck; nothing when no deck is open. */
+async function saveActiveDeckDetail<Field extends DeckDetailField>(
+  store: StoreAccess,
+  edit: Omit<DeckDetailEdit<Field>, "deckId">
+): Promise<void> {
+  const { activeDeckId } = store.get();
+  if (!activeDeckId) return;
+  await saveDeckDetail(store, { ...edit, deckId: activeDeckId });
 }
 
 /** A format save: the format written, and the one to restore if it fails. */
@@ -1498,46 +1593,15 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     }
   },
 
-  renameDeck: async (id: string, name: string) => {
-    const previousDeck = get().decks[id];
-    if (!previousDeck) return;
-    const request = Symbol();
-    latestRenameRequests.set(id, request);
-    pendingRenameWrites += 1;
-    // Optimistic update
-    set((state) => ({
-      decks: {
-        ...state.decks,
-        [id]: { ...state.decks[id], name, updatedAt: new Date() },
-      },
-    }));
-    set({ isSyncing: true });
-    try {
-      await deckApi.updateDeck(id, { name });
-    } catch (err) {
-      logger.error("Unexpected error", "renameDeck", err);
-      set((state) => {
-        const currentDeck = state.decks[id];
-        if (
-          latestRenameRequests.get(id) !== request ||
-          currentDeck?.name !== name
-        )
-          return state;
-        return {
-          decks: {
-            ...state.decks,
-            [id]: { ...currentDeck, name: previousDeck.name },
-          },
-        };
-      });
-      if (get().decks[id]) {
-        useToastStore.getState().add("error", DECK_FAILURE_TOASTS.rename);
-      }
-    } finally {
-      pendingRenameWrites -= 1;
-      set({ isSyncing: hasPendingSaves() });
-    }
-  },
+  renameDeck: (id: string, name: string) =>
+    saveDeckDetail({ set, get }, {
+      deckId: id,
+      field: "name",
+      value: name,
+      patch: { name },
+      failureToast: DECK_FAILURE_TOASTS.rename,
+      action: "renameDeck",
+    }),
 
   setActiveDeck: async (id: string) => {
     if (isGuestDeckId(id)) {
@@ -1578,42 +1642,15 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     }
   },
 
-  updateDeckDescription: async (deckId: string, description: string) => {
-    const previousDeck = get().decks[deckId];
-    if (!previousDeck) return;
-    // Optimistic update
-    set((state) => ({
-      decks: {
-        ...state.decks,
-        [deckId]: {
-          ...state.decks[deckId],
-          description,
-          updatedAt: new Date(),
-        },
-      },
-    }));
-    set({ isSyncing: true });
-    try {
-      await deckApi.updateDeck(deckId, { description });
-    } catch (err) {
-      logger.error("Unexpected error", "updateDeckDescription", err);
-      set((state) => {
-        const currentDeck = state.decks[deckId];
-        if (currentDeck?.description !== description) return state;
-        return {
-          decks: {
-            ...state.decks,
-            [deckId]: { ...currentDeck, description: previousDeck.description },
-          },
-        };
-      });
-      if (get().decks[deckId]) {
-        useToastStore.getState().add("error", DECK_FAILURE_TOASTS.description);
-      }
-    } finally {
-      set({ isSyncing: hasPendingSaves() });
-    }
-  },
+  updateDeckDescription: (deckId: string, description: string) =>
+    saveDeckDetail({ set, get }, {
+      deckId,
+      field: "description",
+      value: description,
+      patch: { description },
+      failureToast: DECK_FAILURE_TOASTS.description,
+      action: "updateDeckDescription",
+    }),
 
   addTag: async (deckId: string, tag: string) => {
     const current = get().decks[deckId];
@@ -2516,142 +2553,32 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     }
   },
 
-  setTargetBracket: async (bracket) => {
-    const { activeDeckId } = get();
-    if (!activeDeckId) return;
-    const previousDeck = get().decks[activeDeckId];
-    if (!previousDeck) return;
+  setTargetBracket: (bracket) =>
+    saveActiveDeckDetail({ set, get }, {
+      field: "targetBracket",
+      value: bracket,
+      patch: { targetBracket: bracket },
+      failureToast: DECK_FAILURE_TOASTS.targetBracket,
+      action: "setTargetBracket",
+    }),
 
-    // Optimistic update
-    set((state) => ({
-      decks: {
-        ...state.decks,
-        [activeDeckId]: {
-          ...state.decks[activeDeckId],
-          targetBracket: bracket,
-          updatedAt: new Date(),
-        },
-      },
-    }));
+  setManualBracket: (bracket) =>
+    saveActiveDeckDetail({ set, get }, {
+      field: "manualBracket",
+      value: bracket,
+      patch: { manualBracket: bracket },
+      failureToast: DECK_FAILURE_TOASTS.manualBracket,
+      action: "setManualBracket",
+    }),
 
-    set({ isSyncing: true });
-    try {
-      await deckApi.updateDeck(activeDeckId, { targetBracket: bracket });
-    } catch (err) {
-      logger.error("Unexpected error", "setTargetBracket", err);
-      set((state) => {
-        const currentDeck = state.decks[activeDeckId];
-        if (currentDeck?.targetBracket !== bracket) return state;
-        return {
-          decks: {
-            ...state.decks,
-            [activeDeckId]: {
-              ...currentDeck,
-              targetBracket: previousDeck.targetBracket,
-            },
-          },
-        };
-      });
-      if (get().decks[activeDeckId]) {
-        useToastStore
-          .getState()
-          .add("error", DECK_FAILURE_TOASTS.targetBracket);
-      }
-    } finally {
-      set({ isSyncing: hasPendingSaves() });
-    }
-  },
-
-  setManualBracket: async (bracket) => {
-    const { activeDeckId } = get();
-    if (!activeDeckId) return;
-    const previousDeck = get().decks[activeDeckId];
-    if (!previousDeck) return;
-
-    // Optimistic update
-    set((state) => ({
-      decks: {
-        ...state.decks,
-        [activeDeckId]: {
-          ...state.decks[activeDeckId],
-          manualBracket: bracket,
-          updatedAt: new Date(),
-        },
-      },
-    }));
-
-    set({ isSyncing: true });
-    try {
-      pendingManualBracketWrites += 1;
-      await deckApi.updateDeck(activeDeckId, { manualBracket: bracket });
-    } catch (err) {
-      logger.error("Unexpected error", "setManualBracket", err);
-      set((state) => {
-        const currentDeck = state.decks[activeDeckId];
-        if (currentDeck?.manualBracket !== bracket) return state;
-        return {
-          decks: {
-            ...state.decks,
-            [activeDeckId]: {
-              ...currentDeck,
-              manualBracket: previousDeck.manualBracket,
-            },
-          },
-        };
-      });
-      if (get().decks[activeDeckId]) {
-        useToastStore
-          .getState()
-          .add("error", DECK_FAILURE_TOASTS.manualBracket);
-      }
-    } finally {
-      pendingManualBracketWrites -= 1;
-      set({ isSyncing: hasPendingSaves() });
-    }
-  },
-
-  setBudget: async (budget) => {
-    const { activeDeckId } = get();
-    if (!activeDeckId) return;
-    const previousDeck = get().decks[activeDeckId];
-    if (!previousDeck) return;
-
-    // Optimistic update
-    set((state) => ({
-      decks: {
-        ...state.decks,
-        [activeDeckId]: {
-          ...state.decks[activeDeckId],
-          budget,
-          updatedAt: new Date(),
-        },
-      },
-    }));
-
-    pendingBudgetWrites += 1;
-    set({ isSyncing: true });
-    try {
-      await deckApi.updateDeck(activeDeckId, { budget });
-    } catch (err) {
-      logger.error("Unexpected error", "setBudget", err);
-      set((state) => {
-        const currentDeck = state.decks[activeDeckId];
-        if (currentDeck?.budget !== budget) return state;
-        return {
-          decks: {
-            ...state.decks,
-            [activeDeckId]: { ...currentDeck, budget: previousDeck.budget },
-          },
-        };
-      });
-      if (get().decks[activeDeckId]) {
-        useToastStore.getState().add("error", DECK_FAILURE_TOASTS.budget);
-      }
-    } finally {
-      pendingBudgetWrites -= 1;
-      set({ isSyncing: hasPendingSaves() });
-    }
-  },
+  setBudget: (budget) =>
+    saveActiveDeckDetail({ set, get }, {
+      field: "budget",
+      value: budget,
+      patch: { budget },
+      failureToast: DECK_FAILURE_TOASTS.budget,
+      action: "setBudget",
+    }),
 
   setFormat: async (format) => {
     const { activeDeckId } = get();
