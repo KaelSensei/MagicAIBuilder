@@ -304,7 +304,8 @@ describe("duplicating a deck", () => {
       ])
     );
     expect(toastTexts().join(" ")).not.toContain("HTTP 500");
-    expect(duplicate).toBeEnabled();
+    // The toast is raised before the page clears its spinner, so wait for it.
+    await waitFor(() => expect(duplicate).toBeEnabled());
     expect(push).not.toHaveBeenCalled();
   });
 
@@ -340,7 +341,8 @@ describe("duplicating a deck", () => {
         "Could not duplicate the deck. Please try again.",
       ])
     );
-    expect(duplicate).toBeEnabled();
+    // The toast is raised before the page clears its spinner, so wait for it.
+    await waitFor(() => expect(duplicate).toBeEnabled());
     expect(push).not.toHaveBeenCalled();
   });
 
