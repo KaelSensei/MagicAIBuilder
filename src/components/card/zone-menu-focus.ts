@@ -1,8 +1,9 @@
 /**
- * Keyboard focus inside the zone menu of a search result.
+ * Keyboard focus inside the zone menu of a search result, and out of it.
  *
  * Card catalog, search results. The arrow keys, Home and End move focus among
- * the menu's items; `ZoneChoiceMenu` calls these on open and on a key.
+ * the menu's items; Tab moves it on to the tab stop after the menu's trigger.
+ * `ZoneChoiceMenu` calls these on open and on a key.
  *
  * Not responsible for: placing the menu or closing it. Those stay in the
  * component.
@@ -80,6 +81,51 @@ function zoneMenuDirection(key: string): 1 | -1 | ZoneMenuInitialFocus | null {
     default:
       return null;
   }
+}
+
+/**
+ * Elements a browser may put in the tab order. Each one is still tried with
+ * `focus()`, so a disabled, hidden or inert candidate is skipped, as the
+ * browser's own Tab skips it.
+ */
+const TAB_STOP_CANDIDATES =
+  "a[href], area[href], button, input, select, textarea, summary, iframe, [contenteditable='true'], [tabindex]";
+
+/**
+ * The document's tab stops in document order. A positive `tabindex` is not
+ * moved to the front as a browser would; the app sets none.
+ *
+ * @param root - The document to read
+ * @returns The candidates whose `tabIndex` is not negative
+ */
+function tabStops(root: Document): readonly HTMLElement[] {
+  const stops: HTMLElement[] = [];
+  for (const node of root.querySelectorAll(TAB_STOP_CANDIDATES)) {
+    if (node instanceof HTMLElement && node.tabIndex >= 0) stops.push(node);
+  }
+  return stops;
+}
+
+/**
+ * Focuses the first tab stop after an element, as Tab from that element would.
+ * The zone menu is drawn at the end of the document, so the browser's own Tab
+ * from it would skip the rest of the results; for the keyboard, the menu sits
+ * right after its trigger, and Tab moves on from there.
+ *
+ * @param anchor - The element Tab starts from; a tab stop itself, such as the
+ *   menu's trigger button
+ * @returns True when an element took focus; false when the anchor is not a tab
+ *   stop or no element after it accepts focus
+ */
+export function focusTabStopAfter(anchor: HTMLElement): boolean {
+  const stops = tabStops(anchor.ownerDocument);
+  const start = stops.indexOf(anchor);
+  if (start === -1) return false;
+  for (const stop of stops.slice(start + 1)) {
+    stop.focus();
+    if (anchor.ownerDocument.activeElement === stop) return true;
+  }
+  return false;
 }
 
 /**
