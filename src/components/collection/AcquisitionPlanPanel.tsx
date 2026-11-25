@@ -7,11 +7,11 @@ import { z } from "zod";
 import { formatAcquisitionCsv } from "@/lib/collection/acquisition-csv";
 import { summarizeAcquisitionPlan } from "@/lib/collection/acquisition-plan-summary";
 import { downloadTextFile } from "@/lib/download-text-file";
-import { Link } from "@/i18n/navigation";
 import { formatUsdPrice } from "@/i18n/number-format";
 import { cardSurfaceClassName } from "@/components/ui/Card";
 import { fieldShellClassName } from "@/components/ui/Input";
 import { cn } from "@/components/ui/utils";
+import { DeckBuilderLink } from "./DeckBuilderLink";
 import { DeferredPlanGroup } from "./DeferredPlanGroup";
 
 // The two deferred fields default to "nothing deferred" so a response from a server
@@ -204,9 +204,7 @@ export function AcquisitionPlanPanel() {
                         {item.decks.map((deck, index) => (
                           <span key={deck.id}>
                             {index > 0 && " · "}
-                            <Link href={`/builder/${deck.id}`} className="hover:text-[var(--accent-text)] hover:underline focus-visible:underline">
-                              {deck.name}
-                            </Link>
+                            <DeckBuilderLink deckId={deck.id}>{deck.name}</DeckBuilderLink>
                             <span className="ml-1">{usage("copies", { count: deck.quantity })}</span>
                           </span>
                         ))}

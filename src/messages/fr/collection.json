@@ -39,8 +39,8 @@
     "toAcquire": "{count} à acquérir",
     "deferredTitle": "Reporté · {count, plural, one {# exemplaire} other {# exemplaires}}",
     "deferredHint": "Exemplaires que tu as choisi de proxy ou d’acheter plus tard dans la liste d’achats d’un deck. Ils ne comptent ni dans le total ni dans le CSV.",
-    "proxyNowFor": "Proxy pour l’instant — {deck}",
-    "buyLaterFor": "Acheter plus tard — {deck}"
+    "proxyNowFor": "Proxy pour l’instant — <link>{deck}</link>",
+    "buyLaterFor": "Acheter plus tard — <link>{deck}</link>"
   },
   "loading": "Chargement de la collection…",
   "loadFailed": "Impossible d’actualiser votre collection. Vos cartes enregistrées sont inchangées.",
