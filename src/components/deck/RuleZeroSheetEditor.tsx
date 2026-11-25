@@ -27,19 +27,33 @@ interface RuleZeroSheetEditorProps {
   readonly onSave: (draft: RuleZeroSheetDraft) => void;
 }
 
+/** The `ruleZero` message the status line reads, or null when it stays empty. */
+type SheetStatusKey = "invalid" | "unavailable" | "saved";
+
+/**
+ * Picks the status line: an invalid sheet first, then an unavailable save,
+ * then a confirmed save.
+ *
+ * @param localInvalid - True when the form refused the draft before saving
+ * @param outcome - The last save's problem and whether it succeeded
+ * @returns The message key, or null for an empty status line
+ */
+function sheetStatusKey(
+  localInvalid: boolean,
+  outcome: Pick<RuleZeroSheetEditorProps, "problem" | "saved">
+): SheetStatusKey | null {
+  if (localInvalid || outcome.problem === "invalid") return "invalid";
+  if (outcome.problem === "unavailable") return "unavailable";
+  return outcome.saved ? "saved" : null;
+}
+
 /** Declared fields, a disclaimer, and a save action. */
 export function RuleZeroSheetEditor(props: RuleZeroSheetEditorProps) {
   const t = useTranslations("ruleZero");
   const titleId = useId();
   const form = useRuleZeroForm(props.initial, props.onSave);
-  const status =
-    form.localInvalid || props.problem === "invalid"
-      ? t("invalid")
-      : props.problem === "unavailable"
-        ? t("unavailable")
-        : props.saved
-          ? t("saved")
-          : "";
+  const statusKey = sheetStatusKey(form.localInvalid, props);
+  const status = statusKey === null ? "" : t(statusKey);
 
   return (
     <form
