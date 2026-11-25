@@ -248,3 +248,22 @@ describe("the Collection switch on the deck's rows", () => {
     );
   });
 });
+
+describe("the Owned and Buy badges on the Grid view's cards", () => {
+  setupMsw(
+    http.get("/api/cache/search", () =>
+      HttpResponse.json({ hit: true, data: EMPTY_SEARCH_RESPONSE })
+    )
+  );
+
+  it("marks a grid card the collection owns as Owned, named as on its list row", () => {
+    ownPrintings("sol-ring-c21");
+
+    renderInView(aDeck({ cards: [SOL_RING] }), "grid");
+
+    expect(screen.getByText("Owned")).toBeInTheDocument();
+    expect(
+      screen.getByText("Owned: 1 copy of this printing in your collection")
+    ).toBeInTheDocument();
+  });
+});
