@@ -1,6 +1,7 @@
 // Deck statistics computation
 import type { Deck, DeckCard } from "./types";
 import { playedDeckCards } from "./played-deck-cards";
+import { averageManaValue } from "./average-mana-value";
 import type { DeckStats } from "./analysis-types";
 import { detectThemes } from "./themes";
 import { extractColorPips } from "@/lib/mana/parse";
@@ -51,13 +52,8 @@ export function computeDeckStats(deck: Deck): DeckStats {
   const manaCurve = buildManaCurve(nonLandCards);
   const colorDistribution = buildColorDistribution(nonLandCards);
 
-  // Avg CMC (excluding lands and commander, main zone only)
-  const cmcCards = mainCards.filter((c) => c.category !== "land");
-  const avgCmc =
-    cmcCards.length > 0
-      ? cmcCards.reduce((sum, c) => sum + c.cmc * c.quantity, 0) /
-        cmcCards.reduce((sum, c) => sum + c.quantity, 0)
-      : 0;
+  // The deck's rows, without the command zone: the shared deck view reads the same rule.
+  const roundedAvgCmc = averageManaValue(deck.cards);
 
   // Category counts
   const lands = allCards.filter((c) => c.category === "land").reduce((s, c) => s + c.quantity, 0);
@@ -94,8 +90,6 @@ export function computeDeckStats(deck: Deck): DeckStats {
   const themes = detectThemes(allCards.filter((c) => c.category !== "land"));
 
   const flexibleLands = allCards.filter((c) => c.isFlexibleLand === true).reduce((s, c) => s + c.quantity, 0);
-
-  const roundedAvgCmc = Math.round(avgCmc * 100) / 100;
 
   return {
     formatStats: buildFormatStats(deck.format, allCards, roundedAvgCmc),
