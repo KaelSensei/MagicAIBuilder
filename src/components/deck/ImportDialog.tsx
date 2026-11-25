@@ -428,7 +428,9 @@ export function ImportDialog({
           {/* URL tab */}
           {activeTab === "url" && (
             <>
-              <ImportFromUrlTab onSuccess={() => setOpen(false)} />
+              {/* A successful import closes like any other close, so the
+                  next opening starts on the Plain Text tab with empty fields. */}
+              <ImportFromUrlTab onSuccess={handleClose} />
               <div className="flex justify-end">
                 <Button type="button" variant="secondary" size="sm" onClick={handleClose}>
                   {t("import.close")}
