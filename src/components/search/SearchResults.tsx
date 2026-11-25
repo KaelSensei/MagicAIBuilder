@@ -3,13 +3,16 @@
  * The search panel's result list, as a grid or a list, with its count and its empty states.
  *
  * Card catalog context, search panel. The builder page feeds it from `useCardSearchResults`;
- * with "Collection only" on, the notices of `CollectionOnlyNotice` explain what the list holds.
+ * with "Collection only" on, `CollectionOnlyCoverageNote` says how much of the search was checked.
+ * Every state keeps the same status region mounted, so a screen reader announces the search as it
+ * moves from "Searching…" to its count, its empty message or the reason nothing was searched; the
+ * error is an alert of its own (`search-results-view.ts` says why).
  *
  * @module components/search/SearchResults
  */
 import { useMemo } from "react";
 import { useTranslations } from "next-intl";
-import { Loader2, AlertCircle, LayoutGrid, List } from "lucide-react";
+import { Loader2, AlertCircle, LayoutGrid, List, Package } from "lucide-react";
 import { CardGrid } from "@/components/card/CardGrid";
 import { CardSearchListItem } from "@/components/card/CardSearchListItem";
 import { useDeckStore } from "@/lib/deck/store";
@@ -17,10 +20,11 @@ import { countCopiesByZone } from "@/lib/deck/zone-source";
 import type { DeckZone } from "@/lib/deck/types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import type { CollectionOnlyState } from "@/hooks/useCardSearchResults";
+import { CollectionOnlyCoverageNote } from "./CollectionOnlyNotice";
 import {
-  CollectionOnlyBlockedState,
-  CollectionOnlyCoverageNote,
-} from "./CollectionOnlyNotice";
+  searchResultsView,
+  type SearchResultsPhase,
+} from "./search-results-view";
 
 interface SearchResultsProps {
   readonly cards: readonly ScryfallCard[];
@@ -37,25 +41,153 @@ interface SearchResultsProps {
   readonly executedQuery?: string;
 }
 
+/** The box around the status line: centred for a message, a header row above a list. */
+const FRAME_CLASS: Readonly<Record<SearchResultsPhase, string>> = {
+  searching:
+    "flex items-center justify-center h-40 text-[var(--text-secondary)]",
+  failed: "flex flex-col items-center justify-center h-40 text-red-400 gap-2",
+  blocked:
+    "flex h-40 flex-col items-center justify-center gap-2 px-6 text-center text-sm text-[var(--text-secondary)]",
+  empty:
+    "flex flex-col items-center justify-center h-40 text-[var(--text-secondary)] text-sm",
+  listed: "flex items-center justify-between px-3 py-1.5",
+};
+
+/** How the status line reads in each layout; an empty one is kept for screen readers only. */
+const STATUS_CLASS: Readonly<Record<SearchResultsPhase, string | undefined>> = {
+  searching: undefined,
+  failed: undefined,
+  blocked: "block",
+  empty: "block",
+  listed: "text-xs text-[var(--text-secondary)]",
+};
+
+function PhaseIcon({ phase }: { readonly phase: SearchResultsPhase }) {
+  switch (phase) {
+    case "searching":
+      return <Loader2 className="w-5 h-5 animate-spin mr-2" />;
+    case "failed":
+      return <AlertCircle className="w-5 h-5" />;
+    case "blocked":
+      return <Package className="h-5 w-5" aria-hidden="true" />;
+    case "empty":
+    case "listed":
+      return null;
+    default: {
+      const unhandled: never = phase;
+      return unhandled;
+    }
+  }
+}
+
 /**
  * Shows, in this order of precedence: a spinner while loading, the error, a "Collection only"
  * notice when there was no collection to filter by, an empty state, or the cards with their count.
+ * The status line between them is one `<output>` that every state keeps mounted.
  */
-export function SearchResults({
+export function SearchResults(props: SearchResultsProps) {
+  const { cards, error, collectionOnly, executedQuery } = props;
+  const t = useTranslations("search");
+  const { phase, status } = searchResultsView({
+    isLoading: props.isLoading,
+    error,
+    cardCount: cards.length,
+    totalCards: props.totalCards,
+    collectionOnly,
+  });
+  const statusText = status ? t(status.key, status.values) : "";
+  const coverageNote = collectionOnly?.kind === "scanned" && (
+    <CollectionOnlyCoverageNote
+      scannedCards={collectionOnly.scannedCards}
+      totalMatches={collectionOnly.totalMatches}
+      complete={collectionOnly.complete}
+    />
+  );
+
+  return (
+    <div className="flex flex-col">
+      <div className={FRAME_CLASS[phase]}>
+        <PhaseIcon phase={phase} />
+        <output
+          aria-live="polite"
+          aria-atomic="true"
+          className={statusText ? STATUS_CLASS[phase] : "sr-only"}
+        >
+          {statusText}
+        </output>
+        {phase === "failed" && error ? (
+          <p role="alert" className="text-sm">
+            {error.message}
+          </p>
+        ) : null}
+        {phase === "empty" ? (
+          <>
+            {executedQuery ? (
+              <p className="mt-2 max-w-full truncate px-4 text-center font-mono text-xs">
+                {t("executedQuery", { query: executedQuery })}
+              </p>
+            ) : null}
+            {coverageNote}
+          </>
+        ) : null}
+        {phase === "listed" ? <ViewModeToggle /> : null}
+      </div>
+      {phase === "listed" ? (
+        <>
+          {coverageNote}
+          <ResultCards {...props} />
+        </>
+      ) : null}
+    </div>
+  );
+}
+
+/** Switches the list between card images and compact rows. */
+function ViewModeToggle() {
+  const t = useTranslations("search");
+  const viewMode = useDeckStore((s) => s.searchViewMode);
+  const setViewMode = useDeckStore((s) => s.setSearchViewMode);
+  return (
+    <div className="flex items-center gap-1 ml-auto">
+      <button
+        type="button"
+        onClick={() => setViewMode("grid")}
+        className={`p-1 rounded transition-colors ${
+          viewMode === "grid"
+            ? "text-[var(--accent-text)]"
+            : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+        }`}
+        title={t("gridView")}
+        aria-label={t("gridView")}
+      >
+        <LayoutGrid className="w-3.5 h-3.5" />
+      </button>
+      <button
+        type="button"
+        onClick={() => setViewMode("list")}
+        className={`p-1 rounded transition-colors ${
+          viewMode === "list"
+            ? "text-[var(--accent-text)]"
+            : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+        }`}
+        title={t("listView")}
+        aria-label={t("listView")}
+      >
+        <List className="w-3.5 h-3.5" />
+      </button>
+    </div>
+  );
+}
+
+/** The cards, as a grid or as rows, each marked with its copies in the active deck. */
+function ResultCards({
   cards,
-  isLoading,
-  error,
-  totalCards,
   onCardClick,
   onAddToMaybeboard,
   onAddToZone,
   draggable = false,
-  collectionOnly,
-  executedQuery,
 }: SearchResultsProps) {
-  const t = useTranslations("search");
   const viewMode = useDeckStore((s) => s.searchViewMode);
-  const setViewMode = useDeckStore((s) => s.setSearchViewMode);
   const activeDeck = useDeckStore((s) =>
     s.activeDeckId ? s.decks[s.activeDeckId] : null
   );
@@ -64,122 +196,33 @@ export function SearchResults({
   );
   const zoneCounts = useMemo(() => countCopiesByZone(activeDeck), [activeDeck]);
 
-  if (isLoading) {
+  if (viewMode === "grid") {
     return (
-      <div className="flex items-center justify-center h-40 text-[var(--text-secondary)]">
-        <Loader2 className="w-5 h-5 animate-spin mr-2" />
-        {t("searching")}
-      </div>
+      <CardGrid
+        cards={cards}
+        onCardClick={onCardClick}
+        onAddToMaybeboard={onAddToMaybeboard}
+        onAddToZone={onAddToZone}
+        zoneCounts={zoneCounts}
+        maybeboardNames={maybeboardNames}
+        draggable={draggable}
+      />
     );
   }
-
-  if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center h-40 text-red-400 gap-2">
-        <AlertCircle className="w-5 h-5" />
-        <p className="text-sm">{error.message}</p>
-      </div>
-    );
-  }
-
-  if (collectionOnly && collectionOnly.kind !== "scanned") {
-    return <CollectionOnlyBlockedState state={collectionOnly} />;
-  }
-
-  const coverageNote = collectionOnly && (
-    <CollectionOnlyCoverageNote
-      scannedCards={collectionOnly.scannedCards}
-      totalMatches={collectionOnly.totalMatches}
-      complete={collectionOnly.complete}
-    />
-  );
-
-  if (cards.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center h-40 text-[var(--text-secondary)] text-sm">
-        <p>{t(collectionOnly ? "collectionOnly.noMatch" : "noResults")}</p>
-        {executedQuery ? (
-          <p className="mt-2 max-w-full truncate px-4 text-center font-mono text-xs">
-            {t("executedQuery", { query: executedQuery })}
-          </p>
-        ) : null}
-        {coverageNote}
-      </div>
-    );
-  }
-
   return (
-    <div className="flex flex-col">
-      {/* Header: count + view toggle */}
-      <div className="flex items-center justify-between px-3 py-1.5">
-        {collectionOnly ? (
-          <p className="text-xs text-[var(--text-secondary)]">
-            {t("collectionOnly.ownedCount", { count: cards.length })}
-          </p>
-        ) : (
-          totalCards != null && (
-            <p className="text-xs text-[var(--text-secondary)]">
-              {t("resultCount", { count: totalCards })}
-            </p>
-          )
-        )}
-        <div className="flex items-center gap-1 ml-auto">
-          <button
-            type="button"
-            onClick={() => setViewMode("grid")}
-            className={`p-1 rounded transition-colors ${
-              viewMode === "grid"
-                ? "text-[var(--accent-text)]"
-                : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-            }`}
-            title={t("gridView")}
-            aria-label={t("gridView")}
-          >
-            <LayoutGrid className="w-3.5 h-3.5" />
-          </button>
-          <button
-            type="button"
-            onClick={() => setViewMode("list")}
-            className={`p-1 rounded transition-colors ${
-              viewMode === "list"
-                ? "text-[var(--accent-text)]"
-                : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-            }`}
-            title={t("listView")}
-            aria-label={t("listView")}
-          >
-            <List className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      </div>
-      {coverageNote}
-
-      {viewMode === "grid" ? (
-        <CardGrid
-          cards={cards}
-          onCardClick={onCardClick}
+    <div className="px-1 py-1">
+      {cards.map((card) => (
+        <CardSearchListItem
+          key={card.id}
+          card={card}
+          onClick={onCardClick}
           onAddToMaybeboard={onAddToMaybeboard}
           onAddToZone={onAddToZone}
           zoneCounts={zoneCounts}
-          maybeboardNames={maybeboardNames}
+          isInMaybeboard={maybeboardNames.has(card.name)}
           draggable={draggable}
         />
-      ) : (
-        <div className="px-1 py-1">
-          {cards.map((card) => (
-            <CardSearchListItem
-              key={card.id}
-              card={card}
-              onClick={onCardClick}
-              onAddToMaybeboard={onAddToMaybeboard}
-              onAddToZone={onAddToZone}
-              zoneCounts={zoneCounts}
-              isInMaybeboard={maybeboardNames.has(card.name)}
-              draggable={draggable}
-            />
-          ))}
-        </div>
-      )}
+      ))}
     </div>
   );
 }
