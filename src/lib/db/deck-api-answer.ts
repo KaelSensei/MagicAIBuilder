@@ -45,6 +45,17 @@ export function isStaleDeckRefusal(error: unknown): boolean {
   return error instanceof DeckApiError && error.status === 409;
 }
 
+/**
+ * Whether a request failed because the player's session ended: the routes'
+ * 401 (`requireAuth`, `requireDeckOwner`). Signing in again helps; trying
+ * again does not.
+ *
+ * @param error - what a deck or snapshot client threw
+ */
+export function isSignedOutRefusal(error: unknown): boolean {
+  return error instanceof DeckApiError && error.status === 401;
+}
+
 /** The deck's new version beside a write's answer; absent for a guest deck, which keeps none. */
 export interface VersionedAnswer {
   readonly version?: number;
