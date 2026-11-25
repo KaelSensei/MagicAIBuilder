@@ -46,10 +46,14 @@ const SAVE_FAILURE_MESSAGES: Readonly<
 /**
  * Whether the save was not made because the deck changed elsewhere: the
  * server refused it as stale (409), or the queue dropped it behind an earlier
- * write of the deck that was. Either way the store has reloaded the deck and
- * raised the conflict toast, so the list now shows the deck as it is.
+ * write of the deck that was. Either way the store reloads the deck and
+ * raises the conflict toast, and the dialog puts the reloaded list in place of
+ * the player's text, as `bulkEdit.conflictReloaded` tells them.
+ *
+ * @param error - what the save threw
+ * @returns true for a stale refusal or a write dropped behind one
  */
-function isConflict(error: unknown): boolean {
+export function isDeckConflict(error: unknown): boolean {
   return isStaleDeckRefusal(error) || error instanceof DroppedDeckWriteError;
 }
 
@@ -66,6 +70,6 @@ export function bulkEditFailureMessageKey(
   error: unknown
 ): BulkEditFailureMessageKey {
   if (error instanceof CardLookupError) return "bulkEdit.lookupFailed";
-  if (isConflict(error)) return "bulkEdit.conflictReloaded";
+  if (isDeckConflict(error)) return "bulkEdit.conflictReloaded";
   return SAVE_FAILURE_MESSAGES[deckRequestFailureOf(error)];
 }
