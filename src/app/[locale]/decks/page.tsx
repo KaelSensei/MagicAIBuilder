@@ -19,6 +19,7 @@ import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { useDeckStore } from "@/lib/deck/store";
 import { useDeckCreateFailureReport } from "@/hooks/useDeckFailureReport";
+import { useDeckDeletion } from "@/hooks/useDeckDeletion";
 import { useDeckDuplication } from "@/hooks/useDeckDuplication";
 import { DeckListTable } from "@/components/deck/DeckListTable";
 import { DecksHomeControls } from "@/components/deck/DecksHomeControls";
@@ -56,8 +57,8 @@ export default function DecksPage() {
   const { status: sessionStatus, timedOut, retry: retrySession } = useBoundedSession();
   const { initializationStatus, retryInitialization } = useInitContext();
   const router = useRouter();
-  const { decks, createDeck, loadDecks, isSyncing, deleteDeck, loadError } =
-    useDeckStore();
+  const { decks, createDeck, loadDecks, isSyncing, loadError } = useDeckStore();
+  const deleteDeck = useDeckDeletion();
   const reportCreateFailure = useDeckCreateFailureReport();
   const [isLoading, setIsLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -118,12 +119,9 @@ export default function DecksPage() {
       }
 
       setDeletingId(id);
-      try {
-        await deleteDeck(id);
-        refreshCardSearch();
-      } finally {
-        setDeletingId(null);
-      }
+      // A failed delete is told in a toast; the deck stays listed.
+      if (await deleteDeck(id)) refreshCardSearch();
+      setDeletingId(null);
     },
     [deleteDeck, refreshCardSearch, t]
   );
