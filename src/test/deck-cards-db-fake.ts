@@ -1,7 +1,8 @@
 /**
  * In-memory `Deck` and `DeckCard` tables with the commit rule of a Prisma
- * interactive transaction, for the card routes under `/api/decks/[id]/cards`
- * and the command-zone route `/api/decks/[id]/command-zone`.
+ * interactive transaction, for the card routes under `/api/decks/[id]/cards`,
+ * the command-zone route `/api/decks/[id]/command-zone`, and a snapshot
+ * restore followed by a card write.
  *
  * Why: those routes must change a card, the deck's `updatedAt` and its
  * `version` together or not at all (B2-09, and the optimistic lock of
@@ -107,6 +108,22 @@ interface DeckLookup {
   readonly select?: { readonly cards?: { readonly where?: Filter } };
 }
 
+/**
+ * The `data` of a `deck.update`: plain columns, and the version either set or
+ * stepped by Prisma's `{ increment }`, as a snapshot restore steps it
+ * (`deckVersionStep`).
+ */
+type DeckUpdate = Omit<Partial<FakeCardsDeck>, "version"> & {
+  readonly version?: number | { readonly increment: number };
+};
+
+/** @returns The deck's version after an update whose `data.version` is `value`. */
+function updatedVersion(current: number, value: DeckUpdate["version"]): number {
+  if (value === undefined) return current;
+  if (typeof value === "number") return value;
+  return current + value.increment;
+}
+
 /** The `where` and `data` of the version claim (`deck.updateMany`). */
 interface VersionClaim {
   readonly where: { readonly id: string; readonly version?: number };
@@ -125,6 +142,7 @@ function createDeckCardsDb() {
   const stored: Tables = { deck: CARDS_DECK, cards: [] };
   let failDeckTouch = false;
   let failCardWrite = false;
+  let failCardInsert = false;
   let createdCount = 0;
 
   /** Throws once when a test planned the deck write to fail. */
@@ -139,6 +157,13 @@ function createDeckCardsDb() {
     if (!failCardWrite) return;
     failCardWrite = false;
     throw new Error("card write failed");
+  };
+
+  /** Throws once when a test planned the bulk insert to fail. */
+  const throwIfCardInsertFails = (): void => {
+    if (!failCardInsert) return;
+    failCardInsert = false;
+    throw new Error("card insert failed");
   };
 
   /**
@@ -160,16 +185,20 @@ function createDeckCardsDb() {
       },
       update: ({
         where,
-        data,
+        data: { version, ...columns },
       }: {
         readonly where: { readonly id: string };
-        readonly data: Partial<FakeCardsDeck>;
+        readonly data: DeckUpdate;
       }) =>
         prismaQuery(() => {
           throwIfDeckTouchFails();
           if (tables.deck.id !== where.id)
             throw new Error("Record to update not found.");
-          tables.deck = { ...tables.deck, ...data };
+          tables.deck = {
+            ...tables.deck,
+            ...columns,
+            version: updatedVersion(tables.deck.version, version),
+          };
           return tables.deck;
         }),
       /** The compare-and-swap of the deck version: 1 when the filter matched. */
@@ -203,6 +232,25 @@ function createDeckCardsDb() {
           };
           tables.cards = [...tables.cards, card];
           return card;
+        }),
+      /** Adds the rows in one statement, as a snapshot restore does. */
+      createMany: ({
+        data,
+      }: {
+        readonly data: readonly Partial<FakeDeckCard>[];
+      }) =>
+        prismaQuery(() => {
+          throwIfCardInsertFails();
+          const created = data.map((row): FakeDeckCard => {
+            createdCount += 1;
+            return {
+              ...deckCard(`created ${createdCount}`),
+              ...row,
+              id: `card-created-${createdCount}`,
+            };
+          });
+          tables.cards = [...tables.cards, ...created];
+          return { count: created.length };
         }),
       update: ({
         where,
@@ -298,6 +346,7 @@ function createDeckCardsDb() {
       stored.cards = cards;
       failDeckTouch = false;
       failCardWrite = false;
+      failCardInsert = false;
       createdCount = 0;
     },
     /**
@@ -315,6 +364,14 @@ function createDeckCardsDb() {
      */
     failNextCardWrite(): void {
       failCardWrite = true;
+    },
+    /**
+     * Makes the next bulk insert (`deckCard.createMany`) throw, after the
+     * writes before it in the same transaction succeeded, as a constraint
+     * violation in the middle of a snapshot restore would.
+     */
+    failNextCardInsert(): void {
+      failCardInsert = true;
     },
     /** @returns The stored deck row. */
     deck: (): FakeCardsDeck => stored.deck,
