@@ -72,6 +72,16 @@ const singleKey = (
   action,
 });
 
+/**
+ * The key that opens the cheat sheet. The builder's shortcut list names it too, to point the
+ * player to the playtest's keys, so it reads the key from here rather than repeating it.
+ */
+export const PLAYTEST_SHOW_KEYS_HOTKEY: PlaytestHotkey = singleKey(
+  "showKeys",
+  "?",
+  { kind: "showKeys" }
+);
+
 /** Every key of the playtest, in the order the cheat sheet lists them. */
 export const PLAYTEST_HOTKEYS: readonly PlaytestHotkey[] = [
   singleKey("draw", "d", { kind: "command", command: { type: "draw" } }),
@@ -94,7 +104,7 @@ export const PLAYTEST_HOTKEYS: readonly PlaytestHotkey[] = [
     to: "battlefield",
   }),
   singleKey("toHand", "h", { kind: "moveFocusedCard", to: "hand" }),
-  singleKey("showKeys", "?", { kind: "showKeys" }),
+  PLAYTEST_SHOW_KEYS_HOTKEY,
   {
     id: "undo",
     key: "z",
