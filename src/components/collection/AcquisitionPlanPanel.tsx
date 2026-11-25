@@ -174,6 +174,10 @@ export function AcquisitionPlanPanel() {
           {state.status === "ready" && state.plan.deckCount > 0 && allItems.length === 0 && (
             <p className="text-sm text-[var(--text-secondary)]">{t("complete")}</p>
           )}
+          {/* Copies are missing but every one is deferred: say so, or only the Deferred group shows. */}
+          {state.status === "ready" && items.length === 0 && deferred.length > 0 && (
+            <p className="mb-3 text-sm text-[var(--text-secondary)]">{t("nothingToBuyNow")}</p>
+          )}
           {state.status === "ready" && items.length > 0 && (
             <>
               <p className="mb-3 text-sm font-medium text-[var(--text-primary)]">
