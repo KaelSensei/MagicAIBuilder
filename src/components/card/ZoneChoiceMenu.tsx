@@ -183,14 +183,17 @@ export function ZoneChoiceMenu({
   usePlaceZoneMenu(menuRef, triggerRef, initialFocus);
   useDismissZoneMenu(menuRef, triggerRef, onClose);
 
+  // tabIndex -1: the menu takes focus from a press on its edge, so the arrow
+  // keys keep working, yet Tab never stops on it; the items keep the tab stops.
   return createPortal(
     <div
       ref={menuRef}
       id={id}
       role="menu"
+      tabIndex={-1}
       aria-label={t("zoneMenu", { name: cardName })}
       onKeyDown={(event) => onZoneMenuKeyDown(event, menuRef.current)}
-      className="fixed z-[80] min-w-44 rounded-[var(--lumen-radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-1 text-[var(--text-primary)] shadow-[var(--lumen-shadow-lg)]"
+      className="fixed z-[80] min-w-44 rounded-[var(--lumen-radius-lg)] outline-none border border-[var(--border)] bg-[var(--surface)] p-1 text-[var(--text-primary)] shadow-[var(--lumen-shadow-lg)]"
     >
       <ZoneMenuItems cardName={cardName} zoneCounts={zoneCounts} onChoose={onChoose} />
     </div>,

@@ -30,7 +30,10 @@ export function menuItems(root: HTMLElement | null): readonly HTMLElement[] {
 }
 
 /**
- * Moves focus among the menu items, wrapping at both ends.
+ * Moves focus among the menu items, wrapping at both ends. When no item has
+ * focus (a press on the menu's edge focused the menu itself), the arrow down
+ * enters at the first item and the arrow up at the last, as the WAI-ARIA menu
+ * pattern does (https://www.w3.org/WAI/ARIA/apg/patterns/menubar/, read 2026-11-25).
  *
  * @param items - The menu items, in order
  * @param direction - The next item, or an end of the list
@@ -50,8 +53,11 @@ export function moveZoneFocus(
   }
   const active = document.activeElement;
   const current = active instanceof HTMLElement ? items.indexOf(active) : -1;
-  const start = current === -1 ? 0 : current;
-  const next = (start + direction + items.length) % items.length;
+  if (current === -1) {
+    moveZoneFocus(items, direction === 1 ? "first" : "last");
+    return;
+  }
+  const next = (current + direction + items.length) % items.length;
   items[next]?.focus();
 }
 

@@ -113,6 +113,61 @@ describe("SearchZoneMenu", () => {
     expect(onAddToZone).toHaveBeenCalledWith(solRing, "sideboard");
   });
 
+  it("opens on the first zone from a click, jumps to the ends with Home and End, and wraps with the arrows", async () => {
+    const user = userEvent.setup();
+    renderMenu(vi.fn());
+    const main = () => screen.getByRole("menuitem", { name: "Add Sol Ring to the main deck" });
+    const considering = () => screen.getByRole("menuitem", { name: "Add Sol Ring to considering" });
+
+    await user.click(screen.getByRole("button", { name: "More zones for Sol Ring" }));
+    expect(main()).toHaveFocus();
+
+    await user.keyboard("{End}");
+    expect(considering()).toHaveFocus();
+
+    await user.keyboard("{ArrowDown}");
+    expect(main()).toHaveFocus();
+
+    await user.keyboard("{ArrowUp}");
+    expect(considering()).toHaveFocus();
+
+    await user.keyboard("{Home}");
+    expect(main()).toHaveFocus();
+  });
+
+  it("opens on the last zone from ArrowUp on the zone button", async () => {
+    const user = userEvent.setup();
+    renderMenu(vi.fn());
+
+    screen.getByRole("button", { name: "More zones for Sol Ring" }).focus();
+    await user.keyboard("{ArrowUp}");
+
+    expect(screen.getByRole("menuitem", { name: "Add Sol Ring to considering" })).toHaveFocus();
+  });
+
+  it("keeps the keyboard in the menu after a press on its edge, so ArrowDown reaches the first zone", async () => {
+    const user = userEvent.setup();
+    renderMenu(vi.fn());
+    await user.click(screen.getByRole("button", { name: "More zones for Sol Ring" }));
+
+    await user.click(screen.getByRole("menu"));
+    await user.keyboard("{ArrowDown}");
+
+    expect(screen.getByRole("menu")).toBeTruthy();
+    expect(screen.getByRole("menuitem", { name: "Add Sol Ring to the main deck" })).toHaveFocus();
+  });
+
+  it("keeps the keyboard in the menu after a press on its edge, so ArrowUp reaches the last zone", async () => {
+    const user = userEvent.setup();
+    renderMenu(vi.fn());
+    await user.click(screen.getByRole("button", { name: "More zones for Sol Ring" }));
+
+    await user.click(screen.getByRole("menu"));
+    await user.keyboard("{ArrowUp}");
+
+    expect(screen.getByRole("menuitem", { name: "Add Sol Ring to considering" })).toHaveFocus();
+  });
+
   it("closes on Escape without adding, and returns focus to the zone button", async () => {
     const user = userEvent.setup();
     const onAddToZone = vi.fn();
