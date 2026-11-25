@@ -44,6 +44,11 @@ const BUDGET_OPTIONS: readonly (number | null)[] = [null, 1, 5, 10, 25];
 interface AISuggestionsPanelProps {
   readonly result: AISuggestionResult | null;
   readonly isLoading: boolean;
+  /**
+   * Why the last request failed, for diagnostics only. It may hold a raw HTTP
+   * status or a browser message, so the player reads the localized
+   * `ai.loadFailed` instead (I-39).
+   */
   readonly error: string | null;
   /** Why the analysis was refused before a model ran; shown instead of `error`. */
   readonly denial?: AiCallRefusal | null;
@@ -362,7 +367,7 @@ export function AISuggestionsPanel({
               {error && !denial && (
                 <div className="flex items-start gap-2 text-red-400 text-xs p-2 bg-red-500/10 rounded-lg">
                   <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-                  <span>{error}</span>
+                  <span>{t("ai.loadFailed")}</span>
                   <button
                     type="button"
                     onClick={onAnalyze}
