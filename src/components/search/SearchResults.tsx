@@ -3,13 +3,16 @@
  * The search panel's result list, as a grid or a list, with its count and its empty states.
  *
  * Card catalog context, search panel. The builder page feeds it from `useCardSearchResults`;
- * with "Collection only" on, the notices of `CollectionOnlyNotice` explain what the list holds.
+ * with "Collection only" on, `CollectionOnlyCoverageNote` says how much of the search was checked.
+ * Every state keeps the same status region mounted, so a screen reader announces the search as it
+ * moves from "Searching…" to its count, its empty message or the reason nothing was searched; the
+ * error is an alert of its own (`search-results-view.ts` says why).
  *
  * @module components/search/SearchResults
  */
 import { useMemo } from "react";
 import { useTranslations } from "next-intl";
-import { Loader2, AlertCircle, LayoutGrid, List } from "lucide-react";
+import { Loader2, AlertCircle, LayoutGrid, List, Package } from "lucide-react";
 import { CardGrid } from "@/components/card/CardGrid";
 import { CardSearchListItem } from "@/components/card/CardSearchListItem";
 import { useDeckStore } from "@/lib/deck/store";
@@ -17,10 +20,11 @@ import { countCopiesByZone } from "@/lib/deck/zone-source";
 import type { DeckZone } from "@/lib/deck/types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import type { CollectionOnlyState } from "@/hooks/useCardSearchResults";
+import { CollectionOnlyCoverageNote } from "./CollectionOnlyNotice";
 import {
-  CollectionOnlyBlockedState,
-  CollectionOnlyCoverageNote,
-} from "./CollectionOnlyNotice";
+  searchResultsView,
+  type SearchResultsPhase,
+} from "./search-results-view";
 
 interface SearchResultsProps {
   readonly cards: readonly ScryfallCard[];
@@ -37,38 +41,62 @@ interface SearchResultsProps {
   readonly executedQuery?: string;
 }
 
+/** The box around the status line: centred for a message, a header row above a list. */
+const FRAME_CLASS: Readonly<Record<SearchResultsPhase, string>> = {
+  searching:
+    "flex items-center justify-center h-40 text-[var(--text-secondary)]",
+  failed: "flex flex-col items-center justify-center h-40 text-red-400 gap-2",
+  blocked:
+    "flex h-40 flex-col items-center justify-center gap-2 px-6 text-center text-sm text-[var(--text-secondary)]",
+  empty:
+    "flex flex-col items-center justify-center h-40 text-[var(--text-secondary)] text-sm",
+  listed: "flex items-center justify-between px-3 py-1.5",
+};
+
+/** How the status line reads in each layout; an empty one is kept for screen readers only. */
+const STATUS_CLASS: Readonly<Record<SearchResultsPhase, string | undefined>> = {
+  searching: undefined,
+  failed: undefined,
+  blocked: "block",
+  empty: "block",
+  listed: "text-xs text-[var(--text-secondary)]",
+};
+
+function PhaseIcon({ phase }: { readonly phase: SearchResultsPhase }) {
+  switch (phase) {
+    case "searching":
+      return <Loader2 className="w-5 h-5 animate-spin mr-2" />;
+    case "failed":
+      return <AlertCircle className="w-5 h-5" />;
+    case "blocked":
+      return <Package className="h-5 w-5" aria-hidden="true" />;
+    case "empty":
+    case "listed":
+      return null;
+    default: {
+      const unhandled: never = phase;
+      return unhandled;
+    }
+  }
+}
+
 /**
  * Shows, in this order of precedence: a spinner while loading, the error, a "Collection only"
  * notice when there was no collection to filter by, an empty state, or the cards with their count.
+ * The status line between them is one `<output>` that every state keeps mounted.
  */
 export function SearchResults(props: SearchResultsProps) {
-  const { cards, isLoading, error, totalCards, collectionOnly, executedQuery } =
-    props;
+  const { cards, error, collectionOnly, executedQuery } = props;
   const t = useTranslations("search");
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-40 text-[var(--text-secondary)]">
-        <Loader2 className="w-5 h-5 animate-spin mr-2" />
-        {t("searching")}
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center h-40 text-red-400 gap-2">
-        <AlertCircle className="w-5 h-5" />
-        <p className="text-sm">{error.message}</p>
-      </div>
-    );
-  }
-
-  if (collectionOnly && collectionOnly.kind !== "scanned") {
-    return <CollectionOnlyBlockedState state={collectionOnly} />;
-  }
-
-  const coverageNote = collectionOnly && (
+  const { phase, status } = searchResultsView({
+    isLoading: props.isLoading,
+    error,
+    cardCount: cards.length,
+    totalCards: props.totalCards,
+    collectionOnly,
+  });
+  const statusText = status ? t(status.key, status.values) : "";
+  const coverageNote = collectionOnly?.kind === "scanned" && (
     <CollectionOnlyCoverageNote
       scannedCards={collectionOnly.scannedCards}
       totalMatches={collectionOnly.totalMatches}
@@ -76,39 +104,40 @@ export function SearchResults(props: SearchResultsProps) {
     />
   );
 
-  if (cards.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center h-40 text-[var(--text-secondary)] text-sm">
-        <p>{t(collectionOnly ? "collectionOnly.noMatch" : "noResults")}</p>
-        {executedQuery ? (
-          <p className="mt-2 max-w-full truncate px-4 text-center font-mono text-xs">
-            {t("executedQuery", { query: executedQuery })}
-          </p>
-        ) : null}
-        {coverageNote}
-      </div>
-    );
-  }
-
   return (
     <div className="flex flex-col">
-      {/* Header: count + view toggle */}
-      <div className="flex items-center justify-between px-3 py-1.5">
-        {collectionOnly ? (
-          <p className="text-xs text-[var(--text-secondary)]">
-            {t("collectionOnly.ownedCount", { count: cards.length })}
+      <div className={FRAME_CLASS[phase]}>
+        <PhaseIcon phase={phase} />
+        <output
+          aria-live="polite"
+          aria-atomic="true"
+          className={statusText ? STATUS_CLASS[phase] : "sr-only"}
+        >
+          {statusText}
+        </output>
+        {phase === "failed" && error ? (
+          <p role="alert" className="text-sm">
+            {error.message}
           </p>
-        ) : (
-          totalCards != null && (
-            <p className="text-xs text-[var(--text-secondary)]">
-              {t("resultCount", { count: totalCards })}
-            </p>
-          )
-        )}
-        <ViewModeToggle />
+        ) : null}
+        {phase === "empty" ? (
+          <>
+            {executedQuery ? (
+              <p className="mt-2 max-w-full truncate px-4 text-center font-mono text-xs">
+                {t("executedQuery", { query: executedQuery })}
+              </p>
+            ) : null}
+            {coverageNote}
+          </>
+        ) : null}
+        {phase === "listed" ? <ViewModeToggle /> : null}
       </div>
-      {coverageNote}
-      <ResultCards {...props} />
+      {phase === "listed" ? (
+        <>
+          {coverageNote}
+          <ResultCards {...props} />
+        </>
+      ) : null}
     </div>
   );
 }
