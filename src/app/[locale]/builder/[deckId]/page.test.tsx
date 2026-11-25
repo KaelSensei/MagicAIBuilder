@@ -550,6 +550,32 @@ describe("characterization: builder page shell", () => {
       expect(useDeckStore.getState().isSyncing).toBe(false);
     });
 
+    // The toast said the deck was gone while the builder kept showing it (I-01).
+    it("shows 'Deck not found' with the way back to the decks, and only the duplicate's toast, when the deck no longer exists", async () => {
+      server.use(
+        http.post("/api/decks/:id/duplicate", () =>
+          HttpResponse.json({ error: "Deck not found" }, { status: 404 })
+        )
+      );
+      const { push } = renderBuilder(DECK_ID, PLAYER);
+      await screen.findByRole("heading", { level: 1, name: "Talrand Spells" });
+      server.use(...deckAnsweredWith(404, "Deck not found"));
+
+      await userEvent.click(screen.getByRole("button", { name: "Duplicate" }));
+
+      expect(await screen.findByText("Deck not found")).toBeInTheDocument();
+      expect(
+        screen.getByRole("link", { name: "Back to My Decks" })
+      ).toHaveAttribute("href", "/decks");
+      expect(
+        screen.queryByRole("button", { name: "Try again" })
+      ).not.toBeInTheDocument();
+      expect(toastTexts()).toEqual([
+        "This deck no longer exists, so it cannot be duplicated.",
+      ]);
+      expect(push).not.toHaveBeenCalled();
+    });
+
     // CR 100.2a: a constructed deck holds at least 60 cards, not Commander's 100.
     it("counts a Standard deck of 60 cards out of 60 in the title bar and, as a full deck, in the editor", async () => {
       server.use(

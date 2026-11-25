@@ -58,7 +58,6 @@ export default function DecksPage() {
   const router = useRouter();
   const { decks, createDeck, loadDecks, isSyncing, deleteDeck, loadError } =
     useDeckStore();
-  const duplicateDeck = useDeckDuplication();
   const reportCreateFailure = useDeckCreateFailureReport();
   const [isLoading, setIsLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -74,6 +73,12 @@ export default function DecksPage() {
   const [cardFilter, setCardFilter] = useState(NO_CARD_FILTER);
   const { search: cardSearch, refresh: refreshCardSearch } =
     useLibraryCardSearch(cardFilter);
+  // A deck deleted elsewhere leaves the list and the card search's results, as after a delete here.
+  const refreshLibrary = useCallback(async () => {
+    refreshCardSearch();
+    await loadDecks();
+  }, [loadDecks, refreshCardSearch]);
+  const duplicateDeck = useDeckDuplication({ onMissing: refreshLibrary });
   const deckList = Object.values(decks);
   // A found card search replaces the loaded page; folder, name and sort follow.
   const sourceDecks = librarySourceDecks(deckList, cardSearch);
