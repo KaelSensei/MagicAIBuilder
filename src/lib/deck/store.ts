@@ -513,6 +513,23 @@ export interface CardAddition {
   readonly printing?: PrintingChoice;
 }
 
+/**
+ * What {@link DeckStore.addCard} did, so the caller can say why nothing was added.
+ *
+ * - `added`: the zone gained the card or one more copy of it; a failed save is reported by
+ *   the store itself and rolled back.
+ * - `at-copy-limit`: the deck already holds every copy the format allows across the zones the
+ *   limit counts (CR 100.2a, CR 903.5b); `format` names that format.
+ * - `basic-land-held`: the zone already holds this basic land, and an add never raises a basic
+ *   land's quantity (the caller passes the quantity on its first add).
+ * - `no-open-deck`: no deck is open.
+ */
+export type CardAdditionResult =
+  | { readonly kind: "added" }
+  | { readonly kind: "at-copy-limit"; readonly format: DeckFormat }
+  | { readonly kind: "basic-land-held" }
+  | { readonly kind: "no-open-deck" };
+
 export interface DeckStore {
   // State
   decks: Record<string, Deck>;
@@ -607,8 +624,12 @@ export interface DeckStore {
    *
    * @param card - The card, as search, import or a suggestion found it
    * @param addition - The copies and the zone; one copy in the main deck when omitted
+   * @returns What the add did; anything but `added` means the deck did not change
    */
-  addCard: (card: ScryfallCard, addition?: CardAddition) => Promise<void>;
+  addCard: (
+    card: ScryfallCard,
+    addition?: CardAddition
+  ) => Promise<CardAdditionResult>;
   addDeckCard: (card: DeckCard) => Promise<void>;
   removeCard: (cardId: string) => Promise<void>;
   updateCardCategory: (cardId: string, category: CardCategory) => Promise<void>;
@@ -1799,11 +1820,11 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
   addCard: async (
     card: ScryfallCard,
     { quantity, zone = "main", printing = "owned-first" }: CardAddition = {}
-  ) => {
+  ): Promise<CardAdditionResult> => {
     const { activeDeckId, decks, gameChangerNames, bannedNames } = get();
-    if (!activeDeckId) return;
+    if (!activeDeckId) return { kind: "no-open-deck" };
     const deck = decks[activeDeckId];
-    if (!deck) return;
+    if (!deck) return { kind: "no-open-deck" };
 
     const isBasic = isBasicLand(card.type_line);
 
@@ -1816,17 +1837,17 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       },
       zone
     );
-    // At the limit across every row and zone the limit counts → skip
-    if (room < 1) return;
+    // At the limit across every row and zone the limit counts → skip, and say so
+    if (room < 1) return { kind: "at-copy-limit", format: deck.format };
     const exists = uniqueDeckCards(deck).find(
       (c) => c.name === card.name && c.zone === zone
     );
     if (exists) {
       // Basic land already present — skip (caller should pass quantity on first add)
-      if (isBasic) return;
+      if (isBasic) return { kind: "basic-land-held" };
       // Can add more → increment quantity
       await get().updateCardQuantity(exists.id, 1);
-      return;
+      return { kind: "added" };
     }
 
     const selectedCard = await printingToAdd(card, printing);
@@ -1899,6 +1920,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       pendingCardAdditionsAndRemovals -= 1;
       set({ isSyncing: hasPendingSaves() });
     }
+    return { kind: "added" };
   },
 
   addDeckCard: async (card: DeckCard) => {

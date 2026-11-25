@@ -10,6 +10,7 @@
  */
 import { useCallback } from "react";
 import { useTranslations } from "next-intl";
+import { useCopyLimitNotice } from "@/hooks/useCopyLimitNotice";
 import {
   useExternalCardDrop,
   type ExternalCardDropOutcome,
@@ -41,7 +42,7 @@ export interface ExternalCardDropTargetProps {
 export function ExternalCardDropTarget({ zone }: ExternalCardDropTargetProps) {
   const t = useTranslations("builder.externalDrop");
   const tZones = useTranslations("builder.zones");
-  const formatName = useTranslations("deck.format.name");
+  const noticeCopyLimit = useCopyLimitNotice();
   const addToast = useToastStore((state) => state.add);
 
   const report = useCallback(
@@ -57,13 +58,7 @@ export function ExternalCardDropTarget({ zone }: ExternalCardDropTargetProps) {
           );
           return;
         case "at-copy-limit":
-          addToast(
-            "info",
-            t("atCopyLimit", {
-              name: outcome.cardName,
-              format: formatName(outcome.format),
-            })
-          );
+          noticeCopyLimit(outcome.cardName, outcome.format);
           return;
         case "unreadable-link":
           addToast("error", t("unreadableLink"));
@@ -78,7 +73,7 @@ export function ExternalCardDropTarget({ zone }: ExternalCardDropTargetProps) {
       const unknown: never = outcome;
       return unknown;
     },
-    [addToast, t, tZones, formatName]
+    [addToast, t, tZones, noticeCopyLimit]
   );
 
   const { isDragOver } = useExternalCardDrop({ zone, onOutcome: report });
