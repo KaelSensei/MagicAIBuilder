@@ -741,7 +741,13 @@
     "deleteConfirm": "Supprimer ?",
     "restoreTooltip": "Restaurer ce snapshot",
     "deleteTooltip": "Supprimer le snapshot",
-    "toggleList": "Liste des snapshots"
+    "toggleList": "Liste des snapshots",
+    "loadFailed": "Impossible de charger l’historique. Réessayez.",
+    "retry": "Réessayer",
+    "saveFailed": "Impossible de sauvegarder le snapshot. Réessayez.",
+    "deleteFailed": "Le snapshot n’a pas été supprimé. Réessayez.",
+    "restoreFailed": "Le deck n’a pas été restauré. Réessayez.",
+    "signedOut": "Votre session a expiré. Reconnectez-vous pour utiliser l’historique."
   },
   "share": {
     "title": "Partager le deck",

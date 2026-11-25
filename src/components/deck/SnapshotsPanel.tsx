@@ -1,5 +1,7 @@
 "use client";
-// Deck Snapshots / History panel — save named versions of a deck
+// Deck Snapshots / History panel — save named versions of a deck. A failed
+// load or save is told inline where the player is looking; a failed delete or
+// restore in a toast. Each reads in the player's language (I-01).
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useFormatter, useTranslations } from "next-intl";
 import {
@@ -13,6 +15,8 @@ import {
   Plus,
 } from "lucide-react";
 import { cn } from "@/components/ui/utils";
+import { useSnapshotFailureMessage } from "@/hooks/useSnapshotFailureMessage";
+import { useToastStore } from "@/hooks/useToast";
 import {
   listSnapshots,
   createSnapshot,
@@ -33,6 +37,20 @@ interface SnapshotsPanelProps {
   readonly currentDeck: Pick<Deck, "cards" | "commander" | "partner">;
   /** Called after a successful restore so the builder can reload the deck */
   readonly onRestore?: () => void;
+}
+
+/** What the open snapshot list shows. A failed load is not an empty history. */
+type ListView = "loading" | "failed" | "empty" | "list";
+
+/** Reads the list's state once, so the render does not repeat the conditions. */
+function listViewOf(
+  isLoading: boolean,
+  loadError: string | null,
+  snapshotCount: number
+): ListView {
+  if (isLoading) return "loading";
+  if (loadError !== null) return "failed";
+  return snapshotCount === 0 ? "empty" : "list";
 }
 
 function DiffBadge({
@@ -67,9 +85,13 @@ export function SnapshotsPanel({
 }: SnapshotsPanelProps) {
   const t = useTranslations("deck");
   const format = useFormatter();
+  const describeFailure = useSnapshotFailureMessage();
+  const addToast = useToastStore((s) => s.add);
   const currentCardCount = countDeckCards(currentDeck);
   const [snapshots, setSnapshots] = useState<SnapshotMeta[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const listView = listViewOf(isLoading, loadError, snapshots.length);
   const [isExpanded, setIsExpanded] = useState(false);
 
   // Save snapshot popover
@@ -86,15 +108,16 @@ export function SnapshotsPanel({
 
   const load = useCallback(async () => {
     setIsLoading(true);
+    setLoadError(null);
     try {
       const data = await listSnapshots(deckId);
       setSnapshots(data);
-    } catch {
-      // silent — panel will show empty state
+    } catch (error) {
+      setLoadError(describeFailure("load", error));
     } finally {
       setIsLoading(false);
     }
-  }, [deckId]);
+  }, [deckId, describeFailure]);
 
   // Load on expand
   useEffect(() => {
@@ -118,20 +141,22 @@ export function SnapshotsPanel({
       setSnapshotName("");
       setShowSavePopover(false);
       if (isExpanded) await load();
-    } catch (err) {
-      setSaveError(
-        err instanceof Error ? err.message : "Failed to save snapshot"
-      );
+    } catch (error) {
+      setSaveError(describeFailure("save", error));
     } finally {
       setIsSaving(false);
     }
   };
 
+  // Delete and restore close their confirmation whatever the answer, so their
+  // failure goes to a toast, which outlives the row's controls and is announced.
   const handleDelete = async (snapshotId: string) => {
     setIsActioning(true);
     try {
       await deleteSnapshot(deckId, snapshotId);
       setSnapshots((prev) => prev.filter((s) => s.id !== snapshotId));
+    } catch (error) {
+      addToast("error", describeFailure("delete", error));
     } finally {
       setIsActioning(false);
       setConfirmDelete(null);
@@ -143,6 +168,8 @@ export function SnapshotsPanel({
     try {
       await restoreSnapshot(deckId, snapshotId);
       onRestore?.();
+    } catch (error) {
+      addToast("error", describeFailure("restore", error));
     } finally {
       setIsActioning(false);
       setConfirmRestore(null);
@@ -191,7 +218,9 @@ export function SnapshotsPanel({
                 className="w-full text-xs bg-[var(--background)] border border-[var(--border)] rounded px-2 py-1.5 text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] outline-none focus:border-[var(--accent)]"
               />
               {saveError && (
-                <p className="text-[10px] text-red-400">{saveError}</p>
+                <p role="alert" className="text-[10px] text-red-400">
+                  {saveError}
+                </p>
               )}
               <div className="flex gap-2">
                 <button
@@ -240,17 +269,32 @@ export function SnapshotsPanel({
       {/* Expandable snapshot list */}
       {isExpanded && (
         <div className="border-t border-[var(--border)] max-h-72 overflow-y-auto">
-          {isLoading && (
+          {listView === "loading" && (
             <div className="flex items-center justify-center py-6">
               <Loader2 className="w-4 h-4 animate-spin text-[var(--text-secondary)]" />
             </div>
           )}
-          {!isLoading && snapshots.length === 0 && (
+          {listView === "failed" && (
+            <div
+              role="alert"
+              className="flex flex-col items-center gap-2 py-6 text-xs text-red-400"
+            >
+              <p>{loadError}</p>
+              <button
+                type="button"
+                onClick={() => void load()}
+                className="px-2 py-1 rounded border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+              >
+                {t("snapshots.retry")}
+              </button>
+            </div>
+          )}
+          {listView === "empty" && (
             <p className="text-xs text-[var(--text-secondary)] text-center py-6 italic">
               {t("snapshots.noSnapshots")}
             </p>
           )}
-          {!isLoading && snapshots.length > 0 && (
+          {listView === "list" && (
             <ul className="divide-y divide-[var(--border)]">
               {snapshots.map((snap) => (
                 <li

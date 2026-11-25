@@ -610,7 +610,13 @@
     "deleteConfirm": "Delete?",
     "restoreTooltip": "Restore to this snapshot",
     "deleteTooltip": "Delete snapshot",
-    "toggleList": "Snapshot list"
+    "toggleList": "Snapshot list",
+    "loadFailed": "Could not load the history. Try again.",
+    "retry": "Try again",
+    "saveFailed": "Could not save the snapshot. Please try again.",
+    "deleteFailed": "The snapshot was not deleted. Please try again.",
+    "restoreFailed": "The deck was not restored. Please try again.",
+    "signedOut": "Your session has ended. Sign in again to use the history."
   },
   "share": {
     "title": "Compartir el deck",
