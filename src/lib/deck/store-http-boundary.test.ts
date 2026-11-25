@@ -9,7 +9,8 @@
  * first, the exact method, URL, content type and body of each request, and the
  * store state after a 2xx answer, a 4xx answer, a 5xx answer and a network
  * error. It also pins that a guest deck, which lives in this browser only,
- * sends no request.
+ * sends no request. `duplicateDeck` has since moved to the deck client (I-01);
+ * its tests here still pin the request it sends and what it rejects with.
  *
  * MSW serves the deck API routes (`setupMsw`); no internal module is mocked, so
  * `duplicateDeck`'s follow-up listing request goes through the real deck
@@ -416,8 +417,9 @@ describe("the raw-fetch deck store actions", () => {
     it("sends POST /api/decks/[id]/duplicate with no body, then reloads the deck listing", async () => {
       await useDeckStore.getState().duplicateDeck(DECK_ID);
 
-      // The content type is left out on purpose: the route reads no body, and
-      // DB-16's deck client (`deckApi.duplicateDeck`) adds a JSON one.
+      // The content type is left out on purpose: the route reads no body. The
+      // request now goes through the deck client (`deckApi.duplicateDeck`),
+      // which adds a JSON one (I-01).
       expect(
         sent.map(({ method, url, body }) => ({ method, url, body }))
       ).toEqual([
@@ -426,29 +428,33 @@ describe("the raw-fetch deck store actions", () => {
       ]);
     });
 
-    it("opens the copy, lists it, announces it and returns its id after a 2xx answer", async () => {
-      const copyId = await useDeckStore.getState().duplicateDeck(DECK_ID);
+    // The store used to raise an English toast, `Deck duplicated: "Goblins (Copy)"`;
+    // the caller now announces the copy in the player's language (I-01).
+    it("opens the copy, lists it and returns its id and name, without a toast, after a 2xx answer", async () => {
+      const copy = await useDeckStore.getState().duplicateDeck(DECK_ID);
 
-      expect(copyId).toBe(COPY_ID);
+      expect(copy).toEqual({ id: COPY_ID, name: "Goblins (Copy)" });
       expect(useDeckStore.getState().activeDeckId).toBe(COPY_ID);
       expect(Object.keys(useDeckStore.getState().decks).sort()).toEqual([
         DECK_ID,
         COPY_ID,
       ]);
       expect(useDeckStore.getState().isSyncing).toBe(false);
-      expect(toasts()).toEqual([
-        { type: "success", message: 'Deck duplicated: "Goblins (Copy)"' },
-      ]);
+      expect(toasts()).toEqual([]);
     });
 
-    it.each(FAILURES.filter(({ outcome }) => outcome !== "a network error"))(
-      "currently rejects with a generic error and no toast after $outcome (pinned; follow-up for B2-36)",
+    // A bare "Failed to duplicate deck" used to hide the status, so a 401 read like a 500 (I-01).
+    it.each([
+      { ...FAILURES[0], thrown: "[duplicateDeck] HTTP 404: Deck not found" },
+      { ...FAILURES[1], thrown: "[duplicateDeck] HTTP 500: Deck not found" },
+    ])(
+      "rejects with the status the server answered, and no toast, after $outcome",
       async (failure) => {
         failRoute("post", DUPLICATE_ROUTE, failure, "Deck not found");
 
         await expect(
           useDeckStore.getState().duplicateDeck(DECK_ID)
-        ).rejects.toThrow("Failed to duplicate deck");
+        ).rejects.toThrow(failure.thrown);
 
         expect(sent.map(({ method }) => method)).toEqual(["POST"]);
         expect(useDeckStore.getState().activeDeckId).toBe(DECK_ID);
@@ -457,7 +463,7 @@ describe("the raw-fetch deck store actions", () => {
       }
     );
 
-    it("currently rejects with the fetch error and no toast after a network error (pinned; follow-up for B2-36)", async () => {
+    it("rejects with the fetch error and no toast after a network error", async () => {
       failRoute("post", DUPLICATE_ROUTE, FAILURES[2], "unused");
 
       await expect(
@@ -476,7 +482,7 @@ describe("the raw-fetch deck store actions", () => {
 
       await expect(
         useDeckStore.getState().duplicateDeck(GUEST_DECK_ID)
-      ).rejects.toThrow("Failed to duplicate deck");
+      ).rejects.toThrow("[duplicateDeck] HTTP 404: Deck not found");
 
       expect(sent.map(({ method, url }) => ({ method, url }))).toEqual([
         { method: "POST", url: `/api/decks/${GUEST_DECK_ID}/duplicate` },

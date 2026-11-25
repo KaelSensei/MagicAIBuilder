@@ -10,6 +10,12 @@
     "createFailed": "Impossibile creare il mazzo.",
     "createSignedOut": "Your session has ended. Sign in again to create a deck."
   },
+  "deckDuplicate": {
+    "succeeded": "Deck duplicated: “{name}”",
+    "failed": "Could not duplicate the deck. Please try again.",
+    "signedOut": "Your session has ended. Sign in again to duplicate a deck.",
+    "missing": "This deck no longer exists, so it cannot be duplicated."
+  },
   "theme": {
     "toggle": "Cambia tema",
     "switchToLight": "Usa il tema chiaro",

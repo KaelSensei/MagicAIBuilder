@@ -548,6 +548,12 @@ export type CardAdditionResult =
   | { readonly kind: "basic-land-held" }
   | { readonly kind: "no-open-deck" };
 
+/** The copy {@link DeckStore.duplicateDeck} made: the deck to open, and the name to announce. */
+export interface DuplicatedDeck {
+  readonly id: string;
+  readonly name: string;
+}
+
 export interface DeckStore {
   // State
   decks: Record<string, Deck>;
@@ -607,7 +613,16 @@ export interface DeckStore {
       idempotencyKey?: string;
     }
   ) => Promise<string>;
-  duplicateDeck: (id: string) => Promise<string>;
+  /**
+   * Copies a saved deck on the server, makes the copy the active deck and
+   * reloads the listing. Raises no toast: the store has no locale, so the
+   * caller tells the player (`useDeckDuplication`).
+   *
+   * @returns the copy's id and its name, as the server set it
+   * @throws DeckApiError when the server refuses or fails the copy, carrying
+   *   its status; the fetch error when the network fails
+   */
+  duplicateDeck: (id: string) => Promise<DuplicatedDeck>;
   deleteDeck: (id: string) => Promise<void>;
   /**
    * Drops the guest deck from memory and from this browser, once an account
@@ -1578,16 +1593,11 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
   duplicateDeck: async (id: string) => {
     set({ isSyncing: true });
     try {
-      const res = await fetch(`/api/decks/${id}/duplicate`, { method: "POST" });
-      if (!res.ok) throw new Error("Failed to duplicate deck");
-      const copy = (await res.json()) as { id: string; name: string };
+      const copy = await deckApi.duplicateDeck(id);
       // Set new deck as active before reloading
       set({ activeDeckId: copy.id });
       await get().loadDecks();
-      useToastStore
-        .getState()
-        .add("success", `Deck duplicated: "${copy.name}"`);
-      return copy.id;
+      return { id: copy.id, name: copy.name };
     } finally {
       set({ isSyncing: hasPendingSaves() });
     }

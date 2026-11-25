@@ -10,6 +10,12 @@
     "createFailed": "Impossible de créer le deck. Réessayez.",
     "createSignedOut": "Votre session a expiré. Reconnectez-vous pour créer un deck."
   },
+  "deckDuplicate": {
+    "succeeded": "Deck dupliqué : « {name} »",
+    "failed": "Impossible de dupliquer le deck. Réessayez.",
+    "signedOut": "Votre session a expiré. Reconnectez-vous pour dupliquer un deck.",
+    "missing": "Ce deck n’existe plus : impossible de le dupliquer."
+  },
   "theme": {
     "toggle": "Changer le thème",
     "switchToLight": "Passer au thème clair",
