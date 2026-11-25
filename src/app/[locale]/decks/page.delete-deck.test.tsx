@@ -26,6 +26,7 @@ import { emptyApiDeck } from "@/test/in-memory-deck-api";
 import { setupMsw } from "@/test/msw";
 import { renderWithProviders, type TestLocale } from "@/test/render";
 
+// next-intl's router builds on these exports; only the router itself is replaced.
 vi.mock(import("next/navigation"), async (importOriginal) => ({
   ...(await importOriginal()),
   useRouter: () => ({
@@ -36,8 +37,6 @@ vi.mock(import("next/navigation"), async (importOriginal) => ({
     replace: vi.fn(),
     prefetch: vi.fn(),
   }),
-  usePathname: () => "/decks",
-  useSearchParams: () => new URLSearchParams(),
 }));
 
 import DecksPage from "./page";

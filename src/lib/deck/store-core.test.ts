@@ -660,9 +660,7 @@ describe("useDeckStore — deleteDeck", () => {
   // What the player asked for is already true: the deck is gone.
   it("counts a deck already deleted elsewhere as deleted, undo history included", async () => {
     useDeckStore.setState({
-      undoStack: [
-        { type: "ADD_CARD", deckId: "deck-1", card: aDeckCard() },
-      ],
+      undoStack: [{ type: "ADD_CARD", deckId: "deck-1", card: aDeckCard() }],
     });
     deckApi.deleteDeck.mockRejectedValueOnce(
       new DeckApiRefusal(404, "Deck not found")
