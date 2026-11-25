@@ -1,7 +1,21 @@
 "use client";
 
+/**
+ * The card-package library: lists public or owned packages, previews one
+ * against the open deck, and applies the cards the player keeps, then says
+ * how many were added.
+ *
+ * @module components/deck/CardPackageLibrary
+ */
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
+import {
+  parseApplyAnswer,
+  parsePreviewAnswer,
+  type ApplyAnswer,
+  type PreviewCardAnswer,
+} from "@/lib/community/card-package-answers";
+import { CardPackagePreviewRow } from "./CardPackagePreviewRow";
 
 interface PackageSummary {
   readonly id: string;
@@ -13,14 +27,6 @@ interface PackageSummary {
   readonly cards: readonly unknown[];
 }
 
-interface PreviewCard {
-  readonly scryfallId: string;
-  readonly name: string;
-  readonly quantity: number;
-  readonly status: "ready" | "blocked";
-  readonly issues: readonly { readonly kind: string }[];
-}
-
 interface CardPackageLibraryProps {
   readonly deckId: string;
   readonly refreshKey: number;
@@ -28,12 +34,29 @@ interface CardPackageLibraryProps {
   readonly onApplied?: () => void | Promise<void>;
 }
 
+/** The apply's outcome line: how many were added and, when the deck changed, how many were not. */
+function ApplyOutcomeLine({ outcome }: { readonly outcome: ApplyAnswer | null }) {
+  const t = useTranslations("deck.cardPackages");
+  const added = outcome?.addedCount ?? 0;
+  const blocked = outcome?.blockedCount ?? 0;
+  const message = blocked > 0 ? t("appliedPartly", { added, blocked }) : t("applied", { added });
+  // A native <output> is a polite status (Sonar S6819); it stays mounted so the
+  // screen reader announces the line when it fills.
+  return (
+    <output aria-live="polite" aria-atomic="true" className="block text-xs text-emerald-400">
+      {outcome === null ? null : message}
+    </output>
+  );
+}
+
+/** The package list of one scope, with the preview and apply of the open package. */
 export function CardPackageLibrary({ deckId, refreshKey, scope, onApplied }: CardPackageLibraryProps) {
   const t = useTranslations("deck.cardPackages");
   const [packages, setPackages] = useState<readonly PackageSummary[]>([]);
-  const [preview, setPreview] = useState<readonly PreviewCard[]>([]);
+  const [preview, setPreview] = useState<readonly PreviewCardAnswer[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [outcome, setOutcome] = useState<ApplyAnswer | null>(null);
   const [status, setStatus] = useState<"loading" | "idle" | "previewing" | "applying" | "error">("loading");
 
   useEffect(() => {
@@ -56,6 +79,7 @@ export function CardPackageLibrary({ deckId, refreshKey, scope, onApplied }: Car
 
   const loadPreview = async (packageId: string) => {
     setStatus("previewing");
+    setOutcome(null);
     try {
       const response = await fetch(`/api/community/card-packages/${packageId}/preview`, {
         method: "POST",
@@ -63,19 +87,27 @@ export function CardPackageLibrary({ deckId, refreshKey, scope, onApplied }: Car
         body: JSON.stringify({ deckId }),
       });
       if (!response.ok) throw new Error("preview failed");
-      const data = await response.json() as { cards: PreviewCard[] };
+      const cards = parsePreviewAnswer(await response.json());
+      if (cards === null) throw new Error("malformed preview");
       setActiveId(packageId);
-      setPreview(data.cards);
-      setSelectedIds(new Set(data.cards.filter((card) => card.status === "ready").map((card) => card.scryfallId)));
+      setPreview(cards);
+      setSelectedIds(new Set(cards.filter((card) => card.status === "ready").map((card) => card.scryfallId)));
       setStatus("idle");
     } catch {
       setStatus("error");
     }
   };
 
+  const toggle = (scryfallId: string) => setSelectedIds((current) => {
+    const next = new Set(current);
+    if (next.has(scryfallId)) next.delete(scryfallId); else next.add(scryfallId);
+    return next;
+  });
+
   const apply = async () => {
     if (!activeId || selectedIds.size === 0) return;
     setStatus("applying");
+    setOutcome(null);
     try {
       const response = await fetch(`/api/community/card-packages/${activeId}/apply`, {
         method: "POST",
@@ -83,6 +115,9 @@ export function CardPackageLibrary({ deckId, refreshKey, scope, onApplied }: Car
         body: JSON.stringify({ deckId, acceptedScryfallIds: [...selectedIds] }),
       });
       if (!response.ok) throw new Error("apply failed");
+      const answer = parseApplyAnswer(await response.json());
+      if (answer === null) throw new Error("malformed apply answer");
+      setOutcome(answer);
       setPreview([]);
       setActiveId(null);
       setStatus("idle");
@@ -114,20 +149,12 @@ export function CardPackageLibrary({ deckId, refreshKey, scope, onApplied }: Car
           {activeId === cardPackage.id && preview.length > 0 && (
             <div className="mt-2 space-y-1 border-t border-[var(--border)] pt-2">
               {preview.map((card) => (
-                <label key={card.scryfallId} className="flex items-start gap-2 text-xs">
-                  <input
-                    type="checkbox"
-                    aria-label={`${card.name} (${card.status})`}
-                    disabled={card.status === "blocked"}
-                    checked={selectedIds.has(card.scryfallId)}
-                    onChange={() => setSelectedIds((current) => {
-                      const next = new Set(current);
-                      if (next.has(card.scryfallId)) next.delete(card.scryfallId); else next.add(card.scryfallId);
-                      return next;
-                    })}
-                  />
-                  <span className="flex-1">{card.name} <span className={card.status === "ready" ? "text-emerald-400" : "text-amber-400"}>· {t(card.status)}</span></span>
-                </label>
+                <CardPackagePreviewRow
+                  key={card.scryfallId}
+                  card={card}
+                  selected={selectedIds.has(card.scryfallId)}
+                  onToggle={toggle}
+                />
               ))}
               <button type="button" disabled={selectedIds.size === 0 || status === "applying"} onClick={() => void apply()} className="mt-2 w-full rounded-md bg-emerald-600 px-3 py-2 text-xs font-semibold text-white disabled:opacity-40">
                 {status === "applying" ? t("applying") : t("apply", { count: selectedIds.size })}
@@ -136,6 +163,7 @@ export function CardPackageLibrary({ deckId, refreshKey, scope, onApplied }: Car
           )}
         </article>
       ))}
+      <ApplyOutcomeLine outcome={outcome} />
       {status === "error" && <p className="text-xs text-red-400">{t("loadError")}</p>}
     </div>
   );
