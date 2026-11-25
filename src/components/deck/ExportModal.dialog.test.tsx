@@ -12,6 +12,7 @@ import { ExportModal } from "./ExportModal";
 
 const NO_RESULTS: ScryfallCard[] = [];
 const ignoreCard = (): void => undefined;
+const ignoreClose = (): void => undefined;
 
 /** A creature row named after its id, so the exported text tells the rows apart. */
 function makeCard(id: string): DeckCard {
@@ -92,6 +93,27 @@ describe("ExportModal", () => {
     expect(
       screen.queryByRole("button", { name: "Export" })
     ).not.toBeInTheDocument();
+  });
+
+  // WCAG 2.2 SC 1.3.1 and 4.1.2: the preview is named by its visible
+  // heading, so a screen reader announces what the text field holds.
+  it("names the read-only preview by its visible deck-list heading", async () => {
+    await openExport();
+
+    const preview = screen.getByRole("textbox", {
+      name: "Deck List — 3 cards",
+    });
+    expect(preview).toHaveAttribute("readonly");
+  });
+
+  it("names the preview in French", () => {
+    renderWithProviders(<ExportModal deck={DECK} onClose={ignoreClose} />, {
+      locale: "fr",
+    });
+
+    expect(
+      screen.getByRole("textbox", { name: "Liste de deck — 3 cartes" })
+    ).toHaveAttribute("readonly");
   });
 
   it("closes only the proxy dialog when Escape is pressed over it", async () => {
