@@ -17,8 +17,11 @@
  * `PATCH /api/decks/[id]/command-zone`, whose row changes and deck fields
  * used to be three browser requests that could each fail on their own, and
  * the bulk edit `PATCH /api/decks/[id]/cards`, which used to keep its own
- * transaction outside the version. The other deck writes (the metadata
- * PATCH, deck creation, imports) do not move the version.
+ * transaction outside the version. Two whole-deck writes outside this
+ * repository move the version too, unconditionally, through
+ * {@link deckVersionStep}: the snapshot restore and the card package apply.
+ * The other deck writes (the metadata PATCH, deck creation, imports) do not
+ * move it.
  * Port and contract: `deck-repository-port.ts`,
  * `testing/deck-repository-contract.ts`.
  *
@@ -56,6 +59,30 @@ class MissingRowError extends Error {
   }
 }
 
+/**
+ * The `Deck` update data that moves a deck to its next version and stamps
+ * its `updatedAt`: the one version step every card write makes, here and in
+ * the whole-deck writes outside this repository (the snapshot restore in
+ * `prisma-snapshot-store.ts`, the card package apply route).
+ *
+ * It filters nothing: a caller that must check the version it read goes
+ * through {@link claimNextVersion}. A whole-deck write merges it into the
+ * deck update of its own transaction, so the step commits or rolls back with
+ * the rows, and a tab that still holds the old version is refused (409) on
+ * its next card write.
+ *
+ * @returns A fresh object, stamped now.
+ */
+export function deckVersionStep(): DeckVersionStep {
+  return { version: { increment: 1 }, updatedAt: new Date() };
+}
+
+/** The `data` of one version step: see {@link deckVersionStep}. */
+export interface DeckVersionStep {
+  readonly version: { readonly increment: 1 };
+  readonly updatedAt: Date;
+}
+
 /** Whether this write may proceed, and the version it gives the deck. */
 type VersionClaim =
   | { readonly kind: "claimed"; readonly version: number }
@@ -82,7 +109,7 @@ async function claimNextVersion(
 ): Promise<VersionClaim> {
   const claimed = await tx.deck.updateMany({
     where: { id: target.deckId, version: target.expectedVersion },
-    data: { version: { increment: 1 }, updatedAt: new Date() },
+    data: deckVersionStep(),
   });
   // Read after the update: it holds the row lock, so this is our version.
   const deck = await tx.deck.findUnique({

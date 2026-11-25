@@ -126,6 +126,14 @@ describe("deckCardsDb", () => {
       },
       message: "card write failed",
     },
+    {
+      name: "deckCard.createMany after a planned insert failure",
+      call: () => {
+        deckCardsDb.failNextCardInsert();
+        return deckCardsDb.prisma.deckCard.createMany({ data: [] });
+      },
+      message: "card insert failed",
+    },
   ];
 
   it.each(failures)(

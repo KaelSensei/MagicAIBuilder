@@ -42,6 +42,8 @@ export type FakeDeck = {
   readonly commanderName: string | null;
   readonly partnerId: string | null;
   readonly companionId: string | null;
+  /** The optimistic-lock counter a snapshot restore steps. */
+  readonly version: number;
 };
 
 /** One stored `DeckSnapshot` row. */
@@ -84,7 +86,7 @@ interface CreateArgs {
   readonly data: Row;
 }
 
-/** The deck every fake starts from. */
+/** The deck every fake starts from, after four saved card writes. */
 export const FAKE_DECK: FakeDeck = {
   id: "deck-1",
   userId: "owner-1",
@@ -92,6 +94,7 @@ export const FAKE_DECK: FakeDeck = {
   commanderName: null,
   partnerId: null,
   companionId: null,
+  version: 4,
 };
 
 /**
@@ -195,6 +198,24 @@ function nullableCount(value: unknown): number | null {
   return typeof value === "number" ? value : null;
 }
 
+/** Whether `value` is Prisma's `{ increment: n }` on a number column. */
+function isIncrement(value: unknown): value is { readonly increment: number } {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "increment" in value &&
+    typeof value.increment === "number"
+  );
+}
+
+/**
+ * @returns The deck's version after an update whose `data.version` is
+ *   `value`: stepped by `{ increment }`, kept when the update leaves it out.
+ */
+function nextVersion(current: number, value: unknown): number {
+  return isIncrement(value) ? current + value.increment : current;
+}
+
 /**
  * Builds a fresh fake database.
  *
@@ -232,8 +253,9 @@ function createPlaytestDb() {
           matches(deck, where) ? { ...deck, cards: [...cards] } : null
         ),
       /**
-       * Writes the commander and companion columns, the only ones a restore
-       * changes. An absent `companionId` is no write, as in Prisma.
+       * Writes the commander and companion columns and the version step, the
+       * only columns a restore changes. An absent `companionId` or `version`
+       * is no write, as in Prisma.
        */
       update: ({ where, data }: FindArgs & CreateArgs) =>
         prismaQuery(() => {
@@ -248,6 +270,7 @@ function createPlaytestDb() {
               "companionId" in data
                 ? nullableText(data.companionId)
                 : deck.companionId,
+            version: nextVersion(deck.version, data.version),
           };
           return deck;
         }),
