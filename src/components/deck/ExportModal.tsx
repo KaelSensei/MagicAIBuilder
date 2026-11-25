@@ -1,6 +1,6 @@
 "use client";
 // Export modal with multiple format support
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Copy, Download, Check, Printer } from "lucide-react";
 import { ProxyExportModal } from "./ProxyExportModal";
@@ -42,6 +42,7 @@ export function ExportModal({ deck, onClose }: ExportModalProps) {
   const t = useTranslations("deck");
   const [copied, setCopied] = useState<ExportTarget | null>(null);
   const [showProxy, setShowProxy] = useState(false);
+  const previewId = useId();
   const formatLabel = (format: ExportTarget): string =>
     format === "plaintext" ? t("import.tabText") : BRAND_LABELS[format];
   // Every target's result, built once per deck: the rows show its notices
@@ -84,12 +85,16 @@ export function ExportModal({ deck, onClose }: ExportModalProps) {
         <ProxyExportModal deck={deck} onClose={() => setShowProxy(false)} />
       )}
       <Modal open onClose={onClose} title={t("export.title")}>
-        {/* Preview */}
+        {/* Preview, named by its visible heading (WCAG 2.2 SC 1.3.1, 4.1.2) */}
         <div className="px-5 pt-4">
-          <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wide mb-2">
+          <label
+            htmlFor={previewId}
+            className="block text-xs text-[var(--text-secondary)] uppercase tracking-wide mb-2"
+          >
             {t("export.deckList", { count: totalCards })}
-          </p>
+          </label>
           <textarea
+            id={previewId}
             readOnly
             value={previewText}
             className={cn(
