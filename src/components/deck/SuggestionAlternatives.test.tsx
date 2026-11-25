@@ -40,7 +40,7 @@ describe("SuggestionAlternatives", () => {
               role: "ramp",
               synergy: "Wrong color",
               manaValue: 2,
-              curveImpact: "Below average",
+              curve: { position: "below", deckAverage: 3 },
               colorIdentity: ["R"],
               colorCompatible: false,
               commanderLegal: true,
