@@ -237,7 +237,7 @@ describe("useDeckStore — forceSave", () => {
     expect(useDeckStore.getState().decks["deck-1"]).toBe(originalDeck);
     expect(useDeckStore.getState().isSyncing).toBe(false);
     expect(toastAdd).toHaveBeenCalledExactlyOnceWith(
-      "error", "Could not refresh deck. Please retry.",
+      "error", { key: "deck.sync.refreshFailed" },
     );
   });
 
@@ -546,7 +546,7 @@ describe("useDeckStore — setBudget error path", () => {
 
     expect(useDeckStore.getState().decks["deck-1"].budget).toBeNull();
     expect(useDeckStore.getState().isSyncing).toBe(false);
-    expect(toastAdd).toHaveBeenCalledExactlyOnceWith("error", "Could not save deck budget. Please retry.");
+    expect(toastAdd).toHaveBeenCalledExactlyOnceWith("error", { key: "deck.sync.budgetFailed" });
   });
 });
 
@@ -560,7 +560,7 @@ describe("useDeckStore — addTag / removeTag error paths", () => {
 
     expect(useDeckStore.getState().decks["deck-1"].tags).not.toContain("stax");
     expect(useDeckStore.getState().isSyncing).toBe(false);
-    expect(toastAdd).toHaveBeenCalledExactlyOnceWith("error", "Could not save deck tags. Please retry.");
+    expect(toastAdd).toHaveBeenCalledExactlyOnceWith("error", { key: "deck.sync.tagsFailed" });
   });
 
   it("removeTag restores the removed tag when API throws", async () => {
@@ -574,7 +574,7 @@ describe("useDeckStore — addTag / removeTag error paths", () => {
 
     expect(useDeckStore.getState().decks["deck-1"].tags).toEqual(["stax", "budget"]);
     expect(useDeckStore.getState().isSyncing).toBe(false);
-    expect(toastAdd).toHaveBeenCalledExactlyOnceWith("error", "Could not save deck tags. Please retry.");
+    expect(toastAdd).toHaveBeenCalledExactlyOnceWith("error", { key: "deck.sync.tagsFailed" });
   });
 });
 

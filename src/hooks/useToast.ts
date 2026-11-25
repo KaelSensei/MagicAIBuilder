@@ -8,6 +8,7 @@
  * when its toast is removed, so a dismissed toast leaves no timer running.
  */
 import { create } from "zustand";
+import type { DeckFailureToastKey } from "@/lib/deck/failure-toasts";
 import { toastLifetime, type ToastType } from "@/lib/ui/toast-policy";
 
 export type { ToastType } from "@/lib/ui/toast-policy";
@@ -15,9 +16,11 @@ export type { ToastType } from "@/lib/ui/toast-policy";
 /**
  * The catalog keys a toast may be raised by, as `useTranslations()` without a
  * namespace reads them. Raised by code that has no locale of its own (the deck
- * store); the toast container translates them in the player's locale.
+ * store); the toast container translates them in the player's locale. The
+ * deck store's save and load failures are listed in `lib/deck/failure-toasts.ts`.
  */
-export type LocalizedToastKey = "deck.sync.conflictReloaded";
+export type LocalizedToastKey =
+  "deck.sync.conflictReloaded" | DeckFailureToastKey;
 
 /** A toast's text: the words themselves, or the catalog key the container translates. */
 export type ToastMessage = string | { readonly key: LocalizedToastKey };

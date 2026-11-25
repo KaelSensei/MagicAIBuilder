@@ -311,7 +311,7 @@ describe("useDeckStore — bulkRemoveCards recovery", () => {
       .mockRejectedValueOnce(new Error("offline"));
     await useDeckStore.getState().bulkRemoveCards(["first", "second"]);
     expect(useDeckStore.getState().decks["deck-1"].cards.map((card) => card.id)).toEqual(["first", "second"]);
-    expect(toastAdd).toHaveBeenCalledExactlyOnceWith("error", "Could not remove card. Please retry.");
+    expect(toastAdd).toHaveBeenCalledExactlyOnceWith("error", { key: "deck.sync.cardRemovalFailed" });
   });
 
   it("preserves original order when the removals are rejected one after the other", async () => {
@@ -364,7 +364,7 @@ describe("useDeckStore — bulkRemoveCards recovery", () => {
     vi.mocked(deckApi.removeCard).mockRejectedValueOnce(new Error("offline"));
     await useDeckStore.getState().bulkRemoveCards(["rejected", "removed"]);
     expect(useDeckStore.getState().decks["deck-1"].cards).toEqual([rejected]);
-    expect(toastAdd).toHaveBeenCalledWith("error", "Could not remove card. Please retry.");
+    expect(toastAdd).toHaveBeenCalledWith("error", { key: "deck.sync.cardRemovalFailed" });
     expect(useDeckStore.getState().isSyncing).toBe(false);
   });
 });
@@ -674,7 +674,7 @@ describe("useDeckStore — renameDeck", () => {
     await useDeckStore.getState().renameDeck("deck-1", "New Name");
     expect(useDeckStore.getState().decks["deck-1"].name).toBe("Test Deck");
     expect(useDeckStore.getState().isSyncing).toBe(false);
-    expect(toastAdd).toHaveBeenCalledExactlyOnceWith("error", "Could not rename deck. Please retry.");
+    expect(toastAdd).toHaveBeenCalledExactlyOnceWith("error", { key: "deck.sync.renameFailed" });
   });
 
   it("preserves a newer successful name when an older rename fails", async () => {
@@ -760,7 +760,7 @@ describe("useDeckStore — setTargetBracket", () => {
     await useDeckStore.getState().setTargetBracket(4);
     expect(useDeckStore.getState().decks["deck-1"].targetBracket).toBe(2);
     expect(useDeckStore.getState().isSyncing).toBe(false);
-    expect(toastAdd).toHaveBeenCalledExactlyOnceWith("error", "Could not save target bracket. Please retry.");
+    expect(toastAdd).toHaveBeenCalledExactlyOnceWith("error", { key: "deck.sync.targetBracketFailed" });
   });
 
   it("updates targetBracket optimistically", async () => {
@@ -906,7 +906,7 @@ describe("useDeckStore — setManualBracket", () => {
     await useDeckStore.getState().setManualBracket(4);
     expect(useDeckStore.getState().decks["deck-1"].manualBracket).toBeNull();
     expect(useDeckStore.getState().isSyncing).toBe(false);
-    expect(toastAdd).toHaveBeenCalledExactlyOnceWith("error", "Could not save manual bracket. Please retry.");
+    expect(toastAdd).toHaveBeenCalledExactlyOnceWith("error", { key: "deck.sync.manualBracketFailed" });
   });
 
   it("sets manualBracket optimistically", async () => {

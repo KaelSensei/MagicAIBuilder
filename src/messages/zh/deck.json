@@ -1026,7 +1026,16 @@
     "updatedOn": "Updated <time>{date}</time>"
   },
   "sync": {
-    "conflictReloaded": "This deck was changed elsewhere (another tab or device). It has been reloaded; redo your last change if you still want it."
+    "conflictReloaded": "This deck was changed elsewhere (another tab or device). It has been reloaded; redo your last change if you still want it.",
+    "refreshFailed": "Could not refresh deck. Please retry.",
+    "openFailed": "Could not open deck. Please try again.",
+    "renameFailed": "Could not rename deck. Please retry.",
+    "descriptionFailed": "Could not save deck description. Please retry.",
+    "tagsFailed": "Could not save deck tags. Please retry.",
+    "targetBracketFailed": "Could not save target bracket. Please retry.",
+    "manualBracketFailed": "Could not save manual bracket. Please retry.",
+    "budgetFailed": "Could not save deck budget. Please retry.",
+    "cardRemovalFailed": "Could not remove card. Please retry."
   },
   "format": {
     "name": {
