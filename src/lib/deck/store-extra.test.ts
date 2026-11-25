@@ -1102,7 +1102,7 @@ describe("useDeckStore failed removal recovery", () => {
 
     expect(useDeckStore.getState().decks["deck-1"].cards).toEqual([card]);
     expect(useDeckStore.getState().undoStack).toHaveLength(0);
-    expect(toastAdd).toHaveBeenCalledWith("error", expect.any(String));
+    expect(toastAdd).toHaveBeenCalledWith("error", { key: "deck.sync.cardRemovalFailed" });
   });
 });
 

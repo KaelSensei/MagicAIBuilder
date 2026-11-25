@@ -330,7 +330,7 @@ describe("deck store — a write the server refuses as stale", () => {
     // Nothing the store can vouch for: the version is not sent again.
     expect(heldDeck()?.version).toBeUndefined();
     expect(toasts.mock.calls).toEqual([
-      ["error", "Could not refresh deck. Please retry."],
+      ["error", { key: "deck.sync.refreshFailed" }],
     ]);
   });
 
@@ -376,7 +376,7 @@ describe("deck store — a write the server never answers", () => {
     expect(sentVersion(api.removeCard.mock.calls[1] ?? [])).toBe(READ_VERSION);
     expect(heldDeck()?.version).toBe(READ_VERSION + 1);
     expect(toasts.mock.calls).toEqual([
-      ["error", "Could not remove card. Please retry."],
+      ["error", { key: "deck.sync.cardRemovalFailed" }],
     ]);
     expect(store().isSyncing).toBe(false);
   });

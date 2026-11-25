@@ -1026,7 +1026,16 @@
     "updatedOn": "Mis à jour le <time>{date}</time>"
   },
   "sync": {
-    "conflictReloaded": "Ce deck a été modifié ailleurs (un autre onglet ou appareil). Il a été rechargé ; refaites votre dernière modification si vous la voulez toujours."
+    "conflictReloaded": "Ce deck a été modifié ailleurs (un autre onglet ou appareil). Il a été rechargé ; refaites votre dernière modification si vous la voulez toujours.",
+    "refreshFailed": "Impossible d’actualiser le deck. Réessayez.",
+    "openFailed": "Impossible d’ouvrir le deck. Réessayez.",
+    "renameFailed": "Impossible de renommer le deck. Réessayez.",
+    "descriptionFailed": "Impossible d’enregistrer la description du deck. Réessayez.",
+    "tagsFailed": "Impossible d’enregistrer les étiquettes du deck. Réessayez.",
+    "targetBracketFailed": "Impossible d’enregistrer le bracket cible. Réessayez.",
+    "manualBracketFailed": "Impossible d’enregistrer le bracket manuel. Réessayez.",
+    "budgetFailed": "Impossible d’enregistrer le budget du deck. Réessayez.",
+    "cardRemovalFailed": "Impossible de retirer la carte. Réessayez."
   },
   "format": {
     "name": {
