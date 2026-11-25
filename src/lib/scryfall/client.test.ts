@@ -23,6 +23,7 @@ import {
   SCRYFALL_TIMEOUT_MS,
 } from "@/lib/scryfall/client";
 import { lookupCardCache } from "@/lib/scryfall/shared-cache-client";
+import { ScryfallApiError } from "@/lib/scryfall/api-error";
 import { logger } from "@/lib/logger";
 import type {
   ScryfallCard,
@@ -180,6 +181,38 @@ describe("searchCards", () => {
     const promise = searchCards("invalid query");
     vi.runAllTimers();
     await expect(promise).rejects.toThrow("Scryfall API error 400");
+  });
+
+  it("throws a ScryfallApiError that carries the status and keeps the logged message", async () => {
+    mockFetchError(503, "Service Unavailable");
+
+    const promise = searchCards("sol ring");
+    vi.runAllTimers();
+    const error = await promise.catch((thrown: unknown) => thrown);
+
+    expect(error).toBeInstanceOf(ScryfallApiError);
+    expect(error).toMatchObject({
+      status: 503,
+      message: "Scryfall API error 503: Service Unavailable",
+    });
+  });
+
+  it("logs the raw failure once, where the search fails", async () => {
+    vi.mocked(logger.warn).mockClear();
+    mockFetchError(400, "Invalid expression");
+
+    const promise = searchCards("sol ring");
+    vi.runAllTimers();
+    await expect(promise).rejects.toThrow(ScryfallApiError);
+
+    expect(logger.warn).toHaveBeenCalledTimes(1);
+    expect(logger.warn).toHaveBeenCalledWith(
+      "Scryfall search failed",
+      "Scryfall search",
+      expect.objectContaining({
+        message: "Scryfall API error 400: Invalid expression",
+      })
+    );
   });
 
   it("returns an empty result set on 404 (no matches) instead of throwing", async () => {

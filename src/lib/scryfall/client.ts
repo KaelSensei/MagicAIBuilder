@@ -18,6 +18,7 @@ import { resetScryfallQueue, scheduleScryfallRequest } from "./request-queue";
 import { buildLocalizedNamesQueries } from "./localized";
 import { exactNameTerm } from "./exact-name";
 import { SCRYFALL_API } from "./constants";
+import { ScryfallApiError } from "./api-error";
 import { logger } from "@/lib/logger";
 
 /**
@@ -80,8 +81,9 @@ async function handleResponse<T>(response: Response): Promise<T> {
     const error = await response.json().catch(() => ({
       details: response.statusText,
     }));
-    throw new Error(
-      `Scryfall API error ${response.status}: ${error.details ?? response.statusText}`
+    throw new ScryfallApiError(
+      response.status,
+      error.details ?? response.statusText
     );
   }
   return response.json() as Promise<T>;
@@ -132,6 +134,11 @@ export async function searchCards(
     }
 
     return await handleResponse<ScryfallSearchResponse>(response);
+  } catch (error) {
+    // The search panel shows the player a translated sentence, never this
+    // error, so its raw text (Scryfall's details, a network failure) is kept here.
+    logger.warn("Scryfall search failed", "Scryfall search", error);
+    throw error;
   } finally {
     logger.info("Scryfall search completed", "Scryfall search", {
       status,

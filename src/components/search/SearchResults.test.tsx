@@ -6,6 +6,7 @@ import { SearchResults } from "./SearchResults";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { renderWithProviders } from "@/test/render";
 import { aScryfallCard } from "@/test/builders/scryfall";
+import { ScryfallApiError } from "@/lib/scryfall/api-error";
 import type { CollectionOnlyState } from "@/hooks/useCardSearchResults";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 
@@ -183,13 +184,56 @@ describe("SearchResults announces the search to a screen-reader player", () => {
     );
   });
 
-  it("announces a failed search as an alert and leaves the polite region silent", () => {
+  it("announces a failed search as one alert and leaves the polite region mounted and silent", () => {
     renderSearch(searchProps({ error: new Error("Scryfall is unavailable.") }));
 
+    expect(screen.getAllByRole("alert")).toHaveLength(1);
     expect(screen.getByRole("alert").textContent).toBe(
-      "Scryfall is unavailable."
+      "Card search is unavailable right now. Try again in a moment."
     );
-    expect(screen.getByRole("status").textContent).toBe("");
+    const status = screen.getByRole("status");
+    expect(status).toBeInstanceOf(HTMLOutputElement);
+    expect(status).toHaveAttribute("aria-live", "polite");
+    expect(status.textContent).toBe("");
+  });
+
+  it("tells the player Scryfall could not read a query it rejected with 400", () => {
+    renderSearch(
+      searchProps({
+        error: new ScryfallApiError(400, 'Invalid expression "zz:"'),
+      })
+    );
+
+    expect(screen.getByRole("alert").textContent).toBe(
+      "Scryfall could not read this search. Check its syntax."
+    );
+    expect(screen.queryByText(/Invalid expression/)).toBeNull();
+  });
+
+  it("says card search is unavailable when the player is offline", () => {
+    renderSearch(searchProps({ error: new TypeError("Failed to fetch") }));
+
+    expect(screen.getByRole("alert").textContent).toBe(
+      "Card search is unavailable right now. Try again in a moment."
+    );
+    expect(screen.queryByText("Failed to fetch")).toBeNull();
+  });
+
+  it("tells a French player that card search is unavailable when Scryfall answers 503, without the raw error", () => {
+    renderWithProviders(
+      <SearchResults
+        {...searchProps({
+          error: new Error("Scryfall API error 503: Service Unavailable"),
+        })}
+      />,
+      { session: null, locale: "fr" }
+    );
+
+    const alert = screen.getByRole("alert");
+    expect(alert.textContent).toBe(
+      "La recherche de cartes est indisponible pour le moment. Réessayez dans un instant."
+    );
+    expect(screen.queryByText(/Scryfall API error/)).toBeNull();
   });
 
   it("says how many owned cards a Collection only search kept", () => {
