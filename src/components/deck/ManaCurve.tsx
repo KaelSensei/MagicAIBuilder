@@ -34,8 +34,16 @@ interface ManaCurveProps {
    * them the bars are plain and not pressable.
    */
   readonly cards?: readonly DeckCard[];
+  /**
+   * The element of the chart's title: a heading at the level the page's outline needs (the shared
+   * deck view's panels are `h3`), or a plain paragraph, the builder's, by default.
+   */
+  readonly titleAs?: ManaCurveTitleElement;
   readonly className?: string;
 }
+
+/** The elements the chart's title can be. */
+export type ManaCurveTitleElement = "p" | "h2" | "h3" | "h4";
 
 const BUCKETS = [0, 1, 2, 3, 4, 5, 6, 7] as const;
 
@@ -145,8 +153,14 @@ function useCurveSelection(cards: readonly DeckCard[] | undefined) {
  *
  * @param props.curve - copies per bucket, from `buildManaCurve`
  * @param props.cards - the builder's deck analysis cards, for the parts and the card lists
+ * @param props.titleAs - the title's element; a paragraph unless the page's outline needs a heading
  */
-export function ManaCurve({ curve, cards, className }: ManaCurveProps) {
+export function ManaCurve({
+  curve,
+  cards,
+  titleAs: Title = "p",
+  className,
+}: ManaCurveProps) {
   const t = useTranslations("deck");
   const { hasParts, shownBucket, selectionOf } = useCurveSelection(cards);
   const maxCount = Math.max(...BUCKETS.map((b) => curve[b] ?? 0), 1);
@@ -160,9 +174,9 @@ export function ManaCurve({ curve, cards, className }: ManaCurveProps) {
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <p className="text-xs font-semibold text-[var(--text-primary)] uppercase tracking-widest">
+        <Title className="text-xs font-semibold text-[var(--text-primary)] uppercase tracking-widest">
           {t("stats.manaCurve")}
-        </p>
+        </Title>
         <span className="text-xs text-[var(--text-secondary)] tabular-nums">
           {t("stats.avgCmcInline", { value: averageOf(curve) })}
         </span>
