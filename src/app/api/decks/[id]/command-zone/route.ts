@@ -15,10 +15,10 @@
  * ability, CR 702.124) answers 400. This is the only route that checks a pair:
  * `PATCH /api/decks/[id]` refuses the command fields outright.
  *
- * The rows the change adds hold at most the copy limit, as the editor does:
- * each is clamped silently to `min(requested, limit)`
- * (`lib/deck/copy-limit-write.ts`). The browser sends one copy; the request
- * schema accepts up to 99.
+ * The rows the change adds hold at most the copy limit, as the editor does
+ * (`lib/deck/copy-room-write.ts`): a command-zone row is clamped silently to
+ * `min(requested, limit)`, and any other row to the room the deck's other
+ * rows leave. The browser sends one copy; the request schema accepts up to 99.
  */
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -29,7 +29,7 @@ import type { RouteParams } from "@/lib/api/route-kit";
 import { deckWriteResponse } from "@/lib/api/versioned-deck-write";
 import { prisma } from "@/lib/db/prisma";
 import { commandPairRefusal } from "@/lib/deck/commander-pairing";
-import { cardWithinCopyLimit } from "@/lib/deck/copy-limit-write";
+import { rowsWriteWithinCopyLimit } from "@/lib/deck/copy-room-write";
 import { deckRepository } from "@/lib/deck/deck-repository";
 import { logger } from "@/lib/logger";
 import { commandZoneChangeSchema } from "@/lib/validation/card";
@@ -83,13 +83,25 @@ export async function PATCH(request: Request, { params }: RouteParams<"id">) {
     // The limit reads the stored command zone, as the bulk edit does: only a
     // commander with no maximum deck size changes a limit (CR 903.5e), and
     // only above the 99 copies a request may send.
-    const { copyRule } = ownership;
+    // The rows are weighed against the rows the change leaves (CR 100.2a,
+    // CR 903.5b); a command-zone row keeps its own per-row limit.
+    const rowsWrite = {
+      removeCardIds,
+      clearSlots: clearCommandSlots,
+      quantityChanges: [],
+      addCards,
+    };
+    const { addCards: stored } = rowsWriteWithinCopyLimit(
+      rowsWrite,
+      ownership.rows,
+      ownership.copyRule
+    );
     const result = await deckRepository.writeCommandZone(
       { deckId, expectedVersion },
       {
         removeCardIds,
         clearSlots: clearCommandSlots,
-        addCards: addCards.map((card) => cardWithinCopyLimit(card, copyRule)),
+        addCards: stored,
         fields: commandZone,
       }
     );

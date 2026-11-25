@@ -1,8 +1,8 @@
 /**
  * The ownership check of a deck route that writes copies: the verdict of
  * `requireDeckOwner` (401, 404, 403), read in the same query as the facts the
- * copy limit needs, so a route can clamp what it stores
- * (`lib/deck/copy-limit-write.ts`) without a second read of the deck.
+ * copy limit needs, so a route can keep what it stores within the limit
+ * (`lib/deck/copy-room-write.ts`) without a second read of the deck.
  *
  * @module api/copy-rule-deck-owner
  */
@@ -11,15 +11,19 @@ import type { NextResponse } from "next/server";
 
 import { ownedDeck, requireAuth } from "@/lib/auth/helpers";
 import { prisma } from "@/lib/db/prisma";
-import { COMMAND_SLOT_ROWS } from "@/lib/deck/bulk-edit-command-zone";
+import { isCommanderRow } from "@/lib/deck/bulk-edit-command-zone";
 import { storedCopyLimitDeck } from "@/lib/deck/copy-limit-write";
-import type { CopyLimitDeck } from "@/lib/deck/multiples";
+import type { CopyRuleDeck } from "@/lib/deck/copy-room-write";
 
 /**
  * The ownership check of `requireDeckOwner`, whose one Prisma query also reads
- * what the copy limit needs: the deck's format and the names of the rows that
- * fill the commander and partner slots (CR 903.5e: their rulebreaker
- * exceptions).
+ * what the copy limit needs: the deck's format and every row, whose copies
+ * the limit counts across zones (CR 100.2a, CR 903.5b) and whose commander
+ * and partner grant their rulebreaker exceptions (CR 903.5e).
+ *
+ * The rows are read before the write's transaction. A write that names the
+ * version it read is refused when another write lands in between, so the
+ * count it was weighed against is the one it commits on.
  *
  * @param deckId - The deck the request names
  * @returns The deck's copy-limit facts when the signed-in user owns it; else
@@ -29,8 +33,8 @@ import type { CopyLimitDeck } from "@/lib/deck/multiples";
 export async function requireCopyRuleDeckOwner(
   deckId: string
 ): Promise<
-  | { copyRule: CopyLimitDeck; error?: never }
-  | { copyRule?: never; error: NextResponse }
+  | (CopyRuleDeck & { error?: never })
+  | { copyRule?: never; rows?: never; error: NextResponse }
 > {
   const auth = await requireAuth();
   if (auth.error) return { error: auth.error };
@@ -40,22 +44,28 @@ export async function requireCopyRuleDeckOwner(
       userId: true,
       format: true,
       cards: {
-        where: {
-          OR: [
-            { ...COMMAND_SLOT_ROWS.commander },
-            { ...COMMAND_SLOT_ROWS.partner },
-          ],
+        select: {
+          id: true,
+          name: true,
+          typeLine: true,
+          oracleText: true,
+          zone: true,
+          quantity: true,
+          isCommander: true,
+          isPartner: true,
+          category: true,
         },
-        select: { name: true },
       },
     },
   });
   const owned = ownedDeck(deck, auth.session.user.id);
   if (owned.error) return { error: owned.error };
+  const { cards } = owned.deck;
   return {
     copyRule: storedCopyLimitDeck({
       format: owned.deck.format,
-      commandZoneNames: owned.deck.cards.map((card) => card.name),
+      commandZoneNames: cards.filter(isCommanderRow).map((card) => card.name),
     }),
+    rows: cards,
   };
 }

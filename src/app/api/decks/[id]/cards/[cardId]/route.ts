@@ -8,9 +8,12 @@
  * and answer 409 when another write landed since the client read the deck;
  * their success bodies carry the deck's new `version`.
  *
- * PATCH stores at most the copy limit, as the editor does: a new quantity is
- * clamped silently to `min(requested, limit)` (`lib/deck/copy-limit-write.ts`),
- * and the response carries the stored row.
+ * PATCH stores at most the copy limit, as the editor does, counted across
+ * every row of the main deck, the sideboard and the command zone
+ * (`lib/deck/copy-room-write.ts`): a new quantity, or a row moved in from
+ * Considering, is clamped silently to the room the deck has left, and the
+ * response carries the stored row. A move with no room for a single copy
+ * stores nothing and answers 409 (`copyLimitResponse`).
  */
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -21,10 +24,11 @@ import { logger } from "@/lib/logger";
 import { readJsonBody } from "@/lib/api/json-body";
 import { requireCopyRuleDeckOwner } from "@/lib/api/copy-rule-deck-owner";
 import {
+  copyLimitResponse,
   deckWriteResponse,
   readExpectedVersionQuery,
 } from "@/lib/api/versioned-deck-write";
-import { editWithinCopyLimit } from "@/lib/deck/copy-limit-write";
+import { editWithinCopyRoom } from "@/lib/deck/copy-room-write";
 import { deckRepository } from "@/lib/deck/deck-repository";
 
 type Params = { params: Promise<{ id: string; cardId: string }> };
@@ -95,10 +99,14 @@ export async function PATCH(request: Request, { params }: Params) {
     // ones out, so past `expectedVersion` the parsed body is exactly the
     // columns to write.
     const { expectedVersion, ...edit } = parsed.data;
+    // Weighed against every other row of the deck (CR 100.2a, CR 903.5b); a
+    // move with no room for a single copy stores nothing.
+    const stored = editWithinCopyRoom(edit, card, ownership);
+    if (stored === null) return copyLimitResponse();
     const result = await deckRepository.editCard(
       { deckId, expectedVersion },
       cardId,
-      editWithinCopyLimit(edit, card, ownership.copyRule)
+      stored
     );
     return deckWriteResponse(result, ({ value, version }) =>
       NextResponse.json({ ...value, version })
