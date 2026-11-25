@@ -608,6 +608,7 @@
     "save": "Save",
     "saveSnapshot": "Save snapshot",
     "placeholder": "e.g. \"v1 budget\"",
+    "nameLabel": "Snapshot name",
     "cancel": "Cancel",
     "noSnapshots": "No snapshots yet. Save one above!",
     "cards": "{count, plural, one {# card} other {# cards}}",
