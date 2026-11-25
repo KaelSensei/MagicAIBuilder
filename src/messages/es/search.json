@@ -3,6 +3,10 @@
   "clearLabel": "Clear search",
   "searching": "Searching…",
   "noResults": "No cards found. Try a different search.",
+  "failure": {
+    "unavailable": "Card search is unavailable right now. Try again in a moment.",
+    "rejectedQuery": "Scryfall could not read this search. Check its syntax."
+  },
   "resultCount": "{count, number} results",
   "gridView": "Grid view",
   "listView": "List view",

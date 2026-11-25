@@ -55,6 +55,42 @@ test.describe("Card Search Flow", () => {
     await expect(page.getByText(/Scryfall API error/i)).toHaveCount(0);
   });
 
+  test("a search Scryfall cannot answer says card search is unavailable, not a raw Scryfall error", async ({
+    page,
+  }) => {
+    // The browser asks the shared cache first, and the server fills it from
+    // Scryfall itself, so the cache must miss for the browser to reach
+    // Scryfall: an answer without `data` is a miss (`shared-cache-client.ts`).
+    await page.route("**/api/cache/search**", async (route) => {
+      await route.fulfill({ json: { hit: false } });
+    });
+    await page.route(
+      "https://api.scryfall.com/cards/search**",
+      async (route) => {
+        await route.fulfill({
+          status: 503,
+          json: {
+            object: "error",
+            status: 503,
+            details: "Service Unavailable",
+          },
+        });
+      }
+    );
+    await openBuilder(page);
+
+    await page.getByTestId("search-input").fill("sol ring");
+
+    // The search retries twice with a back-off before it settles as failed.
+    // Filtered: Next.js mounts its own role="alert" route announcer.
+    await expect(
+      page.getByRole("alert").filter({
+        hasText: "Card search is unavailable right now. Try again in a moment.",
+      })
+    ).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText(/Scryfall API error/i)).toHaveCount(0);
+  });
+
   test("filter toggle shows and hides filter panel", async ({ page }) => {
     await openBuilder(page);
 
