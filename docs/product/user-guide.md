@@ -554,8 +554,10 @@ link. They also wait while an input method (IME) is composing text.
 
 If you use speech input or a screen reader, a stray key can move the focus or
 add a card. Turn these shortcuts off with the **Single-key shortcuts** switch in
-the shortcut list. This browser remembers the choice. Ctrl/⌘ shortcuts (undo,
-save, export, import) keep working, and Esc still closes dialogs.
+the shortcut list. The playtest's key list shows the same switch, so you can
+turn the playtest's letter keys off without leaving it; one switch covers both.
+This browser remembers the choice. Ctrl/⌘ shortcuts (undo, save, export,
+import) keep working, and Esc still closes dialogs.
 
 ---
 
