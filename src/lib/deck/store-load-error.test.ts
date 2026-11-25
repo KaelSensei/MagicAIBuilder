@@ -35,7 +35,11 @@ describe("useDeckStore.loadDecks — failure reporting", () => {
 
     expect(toastAdd).toHaveBeenCalledWith("error", expect.any(String));
     expect(useDeckStore.getState().decks).toEqual({});
-    expect(useDeckStore.getState().deckOpenError).toEqual({ deckId: "deck-1", reason: "offline" });
+    expect(useDeckStore.getState().deckOpenError).toEqual({
+      deckId: "deck-1",
+      kind: "failed",
+      reason: "offline",
+    });
   });
 
   it("starts with no load error", () => {

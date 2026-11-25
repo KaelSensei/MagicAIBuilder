@@ -29,6 +29,7 @@ import {
 import { DataAsOfLine } from "@/components/deck/DataAsOfLine";
 import { currentDataAsOfFacts } from "@/lib/deck/data-as-of";
 import { useDeckStore } from "@/lib/deck/store";
+import { failureToRetry } from "@/lib/deck/deck-open-error";
 import { isDeckStub } from "@/lib/deck/store-factories";
 import { computeDeckStats } from "@/lib/deck/stats";
 import { comboDataOf } from "@/lib/deck/combo-data-of";
@@ -323,7 +324,7 @@ function UnavailableBuilderPage({
         <DeckDepartureGate isLeaving={isLeaving}>
           <DeckUnavailableState
             isLoading={isSyncing || (isDeckIncomplete && !activeDeckOpenError && !loadError)}
-            loadError={activeDeckOpenError?.reason ?? loadError}
+            loadError={failureToRetry(activeDeckOpenError, loadError)}
             errorSource={activeDeckOpenError ? "deck" : "list"}
             onRetry={retry}
           />

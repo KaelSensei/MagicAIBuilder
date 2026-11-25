@@ -31,6 +31,10 @@ import {
   readAnsweredVersion,
 } from "@/lib/db/deck-api-answer";
 import { useCollectionStore } from "@/lib/collection/store";
+import {
+  deckOpenErrorFrom,
+  type DeckOpenError,
+} from "@/lib/deck/deck-open-error";
 import { useToastStore } from "@/hooks/useToast";
 import { logger } from "@/lib/logger";
 import {
@@ -537,8 +541,8 @@ export interface DeckStore {
   isSyncing: boolean;
   /** Why the last deck listing failed, or null when it succeeded. */
   loadError: string | null;
-  /** Individual deck hydration failure, scoped to the deck being opened. */
-  deckOpenError: { readonly deckId: string; readonly reason: string } | null;
+  /** Individual deck hydration failure, scoped to the deck being opened: missing or failed. */
+  deckOpenError: DeckOpenError | null;
 
   // Undo stack
   undoStack: DeckAction[];
@@ -1564,12 +1568,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       }));
     } catch (err) {
       logger.error("Unexpected error", "setActiveDeck.lazyLoad", err);
-      set({
-        deckOpenError: {
-          deckId: id,
-          reason: err instanceof Error ? err.message : "Failed to open deck",
-        },
-      });
+      set({ deckOpenError: deckOpenErrorFrom(id, err) });
       useToastStore
         .getState()
         .add("error", "Could not open deck. Please try again.");
