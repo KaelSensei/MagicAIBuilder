@@ -655,11 +655,11 @@ describe("characterization: builder page shell", () => {
       ).toBeInTheDocument();
     });
 
-    it("currently names the card search box only by its placeholder (pinned)", async () => {
+    it("names the card search box, not only by its placeholder", async () => {
       await openSavedDeck();
 
       expect(screen.getByPlaceholderText("Search cards…")).toHaveAccessibleName(
-        ""
+        "Search cards"
       );
     });
 
