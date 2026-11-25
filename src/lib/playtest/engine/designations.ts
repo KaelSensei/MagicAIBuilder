@@ -26,6 +26,7 @@ import type {
   PlayerCounterKind,
   PlayerDesignations,
   PlaytestEngine,
+  PlaytestLogMessage,
   ToggledDesignation,
 } from "./types";
 
@@ -122,7 +123,7 @@ export function applyPlayerCounter(
     patch: {
       designations: { ...state.designations, [change.counter]: total },
     },
-    description: counterLine(change, total),
+    message: counterMessage(change, total),
   });
 }
 
@@ -142,7 +143,7 @@ export function applyGainCitysBlessing(
 
   return pushHistory(state, deps.clock, {
     patch: { designations: { ...state.designations, citysBlessing: true } },
-    description: "Got the city's blessing",
+    message: { key: "gotCitysBlessing" },
   });
 }
 
@@ -164,7 +165,7 @@ export function applySetDayNight(
   }
   return pushHistory(state, deps.clock, {
     patch: { designations: { ...state.designations, dayNight } },
-    description: dayNightLine(state.designations.dayNight, dayNight),
+    message: dayNightMessage(state.designations.dayNight, dayNight),
   });
 }
 
@@ -185,7 +186,7 @@ export function applyToggleDesignation(
 
   return pushHistory(state, deps.clock, {
     patch: { designations: { ...state.designations, [designation]: has } },
-    description: TOGGLE_LINES[designation][has ? "taken" : "lost"],
+    message: { key: TOGGLE_KEYS[designation][has ? "taken" : "lost"] },
   });
 }
 
@@ -205,35 +206,44 @@ export function applyRingTempts(
 
   return pushHistory(state, deps.clock, {
     patch: { designations: { ...state.designations, ringTemptations } },
-    description: `The Ring tempted you (${ringTemptations} in total)`,
+    message: { key: "ringTempted", params: { total: ringTemptations } },
   });
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────
-/** The log line when the player takes a designation, and when an opponent takes it away. */
-const TOGGLE_LINES: Readonly<
-  Record<ToggledDesignation, { readonly taken: string; readonly lost: string }>
+/** The log messages of a toggled designation; each is a `PlaytestLogMessage` without parameters. */
+type DesignationLogKey =
+  | "becameMonarch"
+  | "opponentBecameMonarch"
+  | "tookInitiative"
+  | "opponentTookInitiative";
+
+/** The log message when the player takes a designation, and when an opponent takes it away. */
+const TOGGLE_KEYS: Readonly<
+  Record<
+    ToggledDesignation,
+    { readonly taken: DesignationLogKey; readonly lost: DesignationLogKey }
+  >
 > = {
-  monarch: {
-    taken: "Became the monarch",
-    lost: "An opponent became the monarch",
-  },
-  initiative: {
-    taken: "Took the initiative",
-    lost: "An opponent took the initiative",
-  },
+  monarch: { taken: "becameMonarch", lost: "opponentBecameMonarch" },
+  initiative: { taken: "tookInitiative", lost: "opponentTookInitiative" },
 };
 
-/** "It became day" from neither; "Night became day" when they swap (CR 731.1, 731.1a). */
-function dayNightLine(from: DayNight, to: DayOrNight): string {
-  if (from === "neither") return `It became ${to}`;
-  return from === "day" ? "Day became night" : "Night became day";
+/** Day or night begins from neither, or the two swap (CR 731.1, 731.1a). */
+function dayNightMessage(from: DayNight, to: DayOrNight): PlaytestLogMessage {
+  return {
+    key: from === "neither" ? "dayNightBegan" : "dayNightSwapped",
+    params: { to },
+  };
 }
 
-/** "Gained 2 poison counters (3 in total)", "Lost 1 energy counter (0 in total)". */
-function counterLine(change: PlayerCounterChange, total: number): string {
-  const verb = change.amount > 0 ? "Gained" : "Lost";
-  const count = Math.abs(change.amount);
-  const noun = count === 1 ? "counter" : "counters";
-  return `${verb} ${count} ${change.counter} ${noun} (${total} in total)`;
+/** Counters gained or lost, how many, and the count they leave. */
+function counterMessage(
+  change: PlayerCounterChange,
+  total: number
+): PlaytestLogMessage {
+  return {
+    key: change.amount > 0 ? "playerCountersGained" : "playerCountersLost",
+    params: { counter: change.counter, count: Math.abs(change.amount), total },
+  };
 }

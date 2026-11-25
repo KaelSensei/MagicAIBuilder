@@ -18,7 +18,7 @@ import { OPENING_HAND_SIZE } from "@/lib/deck/game-constants";
 import { pushHistory } from "./history";
 import { defaultPlaytestDeps, type PlaytestDeps } from "./ports";
 import { shuffleCards } from "./shuffle";
-import type { PlaytestEngine } from "./types";
+import type { PlaytestEngine, PlaytestLogMessage } from "./types";
 
 // ─── Mulligan ─────────────────────────────────────────────────────────────
 /**
@@ -81,15 +81,14 @@ export function maxMulligans(
 }
 
 /**
- * Describes a mulligan for the action log.
+ * The log message of a mulligan: a free one (CR 103.5c) bottoms nothing.
  *
  * @param cardsToBottom - cards the player must now put on the bottom
- * @returns the log line
+ * @returns the message the action log renders
  */
-function describeMulligan(cardsToBottom: number): string {
-  if (cardsToBottom === 0) return "Free mulligan: drew a new seven";
-  const cards = cardsToBottom === 1 ? "1 card" : `${cardsToBottom} cards`;
-  return `Mulligan: drew a new seven, ${cards} to put on the bottom`;
+function mulliganMessage(cardsToBottom: number): PlaytestLogMessage {
+  if (cardsToBottom === 0) return { key: "freeMulligan" };
+  return { key: "mulligan", params: { toBottom: cardsToBottom } };
 }
 
 /**
@@ -138,7 +137,7 @@ export function applyMulligan(
         ? { commandZone: [...state.commandZone, ...commanders] }
         : {}),
     },
-    description: describeMulligan(cardsToBottom),
+    message: mulliganMessage(cardsToBottom),
   });
 }
 
@@ -217,6 +216,9 @@ export function applyBottomCards(
       hand: state.hand.filter((card) => !chosenIds.has(card.id)),
       library: [...state.library, ...chosen],
     },
-    description: `Put ${chosen.map((card) => card.name).join(", ")} on the bottom of the library`,
+    message: {
+      key: "bottomed",
+      params: { cards: chosen.map((card) => card.name) },
+    },
   });
 }

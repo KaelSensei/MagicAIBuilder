@@ -21,9 +21,6 @@ import { defaultPlaytestDeps, type PlaytestDeps } from "./ports";
 import { shuffleCards } from "./shuffle";
 import type { PlaytestEngine } from "./types";
 
-/** The log line of a hand shuffle; the engine's lines are English, the UI translates around them. */
-export const LIBRARY_SHUFFLED_LINE = "Library shuffled";
-
 /**
  * Shuffles the library and nothing else (CR 701.24a), as one undo step with one log line. The
  * hand, the battlefield, the graveyard, exile and the command zone keep their cards and order.
@@ -41,6 +38,6 @@ export function applyShuffleLibrary(
 
   return pushHistory(state, deps.clock, {
     patch: { library: shuffleCards(state.library, deps.random) },
-    description: LIBRARY_SHUFFLED_LINE,
+    message: { key: "libraryShuffled" },
   });
 }

@@ -1,13 +1,22 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { renderWithIntl } from "@/test/render-with-intl";
+import { noteMessage, type PlaytestActionLogEntry } from "@/lib/playtest/engine";
 import { PlaytestActionLog } from "./PlaytestActionLog";
+
+/** A free-text line the player wrote, as the log records it, with optional evidence. */
+function note(
+  entry: Omit<PlaytestActionLogEntry, "message">,
+  text: string
+): PlaytestActionLogEntry {
+  return { ...entry, message: noteMessage(text) };
+}
 
 describe("PlaytestActionLog", () => {
   it("filters visible actions by phase without changing the complete log", () => {
     renderWithIntl(<PlaytestActionLog deckName="Test" entries={[
-      { id: 1, turn: 1, phase: "Draw", description: "Drew a card" },
-      { id: 2, turn: 1, phase: "Main1", description: "Cast a spell" },
+      note({ id: 1, turn: 1, phase: "Draw" }, "Drew a card"),
+      note({ id: 2, turn: 1, phase: "Main1" }, "Cast a spell"),
     ]} onAdd={vi.fn()} onEdit={vi.fn()} onRemove={vi.fn()} />);
 
     fireEvent.click(screen.getByRole("button", { name: "Draw" }));
@@ -19,10 +28,10 @@ describe("PlaytestActionLog", () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText } });
     renderWithIntl(<PlaytestActionLog deckName="Test" entries={[
-      { id: 1, turn: 1, phase: "Draw", description: "First draw" },
-      { id: 2, turn: 1, phase: "Main1", description: "First spell" },
-      { id: 3, turn: 2, phase: "Main1", description: "Second spell" },
-      { id: 4, turn: 2, phase: "Draw", description: "Second draw" },
+      note({ id: 1, turn: 1, phase: "Draw" }, "First draw"),
+      note({ id: 2, turn: 1, phase: "Main1" }, "First spell"),
+      note({ id: 3, turn: 2, phase: "Main1" }, "Second spell"),
+      note({ id: 4, turn: 2, phase: "Draw" }, "Second draw"),
     ]} onAdd={vi.fn()} onEdit={vi.fn()} onRemove={vi.fn()} />);
 
     fireEvent.click(screen.getByRole("button", { name: "Turn 1" }));
@@ -39,8 +48,8 @@ describe("PlaytestActionLog", () => {
 
   it("filters visible actions by turn and can show the full log again", () => {
     renderWithIntl(<PlaytestActionLog deckName="Test" entries={[
-      { id: 1, turn: 1, phase: "Draw", description: "First turn draw" },
-      { id: 2, turn: 2, phase: "Draw", description: "Second turn draw" },
+      note({ id: 1, turn: 1, phase: "Draw" }, "First turn draw"),
+      note({ id: 2, turn: 2, phase: "Draw" }, "Second turn draw"),
     ]} onAdd={vi.fn()} onEdit={vi.fn()} onRemove={vi.fn()} />);
 
     fireEvent.click(screen.getByRole("button", { name: "Turn 1" }));
@@ -53,8 +62,8 @@ describe("PlaytestActionLog", () => {
 
   it("limits turn evidence to the selected turn", () => {
     renderWithIntl(<PlaytestActionLog deckName="Test" entries={[
-      { id: 1, turn: 1, phase: "Draw", description: "First draw", kind: "draw" },
-      { id: 2, turn: 2, phase: "Draw", description: "Second draw", kind: "draw" },
+      note({ id: 1, turn: 1, phase: "Draw", kind: "draw" }, "First draw"),
+      note({ id: 2, turn: 2, phase: "Draw", kind: "draw" }, "Second draw"),
     ]} onAdd={vi.fn()} onEdit={vi.fn()} onRemove={vi.fn()} />);
 
     fireEvent.click(screen.getByRole("button", { name: "Turn 1" }));
@@ -67,8 +76,8 @@ describe("PlaytestActionLog", () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText } });
     renderWithIntl(<PlaytestActionLog deckName="Test" entries={[
-      { id: 1, turn: 1, phase: "Draw", description: "First draw" },
-      { id: 2, turn: 2, phase: "Draw", description: "Second draw" },
+      note({ id: 1, turn: 1, phase: "Draw" }, "First draw"),
+      note({ id: 2, turn: 2, phase: "Draw" }, "Second draw"),
     ]} onAdd={vi.fn()} onEdit={vi.fn()} onRemove={vi.fn()} />);
 
     fireEvent.click(screen.getByRole("button", { name: "Turn 1" }));
@@ -79,7 +88,7 @@ describe("PlaytestActionLog", () => {
 
   it("shows localized turn and phase names in French", () => {
     renderWithIntl(
-      <PlaytestActionLog deckName="Test" entries={[{ id: 1, turn: 2, phase: "Main1", description: "Made mana" }]} onAdd={vi.fn()} onEdit={vi.fn()} onRemove={vi.fn()} />,
+      <PlaytestActionLog deckName="Test" entries={[note({ id: 1, turn: 2, phase: "Main1" }, "Made mana")]} onAdd={vi.fn()} onEdit={vi.fn()} onRemove={vi.fn()} />,
       { locale: "fr" }
     );
 
@@ -90,7 +99,7 @@ describe("PlaytestActionLog", () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText } });
     renderWithIntl(
-      <PlaytestActionLog deckName="Test" entries={[{ id: 1, turn: 2, phase: "Main1", description: "Made mana" }]} onAdd={vi.fn()} onEdit={vi.fn()} onRemove={vi.fn()} />,
+      <PlaytestActionLog deckName="Test" entries={[note({ id: 1, turn: 2, phase: "Main1" }, "Made mana")]} onAdd={vi.fn()} onEdit={vi.fn()} onRemove={vi.fn()} />,
       { locale: "fr" }
     );
 
@@ -101,9 +110,24 @@ describe("PlaytestActionLog", () => {
     });
   });
 
+  // #1853: a line the engine recorded is copied in the player's language.
+  it("copies an engine line in French", async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText } });
+    renderWithIntl(
+      <PlaytestActionLog deckName="Test" entries={[{ id: 1, turn: 2, phase: "Main1", message: { key: "libraryShuffled" } }]} onAdd={vi.fn()} onEdit={vi.fn()} onRemove={vi.fn()} />,
+      { locale: "fr" }
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Copier le journal" }));
+
+    await waitFor(() => {
+      expect(writeText).toHaveBeenCalledWith("Test — Journal des actions\n\nTour 2\n- Principale 1: Tu as mélangé ta bibliothèque");
+    });
+  });
 
   it("copies the exported playtest log", async () => {
-    const entries = [{ id: 1, turn: 2, phase: "Main1", description: "Made mana" }] as const;
+    const entries = [note({ id: 1, turn: 2, phase: "Main1" }, "Made mana")];
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText } });
     renderWithIntl(<PlaytestActionLog deckName="Test" entries={entries} onAdd={vi.fn()} onEdit={vi.fn()} onRemove={vi.fn()} />);
@@ -120,7 +144,7 @@ describe("PlaytestActionLog", () => {
       configurable: true,
       value: { writeText: vi.fn().mockRejectedValue(new Error("blocked")) },
     });
-    renderWithIntl(<PlaytestActionLog deckName="Test" entries={[{ id: 1, turn: 1, phase: "Draw", description: "Drew a card" }]} onAdd={vi.fn()} onEdit={vi.fn()} onRemove={vi.fn()} />);
+    renderWithIntl(<PlaytestActionLog deckName="Test" entries={[note({ id: 1, turn: 1, phase: "Draw" }, "Drew a card")]} onAdd={vi.fn()} onEdit={vi.fn()} onRemove={vi.fn()} />);
 
     fireEvent.click(screen.getByRole("button", { name: "Copy log" }));
 
@@ -128,7 +152,7 @@ describe("PlaytestActionLog", () => {
   });
 
   it("focuses an explicitly edited action without scrolling the viewport", () => {
-    renderWithIntl(<PlaytestActionLog deckName="Test" entries={[{ id: 1, turn: 2, phase: "Main1", description: "Made mana" }]} onAdd={vi.fn()} onEdit={vi.fn()} onRemove={vi.fn()} />);
+    renderWithIntl(<PlaytestActionLog deckName="Test" entries={[note({ id: 1, turn: 2, phase: "Main1" }, "Made mana")]} onAdd={vi.fn()} onEdit={vi.fn()} onRemove={vi.fn()} />);
     const focus = vi.spyOn(HTMLElement.prototype, "focus");
     try {
       fireEvent.click(screen.getByRole("button", { name: /^edit$/i }));
@@ -140,7 +164,7 @@ describe("PlaytestActionLog", () => {
   });
   it("cancels an edited action with Escape without saving it", () => {
     const onEdit = vi.fn();
-    renderWithIntl(<PlaytestActionLog deckName="Test" entries={[{ id: 1, turn: 2, phase: "Main1", description: "Made mana" }]} onAdd={vi.fn()} onEdit={onEdit} onRemove={vi.fn()} />);
+    renderWithIntl(<PlaytestActionLog deckName="Test" entries={[note({ id: 1, turn: 2, phase: "Main1" }, "Made mana")]} onAdd={vi.fn()} onEdit={onEdit} onRemove={vi.fn()} />);
 
     fireEvent.click(screen.getByRole("button", { name: /^edit$/i }));
     const input = screen.getByLabelText(/edit action/i);
@@ -165,7 +189,7 @@ describe("PlaytestActionLog", () => {
     renderWithIntl(
       <PlaytestActionLog
         deckName="Test"
-        entries={[{ id: 1, turn: 2, phase: "Main1", description: "Made mana" }]}
+        entries={[note({ id: 1, turn: 2, phase: "Main1" }, "Made mana")]}
         onAdd={vi.fn()}
         onEdit={onEdit}
         onRemove={onRemove}
@@ -180,6 +204,18 @@ describe("PlaytestActionLog", () => {
     expect(onRemove).toHaveBeenCalledWith(1);
   });
 
+  // #1853: editing an engine line starts from the text the player reads, in their language.
+  it("starts editing an engine line from its French text", () => {
+    renderWithIntl(
+      <PlaytestActionLog deckName="Test" entries={[{ id: 1, turn: 2, phase: "Main1", message: { key: "producedMana", params: { amount: 3 } } }]} onAdd={vi.fn()} onEdit={vi.fn()} onRemove={vi.fn()} />,
+      { locale: "fr" }
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Modifier" }));
+
+    expect(screen.getByRole("textbox", { name: "Modifier l’action" })).toHaveValue("Tu as produit 3 mana");
+  });
+
   it("records mana with a number instead of inferring it from free text", () => {
     const onRecordMana = vi.fn();
     renderWithIntl(<PlaytestActionLog deckName="Test" entries={[]} onAdd={vi.fn()} onEdit={vi.fn()} onRemove={vi.fn()} onRecordMana={onRecordMana} />);
@@ -190,8 +226,8 @@ describe("PlaytestActionLog", () => {
 
   it("shows turn evidence without counting unstructured notes", () => {
     renderWithIntl(<PlaytestActionLog deckName="Test" entries={[
-      { id: 1, turn: 1, phase: "Draw", description: "Drew a card", kind: "draw" },
-      { id: 2, turn: 1, phase: "Main1", description: "Produced mana", kind: "mana", amount: 2 },
+      note({ id: 1, turn: 1, phase: "Draw", kind: "draw" }, "Drew a card"),
+      note({ id: 2, turn: 1, phase: "Main1", kind: "mana", amount: 2 }, "Produced mana"),
     ]} onAdd={vi.fn()} onEdit={vi.fn()} onRemove={vi.fn()} />);
     expect(screen.getByText((_, element) => element?.tagName === "P" && element.textContent?.includes("Turn 1 · 1 draw · 2 mana · 1 card seen") === true)).toBeDefined();
   });

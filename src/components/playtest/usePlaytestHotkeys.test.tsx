@@ -103,7 +103,7 @@ describe("the playtest's keys", () => {
 
     expect(game().hand).toHaveLength(before.hand.length + 1);
     expect(game().actionLog).toHaveLength(before.actionLog.length + 1);
-    expect(game().actionLog.at(-1)?.description).toBe("Drew a card");
+    expect(game().actionLog.at(-1)?.message).toEqual({ key: "drewCard" });
     expect(game().history).toHaveLength(before.history.length + 1);
   });
 
@@ -123,7 +123,9 @@ describe("the playtest's keys", () => {
 
     expect(game().library).toHaveLength(before.library.length);
     expect(game().hand).toEqual(before.hand);
-    expect(game().actionLog.at(-1)?.description).toBe("Library shuffled");
+    expect(game().actionLog.at(-1)?.message).toEqual({
+      key: "libraryShuffled",
+    });
   });
 
   it("U untaps every permanent", async () => {
