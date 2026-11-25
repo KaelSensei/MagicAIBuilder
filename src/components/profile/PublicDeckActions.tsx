@@ -13,7 +13,7 @@
 import { useCallback, useState, type ReactNode } from "react";
 import { Bookmark, CopyPlus, Printer, Share2 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useRouter } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { forkPublicDeck } from "@/lib/db/deck-api";
 import type { InspiredForks } from "@/lib/deck/inspired-forks";
 import { InspiredForksLine } from "./InspiredForksLine";
@@ -40,15 +40,19 @@ interface ForkSourceLinkProps {
   readonly children: ReactNode;
 }
 
-/** Links the fork credit to the source deck's public page. */
+/**
+ * Links the fork credit to the source deck's public page, in the reader's
+ * locale: the localized `Link` adds the `/fr` prefix a plain anchor dropped
+ * (#1842).
+ */
 function ForkSourceLink({ sourceDeckId, children }: ForkSourceLinkProps) {
   return (
-    <a
+    <Link
       href={`/deck/${sourceDeckId}`}
       className="font-medium text-[var(--accent-text)] hover:underline"
     >
       {children}
-    </a>
+    </Link>
   );
 }
 
