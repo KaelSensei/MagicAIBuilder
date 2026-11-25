@@ -214,5 +214,29 @@ describe("BulkEditModal — when the deck API does not save the list", () => {
       expect(alert).not.toHaveTextContent(/dropped/i);
       expect(api.applyCardChanges).not.toHaveBeenCalled();
     });
+
+    it("puts the reloaded deck in the list once the reload behind a dropped save lands", async () => {
+      let refuseQuantity: (refusal: DeckApiRefusal) => void = () => undefined;
+      api.updateCardQuantity.mockReturnValueOnce(
+        new Promise((_, reject) => {
+          refuseQuantity = reject;
+        })
+      );
+      const quantityWrite = useDeckStore
+        .getState()
+        .updateCardQuantity("forest-row", 1);
+      await waitFor(() => {
+        expect(api.updateCardQuantity).toHaveBeenCalledOnce();
+      });
+
+      const textarea = saveWithoutSignet();
+      refuseQuantity(new DeckApiRefusal(409, STALE_DECK_MESSAGE));
+      await quantityWrite;
+
+      await waitFor(() => {
+        expect(textarea).toHaveDisplayValue(/^1 Swords to Plowshares$/m);
+      });
+      expect(textarea).not.toHaveDisplayValue(/Sol Ring/);
+    });
   });
 });
