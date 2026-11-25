@@ -31,7 +31,7 @@ import { useRouter } from "@/i18n/navigation";
 import { ImportDialog } from "@/components/deck/ImportDialog";
 import type { HeaderDeckActionsUiState } from "@/components/layout/header-deck-actions-state";
 import { Button } from "@/components/ui/Button";
-import { useDeckCreateFailureReport } from "@/hooks/useDeckCreateFailureReport";
+import { useDeckCreateFailureReport } from "@/hooks/useDeckFailureReport";
 import { useHasHydrated } from "@/hooks/useHasHydrated";
 import { useDeckStore } from "@/lib/deck/store";
 
