@@ -10,8 +10,10 @@ import { ExternalCardDropTarget } from "@/components/builder/ExternalCardDropTar
 import { Modal } from "@/components/ui/Modal";
 import { GUEST_DECK_ID } from "@/lib/deck/guest-deck";
 import { useDeckStore } from "@/lib/deck/store";
-import type { DeckZone } from "@/lib/deck/types";
+import type { DeckFormat } from "@/lib/deck/formats";
+import type { DeckCard, DeckZone } from "@/lib/deck/types";
 import { LIGHTNING_BOLT_NAMED_RECORDED } from "@/lib/scryfall/fixtures/e2e-stand-in-v1";
+import type { ScryfallCard } from "@/lib/scryfall/types";
 import { aDeckCard } from "@/test/builders/card";
 import { aDeck } from "@/test/builders/deck";
 import { aScryfallCard } from "@/test/builders/scryfall";
@@ -36,6 +38,25 @@ const SOL_RING = aScryfallCard({
 const SOL_RING_PAGE = "https://scryfall.com/card/c21/263/sol-ring";
 const SOL_RING_AT_LIMIT =
   "Sol Ring is already at its copy limit for Commander. Nothing was added.";
+const KRENKO = aScryfallCard({
+  id: "00000000-0000-4000-8000-00000000c0de",
+  name: "Krenko, Mob Boss",
+  type_line: "Legendary Creature — Goblin Warrior",
+  oracle_text:
+    "{T}: Create X 1/1 red Goblin creature tokens, where X is the number of Goblins you control.",
+  set: "m13",
+});
+const KRENKO_PAGE = "https://scryfall.com/card/m13/139/krenko-mob-boss";
+const MOUNTAIN = aScryfallCard({
+  id: "00000000-0000-4000-8000-0000000000aa",
+  name: "Mountain",
+  type_line: "Basic Land — Mountain",
+  oracle_text: "({T}: Add {R}.)",
+  set: "m21",
+});
+const MOUNTAIN_PAGE = "https://scryfall.com/card/m21/272/mountain";
+const BOLT_AT_LIMIT_IN_MODERN =
+  "Lightning Bolt is already at its copy limit for Modern. Nothing was added.";
 
 const deckApi = createInMemoryDeckApi();
 const server = setupMsw(
@@ -132,6 +153,65 @@ function openCommanderDeckHoldingSolRing(): void {
   server.use(
     http.post("*/cards/collection", () =>
       HttpResponse.json({ object: "list", not_found: [], data: [SOL_RING] })
+    )
+  );
+}
+
+/** A row of `quantity` Lightning Bolts in `zone`. */
+function bolts(quantity: number, zone: DeckZone): DeckCard {
+  return aDeckCard({
+    id: `bolts-${zone}`,
+    scryfallId: BOLT.id,
+    name: "Lightning Bolt",
+    typeLine: "Instant",
+    quantity,
+    zone,
+  });
+}
+
+/** The deck's settings and rows that `openDeckHolding` opens. */
+interface HeldDeck {
+  readonly format: DeckFormat;
+  readonly rows: readonly DeckCard[];
+  readonly commander?: DeckCard;
+}
+
+/**
+ * Opens a deck of `format` holding `rows` (and `commander`, when given) in the editor, and
+ * stores the same rows on the in-memory deck API, so an add the editor lets through also passes
+ * the server's own copy count.
+ */
+function openDeckHolding({ format, rows, commander }: HeldDeck): void {
+  deckApi.seedDeck({
+    ...emptyApiDeck("deck-1"),
+    format,
+    cards: rows.map((row) => ({
+      ...row,
+      scryfallId: row.scryfallId ?? "",
+      deckId: "deck-1",
+      notes: null,
+      isCommander: false,
+      isPartner: false,
+    })),
+  });
+  useDeckStore.setState({
+    decks: {
+      "deck-1": aDeck({
+        id: "deck-1",
+        format,
+        cards: [...rows],
+        commander: commander ?? null,
+      }),
+    },
+    activeDeckId: "deck-1",
+  });
+}
+
+/** Lets Scryfall's collection lookup, which a set-and-number link goes through, answer `card`. */
+function collectionAnswers(card: ScryfallCard): void {
+  server.use(
+    http.post("*/cards/collection", () =>
+      HttpResponse.json({ object: "list", not_found: [], data: [card] })
     )
   );
 }
@@ -303,6 +383,103 @@ describe("a card dropped from another site", () => {
     expect(zoneCards("main")).toEqual([
       expect.objectContaining({ name: "Lightning Bolt", quantity: 4 }),
     ]);
+  });
+
+  it("a card at its limit in the main deck, dropped on the sideboard, adds nothing and says it is at the limit", async () => {
+    openDeckHolding({ format: "modern", rows: [bolts(4, "main")] });
+    renderWithProviders(<ExternalCardDropTarget zone="sideboard" />);
+
+    dropOnBuilder({ entries: { "text/uri-list": BOLT_EDHREC } });
+
+    await waitFor(() =>
+      expect(toasts).toHaveBeenCalledWith("info", BOLT_AT_LIMIT_IN_MODERN)
+    );
+    expect(zoneCards("sideboard")).toEqual([]);
+    expect(deckApi.addCard).not.toHaveBeenCalled();
+    expect(useDeckStore.getState().undoStack).toEqual([]);
+  });
+
+  it("the commander's own card, dropped on the main deck, adds nothing and says it is at the limit", async () => {
+    openDeckHolding({
+      format: "commander",
+      rows: [],
+      commander: aDeckCard({
+        id: "krenko",
+        scryfallId: KRENKO.id,
+        name: KRENKO.name,
+        typeLine: KRENKO.type_line,
+      }),
+    });
+    collectionAnswers(KRENKO);
+    renderWithProviders(<ExternalCardDropTarget zone="main" />);
+
+    dropOnBuilder({ entries: { "text/uri-list": KRENKO_PAGE } });
+
+    await waitFor(() =>
+      expect(toasts).toHaveBeenCalledWith(
+        "info",
+        "Krenko, Mob Boss is already at its copy limit for Commander. Nothing was added."
+      )
+    );
+    expect(zoneCards("main")).toEqual([]);
+    expect(deckApi.addCard).not.toHaveBeenCalled();
+  });
+
+  it("a card below its limit across the deck, dropped on the sideboard, is added", async () => {
+    openDeckHolding({ format: "modern", rows: [bolts(3, "main")] });
+    renderWithProviders(<ExternalCardDropTarget zone="sideboard" />);
+
+    dropOnBuilder({ entries: { "text/uri-list": BOLT_EDHREC } });
+
+    await waitFor(() =>
+      expect(toasts).toHaveBeenCalledWith(
+        "success",
+        "Added Lightning Bolt to Sideboard"
+      )
+    );
+    expect(zoneCards("sideboard")).toEqual([
+      expect.objectContaining({ name: "Lightning Bolt", quantity: 1 }),
+    ]);
+  });
+
+  it("a basic land keeps no limit: a fifth Mountain dropped on the sideboard is added", async () => {
+    const mountains = aDeckCard({
+      id: "mountains",
+      scryfallId: MOUNTAIN.id,
+      name: MOUNTAIN.name,
+      typeLine: MOUNTAIN.type_line,
+      quantity: 4,
+      zone: "main",
+    });
+    openDeckHolding({ format: "modern", rows: [mountains] });
+    collectionAnswers(MOUNTAIN);
+    renderWithProviders(<ExternalCardDropTarget zone="sideboard" />);
+
+    dropOnBuilder({ entries: { "text/uri-list": MOUNTAIN_PAGE } });
+
+    await waitFor(() =>
+      expect(toasts).toHaveBeenCalledWith(
+        "success",
+        "Added Mountain to Sideboard"
+      )
+    );
+    expect(zoneCards("sideboard")).toEqual([
+      expect.objectContaining({ name: "Mountain", quantity: 1 }),
+    ]);
+  });
+
+  it("Considering is weighed alone: a card at its limit in the main deck, dropped there, is added", async () => {
+    openDeckHolding({ format: "modern", rows: [bolts(4, "main")] });
+    renderWithProviders(<ExternalCardDropTarget zone="maybeboard" />);
+
+    dropOnBuilder({ entries: { "text/uri-list": BOLT_EDHREC } });
+
+    await waitFor(() =>
+      expect(zoneCards("maybeboard")).toEqual([
+        expect.objectContaining({ name: "Lightning Bolt", quantity: 1 }),
+      ])
+    );
+    expect(toasts).not.toHaveBeenCalledWith("info", BOLT_AT_LIMIT_IN_MODERN);
   });
 
   it("a dropped file adds nothing and points to Import", async () => {

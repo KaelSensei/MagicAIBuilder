@@ -7,8 +7,9 @@
  * starts in this document (an image in the search results) is left alone. The payload's strings
  * go to the pure `readExternalCardReference`; the card is looked up through the Scryfall client
  * and its queue, never at the dropped address, and added with the store's `addCard`, which
- * applies the copy limit, the warnings and the undo entry as for any other add. A card the zone
- * already holds at its copy limit is reported before the add, since `addCard` skips it silently.
+ * applies the copy limit, the warnings and the undo entry as for any other add. A card the deck
+ * already holds at its copy limit, counted across the zones the limit covers, is reported before
+ * the add, since `addCard` skips it silently.
  *
  * Off while a dialog is open, and a paste into a text field stays the field's own.
  *
@@ -21,6 +22,7 @@ import {
   type ExternalCardReference,
 } from "@/lib/deck/external-card-link";
 import { commandZoneExceptions } from "@/lib/deck/color-identity";
+import { copiesCountedFor } from "@/lib/deck/counted-copies";
 import type { DeckFormat } from "@/lib/deck/formats";
 import { deckCopyLimit } from "@/lib/deck/multiples";
 import { useDeckStore } from "@/lib/deck/store";
@@ -140,16 +142,17 @@ function copiesIn(deck: Deck, cardName: string, zone: DeckZone): number {
     .reduce((total, card) => total + card.quantity, 0);
 }
 
-/** Copies of the named card the open deck holds in the zone. */
+/** Copies of the named card the open deck holds in the zone, to tell whether an add landed. */
 function copiesInZone(cardName: string, zone: DeckZone): number {
   const deck = useDeckStore.getState().getActiveDeck();
   return deck === null ? 0 : copiesIn(deck, cardName, zone);
 }
 
 /**
- * Whether the zone already holds as many copies of the card as the deck may hold, the limit
- * `addCard` skips the card at: four in a constructed deck (CR 100.2a), one in a singleton deck
- * (CR 903.5b), more when the card's own text or the commander allows it (CR 903.5e).
+ * Whether the deck already holds as many copies of the card as it may, counted as `addCard`
+ * counts them (`copiesCountedFor`): four in a constructed deck and its sideboard together
+ * (CR 100.2a, CR 100.4a), one in a singleton deck, its command zone included (CR 903.5b), more
+ * when the card's own text or the commander allows it (CR 903.5e). Considering is weighed alone.
  */
 function isAtCopyLimit(
   deck: Deck,
@@ -160,7 +163,12 @@ function isAtCopyLimit(
     { name: card.name, typeLine: card.type_line, oracleText: card.oracle_text },
     { format: deck.format, exceptions: commandZoneExceptions(deck) }
   );
-  return copiesIn(deck, card.name, zone) >= limit;
+  const counted = {
+    cards: cardsFromZoneSource(deck),
+    commander: deck.commander,
+    partner: deck.partner,
+  };
+  return copiesCountedFor(counted, card.name, zone) >= limit;
 }
 
 /**
