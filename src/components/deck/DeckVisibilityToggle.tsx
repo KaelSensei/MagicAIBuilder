@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Globe, Lock, Loader2 } from "lucide-react";
 import { cn } from "@/components/ui/utils";
+import { Link } from "@/i18n/navigation";
 import { logger } from "@/lib/logger";
 
 interface DeckVisibilityToggleProps {
@@ -42,9 +43,6 @@ export function DeckVisibilityToggle({
       setLoading(false);
     }
   };
-
-  const origin = globalThis.window?.location?.origin;
-  const publicUrl = origin ? `${origin}/deck/${deckId}` : `/deck/${deckId}`;
 
   return (
     <div className={cn("flex items-center gap-2", className)}>
@@ -87,14 +85,16 @@ export function DeckVisibilityToggle({
       </div>
 
       {isPublic && (
-        <a
-          href={publicUrl}
+        // The localized Link keeps the owner's locale prefix (/fr/deck/{id});
+        // a hand-built /deck/{id} sent a French owner to the English page.
+        <Link
+          href={`/deck/${deckId}`}
           target="_blank"
           rel="noopener noreferrer"
           className="text-xs text-[var(--accent-text)] hover:underline ml-1"
         >
           {t("visibility.view")}
-        </a>
+        </Link>
       )}
 
       {isPublic && !username && (
