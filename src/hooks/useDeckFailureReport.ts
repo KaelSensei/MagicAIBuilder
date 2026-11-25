@@ -18,10 +18,22 @@ import { logger } from "@/lib/logger";
 /** The `common` catalog key each failure of one request is told with. */
 export type DeckFailureMessages = Readonly<Record<DeckRequestFailure, string>>;
 
-/** How a failed creation of an empty deck reads: the decks page's and the header's "New deck". */
+/**
+ * How a failed creation of an empty deck reads: the decks page's and the
+ * header's "New deck". `POST /api/decks` never answers 404, so `missing` reads
+ * as any other failure.
+ */
 export const DECK_CREATE_FAILURE_MESSAGES: DeckFailureMessages = {
   "signed-out": "nav.createSignedOut",
+  missing: "nav.createFailed",
   failed: "nav.createFailed",
+};
+
+/** How a failed duplication of a deck reads: the decks page's and the builder's "Duplicate". */
+export const DECK_DUPLICATE_FAILURE_MESSAGES: DeckFailureMessages = {
+  "signed-out": "deckDuplicate.signedOut",
+  missing: "deckDuplicate.missing",
+  failed: "deckDuplicate.failed",
 };
 
 /**

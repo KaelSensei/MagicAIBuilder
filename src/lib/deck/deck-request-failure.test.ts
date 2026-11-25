@@ -9,8 +9,20 @@ describe("deckRequestFailureOf", () => {
     ).toBe("signed-out");
   });
 
+  it("reads a 404 answer as a deck that no longer exists", () => {
+    expect(
+      deckRequestFailureOf(
+        new DeckApiError("duplicateDeck", 404, "Deck not found")
+      )
+    ).toBe("missing");
+  });
+
   it.each([
     ["a malformed request (400)", new DeckApiError("createDeck", 400)],
+    [
+      "another account's deck (403)",
+      new DeckApiError("duplicateDeck", 403, "Forbidden"),
+    ],
     [
       "a server failure (500)",
       new DeckApiError("createDeck", 500, "Failed to create deck"),

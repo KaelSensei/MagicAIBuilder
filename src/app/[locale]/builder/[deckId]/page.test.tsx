@@ -38,6 +38,7 @@ import {
   onTestFinished,
   vi,
 } from "vitest";
+import { useToastStore } from "@/hooks/useToast";
 import { aiCallDenialBody } from "@/lib/ai/usage/denial";
 import { useCollectionStore } from "@/lib/collection/store";
 import type {
@@ -223,6 +224,15 @@ function deckApiLines(): readonly string[] {
     .filter((line) => line.includes("/api/decks"));
 }
 
+/** The text of every toast on screen, in order; a toast raised by key shows its key. */
+function toastTexts(): readonly string[] {
+  return useToastStore
+    .getState()
+    .toasts.map((toast) =>
+      typeof toast.message === "string" ? toast.message : toast.message.key
+    );
+}
+
 /** A handler for one deck route that waits for the test to let the answer through. */
 function heldUntilReleased(answer: () => Response): {
   readonly release: () => void;
@@ -327,6 +337,7 @@ beforeEach(() => {
   localStorage.clear();
   useDeckStore.setState(useDeckStore.getInitialState(), true);
   useUIStore.setState(useUIStore.getInitialState(), true);
+  useToastStore.setState({ toasts: [] });
   // jsdom does not implement scrollTo; framer-motion calls it while measuring the panels' entry.
   vi.spyOn(window, "scrollTo").mockImplementation(() => undefined);
 });
@@ -492,6 +503,51 @@ describe("characterization: builder page shell", () => {
 
       await waitFor(() => expect(push).toHaveBeenCalledWith("/builder/deck-2"));
       expect(deckApiLines()).toContain(`POST /api/decks/${DECK_ID}/duplicate`);
+    });
+
+    it("announces the copy by name in the player's language when it opens it", async () => {
+      server.use(
+        http.post("/api/decks/:id/duplicate", () =>
+          HttpResponse.json(
+            savedDeck({ id: "deck-2", name: "Talrand Spells (Copy)" }),
+            { status: 201 }
+          )
+        )
+      );
+      const { push } = renderBuilder(DECK_ID, PLAYER, "fr");
+      await screen.findByRole("heading", { level: 1, name: "Talrand Spells" });
+
+      await userEvent.click(screen.getByRole("button", { name: "Dupliquer" }));
+
+      await waitFor(() => expect(push).toHaveBeenCalledWith("/builder/deck-2"));
+      expect(toastTexts()).toEqual([
+        "Deck dupliqué : « Talrand Spells (Copy) »",
+      ]);
+    });
+
+    // The handler had no catch: the rejection went unhandled and the player saw nothing (I-01).
+    it("says in the player's language that the copy failed, and stays on the deck, when the server fails", async () => {
+      server.use(
+        http.post("/api/decks/:id/duplicate", () =>
+          HttpResponse.json(
+            { error: "Failed to duplicate deck" },
+            { status: 500 }
+          )
+        )
+      );
+      const { push } = renderBuilder(DECK_ID, PLAYER, "fr");
+      await screen.findByRole("heading", { level: 1, name: "Talrand Spells" });
+
+      await userEvent.click(screen.getByRole("button", { name: "Dupliquer" }));
+
+      await waitFor(() =>
+        expect(toastTexts()).toEqual([
+          "Impossible de dupliquer le deck. Réessayez.",
+        ])
+      );
+      expect(push).not.toHaveBeenCalled();
+      expect(useDeckStore.getState().activeDeckId).toBe(DECK_ID);
+      expect(useDeckStore.getState().isSyncing).toBe(false);
     });
 
     // CR 100.2a: a constructed deck holds at least 60 cards, not Commander's 100.

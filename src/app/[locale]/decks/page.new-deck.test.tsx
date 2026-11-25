@@ -1,10 +1,13 @@
 /**
- * Creating a deck from the `/decks` page, driven as a player would.
+ * Creating a deck from the `/decks` page, empty or as a copy of a deck,
+ * driven as a player would.
  *
  * The real deck store and deck API client run; MSW serves `POST /api/decks`
- * and records what the page sent (`setupMsw`). The page's chrome (header,
- * footer, deck views, wizard) is replaced, as it was before this file moved
- * off its deck store mock.
+ * and `POST /api/decks/:id/duplicate` and records what the page sent
+ * (`setupMsw`). The page's chrome (header, footer, deck views, wizard) is
+ * replaced, as it was before this file moved off its deck store mock; the
+ * deck card's stand-in keeps only its duplicate button, wired as the real
+ * card wires it.
  */
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -18,9 +21,16 @@ import { setupMsw } from "@/test/msw";
 import { renderWithProviders } from "@/test/render";
 
 const push = vi.hoisted(() => vi.fn());
+// What `useSession` answers: a guest creates decks, a signed-in player sees theirs.
+const session = vi.hoisted(() => {
+  const state: { status: "authenticated" | "unauthenticated" } = {
+    status: "unauthenticated",
+  };
+  return state;
+});
 
 vi.mock("next-auth/react", () => ({
-  useSession: () => ({ status: "unauthenticated" }),
+  useSession: () => ({ status: session.status }),
 }));
 vi.mock(import("next/navigation"), () => ({
   useRouter: () => ({
@@ -47,7 +57,15 @@ vi.mock(import("@/components/deck/DeckComparisonPanel"), () => ({
   DeckComparisonPanel: () => null,
 }));
 vi.mock(import("@/components/deck/HomeDeckCard"), () => ({
-  HomeDeckCard: () => <></>,
+  HomeDeckCard: ({ deck, onDuplicate, duplicatingId }) => (
+    <button
+      type="button"
+      disabled={duplicatingId === deck.id}
+      onClick={(event) => onDuplicate(event, deck.id)}
+    >
+      {`Duplicate ${deck.name}`}
+    </button>
+  ),
 }));
 vi.mock(import("@/components/deck/DeckListTable"), () => ({
   DeckListTable: () => <></>,
@@ -92,6 +110,7 @@ beforeEach(() => {
 
 afterEach(() => {
   push.mockClear();
+  session.status = "unauthenticated";
   useDeckStore.setState({ decks: {}, activeDeckId: null });
 });
 
@@ -238,5 +257,129 @@ describe("a deck creation that fails", () => {
     await waitFor(() =>
       expect(push).toHaveBeenCalledWith(`/builder/${NEW_DECK_ID}`)
     );
+  });
+});
+
+/*
+ * A failed duplicate only reached `logger.error`: the spinner stopped and the
+ * player was told nothing. The store's own `fetch` also threw a bare "Failed
+ * to duplicate deck", so a 401 read like a 500 (I-01).
+ */
+describe("duplicating a deck", () => {
+  const ORIGINAL = emptyApiDeck("deck-goblins", "Goblins");
+
+  /** Answers the next `POST /api/decks/:id/duplicate` with `status` and the route's `error` text. */
+  function refuseDuplication(status: number, error: string): void {
+    server.use(
+      http.post("/api/decks/:id/duplicate", () =>
+        HttpResponse.json({ error }, { status })
+      )
+    );
+  }
+
+  /** Opens the page as the signed-in owner of {@link ORIGINAL} and returns its duplicate button. */
+  async function openLibrary(locale: "en" | "fr" = "en"): Promise<HTMLElement> {
+    renderWithProviders(<DecksPage />, { locale });
+    return screen.findByRole("button", { name: `Duplicate ${ORIGINAL.name}` });
+  }
+
+  beforeEach(() => {
+    session.status = "authenticated";
+    server.use(
+      http.get("/api/decks", () =>
+        HttpResponse.json({ decks: [ORIGINAL], total: 1, page: 0, limit: 20 })
+      )
+    );
+  });
+
+  it("says so in French, with no HTTP status, and stops the spinner when the server fails", async () => {
+    refuseDuplication(500, "Failed to duplicate deck");
+    const duplicate = await openLibrary("fr");
+
+    fireEvent.click(duplicate);
+
+    await waitFor(() =>
+      expect(toastTexts()).toEqual([
+        "Impossible de dupliquer le deck. Réessayez.",
+      ])
+    );
+    expect(toastTexts().join(" ")).not.toContain("HTTP 500");
+    expect(duplicate).toBeEnabled();
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  it("keeps the raw error, with its status, in the log for diagnostics", async () => {
+    const logError = vi
+      .spyOn(logger, "error")
+      .mockImplementation(() => undefined);
+    refuseDuplication(500, "Failed to duplicate deck");
+    fireEvent.click(await openLibrary());
+
+    await waitFor(() =>
+      expect(logError).toHaveBeenCalledWith(
+        "Unexpected error",
+        "duplicateDeck",
+        expect.objectContaining({
+          message: "[duplicateDeck] HTTP 500: Failed to duplicate deck",
+        })
+      )
+    );
+    logError.mockRestore();
+  });
+
+  it("says so in English, without the browser's text, when the network fails", async () => {
+    server.use(
+      http.post("/api/decks/:id/duplicate", () => HttpResponse.error())
+    );
+    const duplicate = await openLibrary();
+
+    fireEvent.click(duplicate);
+
+    await waitFor(() =>
+      expect(toastTexts()).toEqual([
+        "Could not duplicate the deck. Please try again.",
+      ])
+    );
+    expect(duplicate).toBeEnabled();
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  it("asks the player to sign in again when the session has ended", async () => {
+    refuseDuplication(401, "Unauthorized");
+    fireEvent.click(await openLibrary("fr"));
+
+    await waitFor(() =>
+      expect(toastTexts()).toEqual([
+        "Votre session a expiré. Reconnectez-vous pour dupliquer un deck.",
+      ])
+    );
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  it("says the deck no longer exists when the server has no such deck", async () => {
+    refuseDuplication(404, "Deck not found");
+    fireEvent.click(await openLibrary("fr"));
+
+    await waitFor(() =>
+      expect(toastTexts()).toEqual([
+        "Ce deck n’existe plus : impossible de le dupliquer.",
+      ])
+    );
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  it("announces the copy by name in French and opens it in the builder", async () => {
+    const copy = emptyApiDeck("deck-goblins-copy", "Goblins (Copy)");
+    server.use(
+      http.post("/api/decks/:id/duplicate", () =>
+        HttpResponse.json(copy, { status: 201 })
+      )
+    );
+    fireEvent.click(await openLibrary("fr"));
+
+    await waitFor(() =>
+      expect(push).toHaveBeenCalledWith(`/builder/${copy.id}`)
+    );
+    expect(toastTexts()).toEqual(["Deck dupliqué : « Goblins (Copy) »"]);
   });
 });
