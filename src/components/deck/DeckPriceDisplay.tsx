@@ -14,7 +14,8 @@ interface DeckPriceDisplayProps {
  * Shows the total USD value of the active deck computed by `useDeckPrice`,
  * then, when the deck holds basic lands, the total without them (I-32): the
  * price of what a player who owns a box of basics would really buy.
- * Renders nothing when the deck has no cards yet.
+ * Says the price is unknown, rather than $0.00, when no played card has a
+ * known price (I-01). Renders nothing when the deck has no cards yet.
  */
 export function DeckPriceDisplay({ className }: DeckPriceDisplayProps) {
   const t = useTranslations("deck");
@@ -42,9 +43,15 @@ export function DeckPriceDisplay({ className }: DeckPriceDisplayProps) {
             {t("stats.totalValue")}
           </span>
         </div>
-        <span className="text-sm font-semibold text-emerald-400">
-          {formatUsdPrice(locale, totalPrice)}
-        </span>
+        {totalPrice === null ? (
+          <span className="text-sm font-medium text-[var(--text-secondary)]">
+            {t("stats.priceUnknown")}
+          </span>
+        ) : (
+          <span className="text-sm font-semibold text-emerald-400">
+            {formatUsdPrice(locale, totalPrice)}
+          </span>
+        )}
       </div>
 
       {totalWithoutBasics !== null && (
