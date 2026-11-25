@@ -10,6 +10,7 @@ import { getCommanderRuleIssues } from "./commander-rules-check";
 import { buildFormatStats } from "./format-stats";
 import { buildManaAlignment } from "./mana-alignment";
 import { buildTurnOnePlayability } from "./turn-one";
+import { compareByNameThenId, type NamedCardRow } from "./card-name-order";
 
 function buildManaCurve(
   nonLandCards: readonly DeckCard[]
@@ -43,6 +44,18 @@ function buildColorDistribution(
   return colorDistribution;
 }
 
+/**
+ * The names of the given rows by name, then id, so a warning list reads the
+ * same whatever order the deck's rows arrive in (I-03 slice 5). The banned
+ * list keys the builder's dismissed alert: a reorder must not re-open it.
+ */
+function namesByNameThenId(cards: readonly DeckCard[]): string[] {
+  return cards
+    .map((card): NamedCardRow => ({ name: card.name, cardId: card.id }))
+    .toSorted(compareByNameThenId)
+    .map((row) => row.name);
+}
+
 /** Compute comprehensive deck statistics (maybeboard cards are excluded) */
 export function computeDeckStats(deck: Deck): DeckStats {
   const mainCards = deck.cards.filter((c) => c.zone === "main");
@@ -66,7 +79,7 @@ export function computeDeckStats(deck: Deck): DeckStats {
   // Game Changers
   const gcCards = allCards.filter((c) => c.isGameChanger);
   const gameChangersCount = gcCards.reduce((s, c) => s + c.quantity, 0);
-  const gameChangersList = gcCards.map((c) => c.name);
+  const gameChangersList = namesByNameThenId(gcCards);
 
   // Total cards
   const totalCards = allCards.reduce((s, c) => s + c.quantity, 0);
@@ -76,13 +89,14 @@ export function computeDeckStats(deck: Deck): DeckStats {
     (sum, c) => sum + (c.price ?? 0) * c.quantity,
     0
   );
+  const budget = deck.budget;
   const overBudgetCards =
-    deck.budget === null || deck.budget === undefined
+    budget === null || budget === undefined
       ? []
-      : allCards.filter((c) => (c.price ?? 0) > deck.budget!).map((c) => c.name);
+      : namesByNameThenId(allCards.filter((c) => (c.price ?? 0) > budget));
 
   // Banned cards
-  const bannedCards = allCards.filter((c) => c.isBanned).map((c) => c.name);
+  const bannedCards = namesByNameThenId(allCards.filter((c) => c.isBanned));
 
   const colorIdentityViolations = getColorIdentityViolations(deck).map((v) => v.cardName);
 
