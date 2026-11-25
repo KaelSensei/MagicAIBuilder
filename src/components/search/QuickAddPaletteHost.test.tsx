@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
@@ -43,6 +43,10 @@ describe("QuickAddPaletteHost", () => {
     searched.length = 0;
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it("opens with Ctrl+K and does not search a one-letter line", async () => {
     const user = userEvent.setup();
     renderWithProviders(<QuickAddPaletteHost scope={SIMIC} onAdd={vi.fn()} />);
@@ -74,6 +78,34 @@ describe("QuickAddPaletteHost", () => {
       "main"
     );
     expect(screen.getByRole("dialog", { name: "Quick add" })).toBeTruthy();
+  });
+
+  it("opens with ⌘K on macOS and closes with ⌘K again", async () => {
+    vi.spyOn(window.navigator, "userAgent", "get").mockReturnValue(
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"
+    );
+    const user = userEvent.setup();
+    renderWithProviders(<QuickAddPaletteHost scope={SIMIC} onAdd={vi.fn()} />);
+
+    await user.keyboard("{Meta>}k{/Meta}");
+    expect(screen.getByRole("dialog", { name: "Quick add" })).toBeTruthy();
+
+    await user.keyboard("{Meta>}k{/Meta}");
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("stays closed for Ctrl+K on macOS and for Ctrl+Shift+K elsewhere", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<QuickAddPaletteHost scope={SIMIC} onAdd={vi.fn()} />);
+
+    await user.keyboard("{Control>}{Shift>}k{/Shift}{/Control}");
+    expect(screen.queryByRole("dialog")).toBeNull();
+
+    vi.spyOn(window.navigator, "userAgent", "get").mockReturnValue(
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"
+    );
+    await user.keyboard("{Control>}k{/Control}");
+    expect(screen.queryByRole("dialog")).toBeNull();
   });
 
   it("says when the search fails and does not add a card", async () => {

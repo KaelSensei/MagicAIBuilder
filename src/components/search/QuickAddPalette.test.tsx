@@ -9,6 +9,7 @@ import type {
   QuickAddScope,
 } from "@/lib/search/quick-add-query";
 import type { ScryfallCard } from "@/lib/scryfall/types";
+import { aScryfallCard } from "@/test/builders/scryfall";
 import { QuickAddPalette, type QuickAddPhase } from "./QuickAddPalette";
 
 const SIMIC: QuickAddScope = {
@@ -162,5 +163,124 @@ describe("QuickAddPalette", () => {
     expect(
       screen.getByText("Requête : name:/sol/ legal:commander id<=UG")
     ).toBeTruthy();
+  });
+});
+
+// Characterization before the split of the palette into a hook and small parts
+// (refactor-quick-add-palette): these pin today's behaviour so the structural
+// change can prove it moved nothing.
+describe("QuickAddPalette, pinned before the split", () => {
+  const solRing = aScryfallCard({ id: "sol", name: "Sol Ring" });
+  const arcaneSignet = aScryfallCard({ id: "signet", name: "Arcane Signet" });
+
+  it("adds a clicked result to the main deck and stays open", async () => {
+    const user = userEvent.setup();
+    const onAdd = vi.fn();
+    renderWithIntl(
+      <Harness cards={[solRing, arcaneSignet]} phase="results" onAdd={onAdd} />
+    );
+
+    await user.click(screen.getByRole("button", { name: /Arcane Signet/ }));
+
+    expect(onAdd).toHaveBeenCalledWith(arcaneSignet, "main");
+    expect(screen.getByRole("status").textContent).toBe(
+      "Added Arcane Signet to Main."
+    );
+    expect(screen.getByRole("dialog", { name: "Quick add" })).toBeTruthy();
+  });
+
+  it("keeps the highlight on the first result above the list and on the last below it", async () => {
+    const user = userEvent.setup();
+    const onAdd = vi.fn();
+    renderWithIntl(
+      <Harness cards={[solRing, arcaneSignet]} phase="results" onAdd={onAdd} />
+    );
+    const box = screen.getByRole("combobox", { name: "Quick add" });
+
+    await user.click(box);
+    await user.keyboard("{ArrowUp}{Enter}");
+    expect(onAdd).toHaveBeenLastCalledWith(solRing, "main");
+
+    await user.keyboard("{ArrowDown}{ArrowDown}{ArrowDown}{Enter}");
+    expect(onAdd).toHaveBeenLastCalledWith(arcaneSignet, "main");
+    expect(box.getAttribute("aria-activedescendant")).toBe(
+      "quick-add-option-signet"
+    );
+  });
+
+  it("goes back to the first result and clears the added line when the text changes", async () => {
+    const user = userEvent.setup();
+    const onAdd = vi.fn();
+    renderWithIntl(
+      <Harness cards={[solRing, arcaneSignet]} phase="results" onAdd={onAdd} />
+    );
+    const box = screen.getByRole("combobox", { name: "Quick add" });
+
+    await user.click(box);
+    await user.keyboard("{ArrowDown}{Enter}");
+    expect(screen.getByRole("status").textContent).toBe(
+      "Added Arcane Signet to Main."
+    );
+
+    await user.type(box, "x");
+    expect(screen.queryByRole("status")).toBeNull();
+    await user.keyboard("{Enter}");
+    expect(onAdd).toHaveBeenLastCalledWith(solRing, "main");
+  });
+
+  it("switches between the name and the rules text with its buttons", async () => {
+    const user = userEvent.setup();
+    renderWithIntl(<Harness cards={[]} phase="idle" onAdd={vi.fn()} />);
+
+    await user.click(screen.getByRole("button", { name: "Rules text" }));
+    expect(
+      screen
+        .getByRole("button", { name: "Rules text" })
+        .getAttribute("aria-pressed")
+    ).toBe("true");
+    expect(
+      screen.getByText('Query: o:"sol" legal:commander id<=UG')
+    ).toBeTruthy();
+
+    await user.click(screen.getByRole("button", { name: "Name" }));
+    expect(
+      screen.getByRole("button", { name: "Name" }).getAttribute("aria-pressed")
+    ).toBe("true");
+    expect(
+      screen.getByText("Query: name:/sol/ legal:commander id<=UG")
+    ).toBeTruthy();
+  });
+
+  it("leaves Alt+R alone when another modifier is held", async () => {
+    const user = userEvent.setup();
+    renderWithIntl(<Harness cards={[]} phase="idle" onAdd={vi.fn()} />);
+
+    await user.click(screen.getByRole("combobox", { name: "Quick add" }));
+    await user.keyboard("{Control>}{Alt>}r{/Alt}{/Control}");
+
+    expect(
+      screen.getByRole("button", { name: "Name" }).getAttribute("aria-pressed")
+    ).toBe("true");
+  });
+
+  it("says it is searching while the search runs", () => {
+    renderWithIntl(<Harness cards={[]} phase="loading" onAdd={vi.fn()} />);
+
+    expect(screen.getByText("Searching…")).toBeTruthy();
+    expect(screen.queryByRole("listbox")).toBeNull();
+  });
+
+  it("says when no card matches the query", () => {
+    renderWithIntl(<Harness cards={[]} phase="empty" onAdd={vi.fn()} />);
+
+    expect(screen.getByText("No cards for this query.")).toBeTruthy();
+  });
+
+  it("says when the search failed, as an alert", () => {
+    renderWithIntl(<Harness cards={[]} phase="error" onAdd={vi.fn()} />);
+
+    expect(screen.getByRole("alert").textContent).toBe(
+      "The search could not be completed."
+    );
   });
 });
