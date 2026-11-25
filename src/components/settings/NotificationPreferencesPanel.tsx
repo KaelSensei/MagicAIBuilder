@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Bell, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { withRequestDeadline } from "@/lib/async/request-deadline";
 
 type NotificationPreferenceKey = "replies" | "mentions" | "follows" | "watchedDecks";
 
@@ -35,9 +36,16 @@ export function NotificationPreferencesPanel() {
   const loadPreferences = useCallback(async () => {
     setError(false);
     try {
-      const response = await fetch("/api/user/notification-preferences");
-      const payload: unknown = await response.json();
-      if (!response.ok || !isNotificationPreferences(payload)) throw new Error("Invalid preferences response");
+      // I-04: a read that never answers ends in the alert and its retry, not an endless spinner.
+      const payload = await withRequestDeadline(async (signal) => {
+        const response = await fetch("/api/user/notification-preferences", {
+          signal,
+        });
+        const body: unknown = await response.json();
+        if (!response.ok || !isNotificationPreferences(body))
+          throw new Error("Invalid preferences response");
+        return body;
+      });
       setPreferences(payload);
     } catch {
       setError(true);
