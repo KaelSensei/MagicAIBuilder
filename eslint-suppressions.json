@@ -643,7 +643,7 @@
   },
   "src/components/deck/CardPackageLibrary.tsx": {
     "@typescript-eslint/consistent-type-assertions": {
-      "count": 2
+      "count": 1
     },
     "max-lines-per-function": {
       "count": 1
