@@ -1,13 +1,12 @@
 "use client";
 // Keyboard shortcuts help modal — triggered by "?" or ⌨️ button
-import { useId } from "react";
 import { useTranslations } from "next-intl";
 import { Keyboard } from "lucide-react";
 import { useUIStore } from "@/lib/ui/store";
-import { useShortcutPreferencesStore } from "@/lib/ui/shortcut-preferences";
 import { PLAYTEST_SHOW_KEYS_HOTKEY } from "@/lib/playtest/hotkeys";
 import { Modal, ModalTitle } from "@/components/ui/Modal";
 import { cn } from "@/components/ui/utils";
+import { SingleKeyShortcutsSwitch } from "@/components/layout/SingleKeyShortcutsSwitch";
 
 interface ShortcutEntry {
   readonly keys: readonly string[];
@@ -59,40 +58,6 @@ function PlaytestKeysPointer() {
         button: tPlaytestKeys("open"),
       })}
     </p>
-  );
-}
-
-/**
- * The off switch for shortcuts pressed without Ctrl or ⌘, which speech-input
- * and screen-reader users need (WCAG 2.2 SC 2.1.4).
- */
-function SingleKeyShortcutsSwitch() {
-  const t = useTranslations("common");
-  const descriptionId = useId();
-  const enabled = useShortcutPreferencesStore(
-    (s) => s.singleKeyShortcutsEnabled
-  );
-  const setEnabled = useShortcutPreferencesStore(
-    (s) => s.setSingleKeyShortcutsEnabled
-  );
-
-  return (
-    <div className="mx-5 mb-4 space-y-1 rounded-[var(--lumen-radius-lg)] border border-[var(--border)] p-3">
-      <label className="flex items-center justify-between gap-4 text-sm font-medium text-[var(--text-primary)]">
-        {t("shortcuts.singleKeyLabel")}
-        <input
-          type="checkbox"
-          role="switch"
-          checked={enabled}
-          onChange={(event) => setEnabled(event.target.checked)}
-          aria-describedby={descriptionId}
-          className="h-4 w-4 shrink-0 accent-[var(--accent)]"
-        />
-      </label>
-      <p id={descriptionId} className="text-xs text-[var(--text-secondary)]">
-        {t("shortcuts.singleKeyDescription")}
-      </p>
-    </div>
   );
 }
 
@@ -155,7 +120,7 @@ export function KeyboardShortcutsModal() {
         <PlaytestKeysPointer />
       </div>
 
-      <SingleKeyShortcutsSwitch />
+      <SingleKeyShortcutsSwitch className="mx-5 mb-4" />
 
       {/* Footer hint */}
       <div className="px-5 pb-4">

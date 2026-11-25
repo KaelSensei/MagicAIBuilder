@@ -5,6 +5,7 @@
  *
  * Context: playtest, the UI. `PlaytestKeys` opens it from its button or the `?` key. The key
  * letters are printed as they are in every language; only the descriptions are translated.
+ * The single-key switch is the shared `SingleKeyShortcutsSwitch`, on the one preference store.
  *
  * @module components/playtest/PlaytestKeysDialog
  */
@@ -13,6 +14,7 @@ import { useTranslations } from "next-intl";
 import { Modal } from "@/components/ui/Modal";
 import { PLAYTEST_HOTKEYS } from "@/lib/playtest/hotkeys";
 import { useShortcutPreferencesStore } from "@/lib/ui/shortcut-preferences";
+import { SingleKeyShortcutsSwitch } from "@/components/layout/SingleKeyShortcutsSwitch";
 
 interface PlaytestKeysDialogProps {
   readonly open: boolean;
@@ -20,9 +22,10 @@ interface PlaytestKeysDialogProps {
 }
 
 /**
- * A named modal dialog listing the playtest's keys. It says when the player's single-key
- * switch has turned the letters off, since only the Ctrl/⌘ chord then works. Focus returns to
- * whatever opened it.
+ * A named modal dialog listing the playtest's keys, then the single-key switch the builder's
+ * list shows too, so a speech-input or screen-reader player turns the letters off without
+ * leaving the playtest (WCAG 2.2 SC 2.1.4). While the switch is off it says so, since only the
+ * Ctrl/⌘ chord then works. Focus returns to whatever opened it.
  */
 export function PlaytestKeysDialog({ open, onClose }: PlaytestKeysDialogProps) {
   const t = useTranslations("playtest.hotkeys");
@@ -66,6 +69,7 @@ export function PlaytestKeysDialog({ open, onClose }: PlaytestKeysDialogProps) {
             </div>
           ))}
         </dl>
+        <SingleKeyShortcutsSwitch />
       </div>
     </Modal>
   );
