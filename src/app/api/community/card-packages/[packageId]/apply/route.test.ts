@@ -91,6 +91,30 @@ describe("POST /api/community/card-packages/[packageId]/apply", () => {
     expect(mockCreateMany).not.toHaveBeenCalled();
   });
 
+  // I-01: another tab that read the deck before the apply must be refused
+  // (409) on its next card write, as after any other card write.
+  it("moves the deck to its next version with the cards it adds", async () => {
+    const response = await POST(request(), context);
+
+    expect(response.status).toBe(200);
+    expect(mockDeckUpdate).toHaveBeenCalledWith({
+      where: { id: "deck-1" },
+      data: { version: { increment: 1 }, updatedAt: expect.any(Date) },
+    });
+  });
+
+  it("leaves the deck's version alone when it adds no card", async () => {
+    const blockedOnly = new Request("http://localhost", {
+      method: "POST",
+      body: JSON.stringify({ deckId: "deck-1", acceptedScryfallIds: ["blocked"] }),
+    });
+
+    const response = await POST(blockedOnly, context);
+
+    expect(await response.json()).toEqual({ addedCount: 0, blockedCount: 1 });
+    expect(mockDeckUpdate).not.toHaveBeenCalled();
+  });
+
   it("does not write a package card that Scryfall cannot verify", async () => {
     mockGetCardCollection.mockResolvedValue({ data: [], not_found: [{ id: "ready" }] });
     const response = await POST(request(), context);
