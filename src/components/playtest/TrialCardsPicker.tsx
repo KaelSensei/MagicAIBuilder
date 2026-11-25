@@ -13,8 +13,9 @@
  * @module components/playtest/TrialCardsPicker
  */
 import { useId, useMemo, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import type { DeckCard } from "@/lib/deck/types";
+import { cardListText } from "@/lib/playtest/card-list-text";
 import {
   MAX_TRIAL_CARDS,
   trialCardChoices,
@@ -77,6 +78,7 @@ function TrialCardsChooser({
   readonly choices: readonly TrialCardChoice[];
 }) {
   const t = useTranslations("playtest.trialCards");
+  const locale = useLocale();
   const localize = useLocalizeDeckCard();
   const searchId = useId();
   const [query, setQuery] = useState("");
@@ -124,7 +126,7 @@ function TrialCardsChooser({
         )}
         {chosenNames.length > 0 && (
           <span className="block">
-            {t("chosen", { names: chosenNames.join(", ") })}
+            {t("chosen", { names: cardListText(chosenNames, locale) })}
           </span>
         )}
       </output>
