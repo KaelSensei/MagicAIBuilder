@@ -251,7 +251,7 @@ describe("PlaytestModal", () => {
 
       expect(
         screen.getByText(
-          `Tu as déplacé ${card.name} de ta main vers ton cimetière`
+          `Vous avez déplacé ${card.name} de votre main vers votre cimetière`
         )
       ).toBeInTheDocument();
     });

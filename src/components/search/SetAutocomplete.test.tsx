@@ -31,7 +31,7 @@ describe("SetAutocomplete in French", () => {
     await user.click(screen.getByRole("textbox"));
 
     expect(
-      await screen.findByText("13 éditions disponibles — tape pour rechercher")
+      await screen.findByText("13 éditions disponibles — tapez pour rechercher")
     ).toBeInTheDocument();
   });
 });

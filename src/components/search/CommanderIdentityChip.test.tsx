@@ -46,7 +46,7 @@ describe("CommanderIdentityChip", () => {
     );
 
     expect(screen.getByRole("status")).toHaveTextContent(
-      "Seulement les cartes aux couleurs de ton commandant"
+      "Seulement les cartes aux couleurs de votre commandant"
     );
     expect(
       screen.getByRole("button", { name: "Afficher toutes les couleurs" })

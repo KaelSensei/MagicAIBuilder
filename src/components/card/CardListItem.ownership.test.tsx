@@ -225,13 +225,13 @@ describe("CardListItem ownership badge", () => {
     expect(screen.getByText("Possédée")).toBeInTheDocument();
     expect(
       screen.getByText(
-        "Possédée : 1 exemplaire de cette édition dans ta collection"
+        "Possédée : 1 exemplaire de cette édition dans votre collection"
       )
     ).toBeInTheDocument();
     expect(screen.getByText("Acheter")).toBeInTheDocument();
     expect(
       screen.getByText(
-        "À acheter : 2 exemplaires manquants de cette édition, 3 dans ta collection"
+        "À acheter : 2 exemplaires manquants de cette édition, 3 dans votre collection"
       )
     ).toBeInTheDocument();
   });
