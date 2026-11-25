@@ -384,6 +384,31 @@ describe("BulkEditModal — saving an edited decklist", () => {
     expect(storeCard("Arcane Signet")).toMatchObject({ id: "signet-row" });
   });
 
+  // WCAG 2.2 SC 1.3.1 and 4.1.2: the placeholder is an English sample list,
+  // not a label, so the text box carries its own name from the catalogue.
+  it("names the decklist text box for a screen reader", () => {
+    renderModal(openStoreDeck());
+
+    expect(
+      screen.getByRole("textbox", { name: "Decklist" })
+    ).toHaveDisplayValue(/10 Forest/);
+  });
+
+  it("names the decklist text box in French", () => {
+    const deck = openStoreDeck();
+    renderWithIntl(
+      <BulkEditModal deck={deck}>
+        <button type="button">Ouvrir</button>
+      </BulkEditModal>,
+      { locale: "fr" }
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Ouvrir" }));
+
+    expect(
+      screen.getByRole("textbox", { name: "Liste de deck" })
+    ).toBeInTheDocument();
+  });
+
   // Sonar S6819: the native <output> carries the status role, and the polite,
   // atomic announcement that role="status" implied stays explicit.
   it("reports the saved list in a polite, native status output", async () => {
