@@ -529,3 +529,63 @@ describe("the quantity clamps the store applies today", () => {
     expect(deckApi.addCard).not.toHaveBeenCalled();
   });
 });
+
+// The caller reads what addCard did, so the editor can say why nothing was added (I-37).
+describe("what addCard says it did", () => {
+  // CR 903.5b: the one Sol Ring a Commander deck may hold is already there.
+  it("says the card is at its copy limit, in the deck's format", async () => {
+    openDeck("commander", solRing(1));
+
+    const result = await useDeckStore
+      .getState()
+      .addCard(searchResult(solRing(1)));
+
+    expect(result).toEqual({ kind: "at-copy-limit", format: "commander" });
+  });
+
+  // CR 100.2a: four Lightning Bolt in Main leave no room in the Sideboard.
+  it("says the card is at its copy limit when the copies sit in another zone", async () => {
+    openDeck("modern", bolt(4));
+
+    const result = await useDeckStore
+      .getState()
+      .addCard(searchResult(bolt(1)), { zone: "sideboard" });
+
+    expect(result).toEqual({ kind: "at-copy-limit", format: "modern" });
+  });
+
+  it("says it added a first copy", async () => {
+    openDeck("modern");
+
+    const result = await useDeckStore.getState().addCard(searchResult(bolt(1)));
+
+    expect(result).toEqual({ kind: "added" });
+    expect(copiesOf("Lightning Bolt")).toBe(1);
+  });
+
+  it("says it added one more copy to a row with room", async () => {
+    openDeck("modern", bolt(2));
+
+    const result = await useDeckStore.getState().addCard(searchResult(bolt(1)));
+
+    expect(result).toEqual({ kind: "added" });
+    expect(copiesOf("Lightning Bolt")).toBe(3);
+  });
+
+  it("says the zone already holds the basic land, which it does not add", async () => {
+    openDeck("commander", mountain(10));
+
+    const result = await useDeckStore
+      .getState()
+      .addCard(searchResult(mountain(1)));
+
+    expect(result).toEqual({ kind: "basic-land-held" });
+    expect(copiesOf("Mountain")).toBe(10);
+  });
+
+  it("says no deck is open", async () => {
+    const result = await useDeckStore.getState().addCard(searchResult(bolt(1)));
+
+    expect(result).toEqual({ kind: "no-open-deck" });
+  });
+});
