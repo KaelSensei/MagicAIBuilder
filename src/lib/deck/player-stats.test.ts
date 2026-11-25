@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   countPlayerStats,
+  countsDeckCards,
   type PlayerStatsCard,
   type PlayerStatsDeck,
   type StatsWindow,
@@ -246,5 +247,27 @@ describe("countPlayerStats", () => {
       { bracket: 4, computedDeckIds: [], targetDeckIds: ["c"] },
       { bracket: 5, computedDeckIds: [], targetDeckIds: [] },
     ]);
+  });
+});
+
+describe("countsDeckCards", () => {
+  it("counts the cards of a Commander deck added or changed in the window", () => {
+    const added = aStatsDeck();
+    const changed = aStatsDeck({
+      createdAt: BEFORE_THE_WINDOW,
+      updatedAt: BEFORE_THE_WINDOW,
+      snapshotDates: [IN_THE_WINDOW],
+    });
+
+    expect(countsDeckCards(added, YEAR_2026)).toBe(true);
+    expect(countsDeckCards(changed, YEAR_2026)).toBe(true);
+  });
+
+  it("counts no card of an untouched Commander deck nor of an active deck in another format", () => {
+    const untouched = aStatsDeck({ createdAt: BEFORE_THE_WINDOW, updatedAt: BEFORE_THE_WINDOW });
+    const modern = aStatsDeck({ format: "modern" });
+
+    expect(countsDeckCards(untouched, YEAR_2026)).toBe(false);
+    expect(countsDeckCards(modern, YEAR_2026)).toBe(false);
   });
 });

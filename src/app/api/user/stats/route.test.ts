@@ -13,12 +13,16 @@
 import { NextRequest } from "next/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { PlayerStatsReport } from "@/lib/deck/player-stats-report";
-import type { TableRow } from "@/test/in-memory-prisma-tables";
+import type { TableRead, TableRow } from "@/test/in-memory-prisma-tables";
 
-const fake = vi.hoisted(() => ({
-  auth: vi.fn(),
-  tables: new Map<string, readonly Readonly<Record<string, unknown>>[]>(),
-}));
+const fake = vi.hoisted(() => {
+  const reads: TableRead[] = [];
+  return {
+    auth: vi.fn(),
+    tables: new Map<string, readonly Readonly<Record<string, unknown>>[]>(),
+    reads,
+  };
+});
 
 vi.mock(import("@/lib/auth/config"), () => ({
   auth: fake.auth,
@@ -30,7 +34,9 @@ vi.mock(import("@/lib/auth/config"), () => ({
 
 vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
   const { inMemoryPrisma } = await import("@/test/in-memory-prisma-tables");
-  return inMemoryPrisma(await importOriginal(), fake.tables);
+  return inMemoryPrisma(await importOriginal(), fake.tables, (read) =>
+    fake.reads.push(read)
+  );
 });
 
 import { GET } from "./route";
@@ -199,6 +205,19 @@ function getStats(query = ""): Promise<Response> {
   return GET(new NextRequest(`http://localhost/api/user/stats${query}`));
 }
 
+/** The card queries the requests so far made, each with the rows it took. */
+function cardReads(): readonly TableRead[] {
+  return fake.reads.filter((read) => read.table === "deckCard");
+}
+
+/** The names of the card rows of one deck the requests so far read. */
+function cardNamesReadFor(deckId: string): readonly unknown[] {
+  return cardReads()
+    .flatMap((read) => read.rows)
+    .filter((row) => row.deckId === deckId)
+    .map((row) => row.name);
+}
+
 /** Reads a 200 answer's report. */
 async function reportOf(response: Response): Promise<PlayerStatsReport> {
   expect(response.status).toBe(200);
@@ -215,6 +234,7 @@ beforeEach(() => {
   vi.setSystemTime(clock);
   vi.stubEnv("PLAYWRIGHT_TEST", "0");
   fake.auth.mockReset();
+  fake.reads.splice(0);
   seed();
 });
 
@@ -353,6 +373,47 @@ describe("GET /api/user/stats", () => {
       { name: "Sol Ring", deckIds: [OLD_PAIR] },
     ]);
     expect(report.stats.brackets[2]?.computedDeckIds).toEqual([OLD_PAIR]);
+  });
+
+  it("reads every card of an active Commander deck, and only the commanders of an inactive or non-Commander deck", async () => {
+    signInAs(PLAYER);
+    seedPartnerPairAndOlderDecks();
+
+    await reportOf(await getStats());
+
+    expect(cardNamesReadFor(ELVES)).toEqual([
+      "Ezuri, Renegade Leader",
+      "Sol Ring",
+      "Forest",
+    ]);
+    expect(cardNamesReadFor(OLD_PAIR)).toEqual(["Thrasios", "Tymna"]);
+    expect(cardNamesReadFor(OLD)).toEqual(["Old Commander"]);
+    expect(cardNamesReadFor(MODERN)).toEqual([]);
+    expect(cardNamesReadFor(OLD_MODERN)).toEqual([]);
+  });
+
+  it("reads the cards in as many queries for forty decks as for a handful", async () => {
+    signInAs(PLAYER);
+    await reportOf(await getStats());
+    const queriesForAHandful = cardReads().length;
+    fake.reads.splice(0);
+    const manyDecks = Array.from({ length: 40 }, (_, index) => `deck-${index}`);
+    fake.tables.set(
+      "deck",
+      manyDecks.map((id) => deckRow(id, PLAYER))
+    );
+    fake.tables.set(
+      "deckCard",
+      manyDecks.flatMap((id) => [
+        commanderRow(id, `Commander ${id}`, "G"),
+        cardRow(id, "Sol Ring"),
+      ])
+    );
+
+    await reportOf(await getStats());
+
+    expect(queriesForAHandful).toBeLessThanOrEqual(2);
+    expect(cardReads()).toHaveLength(queriesForAHandful);
   });
 
   it("estimates each Commander deck's bracket without combo data and says the combo floor was not checked", async () => {
