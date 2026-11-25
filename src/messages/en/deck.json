@@ -266,6 +266,7 @@
     "cancel": "Cancel",
     "import": "Import",
     "previewDecklist": "Preview decklist",
+    "fieldLabel": "Decklist to import",
     "moxfieldRefused": "Moxfield refused MagicAIBuilder's request, so this deck can't be fetched from here. To import it anyway, open the deck on moxfield.com, use Export to copy the list as text, then paste it in the {tab} tab.",
     "moxfieldProfiles": {
       "title": "Moxfield profiles",
@@ -320,6 +321,7 @@
     "unknownCards": "Nothing was saved — no card found for: {names}",
     "invalidPartner": "Nothing was saved — {name} cannot be paired with this commander.",
     "invalidCompanion": "Nothing was saved — {name} cannot be this deck’s companion.",
+    "fieldLabel": "Decklist",
     "lineCount": "{count, plural, one {# line} other {# lines}}",
     "save": "Save",
     "savedButton": "Saved!"
