@@ -18,6 +18,7 @@ import type { DeckFormat } from "@/lib/deck/formats";
 import { getFormatConfig } from "@/lib/deck/formats";
 import { deckCopyLimit } from "@/lib/deck/multiples";
 import { isCommanderRow } from "@/lib/deck/bulk-edit-command-zone";
+import { isBasicLand } from "@/lib/scryfall/type-line";
 
 export interface PackagePreviewCard {
   readonly scryfallId: string;
@@ -114,6 +115,43 @@ export function commandZoneNamesOf(
   cards: readonly { readonly name: string; readonly isCommander: boolean; readonly isPartner: boolean }[]
 ): readonly string[] {
   return cards.filter(isCommanderRow).map((card) => card.name);
+}
+
+/** A stored deck row as the package preview reads it. */
+export interface PackageDeckRow {
+  readonly name: string;
+  readonly quantity: number;
+  readonly isCommander: boolean;
+  readonly isPartner: boolean;
+  readonly typeLine: string;
+  readonly colorIdentity: readonly string[];
+}
+
+/**
+ * The preview context of a stored deck. The preview and apply routes both
+ * build it here, so the cards a player sees as ready are the cards the apply
+ * adds.
+ *
+ * @param format - The deck's format, already parsed
+ * @param rows - Every stored row of the deck, command zone included
+ * @returns The context `previewCardPackage` reads
+ */
+export function packagePreviewContextOf(
+  format: DeckFormat,
+  rows: readonly PackageDeckRow[]
+): PackagePreviewContext {
+  // CR 903.4: the commanders' colour identity bounds the deck.
+  const commanderColors = rows.filter(isCommanderRow).flatMap((row) => row.colorIdentity);
+  return {
+    format,
+    commanderColorIdentity: [...new Set(commanderColors)],
+    commandZoneNames: commandZoneNamesOf(rows),
+    existingCards: rows.map((row) => ({
+      name: row.name,
+      quantity: row.quantity,
+      isBasicLand: isBasicLand(row.typeLine),
+    })),
+  };
 }
 
 export function previewCardPackage(

@@ -188,9 +188,6 @@
     }
   },
   "src/app/api/community/card-packages/[packageId]/apply/route.ts": {
-    "max-depth": {
-      "count": 1
-    },
     "max-lines-per-function": {
       "count": 1
     }
@@ -198,11 +195,6 @@
   "src/app/api/community/card-packages/[packageId]/preview/route.test.ts": {
     "no-restricted-syntax": {
       "count": 2
-    }
-  },
-  "src/app/api/community/card-packages/[packageId]/preview/route.ts": {
-    "max-depth": {
-      "count": 1
     }
   },
   "src/app/api/community/card-packages/route.test.ts": {
