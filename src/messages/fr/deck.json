@@ -390,6 +390,7 @@
     "totalValue": "Valeur totale",
     "missingPrices": "{count, plural, one {# carte sans prix} other {# cartes sans prix}}",
     "withoutBasicLands": "Sans les terrains de base",
+    "priceUnknown": "Prix inconnu",
     "groupSubtotal": "Sous-total {amount}",
     "groupSubtotalWithUnpriced": "{amount} · {count, plural, one {# sans prix} other {# sans prix}}",
     "groupKnownSubtotal": "Sous-total connu {amount}, {count, plural, one {# carte} other {# cartes}} sans prix",

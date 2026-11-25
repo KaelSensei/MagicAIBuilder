@@ -105,7 +105,8 @@ function shownBracket(
 
 /**
  * The deck's total price, the figure the Deck Price panel shows, then the number of cards with no
- * price in that panel's words.
+ * price in that panel's words. A deck whose played cards have no known price says so rather than
+ * show $0.00 (I-01).
  */
 function DeckPrice() {
   const locale = useLocale();
@@ -113,7 +114,11 @@ function DeckPrice() {
   const { totalPrice, missingPriceCount } = useDeckPrice();
   return (
     <>
-      <span>{formatUsdPrice(locale, totalPrice)}</span>
+      <span>
+        {totalPrice === null
+          ? t("priceUnknown")
+          : formatUsdPrice(locale, totalPrice)}
+      </span>
       {missingPriceCount > 0 && (
         <span>{t("missingPrices", { count: missingPriceCount })}</span>
       )}

@@ -390,6 +390,7 @@
     "totalValue": "Total value",
     "missingPrices": "{count, plural, one {# card without price data} other {# cards without price data}}",
     "withoutBasicLands": "Without basic lands",
+    "priceUnknown": "Price unknown",
     "groupSubtotal": "Subtotal {amount}",
     "groupSubtotalWithUnpriced": "{amount} · {count, plural, one {# without price} other {# without price}}",
     "groupKnownSubtotal": "Known subtotal {amount}, {count, plural, one {# card} other {# cards}} without price",
