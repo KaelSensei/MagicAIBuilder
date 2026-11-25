@@ -2,10 +2,11 @@ import type { DeckZone } from "./types";
 
 interface AddNamedCardActions<TCard> {
   readonly lookup: (name: string) => Promise<TCard>;
+  /** The store's add; what it did is not read here (an AI add raises no copy-limit notice yet). */
   readonly addCard: (
     card: TCard,
     addition: { readonly zone: DeckZone }
-  ) => Promise<void>;
+  ) => Promise<unknown>;
   readonly onLookupError: (cardName: string) => void;
 }
 

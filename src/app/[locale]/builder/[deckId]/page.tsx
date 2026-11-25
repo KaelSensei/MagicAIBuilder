@@ -37,6 +37,7 @@ import { logger } from "@/lib/logger";
 import { useUIStore } from "@/lib/ui/store";
 import { useBracketScore } from "@/hooks/useBracketScore";
 import { useCardSearchResults } from "@/hooks/useCardSearchResults";
+import { useCopyLimitNotice } from "@/hooks/useCopyLimitNotice";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { Header } from "@/components/layout/Header";
 import { SearchBar } from "@/components/search/SearchBar";
@@ -341,6 +342,7 @@ export default function BuilderPage() {
 
   const setActiveDeck = useDeckStore((s) => s.setActiveDeck);
   const addCard = useDeckStore((s) => s.addCard);
+  const noticeCopyLimit = useCopyLimitNotice();
   const removeCard = useDeckStore((s) => s.removeCard);
   const setCommander = useDeckStore((s) => s.setCommander);
   const setPartner = useDeckStore((s) => s.setPartner);
@@ -722,19 +724,29 @@ export default function BuilderPage() {
     [addCard, activeZone]
   );
 
+  // A search result the deck already holds at its copy limit adds nothing; say why (I-37).
+  const addFromSearch = useCallback(
+    async (searchCard: ScryfallCard, zone: DeckZone) => {
+      const result = await addCard(searchCard, { zone });
+      if (result.kind === "at-copy-limit") {
+        noticeCopyLimit(searchCard.name, result.format);
+      }
+    },
+    [addCard, noticeCopyLimit]
+  );
+
   const dropSearchCard = useCallback(
     (searchCard: ScryfallCard, overId: string) => {
-      const zone = searchDropZone(overId, activeZone);
-      void addCard(searchCard, { zone });
+      void addFromSearch(searchCard, searchDropZone(overId, activeZone));
     },
-    [addCard, activeZone]
+    [addFromSearch, activeZone]
   );
 
   const handleAddToZone = useCallback(
     (searchCard: ScryfallCard, zone: DeckZone) => {
-      void addCard(searchCard, { zone });
+      void addFromSearch(searchCard, zone);
     },
-    [addCard]
+    [addFromSearch]
   );
 
   const moveIntraDeck = useCallback(
