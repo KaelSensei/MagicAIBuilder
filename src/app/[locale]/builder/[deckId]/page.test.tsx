@@ -655,12 +655,22 @@ describe("characterization: builder page shell", () => {
       ).toBeInTheDocument();
     });
 
-    it("currently names the card search box only by its placeholder (pinned)", async () => {
+    it("names the card search box with a label, not its placeholder", async () => {
       await openSavedDeck();
 
-      expect(screen.getByPlaceholderText("Search cards…")).toHaveAccessibleName(
-        ""
-      );
+      expect(
+        screen.getByRole("textbox", { name: "Search cards" })
+      ).toHaveAttribute("placeholder", "Search cards…");
+    });
+
+    it("names the colour search's name filter with a label, not its placeholder", async () => {
+      await openSavedDeck();
+
+      await userEvent.click(searchMode("By Color"));
+
+      expect(
+        screen.getByRole("textbox", { name: "Filter cards by name" })
+      ).toHaveAttribute("placeholder", "Filter by name (optional)…");
     });
 
     it("currently labels a card of the deck grid 'Add <name> to deck' although clicking it looks the card up for the printing picker (pinned)", async () => {

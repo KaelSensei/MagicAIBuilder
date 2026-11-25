@@ -1128,6 +1128,7 @@ export default function BuilderPage() {
                     onSearch={handleSearch}
                     isLoading={searchLoading}
                     placeholder={t("searchFilterPlaceholder")}
+                    label={t("searchFilterLabel")}
                     showKeyboardHint={false}
                     onFocus={() => setIsInputFocused(true)}
                     onBlur={() => setIsInputFocused(false)}

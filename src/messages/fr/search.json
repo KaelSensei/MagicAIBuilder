@@ -1,5 +1,6 @@
 {
   "placeholder": "Rechercher des cartes…",
+  "label": "Rechercher des cartes",
   "clearLabel": "Effacer la recherche",
   "searching": "Recherche…",
   "noResults": "Aucune carte trouvée. Essaie une autre recherche.",

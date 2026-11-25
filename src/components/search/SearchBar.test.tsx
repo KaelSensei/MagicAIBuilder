@@ -23,4 +23,22 @@ describe("SearchBar", () => {
 
     expect(screen.queryByText("⌨ /")).not.toBeInTheDocument();
   });
+
+  it("is named in the reader's language, apart from its placeholder", () => {
+    renderWithIntl(<SearchBar onSearch={vi.fn()} />, { locale: "fr" });
+
+    expect(
+      screen.getByRole("textbox", { name: "Rechercher des cartes" })
+    ).toHaveAttribute("placeholder", "Rechercher des cartes…");
+  });
+
+  it("takes the name its page gives it", () => {
+    renderWithIntl(
+      <SearchBar onSearch={vi.fn()} label="Filter cards by name" />
+    );
+
+    expect(
+      screen.getByRole("textbox", { name: "Filter cards by name" })
+    ).toBeInTheDocument();
+  });
 });

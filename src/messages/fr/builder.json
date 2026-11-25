@@ -259,6 +259,7 @@
     "stats": "Stats"
   },
   "searchFilterPlaceholder": "Filtrer par nom (facultatif)…",
+  "searchFilterLabel": "Filtrer les cartes par nom",
   "filtersToggle": {
     "show": "Afficher les filtres",
     "hide": "Masquer les filtres"

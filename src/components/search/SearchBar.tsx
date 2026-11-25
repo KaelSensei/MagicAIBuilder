@@ -13,16 +13,27 @@ interface SearchBarProps {
   readonly onFocus?: () => void;
   readonly onBlur?: () => void;
   readonly placeholder?: string;
+  /**
+   * The field's accessible name. Defaults to the catalogue's `search.label`. A placeholder is
+   * not a label (WCAG 2.2 SC 1.3.1, 4.1.2): it disappears on typing and is not a reliable name.
+   */
+  readonly label?: string;
   readonly isLoading?: boolean;
   readonly className?: string;
   readonly showKeyboardHint?: boolean;
 }
 
+/**
+ * The builder's card search field. It reports the typed text through `onSearch` after a 400 ms
+ * pause, answers the UI store's focus and clear signals, and is named by `label` (or the
+ * catalogue default), never by its placeholder alone.
+ */
 export function SearchBar({
   onSearch,
   onFocus,
   onBlur,
   placeholder,
+  label,
   isLoading = false,
   className,
   showKeyboardHint = true,
@@ -98,6 +109,7 @@ export function SearchBar({
         onFocus={onFocus}
         onBlur={onBlur}
         placeholder={resolvedPlaceholder}
+        aria-label={label ?? t("label")}
         className="flex-1 bg-transparent px-3 py-2.5 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] outline-none min-w-0"
         data-testid="search-input"
       />

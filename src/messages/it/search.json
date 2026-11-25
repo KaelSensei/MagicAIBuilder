@@ -1,5 +1,6 @@
 {
   "placeholder": "Search cards…",
+  "label": "Search cards",
   "clearLabel": "Clear search",
   "searching": "Searching…",
   "noResults": "No cards found. Try a different search.",

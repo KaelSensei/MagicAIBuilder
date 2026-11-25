@@ -256,6 +256,7 @@
     "stats": "Stats"
   },
   "searchFilterPlaceholder": "Filter by name (optional)…",
+  "searchFilterLabel": "Filter cards by name",
   "filtersToggle": {
     "show": "Show filters",
     "hide": "Hide filters"
