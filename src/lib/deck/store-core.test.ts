@@ -31,7 +31,8 @@ import { GUEST_DECK_ID } from "@/lib/deck/guest-deck";
 import * as scryfallClient from "@/lib/scryfall/client";
 import type { Deck, DeckCard, CardCategory } from "@/lib/deck/types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
-import { installFakeDeckClient } from "@/test/fake-deck-client";
+import { aDeckCard } from "@/test/builders/card";
+import { DeckApiRefusal, installFakeDeckClient } from "@/test/fake-deck-client";
 import { recordToasts } from "@/test/toast-recorder";
 
 // Import the store AFTER mocks are set up
@@ -648,6 +649,46 @@ describe("useDeckStore — deleteDeck", () => {
   it("sets isSyncing to false after completion", async () => {
     await useDeckStore.getState().deleteDeck("deck-1");
     expect(useDeckStore.getState().isSyncing).toBe(false);
+  });
+
+  it("answers that the server deleted the deck", async () => {
+    await expect(useDeckStore.getState().deleteDeck("deck-1")).resolves.toBe(
+      "deleted"
+    );
+  });
+
+  // What the player asked for is already true: the deck is gone.
+  it("counts a deck already deleted elsewhere as deleted, undo history included", async () => {
+    useDeckStore.setState({
+      undoStack: [
+        { type: "ADD_CARD", deckId: "deck-1", card: aDeckCard() },
+      ],
+    });
+    deckApi.deleteDeck.mockRejectedValueOnce(
+      new DeckApiRefusal(404, "Deck not found")
+    );
+
+    await expect(useDeckStore.getState().deleteDeck("deck-1")).resolves.toBe(
+      "alreadyDeleted"
+    );
+
+    expect(useDeckStore.getState().decks["deck-1"]).toBeUndefined();
+    expect(useDeckStore.getState().activeDeckId).toBeNull();
+    expect(useDeckStore.getState().undoStack).toEqual([]);
+    expect(useDeckStore.getState().isSyncing).toBe(false);
+  });
+
+  it("keeps the deck when the server refuses for another reason", async () => {
+    deckApi.deleteDeck.mockRejectedValueOnce(
+      new DeckApiRefusal(403, "Forbidden")
+    );
+
+    await expect(useDeckStore.getState().deleteDeck("deck-1")).rejects.toThrow(
+      "[deleteDeck] HTTP 403: Forbidden"
+    );
+
+    expect(useDeckStore.getState().decks["deck-1"]).toBeDefined();
+    expect(useDeckStore.getState().activeDeckId).toBe("deck-1");
   });
 });
 

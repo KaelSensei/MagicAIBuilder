@@ -217,6 +217,29 @@ describe("a deck delete that the player confirms", () => {
   });
 });
 
+/*
+ * A deck deleted from another tab or device answered 404, which read as a
+ * failure: the deck stayed listed though it no longer existed (I-01).
+ */
+describe("a deck already deleted elsewhere", () => {
+  it("leaves the list, and the player is told it was already gone", async () => {
+    refuseDeletion(404, "Deck not found");
+    const user = userEvent.setup();
+    const remove = await openLibrary("fr");
+
+    await user.click(remove);
+
+    await waitFor(() => expect(remove).not.toBeInTheDocument());
+    expect(useDeckStore.getState().decks[GOBLINS.id]).toBeUndefined();
+    expect(useToastStore.getState().toasts).toEqual([
+      expect.objectContaining({
+        type: "info",
+        message: "Ce deck avait déjà été supprimé.",
+      }),
+    ]);
+  });
+});
+
 describe("a deck delete that the player cancels", () => {
   it("sends no request and keeps the deck listed", async () => {
     vi.stubGlobal(
