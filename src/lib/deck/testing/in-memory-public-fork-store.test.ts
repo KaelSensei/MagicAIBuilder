@@ -2,11 +2,11 @@
  * Runs the public fork store contract against the in-memory fake, so the
  * tests that use the fake can trust it to answer like PostgreSQL.
  */
-import { describe } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { inMemoryPublicForkStore } from "./in-memory-public-fork-store";
 import {
-  describePublicForkStoreContract,
+  PUBLIC_FORK_STORE_CONTRACT_CASES,
   type PublicForkStoreHarness,
 } from "./public-fork-store-contract";
 
@@ -17,5 +17,11 @@ function inMemoryHarness(): PublicForkStoreHarness {
 }
 
 describe("in-memory public fork store", () => {
-  describePublicForkStoreContract(inMemoryHarness);
+  describe("PublicForkStore contract", () => {
+    for (const contractCase of PUBLIC_FORK_STORE_CONTRACT_CASES) {
+      it(contractCase.name, async () => {
+        await expect(contractCase.run(inMemoryHarness())).resolves.toBeUndefined();
+      });
+    }
+  });
 });
