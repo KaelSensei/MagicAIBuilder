@@ -67,7 +67,8 @@ const HEURISTIC_MINIMUM_CARDS = 60;
 
 /**
  * The combos a deck holds as Commander Spellbook found them, with the fetch
- * date when the caller knows it, or `unavailable` when the lookup failed.
+ * date when the caller knows it, `pending` while the lookup has not answered,
+ * or `unavailable` when it failed.
  */
 export type ComboData =
   | {
@@ -75,6 +76,7 @@ export type ComboData =
       readonly combos: readonly Combo[];
       readonly fetchedAt: string | null;
     }
+  | { readonly kind: "pending" }
   | { readonly kind: "unavailable" };
 
 /** What `explainBracket` reads: the deck, its stats and its combo data. */
@@ -142,11 +144,20 @@ function countedRestrictionRow(
   };
 }
 
-function comboDataUnavailableRow(): BracketFloorRow {
+/**
+ * The two-card-combo row while combo data is missing: the lookup has not
+ * answered yet, or it failed (I-77 4.3).
+ */
+function comboNotCheckedRow(
+  comboData: Exclude<ComboData, { kind: "found" }>
+): BracketFloorRow {
   return {
     status: "notChecked",
     rule: "twoCardCombos",
-    reason: "comboDataUnavailable",
+    reason:
+      comboData.kind === "pending"
+        ? "comboLookupPending"
+        : "comboDataUnavailable",
     ruleRef: ruleRef("twoCardCombos"),
   };
 }
@@ -167,14 +178,14 @@ function floorRows(
     gameChangerRow(stats),
     comboData.kind === "found"
       ? twoCardComboRow(twoCardCombosIn(comboData))
-      : comboDataUnavailableRow(),
+      : comboNotCheckedRow(comboData),
     countedRestrictionRow("massLandDenial", massLandDenialCards(played)),
     countedRestrictionRow("extraTurns", extraTurnCards(played)),
   ];
 }
 
 function comboSourceOf(comboData: ComboData): ComboSource {
-  if (comboData.kind === "unavailable") return { kind: "unavailable" };
+  if (comboData.kind !== "found") return { kind: comboData.kind };
   return {
     kind: "commanderSpellbook",
     fetchedAt: comboData.fetchedAt,
@@ -247,8 +258,8 @@ export function termScores(
  * Explains the bracket estimate of a Commander deck list.
  *
  * The same list, rules version, method version and combo data give the same
- * assessment whatever the card order (I-77 1.5). Combo data that is
- * unavailable leaves the two-card-combo floor unchecked and the assessment
+ * assessment whatever the card order (I-77 1.5). Combo data that is pending
+ * or unavailable leaves the two-card-combo floor unchecked and the assessment
  * incomplete (4.3). A list under 60 cards keeps its terms for the record,
  * but only its floors set the estimate (2.6).
  *

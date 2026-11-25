@@ -7,8 +7,9 @@
  * Context: deck building (ui), under the target picker in `DeckDetailsPanel`.
  * It computes the assessment as the builder's badge does, `computeDeckStats`
  * then `explainBracket`, with the combos `useCombos` found: the same cached
- * query the builder page reads. A failed lookup is passed as unavailable, so
- * the list says the combo floor was not checked (4.3). Every line is a
+ * query the builder page reads, mapped by the same `comboDataOf`. A lookup
+ * still pending says the combo floor is being checked, and a failed one says
+ * it was not checked (4.3, issue #1840). Every line is a
  * sentence, never a colour alone, and the bracket is called "estimated",
  * never "your bracket" (1.2).
  *
@@ -20,6 +21,7 @@
 import { useId, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import type { BracketAssessment } from "@/lib/deck/bracket-assessment";
+import { comboDataOf } from "@/lib/deck/combo-data-of";
 import { explainBracket, type ComboData } from "@/lib/deck/explain-bracket";
 import {
   pathToBracket,
@@ -31,17 +33,14 @@ import { useCombos } from "@/modules/combos/client";
 import { useBracketPathText } from "./use-bracket-path-text";
 
 /**
- * The deck's combo data. A lookup still pending or not run (a list under ten
- * names) reads as no combo found, as the builder's badge reads it.
+ * The deck's combo data, read as the builder's badge reads it: pending while
+ * the lookup has not answered, unavailable once it failed.
  */
 function useComboData(deck: Deck): ComboData {
-  const { data, isError } = useCombos(deck);
+  const { data, isLoading, isError } = useCombos(deck);
   return useMemo(
-    () =>
-      isError
-        ? { kind: "unavailable" }
-        : { kind: "found", combos: data ?? [], fetchedAt: null },
-    [data, isError]
+    () => comboDataOf({ data, isLoading, isError }),
+    [data, isLoading, isError]
   );
 }
 
