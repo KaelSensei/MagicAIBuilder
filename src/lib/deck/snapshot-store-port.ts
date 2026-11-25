@@ -74,6 +74,11 @@ export interface DeckWithCards extends CapturableDeck, DeckCommanders {
   readonly id: string;
   /** The companion row's Scryfall id, or null without a companion. */
   readonly companionId: string | null;
+  /**
+   * The deck's optimistic-lock counter (`Deck.version`), which every card
+   * write steps (`deck-repository.ts`). A restore steps it too.
+   */
+  readonly version: number;
 }
 
 /**
@@ -85,9 +90,12 @@ export interface DeckWithCards extends CapturableDeck, DeckCommanders {
  * - `findDeckWithCards` and `findInDeck` answer null when nothing matches;
  *   `findInDeck` never answers a snapshot of another deck;
  * - `create` stores the snapshot and answers the stored row;
- * - `restoreDeck` replaces every card row of the deck and writes the deck
+ * - `restoreDeck` replaces every card row of the deck, writes the deck
  *   fields `restoredDeckFields` names (commander fields, and the companion
- *   when the snapshot recorded it), all or nothing;
+ *   when the snapshot recorded it) and moves the deck to its next version,
+ *   all or nothing. The step is unconditional: a restore is a whole-deck
+ *   action that takes no version from the client, and it exists so that a
+ *   tab still holding the old version is refused on its next card write;
  * - each throws whatever the database throws when it is unavailable.
  *
  * Not responsible for who may act: the routes check the owner first.
