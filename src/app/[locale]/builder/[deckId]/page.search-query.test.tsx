@@ -787,6 +787,26 @@ describe("the builder's search with no result", () => {
         expect(screen.queryByText(NO_RESULT)).toBeNull();
         expect(screen.queryByText(SYNTAX_HINT)).toBeNull();
       });
+
+      // The colour picker used to say the same thing in its own words ("Select colors to browse
+      // cards") under the same condition; the panel's line is the one instruction now.
+      it("asks for colours once on By Color, and stops asking once a name narrows the search", async () => {
+        const { user } = await openBuilder();
+        await user.click(searchTab("By Color"));
+        await liveLine("Choose colors to list their cards.");
+        expect(screen.queryByText("Select colors to browse cards")).toBeNull();
+
+        await user.type(
+          screen.getByPlaceholderText("Filter by name (optional)…"),
+          "Sol"
+        );
+
+        await waitFor(() =>
+          expect(
+            screen.queryByText("Choose colors to list their cards.")
+          ).toBeNull()
+        );
+      });
     });
 
     it("suggests nothing on By Color when the colours match no card", async () => {

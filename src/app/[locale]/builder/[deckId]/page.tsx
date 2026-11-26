@@ -1140,7 +1140,6 @@ export default function BuilderPage() {
                   />
                   <BuilderColorSearchPicker
                     selected={colorFilter}
-                    hasNameFilter={searchText !== ""}
                     onToggle={toggleColorFilter}
                   />
                 </div>
