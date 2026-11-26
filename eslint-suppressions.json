@@ -780,11 +780,6 @@
       "count": 1
     }
   },
-  "src/components/deck/DecksHomeControls.tsx": {
-    "max-lines-per-function": {
-      "count": 1
-    }
-  },
   "src/components/deck/ExportModal.test.tsx": {
     "no-restricted-syntax": {
       "count": 1

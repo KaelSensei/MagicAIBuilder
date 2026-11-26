@@ -162,6 +162,7 @@
   "controls": {
     "grid": "Grille",
     "list": "Liste",
+    "viewMode": "Affichage des decks",
     "sortDecks": "Trier les decks",
     "sortUpdatedNewest": "Modifié (récent)",
     "sortUpdatedOldest": "Modifié (ancien)",
