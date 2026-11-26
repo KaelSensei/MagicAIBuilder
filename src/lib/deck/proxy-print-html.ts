@@ -1,6 +1,7 @@
 /**
  * Server-safe proxy print HTML builder (unit-testable, no React).
  */
+import { escapeHtml } from "@/lib/text/escape-html";
 import { cardsPerPage, type ProxyConfig, type ProxySlot } from "./proxy";
 
 const PAPER_SIZES: Record<ProxyConfig["paper"], { w: string; h: string }> = {
@@ -12,15 +13,6 @@ const LAYOUT_COLS: Record<ProxyConfig["layout"], number> = {
   "3x3": 3,
   "2x2": 2,
 };
-
-function escapeHtml(text: string): string {
-  return text
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
-}
 
 function oracleToHtml(oracle: string): string {
   return escapeHtml(oracle).replaceAll("\n", "<br/>");
