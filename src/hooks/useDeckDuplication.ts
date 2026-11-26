@@ -4,8 +4,9 @@
  * deck action and the builder's toolbar button.
  *
  * The deck store copies the deck but cannot speak the player's language, so
- * this hook tells the player: the copy's name on success, and why the copy
- * failed otherwise (I-01).
+ * this hook names the copy in that language, « Atraxa (copie) » (I-04), and
+ * tells the player: the copy's name on success, and why the copy failed
+ * otherwise (I-01).
  *
  * A deck deleted from another tab or device cannot be copied, and the page
  * that still shows it is out of date. This hook owns that rule; each page
@@ -21,6 +22,7 @@ import {
   useDeckFailureReport,
 } from "@/hooks/useDeckFailureReport";
 import { useToastStore } from "@/hooks/useToast";
+import { copyDeckName } from "@/lib/deck/deck-name";
 import { deckRequestFailureOf } from "@/lib/deck/deck-request-failure";
 import { useDeckStore } from "@/lib/deck/store";
 
@@ -34,9 +36,21 @@ export interface DeckDuplicationOptions {
   readonly onMissing: () => Promise<void>;
 }
 
+/** The deck to copy, as the page that offers "Duplicate" shows it. */
+export interface DuplicatedDeck {
+  readonly id: string;
+  /** The name the page shows; the copy's name is worded from it. */
+  readonly name: string;
+}
+
 /**
- * Returns the duplicate action: copies the deck, announces the copy by name
- * and opens it in the builder.
+ * Returns the duplicate action: copies the deck under a name in the player's
+ * language, announces the copy by name and opens it in the builder.
+ *
+ * The copy's name is worded from the name the page shows, and fitted to the
+ * deck-name limit (`copyDeckName`). The page passes it because the store may
+ * not hold the deck: the decks page also lists decks a card search found
+ * beyond the loaded page.
  *
  * A failure is logged with its raw error and told in a toast; the player stays
  * where they were. When the deck no longer exists, the page is also refreshed
@@ -44,11 +58,11 @@ export interface DeckDuplicationOptions {
  * never rejects.
  *
  * @param options - what the page does when the deck no longer exists
- * @returns a function from the deck's id to whether the copy was made
+ * @returns a function from the deck to whether the copy was made
  */
 export function useDeckDuplication({
   onMissing,
-}: DeckDuplicationOptions): (deckId: string) => Promise<boolean> {
+}: DeckDuplicationOptions): (deck: DuplicatedDeck) => Promise<boolean> {
   const t = useTranslations("common");
   const router = useRouter();
   const duplicateDeck = useDeckStore((s) => s.duplicateDeck);
@@ -56,9 +70,12 @@ export function useDeckDuplication({
   const reportFailure = useDeckFailureReport(DECK_DUPLICATE_FAILURE_MESSAGES);
 
   return useCallback(
-    async (deckId: string) => {
+    async (deck: DuplicatedDeck) => {
+      const copyName = copyDeckName(deck.name, (name) =>
+        t("deckDuplicate.copyName", { name })
+      );
       try {
-        const copy = await duplicateDeck(deckId);
+        const copy = await duplicateDeck(deck.id, copyName);
         addToast("success", t("deckDuplicate.succeeded", { name: copy.name }));
         router.push(`/builder/${copy.id}`);
         return true;

@@ -399,6 +399,14 @@ const deckWrites = createDeckWriteQueue(
 const CONFLICT_TOAST = { key: "deck.sync.conflictReloaded" } as const;
 
 /**
+ * Why an undo waits: its change belongs to a deck the store no longer holds.
+ * Translated by the toast container in the player's locale (I-04).
+ */
+const UNDO_NEEDS_ITS_DECK_TOAST = {
+  key: "deck.undo.openOriginalDeck",
+} as const;
+
+/**
  * Puts the server's deck back on screen after a write was refused as stale,
  * and tells the player. The reload replaces the whole deck, version included,
  * so the next write carries the version the other tab left. The undo entries
@@ -649,14 +657,18 @@ export interface DeckStore {
   ) => Promise<string>;
   /**
    * Copies a saved deck on the server, makes the copy the active deck and
-   * reloads the listing. Raises no toast: the store has no locale, so the
-   * caller tells the player (`useDeckDuplication`).
+   * reloads the listing. Raises no toast and words no name: the store has no
+   * locale, so the caller names the copy and tells the player
+   * (`useDeckDuplication`).
    *
+   * @param id - the deck to copy
+   * @param copyName - the copy's name, in the player's language; left out,
+   *   the server names it `<name> (Copy)`
    * @returns the copy's id and its name, as the server set it
    * @throws DeckApiError when the server refuses or fails the copy, carrying
    *   its status; the fetch error when the network fails
    */
-  duplicateDeck: (id: string) => Promise<DuplicatedDeck>;
+  duplicateDeck: (id: string, copyName?: string) => Promise<DuplicatedDeck>;
   /**
    * Deletes a saved deck on the server, then drops it from the store with its
    * undo history, and clears the active deck if it was this one. A deck the
@@ -1303,9 +1315,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     const last = undoStack.at(-1);
     if (!last) return;
     if (!get().decks[last.deckId]) {
-      useToastStore
-        .getState()
-        .add("error", "Open the original deck before retrying undo.");
+      useToastStore.getState().add("error", UNDO_NEEDS_ITS_DECK_TOAST);
       return;
     }
     // Pop the action
@@ -1687,10 +1697,10 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       await reopenRememberedDeck({ set, get }, rememberedDeckId);
   },
 
-  duplicateDeck: async (id: string) => {
+  duplicateDeck: async (id: string, copyName?: string) => {
     set({ isSyncing: true });
     try {
-      const copy = await deckApi.duplicateDeck(id);
+      const copy = await deckApi.duplicateDeck(id, copyName);
       // Set new deck as active before reloading
       set({ activeDeckId: copy.id });
       await get().loadDecks();
