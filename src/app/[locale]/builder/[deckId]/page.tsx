@@ -1,6 +1,15 @@
 "use client";
 // Main builder view — 3-panel layout: Search | DeckEditor | Stats
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FocusEvent,
+  type KeyboardEvent,
+} from "react";
+import { flushSync } from "react-dom";
 import { useParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import {
@@ -469,6 +478,8 @@ export default function BuilderPage() {
   const [isEditingName, setIsEditingName] = useState(false);
   const [nameInput, setNameInput] = useState("");
   const nameInputRef = useRef<HTMLInputElement>(null);
+  // The deck-name button that starts a rename; focus comes back to it when one ends.
+  const nameButtonRef = useRef<HTMLButtonElement>(null);
 
   // Track active drag card for overlay
   const [activeDragCard, setActiveDragCard] = useState<ScryfallCard | null>(
@@ -852,12 +863,43 @@ export default function BuilderPage() {
     }, 0);
   };
 
-  const commitDeckName = (rawName: string) => {
-    const trimmed = rawName.trim();
+  // Every way out of a rename comes through here. The field unmounts and React fires no blur for
+  // it, so the flag that holds the shortcuts off has to be cleared with it (I-37).
+  const endDeckRename = () => {
     setIsEditingName(false);
     setIsInputFocused(false);
+  };
+
+  const commitDeckName = (rawName: string) => {
+    const trimmed = rawName.trim();
+    endDeckRename();
     if (!trimmed || trimmed === deck.name) return;
     void renameDeck(deckId, trimmed);
+  };
+
+  // Enter, Escape and the Save button end a rename from inside the title bar, so focus goes back
+  // to the deck name instead of falling to the top of the page (WCAG 2.2 SC 2.4.3,
+  // https://www.w3.org/TR/WCAG22/#focus-order, read 2026-11-26). `flushSync` mounts the button
+  // before it takes focus.
+  const endDeckRenameOnName = (end: () => void) => {
+    flushSync(end);
+    nameButtonRef.current?.focus();
+  };
+
+  // Escape cancels from the field or the Save button. The key is spent here: the page's own
+  // Escape would clear the search as well.
+  const cancelDeckRenameOnEscape = (event: KeyboardEvent<HTMLElement>) => {
+    if (event.key !== "Escape") return;
+    event.preventDefault();
+    endDeckRenameOnName(endDeckRename);
+  };
+
+  // The field and its Save button are one rename: focus moving between them keeps it open, so a
+  // keyboard player can reach the button. Focus leaving both (Tab, Shift+Tab, a click elsewhere)
+  // saves, and stays where the player put it.
+  const commitDeckNameOnLeave = (event: FocusEvent<HTMLDivElement>) => {
+    if (event.currentTarget.contains(event.relatedTarget)) return;
+    commitDeckName(nameInputRef.current?.value ?? nameInput);
   };
 
   return (
@@ -893,20 +935,24 @@ export default function BuilderPage() {
             <ArrowLeft className="w-4 h-4" />
           </ButtonLink>
           {isEditingName ? (
-            <div className="flex items-center gap-1.5 flex-1 min-w-0">
+            <div
+              className="flex items-center gap-1.5 flex-1 min-w-0"
+              onBlur={commitDeckNameOnLeave}
+            >
               <input
                 ref={nameInputRef}
                 aria-label={t("actions.rename")}
                 value={nameInput}
                 onChange={(e) => setNameInput(e.target.value)}
                 onFocus={() => setIsInputFocused(true)}
-                onBlur={(event) => commitDeckName(event.currentTarget.value)}
                 onKeyDown={(event) => {
                   if (event.key === "Enter") {
                     event.preventDefault();
-                    commitDeckName(event.currentTarget.value);
+                    endDeckRenameOnName(() =>
+                      commitDeckName(event.currentTarget.value)
+                    );
                   }
-                  if (event.key === "Escape") setIsEditingName(false);
+                  cancelDeckRenameOnEscape(event);
                 }}
                 className="flex-1 text-sm font-semibold bg-transparent border-b border-[var(--border)] focus-visible:border-[var(--focus-ring)] text-[var(--text-primary)] min-w-0"
                 maxLength={200}
@@ -922,8 +968,15 @@ export default function BuilderPage() {
                 size="icon"
                 aria-label={t("actions.confirmRename")}
                 onClick={() =>
-                  commitDeckName(nameInputRef.current?.value ?? nameInput)
+                  endDeckRenameOnName(() =>
+                    commitDeckName(nameInputRef.current?.value ?? nameInput)
+                  )
                 }
+                onKeyDown={cancelDeckRenameOnEscape}
+                // Safari and Firefox on macOS never focus a clicked button, so the field's blur
+                // would save and close the row before this click lands. Keeping focus in the
+                // field lets the click end the rename and return focus to the deck name.
+                onMouseDown={(event) => event.preventDefault()}
                 className="size-6 shrink-0 p-0"
               >
                 <Check className="w-3.5 h-3.5" />
@@ -931,6 +984,7 @@ export default function BuilderPage() {
             </div>
           ) : (
             <button
+              ref={nameButtonRef}
               type="button"
               onClick={handleStartEditName}
               className="group flex items-center gap-1.5"
