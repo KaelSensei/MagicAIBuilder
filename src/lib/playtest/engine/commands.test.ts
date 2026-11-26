@@ -709,7 +709,7 @@ const PINNED_REASONS: Readonly<
 
 describe("each command's refusal reasons (pinned before the split, #1857)", () => {
   it.each(Object.entries(PINNED_REASONS))(
-    "%s is refused for exactly the pinned reasons, in its transition's order",
+    "characterization: %s is refused for exactly the pinned reasons, in its transition's order",
     (type, reasons) => {
       const guards = PLAYTEST_COMMAND_GUARDS[command_type(type)];
 
