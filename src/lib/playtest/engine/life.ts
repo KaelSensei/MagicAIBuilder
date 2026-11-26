@@ -62,7 +62,8 @@ export function hasLostOnLife(
 /**
  * True for an amount of life the rules cannot change by: below 0. CR 107.1b: "You can't choose
  * a negative number, deal negative damage, gain negative life, and so on." Zero is lawful: a
- * source that would deal 0 damage deals none (CR 120.8).
+ * source that would deal 0 damage deals none (CR 120.8), and a gain of 0 life is no life gain
+ * event (CR 119.9).
  *
  * Pure; the life transitions and the command guard table share it so they cannot disagree.
  */
@@ -110,8 +111,11 @@ export function applyDamage(
  * Adds `amount` to the life total (CR 119.3) and records the gain in the life history.
  *
  * A heal that brings the total above zero ends a loss on life, since `hasLostOnLife` reads the
- * total (CR 704.5a). Returns the same state while a bottom choice is pending.
+ * total (CR 704.5a). Returns the same state while a bottom choice is pending, and for a negative
+ * `amount`: no one gains negative life (CR 107.1b), so it must not become a life loss that skips
+ * `applyDamage`. A heal of 0 is still recorded, as damage of 0 is.
  *
+ * @param amount - the life gained; below 0 changes nothing
  * @param deps - `clock` stamps the history entry and the undo entry
  */
 export function applyHeal(
@@ -120,6 +124,7 @@ export function applyHeal(
   deps: PlaytestDeps = defaultPlaytestDeps
 ): PlaytestEngine {
   if (isChoosingBottom(state)) return state;
+  if (isNegativeAmount(amount)) return state;
   const entry = lifeEntry(state, deps.clock, {
     delta: amount,
     description: "heal",
