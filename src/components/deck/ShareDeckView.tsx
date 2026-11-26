@@ -1,5 +1,14 @@
 "use client";
-// Read-only public view of a shared deck
+/**
+ * The read-only page a share link opens (`/share/[token]`): a header with the
+ * deck's name, format and commanders, then its cards by category, its mana
+ * curve and stats, and a button that forks the deck.
+ *
+ * Deck-sharing UI. The header has two colour sets, picked by whether the
+ * commander has an art crop (I-13, design audit S5).
+ *
+ * @module components/deck/ShareDeckView
+ */
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useFormatter, useTranslations } from "next-intl";
@@ -44,6 +53,44 @@ const BRACKET_COLORS: Record<number, string> = {
   4: "text-red-400 bg-red-400/10 border-red-400/30",
   5: "text-fuchsia-400 bg-fuchsia-400/10 border-fuchsia-400/30",
 };
+
+/** The class names that colour the header's backdrop and text. */
+interface HeaderTone {
+  readonly backdrop: string;
+  readonly homeLink: string;
+  readonly badge: string;
+  readonly title: string;
+  readonly detail: string;
+  readonly emphasis: string;
+}
+
+/**
+ * The header's two colour sets (I-13, design audit S5). Without commander art
+ * the header is the plain `--surface`, white in the light theme, so its text
+ * takes the theme's text tokens, which `src/styles/contrast.test.ts` holds to
+ * 4.5:1 on every surface. On the art the text is white on a black scrim whose
+ * lightest stop is 60 %: even over an all-white art, white text reads at
+ * 5.74:1 and 90 % white at 5.04:1 (WCAG 2.1 SC 1.4.3). The fade into the page
+ * sits below the text, never under it.
+ */
+const HEADER_TONES = {
+  onArt: {
+    backdrop: "bg-gradient-to-b from-black/75 to-black/60",
+    homeLink: "text-white/90 hover:text-white",
+    badge: "border-white/40 text-white/90",
+    title: "text-white",
+    detail: "text-white/90",
+    emphasis: "text-white",
+  },
+  onSurface: {
+    backdrop: "bg-[var(--surface)]",
+    homeLink: "text-[var(--text-secondary)] hover:text-[var(--text-primary)]",
+    badge: "border-[var(--border)] text-[var(--text-secondary)]",
+    title: "text-[var(--text-primary)]",
+    detail: "text-[var(--text-secondary)]",
+    emphasis: "text-[var(--text-primary)]",
+  },
+} as const satisfies Readonly<Record<string, HeaderTone>>;
 
 function computeColorDistribution(cards: ApiCard[]): Record<string, number> {
   const dist: Record<string, number> = {};
@@ -97,6 +144,13 @@ interface ShareDeckViewProps {
   readonly deck: ApiSharedDeck;
 }
 
+/**
+ * The shared deck page. Readable in both themes: on the commander's art the
+ * header is white on a dark scrim, and without art it takes the theme's text
+ * tokens.
+ *
+ * @param props - the deck as the share link serves it
+ */
 export function ShareDeckView({ deck }: ShareDeckViewProps) {
   const t = useTranslations("deck");
   const format = useFormatter();
@@ -170,30 +224,42 @@ export function ShareDeckView({ deck }: ShareDeckViewProps) {
         backgroundPosition: "center top",
       }
     : undefined;
+  // The one decision behind the header's colours: white on the art's scrim,
+  // or the theme's tokens on the plain surface.
+  const onArt = bgStyle !== undefined;
+  const tone = onArt ? HEADER_TONES.onArt : HEADER_TONES.onSurface;
 
   return (
     <div className="flex flex-col min-h-screen bg-[var(--background)]">
       {/* Hero header */}
-      <div className="relative overflow-hidden" style={bgStyle}>
+      <div
+        className="relative overflow-hidden"
+        style={bgStyle}
+        data-testid="share-header"
+      >
         <div
-          className={cn(
-            "absolute inset-0",
-            commander?.artCropUri
-              ? "bg-gradient-to-b from-black/70 via-black/60 to-[var(--background)]"
-              : "bg-[var(--surface)]"
-          )}
+          className={cn("absolute inset-0", tone.backdrop)}
+          data-testid="share-header-scrim"
         />
         <div className="relative z-10 max-w-5xl mx-auto px-6 py-8">
           {/* Nav */}
           <div className="flex items-center justify-between mb-6">
             <Link
               href="/"
-              className="flex items-center gap-2 text-white/80 hover:text-white transition-colors"
+              className={cn(
+                "flex items-center gap-2 transition-colors",
+                tone.homeLink
+              )}
             >
               <Layers className="w-5 h-5 text-[var(--accent-text)]" />
               <span className="font-semibold">MagicAIBuilder</span>
             </Link>
-            <span className="text-xs px-2 py-1 rounded-full bg-white/10 text-white/70 border border-white/20">
+            <span
+              className={cn(
+                "text-xs px-2 py-1 rounded-full border",
+                tone.badge
+              )}
+            >
               {t("share.readOnly")}
             </span>
           </div>
@@ -201,14 +267,7 @@ export function ShareDeckView({ deck }: ShareDeckViewProps) {
           {/* Deck title */}
           <div className="flex flex-col sm:flex-row sm:items-end gap-4">
             <div className="flex-1">
-              <h1
-                className={cn(
-                  "text-3xl font-bold mb-2",
-                  commander?.artCropUri
-                    ? "text-white"
-                    : "text-[var(--text-primary)]"
-                )}
-              >
+              <h1 className={cn("text-3xl font-bold mb-2", tone.title)}>
                 {deck.name}
               </h1>
               <div className="flex flex-wrap items-center gap-2">
@@ -220,8 +279,10 @@ export function ShareDeckView({ deck }: ShareDeckViewProps) {
                 >
                   {t("share.bracketLabel")} {deck.targetBracket}
                 </span>
-                <span className="text-xs text-white/60">{deck.format}</span>
-                <span className="text-xs text-white/60">
+                <span className={cn("text-xs", tone.detail)}>
+                  {deck.format}
+                </span>
+                <span className={cn("text-xs", tone.detail)}>
                   {t("share.cardCountLabel", { count: totalCards })}
                 </span>
                 {gameChangers.length > 0 && (
@@ -233,23 +294,16 @@ export function ShareDeckView({ deck }: ShareDeckViewProps) {
                 )}
               </div>
               {commander && (
-                <p
-                  className={cn(
-                    "text-sm mt-2",
-                    commander?.artCropUri
-                      ? "text-white/70"
-                      : "text-[var(--text-secondary)]"
-                  )}
-                >
+                <p className={cn("text-sm mt-2", tone.detail)}>
                   {t("card.commander", { name: "" })}
-                  <span className="font-medium text-white/90">
+                  <span className={cn("font-medium", tone.emphasis)}>
                     {commander.name}
                   </span>
                   {partner && (
                     <>
                       {" "}
                       +{" "}
-                      <span className="font-medium text-white/90">
+                      <span className={cn("font-medium", tone.emphasis)}>
                         {partner.name}
                       </span>
                     </>
@@ -291,6 +345,13 @@ export function ShareDeckView({ deck }: ShareDeckViewProps) {
             </button>
           </div>
         </div>
+        {/* Below the text, never under it: the art fades into the page. */}
+        {onArt && (
+          <div
+            className="relative h-16 bg-gradient-to-b from-transparent to-[var(--background)]"
+            data-testid="share-header-fade"
+          />
+        )}
       </div>
 
       {/* Main content */}
