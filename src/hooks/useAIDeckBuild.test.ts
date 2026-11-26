@@ -152,9 +152,13 @@ describe("useAIDeckBuild", () => {
     vi.unstubAllGlobals();
   });
 
-  it("processes status events from stream", async () => {
+  it("keeps the step of the stream's last status event, not its English line", async () => {
     const events = [
-      JSON.stringify({ type: "status", message: "Analyzing colors..." }),
+      JSON.stringify({
+        type: "status",
+        step: "consulting",
+        message: "Consulting the AI oracle…",
+      }),
       JSON.stringify({ type: "commander", name: "Atraxa" }),
       JSON.stringify({ type: "done" }),
     ];
@@ -180,7 +184,7 @@ describe("useAIDeckBuild", () => {
     });
 
     expect(result.current.state.commander).toBe("Atraxa");
-    expect(result.current.state.statusMessages).toContain("Analyzing colors...");
+    expect(result.current.state.step).toBe("consulting");
     expect(result.current.state.isLoading).toBe(false);
     vi.unstubAllGlobals();
   });
@@ -503,16 +507,42 @@ describe("useAIDeckBuild with lines outside the build event contract", () => {
     );
   });
 
-  it("skips a status event that carries no message", async () => {
-    const { state } = await buildFrom([
-      JSON.stringify({ type: "status" }),
-      JSON.stringify({ type: "status", message: "Choosing the lands..." }),
-      JSON.stringify(SOL_RING),
-      JSON.stringify(DONE),
-    ]);
+  it.each(["thinking", "consulting", "building"])(
+    "keeps the known step %s",
+    async (step) => {
+      const { state } = await buildFrom([
+        JSON.stringify({ type: "status", step }),
+        JSON.stringify(SOL_RING),
+        JSON.stringify(DONE),
+      ]);
 
-    expect(state.statusMessages).toEqual(["Choosing the lands..."]);
-  });
+      expect(state.step).toBe(step);
+    }
+  );
+
+  it.each([
+    ["names no step", { type: "status" }],
+    [
+      "carries only an English line, as a server from before steps does",
+      { type: "status", message: "Choosing the lands..." },
+    ],
+    [
+      "names a step this client does not know",
+      { type: "status", step: "polishing", message: "Polishing the list…" },
+    ],
+  ])(
+    "skips a status event that %s, keeping the last known step",
+    async (_case, event) => {
+      const { state } = await buildFrom([
+        JSON.stringify({ type: "status", step: "consulting" }),
+        JSON.stringify(event),
+        JSON.stringify(SOL_RING),
+        JSON.stringify(DONE),
+      ]);
+
+      expect(state.step).toBe("consulting");
+    }
+  );
 
   it("reports a stream whose only error event has no message as ended early", async () => {
     const { state, built } = await buildFrom([

@@ -769,6 +769,8 @@
     "deckNotSaved": "Your deck was built, but it could not be saved. The build is kept: try saving it again.",
     "trySavingAgain": "Try saving again",
     "addingCards": "デッキにカードを追加しています…",
+    "buildStepConsulting": "Consulting the AI oracle…",
+    "buildStepBuilding": "Building card list…",
     "demoDeckNotice": "デモデッキ — このデプロイには AI プロバイダーが設定されていないため、これは仮のリストです。",
     "correctionsTitle": "Checked against card data: {count, plural, one {# correction} other {# corrections}}",
     "correctionsIntro": "The AI's list broke Commander rules. These changes were made before the deck was saved.",
