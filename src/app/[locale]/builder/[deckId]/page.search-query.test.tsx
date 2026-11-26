@@ -1011,3 +1011,21 @@ describe("the builder's commander, partner and companion picks", () => {
     });
   });
 });
+
+/*
+ * Design audit S3 (WCAG 2.2 SC 4.1.2): the search tabs are a named group whose open tab is
+ * pressed. The open tab used to show only through its raised fill.
+ */
+describe("the builder's search tabs", () => {
+  it("presses the open tab: Name at first, By Color once the player picks it", async () => {
+    const { user } = await openBuilder();
+    expect(searchTab("Name").parentElement).toHaveAccessibleName("Search mode");
+    expect(searchTab("Name")).toHaveAttribute("aria-pressed", "true");
+
+    await user.click(searchTab("By Color"));
+
+    expect(searchTab("By Color")).toHaveAttribute("aria-pressed", "true");
+    expect(searchTab("Name")).toHaveAttribute("aria-pressed", "false");
+    expect(searchTab("By Set")).toHaveAttribute("aria-pressed", "false");
+  });
+});

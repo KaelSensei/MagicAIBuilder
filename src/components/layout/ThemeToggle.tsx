@@ -5,7 +5,10 @@ import { useTranslations } from "next-intl";
 import { Monitor, Moon, Sun } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 import { DARK_COLOR_SCHEME_QUERY, type ThemePreference } from "@/lib/theme/preference";
-import { cn } from "@/components/ui/utils";
+import {
+  SegmentedControl,
+  type SegmentedOption,
+} from "@/components/ui/SegmentedControl";
 
 const THEME_OPTIONS = [
   { preference: "light", Icon: Sun },
@@ -51,6 +54,9 @@ function readSystemPrefersDark(): boolean {
 /**
  * Light, dark, and system choices for the Lumen appearance.
  * An explicit light or dark choice stays put; system follows the OS.
+ * A segmented control of three icons, each named for screen readers; the
+ * chosen one is raised and outlined rather than only recoloured (design audit
+ * S3: the chosen icon differed by 1.18:1).
  *
  * @returns the segmented theme control
  */
@@ -65,33 +71,22 @@ export function ThemeToggle() {
     [setPreference]
   );
 
+  const options = THEME_OPTIONS.map(
+    ({ preference: option, Icon }): SegmentedOption<ThemePreference> => ({
+      value: option,
+      label: themeChoiceLabel(option, t),
+      icon: <Icon className="h-4 w-4" />,
+      hideLabel: true,
+    })
+  );
+
   return (
-    <fieldset
+    <SegmentedControl
       aria-label={t("theme.toggle")}
-      className="flex items-center gap-0.5 rounded-[var(--lumen-radius-pill)] border border-[var(--border)] bg-[var(--background)] p-0.5"
-    >
-      {THEME_OPTIONS.map(({ preference: option, Icon }) => {
-        const selected = preference === option;
-        const label = themeChoiceLabel(option, t);
-        return (
-          <button
-            key={option}
-            type="button"
-            aria-pressed={selected}
-            aria-label={label}
-            title={label}
-            onClick={() => handleSelect(option)}
-            className={cn(
-              "rounded-[var(--lumen-radius-pill)] p-1.5 transition-colors",
-              selected
-                ? "bg-[var(--accent-soft)] text-[var(--accent-text)]"
-                : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-            )}
-          >
-            <Icon className="h-4 w-4" aria-hidden />
-          </button>
-        );
-      })}
-    </fieldset>
+      options={options}
+      value={preference}
+      onChange={handleSelect}
+      className="border border-[var(--border)]"
+    />
   );
 }

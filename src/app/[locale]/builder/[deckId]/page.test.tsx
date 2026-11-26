@@ -1119,12 +1119,22 @@ describe("characterization: builder page shell", () => {
       ]).toEqual([false, true, true]);
     });
 
-    it("currently marks the active mobile tab by colour only, with no pressed or current state (pinned)", async () => {
+    // Was pinned as "currently marks the active mobile tab by colour only, with
+    // no pressed or current state". Design audit S3 presses the active tab
+    // (WCAG 2.2 SC 4.1.2); pressed stays its one state attribute.
+    it("presses the active mobile tab, the deck first, and moves the press with the panel", async () => {
       await openSavedDeck();
+      const tabs = ["Search", "Deck", "Stats"].map((tab) =>
+        screen.getByRole("button", { name: tab })
+      );
+      const pressed = () =>
+        tabs.map((button) => button.getAttribute("aria-pressed"));
+      expect(pressed()).toEqual(["false", "true", "false"]);
 
-      for (const tab of ["Search", "Deck", "Stats"]) {
-        const button = screen.getByRole("button", { name: tab });
-        expect(button).not.toHaveAttribute("aria-pressed");
+      await userEvent.click(screen.getByRole("button", { name: "Stats" }));
+
+      expect(pressed()).toEqual(["false", "false", "true"]);
+      for (const button of tabs) {
         expect(button).not.toHaveAttribute("aria-current");
         expect(button).not.toHaveAttribute("aria-selected");
       }

@@ -67,7 +67,8 @@
   },
   "viewMode": {
     "gridView": "Vue grille",
-    "listView": "Vue liste"
+    "listView": "Vue liste",
+    "layout": "Disposition"
   },
   "empty": {
     "title": "Votre collection est vide.",
