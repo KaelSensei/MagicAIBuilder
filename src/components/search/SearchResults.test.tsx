@@ -126,7 +126,7 @@ describe("SearchResults with Collection only on", () => {
     renderOwned([], { kind: "emptyCollection" }, "fr");
 
     expect(screen.getByRole("status").textContent).toBe(
-      "Ta collection est vide. Ajoutes-y des cartes : ce filtre n'affichera alors que les cartes que tu possèdes."
+      "Votre collection est vide. Ajoutez-y des cartes : ce filtre n'affichera alors que les cartes que vous possédez."
     );
   });
 });

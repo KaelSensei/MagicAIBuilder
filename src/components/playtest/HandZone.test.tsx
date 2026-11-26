@@ -211,7 +211,7 @@ describe("HandZone bottom choice", () => {
     renderChoice(1, "fr");
 
     expect(
-      screen.getByText("Choisis 1 carte à mettre au-dessous de ta bibliothèque.")
+      screen.getByText("Choisissez 1 carte à mettre au-dessous de votre bibliothèque.")
     ).toBeDefined();
     expect(screen.getByRole("button", { name: "Mettre 1 carte au-dessous" })).toBeDisabled();
     expect(screen.getByText("Lightning Bolt")).toBeDefined();
