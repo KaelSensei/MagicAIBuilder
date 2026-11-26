@@ -57,7 +57,7 @@ export function GuestDeckNotice() {
       </p>
       <Link
         href="/auth/signup?callbackUrl=/builder/guest"
-        className="shrink-0 rounded-md bg-[var(--accent)] px-3 py-1.5 font-semibold text-white transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
+        className="shrink-0 rounded-md bg-[var(--accent)] px-3 py-1.5 font-semibold text-white transition-opacity hover:opacity-90"
       >
         {t("createAccount")}
       </Link>

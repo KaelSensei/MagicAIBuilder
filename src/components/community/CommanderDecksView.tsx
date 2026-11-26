@@ -70,7 +70,7 @@ function DeckRow({
       <div className="min-w-0 flex-1">
         <Link
           href={`/deck/${deck.id}`}
-          className="block truncate font-medium text-[var(--text-primary)] transition-colors hover:text-[var(--accent-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+          className="block truncate font-medium text-[var(--text-primary)] transition-colors hover:text-[var(--accent-text)]"
         >
           {deck.name}
         </Link>

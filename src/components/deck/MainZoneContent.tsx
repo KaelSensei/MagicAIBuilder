@@ -110,7 +110,7 @@ function DraggableDeckCard({
         <details className="relative shrink-0">
           <summary
             aria-label={t("actions.changeCategoryFor", { name: card.name })}
-            className="flex h-7 w-7 cursor-pointer list-none items-center justify-center rounded text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)] [&::-webkit-details-marker]:hidden"
+            className="flex h-7 w-7 cursor-pointer list-none items-center justify-center rounded text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)] [&::-webkit-details-marker]:hidden"
           >
             <Layers className="h-3.5 w-3.5" />
           </summary>

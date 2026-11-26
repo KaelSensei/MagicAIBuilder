@@ -33,7 +33,7 @@ function ShareLinkRow({ shareUrl }: { readonly shareUrl: string }) {
           value={shareUrl}
           aria-label={t("share.linkLabel")}
           onFocus={(e) => e.currentTarget.select()}
-          className="flex-1 truncate rounded border border-[var(--border)] bg-[var(--background)] px-2 py-1.5 text-xs text-[var(--text-secondary)] outline-none"
+          className="flex-1 truncate rounded border border-[var(--border)] bg-[var(--background)] px-2 py-1.5 text-xs text-[var(--text-secondary)]"
         />
         <button
           type="button"

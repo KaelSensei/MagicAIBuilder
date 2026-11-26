@@ -46,15 +46,15 @@ describe("StarRating as an input", () => {
     }
   );
 
-  it("shows the app's focus ring on the star a keyboard player reaches", () => {
+  // The focus ring was an --accent ring, 2.76:1 on the dark surface. Every
+  // native button now gets the shared --focus-ring outline from the base layer
+  // of globals.css (design audit S1), so the star must only not hide it.
+  it("shows the app's focus outline on the star a keyboard player reaches", () => {
     renderWithProviders(<StarRating value={0} onSelect={() => undefined} />);
 
     for (const star of screen.getAllByRole("button")) {
-      expect(star).toHaveClass(
-        "focus-visible:outline-none",
-        "focus-visible:ring-2",
-        "focus-visible:ring-[var(--accent)]"
-      );
+      expect(star).toBeInstanceOf(HTMLButtonElement);
+      expect(star.className).not.toMatch(/outline-none|focus-visible:ring/);
     }
   });
 

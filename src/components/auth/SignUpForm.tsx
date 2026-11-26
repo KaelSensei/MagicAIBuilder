@@ -151,7 +151,7 @@ export function SignUpForm() {
             required
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
+            className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--text-primary)] text-sm"
             placeholder={t("signUp.namePlaceholder")}
           />
         </div>
@@ -170,7 +170,7 @@ export function SignUpForm() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
+            className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--text-primary)] text-sm"
             placeholder={t("signUp.emailPlaceholder")}
           />
         </div>
@@ -189,7 +189,7 @@ export function SignUpForm() {
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
+            className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--text-primary)] text-sm"
             placeholder={t("signUp.authInputHint")}
             minLength={8}
           />

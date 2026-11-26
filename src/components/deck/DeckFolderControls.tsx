@@ -81,14 +81,14 @@ export function DeckFolderControls({
         <button
           type="button"
           onClick={() => onFilterChange("all")}
-          className={`rounded-[var(--lumen-radius-pill)] border px-3 py-1 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] ${filterId === "all" ? "border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent-text)]" : "border-[var(--border)] text-[var(--text-secondary)]"}`}
+          className={`rounded-[var(--lumen-radius-pill)] border px-3 py-1 text-xs ${filterId === "all" ? "border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent-text)]" : "border-[var(--border)] text-[var(--text-secondary)]"}`}
         >
           {t("all")}
         </button>
         <button
           type="button"
           onClick={() => onFilterChange("")}
-          className={`rounded-[var(--lumen-radius-pill)] border px-3 py-1 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] ${filterId === "" ? "border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent-text)]" : "border-[var(--border)] text-[var(--text-secondary)]"}`}
+          className={`rounded-[var(--lumen-radius-pill)] border px-3 py-1 text-xs ${filterId === "" ? "border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent-text)]" : "border-[var(--border)] text-[var(--text-secondary)]"}`}
         >
           {t("unfiled")}
         </button>
@@ -97,7 +97,7 @@ export function DeckFolderControls({
             key={folder.id}
             type="button"
             onClick={() => onFilterChange(folder.id)}
-            className={`rounded-[var(--lumen-radius-pill)] border px-3 py-1 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] ${filterId === folder.id ? "border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent-text)]" : "border-[var(--border)] text-[var(--text-secondary)]"}`}
+            className={`rounded-[var(--lumen-radius-pill)] border px-3 py-1 text-xs ${filterId === folder.id ? "border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent-text)]" : "border-[var(--border)] text-[var(--text-secondary)]"}`}
           >
             <FolderName name={folder.name} />
           </button>

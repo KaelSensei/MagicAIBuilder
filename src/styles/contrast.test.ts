@@ -30,6 +30,12 @@ import { contrastRatio, relativeLuminance } from "@/lib/a11y/palette";
  * #e4dcf2 at 1.33:1 on white (docs/product/specs/i13-visual-direction.md).
  * There is no lighter decorative divider token: every `--border` use is held
  * to 3:1.
+ *
+ * `--focus-ring` draws the keyboard focus outline of every control, so it is
+ * held to the same 3:1 on the same four surfaces (WCAG 2.2 SC 1.4.11 and
+ * 2.4.7). Focus used to be drawn in `--accent`, which measured 2.76:1 on the
+ * dark `--surface` and 2.32:1 on `--surface-hover` (design audit S1,
+ * 2026-11-25).
  */
 
 const GLOBALS_CSS = join(process.cwd(), "src", "styles", "globals.css");
@@ -143,6 +149,17 @@ describe.each(THEMES)("$name theme tokens", ({ selector }) => {
     expect(
       ratio,
       `--border (${border}) on ${surfaceToken} (${background}) is ${ratio.toFixed(2)}:1`
+    ).toBeGreaterThanOrEqual(MIN_BOUNDARY_RATIO);
+  });
+
+  it.each(SURFACE_TOKENS)("draws the focus ring at 3:1 against %s", (surfaceToken) => {
+    const ring = colour("--focus-ring");
+    const background = colour(surfaceToken);
+    const ratio = contrastRatio(ring, background);
+
+    expect(
+      ratio,
+      `--focus-ring (${ring}) on ${surfaceToken} (${background}) is ${ratio.toFixed(2)}:1`
     ).toBeGreaterThanOrEqual(MIN_BOUNDARY_RATIO);
   });
 

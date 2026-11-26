@@ -54,7 +54,7 @@ export function PagedCardList({
           placeholder={t("searchPlaceholder")}
           value={paged.search}
           onChange={(e) => paged.changeSearch(e.target.value)}
-          className="w-full pl-9 pr-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent)] transition-colors"
+          className="w-full pl-9 pr-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] transition-colors"
         />
       </div>
 

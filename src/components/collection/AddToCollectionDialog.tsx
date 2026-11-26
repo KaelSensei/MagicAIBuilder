@@ -218,7 +218,7 @@ export function AddToCollectionDialog(props: AddToCollectionDialogProps) {
                 <button
                   type="button"
                   onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                  className="flex h-7 w-7 items-center justify-center rounded-[var(--lumen-radius-pill)] border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+                  className="flex h-7 w-7 items-center justify-center rounded-[var(--lumen-radius-pill)] border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--text-primary)]"
                 >
                   −
                 </button>
@@ -228,7 +228,7 @@ export function AddToCollectionDialog(props: AddToCollectionDialogProps) {
                 <button
                   type="button"
                   onClick={() => setQuantity((q) => q + 1)}
-                  className="flex h-7 w-7 items-center justify-center rounded-[var(--lumen-radius-pill)] border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+                  className="flex h-7 w-7 items-center justify-center rounded-[var(--lumen-radius-pill)] border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--text-primary)]"
                 >
                   +
                 </button>
@@ -247,7 +247,7 @@ export function AddToCollectionDialog(props: AddToCollectionDialogProps) {
                     key={c}
                     onClick={() => setCondition(c)}
                     className={cn(
-                      "rounded-[var(--lumen-radius-pill)] border px-2 py-1 text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]",
+                      "rounded-[var(--lumen-radius-pill)] border px-2 py-1 text-xs transition-colors",
                       condition === c
                         ? "border-[var(--accent)] text-[var(--accent-text)] bg-[var(--accent)]/10"
                         : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/50"
@@ -268,7 +268,7 @@ export function AddToCollectionDialog(props: AddToCollectionDialogProps) {
                 type="button"
                 onClick={() => setFoil((f) => !f)}
                 className={cn(
-                  "rounded-[var(--lumen-radius-pill)] border px-3 py-1 text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]",
+                  "rounded-[var(--lumen-radius-pill)] border px-3 py-1 text-xs transition-colors",
                   foil
                     ? "border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent-text)]"
                     : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]"
