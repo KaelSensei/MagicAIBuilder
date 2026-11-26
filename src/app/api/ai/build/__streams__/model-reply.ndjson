@@ -1,7 +1,7 @@
-{"type":"status","message":"Thinking…"}
-{"type":"status","message":"Consulting the AI oracle…"}
+{"type":"status","step":"thinking","message":"Thinking…"}
+{"type":"status","step":"consulting","message":"Consulting the AI oracle…"}
 {"type":"commander","name":"Talrand, Sky Summoner"}
-{"type":"status","message":"Building card list…"}
+{"type":"status","step":"building","message":"Building card list…"}
 {"type":"card","name":"Sol Ring","category":"ramp","quantity":1}
 {"type":"card","name":"Counterspell","category":"removal","quantity":1}
 {"type":"card","name":"Persistent Petitioners","category":"creature","quantity":4}

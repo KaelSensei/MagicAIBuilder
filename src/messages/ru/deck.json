@@ -769,6 +769,8 @@
     "deckNotSaved": "Your deck was built, but it could not be saved. The build is kept: try saving it again.",
     "trySavingAgain": "Try saving again",
     "addingCards": "Добавление карт в колоду…",
+    "buildStepConsulting": "Consulting the AI oracle…",
+    "buildStepBuilding": "Building card list…",
     "demoDeckNotice": "Демонстрационная колода — в этом развёртывании не настроен ИИ-провайдер, поэтому список является заглушкой.",
     "correctionsTitle": "Checked against card data: {count, plural, one {# correction} other {# corrections}}",
     "correctionsIntro": "The AI's list broke Commander rules. These changes were made before the deck was saved.",

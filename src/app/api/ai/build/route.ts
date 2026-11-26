@@ -32,6 +32,7 @@ import {
   type AiCallTicket,
 } from "@/lib/ai/usage/meter";
 import { reserveAiCallForRoute } from "@/lib/ai/usage/route-gate";
+import { statusEvent } from "./status-event";
 import type {
   AIDeckResponse,
   Bracket,
@@ -209,7 +210,7 @@ async function generateDeck(
 ): Promise<AIDeckResponse> {
   switch (origin.kind) {
     case "model":
-      emit({ type: "status", message: "Consulting the AI oracle…" });
+      emit(statusEvent("consulting"));
       return callModelMetered({
         ticket: origin.ticket,
         target: origin.target,
@@ -254,7 +255,7 @@ function streamDeck(
   corrections: readonly DeckCorrection[]
 ): void {
   emit({ type: "commander", name: deck.commander });
-  emit({ type: "status", message: "Building card list…" });
+  emit(statusEvent("building"));
 
   let total = 0;
   for (const card of deck.cards) {
@@ -364,7 +365,7 @@ export async function POST(request: Request) {
         controller.enqueue(encoder.encode(JSON.stringify(event) + "\n"));
 
       try {
-        emit({ type: "status", message: "Thinking…" });
+        emit(statusEvent("thinking"));
         const deck = await generateDeck(origin, body, userId, emit);
         const source: BuildSource = origin.kind === "model" ? "ai" : "demo";
 

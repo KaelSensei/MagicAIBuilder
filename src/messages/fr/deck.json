@@ -900,6 +900,8 @@
     "deckNotSaved": "Votre deck a été construit, mais il n’a pas pu être enregistré. La construction est conservée : réessayez de l’enregistrer.",
     "trySavingAgain": "Réessayer l’enregistrement",
     "addingCards": "Ajout des cartes à votre deck…",
+    "buildStepConsulting": "Consultation de l’oracle IA…",
+    "buildStepBuilding": "Construction de la liste de cartes…",
     "demoDeckNotice": "Deck de démonstration — aucun fournisseur IA n’est configuré sur ce déploiement, cette liste est un simple exemple.",
     "correctionsTitle": "Vérifié avec les données des cartes : {count, plural, one {# correction} other {# corrections}}",
     "correctionsIntro": "La liste de l’IA enfreignait les règles du Commander. Ces changements ont été faits avant l’enregistrement du deck.",
