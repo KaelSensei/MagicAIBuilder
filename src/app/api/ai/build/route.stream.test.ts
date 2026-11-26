@@ -56,11 +56,20 @@ vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
 
 import { POST } from "./route";
 
-/** The status lines every model build streams before the reply arrives. */
+/**
+ * The status events every model build streams before the reply arrives: each names its step, and
+ * keeps its English line for a client loaded before steps existed.
+ */
 const MODEL_STATUS = [
-  { type: "status", message: "Thinking…" },
-  { type: "status", message: "Consulting the AI oracle…" },
+  { type: "status", step: "thinking", message: "Thinking…" },
+  { type: "status", step: "consulting", message: "Consulting the AI oracle…" },
 ] as const;
+
+const BUILDING_STATUS = {
+  type: "status",
+  step: "building",
+  message: "Building card list…",
+} as const;
 
 const BUILD_FAILED = {
   type: "error",
@@ -210,9 +219,9 @@ describe("POST /api/ai/build event stream", () => {
 
       expect(sent).toEqual([]);
       expect(events.slice(0, 3)).toEqual([
-        { type: "status", message: "Thinking…" },
+        MODEL_STATUS[0],
         { type: "commander", name: "Talrand, Sky Summoner" },
-        { type: "status", message: "Building card list…" },
+        BUILDING_STATUS,
       ]);
       expect(events.at(-1)).toEqual({
         type: "done",
@@ -252,7 +261,7 @@ describe("POST /api/ai/build event stream", () => {
       expect(events).toEqual([
         ...MODEL_STATUS,
         { type: "commander", name: "Tymna the Weaver" },
-        { type: "status", message: "Building card list…" },
+        BUILDING_STATUS,
         { type: "card", name: "Sol Ring", category: "ramp", quantity: 1 },
         { type: "card", name: "Island", category: "land", quantity: 97 },
         {
@@ -265,7 +274,7 @@ describe("POST /api/ai/build event stream", () => {
       ]);
     });
 
-    it("currently streams English status lines to a French interface (pinned; see B2-55)", async () => {
+    it("names every status event's step for a French interface too, so the wizard words it in French (B2-55)", async () => {
       const events = await readNdjsonEvents(
         await POST(
           buildRequest(TALRAND_BUILD_REQUEST, {
@@ -275,11 +284,11 @@ describe("POST /api/ai/build event stream", () => {
         )
       );
 
-      expect(events.slice(0, 2)).toEqual(MODEL_STATUS);
-      expect(events).toContainEqual({
-        type: "status",
-        message: "Building card list…",
-      });
+      expect(events.slice(0, 4)).toEqual([
+        ...MODEL_STATUS,
+        { type: "commander", name: "Talrand, Sky Summoner" },
+        BUILDING_STATUS,
+      ]);
     });
   });
 

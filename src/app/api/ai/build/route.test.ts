@@ -229,8 +229,12 @@ describe("POST /api/ai/build truncated reply", () => {
     });
 
     expect(events).toEqual([
-      { type: "status", message: "Thinking…" },
-      { type: "status", message: "Consulting the AI oracle…" },
+      { type: "status", step: "thinking", message: "Thinking…" },
+      {
+        type: "status",
+        step: "consulting",
+        message: "Consulting the AI oracle…",
+      },
       { type: "error", message: "AI deck build failed" },
     ]);
     expect(logError).toHaveBeenCalledTimes(1);
@@ -263,8 +267,12 @@ describe("POST /api/ai/build truncated reply", () => {
     });
 
     expect(events).toEqual([
-      { type: "status", message: "Thinking…" },
-      { type: "status", message: "Consulting the AI oracle…" },
+      { type: "status", step: "thinking", message: "Thinking…" },
+      {
+        type: "status",
+        step: "consulting",
+        message: "Consulting the AI oracle…",
+      },
       { type: "error", message: "AI deck build failed" },
     ]);
     expect(logError).toHaveBeenCalledTimes(1);
@@ -387,8 +395,12 @@ describe("POST /api/ai/build card-data check", () => {
     });
 
     expect(events).toEqual([
-      { type: "status", message: "Thinking…" },
-      { type: "status", message: "Consulting the AI oracle…" },
+      { type: "status", step: "thinking", message: "Thinking…" },
+      {
+        type: "status",
+        step: "consulting",
+        message: "Consulting the AI oracle…",
+      },
       { type: "error", message: "AI deck build failed" },
     ]);
     expect(logError).toHaveBeenCalledWith(

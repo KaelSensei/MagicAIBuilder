@@ -2,8 +2,9 @@
 /**
  * Client side of the AI deck build: posts the request, reads the NDJSON build
  * stream through guarded events, and exposes progress and the finished list.
- * A failed build is logged and kept as its kind (`lib/ai/build-failure.ts`),
- * never as the thrown text.
+ * Progress is kept as the step the server named (`lib/ai/build-step.ts`), and a
+ * failed build as its kind (`lib/ai/build-failure.ts`), never as server or
+ * thrown text, so the wizard words both in the player's language.
  */
 import { useState, useCallback, useRef } from "react";
 import type {
@@ -21,6 +22,7 @@ import {
   deckBuildFailureOf,
   type DeckBuildFailure,
 } from "@/lib/ai/build-failure";
+import { isBuildStep, type BuildStep } from "@/lib/ai/build-step";
 import {
   readAiCallDenialResponse,
   type AiCallDenial,
@@ -56,7 +58,8 @@ export interface BuildResult {
 }
 
 export interface AIDeckBuildState {
-  statusMessages: string[];
+  /** The step the build last named; null before its first status event this client can read. */
+  step: BuildStep | null;
   commander: string | null;
   cards: BuildCard[];
   totalCards: number | null;
@@ -71,7 +74,7 @@ export interface AIDeckBuildState {
 export type AIDeckBuildParams = BuildRequest;
 
 const EMPTY_STATE: AIDeckBuildState = {
-  statusMessages: [],
+  step: null,
   commander: null,
   cards: [],
   totalCards: null,
@@ -87,7 +90,7 @@ const EMPTY_STATE: AIDeckBuildState = {
 type BuildAcc = {
   commander: string | null;
   cards: BuildCard[];
-  messages: string[];
+  step: BuildStep | null;
   totalCards: number | null;
   source: BuildSource | null;
   corrections: readonly DeckCorrection[];
@@ -106,13 +109,17 @@ type CardEvent = Extract<BuildEvent, { type: "card" }>;
 /**
  * A build event as this client accepts it off the wire.
  *
- * Status, commander and error events need every field they carry. A card's
+ * Commander and error events need every field they carry. A status event
+ * needs a step this client knows, and its English `message` is never read: a
+ * status event from a server that predates steps, or naming a step added
+ * since, is skipped, so the wizard keeps the last step it can word. A card's
  * `quantity` and every field of `done` stay `unknown` here: a server that
  * predates them sends none, and the reader falls back as if a field it cannot
  * read were absent, so a `done` event always completes the build.
  */
 type ReceivedBuildEvent =
-  | Exclude<BuildEvent, { type: "card" | "done" }>
+  | Exclude<BuildEvent, { type: "status" | "card" | "done" }>
+  | { readonly type: "status"; readonly step: BuildStep }
   | (Omit<CardEvent, "quantity"> & { readonly quantity?: unknown })
   | {
       readonly type: "done";
@@ -142,6 +149,7 @@ function isBuildEvent(value: unknown): value is ReceivedBuildEvent {
   if (!isRecord(value)) return false;
   switch (value.type) {
     case "status":
+      return isBuildStep(value.step);
     case "error":
       return typeof value.message === "string";
     case "commander":
@@ -229,7 +237,7 @@ function applyBuildEvent(
 ): boolean {
   switch (event.type) {
     case "status":
-      acc.messages.push(event.message);
+      acc.step = event.step;
       onUpdate(acc);
       return false;
     case "commander":
@@ -272,7 +280,7 @@ async function processBuildStream(
   const acc: BuildAcc = {
     commander: null,
     cards: [],
-    messages: [],
+    step: null,
     totalCards: null,
     source: null,
     corrections: [],
@@ -358,7 +366,7 @@ export function useAIDeckBuild() {
         const acc = await processBuildStream(response.body.getReader(), (a) => {
           setState((prev) => ({
             ...prev,
-            statusMessages: [...a.messages],
+            step: a.step,
             commander: a.commander,
             cards: [...a.cards],
             totalCards: a.totalCards,
