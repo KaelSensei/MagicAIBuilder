@@ -47,6 +47,17 @@ const SURFACE_TOKENS = [
   "--surface-hover",
 ] as const;
 
+/**
+ * Every text token on every surface. `--text-primary` joined `--text-secondary`
+ * with I-13 (design audit S5): the shared deck page's header without
+ * commander art writes its title and commanders in it on `--surface`.
+ */
+const TEXT_ON_SURFACES = (
+  ["--text-primary", "--text-secondary"] as const
+).flatMap((textToken) =>
+  SURFACE_TOKENS.map((surfaceToken) => [textToken, surfaceToken] as const)
+);
+
 const css = readFileSync(GLOBALS_CSS, "utf8");
 
 /** The `#rrggbb` tokens declared inside one selector block. */
@@ -110,16 +121,19 @@ describe.each(THEMES)("$name theme tokens", ({ selector }) => {
     expect(colour("--accent-hover")).toBe("#6d28d9");
   });
 
-  it.each(SURFACE_TOKENS)("keeps --text-secondary readable on %s", (surfaceToken) => {
-    const foreground = colour("--text-secondary");
-    const background = colour(surfaceToken);
-    const ratio = contrastRatio(foreground, background);
+  it.each(TEXT_ON_SURFACES)(
+    "keeps %s readable on %s",
+    (textToken, surfaceToken) => {
+      const foreground = colour(textToken);
+      const background = colour(surfaceToken);
+      const ratio = contrastRatio(foreground, background);
 
-    expect(
-      ratio,
-      `--text-secondary (${foreground}) on ${surfaceToken} (${background}) is ${ratio.toFixed(2)}:1`
-    ).toBeGreaterThanOrEqual(MIN_RATIO);
-  });
+      expect(
+        ratio,
+        `${textToken} (${foreground}) on ${surfaceToken} (${background}) is ${ratio.toFixed(2)}:1`
+      ).toBeGreaterThanOrEqual(MIN_RATIO);
+    }
+  );
 
   it.each(SURFACE_TOKENS)("draws component borders at 3:1 against %s", (surfaceToken) => {
     const border = colour("--border");
