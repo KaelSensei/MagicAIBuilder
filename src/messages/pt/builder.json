@@ -260,7 +260,6 @@
     "show": "Show filters",
     "hide": "Hide filters"
   },
-  "colorSearchHint": "Select colors to browse cards",
   "searchModes": {
     "name": "Name",
     "set": "By Set",

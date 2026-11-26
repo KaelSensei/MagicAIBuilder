@@ -30,10 +30,12 @@ import { useCollectionStore } from "@/lib/collection/store";
 import { isRecord } from "@/lib/guards";
 import type { ApiDeck, ApiDeckCard } from "@/lib/db/deck-api";
 import { useDeckStore } from "@/lib/deck/store";
+import { SCRYFALL_API } from "@/lib/scryfall/constants";
 import {
   EMPTY_SEARCH_RESPONSE,
   type ScryfallCard,
   type ScryfallSearchResponse,
+  type ScryfallSetList,
 } from "@/lib/scryfall/types";
 import { useUIStore } from "@/lib/ui/store";
 import { setupMsw } from "@/test/msw";
@@ -127,6 +129,20 @@ const OWNED_OPT = {
   quantity: 2,
   foil: false,
   createdAt: "2026-11-01T00:00:00.000Z",
+};
+
+/** The one set By Set's field offers. No search finds a card in this file, its set included. */
+const SETS: ScryfallSetList = {
+  object: "list",
+  data: [
+    {
+      code: "dsk",
+      name: "Duskmourn: House of Horror",
+      set_type: "expansion",
+      card_count: 286,
+      released_at: "2024-09-27",
+    },
+  ],
 };
 
 /**
@@ -313,7 +329,9 @@ const server = setupMsw(
   ),
   http.get("/api/meta/:slug/history", () =>
     HttpResponse.json({ report: null, snapshotCount: 0, windowDays: 90 })
-  )
+  ),
+  // By Set's field reads the sets from Scryfall itself, not through the search cache.
+  http.get(`${SCRYFALL_API}/sets`, () => HttpResponse.json(SETS))
 );
 
 describe("characterization: the builder's name search with a plain-language query", () => {
@@ -721,14 +739,74 @@ describe("the builder's search with no result", () => {
     it("suggests nothing on By Set, which has no text box for the syntax", async () => {
       const { user } = await openBuilder();
 
+      // A set must be chosen first: until then By Set sends no search (the describe below).
       await user.click(searchTab("By Set"));
-
-      expect(
+      await user.click(
         screen.getByPlaceholderText("Search set (e.g. dsk, mh3…)")
-      ).toBeDefined();
-      expect(screen.getByText(NO_RESULT)).toBeDefined();
+      );
+      await user.click(await screen.findByText("Duskmourn: House of Horror"));
+
+      await settlesEmpty("set:dsk legal:commander");
+      expect(screen.queryByText("Choose a set to list its cards.")).toBeNull();
       expect(screen.queryByText(SYNTAX_HINT)).toBeNull();
       expect(buttonCount("Clear filters")).toBe(0);
+    });
+
+    /*
+     * By Set and By Color send no search until the player chooses a set or a colour, yet the
+     * panel said "No cards found" there, and its live region announced it although nothing was
+     * searched. It now says what to choose (I-13, a follow-up of #1967).
+     */
+    describe("before the tab has anything to search", () => {
+      /** The panel's line `text`, once it shows, checked to be the polite live region. */
+      async function liveLine(text: string): Promise<HTMLElement> {
+        const line = await screen.findByText(text);
+        expect(line).toBeInstanceOf(HTMLOutputElement);
+        expect(line).toHaveAttribute("aria-live", "polite");
+        return line;
+      }
+
+      it("asks for a set on By Set instead of saying that no card was found", async () => {
+        const { user } = await openBuilder();
+
+        await user.click(searchTab("By Set"));
+
+        expect(await liveLine("Choose a set to list its cards.")).toBeDefined();
+        expect(screen.queryByText(NO_RESULT)).toBeNull();
+        expect(screen.queryByText(SYNTAX_HINT)).toBeNull();
+      });
+
+      it("asks for colours on By Color instead of saying that no card was found", async () => {
+        const { user } = await openBuilder();
+
+        await user.click(searchTab("By Color"));
+
+        expect(
+          await liveLine("Choose colors to list their cards.")
+        ).toBeDefined();
+        expect(screen.queryByText(NO_RESULT)).toBeNull();
+        expect(screen.queryByText(SYNTAX_HINT)).toBeNull();
+      });
+
+      // The colour picker used to say the same thing in its own words ("Select colors to browse
+      // cards") under the same condition; the panel's line is the one instruction now.
+      it("asks for colours once on By Color, and stops asking once a name narrows the search", async () => {
+        const { user } = await openBuilder();
+        await user.click(searchTab("By Color"));
+        await liveLine("Choose colors to list their cards.");
+        expect(screen.queryByText("Select colors to browse cards")).toBeNull();
+
+        await user.type(
+          screen.getByPlaceholderText("Filter by name (optional)…"),
+          "Sol"
+        );
+
+        await waitFor(() =>
+          expect(
+            screen.queryByText("Choose colors to list their cards.")
+          ).toBeNull()
+        );
+      });
     });
 
     it("suggests nothing on By Color when the colours match no card", async () => {
@@ -738,6 +816,9 @@ describe("the builder's search with no result", () => {
       await user.click(button("White"));
 
       await settlesEmpty("legal:commander id<=W");
+      expect(
+        screen.queryByText("Choose colors to list their cards.")
+      ).toBeNull();
       expect(screen.queryByText(SYNTAX_HINT)).toBeNull();
       expect(buttonCount("Clear filters")).toBe(0);
     });

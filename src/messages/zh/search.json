@@ -4,6 +4,10 @@
   "clearLabel": "Clear search",
   "searching": "Searching…",
   "noResults": "No cards found. Try a different search.",
+  "choose": {
+    "set": "Choose a set to list its cards.",
+    "colors": "Choose colors to list their cards."
+  },
   "failure": {
     "unavailable": "Card search is unavailable right now. Try again in a moment.",
     "rejectedQuery": "Scryfall could not read this search. Check its syntax."
