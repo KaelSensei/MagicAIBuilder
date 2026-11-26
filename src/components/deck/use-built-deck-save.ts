@@ -18,6 +18,11 @@
  * a second deck (I-02). A commander the store could not save and a card the server refused are
  * swallowed by the store, so the deck still opens without them (B2-36).
  *
+ * A save belongs to the session it started in, and `reset` starts a new one. A save still running
+ * from an earlier session (the player reopened the wizard, or chose "Try again") changes nothing
+ * the wizard shows and opens no deck when it ends; its deck stays stored, and its end is logged at
+ * info for support (I-02, follow-up of #1984).
+ *
  * @module deck/use-built-deck-save
  */
 import { useCallback, useRef, useState } from "react";
@@ -80,7 +85,8 @@ export interface BuiltDeckSave {
    * Stores the built deck, then calls `onComplete` with its id, unless it carries corrections or
    * could not be filled. Throws only what `onComplete` throws. When the server cannot create the
    * deck, it holds the deck and sets `saveFailed`; when the deck was created but a card lookup
-   * failed or a later step threw, it sets `unfinishedDeck`, with the build's corrections.
+   * failed or a later step threw, it sets `unfinishedDeck`, with the build's corrections. When
+   * `reset` came first, it does none of this: it logs what became of the deck and returns.
    */
   readonly save: (deck: BuiltDeck) => Promise<void>;
   /**
@@ -88,7 +94,10 @@ export interface BuiltDeckSave {
    * Does nothing when no deck is held. Throws only what `onComplete` throws, as `save`.
    */
   readonly retry: () => Promise<void>;
-  /** Forgets the progress and the corrected, unfinished and held decks, for a fresh build. */
+  /**
+   * Forgets the progress and the corrected, unfinished and held decks, for a fresh build, and ends
+   * the save session: a save started before it shows nothing and opens nothing when it ends.
+   */
   readonly reset: () => void;
 }
 

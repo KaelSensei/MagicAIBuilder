@@ -22,7 +22,9 @@
  * step that throws once the deck exists, it says so in an alert, with the count of copies not
  * added when known and the build's corrections under it, and offers only "Open the deck". A
  * commander the store could not save, and a card the server refused (B2-36), still open the deck
- * in silence; both stay pinned below.
+ * in silence; both stay pinned below. A save left running when the player reopens the wizard ends
+ * without a word: its deck stays stored, but its notice, its hold and its import count never reach
+ * the new build's screen, and it opens no deck (I-02, #1984's QA).
  */
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { MotionGlobalConfig } from "framer-motion";
