@@ -941,7 +941,7 @@ export default function BuilderPage() {
             </button>
           )}
           {/* The status chip of the theme, `--accent-text` on `--accent-soft`
-              (at least 4.5:1 in both themes, `src/styles/contrast.test.ts`),
+              (at least 4.5:1 in both themes, held by `src/components/landing/contrast.test.ts`),
               in place of raw `text-purple-400` (design audit S10). The
               transparent border keeps the chip's size and draws its edge in
               forced-colors mode, which drops the fill. */}

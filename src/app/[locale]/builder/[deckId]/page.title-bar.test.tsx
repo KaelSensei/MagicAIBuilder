@@ -12,7 +12,7 @@
  * jsdom loads no stylesheet and computes no layout, so sizes and focus styles are read from the
  * Tailwind classes; `e2e/focus-visible.spec.ts` measures the outline in a browser.
  */
-import { screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import type { Session } from "next-auth";
@@ -63,11 +63,12 @@ setupMsw(
 );
 
 /**
- * Opens Atraxa Superfriends at `/en/builder/atraxa` and waits for its title bar.
+ * Opens Atraxa Superfriends at `/<locale>/builder/atraxa` and waits for its title bar.
  *
+ * @param locale - the interface language, English unless a test reads the French labels
  * @returns the deck's name heading, inside the button that starts a rename
  */
-async function openAtraxa(): Promise<HTMLElement> {
+async function openAtraxa(locale: "en" | "fr" = "en"): Promise<HTMLElement> {
   const router = {
     back: vi.fn(),
     forward: vi.fn(),
@@ -78,11 +79,11 @@ async function openAtraxa(): Promise<HTMLElement> {
   };
   renderWithProviders(
     <AppRouterContext.Provider value={router}>
-      <PathParamsContext.Provider value={{ locale: "en", deckId: DECK_ID }}>
+      <PathParamsContext.Provider value={{ locale, deckId: DECK_ID }}>
         <BuilderPage />
       </PathParamsContext.Provider>
     </AppRouterContext.Provider>,
-    { session: PLAYER }
+    { session: PLAYER, locale }
   );
   return screen.findByRole("heading", { level: 1, name: DECK_NAME });
 }
@@ -111,6 +112,15 @@ describe("builder page: the title bar for keyboard and screen-reader players", (
       ).toBeInTheDocument();
     });
 
+    it("names that button in French for a French player", async () => {
+      const user = userEvent.setup();
+      await user.click(await openAtraxa("fr"));
+
+      expect(
+        screen.getByRole("button", { name: "Enregistrer le nom" })
+      ).toBeInTheDocument();
+    });
+
     // Pressing the button moves focus off the field first, and the field's blur is what saves:
     // the button's own click lands once the row is gone. One save either way.
     it("saves the typed name once when the player presses that button", async () => {
@@ -122,6 +132,27 @@ describe("builder page: the title bar for keyboard and screen-reader players", (
       await user.paste("Atraxa Tempo");
 
       await user.click(screen.getByRole("button", { name: "Save the name" }));
+
+      expect(
+        await screen.findByRole("heading", { level: 1, name: "Atraxa Tempo" })
+      ).toBeInTheDocument();
+      await waitFor(() =>
+        expect(api.savedDeck(DECK_ID)?.name).toBe("Atraxa Tempo")
+      );
+      expect(api.updateDeck).toHaveBeenCalledTimes(1);
+    });
+
+    // A screen reader can activate the button while focus stays in the field, so no blur saves
+    // first: the button's own click must save, once.
+    it("saves the typed name once when the button is activated while the field keeps focus", async () => {
+      const user = userEvent.setup();
+      await user.click(await openAtraxa());
+      await user.clear(
+        screen.getByRole("textbox", { name: "Click to rename" })
+      );
+      await user.paste("Atraxa Tempo");
+
+      fireEvent.click(screen.getByRole("button", { name: "Save the name" }));
 
       expect(
         await screen.findByRole("heading", { level: 1, name: "Atraxa Tempo" })
@@ -166,7 +197,7 @@ describe("builder page: the title bar for keyboard and screen-reader players", (
   describe("the deck-name button", () => {
     // The name is the visible deck name, so speech input can say what it sees (WCAG 2.2
     // SC 2.5.3), and the title tells a screen reader what pressing it does.
-    it("is named after the deck and described as renaming it", async () => {
+    it("characterization: is named after the deck and described as renaming it", async () => {
       await openAtraxa();
 
       expect(
@@ -188,6 +219,7 @@ describe("builder page: the title bar for keyboard and screen-reader players", (
         "group-hover:opacity-100",
         "group-focus-visible:opacity-100"
       );
+      expect(pencil).toHaveAttribute("aria-hidden", "true");
     });
   });
 
