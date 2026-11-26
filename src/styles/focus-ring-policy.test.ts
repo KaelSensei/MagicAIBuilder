@@ -36,7 +36,7 @@ const FOCUS_IN_OLD_COLOUR =
 
 const FOCUS_AS_RING = /(focus|focus-visible|focus-within)\]?:ring-/;
 
-const SCANNED_ROOTS = ["src/components", "src/app"] as const;
+const SCANNED_ROOTS = ["src/components", "src/app", "src/modules"] as const;
 
 function walk(dir: string): string[] {
   return readdirSync(dir).flatMap((entry) => {
