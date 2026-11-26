@@ -11,6 +11,8 @@
  * @module layout/header-deck-actions-state
  */
 
+import type { Dispatch, SetStateAction } from "react";
+
 /** What the deck actions are doing right now; one value per header. */
 export interface HeaderDeckActionsUiState {
   /** The import dialog is open, whichever instance asked for it. */
@@ -19,6 +21,16 @@ export interface HeaderDeckActionsUiState {
   readonly isCreatingDeck: boolean;
   /** "Import" is creating the deck that will receive the list. */
   readonly isCreatingImportDeck: boolean;
+}
+
+/**
+ * The deck actions' state and its setter, when a page holds them instead of
+ * `Header`. The decks page does, so its empty library's "Import a decklist"
+ * starts the header's import and the header's dialog opens.
+ */
+export interface SharedHeaderDeckActions {
+  readonly state: HeaderDeckActionsUiState;
+  readonly onChange: Dispatch<SetStateAction<HeaderDeckActionsUiState>>;
 }
 
 /** Nothing pending, dialog closed. */

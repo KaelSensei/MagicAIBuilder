@@ -92,6 +92,7 @@
     "startBuilding": "Start building",
     "startBuildingDescription": "Create your first Commander deck with live bracket scoring and Game Changers detection.",
     "createDeck": "Create Deck",
+    "importDeck": "Import a decklist",
     "newDeck": "New Deck",
     "newDeckName": "New Deck {index}",
     "newDeckFormat": "New deck format",

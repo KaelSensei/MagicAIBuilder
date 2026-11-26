@@ -3,6 +3,7 @@
 import {
   useCallback,
   useEffect,
+  useId,
   useMemo,
   useState,
   type ReactNode,
@@ -12,11 +13,23 @@ import { useInitContext } from "@/components/providers/InitProvider";
 import { useBoundedSession } from "@/hooks/useBoundedSession";
 import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
-import { AlertTriangle, Layers, Loader2, Plus, RefreshCw, Search } from "lucide-react";
+import {
+  AlertTriangle,
+  Layers,
+  Loader2,
+  Plus,
+  RefreshCw,
+  Search,
+  Sparkles,
+  Upload,
+} from "lucide-react";
 import { DeckWizard } from "@/components/deck/DeckWizard";
 import { HomeDeckCard } from "@/components/deck/HomeDeckCard";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
+import { IDLE_HEADER_DECK_ACTIONS } from "@/components/layout/header-deck-actions-state";
+import { useImportIntoNewDeck } from "@/components/layout/use-import-into-new-deck";
+import { Button } from "@/components/ui/Button";
 import { useDeckStore } from "@/lib/deck/store";
 import { useDeckCreateFailureReport } from "@/hooks/useDeckFailureReport";
 import { useDeckDeletion } from "@/hooks/useDeckDeletion";
@@ -66,6 +79,15 @@ export default function DecksPage() {
   const [isCreating, setIsCreating] = useState(false);
   const [newDeckFormat, setNewDeckFormat] = useState<DeckFormat>("commander");
   const [wizardOpen, setWizardOpen] = useState(false);
+  // Shared with the header, so the empty library's "Import a decklist" runs
+  // the header's import and opens the header's one import dialog.
+  const [headerDeckActions, setHeaderDeckActions] = useState(
+    IDLE_HEADER_DECK_ACTIONS
+  );
+  const importIntoNewDeck = useImportIntoNewDeck(
+    headerDeckActions.isCreatingImportDeck,
+    setHeaderDeckActions
+  );
   const [viewMode, setViewMode] = useState<DecksViewMode>("grid");
   const [sortKey, setSortKey] = useState<DecksSortKey>("updatedAt");
   const [sortDir, setSortDir] = useState<DecksSortDir>("desc");
@@ -171,6 +193,8 @@ export default function DecksPage() {
     void loadDecks().finally(() => setIsLoading(false));
   }, [loadDecks]);
 
+  const openWizard = useCallback(() => setWizardOpen(true), []);
+
   const handleSetViewMode = useCallback((mode: DecksViewMode) => {
     setViewMode(mode);
     storeDecksViewMode(mode);
@@ -247,6 +271,9 @@ export default function DecksPage() {
             <EmptyLibraryPanel
               onCreate={handleNewDeck}
               isCreating={isCreating}
+              onImport={importIntoNewDeck}
+              isImporting={headerDeckActions.isCreatingImportDeck}
+              onOpenWizard={openWizard}
             />
           </>
         );
@@ -348,7 +375,12 @@ export default function DecksPage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <Header />
+      <Header
+        deckActions={{
+          state: headerDeckActions,
+          onChange: setHeaderDeckActions,
+        }}
+      />
 
       <main className="mx-auto flex-1 w-full max-w-5xl px-6 py-10">
         <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
@@ -392,7 +424,7 @@ export default function DecksPage() {
             sortDir={sortDir}
             onSetViewMode={handleSetViewMode}
             onSetSort={handleSetSort}
-            onOpenWizard={() => setWizardOpen(true)}
+            onOpenWizard={openWizard}
             onNewDeck={handleNewDeck}
             disableNewDeck={isCreating || isSyncing}
             isCreating={isCreating}
@@ -499,28 +531,51 @@ function LoadFailedPanel({
   );
 }
 
-/** The library holds no deck: the first one is one click away. */
+interface EmptyLibraryPanelProps {
+  /** The page's "Create Deck": a deck in the format picked on the page. */
+  readonly onCreate: () => void;
+  readonly isCreating: boolean;
+  /** The header's import: a dated deck, then the header's import dialog on it. */
+  readonly onImport: () => void;
+  readonly isImporting: boolean;
+  readonly onOpenWizard: () => void;
+}
+
+/**
+ * The library holds no deck: it says so, and offers the three ways to start
+ * that the toolbar and the header already offer, "Create Deck" first (I-13
+ * AC-13-05, design audit S11). "Import a decklist" runs the header's own
+ * import, so the header's one import dialog opens and gives focus back to the
+ * header's "Import" when it closes.
+ */
 function EmptyLibraryPanel({
   onCreate,
   isCreating,
-}: {
-  readonly onCreate: () => void;
-  readonly isCreating: boolean;
-}) {
+  onImport,
+  isImporting,
+  onOpenWizard,
+}: EmptyLibraryPanelProps) {
   const t = useTranslations("deck");
+  const headingId = useId();
   return (
-    <motion.div
-      className="flex flex-col items-center justify-center py-24 text-center"
+    <motion.section
+      aria-labelledby={headingId}
+      className="flex flex-wrap items-center justify-center gap-3 py-24 text-center"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
     >
-      <Layers className="mb-4 h-12 w-12 text-[var(--accent-text)] opacity-60" />
-      <h2 className="mb-2 text-lg font-semibold text-[var(--text-primary)]">
-        {t("home.startBuilding")}
-      </h2>
-      <p className="mb-6 max-w-sm text-sm text-[var(--text-secondary)]">
-        {t("home.startBuildingDescription")}
-      </p>
+      <div className="flex w-full flex-col items-center">
+        <Layers className="mb-4 h-12 w-12 text-[var(--accent-text)] opacity-60" />
+        <h2
+          id={headingId}
+          className="mb-2 text-lg font-semibold text-[var(--text-primary)]"
+        >
+          {t("home.startBuilding")}
+        </h2>
+        <p className="mb-3 max-w-sm text-sm text-[var(--text-secondary)]">
+          {t("home.startBuildingDescription")}
+        </p>
+      </div>
       <button
         type="button"
         onClick={onCreate}
@@ -534,6 +589,23 @@ function EmptyLibraryPanel({
         )}
         {t("home.createDeck")}
       </button>
-    </motion.div>
+      <Button
+        variant="secondary"
+        size="lg"
+        onClick={onImport}
+        disabled={isImporting}
+      >
+        {isImporting ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <Upload className="h-4 w-4" />
+        )}
+        {t("home.importDeck")}
+      </Button>
+      <Button variant="secondary" size="lg" onClick={onOpenWizard}>
+        <Sparkles className="h-4 w-4" />
+        {t("controls.buildWithAI")}
+      </Button>
+    </motion.section>
   );
 }
