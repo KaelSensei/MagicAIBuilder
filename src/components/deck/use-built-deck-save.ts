@@ -5,14 +5,16 @@
  *
  * Deck building context. Kept out of `DeckWizard.tsx` so the wizard holds the questions and the
  * screens, and this hook holds the writes: create the deck, activate it, resolve the commander,
- * import the cards, then either show the build's corrections or open the deck.
+ * import the cards, then show what could not be added, or the build's corrections, or open the
+ * deck.
  *
  * When the server cannot create the deck, the built deck is held so the player can save it again:
  * a fresh build would cost another AI build from the player's allowance and another model call.
  * Each built deck gets one idempotency key, and every attempt to create it sends that key: when the
  * server stored the deck but its answer was lost, saving again answers the stored deck instead of
- * creating a second one (#1855). Only the creation is retried; later failures still throw to the
- * wizard.
+ * creating a second one (#1855). Only the creation is retried. A failure once the deck exists stops
+ * on that deck instead (`unfinishedDeck`): the player opens it to finish it by hand, and nothing
+ * offers a save that would store a second deck (I-02).
  *
  * @module deck/use-built-deck-save
  */
@@ -39,6 +41,16 @@ export interface CorrectedDeck {
   readonly corrections: BuildResult["corrections"];
 }
 
+/**
+ * A stored deck the save step could not finish: the player opens it and completes it by hand.
+ * Offered instead of a new save, which would store a second deck.
+ */
+export interface UnfinishedDeck {
+  readonly deckId: string;
+  /** Copies the import could not add, or null when a step threw before they could be counted. */
+  readonly cardsNotAdded: number | null;
+}
+
 /** A built deck and the idempotency key every attempt to create it sends. */
 interface DeckToCreate {
   readonly deck: BuiltDeck;
@@ -53,24 +65,23 @@ export interface BuiltDeckSave {
   readonly importTotal: number;
   /** Set once a corrected deck is stored; the wizard shows its corrections. */
   readonly correctedDeck: CorrectedDeck | null;
+  /** Set once a stored deck could not be filled; the wizard offers to open it. */
+  readonly unfinishedDeck: UnfinishedDeck | null;
   /** True while a built deck the server could not create waits for `retry`. */
   readonly saveFailed: boolean;
   /**
-   * Stores the built deck, then calls `onComplete` with its id, unless it carries corrections.
-   * When the server cannot create the deck, it holds the deck and sets `saveFailed` instead of
-   * throwing.
-   *
-   * @throws When the deck was created but cannot be activated
+   * Stores the built deck, then calls `onComplete` with its id, unless it carries corrections or
+   * could not be filled. Never throws. When the server cannot create the deck, it holds the deck
+   * and sets `saveFailed`; when the deck was created but a later step failed, it sets
+   * `unfinishedDeck`.
    */
   readonly save: (deck: BuiltDeck) => Promise<void>;
   /**
    * Saves the held deck again: the same name, cards, commander and corrections, with no new build.
-   * Does nothing when no deck is held.
-   *
-   * @throws As `save` does
+   * Does nothing when no deck is held. Never throws, as `save`.
    */
   readonly retry: () => Promise<void>;
-  /** Forgets the progress, the corrected deck and the held deck, for a fresh build. */
+  /** Forgets the progress and the corrected, unfinished and held decks, for a fresh build. */
   readonly reset: () => void;
 }
 
@@ -115,6 +126,9 @@ export function useBuiltDeckSave(
     null
   );
   const [unsavedDeck, setUnsavedDeck] = useState<DeckToCreate | null>(null);
+  const [unfinishedDeck, setUnfinishedDeck] = useState<UnfinishedDeck | null>(
+    null
+  );
 
   /** The new deck's id, or null when the server refused it and the deck is now held. */
   const createOrHold = async (
@@ -142,24 +156,34 @@ export function useBuiltDeckSave(
     }
 
     startImport(countCopies(result.cards));
-    await importCardsInBatches(
+    const { copiesNotAdded } = await importCardsInBatches(
       collapseEntries(result.cards),
       addDeckCard,
       progress.setImportedCount
     );
 
-    if (result.corrections.length > 0) {
+    // An incomplete deck says so before its corrections: the player has cards to add by hand.
+    if (copiesNotAdded > 0) {
+      setUnfinishedDeck({ deckId, cardsNotAdded: copiesNotAdded });
+    } else if (result.corrections.length > 0) {
       setCorrectedDeck({ deckId, corrections: result.corrections });
-      return;
+    } else {
+      onComplete(deckId);
     }
-    onComplete(deckId);
   };
 
   const store = async (attempt: DeckToCreate): Promise<void> => {
     setUnsavedDeck(null);
     const deckId = await createOrHold(attempt);
     if (deckId === null) return;
-    await fill(deckId, attempt.deck.result);
+    // The deck exists from here on, so no failure may reach the wizard's "Try
+    // again": a new build would store a second deck. The error stays in the log.
+    try {
+      await fill(deckId, attempt.deck.result);
+    } catch (err) {
+      logger.error("Built deck fill error", "DeckWizard", err);
+      setUnfinishedDeck({ deckId, cardsNotAdded: null });
+    }
   };
 
   // A new build is a new deck, so it gets a new key; a retry resends the held one.
@@ -173,12 +197,14 @@ export function useBuiltDeckSave(
     startImport(0);
     setCorrectedDeck(null);
     setUnsavedDeck(null);
+    setUnfinishedDeck(null);
   }, [startImport]);
 
   return {
     importedCount: progress.importedCount,
     importTotal: progress.importTotal,
     correctedDeck,
+    unfinishedDeck,
     saveFailed: unsavedDeck !== null,
     save,
     retry,

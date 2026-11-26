@@ -1,0 +1,49 @@
+"use client";
+
+/**
+ * What the AI deck wizard shows when it created the deck but could not fill it completely.
+ *
+ * Deck building context. The deck is in the player's library already, so the notice offers the
+ * deck, never a retry: building or saving again would store a second deck (I-02). The error behind
+ * it stays in the log (`use-built-deck-save.ts`); the player reads one sentence in their language.
+ *
+ * @module deck/UnfinishedDeckNotice
+ */
+import { useTranslations } from "next-intl";
+import type { UnfinishedDeck } from "./use-built-deck-save";
+
+/**
+ * Says the deck was created but not finished, and opens it on request.
+ *
+ * @param deck - The stored deck and the copies its import could not add
+ * @param onOpenDeck - Opens a deck by id, as the wizard's success path does
+ */
+export function UnfinishedDeckNotice({
+  deck,
+  onOpenDeck,
+}: {
+  readonly deck: UnfinishedDeck;
+  readonly onOpenDeck: (deckId: string) => void;
+}) {
+  const t = useTranslations("deck");
+
+  return (
+    <section className="flex flex-col items-center gap-6 w-full max-w-md mx-auto text-center">
+      <div className="text-4xl" aria-hidden="true">
+        ⚠️
+      </div>
+      <p role="alert" className="text-sm text-[var(--text-primary)]">
+        {deck.cardsNotAdded === null
+          ? t("wizard.deckNotFinished")
+          : t("wizard.deckNotFinishedCards", { count: deck.cardsNotAdded })}
+      </p>
+      <button
+        type="button"
+        onClick={() => onOpenDeck(deck.deckId)}
+        className="px-5 py-2.5 rounded-xl text-sm font-semibold bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white"
+      >
+        {t("wizard.openDeck")}
+      </button>
+    </section>
+  );
+}

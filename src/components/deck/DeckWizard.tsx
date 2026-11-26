@@ -38,6 +38,7 @@ import { deckBuildFailureMessageKey } from "@/lib/ai/build-failure";
 import { buildStepMessageKey, type BuildStep } from "@/lib/ai/build-step";
 import type { BuildRequest } from "@/app/api/ai/build/types";
 import { GeneratedDeckCorrections } from "./GeneratedDeckCorrections";
+import { UnfinishedDeckNotice } from "./UnfinishedDeckNotice";
 import { useBuiltDeckSave } from "./use-built-deck-save";
 
 // ---------------------------------------------------------------------------
@@ -710,7 +711,7 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
   const { state: buildState, build, reset: resetBuild } = useAIDeckBuild();
   const describeDenial = useAiDenialMessage();
   const builtDeck = useBuiltDeckSave(onComplete);
-  const { correctedDeck, reset: resetSave } = builtDeck;
+  const { correctedDeck, unfinishedDeck, reset: resetSave } = builtDeck;
 
   // Reset wizard on open
   useEffect(() => {
@@ -781,8 +782,8 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
         : commanderName,
   });
 
-  // A failure once the deck exists returns to the plan, as before: saving
-  // again would create a second deck.
+  // A build that threw. The save step never throws: it holds a deck it could
+  // not create and stops on a deck it could not fill (`unfinishedDeck`).
   const reportFailure = (err: unknown) => {
     const message = err instanceof Error ? err.message : "Deck build failed";
     logger.error("Generate error", "DeckWizard", err);
@@ -918,14 +919,21 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
               style={{ minHeight: 360 }}
             >
               {isBuilding ? (
-                /* Loading / streaming step, then the card-data corrections */
+                /* Loading / streaming step, then an unfinished deck or the card-data corrections */
                 <div className="flex flex-col items-center justify-center flex-1 py-8">
-                  {correctedDeck ? (
+                  {unfinishedDeck && (
+                    <UnfinishedDeckNotice
+                      deck={unfinishedDeck}
+                      onOpenDeck={onComplete}
+                    />
+                  )}
+                  {correctedDeck && (
                     <GeneratedDeckCorrections
                       corrections={correctedDeck.corrections}
                       onOpenDeck={() => onComplete(correctedDeck.deckId)}
                     />
-                  ) : (
+                  )}
+                  {!unfinishedDeck && !correctedDeck && (
                     <>
                       <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-8">
                         {t("wizard.aiBuilding")}
