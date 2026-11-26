@@ -92,8 +92,15 @@ const TAB_STOP_CANDIDATES =
   "a[href], area[href], button, input, select, textarea, summary, iframe, [contenteditable='true'], [tabindex]";
 
 /**
- * The document's tab stops in document order. A positive `tabindex` is not
- * moved to the front as a browser would; the app sets none.
+ * The document's tab stops in document order. It approximates the browser's
+ * Tab order and differs from it where the browser applies its own rules:
+ * - a positive `tabindex` is not moved to the front; the app sets none;
+ * - in a radio group the browser stops only on the checked radio, this list
+ *   on every radio;
+ * - Safari's default setting skips buttons and links on Tab, this list
+ *   does not.
+ * Only buttons follow the zone menu's trigger today, so none of these differ
+ * there; check them before reusing the helper elsewhere.
  *
  * @param root - The document to read
  * @returns The candidates whose `tabIndex` is not negative
