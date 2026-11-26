@@ -31,14 +31,19 @@ export async function readJsonBody(request: Request): Promise<JsonBody> {
   try {
     return { ok: true, value: await request.json() };
   } catch {
-    return {
-      ok: false,
-      response: NextResponse.json(
-        { error: "Malformed request body" },
-        { status: 400 }
-      ),
-    };
+    return malformedBody();
   }
+}
+
+/** The 400 answered for a body that is not JSON. */
+function malformedBody(): JsonBody {
+  return {
+    ok: false,
+    response: NextResponse.json(
+      { error: "Malformed request body" },
+      { status: 400 }
+    ),
+  };
 }
 
 /**

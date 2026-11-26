@@ -1,5 +1,6 @@
-/** Zod schemas for deck requests: card ids, pairing types, and the patch body. */
+/** Zod schemas for deck requests: card ids, pairing types, deck names, and the patch body. */
 import { z } from "zod";
+import { DECK_NAME_MAX_LENGTH } from "@/lib/deck/deck-name";
 import { ALL_FORMATS } from "@/lib/deck/formats";
 import { PAIRING_TYPES } from "@/lib/deck/types";
 
@@ -58,12 +59,18 @@ export function commandZoneFieldsRefusal(fields: readonly string[]): string {
 }
 
 /**
+ * A deck's name, as a rename sets it: 1 to {@link DECK_NAME_MAX_LENGTH}
+ * characters. The builder's name field holds the same limit.
+ */
+export const deckNameSchema = z.string().min(1).max(DECK_NAME_MAX_LENGTH);
+
+/**
  * Body of `PATCH /api/decks/[id]`: the deck's metadata. The command-zone
  * fields are not part of it (see {@link COMMAND_ZONE_FIELDS}); a body that
  * carries one is refused before parsing, and an unknown key is dropped.
  */
 export const patchDeckSchema = z.object({
-  name: z.string().min(1).max(200).optional(),
+  name: deckNameSchema.optional(),
   format: z.enum(ALL_FORMATS).optional(),
   targetBracket: z.number().int().min(1).max(5).optional(),
   manualBracket: z.number().int().min(1).max(5).nullable().optional(),
