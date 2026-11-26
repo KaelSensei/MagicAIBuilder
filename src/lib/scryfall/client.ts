@@ -11,6 +11,8 @@ import {
   type ScryfallAutocompleteResponse,
   type ScryfallCollectionIdentifier,
   type ScryfallCollectionResponse,
+  type ScryfallSet,
+  type ScryfallSetList,
 } from "./types";
 import { lookupCardCache, lookupSearchCache } from "./shared-cache-client";
 import { isScryfallCard, isScryfallSearchResponse } from "./guards";
@@ -214,6 +216,19 @@ export async function getCardCollection(
     body: JSON.stringify({ identifiers }),
   });
   return handleResponse<ScryfallCollectionResponse>(response);
+}
+
+/**
+ * Every set Scryfall lists, from `/sets`, asked in its turn in the runtime's
+ * queue.
+ *
+ * @throws {ScryfallApiError} when Scryfall answers a failure status; with
+ *   status 429, unsent, during the queue's 429 block
+ */
+export async function getAllSets(): Promise<readonly ScryfallSet[]> {
+  const response = await rateLimitedFetch(`${SCRYFALL_API}/sets`);
+  const list = await handleResponse<ScryfallSetList>(response);
+  return list.data;
 }
 
 /** Fetch all pages of a Scryfall search query */
