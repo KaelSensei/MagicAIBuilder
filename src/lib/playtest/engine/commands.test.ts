@@ -654,6 +654,70 @@ function command_type(type: string): PlaytestCommandType {
   return known.type;
 }
 
+// ─── Each command's reasons, pinned ───────────────────────────────────────
+/**
+ * Every reason each command is refused for today, in the order its transition checks them,
+ * written out by hand. The walk above proves each guard the table holds, but a guard lost from
+ * the table would leave it green; this pin keeps the guard table's split (#1857) honest.
+ */
+const PINNED_REASONS: Readonly<
+  Record<PlaytestCommandType, readonly PlaytestGuardReason[]>
+> = {
+  draw: ["choosing-bottom", "library-empty"],
+  mulligan: ["choosing-bottom", "mulligan-limit"],
+  bottomCards: [
+    "no-bottom-pending",
+    "bottom-count-mismatch",
+    "bottom-duplicate",
+    "bottom-not-in-hand",
+  ],
+  nextPhase: ["choosing-bottom"],
+  nextTurn: ["choosing-bottom"],
+  shuffleLibrary: ["choosing-bottom"],
+  damage: ["choosing-bottom", "negative-damage"],
+  heal: ["choosing-bottom"],
+  commanderDamage: [
+    "choosing-bottom",
+    "no-commander-damage",
+    "unknown-opponent",
+    "not-a-commander",
+    "bad-commander-damage",
+  ],
+  playerCounter: ["choosing-bottom", "bad-counter-change"],
+  gainCitysBlessing: ["choosing-bottom", "has-citys-blessing"],
+  setDayNight: ["choosing-bottom", "same-day-night"],
+  toggleDesignation: ["choosing-bottom"],
+  ringTempts: ["choosing-bottom"],
+  tap: ["choosing-bottom", "not-on-battlefield"],
+  untapAll: ["choosing-bottom"],
+  moveToZone: [
+    "choosing-bottom",
+    "same-zone",
+    "not-a-commander",
+    "not-in-zone",
+  ],
+  addCounter: ["choosing-bottom", "not-on-battlefield"],
+  createCardCopy: ["choosing-bottom", "id-taken", "not-on-battlefield"],
+  createToken: ["choosing-bottom", "id-taken"],
+  rollDie: ["choosing-bottom", "bad-die"],
+  addLogEntry: ["choosing-bottom", "blank-note"],
+  recordMana: ["choosing-bottom", "mana-out-of-range"],
+  editLogEntry: ["choosing-bottom", "unknown-log-entry", "blank-note"],
+  removeLogEntry: ["choosing-bottom", "unknown-log-entry"],
+  undo: ["nothing-to-undo"],
+};
+
+describe("each command's refusal reasons (pinned before the split, #1857)", () => {
+  it.each(Object.entries(PINNED_REASONS))(
+    "%s is refused for exactly the pinned reasons, in its transition's order",
+    (type, reasons) => {
+      const guards = PLAYTEST_COMMAND_GUARDS[command_type(type)];
+
+      expect(guards.map((guard) => guard.reason)).toEqual(reasons);
+    }
+  );
+});
+
 // ─── Known gaps, pinned ───────────────────────────────────────────────────
 describe("known gaps (pinned, not fixed here)", () => {
   it("lists no gap now that negative damage is a guard", () => {
