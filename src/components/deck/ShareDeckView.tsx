@@ -318,7 +318,7 @@ export function ShareDeckView({ deck }: ShareDeckViewProps) {
               onClick={handleImport}
               disabled={importing || imported}
               className={cn(
-                "flex shrink-0 items-center gap-2 rounded-[var(--lumen-radius-pill)] px-4 py-2.5 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2",
+                "flex shrink-0 items-center gap-2 rounded-[var(--lumen-radius-pill)] px-4 py-2.5 text-sm font-medium transition-all",
                 imported
                   ? "bg-green-500/20 text-green-400 border border-green-500/40 cursor-default"
                   : "bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white disabled:opacity-60 disabled:cursor-not-allowed"

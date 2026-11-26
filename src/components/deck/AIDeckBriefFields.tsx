@@ -35,7 +35,7 @@ export function AIDeckBriefFields({ value, onChange }: AIDeckBriefFieldsProps) {
             maxLength={MAX_DECK_BRIEF_FIELD_LENGTH}
             placeholder={t(`${field}Placeholder`)}
             onChange={(event) => onChange({ ...value, [field]: event.target.value })}
-            className="w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-2 py-1.5 text-xs text-[var(--text-primary)] outline-none transition-colors placeholder:text-[var(--text-secondary)]/60 focus:border-[var(--accent)]"
+            className="w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-2 py-1.5 text-xs text-[var(--text-primary)] transition-colors placeholder:text-[var(--text-secondary)]/60"
           />
         </label>
       ))}

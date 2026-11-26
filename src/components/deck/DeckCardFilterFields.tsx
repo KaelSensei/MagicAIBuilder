@@ -33,7 +33,7 @@ export interface DeckCardFilterFieldsProps {
 }
 
 const SMALL_BUTTON =
-  "shrink-0 rounded-[var(--lumen-radius-pill)] border border-[var(--border)] px-3 py-2 text-sm text-[var(--text-primary)] transition-colors hover:border-[var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-60";
+  "shrink-0 rounded-[var(--lumen-radius-pill)] border border-[var(--border)] px-3 py-2 text-sm text-[var(--text-primary)] transition-colors hover:border-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-60";
 
 /**
  * The two card name lists and the search's status line.
@@ -124,7 +124,7 @@ function CardNameList({ label, names, onChange }: Readonly<CardNameListProps>) {
                     onChange(names.filter((listed) => listed !== name))
                   }
                   aria-label={t("home.cardFilter.remove", { name })}
-                  className="rounded-full p-1 hover:bg-[var(--background)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+                  className="rounded-full p-1 hover:bg-[var(--background)]"
                 >
                   <X className="h-3 w-3" aria-hidden="true" />
                 </button>

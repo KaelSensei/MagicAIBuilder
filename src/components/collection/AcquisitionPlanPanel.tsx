@@ -122,7 +122,7 @@ export function AcquisitionPlanPanel() {
         aria-expanded={open}
         aria-controls="collection-acquisition-plan"
         onClick={() => setOpen((value) => !value)}
-        className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--accent)]"
+        className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-hover)] focus-visible:-outline-offset-2"
       >
         {open ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
         {t("title")}

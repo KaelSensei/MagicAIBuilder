@@ -73,7 +73,7 @@ export function AccountDataSection() {
         onClick={start}
         disabled={busy}
         aria-busy={busy}
-        className="flex items-center gap-1.5 rounded-[var(--lumen-radius-pill)] bg-[var(--accent)] px-4 py-2.5 text-sm text-white shadow-[var(--lumen-shadow-sm)] transition-colors hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 disabled:opacity-50"
+        className="flex items-center gap-1.5 rounded-[var(--lumen-radius-pill)] bg-[var(--accent)] px-4 py-2.5 text-sm text-white shadow-[var(--lumen-shadow-sm)] transition-colors hover:bg-[var(--accent-hover)] disabled:opacity-50"
       >
         {busy ? (
           <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
@@ -102,7 +102,7 @@ export function AccountDataSection() {
           <button
             type="button"
             onClick={start}
-            className="rounded border border-[var(--border)] px-3 py-1.5 text-xs text-[var(--text-primary)] hover:bg-[var(--surface-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+            className="rounded border border-[var(--border)] px-3 py-1.5 text-xs text-[var(--text-primary)] hover:bg-[var(--surface-hover)]"
           >
             {t("retry")}
           </button>

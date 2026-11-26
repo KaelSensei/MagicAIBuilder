@@ -266,7 +266,7 @@ export function CollectionPageClient() {
               onClick={() => setViewMode("grid")}
               aria-pressed={viewMode === "grid"}
               className={cn(
-                "rounded-[var(--lumen-radius-pill)] p-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]",
+                "rounded-[var(--lumen-radius-pill)] p-2 transition-colors",
                 viewMode === "grid"
                   ? "bg-[var(--accent)] text-white"
                   : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
@@ -281,7 +281,7 @@ export function CollectionPageClient() {
               onClick={() => setViewMode("list")}
               aria-pressed={viewMode === "list"}
               className={cn(
-                "rounded-[var(--lumen-radius-pill)] p-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]",
+                "rounded-[var(--lumen-radius-pill)] p-2 transition-colors",
                 viewMode === "list"
                   ? "bg-[var(--accent)] text-white"
                   : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"

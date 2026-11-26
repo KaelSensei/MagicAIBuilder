@@ -82,7 +82,7 @@ export function ThemeToggle() {
             title={label}
             onClick={() => handleSelect(option)}
             className={cn(
-              "rounded-[var(--lumen-radius-pill)] p-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]",
+              "rounded-[var(--lumen-radius-pill)] p-1.5 transition-colors",
               selected
                 ? "bg-[var(--accent-soft)] text-[var(--accent-text)]"
                 : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"

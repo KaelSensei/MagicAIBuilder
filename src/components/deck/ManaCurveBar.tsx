@@ -123,9 +123,9 @@ export function ManaCurveBar({
     <button
       type="button"
       className={cn(
-        "relative flex flex-col items-center flex-1 h-full justify-end bg-transparent border-0 p-0 focus:outline-none",
+        "relative flex flex-col items-center flex-1 h-full justify-end bg-transparent border-0 p-0",
         selection
-          ? "cursor-pointer disabled:cursor-default focus-visible:ring-2 focus-visible:ring-[var(--accent)] rounded-t"
+          ? "cursor-pointer disabled:cursor-default rounded-t"
           : "cursor-default"
       )}
       aria-label={label}

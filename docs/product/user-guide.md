@@ -549,6 +549,13 @@ the keyboard shortcuts. Ctrl+K (⌘K on macOS) opens quick add. Ctrl+Z (⌘Z on 
 while you are typing in a text field such as a card note or the search bar:
 there it undoes your typing instead.
 
+### Where the keyboard focus is
+
+When you move with Tab, the control that has the focus shows a violet outline,
+in the light and the dark theme alike, and the outline stays in Windows
+high-contrast mode. A text field shows it as soon as you click in it; a button
+you click with the mouse shows none.
+
 ### Single-key shortcuts
 
 **/** (focus the search bar), **?** (list the shortcuts), **Esc** (clear the

@@ -38,7 +38,7 @@ export function CommanderIdentityChip({
       <button
         type="button"
         onClick={onToggle}
-        className="shrink-0 rounded px-1.5 py-0.5 font-medium text-[var(--accent-text)] transition-colors hover:bg-[var(--accent-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+        className="shrink-0 rounded px-1.5 py-0.5 font-medium text-[var(--accent-text)] transition-colors hover:bg-[var(--accent-soft)]"
       >
         {t(widened ? "narrow" : "widen")}
       </button>

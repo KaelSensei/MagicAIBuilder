@@ -120,7 +120,7 @@ function EntryEditor({
         if (event.key === "Escape") onCancel();
       }}
       aria-label={t("editEntry")}
-      className="min-w-0 flex-1 rounded border border-purple-400/50 bg-[var(--background)] px-2 py-1 text-[var(--text-primary)] outline-none"
+      className="min-w-0 flex-1 rounded border border-purple-400/50 bg-[var(--background)] px-2 py-1 text-[var(--text-primary)]"
     />
   );
 }
