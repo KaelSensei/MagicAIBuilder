@@ -1,8 +1,9 @@
 "use client";
 /**
  * The client-side composition root of every localized page: the session,
- * TanStack Query, the theme painter, the sign-in bootstrap and the app-wide
- * overlays (onboarding wizard, guest-deck claim offer, toasts).
+ * TanStack Query, the theme painter, the sign-in bootstrap, the open deck
+ * reopened after a page load, and the app-wide overlays (onboarding wizard,
+ * guest-deck claim offer, toasts).
  *
  * Wiring lives here, not in the providers it composes: the bootstrap payload
  * is handed to the collection store from this file, so `InitProvider` knows
@@ -17,6 +18,7 @@ import { InitProvider } from "@/components/providers/InitProvider";
 import { ThemeSync } from "@/components/providers/ThemeSync";
 import { OnboardingProvider } from "@/components/onboarding/OnboardingProvider";
 import { GuestDeckClaimPrompt } from "@/components/deck/GuestDeckClaimPrompt";
+import { OpenDeckAccountSync } from "@/components/deck/OpenDeckAccountSync";
 import { ToastContainer } from "@/components/ui/Toast";
 import type { UserInitData } from "@/lib/auth/user-init";
 import { STALE_TIME_5MIN } from "@/lib/query/stale-times";
@@ -59,6 +61,8 @@ export function Providers({
           <OnboardingProvider>{children}</OnboardingProvider>
           {/* Here rather than on one page: sign-in can return to any page. */}
           <GuestDeckClaimPrompt />
+          {/* Every page adds to the open deck, so every page reopens it. */}
+          <OpenDeckAccountSync />
           {/* Mounted once here: it used to live only in the builder page, so
               toasts raised anywhere else were queued and never rendered. */}
           <ToastContainer />
