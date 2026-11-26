@@ -11,7 +11,8 @@ import { ImportDialog } from "./ImportDialog";
 import { CardLookupError } from "@/lib/deck/card-lookup-error";
 import { logger } from "@/lib/logger";
 
-const addCard = vi.hoisted(() => vi.fn());
+// Answers as the real store does when the deck takes the card.
+const addCard = vi.hoisted(() => vi.fn(async () => ({ kind: "added" })));
 const fetchInBatches = vi.hoisted(() => vi.fn());
 
 vi.mock(import("@/lib/deck/batch-fetch"), () => ({ fetchInBatches }));
