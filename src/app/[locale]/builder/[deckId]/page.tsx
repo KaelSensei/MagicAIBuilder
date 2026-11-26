@@ -82,6 +82,7 @@ import {
   KeyboardShortcutsTrigger,
 } from "@/components/layout/KeyboardShortcutsModal";
 import { motion } from "framer-motion";
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { cn } from "@/components/ui/utils";
 import { Button } from "@/components/ui/Button";
 import { ButtonLink } from "@/components/ui/ButtonLink";
@@ -131,6 +132,9 @@ import { explicitDropZone, preferSmallerDropTarget, searchDropZone } from "@/lib
 import { ExternalCardDropTarget } from "@/components/builder/ExternalCardDropTarget";
 
 type SearchMode = "name" | "set" | "color";
+
+/** The search tabs, in display order. */
+const SEARCH_MODES: readonly SearchMode[] = ["name", "set", "color"];
 
 /** Message key for a search mode tab, resolved by the caller's `t`. */
 function searchModeKey(mode: SearchMode): string {
@@ -1070,23 +1074,17 @@ export default function BuilderPage() {
               className="space-y-3 border-b border-[var(--border)] p-4"
             >
               {/* Search mode tabs */}
-              <div className="flex gap-1 rounded-[var(--lumen-radius-pill)] bg-[var(--background)] p-1">
-                {(["name", "set", "color"] as const).map((mode) => (
-                  <button
-                    type="button"
-                    key={mode}
-                    onClick={() => switchSearchTab(mode)}
-                    className={cn(
-                      "flex-1 rounded-[var(--lumen-radius-pill)] py-2 text-xs font-medium capitalize transition-all",
-                      searchMode === mode
-                        ? "bg-[var(--surface)] text-[var(--text-primary)] shadow-[var(--lumen-shadow-sm)]"
-                        : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-                    )}
-                  >
-                    {t(searchModeKey(mode))}
-                  </button>
-                ))}
-              </div>
+              <SegmentedControl
+                aria-label={t("searchModes.label")}
+                options={SEARCH_MODES.map((mode) => ({
+                  value: mode,
+                  label: t(searchModeKey(mode)),
+                }))}
+                value={searchMode}
+                onChange={switchSearchTab}
+                size="md"
+                fullWidth
+              />
 
               {/* Mode-specific controls */}
               {searchMode === "name" && (

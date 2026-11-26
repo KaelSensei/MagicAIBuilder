@@ -27,6 +27,7 @@ import {
 } from "@/components/deck/deck-import";
 import { Button } from "@/components/ui/Button";
 import { textAreaShellClassName } from "@/components/ui/Input";
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { cn } from "@/components/ui/utils";
 import { getDuplicateImportedNames } from "@/lib/import/import-preview";
 import type { ScryfallCard } from "@/lib/scryfall/types";
@@ -395,33 +396,17 @@ export function ImportDialog({
             </Dialog.Close>
           </div>
 
-          {/* Tab switcher */}
-          <div className="flex w-fit gap-1 rounded-[var(--lumen-radius-pill)] border border-[var(--border)] bg-[var(--background)] p-1">
-            <button
-              type="button"
-              onClick={() => setActiveTab("text")}
-              className={cn(
-                "rounded-[var(--lumen-radius-pill)] px-3 py-1 text-xs font-medium transition-colors",
-                activeTab === "text"
-                  ? "bg-[var(--accent)] text-white"
-                  : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-              )}
-            >
-              {t("import.tabText")}
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab("url")}
-              className={cn(
-                "rounded-[var(--lumen-radius-pill)] px-3 py-1 text-xs font-medium transition-colors",
-                activeTab === "url"
-                  ? "bg-[var(--accent)] text-white"
-                  : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-              )}
-            >
-              {t("import.tabUrl")}
-            </button>
-          </div>
+          {/* Source switch */}
+          <SegmentedControl
+            aria-label={t("import.source")}
+            options={[
+              { value: "text", label: t("import.tabText") },
+              { value: "url", label: t("import.tabUrl") },
+            ]}
+            value={activeTab}
+            onChange={setActiveTab}
+            className="w-fit border border-[var(--border)]"
+          />
 
           {/* URL tab */}
           {activeTab === "url" && (

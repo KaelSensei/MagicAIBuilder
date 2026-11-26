@@ -25,6 +25,7 @@ import { downloadTextFile } from "@/lib/download-text-file";
 import { Button } from "@/components/ui/Button";
 import { cardSurfaceClassName } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { cn } from "@/components/ui/utils";
 import type { CollectionCard } from "@/lib/collection/types";
 import { CardImage } from "@/components/card/CardImage";
@@ -260,38 +261,27 @@ export function CollectionPageClient() {
               className="w-full pl-10"
             />
           </div>
-          <div className="ml-auto flex items-center gap-1 rounded-[var(--lumen-radius-pill)] border border-[var(--border)] bg-[var(--background)] p-1">
-            <button
-              type="button"
-              onClick={() => setViewMode("grid")}
-              aria-pressed={viewMode === "grid"}
-              className={cn(
-                "rounded-[var(--lumen-radius-pill)] p-2 transition-colors",
-                viewMode === "grid"
-                  ? "bg-[var(--accent)] text-white"
-                  : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-              )}
-              title={t("viewMode.gridView")}
-              aria-label={t("viewMode.gridView")}
-            >
-              <LayoutGrid className="w-4 h-4" />
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode("list")}
-              aria-pressed={viewMode === "list"}
-              className={cn(
-                "rounded-[var(--lumen-radius-pill)] p-2 transition-colors",
-                viewMode === "list"
-                  ? "bg-[var(--accent)] text-white"
-                  : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-              )}
-              title={t("viewMode.listView")}
-              aria-label={t("viewMode.listView")}
-            >
-              <List className="w-4 h-4" />
-            </button>
-          </div>
+          <SegmentedControl
+            aria-label={t("viewMode.layout")}
+            options={[
+              {
+                value: "grid",
+                label: t("viewMode.gridView"),
+                icon: <LayoutGrid className="w-4 h-4" />,
+                hideLabel: true,
+              },
+              {
+                value: "list",
+                label: t("viewMode.listView"),
+                icon: <List className="w-4 h-4" />,
+                hideLabel: true,
+              },
+            ]}
+            value={viewMode}
+            onChange={setViewMode}
+            size="md"
+            className="ml-auto border border-[var(--border)]"
+          />
         </div>
 
         {/* Cards */}
