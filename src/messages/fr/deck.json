@@ -261,6 +261,13 @@
     "validating": "Validation de {count} cartes avec Scryfall...",
     "importSuccess": "{count} cartes importées avec succès.",
     "importFailed": "Échec de l’import des cartes.",
+    "nothingAdded": "Aucune carte n’a été ajoutée au deck.",
+    "refused": {
+      "title": "Cartes refusées par le deck ({count}) :",
+      "atCopyLimit": "{name} : déjà à sa limite d’exemplaires en {format}",
+      "basicLandHeld": "{name} : ce terrain de base est déjà dans cette zone, sa quantité n’a pas changé",
+      "commandZone": "{name} : n’a pas pu prendre place dans la zone de commandement"
+    },
     "lookupFailed": "La recherche des cartes n’a pas répondu. Rien n’a été importé ; réessayez.",
     "close": "Fermer",
     "cancel": "Annuler",
