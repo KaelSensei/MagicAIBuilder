@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { useCollectionStore } from "@/lib/collection/store";
 import { AddToCollectionDialog } from "./AddToCollectionDialog";
+import { EmptyCollection } from "./EmptyCollection";
 import { formatCollectionText } from "@/lib/collection/shopping-list";
 import { formatCollectionPrintingCsv } from "@/lib/collection/printing-csv";
 import { downloadTextFile } from "@/lib/download-text-file";
@@ -65,6 +66,8 @@ export function CollectionPageClient() {
   } = useCollectionStore();
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
   const [searchQuery, setSearchQuery] = useState("");
+  // Held here so the empty state's "Add cards" opens the toolbar's dialog.
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
 
   useEffect(() => {
     void loadCollection();
@@ -215,7 +218,10 @@ export function CollectionPageClient() {
                 </Button>
               </>
             )}
-            <AddToCollectionDialog />
+            <AddToCollectionDialog
+              open={addDialogOpen}
+              onOpenChange={setAddDialogOpen}
+            />
           </div>
         </div>
 
@@ -289,17 +295,13 @@ export function CollectionPageClient() {
         </div>
 
         {/* Cards */}
-        {filtered.length === 0 && (
+        {allCards.length === 0 && (
+          <EmptyCollection onAddCards={() => setAddDialogOpen(true)} />
+        )}
+        {allCards.length > 0 && filtered.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20 text-[var(--text-secondary)] gap-3">
-            <Package className="w-10 h-10 opacity-40" />
-            {allCards.length === 0 ? (
-              <>
-                <p className="text-sm">{t("empty.title")}</p>
-                <p className="text-xs opacity-70">{t("empty.hint")}</p>
-              </>
-            ) : (
-              <p className="text-sm">{t("empty.noMatch")}</p>
-            )}
+            <Package className="w-10 h-10" aria-hidden="true" />
+            <p className="text-sm">{t("empty.noMatch")}</p>
           </div>
         )}
         {filtered.length > 0 && viewMode === "grid" && (

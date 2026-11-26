@@ -92,6 +92,7 @@
     "startBuilding": "Commencez à construire",
     "startBuildingDescription": "Créez votre premier deck Commander avec le scoring de bracket en direct et la détection de Game Changers.",
     "createDeck": "Créer un deck",
+    "importDeck": "Importer une liste de deck",
     "newDeck": "Nouveau deck",
     "newDeckName": "Nouveau deck {index}",
     "newDeckFormat": "Format du nouveau deck",

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
@@ -142,5 +142,64 @@ describe("Modal", () => {
 
     expect(onEscape).toHaveBeenCalledTimes(1);
     expect(onClose).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * A page whose opener can leave while the modal is open, as the collection's empty state does
+ * once a first card is added, and a control that stays to take focus instead.
+ */
+function LeavingOpenerPage({ openerShown }: { readonly openerShown: boolean }) {
+  const [open, setOpen] = useState(false);
+  const stays = useRef<HTMLButtonElement>(null);
+  const fallback = useCallback(() => stays.current, []);
+  return (
+    <>
+      {openerShown ? (
+        <button type="button" onClick={() => setOpen(true)}>
+          Open settings
+        </button>
+      ) : null}
+      <button type="button" ref={stays}>
+        Settings menu
+      </button>
+      <Modal
+        open={open}
+        onClose={() => setOpen(false)}
+        title="Settings"
+        returnFocusFallback={fallback}
+      >
+        <button type="button">First option</button>
+      </Modal>
+    </>
+  );
+}
+
+describe("Modal with a focus fallback", () => {
+  it("gives focus to the fallback when the element that opened it has left the page", async () => {
+    const user = userEvent.setup();
+    const { rerender } = renderWithIntl(<LeavingOpenerPage openerShown />);
+    await user.click(screen.getByRole("button", { name: "Open settings" }));
+
+    rerender(<LeavingOpenerPage openerShown={false} />);
+    await user.keyboard("{Escape}");
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(
+        screen.getByRole("button", { name: "Settings menu" })
+      ).toHaveFocus()
+    );
+  });
+
+  it("still gives focus back to the element that opened it while it is on the page", async () => {
+    const user = userEvent.setup();
+    renderWithIntl(<LeavingOpenerPage openerShown />);
+    const opener = screen.getByRole("button", { name: "Open settings" });
+    await user.click(opener);
+
+    await user.keyboard("{Escape}");
+
+    await waitFor(() => expect(opener).toHaveFocus());
   });
 });
