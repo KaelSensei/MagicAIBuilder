@@ -115,7 +115,7 @@ export function MulliganBottomChoice({
                 disabled={!isChosen && isComplete}
                 onClick={() => handleToggle(card.id)}
                 className={cn(
-                  "relative block w-14 overflow-hidden rounded-md transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400",
+                  "relative block w-14 overflow-hidden rounded-md transition-transform",
                   isChosen
                     ? "ring-2 ring-purple-500"
                     : "hover:scale-105 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100"

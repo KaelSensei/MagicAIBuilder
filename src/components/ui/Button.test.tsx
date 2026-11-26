@@ -7,9 +7,13 @@ import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { Button } from "./Button";
 
-/** What every Lumen button carries, whatever its variant and size. */
+/**
+ * What every Lumen button carries, whatever its variant and size. Keyboard
+ * focus is the shared `--focus-ring` outline (design audit S1); it was an
+ * `--accent` ring, at 2.76:1 on the dark surface.
+ */
 const PILL_BASE =
-  "inline-flex items-center justify-center gap-1.5 font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex items-center justify-center gap-1.5 font-medium transition-colors outline-[var(--focus-ring)] [outline-width:2px] outline-offset-2 focus-visible:outline-solid disabled:cursor-not-allowed disabled:opacity-50";
 
 /** One class list, for the exact form of `toHaveClass`, which takes a single string. */
 function classList(...parts: readonly string[]): string {

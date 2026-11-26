@@ -244,7 +244,7 @@ export function BulkEditModal({ deck, children }: BulkEditModalProps) {
               localised example would show input the parser rejects. */}
           <div className="flex flex-col gap-1 flex-1 min-h-0">
             <textarea
-              className="w-full flex-1 min-h-[55vh] bg-[var(--background)] border border-[var(--border)] rounded px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] resize-none focus:outline-none focus:border-[var(--accent)] font-mono leading-relaxed"
+              className="w-full flex-1 min-h-[55vh] bg-[var(--background)] border border-[var(--border)] rounded px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] resize-none font-mono leading-relaxed"
               // The sample list is no name (WCAG 2.2 SC 1.3.1, 4.1.2).
               aria-label={t("bulkEdit.fieldLabel")}
               placeholder={`Commander\n1 Atraxa, Praetors' Voice\n\nDeck\n1 Sol Ring\n1 Arcane Signet\n4 Forest\n...`}

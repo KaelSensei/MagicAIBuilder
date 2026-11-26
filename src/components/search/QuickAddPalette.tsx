@@ -91,7 +91,7 @@ export function QuickAddPalette(props: QuickAddPaletteProps) {
           value={props.text}
           onChange={(event) => state.onTextChange(event.target.value)}
           onKeyDown={state.onKeyDown}
-          className="w-full rounded-[var(--lumen-radius-lg)] border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+          className="w-full rounded-[var(--lumen-radius-lg)] border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--text-primary)]"
         />
         <QuickAddReadingSwitch
           reading={props.reading}

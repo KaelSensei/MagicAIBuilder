@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { fireEvent, screen, within } from "@testing-library/react";
 
 import { aScryfallCard } from "@/test/builders/scryfall";
+import { HIDES_FOCUS_OUTLINE } from "@/test/focus-outline";
 import { renderWithIntl, type TestLocale } from "@/test/render-with-intl";
 import { PrintingSelectorModal } from "./PrintingSelectorModal";
 import type { ScryfallCard } from "@/lib/scryfall/types";
@@ -76,6 +77,22 @@ function ownedCard(scryfallId: string, quantity: number, foil: boolean): Collect
 }
 
 describe("PrintingSelectorModal", () => {
+  // Design audit S1: a printing tile hid its outline on focus, so a keyboard
+  // player could not see which printing had focus.
+  it("leaves the app's focus outline visible on every printing tile", () => {
+    printingsResult.current = {
+      data: { data: [makeCard(), FRENCH_PRINTING] },
+      isLoading: false,
+    };
+    renderModal(makeCard());
+
+    const tiles = screen.getAllByRole("button", { name: /^Lightning Bolt — / });
+    expect(tiles).toHaveLength(2);
+    for (const tile of tiles) {
+      expect(tile.className).not.toMatch(HIDES_FOCUS_OUTLINE);
+    }
+  });
+
   it("shows the English text of an English printing", () => {
     renderModal(makeCard());
     expect(screen.getByText("Instant")).toBeDefined();

@@ -136,7 +136,7 @@ export function CardNoteInline({
           placeholder={t("placeholder")}
           rows={3}
           maxLength={1000}
-          className="w-full bg-transparent text-xs text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]/50 resize-none outline-none"
+          className="w-full bg-transparent text-xs text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]/50 resize-none"
         />
         <div
           id={hintId}

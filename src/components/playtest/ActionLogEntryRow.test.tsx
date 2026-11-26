@@ -9,6 +9,7 @@
 import { screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { PlaytestLogMessage } from "@/lib/playtest/engine";
+import { HIDES_FOCUS_OUTLINE } from "@/test/focus-outline";
 import { renderWithProviders, type TestLocale } from "@/test/render";
 import { ActionLogEntryRow } from "./ActionLogEntryRow";
 
@@ -365,6 +366,29 @@ function renderRow(message: PlaytestLogMessage, locale: TestLocale) {
 }
 
 describe("ActionLogEntryRow", () => {
+  // Design audit S1: the edit field hid its outline and drew nothing on focus.
+  it("leaves the app's focus outline visible on the field that edits a line", () => {
+    renderWithProviders(
+      <ul>
+        <ActionLogEntryRow
+          entry={{
+            id: 1,
+            turn: 2,
+            phase: "Main1",
+            message: { key: "startedWithChosenCards", params: { cards: ["Sol Ring"] } },
+          }}
+          editing
+          onStartEdit={vi.fn()}
+          onSave={vi.fn()}
+          onCancelEdit={vi.fn()}
+          onRemove={vi.fn()}
+        />
+      </ul>
+    );
+
+    expect(screen.getByRole("textbox").className).not.toMatch(HIDES_FOCUS_OUTLINE);
+  });
+
   it.each(LINES)(
     "says $message.key in English as the engine did: $en",
     ({ message, en }) => {

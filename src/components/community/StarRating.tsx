@@ -20,7 +20,7 @@ const SIZE_CLASSES = { sm: "w-3.5 h-3.5", md: "w-5 h-5" } as const;
 // around the icon, so a small star keeps its drawn size. SC 2.4.7: the
 // keyboard focus uses the app's accent ring.
 const STAR_BUTTON_CLASS =
-  "inline-flex items-center justify-center min-w-6 min-h-6 p-0.5 rounded disabled:opacity-60 hover:scale-110 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]";
+  "inline-flex items-center justify-center min-w-6 min-h-6 p-0.5 rounded disabled:opacity-60 hover:scale-110 transition-transform";
 
 /**
  * Five stars: a read-only average when `onSelect` is omitted, otherwise a 1–5

@@ -82,7 +82,7 @@ export function CommanderDamageTally({
           inputMode="numeric"
           value={amountText}
           onChange={(event) => setAmountText(event.target.value)}
-          className="w-20 bg-[var(--surface-hover)] border border-[var(--border)] rounded-lg px-2 py-1 text-sm text-[var(--text-primary)] focus:outline-none focus:border-purple-500"
+          className="w-20 bg-[var(--surface-hover)] border border-[var(--border)] rounded-lg px-2 py-1 text-sm text-[var(--text-primary)]"
         />
       </div>
       {seats.map((seat) => (

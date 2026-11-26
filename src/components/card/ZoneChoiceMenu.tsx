@@ -191,7 +191,7 @@ function ZoneMenuItems({ cardName, zoneCounts, onChoose }: ZoneMenuItemsProps) {
         type="button"
         role="menuitem"
         tabIndex={-1}
-        className="flex w-full items-center rounded-[var(--lumen-radius-md)] px-3 py-2 text-left text-sm text-[var(--text-primary)] hover:bg-[var(--accent-soft)] focus-visible:bg-[var(--accent-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+        className="flex w-full items-center rounded-[var(--lumen-radius-md)] px-3 py-2 text-left text-sm text-[var(--text-primary)] hover:bg-[var(--accent-soft)] focus-visible:bg-[var(--accent-soft)]"
         aria-label={label}
         onClick={() => onChoose(zone)}
       >

@@ -38,7 +38,7 @@ interface HeaderProps {
 }
 
 const NAV_LINK_CLASS =
-  "inline-flex items-center gap-1.5 rounded-[var(--lumen-radius-pill)] px-3 py-2 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--accent-soft)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]";
+  "inline-flex items-center gap-1.5 rounded-[var(--lumen-radius-pill)] px-3 py-2 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--accent-soft)] hover:text-[var(--text-primary)]";
 
 /**
  * Paints the product name with the Lumen violet on the "AI" syllable.
@@ -87,7 +87,7 @@ export function Header({
     <header className="relative z-40 flex h-16 shrink-0 items-center gap-3 border-b border-[var(--border)] bg-[var(--surface)]/90 px-4 shadow-[var(--lumen-shadow-sm)] backdrop-blur-md md:gap-6 md:px-6">
       <Link
         href="/"
-        className="flex items-center gap-2.5 rounded-[var(--lumen-radius-md)] text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+        className="flex items-center gap-2.5 rounded-[var(--lumen-radius-md)] text-[var(--text-primary)]"
       >
         <span className="flex h-8 w-8 items-center justify-center rounded-[var(--lumen-radius-md)] bg-[var(--accent-soft)] text-[var(--accent-text)]">
           <Sparkles className="h-4 w-4" />

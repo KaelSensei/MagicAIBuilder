@@ -243,7 +243,7 @@ export function SecondaryZoneContent({
                     type="button"
                     key={targetZone}
                     onClick={() => moveCardToZone(card.id, targetZone)}
-                    className="min-h-8 rounded bg-black/80 px-1.5 py-1 text-[10px] text-white hover:bg-black focus-visible:outline-2 focus-visible:outline-[var(--accent)]"
+                    className="min-h-8 rounded bg-black/80 px-1.5 py-1 text-[10px] text-white hover:bg-black"
                     aria-label={title}
                     title={title}
                   >
