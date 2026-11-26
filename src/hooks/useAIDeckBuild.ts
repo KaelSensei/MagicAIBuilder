@@ -2,6 +2,8 @@
 /**
  * Client side of the AI deck build: posts the request, reads the NDJSON build
  * stream through guarded events, and exposes progress and the finished list.
+ * A failed build is logged and kept as its kind (`lib/ai/build-failure.ts`),
+ * never as the thrown text.
  */
 import { useState, useCallback, useRef } from "react";
 import type {
@@ -12,12 +14,18 @@ import type {
   DeckRemovalReason,
 } from "@/app/api/ai/build/types";
 import {
+  DeckBuildRefusedError,
+  deckBuildFailureOf,
+  type DeckBuildFailure,
+} from "@/lib/ai/build-failure";
+import {
   readAiCallDenialResponse,
   type AiCallDenial,
 } from "@/lib/ai/usage/denial";
 import { readNdjsonEvents } from "@/lib/async/ndjson-lines";
 import { parseBracketLevel } from "@/lib/constants/brackets";
 import { isRecord } from "@/lib/guards";
+import { logger } from "@/lib/logger";
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -51,7 +59,8 @@ export interface AIDeckBuildState {
   totalCards: number | null;
   source: BuildSource | null;
   isLoading: boolean;
-  error: string | null;
+  /** Why the last build failed; null while it runs, and after a success or a cancellation. */
+  failure: DeckBuildFailure | null;
   /** Why the server refused the build before calling a model, if it did. */
   denial: AiCallDenial | null;
 }
@@ -65,7 +74,7 @@ const EMPTY_STATE: AIDeckBuildState = {
   totalCards: null,
   source: null,
   isLoading: false,
-  error: null,
+  failure: null,
   denial: null,
 };
 
@@ -276,6 +285,16 @@ async function processBuildStream(
   throw new Error("The AI build ended early");
 }
 
+/**
+ * Runs one AI deck build at a time.
+ *
+ * `build` resolves to the finished build, or to null when there is none: the
+ * build failed (`state.failure` says why, and `state.denial` too when the
+ * server refused it before a model ran), or `reset` or a newer build cancelled
+ * it, which sets neither and logs nothing.
+ *
+ * @returns the build's progress, `build` and `reset`
+ */
 export function useAIDeckBuild() {
   const [state, setState] = useState<AIDeckBuildState>(EMPTY_STATE);
 
@@ -306,7 +325,7 @@ export function useAIDeckBuild() {
         if (!response.ok) {
           const denial = (await readAiCallDenialResponse(response)) ?? null;
           setState((prev) => ({ ...prev, denial }));
-          throw new Error(`Build request failed (${response.status})`);
+          throw new DeckBuildRefusedError(response.status);
         }
         if (!response.body) throw new Error("No response body");
 
@@ -338,8 +357,9 @@ export function useAIDeckBuild() {
         };
       } catch (err) {
         if (err instanceof DOMException && err.name === "AbortError") return null;
-        const message = err instanceof Error ? err.message : "Unknown error";
-        setState((prev) => ({ ...prev, isLoading: false, error: message }));
+        logger.error("AI deck build failed", "useAIDeckBuild", err);
+        const failure = deckBuildFailureOf(err);
+        setState((prev) => ({ ...prev, isLoading: false, failure }));
         return null;
       }
     },

@@ -34,6 +34,7 @@ import type { ScryfallCard } from "@/lib/scryfall/types";
 import { getListedImageUri } from "@/lib/scryfall/images";
 import type { BracketLevel } from "@/lib/deck/types";
 import { createDeckPlan } from "@/lib/ai/deck-plan";
+import { deckBuildFailureMessageKey } from "@/lib/ai/build-failure";
 import type { BuildRequest } from "@/app/api/ai/build/types";
 import { GeneratedDeckCorrections } from "./GeneratedDeckCorrections";
 import { useBuiltDeckSave } from "./use-built-deck-save";
@@ -796,6 +797,8 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
     try {
       const result = await build(buildRequest(skipCommander));
 
+      // No deck. A refusal or a failure is in the build state, and
+      // `loadingError` shows it first; otherwise the build was cancelled.
       if (!result) {
         setBuildError(t("wizard.buildCancelled"));
         return;
@@ -829,10 +832,14 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
     resetBuild();
   };
 
-  // The server's own text never reaches the player: a deck the server could
-  // not create gets the wizard's message.
+  // The server's own text never reaches the player: a failed build gets the
+  // sentence of its kind, and a deck the server could not create gets the
+  // wizard's message.
   const loadingError = (): string | null => {
     if (buildState.denial) return describeDenial(buildState.denial);
+    if (buildState.failure) {
+      return t(deckBuildFailureMessageKey(buildState.failure));
+    }
     if (builtDeck.saveFailed) return t("wizard.deckNotSaved");
     return buildError;
   };
