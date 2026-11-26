@@ -884,6 +884,7 @@
     "bracket5Sub": "cEDH (bracket 5)",
     "bracket5Desc": "Conçu pour le métagame cEDH : la victoire avant tout. Game Changers illimités. La partie peut se terminer à n’importe quel tour",
     "searchCommander": "Rechercher un commandant…",
+    "commanderSearchLabel": "Rechercher un commandant",
     "skipLetAI": "Passer — laisser l’IA choisir",
     "aiBuilding": "L’IA construit votre deck…",
     "thinking": "Réflexion…",

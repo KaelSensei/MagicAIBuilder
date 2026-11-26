@@ -417,6 +417,9 @@ function StepCommander({
           type="text"
           value={query}
           onChange={handleChange}
+          // The step's heading asks a question and is not tied to the field,
+          // and a placeholder is no name (WCAG 2.2 SC 1.3.1 and 4.1.2).
+          aria-label={t("wizard.commanderSearchLabel")}
           placeholder={t("wizard.searchCommander")}
           className="
             w-full px-4 py-3 rounded-xl border border-[var(--border)] bg-[var(--surface)]

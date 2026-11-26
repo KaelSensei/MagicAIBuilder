@@ -753,6 +753,7 @@
     "bracket5Sub": "cEDH",
     "bracket5Desc": "Built for the cEDH metagame; victory over all else. Unlimited Game Changers. Games can end on any turn",
     "searchCommander": "Search for a commander…",
+    "commanderSearchLabel": "Search for a commander",
     "skipLetAI": "Skip — let the AI choose",
     "aiBuilding": "AI is building your deck…",
     "thinking": "Thinking…",
