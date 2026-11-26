@@ -15,7 +15,7 @@
 
 import { useCallback, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Link } from "@/i18n/navigation";
+import { Link, usePathname } from "@/i18n/navigation";
 import { Menu, Package, Shield, Sparkles, X } from "lucide-react";
 import { UserMenu } from "@/components/auth/UserMenu";
 import {
@@ -25,6 +25,11 @@ import {
 import { HeaderDeckActionsSlot } from "@/components/layout/HeaderDeckActionsSlot";
 import { HeaderMobileMenu } from "@/components/layout/HeaderMobileMenu";
 import { LocaleSwitcher } from "@/components/layout/LocaleSwitcher";
+import {
+  ariaCurrentPage,
+  CURRENT_PAGE_LINK_CLASS,
+  currentNavDestination,
+} from "@/components/layout/primary-nav";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 
 interface HeaderProps {
@@ -37,8 +42,7 @@ interface HeaderProps {
   readonly deckActions?: SharedHeaderDeckActions;
 }
 
-const NAV_LINK_CLASS =
-  "inline-flex items-center gap-1.5 rounded-[var(--lumen-radius-pill)] px-3 py-2 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--accent-soft)] hover:text-[var(--text-primary)]";
+const NAV_LINK_CLASS = `inline-flex items-center gap-1.5 rounded-[var(--lumen-radius-pill)] px-3 py-2 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--accent-soft)] hover:text-[var(--text-primary)] ${CURRENT_PAGE_LINK_CLASS}`;
 
 /**
  * Paints the product name with the Lumen violet on the "AI" syllable.
@@ -62,24 +66,38 @@ function BrandWordmark({ name }: { readonly name: string }) {
 
 /**
  * The primary navigation on wide screens; `HeaderMobileMenu` holds the same
- * links on small ones.
+ * links on small ones. The link to the page the player is on carries
+ * `aria-current="page"` and the mark of `CURRENT_PAGE_LINK_CLASS`.
  */
 function HeaderNav() {
   const t = useTranslations("common");
+  const current = currentNavDestination(usePathname());
 
   return (
     <nav
       aria-label={t("nav.myDecks")}
       className="ml-2 hidden items-center gap-1 md:flex"
     >
-      <Link href="/decks" className={NAV_LINK_CLASS}>
+      <Link
+        href="/decks"
+        aria-current={ariaCurrentPage(current, "decks")}
+        className={NAV_LINK_CLASS}
+      >
         {t("nav.myDecks")}
       </Link>
-      <Link href="/collection" className={NAV_LINK_CLASS}>
+      <Link
+        href="/collection"
+        aria-current={ariaCurrentPage(current, "collection")}
+        className={NAV_LINK_CLASS}
+      >
         <Package className="h-3.5 w-3.5" />
         {t("nav.collection")}
       </Link>
-      <Link href="/rules/game-changers" className={NAV_LINK_CLASS}>
+      <Link
+        href="/rules/game-changers"
+        aria-current={ariaCurrentPage(current, "rules")}
+        className={NAV_LINK_CLASS}
+      >
         <Shield className="h-3.5 w-3.5" />
         {t("nav.rules")}
       </Link>
