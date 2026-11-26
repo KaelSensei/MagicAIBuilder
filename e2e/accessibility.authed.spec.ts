@@ -9,8 +9,26 @@ test("rename keeps keyboard focus and persists the deck title", async ({ page })
   await name.fill("Keyboard renamed deck");
   await name.press("Enter");
   await expect(page.getByRole("heading", { name: "Keyboard renamed deck" })).toBeVisible();
+  // The field unmounts; focus goes back to the deck-name button, not to the page's top (I-37).
+  await expect(page.getByRole("heading", { level: 1 }).locator("..")).toBeFocused();
   await page.reload();
   await expect(page.getByRole("heading", { name: "Keyboard renamed deck" })).toBeVisible();
+});
+
+// In a browser, not jsdom: the field is removed while it has focus, and that must neither save
+// the discarded name nor leave the single-key shortcuts off (I-37).
+test("Escape out of a rename keeps the name, returns focus to it and turns the shortcuts back on", async ({ page }) => {
+  await openBuilder(page);
+  const heading = page.getByRole("heading", { level: 1 });
+  const savedName = (await heading.textContent()) ?? "";
+  await heading.locator("..").click();
+  const name = page.getByRole("textbox", { name: "Click to rename", exact: true });
+  await name.fill("Discarded deck name");
+  await name.press("Escape");
+  await expect(heading).toHaveText(savedName);
+  await expect(heading.locator("..")).toBeFocused();
+  await page.keyboard.press("?");
+  await expect(page.getByRole("dialog", { name: "Keyboard Shortcuts" })).toBeVisible();
 });
 
 test("report modal contains keyboard focus and restores it after dismissal", async ({ page, playwright, baseURL }) => {
