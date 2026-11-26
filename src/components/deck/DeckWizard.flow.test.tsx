@@ -1864,5 +1864,29 @@ describe("DeckWizard flow (characterization)", () => {
       await waitForDeckOpened();
       expect(onComplete).toHaveBeenCalledOnce();
     });
+
+    it("keeps the earlier deck's import progress off the new build's screen", async () => {
+      const info = vi.spyOn(logger, "info").mockImplementation(() => undefined);
+      serveDeckCreatesAsTheRoute();
+      const earlierCommander = holdNext("get", `${SCRYFALL}/cards/named`);
+      await generateDeck();
+      await earlierCommander.asked;
+      await buildAgainInTheReopenedWizard();
+
+      // The earlier save goes on: it sets the commander, then imports every card of its deck.
+      earlierCommander.answer(HttpResponse.json(TALRAND_NAMED_RECORDED));
+      await waitFor(() =>
+        expect(info).toHaveBeenCalledWith(LATE_SAVE_LOG, "DeckWizard", {
+          deckId: EARLIER_DECK_ID,
+          cardsNotAdded: 0,
+        })
+      );
+
+      expect(screen.queryByText("Adding cards to your deck…")).toBeNull();
+      expect(
+        screen.queryByText(`${STREAMED_COPIES} / ${STREAMED_COPIES} cards…`)
+      ).toBeNull();
+      expect(screen.getByText("Generating deck…")).toBeInTheDocument();
+    });
   });
 });

@@ -163,6 +163,21 @@ function useSaveSessions(): SaveSessions {
   return { begin, renew };
 }
 
+/**
+ * `progress`, counting only while `session` is current: the counter is the wizard's, and a late
+ * import would show its own deck's count on the new build's screen.
+ */
+function countedWithin(
+  session: SaveSession,
+  progress: ImportProgress
+): ImportProgress {
+  return {
+    ...progress,
+    start: session.guard(progress.start),
+    setImportedCount: session.guard(progress.setImportedCount),
+  };
+}
+
 /** The deck store's action that creates a deck, and what keeps the built deck when it fails. */
 interface DeckCreation extends Pick<DeckStore, "createDeck"> {
   /** Keeps the built deck for "Try saving again"; does nothing once the save's session is over. */
@@ -266,7 +281,7 @@ export function useBuiltDeckSave(
       setActiveDeck,
       setCommander,
       addDeckCard,
-      progress,
+      progress: countedWithin(session, progress),
     });
     if (!session.isCurrent()) {
       // Nothing reaches the player, so support reads here what became of the deck.
