@@ -4,12 +4,15 @@
  * Card catalog context, browser side: `CardRulingsPanel` calls
  * `getCardRulings`. A successful answer is kept in `localStorage` for the 50
  * most recently viewed cards and served from there when Scryfall cannot be
- * reached. Unlike the other Scryfall clients, the request does not wait its
- * turn in `request-queue.ts`.
+ * reached. The request waits its turn in the runtime's Scryfall queue
+ * (`request-queue.ts`), like every other api.scryfall.com request: a 429 it
+ * receives blocks the queue, and during a block it is refused unsent, so the
+ * offline copy is served, or the panel shows its error.
  *
  * @module scryfall/rulings
  */
 import { SCRYFALL_API } from "./constants";
+import { scheduleScryfallRequest } from "./request-queue";
 import { isRecord } from "@/lib/guards";
 
 /** A dated card ruling returned by Scryfall. */
@@ -31,7 +34,11 @@ interface RulingCacheEntry {
 
 const RULINGS_CACHE_KEY = "magic-ai-builder:rulings:v1";
 
-/** Longest wait for Scryfall rulings before falling back to the offline cache. */
+/**
+ * Longest wait for Scryfall rulings before falling back to the offline cache.
+ * It counts from the request's turn in the queue, never from the time spent
+ * waiting in line.
+ */
 export const RULINGS_TIMEOUT_MS = 15_000;
 
 /** Maximum recently viewed cards retained for offline rulings access. */
@@ -110,13 +117,18 @@ function writeCache(cardId: string, rulings: readonly CardRuling[]): void {
   }
 }
 
+/**
+ * Asks Scryfall for a card's rulings in its turn in the runtime's queue.
+ *
+ * @throws {ScryfallBlockedError} during the queue's 429 block, unsent
+ */
 async function fetchRulings(cardId: string): Promise<readonly CardRuling[]> {
-  const response = await fetch(
-    `${SCRYFALL_API}/cards/${encodeURIComponent(cardId)}/rulings`,
-    {
+  const url = `${SCRYFALL_API}/cards/${encodeURIComponent(cardId)}/rulings`;
+  const response = await scheduleScryfallRequest(url, () =>
+    fetch(url, {
       headers: { Accept: "application/json" },
       signal: AbortSignal.timeout(RULINGS_TIMEOUT_MS),
-    }
+    })
   );
   if (!response.ok) {
     throw new Error(`Scryfall rulings request failed: ${response.status}`);
@@ -133,6 +145,8 @@ async function fetchRulings(cardId: string): Promise<readonly CardRuling[]> {
  *
  * @param cardId - Scryfall printing ID whose Oracle rulings should be loaded.
  * @returns Rulings plus whether they came from the network or offline cache.
+ * @throws the request's failure when nothing is cached: during the runtime
+ *   queue's 429 block, a `ScryfallApiError` of status 429, sent nowhere
  */
 export async function getCardRulings(
   cardId: string
