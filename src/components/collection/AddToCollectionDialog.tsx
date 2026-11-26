@@ -1,6 +1,6 @@
 "use client";
 // Dialog for adding a card to the collection via search
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useId, useRef } from "react";
 import { useFormatter, useTranslations } from "next-intl";
 import { Plus, Search, Loader2, Check } from "lucide-react";
 import { useCollectionStore } from "@/lib/collection/store";
@@ -37,6 +37,21 @@ function useOpenState(
 }
 
 /**
+ * The dialog's own "Add Card", where focus goes on close once the element
+ * that opened the dialog has left: the empty collection's "Add cards"
+ * unmounts when a first card is added, while the dialog stays open for the
+ * next one.
+ */
+function useTriggerFocusFallback() {
+  const triggerId = useId();
+  const findTrigger = useCallback(
+    () => document.getElementById(triggerId),
+    [triggerId]
+  );
+  return { triggerId, findTrigger };
+}
+
+/**
  * "Add Card" and the dialog it opens: search a card, pick its quantity, foil
  * and condition, and add it to the collection. The dialog stays open after an
  * add, ready for the next card.
@@ -45,6 +60,7 @@ export function AddToCollectionDialog(props: AddToCollectionDialogProps) {
   const t = useTranslations("collection.dialog");
   const format = useFormatter();
   const [open, setOpen] = useOpenState(props);
+  const { triggerId, findTrigger } = useTriggerFocusFallback();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<ScryfallCard[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -126,7 +142,13 @@ export function AddToCollectionDialog(props: AddToCollectionDialogProps) {
 
   return (
     <>
-      <Button type="button" variant="primary" size="sm" onClick={() => setOpen(true)}>
+      <Button
+        id={triggerId}
+        type="button"
+        variant="primary"
+        size="sm"
+        onClick={() => setOpen(true)}
+      >
         <Plus className="w-3.5 h-3.5" />
         {t("trigger")}
       </Button>
@@ -137,6 +159,7 @@ export function AddToCollectionDialog(props: AddToCollectionDialogProps) {
         maxWidth="max-w-md"
         className="p-6"
         showClose={false}
+        returnFocusFallback={findTrigger}
       >
         <ModalTitle className="text-lg font-semibold text-[var(--text-primary)] mb-4">
           {t("title")}
