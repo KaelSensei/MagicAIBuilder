@@ -152,7 +152,9 @@ describe("Import a decklist", () => {
   });
 
   // The panel leaves once the library holds the new deck, so focus goes back
-  // to the header's "Import", the dialog's own trigger (I-13 AC-13-08).
+  // to the header's "Import", the dialog's own trigger (I-13 AC-13-08). jsdom
+  // applies no CSS, so this holds from `md` up only: below it that button is
+  // hidden and focus falls to <body> (a follow-up).
   it("gives focus to the header's Import when the dialog closes", async () => {
     const user = userEvent.setup();
     openEmptyLibrary();

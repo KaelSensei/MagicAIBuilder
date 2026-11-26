@@ -31,8 +31,10 @@ export interface EmptyLibraryPanelProps {
  * The library holds no deck: it says so, and offers the three ways to start
  * that the toolbar and the header already offer, "Create Deck" first (I-13
  * AC-13-05, design audit S11). "Import a decklist" runs the header's own
- * import, so the header's one import dialog opens and gives focus back to the
- * header's "Import" when it closes.
+ * import, so the header's one import dialog opens. When it closes, focus goes
+ * back to the header's desktop "Import", the dialog's trigger, at `md` widths
+ * and up. Below `md` that button is hidden by CSS, so focus falls to `<body>`;
+ * a fallback target is a follow-up.
  */
 export function EmptyLibraryPanel({
   onCreate,
