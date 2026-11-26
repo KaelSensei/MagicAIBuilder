@@ -39,15 +39,14 @@ describe("deriveLibraryView: one screen per state", () => {
     expect(view).toEqual({ kind: "sessionBlocked" });
   });
 
-  it("shows the failure panel with the listing error when no deck loaded", () => {
+  // The panel used to carry the listing's error, diagnostic English text that
+  // reached the screen; it now carries none (I-04).
+  it("shows the failure panel, without the listing error, when no deck loaded", () => {
     const view = deriveLibraryView(
       signedInLibrary({ loadError: "[fetchDecks] HTTP 500" })
     );
 
-    expect(view).toEqual({
-      kind: "loadFailed",
-      error: "[fetchDecks] HTTP 500",
-    });
+    expect(view).toEqual({ kind: "loadFailed" });
   });
 
   it("shows the empty library to a signed-in player with no deck", () => {

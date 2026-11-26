@@ -414,18 +414,34 @@ describe("the raw-fetch deck store actions", () => {
   // ---------------------------------------------------------------------------
 
   describe("duplicateDeck at the HTTP boundary", () => {
-    it("sends POST /api/decks/[id]/duplicate with no body, then reloads the deck listing", async () => {
-      await useDeckStore.getState().duplicateDeck(DECK_ID);
+    // The body used to be empty: the route read none, and named every copy
+    // « (Copy) ». It now carries the copy's name the caller worded (I-04).
+    it("sends POST /api/decks/[id]/duplicate with the copy's name, then reloads the deck listing", async () => {
+      await useDeckStore.getState().duplicateDeck(DECK_ID, "Goblins (copie)");
 
-      // The content type is left out on purpose: the route reads no body. The
-      // request now goes through the deck client (`deckApi.duplicateDeck`),
-      // which adds a JSON one (I-01).
+      // The content type is left out on purpose. The request goes through the
+      // deck client (`deckApi.duplicateDeck`), which sends JSON (I-01).
       expect(
         sent.map(({ method, url, body }) => ({ method, url, body }))
       ).toEqual([
-        { method: "POST", url: `/api/decks/${DECK_ID}/duplicate`, body: null },
+        {
+          method: "POST",
+          url: `/api/decks/${DECK_ID}/duplicate`,
+          body: { name: "Goblins (copie)" },
+        },
         { method: "GET", url: "/api/decks?page=0&limit=20", body: null },
       ]);
+    });
+
+    it("sends an empty JSON object when the caller gives no name, so the server names the copy", async () => {
+      await useDeckStore.getState().duplicateDeck(DECK_ID);
+
+      expect(sent[0]).toMatchObject({
+        method: "POST",
+        url: `/api/decks/${DECK_ID}/duplicate`,
+      });
+      // `toMatchObject({ body: {} })` would also accept a null body.
+      expect(sent[0]?.body).toEqual({});
     });
 
     // The store used to raise an English toast, `Deck duplicated: "Goblins (Copy)"`;

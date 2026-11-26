@@ -142,11 +142,14 @@ export default function DecksPage() {
     async (e: React.MouseEvent, id: string) => {
       e.preventDefault();
       e.stopPropagation();
+      // The shown deck, which a card search may have found beyond the store's page.
+      const shown = sortedDeckList.find((deck) => deck.id === id);
+      if (!shown) return;
       setDuplicatingId(id);
       // On success the builder opens on the copy, so the spinner stays.
-      if (!(await duplicateDeck(id))) setDuplicatingId(null);
+      if (!(await duplicateDeck(shown))) setDuplicatingId(null);
     },
-    [duplicateDeck]
+    [duplicateDeck, sortedDeckList]
   );
 
   const handleNewDeck = useCallback(async () => {
@@ -248,12 +251,7 @@ export default function DecksPage() {
           </>
         );
       case "loadFailed":
-        return (
-          <LoadFailedPanel
-            error={libraryView.error}
-            onRetry={handleRetryLoad}
-          />
-        );
+        return <LoadFailedPanel onRetry={handleRetryLoad} />;
       case "empty":
         return (
           <>
@@ -483,15 +481,11 @@ function SessionTimeoutPanel({ onRetry }: { readonly onRetry: () => void }) {
 
 /**
  * The listing failed with no deck to fall back on. A failed listing must not
- * read as an empty account, so the raw error is shown with a reload.
+ * read as an empty account, so the failure is told with a reload. The raw
+ * error is diagnostic English text: the store logs it, and the player reads
+ * only the translated message (I-04).
  */
-function LoadFailedPanel({
-  error,
-  onRetry,
-}: {
-  readonly error: string;
-  readonly onRetry: () => void;
-}) {
+function LoadFailedPanel({ onRetry }: { readonly onRetry: () => void }) {
   const t = useTranslations("deck");
   return (
     <motion.div
@@ -503,11 +497,8 @@ function LoadFailedPanel({
       <h2 className="mb-2 text-lg font-semibold text-[var(--text-primary)]">
         {t("home.loadFailedTitle")}
       </h2>
-      <p className="mb-2 max-w-md text-sm text-[var(--text-secondary)]">
+      <p className="mb-6 max-w-md text-sm text-[var(--text-secondary)]">
         {t("home.loadFailedDescription")}
-      </p>
-      <p className="mb-6 max-w-md break-words font-mono text-xs text-[var(--text-secondary)] opacity-70">
-        {error}
       </p>
       <button
         type="button"

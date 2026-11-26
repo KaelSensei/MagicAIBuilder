@@ -244,7 +244,9 @@ describe("DecksPage states (characterization)", () => {
     expect(subtitle()).toBe("home.loading");
   });
 
-  it("currently shows the raw load error under the failure message, and reloads from Retry (pinned; new follow-up, see the P1-20 PR)", async () => {
+  // The raw load error, diagnostic English text, used to show under the
+  // failure message; the player now reads only the translated words (I-04).
+  it("shows the translated failure message without the raw load error, and reloads from Retry", async () => {
     signedInWith([], "[fetchDecks] HTTP 500: Internal server error");
 
     render(<DecksPage />);
@@ -252,9 +254,8 @@ describe("DecksPage states (characterization)", () => {
     expect(
       await screen.findByRole("heading", { name: "home.loadFailedTitle" })
     ).toBeInTheDocument();
-    expect(
-      screen.getByText("[fetchDecks] HTTP 500: Internal server error")
-    ).toBeInTheDocument();
+    expect(screen.getByText("home.loadFailedDescription")).toBeInTheDocument();
+    expect(screen.queryByText(/HTTP 500/)).not.toBeInTheDocument();
     expect(subtitle()).toBe("home.loadFailedSubtitle");
     expect(screen.queryByText("home.startBuilding")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "home.retry" }));
