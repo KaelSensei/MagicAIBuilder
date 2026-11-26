@@ -74,6 +74,31 @@ export interface BuiltDeckSave {
   readonly reset: () => void;
 }
 
+/** Copies an import has written, of the copies it will write. */
+interface ImportProgress {
+  readonly importedCount: number;
+  /** 0 until an import starts. */
+  readonly importTotal: number;
+  /** Counts a new import of `total` copies from zero; `start(0)` clears the count. */
+  readonly start: (total: number) => void;
+  readonly setImportedCount: (count: number) => void;
+}
+
+/**
+ * Counts the copies of the import. Importing 99 cards is ~65 serialized round trips; without a
+ * counter the dialog looks frozen for the whole minute. `start` keeps one identity, so the save
+ * step's `reset` does too: the wizard resets on open, once.
+ */
+function useImportProgress(): ImportProgress {
+  const [importedCount, setImportedCount] = useState(0);
+  const [importTotal, setImportTotal] = useState(0);
+  const start = useCallback((total: number) => {
+    setImportTotal(total);
+    setImportedCount(0);
+  }, []);
+  return { importedCount, importTotal, start, setImportedCount };
+}
+
 /**
  * Holds the save step's progress and runs it.
  *
@@ -84,10 +109,8 @@ export function useBuiltDeckSave(
 ): BuiltDeckSave {
   const { createDeck, setActiveDeck, addDeckCard, setCommander } =
     useDeckStore();
-  // Importing 99 cards is ~65 serialized round trips; without a counter the
-  // dialog looks frozen for the whole minute.
-  const [importedCount, setImportedCount] = useState(0);
-  const [importTotal, setImportTotal] = useState(0);
+  const progress = useImportProgress();
+  const { start: startImport } = progress;
   const [correctedDeck, setCorrectedDeck] = useState<CorrectedDeck | null>(
     null
   );
@@ -118,12 +141,11 @@ export function useBuiltDeckSave(
       await tryResolveCommander(result.commander, setCommander);
     }
 
-    setImportTotal(countCopies(result.cards));
-    setImportedCount(0);
+    startImport(countCopies(result.cards));
     await importCardsInBatches(
       collapseEntries(result.cards),
       addDeckCard,
-      setImportedCount
+      progress.setImportedCount
     );
 
     if (result.corrections.length > 0) {
@@ -148,15 +170,14 @@ export function useBuiltDeckSave(
     unsavedDeck ? store(unsavedDeck) : Promise.resolve();
 
   const reset = useCallback(() => {
-    setImportedCount(0);
-    setImportTotal(0);
+    startImport(0);
     setCorrectedDeck(null);
     setUnsavedDeck(null);
-  }, []);
+  }, [startImport]);
 
   return {
-    importedCount,
-    importTotal,
+    importedCount: progress.importedCount,
+    importTotal: progress.importTotal,
     correctedDeck,
     saveFailed: unsavedDeck !== null,
     save,
