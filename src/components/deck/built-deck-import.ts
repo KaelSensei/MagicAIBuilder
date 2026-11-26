@@ -88,9 +88,9 @@ export function collapseEntries(
 /** What an import could not write into the deck. */
 export interface CardImportReport {
   /**
-   * Copies of the batches whose lookup or save failed, less those written before the failure.
-   * Zero when every batch went through; a name Scryfall does not know is not counted, it was never
-   * a card to add.
+   * Copies left unwritten in the batches whose lookup or save failed: all of a batch whose lookup
+   * failed, or the copies of the cards Scryfall found but the save did not reach. Zero when every
+   * batch went through; a name Scryfall does not know is never counted, it was never a card to add.
    */
   readonly copiesNotAdded: number;
 }
@@ -112,6 +112,9 @@ export async function importCardsInBatches(
   onProgress: (imported: number) => void
 ): Promise<CardImportReport> {
   const byName = new Map(entries.map((e) => [e.name, e]));
+  // A card Scryfall renamed (a double-faced card's full name) is not in `byName`: one copy.
+  const copiesAskedFor = (sc: ScryfallCard): number =>
+    byName.get(sc.name)?.quantity ?? 1;
   let imported = 0;
   let copiesNotAdded = 0;
 
@@ -121,11 +124,14 @@ export async function importCardsInBatches(
   );
   await forEachSequential(offsets, async (i) => {
     const batch = entries.slice(i, i + BATCH_SIZE);
-    let writtenFromBatch = 0;
+    // Until Scryfall answers, every copy the batch asks for is left to add. Once it has, only the
+    // copies of the cards it found are: a name it does not know was never a card to add.
+    let copiesLeft = copiesOf(batch);
     try {
       const result = await getCardCollection(
         batch.map((entry) => ({ name: entry.name }))
       );
+      copiesLeft = result.data.reduce((sum, sc) => sum + copiesAskedFor(sc), 0);
       await forEachSequential(result.data, async (sc) => {
         const entry = byName.get(sc.name);
         const deckCard: DeckCard = {
@@ -145,17 +151,17 @@ export async function importCardsInBatches(
           category: isDeckCategory(entry?.category)
             ? entry.category
             : categorizeCard(sc),
-          quantity: entry?.quantity ?? 1,
+          quantity: copiesAskedFor(sc),
           zone: "main",
         };
         await addDeckCard(deckCard);
-        writtenFromBatch += deckCard.quantity;
+        copiesLeft -= deckCard.quantity;
         imported += deckCard.quantity;
         onProgress(imported);
       });
     } catch (err) {
       logger.error("Batch import error", "DeckWizard", err);
-      copiesNotAdded += copiesOf(batch) - writtenFromBatch;
+      copiesNotAdded += copiesLeft;
     }
   });
   return { copiesNotAdded };

@@ -7,7 +7,7 @@
  * flow test (`DeckWizard.flow.test.tsx`) covers the import with the real store.
  */
 import { http, HttpResponse } from "msw";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 import type { DeckCard } from "@/lib/deck/types";
 import { logger } from "@/lib/logger";
@@ -77,6 +77,10 @@ describe("importCardsInBatches", () => {
     vi.spyOn(logger, "error").mockImplementation(() => undefined);
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it("reports no copy missing when every batch went through, a name Scryfall does not know included", async () => {
     const deck = deckRefusing("none");
 
@@ -107,5 +111,25 @@ describe("importCardsInBatches", () => {
       "DeckWizard",
       expect.any(Error)
     );
+  });
+
+  it("does not count a name Scryfall does not know when a save throws later in its batch", async () => {
+    const deck = deckRefusing("Island");
+
+    const report = await importCardsInBatches(
+      [
+        entry("Sol Ring"),
+        entry("Talrand's Grand Archive", 2),
+        entry("Island", 30),
+        entry("Counterspell"),
+      ],
+      deck.addDeckCard,
+      () => undefined
+    );
+
+    // Scryfall knows no "Talrand's Grand Archive": it was never a card to add, so only the
+    // 30 Islands and Counterspell are missing.
+    expect(report).toEqual({ copiesNotAdded: 31 });
+    expect(deck.written).toEqual(["Sol Ring"]);
   });
 });
