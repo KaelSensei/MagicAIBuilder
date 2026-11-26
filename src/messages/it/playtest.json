@@ -44,6 +44,7 @@
   "life": {
     "total": "Life total",
     "customPlaceholder": "+/- amount",
+    "customLabel": "Life to gain or lose",
     "apply": "Apply",
     "undo": "Undo last action",
     "history": "History"

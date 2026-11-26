@@ -44,6 +44,7 @@
   "life": {
     "total": "Points de vie",
     "customPlaceholder": "+/- montant",
+    "customLabel": "Points de vie à gagner ou à perdre",
     "apply": "Appliquer",
     "undo": "Annuler la dernière action",
     "history": "Historique"
