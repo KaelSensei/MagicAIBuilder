@@ -178,6 +178,31 @@ describe("builder page: the title bar for keyboard and screen-reader players", (
       ).toBeInTheDocument();
       expect(api.updateDeck).not.toHaveBeenCalled();
     });
+
+    it("saves nothing and keeps the saved name when the new name is only spaces", async () => {
+      const user = userEvent.setup();
+      await user.click(await openAtraxa());
+      await user.clear(
+        screen.getByRole("textbox", { name: "Click to rename" })
+      );
+      await user.paste("   ");
+
+      await user.keyboard("{Enter}");
+
+      expect(
+        await screen.findByRole("heading", { level: 1, name: DECK_NAME })
+      ).toBeInTheDocument();
+      expect(api.updateDeck).not.toHaveBeenCalled();
+    });
+
+    it("takes at most 200 characters", async () => {
+      const user = userEvent.setup();
+      await user.click(await openAtraxa());
+
+      expect(
+        screen.getByRole("textbox", { name: "Click to rename" })
+      ).toHaveAttribute("maxLength", "200");
+    });
   });
 
   // The page turns its single-key shortcuts off while the deck-name field is open. The field
