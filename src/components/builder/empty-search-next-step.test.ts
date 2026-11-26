@@ -118,7 +118,7 @@ describe("emptySearchNextStep in a commander, partner or companion picker", () =
     expect(stepFor(searchWith({ picking: true }))).toBe("none");
   });
 
-  it("follows the picker's query on the set tab, where the picker still runs", () => {
+  it("follows the picker's query on the set tab (the page now ends a pick on a tab switch; the policy stays total)", () => {
     const search = searchWith({
       tab: "set",
       picking: true,

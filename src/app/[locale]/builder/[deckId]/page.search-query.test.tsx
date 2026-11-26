@@ -776,7 +776,7 @@ describe("the builder's search with no result", () => {
 describe("the builder's commander, partner and companion picks", () => {
   // The name search's earlier queries come back from the page's search cache, so a new name
   // proves which search runs once the pick has ended.
-  it("ends a pick when its toggle is pressed again: the name search runs again", async () => {
+  it("characterization: ends a pick when its toggle is pressed again: the name search runs again", async () => {
     const { user } = await openBuilder();
     const searchField = screen.getByPlaceholderText("Search cards…");
     await user.type(searchField, "Sol");
@@ -877,15 +877,18 @@ describe("the builder's commander, partner and companion picks", () => {
       }
     );
 
-    it("ends the pick on By Color: choosing a colour searches that colour", async () => {
-      const { user } = await openBuilder();
-      await startPick(user, PICKS[0]);
+    it.each(PICKS)(
+      "ends the $toggle pick on By Color: choosing a colour searches that colour",
+      async (pick) => {
+        const { user } = await openBuilder();
+        await startPick(user, pick);
 
-      await user.click(searchTab("By Color"));
-      await user.click(button("White"));
+        await user.click(searchTab("By Color"));
+        await user.click(button("White"));
 
-      await lastSearchIs("legal:commander id<=W");
-    });
+        await lastSearchIs("legal:commander id<=W");
+      }
+    );
 
     it("has no pick on when the player comes back to Name: a typed name runs the name search", async () => {
       const { user } = await openBuilder();
@@ -897,6 +900,33 @@ describe("the builder's commander, partner and companion picks", () => {
 
       // Thrasios's colour identity, in WUBRG order (CR 903.4).
       await lastSearchIs("name:/Sol/ legal:commander id<=UG");
+    });
+
+    // This PR's choice: pressing the tab that is already open starts it afresh too.
+    it("ends the pick when the Name tab already open is pressed again", async () => {
+      const { user } = await openBuilder();
+      await startPick(user, PICKS[0]);
+
+      await user.click(searchTab("Name"));
+      await user.type(screen.getByPlaceholderText("Search cards…"), "Sol");
+
+      await lastSearchIs("name:/Sol/ legal:commander id<=UG");
+    });
+
+    // By Set's query reads the colours too, so colours left from By Color would narrow it.
+    it("clears the colours chosen on By Color when the player switches to By Set", async () => {
+      const { user } = await openBuilder();
+      await user.click(searchTab("By Color"));
+      await user.click(button("White"));
+      await lastSearchIs("legal:commander id<=W");
+
+      await user.click(searchTab("By Set"));
+      await user.click(
+        screen.getByPlaceholderText("Search set (e.g. dsk, mh3…)")
+      );
+      await user.click(await screen.findByText(DUSKMOURN.name));
+
+      await lastSearchIs("set:dsk legal:commander");
     });
   });
 });
