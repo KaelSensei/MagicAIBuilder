@@ -4,6 +4,10 @@
   "clearLabel": "Effacer la recherche",
   "searching": "Recherche…",
   "noResults": "Aucune carte trouvée. Essayez une autre recherche.",
+  "choose": {
+    "set": "Choisissez une édition pour en afficher les cartes.",
+    "colors": "Choisissez des couleurs pour en afficher les cartes."
+  },
   "failure": {
     "unavailable": "La recherche de cartes est indisponible pour le moment. Réessayez dans un instant.",
     "rejectedQuery": "Scryfall n’a pas pu lire cette recherche. Vérifiez sa syntaxe."

@@ -61,8 +61,8 @@ Under the three panels, the deck summary bar keeps the deck's figures in view wh
 #### Searching for Cards
 
 - Use the **Name** tab to search by card name
-- Use **By Set** to browse cards from a specific expansion
-- Use **By Color** to browse by color identity
+- Use **By Set** to browse cards from a specific expansion. Until you choose a set, the panel asks you to choose one
+- Use **By Color** to browse by color identity. Until you choose a color (or type a name), the panel asks you to choose colors
 - Click **Show filters** to filter by CMC, price, color
 - When a search finds no card, the panel says what to try next: **Clear filters** while a filter narrows the search, or, in the **Name** tab, a hint at the Scryfall search syntax with an example. The commander, partner and companion searches read only the color filters and **Collection only**, so only those bring up **Clear filters** there; **By Set** and **By Color** offer neither
 - **Quick add** (Ctrl+K, or ⌘K, or the Quick add button in the deck toolbar) is a second way to find a card. Type a name, a role such as ramp or removal (rampe or retrait in French), or switch to rules text with Alt+R. The Scryfall query is shown above the results. Enter adds to the main deck, Shift+Enter to the sideboard and Alt+Enter to considering, and the palette stays open so the next card can be added. When a commander is set, the search stays inside that commander's colours. The Name, By Set and By Color panel is unchanged and remains the search that opens with the builder.

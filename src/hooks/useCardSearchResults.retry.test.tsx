@@ -66,8 +66,11 @@ function SearchPanel({
     sessionStatus: "authenticated",
   });
   // These tests are about retries; the builder decides an empty result's next
-  // step, pinned in `page.search-query.test.tsx`.
-  return <SearchResults {...results} nextStep={{ kind: "none" }} />;
+  // step and what an unsearched tab waits for, both pinned in
+  // `page.search-query.test.tsx`.
+  return (
+    <SearchResults {...results} nextStep={{ kind: "none" }} waitingFor={null} />
+  );
 }
 
 /**
