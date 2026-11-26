@@ -13,12 +13,16 @@
 import { NextRequest } from "next/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { PlayerStatsReport } from "@/lib/deck/player-stats-report";
-import type { TableRow } from "@/test/in-memory-prisma-tables";
+import type { TableRead, TableRow } from "@/test/in-memory-prisma-tables";
 
-const fake = vi.hoisted(() => ({
-  auth: vi.fn(),
-  tables: new Map<string, readonly Readonly<Record<string, unknown>>[]>(),
-}));
+const fake = vi.hoisted(() => {
+  const reads: TableRead[] = [];
+  return {
+    auth: vi.fn(),
+    tables: new Map<string, readonly Readonly<Record<string, unknown>>[]>(),
+    reads,
+  };
+});
 
 vi.mock(import("@/lib/auth/config"), () => ({
   auth: fake.auth,
@@ -30,7 +34,9 @@ vi.mock(import("@/lib/auth/config"), () => ({
 
 vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
   const { inMemoryPrisma } = await import("@/test/in-memory-prisma-tables");
-  return inMemoryPrisma(await importOriginal(), fake.tables);
+  return inMemoryPrisma(await importOriginal(), fake.tables, (read) =>
+    fake.reads.push(read)
+  );
 });
 
 import { GET } from "./route";
@@ -44,6 +50,9 @@ const SHEOLDRED = "deck-sheoldred";
 const MODERN = "deck-modern";
 const OLD = "deck-old";
 const RIVAL_DECK = "deck-rival";
+const PAIR = "deck-pair";
+const OLD_PAIR = "deck-old-pair";
+const OLD_MODERN = "deck-old-modern";
 
 const IN_2026 = new Date("2026-03-01T10:00:00.000Z");
 const IN_2025 = new Date("2025-06-01T10:00:00.000Z");
@@ -152,6 +161,40 @@ function seed(): void {
   fake.tables.set("deckSnapshot", []);
 }
 
+/**
+ * Adds, on top of `seed`, a 2026 Commander deck led by a partner pair, a 2025
+ * Commander deck led by the same pair with a Game Changer in its main deck,
+ * and a 2025 Modern deck. The partner row carries `isPartner` alone, as
+ * `COMMAND_SLOT_ROWS` allows.
+ */
+function seedPartnerPairAndOlderDecks(): void {
+  const inactive = { createdAt: IN_2025, updatedAt: IN_2025 };
+  fake.tables.set("deck", [
+    ...(fake.tables.get("deck") ?? []),
+    deckRow(PAIR, PLAYER),
+    deckRow(OLD_PAIR, PLAYER, inactive),
+    deckRow(OLD_MODERN, PLAYER, { format: "modern", ...inactive }),
+  ]);
+  const pairRows = (deckId: string) => [
+    commanderRow(deckId, "Thrasios", "U"),
+    cardRow(deckId, "Tymna", {
+      typeLine: "Legendary Creature — Human Cleric",
+      colorIdentity: ["W"],
+      category: "commander",
+      isPartner: true,
+    }),
+  ];
+  fake.tables.set("deckCard", [
+    ...(fake.tables.get("deckCard") ?? []),
+    ...pairRows(PAIR),
+    cardRow(PAIR, "Sol Ring"),
+    ...pairRows(OLD_PAIR),
+    cardRow(OLD_PAIR, "Sol Ring"),
+    cardRow(OLD_PAIR, "Mana Crypt", { isGameChanger: true }),
+    cardRow(OLD_MODERN, "Lightning Bolt", { typeLine: "Instant" }),
+  ]);
+}
+
 /** Signs the caller in as `userId`, as the session cookie would. */
 function signInAs(userId: string): void {
   fake.auth.mockResolvedValue({ user: { id: userId } });
@@ -160,6 +203,19 @@ function signInAs(userId: string): void {
 /** Calls the route with an optional query string. */
 function getStats(query = ""): Promise<Response> {
   return GET(new NextRequest(`http://localhost/api/user/stats${query}`));
+}
+
+/** The card queries the requests so far made, each with the rows it took. */
+function cardReads(): readonly TableRead[] {
+  return fake.reads.filter((read) => read.table === "deckCard");
+}
+
+/** The names of the card rows of one deck the requests so far read. */
+function cardNamesReadFor(deckId: string): readonly unknown[] {
+  return cardReads()
+    .flatMap((read) => read.rows)
+    .filter((row) => row.deckId === deckId)
+    .map((row) => row.name);
 }
 
 /** Reads a 200 answer's report. */
@@ -178,6 +234,7 @@ beforeEach(() => {
   vi.setSystemTime(clock);
   vi.stubEnv("PLAYWRIGHT_TEST", "0");
   fake.auth.mockReset();
+  fake.reads.splice(0);
   seed();
 });
 
@@ -235,6 +292,128 @@ describe("GET /api/user/stats", () => {
     ]);
     expect((await getStats("?year=2024")).status).toBe(400);
     expect((await getStats("?year=twenty")).status).toBe(400);
+  });
+
+  it("answers the whole year from the active Commander decks' cards, inactive and Modern decks only adding to the deck figures", async () => {
+    signInAs(PLAYER);
+    seedPartnerPairAndOlderDecks();
+
+    const report = await reportOf(await getStats());
+
+    const active = [ELVES, MARWYN, SHEOLDRED, MODERN, PAIR];
+    const commanderDecks = [ELVES, MARWYN, SHEOLDRED, PAIR];
+    expect(report).toEqual({
+      year: 2026,
+      years: [2026, 2025],
+      decks: [
+        ELVES,
+        MARWYN,
+        SHEOLDRED,
+        MODERN,
+        OLD,
+        PAIR,
+        OLD_PAIR,
+        OLD_MODERN,
+      ].map((id) => ({ id, name: `Name of ${id}` })),
+      stats: {
+        activeDeckIds: active,
+        addedDeckIds: active,
+        changedDeckIds: [],
+        formats: [
+          { format: "commander", deckIds: commanderDecks },
+          { format: "modern", deckIds: [MODERN] },
+        ],
+        commanderDeckIds: commanderDecks,
+        colors: [
+          { color: "W", deckIds: [PAIR] },
+          { color: "U", deckIds: [PAIR] },
+          { color: "B", deckIds: [SHEOLDRED] },
+          { color: "R", deckIds: [] },
+          { color: "G", deckIds: [ELVES, MARWYN] },
+        ],
+        colorIdentities: [
+          { identity: ["G"], deckIds: [ELVES, MARWYN] },
+          { identity: ["B"], deckIds: [SHEOLDRED] },
+          { identity: ["W", "U"], deckIds: [PAIR] },
+        ],
+        commanders: [
+          { names: ["Ezuri, Renegade Leader"], deckIds: [ELVES], isNew: true },
+          { names: ["Marwyn, the Nurturer"], deckIds: [MARWYN], isNew: true },
+          {
+            names: ["Sheoldred, the Apocalypse"],
+            deckIds: [SHEOLDRED],
+            isNew: true,
+          },
+          { names: ["Thrasios", "Tymna"], deckIds: [PAIR], isNew: false },
+        ],
+        cardsUsedMost: [{ name: "Sol Ring", deckIds: commanderDecks }],
+        sharedCards: {
+          count: 1,
+          mostShared: [{ name: "Sol Ring", deckIds: commanderDecks }],
+        },
+        brackets: [1, 2, 3, 4, 5].map((bracket) => ({
+          bracket,
+          computedDeckIds: bracket === 1 ? commanderDecks : [],
+          targetDeckIds: bracket === 3 ? commanderDecks : [],
+        })),
+      },
+      comboFloorChecked: false,
+    });
+  });
+
+  it("counts the cards of a deck active in an earlier year when that year is asked for", async () => {
+    signInAs(PLAYER);
+    seedPartnerPairAndOlderDecks();
+
+    const report = await reportOf(await getStats("?year=2025"));
+
+    expect(report.stats.commanderDeckIds).toEqual([OLD, OLD_PAIR]);
+    expect(report.stats.cardsUsedMost).toEqual([
+      { name: "Mana Crypt", deckIds: [OLD_PAIR] },
+      { name: "Sol Ring", deckIds: [OLD_PAIR] },
+    ]);
+    expect(report.stats.brackets[2]?.computedDeckIds).toEqual([OLD_PAIR]);
+  });
+
+  it("reads every card of an active Commander deck, and only the commanders of an inactive or non-Commander deck", async () => {
+    signInAs(PLAYER);
+    seedPartnerPairAndOlderDecks();
+
+    await reportOf(await getStats());
+
+    expect(cardNamesReadFor(ELVES)).toEqual([
+      "Ezuri, Renegade Leader",
+      "Sol Ring",
+      "Forest",
+    ]);
+    expect(cardNamesReadFor(OLD_PAIR)).toEqual(["Thrasios", "Tymna"]);
+    expect(cardNamesReadFor(OLD)).toEqual(["Old Commander"]);
+    expect(cardNamesReadFor(MODERN)).toEqual([]);
+    expect(cardNamesReadFor(OLD_MODERN)).toEqual([]);
+  });
+
+  it("reads the cards in as many queries for forty decks as for a handful", async () => {
+    signInAs(PLAYER);
+    await reportOf(await getStats());
+    const queriesForAHandful = cardReads().length;
+    fake.reads.splice(0);
+    const manyDecks = Array.from({ length: 40 }, (_, index) => `deck-${index}`);
+    fake.tables.set(
+      "deck",
+      manyDecks.map((id) => deckRow(id, PLAYER))
+    );
+    fake.tables.set(
+      "deckCard",
+      manyDecks.flatMap((id) => [
+        commanderRow(id, `Commander ${id}`, "G"),
+        cardRow(id, "Sol Ring"),
+      ])
+    );
+
+    await reportOf(await getStats());
+
+    expect(queriesForAHandful).toBeLessThanOrEqual(2);
+    expect(cardReads()).toHaveLength(queriesForAHandful);
   });
 
   it("estimates each Commander deck's bracket without combo data and says the combo floor was not checked", async () => {
