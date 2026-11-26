@@ -20,9 +20,17 @@ export interface DialogFocusReturnProps {
  * Opening still moves focus to the dialog's first control: the open handler
  * only records, it does not prevent Radix's own initial focus.
  *
+ * The opener can leave while the dialog is open: the collection's empty state,
+ * whose "Add cards" opens the add dialog, unmounts once a first card is added.
+ * `fallback` then names where focus goes instead of `<body>`.
+ *
+ * @param fallback - the element to focus when the opener has left the page;
+ *   read on close, and stable across renders (a `useCallback`)
  * @returns props to spread onto `Dialog.Content`
  */
-export function useDialogFocusReturn(): DialogFocusReturnProps {
+export function useDialogFocusReturn(
+  fallback?: () => HTMLElement | null
+): DialogFocusReturnProps {
   const returnTarget = useRef<HTMLElement | null>(null);
 
   return useMemo(
@@ -35,9 +43,13 @@ export function useDialogFocusReturn(): DialogFocusReturnProps {
         event.preventDefault();
         const target = returnTarget.current;
         returnTarget.current = null;
-        if (target?.isConnected) target.focus();
+        if (target?.isConnected) {
+          target.focus();
+          return;
+        }
+        fallback?.()?.focus();
       },
     }),
-    []
+    [fallback]
   );
 }

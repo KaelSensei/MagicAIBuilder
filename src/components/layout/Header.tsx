@@ -8,7 +8,7 @@
  * "New Deck" and "Import" come from `HeaderDeckActionsSlot`, loaded lazily so
  * public pages do not ship the deck store in their first bundle. The header
  * only owns the UI state those actions share between the desktop bar and the
- * mobile menu.
+ * mobile menu, unless the page holds it (`SharedHeaderDeckActions`).
  *
  * @module layout/Header
  */
@@ -18,7 +18,10 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Menu, Package, Shield, Sparkles, X } from "lucide-react";
 import { UserMenu } from "@/components/auth/UserMenu";
-import { IDLE_HEADER_DECK_ACTIONS } from "@/components/layout/header-deck-actions-state";
+import {
+  IDLE_HEADER_DECK_ACTIONS,
+  type SharedHeaderDeckActions,
+} from "@/components/layout/header-deck-actions-state";
 import { HeaderDeckActionsSlot } from "@/components/layout/HeaderDeckActionsSlot";
 import { HeaderMobileMenu } from "@/components/layout/HeaderMobileMenu";
 import { LocaleSwitcher } from "@/components/layout/LocaleSwitcher";
@@ -27,6 +30,11 @@ import { ThemeToggle } from "@/components/layout/ThemeToggle";
 interface HeaderProps {
   /** The deck open in the builder. Import then fills it instead of a new deck. */
   readonly deckId?: string;
+  /**
+   * The deck actions' state, when the page holds it so its own controls can
+   * start the header's actions; left out, the header keeps its own.
+   */
+  readonly deckActions?: SharedHeaderDeckActions;
 }
 
 const NAV_LINK_CLASS =
@@ -59,10 +67,17 @@ function BrandWordmark({ name }: { readonly name: string }) {
  * sit in the bar; on small screens a toggle opens `HeaderMobileMenu`, which
  * holds the same links and actions.
  */
-export function Header({ deckId }: HeaderProps = {}) {
+export function Header({
+  deckId,
+  deckActions: sharedDeckActions,
+}: HeaderProps = {}) {
   const t = useTranslations("common");
   const [menuOpen, setMenuOpen] = useState(false);
-  const [deckActions, setDeckActions] = useState(IDLE_HEADER_DECK_ACTIONS);
+  const [ownDeckActions, setOwnDeckActions] = useState(
+    IDLE_HEADER_DECK_ACTIONS
+  );
+  const { state: deckActions, onChange: setDeckActions } =
+    sharedDeckActions ?? { state: ownDeckActions, onChange: setOwnDeckActions };
 
   const handleCloseMenu = useCallback(() => {
     setMenuOpen(false);

@@ -69,6 +69,8 @@ vi.mock(import("next/navigation"), () => ({
 }));
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
+  // The empty library's import names its deck after the date.
+  useFormatter: () => ({ dateTime: () => "date" }),
 }));
 vi.mock("@/lib/deck/store", () => ({
   useDeckStore: () => ({

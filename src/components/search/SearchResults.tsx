@@ -22,6 +22,10 @@ import type { ScryfallCard } from "@/lib/scryfall/types";
 import type { CollectionOnlyState } from "@/hooks/useCardSearchResults";
 import { CollectionOnlyCoverageNote } from "./CollectionOnlyNotice";
 import {
+  EmptySearchResult,
+  type EmptySearchNextStep,
+} from "./EmptySearchResult";
+import {
   searchResultsView,
   type SearchResultsPhase,
 } from "./search-results-view";
@@ -40,6 +44,11 @@ interface SearchResultsProps {
   readonly collectionOnly?: CollectionOnlyState;
   /** The Scryfall query that produced an empty list, shown so the player can edit it. */
   readonly executedQuery?: string;
+  /**
+   * What an empty result offers next: "Clear filters", the syntax hint, or nothing. The page
+   * decides, since only it knows which filters its query reads.
+   */
+  readonly nextStep: EmptySearchNextStep;
 }
 
 /** The box around the status line: centred for a message, a header row above a list. */
@@ -50,7 +59,7 @@ const FRAME_CLASS: Readonly<Record<SearchResultsPhase, string>> = {
   blocked:
     "flex h-40 flex-col items-center justify-center gap-2 px-6 text-center text-sm text-[var(--text-secondary)]",
   empty:
-    "flex flex-col items-center justify-center h-40 text-[var(--text-secondary)] text-sm",
+    "flex flex-col items-center justify-center min-h-40 py-4 text-[var(--text-secondary)] text-sm",
   listed: "flex items-center justify-between px-3 py-1.5",
 };
 
@@ -88,7 +97,7 @@ function PhaseIcon({ phase }: { readonly phase: SearchResultsPhase }) {
  * The status line between them is one `<output>` that every state keeps mounted.
  */
 export function SearchResults(props: SearchResultsProps) {
-  const { cards, error, collectionOnly, executedQuery } = props;
+  const { cards, error, collectionOnly, executedQuery, nextStep } = props;
   const t = useTranslations("search");
   const { phase, status } = searchResultsView({
     isLoading: props.isLoading,
@@ -123,14 +132,9 @@ export function SearchResults(props: SearchResultsProps) {
           </p>
         ) : null}
         {phase === "empty" ? (
-          <>
-            {executedQuery ? (
-              <p className="mt-2 max-w-full truncate px-4 text-center font-mono text-xs">
-                {t("executedQuery", { query: executedQuery })}
-              </p>
-            ) : null}
+          <EmptySearchResult executedQuery={executedQuery} nextStep={nextStep}>
             {coverageNote}
-          </>
+          </EmptySearchResult>
         ) : null}
         {phase === "listed" ? <ViewModeToggle /> : null}
       </div>
