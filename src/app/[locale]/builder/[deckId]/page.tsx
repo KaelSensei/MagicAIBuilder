@@ -46,6 +46,7 @@ import { Header } from "@/components/layout/Header";
 import { SearchBar } from "@/components/search/SearchBar";
 import { SearchFilters } from "@/components/search/SearchFilters";
 import { SearchResults } from "@/components/search/SearchResults";
+import { searchWaitingFor } from "@/components/builder/search-waiting-for";
 import { QuickAddPaletteHost } from "@/components/search/QuickAddPaletteHost";
 import { DeckCardCount } from "@/components/deck/DeckCardCount";
 import { DeckEditor } from "@/components/deck/DeckEditor";
@@ -1139,7 +1140,6 @@ export default function BuilderPage() {
                   />
                   <BuilderColorSearchPicker
                     selected={colorFilter}
-                    hasNameFilter={searchText !== ""}
                     onToggle={toggleColorFilter}
                   />
                 </div>
@@ -1159,6 +1159,7 @@ export default function BuilderPage() {
                 draggable={true}
                 executedQuery={pinnedQueryLabel(pinnedQuery)}
                 nextStep={emptyResultNextStep}
+                waitingFor={searchWaitingFor(searchMode, query)}
               />
             </div>
           </motion.div>

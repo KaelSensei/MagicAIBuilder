@@ -263,7 +263,6 @@
     "show": "Afficher les filtres",
     "hide": "Masquer les filtres"
   },
-  "colorSearchHint": "Sélectionnez des couleurs pour parcourir les cartes",
   "searchModes": {
     "name": "Nom",
     "set": "Par édition",
