@@ -36,13 +36,21 @@ export interface DeckDuplicationOptions {
   readonly onMissing: () => Promise<void>;
 }
 
+/** The deck to copy, as the page that offers "Duplicate" shows it. */
+export interface DuplicatedDeck {
+  readonly id: string;
+  /** The name the page shows; the copy's name is worded from it. */
+  readonly name: string;
+}
+
 /**
  * Returns the duplicate action: copies the deck under a name in the player's
  * language, announces the copy by name and opens it in the builder.
  *
- * The copy's name is worded from the deck's name as the store holds it, and
- * fitted to the deck-name limit (`copyDeckName`). A deck the store does not
- * hold is copied without a name, so the server names it.
+ * The copy's name is worded from the name the page shows, and fitted to the
+ * deck-name limit (`copyDeckName`). The page passes it because the store may
+ * not hold the deck: the decks page also lists decks a card search found
+ * beyond the loaded page.
  *
  * A failure is logged with its raw error and told in a toast; the player stays
  * where they were. When the deck no longer exists, the page is also refreshed
@@ -50,11 +58,11 @@ export interface DeckDuplicationOptions {
  * never rejects.
  *
  * @param options - what the page does when the deck no longer exists
- * @returns a function from the deck's id to whether the copy was made
+ * @returns a function from the deck to whether the copy was made
  */
 export function useDeckDuplication({
   onMissing,
-}: DeckDuplicationOptions): (deckId: string) => Promise<boolean> {
+}: DeckDuplicationOptions): (deck: DuplicatedDeck) => Promise<boolean> {
   const t = useTranslations("common");
   const router = useRouter();
   const duplicateDeck = useDeckStore((s) => s.duplicateDeck);
@@ -62,16 +70,12 @@ export function useDeckDuplication({
   const reportFailure = useDeckFailureReport(DECK_DUPLICATE_FAILURE_MESSAGES);
 
   return useCallback(
-    async (deckId: string) => {
-      const deckName = useDeckStore.getState().decks[deckId]?.name;
-      const copyName =
-        deckName === undefined
-          ? undefined
-          : copyDeckName(deckName, (name) =>
-              t("deckDuplicate.copyName", { name })
-            );
+    async (deck: DuplicatedDeck) => {
+      const copyName = copyDeckName(deck.name, (name) =>
+        t("deckDuplicate.copyName", { name })
+      );
       try {
-        const copy = await duplicateDeck(deckId, copyName);
+        const copy = await duplicateDeck(deck.id, copyName);
         addToast("success", t("deckDuplicate.succeeded", { name: copy.name }));
         router.push(`/builder/${copy.id}`);
         return true;

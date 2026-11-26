@@ -9,7 +9,7 @@
  * deck card's stand-in keeps only its duplicate button, wired as the real
  * card wires it.
  */
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -524,5 +524,33 @@ describe("naming the copy of a deck", () => {
     await duplicateTheDeck(longest, "fr");
 
     expect(duplications).toEqual([{ name: `${"a".repeat(192)} (copie)` }]);
+  });
+
+  // The store loads one page of decks; a card search also lists decks beyond it.
+  it("names the copy in French for a deck a card search found beyond the loaded page", async () => {
+    serveLibraryOf(ATRAXA);
+    server.use(
+      http.get("*/api/decks/search", () =>
+        HttpResponse.json({
+          decks: [emptyApiDeck("deck-31", "Edgar's Vampires")],
+          hasMore: false,
+        })
+      )
+    );
+    const user = userEvent.setup();
+    renderWithProviders(<DecksPage />, { locale: "fr" });
+    await screen.findByRole("button", { name: "Duplicate Atraxa" });
+
+    const include = screen.getByRole("group", { name: "Contient la carte" });
+    await user.type(within(include).getByRole("textbox"), "Sol Ring");
+    await user.click(within(include).getByRole("button", { name: "Ajouter" }));
+    await user.click(
+      await screen.findByRole("button", { name: "Duplicate Edgar's Vampires" })
+    );
+    await waitFor(() =>
+      expect(push).toHaveBeenCalledWith("/builder/deck-copy")
+    );
+
+    expect(duplications).toEqual([{ name: "Edgar's Vampires (copie)" }]);
   });
 });

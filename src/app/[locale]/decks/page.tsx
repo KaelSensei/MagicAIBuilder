@@ -142,11 +142,14 @@ export default function DecksPage() {
     async (e: React.MouseEvent, id: string) => {
       e.preventDefault();
       e.stopPropagation();
+      // The shown deck, which a card search may have found beyond the store's page.
+      const shown = sortedDeckList.find((deck) => deck.id === id);
+      if (!shown) return;
       setDuplicatingId(id);
       // On success the builder opens on the copy, so the spinner stays.
-      if (!(await duplicateDeck(id))) setDuplicatingId(null);
+      if (!(await duplicateDeck(shown))) setDuplicatingId(null);
     },
-    [duplicateDeck]
+    [duplicateDeck, sortedDeckList]
   );
 
   const handleNewDeck = useCallback(async () => {
