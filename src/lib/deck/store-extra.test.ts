@@ -1615,9 +1615,13 @@ describe("useDeckStore — duplicateDeck", () => {
   });
 
   // It used to call `fetch` itself, which hid the answered status (I-01).
-  it("asks the deck client to copy the deck", async () => {
-    await useDeckStore.getState().duplicateDeck("deck-1");
-    expect(deckApi.duplicateDeck).toHaveBeenCalledWith("deck-1");
+  // The copy's name is the caller's, in the player's language (I-04).
+  it("asks the deck client to copy the deck under the caller's name", async () => {
+    await useDeckStore.getState().duplicateDeck("deck-1", "Test Deck (copie)");
+    expect(deckApi.duplicateDeck).toHaveBeenCalledWith(
+      "deck-1",
+      "Test Deck (copie)"
+    );
   });
 });
 

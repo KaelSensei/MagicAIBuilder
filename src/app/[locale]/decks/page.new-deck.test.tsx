@@ -437,3 +437,92 @@ describe("duplicating a deck", () => {
     expect(toastTexts()).toEqual(["Deck dupliqué : « Goblins (Copy) »"]);
   });
 });
+
+/*
+ * The server named every copy `${name} (Copy)`, so a French player's library
+ * listed « Atraxa (Copy) ». The page now names the copy in the player's
+ * language and sends that name; the route keeps it (I-04).
+ */
+describe("naming the copy of a deck", () => {
+  const ATRAXA = emptyApiDeck("deck-atraxa", "Atraxa");
+
+  /** The JSON bodies `POST /api/decks/:id/duplicate` received, in order; `null` for none. */
+  let duplications: unknown[] = [];
+
+  /**
+   * Lists `original` as the player's one deck, and answers its duplicate as
+   * the route names a copy: the name the request sent, or the original's name
+   * followed by " (Copy)" when it sent none.
+   */
+  function serveLibraryOf(original: typeof ATRAXA): void {
+    server.use(
+      http.get("/api/decks", () =>
+        HttpResponse.json({ decks: [original], total: 1, page: 0, limit: 20 })
+      ),
+      http.post("/api/decks/:id/duplicate", async ({ request }) => {
+        const text = await request.text();
+        const body: unknown = text === "" ? null : JSON.parse(text);
+        duplications.push(body);
+        const name = sentName(body) ?? `${original.name} (Copy)`;
+        return HttpResponse.json(emptyApiDeck("deck-copy", name), {
+          status: 201,
+        });
+      })
+    );
+  }
+
+  /** The `name` a duplicate request sent, if it sent one. */
+  function sentName(body: unknown): string | undefined {
+    if (typeof body !== "object" || body === null || !("name" in body)) {
+      return undefined;
+    }
+    return typeof body.name === "string" ? body.name : undefined;
+  }
+
+  /** Opens the library under `locale` and duplicates the one deck it lists. */
+  async function duplicateTheDeck(
+    original: typeof ATRAXA,
+    locale: "en" | "fr"
+  ): Promise<void> {
+    renderWithProviders(<DecksPage />, { locale });
+    fireEvent.click(
+      await screen.findByRole("button", { name: `Duplicate ${original.name}` })
+    );
+    await waitFor(() =>
+      expect(push).toHaveBeenCalledWith("/builder/deck-copy")
+    );
+  }
+
+  beforeEach(() => {
+    session.status = "authenticated";
+    duplications = [];
+  });
+
+  it("names the copy « Atraxa (copie) » for a player using French", async () => {
+    serveLibraryOf(ATRAXA);
+
+    await duplicateTheDeck(ATRAXA, "fr");
+
+    expect(duplications).toEqual([{ name: "Atraxa (copie)" }]);
+    expect(toastTexts()).toEqual(["Deck dupliqué : « Atraxa (copie) »"]);
+  });
+
+  it("names the copy « Atraxa (Copy) » for a player using English", async () => {
+    serveLibraryOf(ATRAXA);
+
+    await duplicateTheDeck(ATRAXA, "en");
+
+    expect(duplications).toEqual([{ name: "Atraxa (Copy)" }]);
+    expect(toastTexts()).toEqual(["Deck duplicated: “Atraxa (Copy)”"]);
+  });
+
+  // A rename accepts 200 characters at most, and so does the copy's name.
+  it("shortens a long deck name so the copy's name fits the deck-name limit", async () => {
+    const longest = emptyApiDeck("deck-long", "a".repeat(200));
+    serveLibraryOf(longest);
+
+    await duplicateTheDeck(longest, "fr");
+
+    expect(duplications).toEqual([{ name: `${"a".repeat(192)} (copie)` }]);
+  });
+});

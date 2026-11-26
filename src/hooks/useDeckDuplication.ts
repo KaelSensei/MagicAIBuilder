@@ -4,8 +4,9 @@
  * deck action and the builder's toolbar button.
  *
  * The deck store copies the deck but cannot speak the player's language, so
- * this hook tells the player: the copy's name on success, and why the copy
- * failed otherwise (I-01).
+ * this hook names the copy in that language, « Atraxa (copie) » (I-04), and
+ * tells the player: the copy's name on success, and why the copy failed
+ * otherwise (I-01).
  *
  * A deck deleted from another tab or device cannot be copied, and the page
  * that still shows it is out of date. This hook owns that rule; each page
@@ -21,6 +22,7 @@ import {
   useDeckFailureReport,
 } from "@/hooks/useDeckFailureReport";
 import { useToastStore } from "@/hooks/useToast";
+import { copyDeckName } from "@/lib/deck/deck-name";
 import { deckRequestFailureOf } from "@/lib/deck/deck-request-failure";
 import { useDeckStore } from "@/lib/deck/store";
 
@@ -35,8 +37,12 @@ export interface DeckDuplicationOptions {
 }
 
 /**
- * Returns the duplicate action: copies the deck, announces the copy by name
- * and opens it in the builder.
+ * Returns the duplicate action: copies the deck under a name in the player's
+ * language, announces the copy by name and opens it in the builder.
+ *
+ * The copy's name is worded from the deck's name as the store holds it, and
+ * fitted to the deck-name limit (`copyDeckName`). A deck the store does not
+ * hold is copied without a name, so the server names it.
  *
  * A failure is logged with its raw error and told in a toast; the player stays
  * where they were. When the deck no longer exists, the page is also refreshed
@@ -57,8 +63,15 @@ export function useDeckDuplication({
 
   return useCallback(
     async (deckId: string) => {
+      const deckName = useDeckStore.getState().decks[deckId]?.name;
+      const copyName =
+        deckName === undefined
+          ? undefined
+          : copyDeckName(deckName, (name) =>
+              t("deckDuplicate.copyName", { name })
+            );
       try {
-        const copy = await duplicateDeck(deckId);
+        const copy = await duplicateDeck(deckId, copyName);
         addToast("success", t("deckDuplicate.succeeded", { name: copy.name }));
         router.push(`/builder/${copy.id}`);
         return true;

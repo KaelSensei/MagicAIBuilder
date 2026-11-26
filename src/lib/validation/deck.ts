@@ -1,4 +1,4 @@
-/** Zod schemas for deck requests: card ids, pairing types, deck names, and the patch body. */
+/** Zod schemas for deck requests: card ids, pairing types, deck names, and the patch and duplicate bodies. */
 import { z } from "zod";
 import { DECK_NAME_MAX_LENGTH } from "@/lib/deck/deck-name";
 import { ALL_FORMATS } from "@/lib/deck/formats";
@@ -63,6 +63,16 @@ export function commandZoneFieldsRefusal(fields: readonly string[]): string {
  * characters. The builder's name field holds the same limit.
  */
 export const deckNameSchema = z.string().min(1).max(DECK_NAME_MAX_LENGTH);
+
+/**
+ * Body of `POST /api/decks/[id]/duplicate`: the copy's name, worded in the
+ * player's language by the page (I-04), under the rename's rule. Without a
+ * name the route names the copy itself, so a client that sends none keeps
+ * working; an unknown key is dropped.
+ */
+export const duplicateDeckSchema = z.object({
+  name: deckNameSchema.optional(),
+});
 
 /**
  * Body of `PATCH /api/decks/[id]`: the deck's metadata. The command-zone
