@@ -123,6 +123,26 @@ describe("fetchCard", () => {
       status: null,
     });
   });
+
+  it("sends no further fill while Scryfall's 429 block runs, failing it with status 429", async () => {
+    let requests = 0;
+    server.use(
+      http.get("*/cards/:id", () => {
+        requests += 1;
+        return HttpResponse.json(
+          { object: "error", code: "rate_limited", status: 429 },
+          { status: 429 }
+        );
+      })
+    );
+    await fetchCard(BOLT.id);
+
+    await expect(fetchCard(ANOTHER_ID)).resolves.toEqual({
+      kind: "failed",
+      status: 429,
+    });
+    expect(requests).toBe(1);
+  });
 });
 
 describe("fetchSearchPage", () => {

@@ -3,11 +3,13 @@
  *
  * Requests go through `httpGet` (timeout, the app's User-Agent and an Accept
  * header, which Scryfall requires) and wait their turn in the runtime's Scryfall
- * queue. A body is returned only after it passes the shape check, so nothing
- * but a Scryfall card or list can reach the cache.
+ * queue. A 429 blocks that queue, so while the block runs a fill is not sent and
+ * fails with status 429. A body is returned only after it passes the shape
+ * check, so nothing but a Scryfall card or list can reach the cache.
  */
 import "server-only";
 import { httpGet, HttpStatusError } from "@/lib/http";
+import { ScryfallApiError } from "./api-error";
 import { isScryfallCard, isScryfallSearchResponse } from "./guards";
 import { scheduleScryfallRequest } from "./request-queue";
 import { SCRYFALL_API } from "./constants";
@@ -24,17 +26,27 @@ export type UpstreamResult<T> =
   | { readonly kind: "not_found" }
   | { readonly kind: "failed"; readonly status: number | null };
 
+/**
+ * What a failed request tells a cache route. Scryfall's 404 is no such card.
+ * Any other HTTP status, or the queue's refusal during a 429 block (a
+ * `ScryfallApiError` of status 429), is a failure carrying that status; a
+ * network failure or a timeout carries none.
+ */
+function failureOf(error: unknown): UpstreamResult<never> {
+  const status =
+    error instanceof HttpStatusError || error instanceof ScryfallApiError
+      ? error.status
+      : null;
+  return status === 404 ? { kind: "not_found" } : { kind: "failed", status };
+}
+
 async function getJson(url: string): Promise<UpstreamResult<unknown>> {
   try {
     const response = await scheduleScryfallRequest(url, () => httpGet(url));
     const data: unknown = await response.json();
     return { kind: "found", data };
   } catch (error) {
-    if (!(error instanceof HttpStatusError))
-      return { kind: "failed", status: null };
-    return error.status === 404
-      ? { kind: "not_found" }
-      : { kind: "failed", status: error.status };
+    return failureOf(error);
   }
 }
 
