@@ -1070,6 +1070,9 @@
     "budgetFailed": "Impossible d’enregistrer le budget du deck. Réessayez.",
     "cardRemovalFailed": "Impossible de retirer la carte. Réessayez."
   },
+  "undo": {
+    "openOriginalDeck": "Ouvrez le deck d’origine avant de réessayer d’annuler."
+  },
   "format": {
     "name": {
       "commander": "Commander",

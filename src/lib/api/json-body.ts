@@ -31,14 +31,43 @@ export async function readJsonBody(request: Request): Promise<JsonBody> {
   try {
     return { ok: true, value: await request.json() };
   } catch {
-    return {
-      ok: false,
-      response: NextResponse.json(
-        { error: "Malformed request body" },
-        { status: 400 }
-      ),
-    };
+    return malformedBody();
   }
+}
+
+/**
+ * Reads a JSON request body that the client may leave out.
+ *
+ * An empty body reads as `undefined` rather than the 400 `readJsonBody`
+ * answers, so a route that gains an optional body keeps answering the clients
+ * that send none. A body that is sent must still be JSON.
+ *
+ * @param request Incoming request whose body, when it has one, should be JSON.
+ * @returns The parsed value, `undefined` for an empty body, or a 400 response
+ *   to return unchanged.
+ */
+export async function readOptionalJsonBody(
+  request: Request
+): Promise<JsonBody> {
+  try {
+    const text = await request.text();
+    if (text === "") return { ok: true, value: undefined };
+    const value: unknown = JSON.parse(text);
+    return { ok: true, value };
+  } catch {
+    return malformedBody();
+  }
+}
+
+/** The 400 both readers answer for a body that is not JSON. */
+function malformedBody(): JsonBody {
+  return {
+    ok: false,
+    response: NextResponse.json(
+      { error: "Malformed request body" },
+      { status: 400 }
+    ),
+  };
 }
 
 /**

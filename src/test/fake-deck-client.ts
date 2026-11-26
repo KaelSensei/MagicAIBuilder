@@ -122,6 +122,8 @@ const deckFieldsSchema = z.looseObject({
 });
 
 const createDeckBodySchema = deckFieldsSchema.extend({ name: z.string() });
+/** The duplicate body: the copy's name, when the client sends one (I-04). */
+const duplicateBodySchema = z.object({ name: z.string().optional() });
 /**
  * A command field on the deck PATCH answers 400, as the server does: the
  * command zone changes only through `PATCH …/command-zone`.
@@ -281,8 +283,10 @@ export function deckApiHandlers(client: DeckApiOperations): HttpHandler[] {
     http.delete<DeckParams>(DECK, ({ params }) =>
       answer(() => client.deleteDeck(params.deckId))
     ),
-    http.post<DeckParams>(`${DECK}/duplicate`, ({ params }) =>
-      answer(() => client.duplicateDeck(params.deckId))
+    http.post<DeckParams>(`${DECK}/duplicate`, ({ request, params }) =>
+      answerBody(request, duplicateBodySchema, ({ name }) =>
+        client.duplicateDeck(params.deckId, name)
+      )
     ),
     http.post<DeckParams>(CARDS, ({ request, params }) =>
       answerBody(

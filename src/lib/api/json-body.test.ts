@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { readJsonBody, readRecord } from "./json-body";
+import { readJsonBody, readOptionalJsonBody, readRecord } from "./json-body";
 
 /**
  * The distinction this helper exists to preserve: a body the server could not
@@ -54,6 +54,41 @@ describe("readJsonBody", () => {
     const result = await readJsonBody(bodyOf("[1,2,3]"));
 
     expect(result.ok && result.value).toEqual([1, 2, 3]);
+  });
+});
+
+/*
+ * A route that gains an optional body must keep answering the clients that
+ * send none, as `POST /api/decks/[id]/duplicate` did when it learned to take
+ * the copy's name (I-04).
+ */
+describe("readOptionalJsonBody", () => {
+  it("reads an empty body as no value", async () => {
+    const result = await readOptionalJsonBody(bodyOf(""));
+
+    expect(result).toEqual({ ok: true, value: undefined });
+  });
+
+  it("reads a request sent without a body as no value", async () => {
+    const result = await readOptionalJsonBody(
+      new Request("http://localhost/api/test", { method: "POST" })
+    );
+
+    expect(result).toEqual({ ok: true, value: undefined });
+  });
+
+  it("returns the parsed value for valid JSON", async () => {
+    const result = await readOptionalJsonBody(bodyOf('{"name":"Atraxa"}'));
+
+    expect(result).toEqual({ ok: true, value: { name: "Atraxa" } });
+  });
+
+  it("answers 400 for a body that is sent but is not JSON", async () => {
+    const result = await readOptionalJsonBody(bodyOf('{"name":"Atra'));
+    const payload = result.ok === false ? await result.response.json() : null;
+
+    expect(result.ok === false && result.response.status).toBe(400);
+    expect(payload).toEqual({ error: "Malformed request body" });
   });
 });
 
