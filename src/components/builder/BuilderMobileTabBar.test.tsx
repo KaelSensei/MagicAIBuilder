@@ -39,9 +39,9 @@ describe("BuilderMobileTabBar", () => {
   });
 
   // Design audit S3: a 2 px bar on top of the active tab marks it without
-  // colour alone, every tab is a 48 px target, and the bar pads itself by the
-  // iOS home indicator's inset.
-  it("marks the active tab with a top bar and clears the home indicator", () => {
+  // colour alone, and every tab is a 48 px target. The safe-area padding only
+  // takes effect once the viewport sets viewport-fit=cover.
+  it("marks the active tab with a top bar and pads the bar by the safe-area inset", () => {
     renderWithIntl(
       <BuilderMobileTabBar activePanel="deck" onSelect={vi.fn()} />
     );

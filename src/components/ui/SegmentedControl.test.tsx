@@ -156,6 +156,54 @@ describe("SegmentedControl", () => {
     );
   });
 
+  // Choosing an option must not change the track's width: the weight stays the same.
+  it("gives every option the same weight, chosen or not", () => {
+    renderViews("grid");
+
+    for (const option of screen.getAllByRole("button")) {
+      expect(option).toHaveClass("font-medium");
+      expect(option.className).not.toContain("data-[state=on]:font-");
+    }
+  });
+
+  it("keeps an icon-only option a square of its target, with no side padding", () => {
+    render(
+      <SegmentedControl
+        aria-label="Layout"
+        options={[
+          { value: "list", label: "List view", icon: "L", hideLabel: true },
+          { value: "grid", label: "Grid view", icon: "G", hideLabel: true },
+        ]}
+        value="list"
+        onChange={vi.fn()}
+        size="md"
+      />
+    );
+
+    for (const option of screen.getAllByRole("button")) {
+      expect(option).toHaveClass("min-h-8", "min-w-8", "px-0");
+    }
+  });
+
+  // The builder's search panel can be 220 px wide: three French tabs must still fit.
+  it("pads the options of a full-width track lightly, so long labels fit a narrow panel", () => {
+    render(
+      <SegmentedControl
+        aria-label="Layout"
+        options={VIEWS}
+        value="list"
+        onChange={vi.fn()}
+        size="md"
+        fullWidth
+      />
+    );
+
+    for (const option of screen.getAllByRole("button")) {
+      expect(option).toHaveClass("flex-1", "px-1");
+      expect(option).not.toHaveClass("px-3");
+    }
+  });
+
   // WCAG 2.2 SC 2.5.8 asks for 24 px; the control aims for 28 px and more.
   it.each(TARGETS)(
     "gives every option a target of at least 28 px at size $size",

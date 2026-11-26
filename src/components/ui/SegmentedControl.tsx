@@ -87,14 +87,40 @@ const TRACK_CLASS_NAME =
 /**
  * An option at rest and, through `data-state="on"`, chosen. The ring is the
  * chosen marker, never a focus style: focus is the base layer's outline.
+ * Every option has the same weight, chosen or not, so choosing one never
+ * changes the track's width.
  */
 const OPTION_CLASS_NAME =
-  "inline-flex items-center justify-center gap-1.5 rounded-[var(--lumen-radius-pill)] text-xs text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)] data-[state=on]:bg-[var(--surface)] data-[state=on]:font-medium data-[state=on]:text-[var(--text-primary)] data-[state=on]:shadow-[var(--lumen-shadow-sm)] data-[state=on]:ring-1 data-[state=on]:ring-inset data-[state=on]:ring-[var(--border)]";
+  "inline-flex items-center justify-center gap-1.5 rounded-[var(--lumen-radius-pill)] text-xs font-medium text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)] data-[state=on]:bg-[var(--surface)] data-[state=on]:text-[var(--text-primary)] data-[state=on]:shadow-[var(--lumen-shadow-sm)] data-[state=on]:ring-1 data-[state=on]:ring-inset data-[state=on]:ring-[var(--border)]";
 
-const SIZE_CLASS_NAME: Readonly<Record<SegmentedControlSize, string>> = {
-  sm: "min-h-7 min-w-7 px-2",
-  md: "min-h-8 min-w-8 px-3",
+/** The minimum target of an option, by size: 28 px and 32 px. */
+const TARGET_CLASS_NAME: Readonly<Record<SegmentedControlSize, string>> = {
+  sm: "min-h-7 min-w-7",
+  md: "min-h-8 min-w-8",
 };
+
+/** The side padding of an option whose label shows, in a track sized to its content. */
+const LABEL_PADDING_CLASS_NAME: Readonly<Record<SegmentedControlSize, string>> =
+  {
+    sm: "px-2",
+    md: "px-3",
+  };
+
+/**
+ * The side padding of an option: none for an icon-only option, which stays a
+ * square of its minimum target; `px-1` in a full-width track, whose options
+ * share a width that may be narrow (the builder's search panel can be 220 px
+ * wide, and « Par couleur » must still fit); otherwise the size's padding.
+ */
+function optionPadding(
+  option: { readonly hideLabel?: boolean },
+  size: SegmentedControlSize,
+  fullWidth: boolean
+): string {
+  if (option.hideLabel) return "px-0";
+  if (fullWidth) return "px-1";
+  return LABEL_PADDING_CLASS_NAME[size];
+}
 
 /**
  * A named group of toggle buttons, one of them chosen: a `fieldset`, whose
@@ -143,7 +169,8 @@ export function SegmentedControl<T extends string>({
             onClick={() => onChange(option.value)}
             className={cn(
               OPTION_CLASS_NAME,
-              SIZE_CLASS_NAME[size],
+              TARGET_CLASS_NAME[size],
+              optionPadding(option, size, fullWidth),
               fullWidth && "flex-1"
             )}
           >

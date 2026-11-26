@@ -36,10 +36,13 @@ export interface BuilderMobileTabBarProps {
  * Bottom tab bar that picks the one builder panel visible below `lg`.
  * From `lg` up the three panels sit side by side and the bar is hidden.
  *
- * The active tab is pressed for screen readers (WCAG 2.2 SC 4.1.2) and
+ * The active tab is pressed for screen readers (WCAG 2.2 SC 4.1.2,
+ * https://www.w3.org/TR/WCAG22/#name-role-value, read 2026-11-26) and
  * carries a 2 px bar on top, so it does not rely on its fill colour alone
- * (SC 1.4.1). Each tab is at least 48 px tall, and the bar pads itself by the
- * iOS home indicator's inset (design audit S3, 2026-11-25).
+ * (SC 1.4.1, https://www.w3.org/TR/WCAG22/#use-of-color). Each tab is at
+ * least 48 px tall (design audit S3, 2026-11-25). The bar also pads itself by
+ * `env(safe-area-inset-bottom)`, which is 0 until the root viewport sets
+ * `viewport-fit=cover`; the deck summary bar also sits below it on phones.
  */
 export function BuilderMobileTabBar({
   activePanel,
