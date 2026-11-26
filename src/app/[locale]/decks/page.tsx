@@ -3,7 +3,6 @@
 import {
   useCallback,
   useEffect,
-  useId,
   useMemo,
   useState,
   type ReactNode,
@@ -13,23 +12,14 @@ import { useInitContext } from "@/components/providers/InitProvider";
 import { useBoundedSession } from "@/hooks/useBoundedSession";
 import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
-import {
-  AlertTriangle,
-  Layers,
-  Loader2,
-  Plus,
-  RefreshCw,
-  Search,
-  Sparkles,
-  Upload,
-} from "lucide-react";
+import { AlertTriangle, Loader2, Plus, RefreshCw, Search } from "lucide-react";
 import { DeckWizard } from "@/components/deck/DeckWizard";
+import { EmptyLibraryPanel } from "@/components/deck/EmptyLibraryPanel";
 import { HomeDeckCard } from "@/components/deck/HomeDeckCard";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { IDLE_HEADER_DECK_ACTIONS } from "@/components/layout/header-deck-actions-state";
 import { useImportIntoNewDeck } from "@/components/layout/use-import-into-new-deck";
-import { Button } from "@/components/ui/Button";
 import { useDeckStore } from "@/lib/deck/store";
 import { useDeckCreateFailureReport } from "@/hooks/useDeckFailureReport";
 import { useDeckDeletion } from "@/hooks/useDeckDeletion";
@@ -528,84 +518,5 @@ function LoadFailedPanel({
         {t("home.retry")}
       </button>
     </motion.div>
-  );
-}
-
-interface EmptyLibraryPanelProps {
-  /** The page's "Create Deck": a deck in the format picked on the page. */
-  readonly onCreate: () => void;
-  readonly isCreating: boolean;
-  /** The header's import: a dated deck, then the header's import dialog on it. */
-  readonly onImport: () => void;
-  readonly isImporting: boolean;
-  readonly onOpenWizard: () => void;
-}
-
-/**
- * The library holds no deck: it says so, and offers the three ways to start
- * that the toolbar and the header already offer, "Create Deck" first (I-13
- * AC-13-05, design audit S11). "Import a decklist" runs the header's own
- * import, so the header's one import dialog opens and gives focus back to the
- * header's "Import" when it closes.
- */
-function EmptyLibraryPanel({
-  onCreate,
-  isCreating,
-  onImport,
-  isImporting,
-  onOpenWizard,
-}: EmptyLibraryPanelProps) {
-  const t = useTranslations("deck");
-  const headingId = useId();
-  return (
-    <motion.section
-      aria-labelledby={headingId}
-      className="flex flex-wrap items-center justify-center gap-3 py-24 text-center"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-    >
-      <div className="flex w-full flex-col items-center">
-        <Layers className="mb-4 h-12 w-12 text-[var(--accent-text)] opacity-60" />
-        <h2
-          id={headingId}
-          className="mb-2 text-lg font-semibold text-[var(--text-primary)]"
-        >
-          {t("home.startBuilding")}
-        </h2>
-        <p className="mb-3 max-w-sm text-sm text-[var(--text-secondary)]">
-          {t("home.startBuildingDescription")}
-        </p>
-      </div>
-      <button
-        type="button"
-        onClick={onCreate}
-        disabled={isCreating}
-        className="flex items-center gap-2 rounded-[var(--lumen-radius-pill)] bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white shadow-[var(--lumen-shadow-sm)] transition-colors hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
-      >
-        {isCreating ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
-        ) : (
-          <Plus className="h-4 w-4" />
-        )}
-        {t("home.createDeck")}
-      </button>
-      <Button
-        variant="secondary"
-        size="lg"
-        onClick={onImport}
-        disabled={isImporting}
-      >
-        {isImporting ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
-        ) : (
-          <Upload className="h-4 w-4" />
-        )}
-        {t("home.importDeck")}
-      </Button>
-      <Button variant="secondary" size="lg" onClick={onOpenWizard}>
-        <Sparkles className="h-4 w-4" />
-        {t("controls.buildWithAI")}
-      </Button>
-    </motion.section>
   );
 }
