@@ -2,9 +2,10 @@
  * One queue per runtime for every request the app sends to api.scryfall.com,
  * paced to Scryfall's published limits, and stopped while a 429 block runs.
  *
- * Card catalog context. The Scryfall client (`client.ts`), the server's cache
- * fills (`server-fetch.ts`) and the bulk card source send every API request
- * through it. In the browser it paces one visitor; on the server it paces one
+ * Card catalog context. The Scryfall client (`client.ts`), card rulings
+ * (`rulings.ts`), the server's cache fills (`server-fetch.ts`) and the bulk
+ * card source send every API request through it. In the browser it paces one
+ * visitor; on the server it paces one
  * function instance, shared by every visitor that instance serves, so the
  * shared cache's fills and the collection lookups wait in the same line.
  *
@@ -26,6 +27,12 @@
  * settles as a 429 until the block ends, the queue sends nothing. Not
  * responsible for retrying: the 429 reaches its caller as a failed request,
  * and so does every request the block refuses.
+ *
+ * Only a 429 the queue can see starts a block: a request that resolves to a
+ * `Response` of status 429, or rejects with an error carrying status 429
+ * (`HttpStatusError`). The bulk card source's own 429 does not start one yet:
+ * its request resolves to the source's own answer, not the `Response`, so it
+ * pauses that source alone (a listed follow-up).
  *
  * @module scryfall/request-queue
  */
@@ -102,6 +109,11 @@ export class ScryfallBlockedError extends ScryfallApiError {
 /**
  * The time a queue reads and the waits it takes: its only contact with real
  * time, so a test can drive the spacing without timers or real waiting.
+ *
+ * A 429 block ends at a time read from `now`, which is wall-clock time on the
+ * default clock: a clock step, such as an NTP correction, lengthens or
+ * shortens a running block. The risk is accepted: a step is rare, and a block
+ * lasts 120 seconds at most.
  */
 export interface QueueClock {
   /** The current time in milliseconds, on the same scale as `Date.now()`. */
@@ -155,6 +167,13 @@ function statusOf(settled: unknown): number | null {
  * seconds: read as it stands it would end the block at once, so the 429 would
  * remove the protection instead of starting it. A failure such as
  * `HttpStatusError` carries no headers, so it gets 30 seconds.
+ *
+ * In the browser the header is never readable, so a tab always blocks for 30
+ * seconds. Scryfall answers cross-origin, `Retry-After` is not a
+ * CORS-safelisted response header, and Scryfall sends no
+ * `Access-Control-Expose-Headers` (checked on a 200 from api.scryfall.com on
+ * 2026-11-26; a 429 answer was not checked), so `headers.get` returns `null`
+ * there. The parsing serves the server's own calls through `client.ts`.
  *
  * @param settled - what the request resolved to, or rejected with
  */
@@ -279,8 +298,8 @@ export function createScryfallQueue(
 let runtimeQueue = createScryfallQueue();
 
 /**
- * Rebuilds the runtime's queue on `clock`, forgetting its line and its last
- * start times.
+ * Rebuilds the runtime's queue on `clock`, forgetting its line, its last
+ * start times and any 429 block.
  *
  * The seam the Vitest setup (`src/test/unpaced-scryfall-queue.ts`) uses to put
  * the runtime's queue on a clock that never waits, so suites that call the
@@ -306,6 +325,10 @@ export function resetScryfallQueue(): void {
 /**
  * Runs one Scryfall request in its turn in the runtime's queue, or refuses it
  * while the runtime's 429 block runs.
+ *
+ * The runtime is one browser tab or one server function instance. A server
+ * instance's block protects that instance only: other instances keep their
+ * own line and block, and know nothing of this one's 429.
  *
  * @param url - the absolute api.scryfall.com URL the request asks for
  * @param request - starts the request; called once, when its turn comes

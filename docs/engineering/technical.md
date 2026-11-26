@@ -115,7 +115,8 @@ an account, and the deck list's sort and grouping preferences are kept in `local
 
 Every request to `api.scryfall.com`, from the browser or the server, waits its turn in one queue
 per runtime: `scheduleScryfallRequest` in `src/lib/scryfall/request-queue.ts` starts one request
-at a time, at least 100 ms apart. Scryfall requires a `User-Agent` and an `Accept` header on every
+at a time, at least 100 ms apart. That includes card rulings (`src/lib/scryfall/rulings.ts`) and
+the set list of the set autocomplete (`getAllSets` in `src/lib/scryfall/client.ts`). Scryfall requires a `User-Agent` and an `Accept` header on every
 request ([API documentation](https://scryfall.com/docs/api), read 2026-11-10). The server sends
 the app's one `USER_AGENT` (`src/lib/http.ts`); the browser keeps its own, as Scryfall asks of
 on-page JavaScript. A request that has not answered after 10 seconds is aborted
@@ -130,12 +131,19 @@ request to one of those endpoints from the previous request to the same endpoint
 
 A 429 answer "will result in your access being limited for 30 seconds", and "it is not acceptable
 to ignore HTTP 429 responses" ([rate limits](https://scryfall.com/docs/api/rate-limits), read
-2026-11-26). After any 429, the queue blocks: until the end of the block it sends nothing, and
-every request that reaches it, or already waits in it, fails at once with a `ScryfallApiError` of
-status 429, which the search panel shows as "unavailable". The block lasts 30 seconds, or the
-`Retry-After` delay in seconds when Scryfall sends one, capped at 120 seconds
-(`RATE_LIMIT_BLOCK_MS`, `MAX_RETRY_AFTER_MS`). Each runtime has its own block: a browser tab
-protects itself, and a server function instance protects that instance only.
+2026-11-26). After a 429 the queue sees, the queue blocks: until the end of the block it sends
+nothing, and every request that reaches it, or already waits in it, fails at once with a
+`ScryfallApiError` of status 429, which the search panel shows as "unavailable". The queue sees a
+429 that a request resolves to (a `Response`) or rejects with (`HttpStatusError`). The bulk card
+source's own 429 does not start a block yet: it pauses that source alone, until a follow-up lets
+the queue see its index `Response`. The block lasts 30 seconds, or the `Retry-After` delay in whole
+seconds when one is sent, capped at 120 seconds (`RATE_LIMIT_BLOCK_MS`, `MAX_RETRY_AFTER_MS`); a
+delay of 0 also gives 30 seconds, since it would otherwise end the block at once. A browser tab
+cannot read `Retry-After` at all: it is not a CORS-safelisted response header, and Scryfall sends no
+`Access-Control-Expose-Headers` (checked 2026-11-26), so a tab always blocks for 30 seconds. Each
+runtime has its own block: a browser tab protects itself, and a server function instance protects
+that instance only. The queue logs each block once, at `warn`; the callers log a request it
+refused at `info`.
 
 TanStack Query's deduplication prevents duplicate concurrent requests. `getCardById()` reads the
 shared server cache first (see [Scryfall API Caching](#scryfall-api-caching)).
