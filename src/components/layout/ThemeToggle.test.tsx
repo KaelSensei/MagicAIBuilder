@@ -26,4 +26,19 @@ describe("ThemeToggle", () => {
       "true"
     );
   });
+
+  // Design audit S3: the chosen icon only changed colour, 1.18:1 from the
+  // others. It now carries the segmented control's marker, `data-state="on"`.
+  it("marks the system choice, and only it, when the player follows the system", () => {
+    useThemeStore.setState({ theme: "dark", preference: "system" });
+
+    renderWithIntl(<ThemeToggle />);
+
+    const system = screen.getByRole("button", { name: "Use system theme" });
+    expect(screen.getAllByRole("button", { pressed: true })).toEqual([system]);
+    expect(system).toHaveAttribute("data-state", "on");
+    expect(
+      screen.getByRole("button", { name: "Use dark theme" })
+    ).toHaveAttribute("data-state", "off");
+  });
 });

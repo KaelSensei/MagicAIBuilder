@@ -255,6 +255,7 @@
     "title": "Importer une liste de deck",
     "tabText": "Texte brut",
     "tabUrl": "Depuis une URL",
+    "source": "Source de l’import",
     "description": "Collez une liste de deck en texte brut. Utilisez <code>1 Nom de carte</code> par ligne. Ajoutez un en-tête <code>Commander</code> pour définir votre commandant.",
     "noDeckSelected": "Aucun deck sélectionné. Créez ou ouvrez un deck d’abord.",
     "parsing": "Analyse de la liste...",

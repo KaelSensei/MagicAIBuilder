@@ -67,7 +67,8 @@
   },
   "viewMode": {
     "gridView": "Grid view",
-    "listView": "List view"
+    "listView": "List view",
+    "layout": "Layout"
   },
   "empty": {
     "title": "Your collection is empty.",

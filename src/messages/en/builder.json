@@ -101,7 +101,9 @@
     "listView": "List view",
     "gridView": "Grid view",
     "cardsPerRow": "{count} cards per row",
-    "toolbar": "Deck view"
+    "toolbar": "Deck view",
+    "layout": "Layout",
+    "density": "Cards per row"
   },
   "actions": {
     "removeCommander": "Remove commander",
@@ -267,7 +269,8 @@
   "searchModes": {
     "name": "Name",
     "set": "By Set",
-    "color": "By Color"
+    "color": "By Color",
+    "label": "Search mode"
   },
   "searchToggles": {
     "commander": "Commander",

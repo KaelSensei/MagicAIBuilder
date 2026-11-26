@@ -100,8 +100,10 @@
   "viewMode": {
     "listView": "Vue liste",
     "gridView": "Vue grille",
-    "cardsPerRow": "{count} cartes par rangée",
-    "toolbar": "Affichage du deck"
+    "cardsPerRow": "{count} cartes par ligne",
+    "toolbar": "Affichage du deck",
+    "layout": "Disposition",
+    "density": "Cartes par ligne"
   },
   "actions": {
     "removeCommander": "Retirer le commandant",
@@ -267,7 +269,8 @@
   "searchModes": {
     "name": "Nom",
     "set": "Par édition",
-    "color": "Par couleur"
+    "color": "Par couleur",
+    "label": "Mode de recherche"
   },
   "searchToggles": {
     "commander": "Commandant",
