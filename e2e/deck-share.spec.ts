@@ -12,6 +12,7 @@
  *
  * @module e2e/deck-share
  */
+import type { APIRequestContext } from "@playwright/test";
 import { test, expect } from "./fixtures";
 import {
   fixtureCards,
@@ -29,6 +30,26 @@ const SHARE_DECK: DeckSeed = {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
+}
+
+/**
+ * Opens a share link for the deck through the API, as its owner.
+ *
+ * @returns the link's token
+ */
+async function shareTokenFor(
+  request: APIRequestContext,
+  deckId: string
+): Promise<string> {
+  const created = await request.post(`/api/decks/${deckId}/share`);
+  expect(created.ok(), await created.text()).toBe(true);
+  const body: unknown = await created.json();
+  const token =
+    isRecord(body) && typeof body.shareToken === "string"
+      ? body.shareToken
+      : "";
+  expect(token).not.toBe("");
+  return token;
 }
 
 test.describe("Deck sharing with a signed-out visitor", () => {
@@ -82,14 +103,7 @@ test.describe("Deck sharing with a signed-out visitor", () => {
   }) => {
     const deckId = await seededDeck.create(SHARE_DECK);
 
-    const created = await request.post(`/api/decks/${deckId}/share`);
-    expect(created.ok(), await created.text()).toBe(true);
-    const body: unknown = await created.json();
-    const token =
-      isRecord(body) && typeof body.shareToken === "string"
-        ? body.shareToken
-        : "";
-    expect(token).not.toBe("");
+    const token = await shareTokenFor(request, deckId);
 
     await suppressOnboarding(page);
     await page.goto(`/share/${token}`);
