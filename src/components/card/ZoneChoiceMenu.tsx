@@ -4,20 +4,27 @@
  *
  * Card catalog, search results. Rendered on `document.body` so the result
  * grid's overflow cannot clip it. Arrow keys move between the zones
- * (`zone-menu-focus.ts`), Enter picks the focused one, and Escape closes the
- * menu.
+ * (`zone-menu-focus.ts`), Enter picks the focused one, Escape closes the
+ * menu, and Tab closes it and moves on, as a menu does.
  *
  * Not responsible for: the primary "add to the main deck" button. That sits
  * on {@link SearchZoneMenu}.
  *
  * @module card/ZoneChoiceMenu
  */
-import { useEffect, useLayoutEffect, useRef, type RefObject } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type RefObject,
+} from "react";
 import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
 import type { DeckZone } from "@/lib/deck/types";
 import { placeZoneMenu } from "@/components/card/zone-menu-place";
 import {
+  focusTabStopAfter,
   menuItems,
   moveZoneFocus,
   onZoneMenuKeyDown,
@@ -131,13 +138,43 @@ function useDismissZoneMenu(
   }, [menuRef, onClose, triggerRef]);
 }
 
+/**
+ * Tab and Shift+Tab move focus out of the menu and close it, as the WAI-ARIA
+ * menu pattern asks (APG, menu and menubar pattern, Keyboard Interaction, "Tab
+ * and Shift + Tab", https://www.w3.org/WAI/ARIA/apg/patterns/menubar/, read
+ * 2026-11-25). For the keyboard the menu sits right after its trigger, so Tab
+ * lands on the tab stop after the trigger and Shift+Tab on the trigger itself,
+ * as in the APG's own menu button example.
+ *
+ * @param event - A key event bubbling from the menu or one of its items
+ * @param trigger - The button that opened the menu
+ * @param onClose - Closes the menu; it puts focus back on the trigger
+ */
+function leaveZoneMenuOnTab(
+  event: ReactKeyboardEvent<HTMLDivElement>,
+  trigger: HTMLElement | null,
+  onClose: () => void
+): void {
+  if (event.key !== "Tab") return;
+  event.preventDefault();
+  event.stopPropagation();
+  // onClose focuses the trigger, so the move on to the next tab stop follows it.
+  onClose();
+  if (!trigger) return;
+  if (event.shiftKey || !focusTabStopAfter(trigger)) trigger.focus();
+}
+
 interface ZoneMenuItemsProps {
   readonly cardName: string;
   readonly zoneCounts?: Readonly<Record<DeckZone, number>>;
   readonly onChoose: (zone: DeckZone) => void;
 }
 
-/** One button per zone. The count is every card already in that zone, not copies of this result. */
+/**
+ * One button per zone. The count is every card already in that zone, not copies of this result.
+ * No zone is a tab stop: the arrow keys move focus among them (roving focus) and Tab leaves the
+ * menu, as the WAI-ARIA menu pattern asks.
+ */
 function ZoneMenuItems({ cardName, zoneCounts, onChoose }: ZoneMenuItemsProps) {
   const t = useTranslations("card");
   return MENU_ZONES.map((zone) => {
@@ -153,6 +190,7 @@ function ZoneMenuItems({ cardName, zoneCounts, onChoose }: ZoneMenuItemsProps) {
         key={zone}
         type="button"
         role="menuitem"
+        tabIndex={-1}
         className="flex w-full items-center rounded-[var(--lumen-radius-md)] px-3 py-2 text-left text-sm text-[var(--text-primary)] hover:bg-[var(--accent-soft)] focus-visible:bg-[var(--accent-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
         aria-label={label}
         onClick={() => onChoose(zone)}
@@ -184,7 +222,7 @@ export function ZoneChoiceMenu({
   useDismissZoneMenu(menuRef, triggerRef, onClose);
 
   // tabIndex -1: the menu takes focus from a press on its edge, so the arrow
-  // keys keep working, yet Tab never stops on it; the items keep the tab stops.
+  // keys keep working, yet Tab never stops on it, nor on its items: Tab leaves.
   return createPortal(
     <div
       ref={menuRef}
@@ -192,7 +230,10 @@ export function ZoneChoiceMenu({
       role="menu"
       tabIndex={-1}
       aria-label={t("zoneMenu", { name: cardName })}
-      onKeyDown={(event) => onZoneMenuKeyDown(event, menuRef.current)}
+      onKeyDown={(event) => {
+        leaveZoneMenuOnTab(event, triggerRef.current, onClose);
+        onZoneMenuKeyDown(event, menuRef.current);
+      }}
       className="fixed z-[80] min-w-44 rounded-[var(--lumen-radius-lg)] outline-none border border-[var(--border)] bg-[var(--surface)] p-1 text-[var(--text-primary)] shadow-[var(--lumen-shadow-lg)]"
     >
       <ZoneMenuItems cardName={cardName} zoneCounts={zoneCounts} onChoose={onChoose} />
