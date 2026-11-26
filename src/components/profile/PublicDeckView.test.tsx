@@ -137,6 +137,33 @@ describe("PublicDeckView header in French", () => {
   });
 });
 
+// WCAG 2.2 SC 1.3.1 and 4.1.2 (I-04 accessibility bundle 4): the owner writes
+// the focused-feedback question in a text box, and a placeholder is no name.
+describe("PublicDeckView focused feedback request", () => {
+  const ownDeck: PublicDeck = { ...deck, isOwner: true };
+
+  it("names the owner's question field for a screen reader and keeps the prompt as its placeholder", () => {
+    renderWithIntl(<PublicDeckView deck={ownDeck} isSignedIn />);
+
+    expect(
+      screen.getByRole("textbox", { name: "Your question for other players" })
+    ).toHaveAttribute(
+      "placeholder",
+      "What would you like other players to help with?"
+    );
+  });
+
+  it("names the owner's question field in French", () => {
+    renderWithIntl(<PublicDeckView deck={ownDeck} isSignedIn />, {
+      locale: "fr",
+    });
+
+    expect(
+      screen.getByRole("textbox", { name: "Votre question aux autres joueurs" })
+    ).toBeInTheDocument();
+  });
+});
+
 // I-92: a visitor sees how current a public list is, from the stored dates only.
 describe("PublicDeckView dates", () => {
   beforeEach(() => {

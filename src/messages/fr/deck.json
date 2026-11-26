@@ -1020,6 +1020,7 @@
     "title": "Avis recherchés",
     "ownerHint": "Posez une question précise pour obtenir des réponses plus utiles.",
     "enable": "Afficher cette demande sur le deck public",
+    "questionLabel": "Votre question aux autres joueurs",
     "placeholder": "Sur quel point souhaitez-vous l'aide des autres joueurs ?",
     "save": "Enregistrer la demande",
     "saving": "Enregistrement…",

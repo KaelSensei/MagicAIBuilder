@@ -6,6 +6,7 @@ const labels = {
   title: "Feedback wanted",
   ownerHint: "Ask one focused question.",
   enable: "Show this request",
+  questionLabel: "Your question",
   placeholder: "What needs help?",
   save: "Save request",
   saving: "Saving…",
