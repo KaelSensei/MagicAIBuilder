@@ -24,6 +24,8 @@ On mobile devices or with `prefers-reduced-motion`, a clean 2D fallback is shown
 4. Name your deck and it will appear in the deck list
 5. Click the deck to open the builder
 
+Before your first deck, **My Decks** offers the three ways to start: **Create Deck**, **Import a decklist** and **Build with AI**. **Import a decklist** works like the header's **Import**: it creates a deck named after today's date and opens the import dialog on it.
+
 To delete the deck you are editing, press **Delete** in the builder's title bar and confirm in the dialog. If a change is still saving, the dialog waits for it first. The deck is deleted for good, and you land back on your deck list. A deck kept in this browser without an account has no Delete button.
 
 ### Format Rules
@@ -62,6 +64,7 @@ Under the three panels, the deck summary bar keeps the deck's figures in view wh
 - Use **By Set** to browse cards from a specific expansion
 - Use **By Color** to browse by color identity
 - Click **Show filters** to filter by CMC, price, color
+- When a search finds no card, the panel says what to try next: **Clear filters** while a filter narrows the name search, or a hint at the Scryfall search syntax with an example otherwise
 - **Quick add** (Ctrl+K, or ⌘K, or the Quick add button in the deck toolbar) is a second way to find a card. Type a name, a role such as ramp or removal (rampe or retrait in French), or switch to rules text with Alt+R. The Scryfall query is shown above the results. Enter adds to the main deck, Shift+Enter to the sideboard and Alt+Enter to considering, and the palette stays open so the next card can be added. When a commander is set, the search stays inside that commander's colours. The Name, By Set and By Color panel is unchanged and remains the search that opens with the builder.
 
 #### Adding Cards
@@ -439,6 +442,8 @@ The Collection Mode lets you track your physical MTG card collection so you can 
 3. Search for a card by name
 4. Set the quantity, condition, and whether it's foil
 5. Click **Add to Collection**
+
+While your collection is empty, the page says what it is for and offers **Add cards**, which opens the same dialog.
 
 **Conditions:** NM (Near Mint), LP (Lightly Played), MP (Moderately Played), HP (Heavily Played), DMG (Damaged)
 
