@@ -1113,12 +1113,9 @@
   },
   "src/components/search/SetAutocomplete.tsx": {
     "@typescript-eslint/consistent-type-assertions": {
-      "count": 2
-    },
-    "complexity": {
       "count": 1
     },
-    "max-lines": {
+    "complexity": {
       "count": 1
     },
     "max-lines-per-function": {

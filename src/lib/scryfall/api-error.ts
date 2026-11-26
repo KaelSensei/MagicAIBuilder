@@ -1,6 +1,8 @@
 /**
  * The error the browser's Scryfall client throws when api.scryfall.com answers
- * with a failure status.
+ * with a failure status. Its subclass `ScryfallBlockedError`
+ * (`request-queue.ts`) is thrown by the runtime's Scryfall queue, in the
+ * browser and on the server, when nothing was sent: a 429 block was running.
  *
  * Card catalog context. It carries the HTTP status so a caller can tell a
  * query Scryfall rejected from an outage without reading the message, as

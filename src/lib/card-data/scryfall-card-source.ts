@@ -7,17 +7,23 @@
  *   (https://scryfall.com/docs/api, "Required Headers", read 2026-11-10);
  * - a 429 means access is limited for 30 seconds
  *   (https://scryfall.com/docs/api/rate-limits, read 2026-11-10): the source then sends no
- *   request for {@link RATE_LIMIT_PAUSE_MS}, answering each call as rate limited instead.
+ *   request for {@link RATE_LIMIT_PAUSE_MS}, answering each call as rate limited instead;
+ * - the index request also waits in the runtime's Scryfall queue, so a 429 block that queue runs
+ *   for another caller answers it as rate limited too, until the block ends.
  *
  * The pause lives in the source instance, so the caller keeps one source for the life of the
- * process. Time is read from the injected clock only.
+ * process. Time is read from the injected clock only, except the end of a queue block, which is
+ * on the queue's clock.
  *
  * @module card-data/scryfall-card-source
  */
 import "server-only";
 import { USER_AGENT } from "@/lib/http";
 import { scryfallApiBaseUrl } from "@/lib/scryfall/api-base-url";
-import { scheduleScryfallRequest } from "@/lib/scryfall/request-queue";
+import {
+  ScryfallBlockedError,
+  scheduleScryfallRequest,
+} from "@/lib/scryfall/request-queue";
 import type { BulkFileDescriptor, SourceFailure } from "./bulk-file";
 import { parseBulkIndex } from "./bulk-index";
 import type { BulkIndexOutcome, CardSource } from "./card-source";
@@ -115,6 +121,18 @@ async function toIndexOutcome(response: Response): Promise<BulkIndexOutcome> {
 }
 
 /**
+ * The runtime queue's refusal during a 429 block, answered as the rate-limited
+ * refusal the source gives for its own 429; any other failure is rethrown.
+ */
+function refusedDuringBlock(error: unknown): Answer {
+  if (!(error instanceof ScryfallBlockedError)) throw error;
+  return {
+    kind: "refused",
+    reason: { kind: "rate_limited", retryAt: error.blockedUntil },
+  };
+}
+
+/**
  * Builds the Scryfall card source.
  *
  * @param options - the clock, and the API origin when not the configured one
@@ -162,7 +180,7 @@ export function createScryfallCardSource(
     const url = `${apiBaseUrl}/bulk-data`;
     const answer = await scheduleScryfallRequest(url, () =>
       get({ url, accept: INDEX_ACCEPT, timeoutMs: INDEX_TIMEOUT_MS })
-    );
+    ).catch(refusedDuringBlock);
     if (answer.kind === "refused")
       return { status: "failed", reason: answer.reason };
     return toIndexOutcome(answer.response);
