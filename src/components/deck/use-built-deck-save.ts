@@ -21,7 +21,7 @@
 import { useCallback, useState } from "react";
 import { countCopies } from "@/hooks/useAIDeckBuild";
 import type { BuildResult } from "@/hooks/useAIDeckBuild";
-import { useDeckStore } from "@/lib/deck/store";
+import { useDeckStore, type DeckStore } from "@/lib/deck/store";
 import { logger } from "@/lib/logger";
 import {
   collapseEntries,
@@ -110,6 +110,43 @@ function useImportProgress(): ImportProgress {
   return { importedCount, importTotal, start, setImportedCount };
 }
 
+/** The deck store's actions that fill a created deck, and the counter of its import. */
+interface DeckFill extends Pick<
+  DeckStore,
+  "setActiveDeck" | "setCommander" | "addDeckCard"
+> {
+  readonly progress: ImportProgress;
+}
+
+/**
+ * Fills a created deck: opens it, sets the build's commander, then imports its cards.
+ *
+ * @returns the copies the import could not add
+ * @throws what a store action throws; a commander that cannot be set and a card batch that fails
+ * are caught by `built-deck-import.ts` instead
+ */
+async function fillCreatedDeck(
+  deckId: string,
+  result: BuildResult,
+  { setActiveDeck, setCommander, addDeckCard, progress }: DeckFill
+): Promise<number> {
+  await setActiveDeck(deckId);
+
+  // Read the commander off the build result, not off the build hook's
+  // state: the caller's closure holds the render-time snapshot.
+  if (result.commander) {
+    await tryResolveCommander(result.commander, setCommander);
+  }
+
+  progress.start(countCopies(result.cards));
+  const { copiesNotAdded } = await importCardsInBatches(
+    collapseEntries(result.cards),
+    addDeckCard,
+    progress.setImportedCount
+  );
+  return copiesNotAdded;
+}
+
 /**
  * Holds the save step's progress and runs it.
  *
@@ -147,20 +184,12 @@ export function useBuiltDeckSave(
   };
 
   const fill = async (deckId: string, result: BuildResult): Promise<void> => {
-    await setActiveDeck(deckId);
-
-    // Read the commander off the build result, not off the build hook's
-    // state: the caller's closure holds the render-time snapshot.
-    if (result.commander) {
-      await tryResolveCommander(result.commander, setCommander);
-    }
-
-    startImport(countCopies(result.cards));
-    const { copiesNotAdded } = await importCardsInBatches(
-      collapseEntries(result.cards),
+    const copiesNotAdded = await fillCreatedDeck(deckId, result, {
+      setActiveDeck,
+      setCommander,
       addDeckCard,
-      progress.setImportedCount
-    );
+      progress,
+    });
 
     // An incomplete deck says so before its corrections: the player has cards to add by hand.
     if (copiesNotAdded > 0) {
