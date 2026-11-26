@@ -19,7 +19,7 @@ import {
   normalizeDeckBrief,
 } from "@/lib/ai/deck-brief";
 import { getCardCollection } from "@/lib/scryfall/client";
-import { ScryfallBlockedError } from "@/lib/scryfall/request-queue";
+import { logScryfallLookupFailure } from "@/lib/scryfall/log-lookup-failure";
 import {
   attachSuggestionEvidence,
   suggestionLookupNames,
@@ -497,28 +497,6 @@ function mockSuggestions(req: SuggestRequest): SuggestResponse {
   };
 }
 
-/**
- * Logs why the suggested cards could not be looked up on Scryfall. A lookup
- * the Scryfall queue refused during a 429 block goes to `info`: the queue
- * logged that block once at `warn`, and an error, which reaches Sentry, for
- * every suggestion made during it would repeat it. Any other failure stays an
- * error.
- */
-function logEvidenceUnavailable(error: unknown): void {
-  if (error instanceof ScryfallBlockedError) {
-    logger.info(
-      "Suggestion evidence not looked up during a Scryfall 429 block",
-      "POST /api/ai/suggest"
-    );
-    return;
-  }
-  logger.error(
-    "Suggestion evidence unavailable",
-    "POST /api/ai/suggest",
-    error
-  );
-}
-
 async function enrichSuggestionEvidence(
   result: SuggestResponse,
   req: SuggestRequest
@@ -532,7 +510,10 @@ async function enrichSuggestionEvidence(
     );
     cards = collection.data;
   } catch (error) {
-    logEvidenceUnavailable(error);
+    logScryfallLookupFailure(error, "POST /api/ai/suggest", {
+      blocked: "Suggestion evidence not looked up during a Scryfall 429 block",
+      failed: "Suggestion evidence unavailable",
+    });
   }
 
   // CR 903.5e: only the command zone's rulebreaker widens the colour fit.

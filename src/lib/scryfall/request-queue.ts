@@ -88,9 +88,10 @@ const LOG_CONTEXT = "Scryfall queue";
  *
  * A `ScryfallApiError` with status 429, so every caller reads it as the 429
  * Scryfall would have answered: the search panel says Scryfall is
- * unavailable. A caller that logs failures logs this one at `info`, since
- * the queue logs each block once at `warn`; the server's cache fill reports
- * it as `blocked` for that reason.
+ * unavailable. A caller that logs failures should log this one at `info`, as
+ * `logScryfallLookupFailure` does (`log-lookup-failure.ts`), since the queue
+ * logs each block once at `warn`; the server's cache fill reports it as
+ * `blocked` for that reason.
  */
 export class ScryfallBlockedError extends ScryfallApiError {
   /**
