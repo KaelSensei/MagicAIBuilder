@@ -58,13 +58,15 @@ export function DecksHomeControls({
     <div className="flex items-center gap-2">
       <div className="hidden items-center gap-2 sm:flex">
         {/*
-         * `md`: 32 px options on a 36 px track, level with the row's 36 px
-         * New Deck button and just under its 38 px sort select and wizard
-         * button; `sm` would leave a 32 px track among them.
+         * `md`: 32 px options; with the track's border, a 38 px switch level
+         * with the row's sort select and wizard button. The border keeps the
+         * track visible: its fill is the page's own `--background`, as on the
+         * Collection and import switches.
          */}
         <SegmentedControl
           aria-label={t("controls.viewMode")}
           size="md"
+          className="border border-[var(--border)]"
           options={[
             { value: "grid", label: t("controls.grid") },
             { value: "list", label: t("controls.list") },

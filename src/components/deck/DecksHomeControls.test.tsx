@@ -58,6 +58,21 @@ describe("the My Decks view switch", () => {
     expect(pressedViews(group)).toEqual(["Grid"]);
   });
 
+  // The labels stay visible (32 px `md` options with side padding), the track
+  // keeps its outline against the page, and the switch stays hidden on phones.
+  it("draws labelled 32 px options on an outlined track, hidden below the sm breakpoint", () => {
+    renderWithProviders(<ControlsHost />);
+
+    const group = screen.getByRole("group", { name: "Deck view" });
+
+    expect(group).toHaveClass("border", "border-[var(--border)]");
+    expect(group.parentElement).toHaveClass("hidden", "sm:flex");
+    for (const option of within(group).getAllByRole("button")) {
+      expect(option).toHaveClass("min-h-8", "px-3");
+      expect(option.querySelector(".sr-only")).toBeNull();
+    }
+  });
+
   it("asks for the list view when the player presses List, and shows List as the chosen view", async () => {
     const user = userEvent.setup();
     renderWithProviders(<ControlsHost />);
