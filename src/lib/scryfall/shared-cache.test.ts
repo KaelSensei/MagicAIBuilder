@@ -31,7 +31,9 @@ vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
   return stubPrisma(await importOriginal(), db.prisma);
 });
 
+import { SCRYFALL_API } from "./constants";
 import { LIGHTNING_BOLT_NAMED_RECORDED } from "./fixtures/e2e-stand-in-v1";
+import { scheduleScryfallRequest } from "./request-queue";
 import { fetchCard } from "./server-fetch";
 import {
   CARD_CACHE,
@@ -200,6 +202,28 @@ describe("readThrough on the card cache", () => {
       "Scryfall fill failed",
       "Shared Scryfall cache",
       { cache: "cards", status: 503 }
+    );
+  });
+
+  it("logs a fill the queue refuses during a 429 block at info, since the queue warned once for the block", async () => {
+    vi.spyOn(logger, "info").mockImplementation(() => undefined);
+    await scheduleScryfallRequest(
+      `${SCRYFALL_API}/cards/search?q=sol`,
+      async () => new Response(null, { status: 429 })
+    );
+    vi.mocked(logger.warn).mockClear();
+
+    const result = await read();
+
+    expect(result).toEqual({
+      outcome: { kind: "upstream_failed" },
+      dbFailed: false,
+    });
+    expect(logger.warn).not.toHaveBeenCalled();
+    expect(logger.info).toHaveBeenCalledWith(
+      "Scryfall fill not sent during a 429 block",
+      "Shared Scryfall cache",
+      { cache: "cards" }
     );
   });
 

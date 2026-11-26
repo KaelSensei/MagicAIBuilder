@@ -172,7 +172,10 @@ describe("a card search that failed for a reason that can pass", () => {
     expect(sentToScryfall).toEqual([QUERY, QUERY, QUERY]);
   });
 
-  it("is sent twice more when Scryfall answers too many requests (429)", async () => {
+  // The panel retries a 429 as it retries a 503, but the 429 starts the Scryfall queue's
+  // 30-second block (I-01): both retries are refused there, unsent, so Scryfall receives the
+  // search once and the player reads the same message.
+  it("is sent once when Scryfall answers too many requests (429): the queue refuses its retries", async () => {
     scryfallAnswers(
       () =>
         new HttpResponse(null, {
@@ -186,7 +189,7 @@ describe("a card search that failed for a reason that can pass", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(
       UNAVAILABLE_MESSAGE
     );
-    expect(sentToScryfall).toEqual([QUERY, QUERY, QUERY]);
+    expect(sentToScryfall).toEqual([QUERY]);
   });
 
   it("is sent twice more with Collection only on when Scryfall is unavailable", async () => {

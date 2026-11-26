@@ -3,13 +3,14 @@
  *
  * Requests go through `httpGet` (timeout, the app's User-Agent and an Accept
  * header, which Scryfall requires) and wait their turn in the runtime's Scryfall
- * queue. A body is returned only after it passes the shape check, so nothing
- * but a Scryfall card or list can reach the cache.
+ * queue. A 429 blocks that queue, so while the block runs a fill is not sent and
+ * comes back `blocked`. A body is returned only after it passes the shape
+ * check, so nothing but a Scryfall card or list can reach the cache.
  */
 import "server-only";
 import { httpGet, HttpStatusError } from "@/lib/http";
 import { isScryfallCard, isScryfallSearchResponse } from "./guards";
-import { scheduleScryfallRequest } from "./request-queue";
+import { ScryfallBlockedError, scheduleScryfallRequest } from "./request-queue";
 import { SCRYFALL_API } from "./constants";
 import type { SearchCacheKey } from "./shared-cache-keys";
 import {
@@ -18,11 +19,27 @@ import {
   type ScryfallSearchResponse,
 } from "./types";
 
-/** What Scryfall answered, reduced to what a cache route can act on. */
+/**
+ * What Scryfall answered, reduced to what a cache route can act on. `blocked`
+ * means nothing was sent: the runtime queue refused the request during a 429
+ * block, which the queue has already logged once.
+ */
 export type UpstreamResult<T> =
   | { readonly kind: "found"; readonly data: T }
   | { readonly kind: "not_found" }
-  | { readonly kind: "failed"; readonly status: number | null };
+  | { readonly kind: "failed"; readonly status: number | null }
+  | { readonly kind: "blocked" };
+
+/**
+ * What a failed request tells a cache route. The queue's refusal during a 429
+ * block is `blocked`. Scryfall's 404 is no such card. Any other HTTP status is
+ * a failure carrying that status; a network failure or a timeout carries none.
+ */
+function failureOf(error: unknown): UpstreamResult<never> {
+  if (error instanceof ScryfallBlockedError) return { kind: "blocked" };
+  const status = error instanceof HttpStatusError ? error.status : null;
+  return status === 404 ? { kind: "not_found" } : { kind: "failed", status };
+}
 
 async function getJson(url: string): Promise<UpstreamResult<unknown>> {
   try {
@@ -30,11 +47,7 @@ async function getJson(url: string): Promise<UpstreamResult<unknown>> {
     const data: unknown = await response.json();
     return { kind: "found", data };
   } catch (error) {
-    if (!(error instanceof HttpStatusError))
-      return { kind: "failed", status: null };
-    return error.status === 404
-      ? { kind: "not_found" }
-      : { kind: "failed", status: error.status };
+    return failureOf(error);
   }
 }
 
@@ -61,6 +74,7 @@ export async function fetchSearchPage(
     case "not_found":
       return { kind: "found", data: EMPTY_SEARCH_RESPONSE };
     case "failed":
+    case "blocked":
       return result;
     default: {
       const unreachable: never = result;
