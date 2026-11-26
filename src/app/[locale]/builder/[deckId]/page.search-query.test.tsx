@@ -677,4 +677,82 @@ describe("the builder's search with no result", () => {
     expect(screen.getByText(SYNTAX_HINT)).toBeDefined();
     expect(buttonCount("Clear filters")).toBe(0);
   });
+
+  /*
+   * The syntax hint helps only where the player types a Scryfall query: the
+   * plain name search. By Set has no text box, By Color and the pickers turn
+   * the text into `name:/…/`, and the pickers read no filter but the colours
+   * and "Collection only" (`lib/scryfall/search.ts`).
+   */
+  describe("outside the plain name search", () => {
+    const NO_RESULT = "No cards found. Try a different search.";
+
+    /** Waits for `query` to be sent and for the panel to say it found nothing. */
+    async function settlesEmpty(query: string): Promise<void> {
+      await lastSearchIs(query);
+      expect(await screen.findByText(NO_RESULT)).toBeDefined();
+    }
+
+    /**
+     * The search tab named `name`. The deck editor's grouping has a "By Color" of its own, so
+     * the match is taken from the row that holds "By Set".
+     */
+    function searchTab(name: "By Set" | "By Color"): HTMLElement {
+      const tabRow = button("By Set").parentElement;
+      const matches = Array.from(tabRow?.querySelectorAll("button") ?? []).filter(
+        (candidate) => buttonName(candidate) === name
+      );
+      expect(matches, `one search tab named "${name}"`).toHaveLength(1);
+      return matches[0];
+    }
+
+    it("suggests nothing on By Set, which has no text box for the syntax", async () => {
+      const { user } = await openBuilder();
+
+      await user.click(searchTab("By Set"));
+
+      expect(
+        screen.getByPlaceholderText("Search set (e.g. dsk, mh3…)")
+      ).toBeDefined();
+      expect(screen.getByText(NO_RESULT)).toBeDefined();
+      expect(screen.queryByText(SYNTAX_HINT)).toBeNull();
+      expect(buttonCount("Clear filters")).toBe(0);
+    });
+
+    it("suggests nothing on By Color when the colours match no card", async () => {
+      const { user } = await openBuilder();
+      await user.click(searchTab("By Color"));
+
+      await user.click(button("White"));
+
+      await settlesEmpty("legal:commander id<=W");
+      expect(screen.queryByText(SYNTAX_HINT)).toBeNull();
+      expect(buttonCount("Clear filters")).toBe(0);
+    });
+
+    it("offers neither Clear filters nor the hint in the commander picker when only a filter it ignores is set", async () => {
+      const user = await openBuilderWithFilters();
+      await user.click(button("Commander"));
+      await settlesEmpty("is:commander");
+
+      await user.click(button("Land"));
+
+      expect(searched.at(-1)).toBe("is:commander");
+      expect(buttonCount("Clear filters")).toBe(0);
+      expect(screen.queryByText(SYNTAX_HINT)).toBeNull();
+    });
+
+    it("offers Clear filters in the commander picker while a colour narrows it, and clears the colours", async () => {
+      const user = await openBuilderWithFilters();
+      await user.click(button("Commander"));
+      await user.click(button("White"));
+      await settlesEmpty("is:commander id<=W");
+
+      await user.click(await findButton("Clear filters"));
+
+      expect(button("White")).toHaveAttribute("aria-pressed", "false");
+      expect(buttonCount("Clear filters")).toBe(0);
+      expect(screen.queryByText(SYNTAX_HINT)).toBeNull();
+    });
+  });
 });

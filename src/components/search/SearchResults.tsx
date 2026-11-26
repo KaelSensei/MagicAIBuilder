@@ -21,7 +21,10 @@ import type { DeckZone } from "@/lib/deck/types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import type { CollectionOnlyState } from "@/hooks/useCardSearchResults";
 import { CollectionOnlyCoverageNote } from "./CollectionOnlyNotice";
-import { EmptySearchResult } from "./EmptySearchResult";
+import {
+  EmptySearchResult,
+  type EmptySearchNextStep,
+} from "./EmptySearchResult";
 import {
   searchResultsView,
   type SearchResultsPhase,
@@ -42,10 +45,10 @@ interface SearchResultsProps {
   /** The Scryfall query that produced an empty list, shown so the player can edit it. */
   readonly executedQuery?: string;
   /**
-   * Clears the search filters. Given only while they narrow the search shown: an empty result
-   * then offers "Clear filters" instead of the syntax hint.
+   * What an empty result offers next: "Clear filters", the syntax hint, or nothing. The page
+   * decides, since only it knows which filters its query reads.
    */
-  readonly onClearFilters?: () => void;
+  readonly nextStep: EmptySearchNextStep;
 }
 
 /** The box around the status line: centred for a message, a header row above a list. */
@@ -94,7 +97,7 @@ function PhaseIcon({ phase }: { readonly phase: SearchResultsPhase }) {
  * The status line between them is one `<output>` that every state keeps mounted.
  */
 export function SearchResults(props: SearchResultsProps) {
-  const { cards, error, collectionOnly, executedQuery, onClearFilters } = props;
+  const { cards, error, collectionOnly, executedQuery, nextStep } = props;
   const t = useTranslations("search");
   const { phase, status } = searchResultsView({
     isLoading: props.isLoading,
@@ -129,10 +132,7 @@ export function SearchResults(props: SearchResultsProps) {
           </p>
         ) : null}
         {phase === "empty" ? (
-          <EmptySearchResult
-            executedQuery={executedQuery}
-            onClearFilters={onClearFilters}
-          >
+          <EmptySearchResult executedQuery={executedQuery} nextStep={nextStep}>
             {coverageNote}
           </EmptySearchResult>
         ) : null}

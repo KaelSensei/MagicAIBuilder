@@ -67,10 +67,8 @@ import {
 } from "@/lib/scryfall/search";
 import { SetAutocomplete } from "@/components/search/SetAutocomplete";
 import type { SearchFilters as Filters } from "@/lib/scryfall/search-types";
-import {
-  NO_SEARCH_FILTERS,
-  searchFiltersNarrow,
-} from "@/lib/scryfall/search-filters";
+import { NO_SEARCH_FILTERS } from "@/lib/scryfall/search-filters";
+import { emptySearchNextStep } from "@/components/builder/empty-search-next-step";
 import type { DeckCard, CardCategory, DeckZone } from "@/lib/deck/types";
 import { getFormatConfig, type DeckFormat } from "@/lib/deck/formats";
 import type { PairingCard } from "@/lib/deck/partner-abilities";
@@ -175,22 +173,6 @@ function nameSearchAllowsDescription(input: {
 function searchQueryOrPinned(pinned: string | null, syntax: string): string {
   if (pinned === null) return syntax;
   return pinned;
-}
-
-/**
- * Whether the filters narrow the search the panel shows, so that a search with no result offers
- * "Clear filters" (I-13 AC-13-05). Only the name search reads the filters, and a confirmed
- * plain-language query runs as written, keeping "Collection only" alone (pinned in
- * `page.search-query.test.tsx`).
- */
-function filtersNarrowShownSearch(input: {
-  readonly mode: SearchMode;
-  readonly pinned: string | null;
-  readonly filters: Filters;
-}): boolean {
-  if (input.mode !== "name") return false;
-  if (input.pinned !== null) return input.filters.collectionOnly === true;
-  return searchFiltersNarrow(input.filters);
 }
 
 /** The confirmed description search is active only while description search is allowed. */
@@ -565,17 +547,23 @@ export default function BuilderPage() {
 
   // Set and colour search show no filters panel, so a "Collection only" left on there must not
   // filter a list whose toggle the player cannot see.
+  const collectionOnly = searchMode === "name" && filters.collectionOnly === true;
   const searchResults = useCardSearchResults(query, {
-    collectionOnly: searchMode === "name" && filters.collectionOnly === true,
+    collectionOnly,
     sessionStatus,
   });
   const searchLoading = searchResults.isLoading;
   const clearFilters = useCallback(() => setFilters(NO_SEARCH_FILTERS), []);
-  const filtersNarrowSearch = filtersNarrowShownSearch({
-    mode: searchMode,
-    pinned: pinnedQuery,
-    filters,
-  });
+  const emptyResultNextStep = emptySearchNextStep(
+    {
+      tab: searchMode,
+      picking: commanderMode || partnerMode || companionMode,
+      pinned: pinnedQuery !== null,
+      filters,
+      collectionOnly,
+    },
+    clearFilters
+  );
 
   const handleSearch = useCallback((text: string) => {
     setSearchText(text);
@@ -1158,7 +1146,7 @@ export default function BuilderPage() {
                 onAddToZone={handleAddToZone}
                 draggable={true}
                 executedQuery={pinnedQueryLabel(pinnedQuery)}
-                onClearFilters={filtersNarrowSearch ? clearFilters : undefined}
+                nextStep={emptyResultNextStep}
               />
             </div>
           </motion.div>
