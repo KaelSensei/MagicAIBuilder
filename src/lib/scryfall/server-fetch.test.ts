@@ -124,7 +124,7 @@ describe("fetchCard", () => {
     });
   });
 
-  it("sends no further fill while Scryfall's 429 block runs, failing it with status 429", async () => {
+  it("sends no further fill while Scryfall's 429 block runs, reporting it as blocked", async () => {
     let requests = 0;
     server.use(
       http.get("*/cards/:id", () => {
@@ -137,10 +137,7 @@ describe("fetchCard", () => {
     );
     await fetchCard(BOLT.id);
 
-    await expect(fetchCard(ANOTHER_ID)).resolves.toEqual({
-      kind: "failed",
-      status: 429,
-    });
+    await expect(fetchCard(ANOTHER_ID)).resolves.toEqual({ kind: "blocked" });
     expect(requests).toBe(1);
   });
 });

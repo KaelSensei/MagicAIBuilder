@@ -1,6 +1,7 @@
 /*
- * Card names and player text reach the suggestion prompt intact, and a
- * removal the route streams still matches the deck card it names.
+ * Card names and player text reach the suggestion prompt intact, a removal
+ * the route streams still matches the deck card it names, and a Scryfall
+ * lookup of the suggested names refused during a 429 block is logged at info.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
@@ -30,6 +31,9 @@ vi.mock(import("@/lib/rate-limit"), () => ({
 }));
 
 import { buildSuggestionDiff } from "@/lib/ai/suggestion-review";
+import { logger } from "@/lib/logger";
+import { SCRYFALL_API } from "@/lib/scryfall/constants";
+import { scheduleScryfallRequest } from "@/lib/scryfall/request-queue";
 import { resetAiUsageDb } from "@/test/ai-usage-db";
 import { POST } from "./route";
 
@@ -96,6 +100,7 @@ describe("POST /api/ai/suggest card names", () => {
   afterEach(() => {
     delete process.env.ANTHROPIC_API_KEY;
     vi.unstubAllGlobals();
+    vi.restoreAllMocks();
   });
 
   it("sends the commander, the deck cards and the asked card to the model unchanged", async () => {
@@ -145,6 +150,31 @@ describe("POST /api/ai/suggest card names", () => {
     expect(removals.map(({ name }) => name)).toEqual(["Urza's Saga"]);
     expect(buildSuggestionDiff(DECK_CARD_NAMES, [], removals).removals).toEqual(
       ["Urza's Saga"]
+    );
+  });
+
+  it("logs the suggested cards' lookup refused during a Scryfall 429 block at info, not as an error", async () => {
+    const logError = vi
+      .spyOn(logger, "error")
+      .mockImplementation(() => undefined);
+    const logInfo = vi
+      .spyOn(logger, "info")
+      .mockImplementation(() => undefined);
+    vi.spyOn(logger, "warn").mockImplementation(() => undefined);
+    const scryfall = vi.fn<typeof fetch>();
+    vi.stubGlobal("fetch", scryfall);
+    await scheduleScryfallRequest(
+      `${SCRYFALL_API}/cards/search?q=sol`,
+      async () => new Response(null, { status: 429 })
+    );
+
+    await (await POST(suggestRequest())).text();
+
+    expect(scryfall).not.toHaveBeenCalled();
+    expect(logError).not.toHaveBeenCalled();
+    expect(logInfo).toHaveBeenCalledWith(
+      "Suggestion evidence not looked up during a Scryfall 429 block",
+      "POST /api/ai/suggest"
     );
   });
 });

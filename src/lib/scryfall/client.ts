@@ -16,7 +16,11 @@ import {
 } from "./types";
 import { lookupCardCache, lookupSearchCache } from "./shared-cache-client";
 import { isScryfallCard, isScryfallSearchResponse } from "./guards";
-import { resetScryfallQueue, scheduleScryfallRequest } from "./request-queue";
+import {
+  resetScryfallQueue,
+  scheduleScryfallRequest,
+  ScryfallBlockedError,
+} from "./request-queue";
 import { buildLocalizedNamesQueries } from "./localized";
 import { exactNameTerm } from "./exact-name";
 import { SCRYFALL_API } from "./constants";
@@ -92,6 +96,24 @@ async function handleResponse<T>(response: Response): Promise<T> {
 }
 
 /**
+ * Logs a failed search once, where it fails. A search the queue refused during
+ * a 429 block goes to `info`: the queue logged that block once at `warn`, and
+ * a line per refused retry would repeat it. Any other failure keeps its raw
+ * text (Scryfall's details, a network failure) at `warn`, since the search
+ * panel shows the player a translated sentence, never this error.
+ */
+function logSearchFailure(error: unknown): void {
+  if (error instanceof ScryfallBlockedError) {
+    logger.info(
+      "Scryfall search not sent during a 429 block",
+      "Scryfall search"
+    );
+    return;
+  }
+  logger.warn("Scryfall search failed", "Scryfall search", error);
+}
+
+/**
  * Search cards using Scryfall query syntax — results cached 1h.
  *
  * `includeMultilingual` must be set whenever the query carries a `lang:`
@@ -137,9 +159,7 @@ export async function searchCards(
 
     return await handleResponse<ScryfallSearchResponse>(response);
   } catch (error) {
-    // The search panel shows the player a translated sentence, never this
-    // error, so its raw text (Scryfall's details, a network failure) is kept here.
-    logger.warn("Scryfall search failed", "Scryfall search", error);
+    logSearchFailure(error);
     throw error;
   } finally {
     logger.info("Scryfall search completed", "Scryfall search", {

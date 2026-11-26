@@ -63,4 +63,20 @@ describe("searchCards during Scryfall's 429 block", () => {
     await expect(retry).rejects.toMatchObject({ status: 429 });
     expect(scryfallRequests(fetchMock)).toBe(1);
   });
+
+  it("logs the retry the block refuses at info, keeping warn for the 429 Scryfall answered", async () => {
+    stubFetch();
+    await expect(searchCards("sol ring")).rejects.toThrow();
+
+    await expect(searchCards("sol ring")).rejects.toThrow();
+
+    const failureWarnings = vi
+      .mocked(logger.warn)
+      .mock.calls.filter(([message]) => message === "Scryfall search failed");
+    expect(failureWarnings).toHaveLength(1);
+    expect(logger.info).toHaveBeenCalledWith(
+      "Scryfall search not sent during a 429 block",
+      "Scryfall search"
+    );
+  });
 });
