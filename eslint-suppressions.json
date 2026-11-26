@@ -1071,7 +1071,7 @@
   },
   "src/components/profile/PublicDeckView.test.tsx": {
     "no-restricted-syntax": {
-      "count": 7
+      "count": 6
     }
   },
   "src/components/profile/PublicDeckView.tsx": {

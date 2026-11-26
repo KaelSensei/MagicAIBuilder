@@ -15,9 +15,6 @@ vi.mock(import("@/components/community/DeckRatingPanel"), () => ({
 vi.mock(import("@/components/community/DeckCommentPanel"), () => ({
   DeckCommentPanel: () => <></>,
 }));
-vi.mock(import("@/components/community/FocusedFeedbackPanel"), () => ({
-  FocusedFeedbackPanel: () => null,
-}));
 vi.mock(import("@/components/community/DeckReportButton"), () => ({
   DeckReportButton: () => null,
 }));
