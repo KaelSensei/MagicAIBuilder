@@ -1,16 +1,21 @@
 import { describe, expect, it } from "vitest";
 import {
   DeckBuildRefusedError,
+  DeckBuildServerError,
+  DeckBuildUnreachableError,
+  deckBuildFailureLogLevel,
   deckBuildFailureMessageKey,
   deckBuildFailureOf,
   type DeckBuildFailure,
 } from "@/lib/ai/build-failure";
 
 describe("deckBuildFailureOf", () => {
-  it("reads a request the network lost as unreachable", () => {
-    expect(deckBuildFailureOf(new TypeError("Failed to fetch"))).toBe(
-      "unreachable"
+  it("reads a request that got no answer as unreachable", () => {
+    const lost = new DeckBuildUnreachableError(
+      new TypeError("Failed to fetch")
     );
+
+    expect(deckBuildFailureOf(lost)).toBe("unreachable");
   });
 
   it("reads a 401 refusal as an ended session", () => {
@@ -35,8 +40,14 @@ describe("deckBuildFailureOf", () => {
   );
 
   it.each([
-    ["the stream's error event", new Error("AI deck build failed")],
+    [
+      "the stream's error event",
+      new DeckBuildServerError("AI deck build failed"),
+    ],
     ["a stream cut short", new Error("The AI build ended early")],
+    // A response arrived, so the network did answer: a stream dropped
+    // mid-read, or a bug in the code that reads it.
+    ["a TypeError thrown after the answer", new TypeError("network error")],
     ["a thrown value that is not an Error", "boom"],
   ])("reads %s as a failed build", (_case, thrown) => {
     expect(deckBuildFailureOf(thrown)).toBe("failed");
@@ -47,6 +58,51 @@ describe("deckBuildFailureOf", () => {
     expect(deckBuildFailureOf(new Error("Build request failed (401)"))).toBe(
       "failed"
     );
+  });
+});
+
+describe("deckBuildFailureLogLevel", () => {
+  const RESET = new Date("2026-12-01T00:00:00.000Z");
+
+  it.each([
+    [
+      "a request that got no answer",
+      new DeckBuildUnreachableError(new TypeError("Failed to fetch")),
+    ],
+    ["an ended session (401)", new DeckBuildRefusedError(401)],
+    ["the rate limit (429)", new DeckBuildRefusedError(429)],
+    [
+      "a spent monthly allowance",
+      new DeckBuildRefusedError(429, {
+        code: "allowance_exhausted",
+        route: "build",
+        limit: 5,
+        resetsAt: RESET,
+      }),
+    ],
+    [
+      "the spend ceiling",
+      new DeckBuildRefusedError(503, {
+        code: "ai_spend_ceiling_reached",
+        resetsAt: RESET,
+      }),
+    ],
+    [
+      "the stream's error event, which the route has already reported",
+      new DeckBuildServerError("AI deck build failed"),
+    ],
+  ])("logs %s as a warning", (_case, error) => {
+    expect(deckBuildFailureLogLevel(error)).toBe("warn");
+  });
+
+  it.each([
+    ["a 500 refusal", new DeckBuildRefusedError(500)],
+    ["a 400 refusal", new DeckBuildRefusedError(400)],
+    ["a stream cut short", new Error("The AI build ended early")],
+    ["a TypeError thrown after the answer", new TypeError("network error")],
+    ["a thrown value that is not an Error", "boom"],
+  ])("logs %s as an error", (_case, error) => {
+    expect(deckBuildFailureLogLevel(error)).toBe("error");
   });
 });
 
