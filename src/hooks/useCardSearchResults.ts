@@ -28,6 +28,7 @@ import {
 } from "@/lib/collection/owned-oracle-names";
 import { searchCards } from "@/lib/scryfall/client";
 import { pauseFor, scanSearch } from "@/lib/scryfall/search-scan";
+import { retrySearchFailure } from "@/lib/scryfall/search-retry";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 
 const NO_CARDS: readonly ScryfallCard[] = [];
@@ -136,7 +137,8 @@ function useOwnedOracleNames(): OwnedOracleNames {
 /**
  * Reads the search for "Collection only". The query key leaves the collection out on purpose:
  * the scan keeps every card it read and the owned ones are picked at render, so a change to the
- * collection shows at once without reading Scryfall again.
+ * collection shows at once without reading Scryfall again. A failed scan is retried by the same
+ * rule as the unfiltered search, not the app's default, so a rejected query fails at once.
  */
 function useOwnedSearchScan(
   query: string,
@@ -152,6 +154,7 @@ function useOwnedSearchScan(
       ),
     enabled: enabled && query.trim().length >= MIN_SEARCH_QUERY_LENGTH,
     staleTime: STALE_TIME_5MIN,
+    retry: retrySearchFailure,
   });
 }
 
