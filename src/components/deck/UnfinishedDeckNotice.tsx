@@ -12,6 +12,7 @@
  * @module deck/UnfinishedDeckNotice
  */
 import { useTranslations } from "next-intl";
+import { Button } from "@/components/ui/Button";
 import { GeneratedDeckCorrections } from "./GeneratedDeckCorrections";
 import type { UnfinishedDeck } from "./use-built-deck-save";
 
@@ -47,13 +48,9 @@ export function UnfinishedDeckNotice({
       {deck.corrections.length > 0 && (
         <GeneratedDeckCorrections corrections={deck.corrections} />
       )}
-      <button
-        type="button"
-        onClick={() => onOpenDeck(deck.deckId)}
-        className="px-5 py-2.5 rounded-xl text-sm font-semibold bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white"
-      >
+      <Button size="lg" onClick={() => onOpenDeck(deck.deckId)}>
         {t("wizard.openDeck")}
-      </button>
+      </Button>
     </section>
   );
 }
