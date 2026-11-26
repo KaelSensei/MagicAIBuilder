@@ -47,7 +47,8 @@ export type {
  *
  * The `Record` over `PlaytestCommandType` requires every command type, so a command no concern
  * table names does not compile. Each concern table names exactly the commands its type declares
- * (`PlaytestGuardTable`).
+ * (`PlaytestGuardTable`); `command-guards.test.ts` checks that no two of them name the same one,
+ * since the later spread would silently replace the earlier list.
  */
 export const PLAYTEST_COMMAND_GUARDS: Readonly<
   Record<PlaytestCommandType, readonly PlaytestCommandGuard[]>
