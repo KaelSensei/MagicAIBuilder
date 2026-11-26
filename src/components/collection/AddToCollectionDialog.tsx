@@ -14,10 +14,34 @@ import { Input } from "@/components/ui/Input";
 import { Modal, ModalTitle } from "@/components/ui/Modal";
 import { cn } from "@/components/ui/utils";
 
-export function AddToCollectionDialog() {
+/**
+ * Optional control by the page. The collection page holds the open state so
+ * its empty state's "Add cards" opens this same dialog; left out, the dialog
+ * keeps its own state and opens from its trigger only.
+ */
+export interface AddToCollectionDialogProps {
+  readonly open?: boolean;
+  readonly onOpenChange?: (open: boolean) => void;
+}
+
+/** The page's open state when it passes one, else the dialog's own. */
+function useOpenState({
+  open,
+  onOpenChange,
+}: AddToCollectionDialogProps): readonly [boolean, (open: boolean) => void] {
+  const [ownOpen, setOwnOpen] = useState(false);
+  return [open ?? ownOpen, onOpenChange ?? setOwnOpen];
+}
+
+/**
+ * "Add Card" and the dialog it opens: search a card, pick its quantity, foil
+ * and condition, and add it to the collection. The dialog stays open after an
+ * add, ready for the next card.
+ */
+export function AddToCollectionDialog(props: AddToCollectionDialogProps) {
   const t = useTranslations("collection.dialog");
   const format = useFormatter();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useOpenState(props);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<ScryfallCard[]>([]);
   const [isSearching, setIsSearching] = useState(false);

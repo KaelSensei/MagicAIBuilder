@@ -79,6 +79,38 @@ describe("AddToCollectionDialog", () => {
   });
 });
 
+/*
+ * The collection page holds the open state, so its empty state's "Add cards"
+ * opens this same dialog (I-13 AC-13-05).
+ */
+describe("AddToCollectionDialog opened by its page", () => {
+  it("opens when the page asks, and tells the page when the player closes it", async () => {
+    const onOpenChange = vi.fn();
+    const user = userEvent.setup();
+    renderWithIntl(<AddToCollectionDialog open onOpenChange={onOpenChange} />);
+
+    expect(
+      screen.getByRole("dialog", { name: "Add to Collection" })
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
+
+  it("asks the page to open it from its own trigger", async () => {
+    const onOpenChange = vi.fn();
+    const user = userEvent.setup();
+    renderWithIntl(
+      <AddToCollectionDialog open={false} onOpenChange={onOpenChange} />
+    );
+
+    await user.click(screen.getByRole("button", { name: "Add Card" }));
+
+    expect(onOpenChange).toHaveBeenCalledWith(true);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+});
+
 describe("AddToCollectionDialog add flow", () => {
   // The store's real action posts to /api/collection. The dialog's own job ends
   // at the input it hands over, so that handover is what these tests observe.
