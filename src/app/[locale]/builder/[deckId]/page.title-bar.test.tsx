@@ -121,8 +121,8 @@ describe("builder page: the title bar for keyboard and screen-reader players", (
       ).toBeInTheDocument();
     });
 
-    // Pressing the button moves focus off the field first, and the field's blur is what saves:
-    // the button's own click lands once the row is gone. One save either way.
+    // Pressing the button moves focus off the field first. Focus stays inside the rename row, so
+    // that move saves nothing, and the button's own click saves. One save either way.
     it("saves the typed name once when the player presses that button", async () => {
       const user = userEvent.setup();
       await user.click(await openAtraxa());
@@ -194,6 +194,147 @@ describe("builder page: the title bar for keyboard and screen-reader players", (
       expect(
         await screen.findByRole("dialog", { name: "Keyboard Shortcuts" })
       ).toBeInTheDocument();
+    });
+
+    // The field unmounts, so focus would fall to the top of the page and a keyboard player would
+    // tab back from there (WCAG 2.2 SC 2.4.3, https://www.w3.org/TR/WCAG22/#focus-order, read
+    // 2026-11-26). The deck-name button is where the rename started.
+    it("puts focus back on the deck name when the player presses Escape", async () => {
+      const user = userEvent.setup();
+      await user.click(await openAtraxa());
+
+      await user.keyboard("{Escape}");
+
+      expect(screen.getByRole("button", { name: DECK_NAME })).toHaveFocus();
+    });
+
+    it("saves once on Enter, puts focus back on the deck name and turns the shortcuts back on", async () => {
+      const user = userEvent.setup();
+      await user.click(await openAtraxa());
+      await user.clear(
+        screen.getByRole("textbox", { name: "Click to rename" })
+      );
+      await user.paste("Atraxa Tempo");
+
+      await user.keyboard("{Enter}");
+
+      expect(
+        screen.getByRole("button", { name: "Atraxa Tempo" })
+      ).toHaveFocus();
+      await user.keyboard("?");
+      expect(
+        await screen.findByRole("dialog", { name: "Keyboard Shortcuts" })
+      ).toBeInTheDocument();
+      await waitFor(() =>
+        expect(api.savedDeck(DECK_ID)?.name).toBe("Atraxa Tempo")
+      );
+      expect(api.updateDeck).toHaveBeenCalledTimes(1);
+    });
+
+    it("saves once from the Save button, puts focus back on the deck name and turns the shortcuts back on", async () => {
+      const user = userEvent.setup();
+      await user.click(await openAtraxa());
+      await user.clear(
+        screen.getByRole("textbox", { name: "Click to rename" })
+      );
+      await user.paste("Atraxa Tempo");
+
+      await user.click(screen.getByRole("button", { name: "Save the name" }));
+
+      expect(
+        screen.getByRole("button", { name: "Atraxa Tempo" })
+      ).toHaveFocus();
+      await user.keyboard("?");
+      expect(
+        await screen.findByRole("dialog", { name: "Keyboard Shortcuts" })
+      ).toBeInTheDocument();
+      await waitFor(() =>
+        expect(api.savedDeck(DECK_ID)?.name).toBe("Atraxa Tempo")
+      );
+      expect(api.updateDeck).toHaveBeenCalledTimes(1);
+    });
+
+    // The field and its Save button are one rename: focus moving between them keeps it open, so
+    // a keyboard player can reach the button.
+    it("keeps the rename open when the player tabs from the field to the Save button", async () => {
+      const user = userEvent.setup();
+      await user.click(await openAtraxa());
+      await user.clear(
+        screen.getByRole("textbox", { name: "Click to rename" })
+      );
+      await user.paste("Atraxa Tempo");
+
+      await user.tab();
+
+      expect(
+        screen.getByRole("button", { name: "Save the name" })
+      ).toHaveFocus();
+      expect(
+        screen.getByRole("textbox", { name: "Click to rename" })
+      ).toHaveValue("Atraxa Tempo");
+      expect(api.updateDeck).not.toHaveBeenCalled();
+    });
+
+    it("saves once when the player tabs past the Save button, and leaves focus on the next control", async () => {
+      const user = userEvent.setup();
+      await user.click(await openAtraxa());
+      await user.clear(
+        screen.getByRole("textbox", { name: "Click to rename" })
+      );
+      await user.paste("Atraxa Tempo");
+
+      await user.tab();
+      await user.tab();
+
+      expect(screen.getByRole("button", { name: "Duplicate" })).toHaveFocus();
+      await user.keyboard("?");
+      expect(
+        await screen.findByRole("dialog", { name: "Keyboard Shortcuts" })
+      ).toBeInTheDocument();
+      await waitFor(() =>
+        expect(api.savedDeck(DECK_ID)?.name).toBe("Atraxa Tempo")
+      );
+      expect(api.updateDeck).toHaveBeenCalledTimes(1);
+    });
+
+    it("saves once when the player shift-tabs out of the field, and leaves focus on the back link", async () => {
+      const user = userEvent.setup();
+      await user.click(await openAtraxa());
+      await user.clear(
+        screen.getByRole("textbox", { name: "Click to rename" })
+      );
+      await user.paste("Atraxa Tempo");
+
+      await user.tab({ shift: true });
+
+      expect(
+        screen.getByRole("link", { name: "Back to my decks" })
+      ).toHaveFocus();
+      await user.keyboard("?");
+      expect(
+        await screen.findByRole("dialog", { name: "Keyboard Shortcuts" })
+      ).toBeInTheDocument();
+      await waitFor(() =>
+        expect(api.savedDeck(DECK_ID)?.name).toBe("Atraxa Tempo")
+      );
+      expect(api.updateDeck).toHaveBeenCalledTimes(1);
+    });
+
+    // The Escape that cancels the rename is spent: the page's own Escape would clear the search.
+    it("cancels from the Save button on Escape: keeps the saved name, sends nothing and puts focus back on the deck name", async () => {
+      const user = userEvent.setup();
+      await user.click(await openAtraxa());
+      await user.clear(
+        screen.getByRole("textbox", { name: "Click to rename" })
+      );
+      await user.paste("Atraxa Tempo");
+      await user.tab();
+
+      await user.keyboard("{Escape}");
+
+      expect(screen.getByRole("button", { name: DECK_NAME })).toHaveFocus();
+      expect(useUIStore.getState().searchClearSignal).toBe(0);
+      expect(api.updateDeck).not.toHaveBeenCalled();
     });
   });
 
