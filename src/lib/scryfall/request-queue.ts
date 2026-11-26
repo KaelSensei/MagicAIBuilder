@@ -149,7 +149,10 @@ function statusOf(settled: unknown): number | null {
  * Reads the delay-seconds form of `Retry-After` only. Its HTTP-date form, a
  * negative or fractional number, or no header at all gives Scryfall's
  * documented 30 seconds, and a delay over `MAX_RETRY_AFTER_MS` is capped. A
- * failure such as `HttpStatusError` carries no headers, so it gets 30 seconds.
+ * delay under one second, which in whole seconds means `0`, also gives 30
+ * seconds: read as it stands it would end the block at once, so the 429 would
+ * remove the protection instead of starting it. A failure such as
+ * `HttpStatusError` carries no headers, so it gets 30 seconds.
  *
  * @param settled - what the request resolved to, or rejected with
  */
@@ -159,7 +162,9 @@ function blockLengthOf(settled: unknown): number {
   if (retryAfter === null || !DELAY_SECONDS.test(retryAfter)) {
     return RATE_LIMIT_BLOCK_MS;
   }
-  return Math.min(Number(retryAfter) * 1_000, MAX_RETRY_AFTER_MS);
+  const delay = Number(retryAfter) * 1_000;
+  if (delay < 1_000) return RATE_LIMIT_BLOCK_MS;
+  return Math.min(delay, MAX_RETRY_AFTER_MS);
 }
 
 /**

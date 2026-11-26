@@ -279,6 +279,15 @@ describe("after Scryfall answers 429", () => {
     }
   );
 
+  it("never reads a Retry-After of 0 as no block: it blocks for 30 seconds", async () => {
+    expect(
+      await outcomesAfter(
+        async () => tooManyRequests("0"),
+        [RATE_LIMIT_BLOCK_MS - 1, RATE_LIMIT_BLOCK_MS]
+      )
+    ).toEqual(["refused", "sent"]);
+  });
+
   it("caps a huge Retry-After at the longest block", async () => {
     expect(
       await outcomesAfter(
