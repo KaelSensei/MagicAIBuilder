@@ -69,14 +69,16 @@ function reasonText(
  * so a removed or added card is never a silent change (I-02 spec, 2.2 and 5.3).
  *
  * @param corrections - The corrections from the build's `done` event, in list order
- * @param onOpenDeck - Opens the saved deck once the player has read the list
+ * @param onOpenDeck - Opens the saved deck once the player has read the list. Left out when the
+ * list sits inside a screen that offers the deck itself (`UnfinishedDeckNotice`), so the player
+ * never sees two "Open the deck" buttons.
  */
 export function GeneratedDeckCorrections({
   corrections,
   onOpenDeck,
 }: {
   readonly corrections: readonly DeckCorrection[];
-  readonly onOpenDeck: () => void;
+  readonly onOpenDeck?: () => void;
 }) {
   const t = useTranslations("deck");
   const format = useFormatter();
@@ -114,13 +116,15 @@ export function GeneratedDeckCorrections({
           </li>
         ))}
       </ul>
-      <button
-        type="button"
-        onClick={onOpenDeck}
-        className="self-center px-5 py-2.5 rounded-xl text-sm font-semibold bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white"
-      >
-        {t("wizard.openDeck")}
-      </button>
+      {onOpenDeck && (
+        <button
+          type="button"
+          onClick={onOpenDeck}
+          className="self-center px-5 py-2.5 rounded-xl text-sm font-semibold bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white"
+        >
+          {t("wizard.openDeck")}
+        </button>
+      )}
     </section>
   );
 }

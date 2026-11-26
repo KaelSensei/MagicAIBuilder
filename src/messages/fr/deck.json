@@ -899,6 +899,8 @@
     "buildFailed": "L’IA n’a pas pu construire votre deck. Réessayez.",
     "deckNotSaved": "Votre deck a été construit, mais il n’a pas pu être enregistré. La construction est conservée : réessayez de l’enregistrer.",
     "trySavingAgain": "Réessayer l’enregistrement",
+    "deckNotFinished": "Votre deck a été créé, mais une partie n’a pas pu y être ajoutée. Ouvrez-le pour le terminer.",
+    "deckNotFinishedCards": "Votre deck a été créé, mais {count, plural, one {# carte n’a pas pu y être ajoutée} other {# cartes n’ont pas pu y être ajoutées}}. Ouvrez-le pour le terminer.",
     "addingCards": "Ajout des cartes à votre deck…",
     "buildStepConsulting": "Consultation de l’oracle IA…",
     "buildStepBuilding": "Construction de la liste de cartes…",
