@@ -949,7 +949,7 @@ export default function BuilderPage() {
                   if (event.key === "Enter") {
                     event.preventDefault();
                     endDeckRenameOnName(() =>
-                      commitDeckName(event.currentTarget.value),
+                      commitDeckName(event.currentTarget.value)
                     );
                   }
                   cancelDeckRenameOnEscape(event);
@@ -969,10 +969,14 @@ export default function BuilderPage() {
                 aria-label={t("actions.confirmRename")}
                 onClick={() =>
                   endDeckRenameOnName(() =>
-                    commitDeckName(nameInputRef.current?.value ?? nameInput),
+                    commitDeckName(nameInputRef.current?.value ?? nameInput)
                   )
                 }
                 onKeyDown={cancelDeckRenameOnEscape}
+                // Safari and Firefox on macOS never focus a clicked button, so the field's blur
+                // would save and close the row before this click lands. Keeping focus in the
+                // field lets the click end the rename and return focus to the deck name.
+                onMouseDown={(event) => event.preventDefault()}
                 className="size-6 shrink-0 p-0"
               >
                 <Check className="w-3.5 h-3.5" />

@@ -360,6 +360,73 @@ describe("builder page: the title bar for keyboard and screen-reader players", (
       expect(screen.getByRole("button", { name: DECK_NAME })).toHaveFocus();
       expect(useUIStore.getState().searchClearSignal).toBe(0);
       expect(api.updateDeck).not.toHaveBeenCalled();
+      await user.keyboard("?");
+      expect(
+        await screen.findByRole("dialog", { name: "Keyboard Shortcuts" })
+      ).toBeInTheDocument();
+    });
+
+    it.each([
+      ["Enter", "{Enter}"],
+      ["Space", " "],
+    ])(
+      "saves once when the player presses %s on the Save button, and puts focus back on the deck name",
+      async (_key, keys) => {
+        const user = userEvent.setup();
+        await user.click(await openAtraxa());
+        await user.clear(
+          screen.getByRole("textbox", { name: "Click to rename" })
+        );
+        await user.paste("Atraxa Tempo");
+        await user.tab();
+
+        await user.keyboard(keys);
+
+        expect(
+          screen.getByRole("button", { name: "Atraxa Tempo" })
+        ).toHaveFocus();
+        await user.keyboard("?");
+        expect(
+          await screen.findByRole("dialog", { name: "Keyboard Shortcuts" })
+        ).toBeInTheDocument();
+        await waitFor(() =>
+          expect(api.savedDeck(DECK_ID)?.name).toBe("Atraxa Tempo")
+        );
+        expect(api.updateDeck).toHaveBeenCalledTimes(1);
+      }
+    );
+
+    it("saves once when the player clicks outside the rename, and turns the shortcuts back on", async () => {
+      const user = userEvent.setup();
+      await user.click(await openAtraxa());
+      await user.clear(
+        screen.getByRole("textbox", { name: "Click to rename" })
+      );
+      await user.paste("Atraxa Tempo");
+
+      await user.click(document.body);
+
+      await user.keyboard("?");
+      expect(
+        await screen.findByRole("dialog", { name: "Keyboard Shortcuts" })
+      ).toBeInTheDocument();
+      await waitFor(() =>
+        expect(api.savedDeck(DECK_ID)?.name).toBe("Atraxa Tempo")
+      );
+      expect(api.updateDeck).toHaveBeenCalledTimes(1);
+    });
+
+    // Safari and Firefox on macOS never focus a clicked button: without this, the field's blur
+    // would save and close the row before the click lands, and focus would fall to the page.
+    it("keeps focus in the field when the player presses the mouse on Save", async () => {
+      const user = userEvent.setup();
+      await user.click(await openAtraxa());
+
+      const pressed = fireEvent.mouseDown(
+        screen.getByRole("button", { name: "Save the name" })
+      );
+
+      expect(pressed).toBe(false);
     });
   });
 
