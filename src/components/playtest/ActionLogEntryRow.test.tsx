@@ -48,17 +48,17 @@ const LINES: readonly Line[] = [
       params: { cards: ["Sol Ring", "Lightning Bolt"] },
     },
     en: "Put Sol Ring and Lightning Bolt on the bottom of the library",
-    fr: "Tu as mis Sol Ring et Lightning Bolt au-dessous de ta bibliothèque",
+    fr: "Vous avez mis Sol Ring et Lightning Bolt au-dessous de votre bibliothèque",
   },
   {
     message: { key: "drewCard" },
     en: "Drew a card",
-    fr: "Tu as pioché une carte",
+    fr: "Vous avez pioché une carte",
   },
   {
     message: { key: "drewFirstTurnCard" },
     en: "Drew a card for turn 1",
-    fr: "Tu as pioché une carte pour le tour 1",
+    fr: "Vous avez pioché une carte pour le tour 1",
   },
   {
     message: { key: "startedTurn", params: { turn: 3 } },
@@ -68,7 +68,7 @@ const LINES: readonly Line[] = [
   {
     message: { key: "startedTurnAndDrew", params: { turn: 3 } },
     en: "Started turn 3 and drew a card",
-    fr: "Début du tour 3 : tu as pioché une carte",
+    fr: "Début du tour 3 : vous avez pioché une carte",
   },
   {
     message: { key: "advancedToPhase", params: { phase: "Main1" } },
@@ -83,52 +83,52 @@ const LINES: readonly Line[] = [
   {
     message: { key: "tapped", params: { card: "Llanowar Elves" } },
     en: "Tapped Llanowar Elves",
-    fr: "Tu as engagé Llanowar Elves",
+    fr: "Vous avez engagé Llanowar Elves",
   },
   {
     message: { key: "untapped", params: { card: "Llanowar Elves" } },
     en: "Untapped Llanowar Elves",
-    fr: "Tu as dégagé Llanowar Elves",
+    fr: "Vous avez dégagé Llanowar Elves",
   },
   {
     message: { key: "untappedAll" },
     en: "Untapped all permanents",
-    fr: "Tu as dégagé tous tes permanents",
+    fr: "Vous avez dégagé tous vos permanents",
   },
   {
     message: { key: "createdCopy", params: { card: "Llanowar Elves" } },
     en: "Created a copy of Llanowar Elves",
-    fr: "Tu as créé une copie de Llanowar Elves",
+    fr: "Vous avez créé une copie de Llanowar Elves",
   },
   {
     message: { key: "created", params: { card: "1/1 Soldier token" } },
     en: "Created 1/1 Soldier token",
-    fr: "Tu as créé 1/1 Soldier token",
+    fr: "Vous avez créé 1/1 Soldier token",
   },
   {
     message: { key: "counterAdded", params: { card: "Llanowar Elves" } },
     en: "Added a counter to Llanowar Elves",
-    fr: "Tu as ajouté un marqueur sur Llanowar Elves",
+    fr: "Vous avez ajouté un marqueur sur Llanowar Elves",
   },
   {
     message: { key: "counterRemoved", params: { card: "Llanowar Elves" } },
     en: "Removed a counter from Llanowar Elves",
-    fr: "Tu as retiré un marqueur de Llanowar Elves",
+    fr: "Vous avez retiré un marqueur de Llanowar Elves",
   },
   {
     message: { key: "removedCopy", params: { card: "Sol Ring" } },
     en: "Removed Sol Ring from the battlefield",
-    fr: "Tu as retiré Sol Ring du champ de bataille",
+    fr: "Vous avez retiré Sol Ring du champ de bataille",
   },
   {
     message: { key: "castFromCommandZone", params: { card: "Kenrith" } },
     en: "Cast Kenrith from the command zone",
-    fr: "Tu as lancé Kenrith depuis la zone de commandement",
+    fr: "Vous avez lancé Kenrith depuis la zone de commandement",
   },
   {
     message: { key: "returnedToCommandZone", params: { card: "Kenrith" } },
     en: "Returned Kenrith to the command zone",
-    fr: "Tu as renvoyé Kenrith dans la zone de commandement",
+    fr: "Vous avez renvoyé Kenrith dans la zone de commandement",
   },
   {
     message: {
@@ -136,7 +136,7 @@ const LINES: readonly Line[] = [
       params: { card: "Forest", from: "hand", to: "battlefield" },
     },
     en: "Moved Forest from hand to battlefield",
-    fr: "Tu as déplacé Forest de ta main vers le champ de bataille",
+    fr: "Vous avez déplacé Forest de votre main vers le champ de bataille",
   },
   {
     message: {
@@ -144,7 +144,7 @@ const LINES: readonly Line[] = [
       params: { card: "Sol Ring", from: "library", to: "graveyard" },
     },
     en: "Moved Sol Ring from library to graveyard",
-    fr: "Tu as déplacé Sol Ring de ta bibliothèque vers ton cimetière",
+    fr: "Vous avez déplacé Sol Ring de votre bibliothèque vers votre cimetière",
   },
   {
     message: {
@@ -152,7 +152,7 @@ const LINES: readonly Line[] = [
       params: { card: "Kenrith", from: "command", to: "exile" },
     },
     en: "Moved Kenrith from command to exile",
-    fr: "Tu as déplacé Kenrith de la zone de commandement vers l’exil",
+    fr: "Vous avez déplacé Kenrith de la zone de commandement vers l’exil",
   },
   {
     message: {
@@ -160,7 +160,7 @@ const LINES: readonly Line[] = [
       params: { card: "Forest", from: "exile", to: "library" },
     },
     en: "Moved Forest from exile to library",
-    fr: "Tu as déplacé Forest de l’exil vers ta bibliothèque",
+    fr: "Vous avez déplacé Forest de l’exil vers votre bibliothèque",
   },
   {
     message: {
@@ -168,7 +168,7 @@ const LINES: readonly Line[] = [
       params: { card: "Forest", from: "graveyard", to: "hand" },
     },
     en: "Moved Forest from graveyard to hand",
-    fr: "Tu as déplacé Forest de ton cimetière vers ta main",
+    fr: "Vous avez déplacé Forest de votre cimetière vers votre main",
   },
   {
     message: {
@@ -176,12 +176,12 @@ const LINES: readonly Line[] = [
       params: { card: "Forest", from: "battlefield", to: "exile" },
     },
     en: "Moved Forest from battlefield to exile",
-    fr: "Tu as déplacé Forest du champ de bataille vers l’exil",
+    fr: "Vous avez déplacé Forest du champ de bataille vers l’exil",
   },
   {
     message: { key: "libraryShuffled" },
     en: "Library shuffled",
-    fr: "Tu as mélangé ta bibliothèque",
+    fr: "Vous avez mélangé votre bibliothèque",
   },
   {
     message: { key: "rolledDie", params: { sides: 20, result: 17 } },
@@ -191,22 +191,22 @@ const LINES: readonly Line[] = [
   {
     message: { key: "lostLife", params: { amount: 3 } },
     en: "Lost 3 life: damage",
-    fr: "Tu as perdu 3 points de vie : blessures",
+    fr: "Vous avez perdu 3 points de vie : blessures",
   },
   {
     message: { key: "lostLifeTo", params: { amount: 1, cause: "combat" } },
     en: "Lost 1 life: combat",
-    fr: "Tu as perdu 1 point de vie : combat",
+    fr: "Vous avez perdu 1 point de vie : combat",
   },
   {
     message: { key: "gainedLife", params: { amount: 4 } },
     en: "Gained 4 life",
-    fr: "Tu as gagné 4 points de vie",
+    fr: "Vous avez gagné 4 points de vie",
   },
   {
     message: { key: "producedMana", params: { amount: 3 } },
     en: "Produced 3 mana",
-    fr: "Tu as produit 3 mana",
+    fr: "Vous avez produit 3 mana",
   },
   {
     message: {
@@ -227,7 +227,7 @@ const LINES: readonly Line[] = [
       params: { counter: "poison", count: 2, total: 2 },
     },
     en: "Gained 2 poison counters (2 in total)",
-    fr: "Tu as reçu 2 marqueurs poison (2 au total)",
+    fr: "Vous avez reçu 2 marqueurs poison (2 au total)",
   },
   {
     message: {
@@ -235,7 +235,7 @@ const LINES: readonly Line[] = [
       params: { counter: "experience", count: 1, total: 4 },
     },
     en: "Gained 1 experience counter (4 in total)",
-    fr: "Tu as reçu 1 marqueur d’expérience (4 au total)",
+    fr: "Vous avez reçu 1 marqueur d’expérience (4 au total)",
   },
   {
     message: {
@@ -243,12 +243,12 @@ const LINES: readonly Line[] = [
       params: { counter: "energy", count: 1, total: 2 },
     },
     en: "Lost 1 energy counter (2 in total)",
-    fr: "Tu as perdu 1 marqueur d’énergie (2 au total)",
+    fr: "Vous avez perdu 1 marqueur d’énergie (2 au total)",
   },
   {
     message: { key: "gotCitysBlessing" },
     en: "Got the city's blessing",
-    fr: "Tu as obtenu la bénédiction de la cité",
+    fr: "Vous avez obtenu la bénédiction de la cité",
   },
   {
     message: { key: "dayNightBegan", params: { to: "night" } },
@@ -273,7 +273,7 @@ const LINES: readonly Line[] = [
   {
     message: { key: "becameMonarch" },
     en: "Became the monarch",
-    fr: "Tu deviens le monarque",
+    fr: "Vous devenez le monarque",
   },
   {
     message: { key: "opponentBecameMonarch" },
@@ -283,7 +283,7 @@ const LINES: readonly Line[] = [
   {
     message: { key: "tookInitiative" },
     en: "Took the initiative",
-    fr: "Tu prends l’initiative",
+    fr: "Vous prenez l’initiative",
   },
   {
     message: { key: "opponentTookInitiative" },
@@ -293,7 +293,7 @@ const LINES: readonly Line[] = [
   {
     message: { key: "ringTempted", params: { total: 2 } },
     en: "The Ring tempted you (2 in total)",
-    fr: "L’Anneau t’a tenté (2 au total)",
+    fr: "L’Anneau vous a tenté (2 au total)",
   },
   {
     message: { key: "note", params: { text: "Opponent at 12" } },

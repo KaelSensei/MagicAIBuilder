@@ -163,7 +163,7 @@ describe("the playtest's cheat sheet", () => {
     expect(within(sheet).getByText("D")).toBeInTheDocument();
     expect(within(sheet).getByText("Piocher une carte")).toBeInTheDocument();
     expect(
-      within(sheet).getByText("Mélanger ta bibliothèque")
+      within(sheet).getByText("Mélanger votre bibliothèque")
     ).toBeInTheDocument();
   });
 });

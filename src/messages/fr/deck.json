@@ -571,7 +571,7 @@
   "community": {
     "upvote": "Voter pour",
     "downvote": "Voter contre",
-    "signInToVote": "Connecte-toi pour voter",
+    "signInToVote": "Connectez-vous pour voter",
     "commanderDecksTitle": "Decks {commander}",
     "commanderDecksSubtitle": "Decks publics menés par ce commandant, classés par votes de la communauté.",
     "noDecks": "Aucun deck public pour ce commandant pour l'instant.",
