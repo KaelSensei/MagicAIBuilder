@@ -20,7 +20,7 @@
  *
  * @module deck/use-built-deck-save
  */
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { countCopies } from "@/hooks/useAIDeckBuild";
 import type { BuildResult } from "@/hooks/useAIDeckBuild";
 import { useDeckStore, type DeckStore } from "@/lib/deck/store";
@@ -117,6 +117,40 @@ function useImportProgress(): ImportProgress {
   return { importedCount, importTotal, start, setImportedCount };
 }
 
+/** The save session a save started in. */
+interface SaveSession {
+  /** False once a `reset` came after the save started. */
+  readonly isCurrent: () => boolean;
+}
+
+/** Hands each save the session it starts in; `renew` ends the current one. */
+interface SaveSessions {
+  readonly begin: () => SaveSession;
+  readonly renew: () => void;
+}
+
+/**
+ * Tells a save whether the wizard moved on since it started. The wizard's `reset` (on open, and on
+ * "Try again") starts a new session; a save still running from an earlier one is late: its deck
+ * stays stored, but what it ends with must not replace the new build's screen or open its own deck
+ * in the middle of the new build (I-02).
+ *
+ * The count lives in a ref, not in state: a save compares the count it began with against the
+ * latest one, which its render-time closure would not see. `renew` keeps one identity, so the save
+ * step's `reset` does too.
+ */
+function useSaveSessions(): SaveSessions {
+  const latest = useRef(0);
+  const renew = useCallback(() => {
+    latest.current += 1;
+  }, []);
+  const begin = (): SaveSession => {
+    const started = latest.current;
+    return { isCurrent: () => latest.current === started };
+  };
+  return { begin, renew };
+}
+
 /** The deck store's actions that fill a created deck, and the counter of its import. */
 interface DeckFill extends Pick<
   DeckStore,
@@ -174,6 +208,8 @@ export function useBuiltDeckSave(
     useDeckStore();
   const progress = useImportProgress();
   const { start: startImport } = progress;
+  const sessions = useSaveSessions();
+  const { renew: renewSession } = sessions;
   const [correctedDeck, setCorrectedDeck] = useState<CorrectedDeck | null>(
     null
   );
@@ -199,6 +235,7 @@ export function useBuiltDeckSave(
   };
 
   const store = async (attempt: DeckToCreate): Promise<void> => {
+    const session = sessions.begin();
     setUnsavedDeck(null);
     const deckId = await createOrHold(attempt);
     if (deckId === null) return;
@@ -209,6 +246,7 @@ export function useBuiltDeckSave(
       addDeckCard,
       progress,
     });
+    if (!session.isCurrent()) return;
 
     // An incomplete deck says so first, its corrections under it: the player
     // has cards to add by hand.
@@ -230,11 +268,12 @@ export function useBuiltDeckSave(
     unsavedDeck ? store(unsavedDeck) : Promise.resolve();
 
   const reset = useCallback(() => {
+    renewSession();
     startImport(0);
     setCorrectedDeck(null);
     setUnsavedDeck(null);
     setUnfinishedDeck(null);
-  }, [startImport]);
+  }, [renewSession, startImport]);
 
   return {
     importedCount: progress.importedCount,
