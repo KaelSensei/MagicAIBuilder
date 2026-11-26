@@ -232,11 +232,14 @@ describe("after Scryfall answers 429", () => {
     await answered;
     const settled = await Promise.allSettled(waiting);
 
-    expect(settled.map((outcome) => outcome.status)).toEqual([
-      "rejected",
-      "rejected",
-      "rejected",
-    ]);
+    const refused = {
+      status: "rejected",
+      reason: expect.any(ScryfallBlockedError),
+    };
+    expect(settled).toEqual([refused, refused, refused]);
+    expect(settled).toMatchObject(
+      waiting.map(() => ({ reason: { status: 429 } }))
+    );
     expect(send).not.toHaveBeenCalled();
   });
 
