@@ -769,6 +769,8 @@
     "deckNotSaved": "Your deck was built, but it could not be saved. The build is kept: try saving it again.",
     "trySavingAgain": "Try saving again",
     "addingCards": "Aggiunta delle carte al mazzo…",
+    "buildStepConsulting": "Consulting the AI oracle…",
+    "buildStepBuilding": "Building card list…",
     "demoDeckNotice": "Mazzo dimostrativo — nessun fornitore IA è configurato su questo deployment, questa lista è solo un segnaposto.",
     "correctionsTitle": "Checked against card data: {count, plural, one {# correction} other {# corrections}}",
     "correctionsIntro": "The AI's list broke Commander rules. These changes were made before the deck was saved.",

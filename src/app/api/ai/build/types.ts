@@ -5,6 +5,7 @@
  * server module just to name an event.
  */
 
+import type { BuildStep } from "@/lib/ai/build-step";
 import type { BracketLevel } from "@/lib/constants/brackets";
 
 export type BuildColor = "W" | "U" | "B" | "R" | "G" | "C";
@@ -79,7 +80,13 @@ export type DeckCorrection =
     };
 
 export type BuildEvent =
-  | { type: "status"; message: string }
+  | {
+      type: "status";
+      /** What the build is doing; the client words it in the player's language. */
+      step: BuildStep;
+      /** The step's English line, for a client loaded before steps existed; kept one release (`status-event.ts`). */
+      message: string;
+    }
   | { type: "commander"; name: string }
   | { type: "card"; name: string; category: string; quantity: number }
   | {

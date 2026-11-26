@@ -35,6 +35,7 @@ import { getListedImageUri } from "@/lib/scryfall/images";
 import type { BracketLevel } from "@/lib/deck/types";
 import { createDeckPlan } from "@/lib/ai/deck-plan";
 import { deckBuildFailureMessageKey } from "@/lib/ai/build-failure";
+import { buildStepMessageKey, type BuildStep } from "@/lib/ai/build-step";
 import type { BuildRequest } from "@/app/api/ai/build/types";
 import { GeneratedDeckCorrections } from "./GeneratedDeckCorrections";
 import { useBuiltDeckSave } from "./use-built-deck-save";
@@ -556,7 +557,7 @@ function StepPlan({ request }: { readonly request: BuildRequest }) {
 // Loading step (step 5)
 // ---------------------------------------------------------------------------
 function StepLoading({
-  statusMessages,
+  step,
   commander,
   cardCount,
   totalCards,
@@ -565,7 +566,7 @@ function StepLoading({
   importTotal,
   error,
 }: {
-  readonly statusMessages: string[];
+  readonly step: BuildStep | null;
   readonly commander: string | null;
   readonly cardCount: number;
   readonly totalCards: number | null;
@@ -578,7 +579,7 @@ function StepLoading({
   const isImporting = importTotal > 0;
   const lastMsg = isImporting
     ? t("wizard.addingCards")
-    : (statusMessages.at(-1) ?? t("wizard.thinking"));
+    : t(buildStepMessageKey(step));
 
   // While streaming, measure against what the server said it would send; while
   // importing, against the copies actually being written to the deck.
@@ -930,7 +931,7 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
                         {t("wizard.aiBuilding")}
                       </h2>
                       <StepLoading
-                        statusMessages={buildState.statusMessages}
+                        step={buildState.step}
                         commander={buildState.commander}
                         cardCount={countCopies(buildState.cards)}
                         totalCards={buildState.totalCards}
