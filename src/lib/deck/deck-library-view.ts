@@ -45,7 +45,9 @@ export interface LibraryViewInput<TDeck> {
  *
  * - `loading`: the skeleton cards.
  * - `sessionBlocked`: the session-timeout panel with its retry.
- * - `loadFailed`: the failure panel, showing `error` and a reload retry.
+ * - `loadFailed`: the failure panel, a translated message and a reload retry.
+ *   It carries no error text: the listing's error is diagnostic English, kept
+ *   in the log, never shown to the player (I-04).
  * - `empty`: the "start building" panel.
  * - `searchEmpty`: the "no deck matches" notice; `deckCount` feeds the
  *   subtitle and `refreshFailed` the refresh notice above the list.
@@ -54,7 +56,7 @@ export interface LibraryViewInput<TDeck> {
 export type LibraryView<TDeck> =
   | { readonly kind: "loading" }
   | { readonly kind: "sessionBlocked" }
-  | { readonly kind: "loadFailed"; readonly error: string }
+  | { readonly kind: "loadFailed" }
   | { readonly kind: "empty" }
   | {
       readonly kind: "searchEmpty";
@@ -109,7 +111,7 @@ export function deriveLibraryView<TDeck>(
   }
   if (isFirstListingPending(input)) return { kind: "loading" };
   if (input.sessionTimedOut) return { kind: "sessionBlocked" };
-  if (loadError !== null) return { kind: "loadFailed", error: loadError };
+  if (loadError !== null) return { kind: "loadFailed" };
   return { kind: "empty" };
 }
 
