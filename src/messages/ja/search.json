@@ -15,6 +15,7 @@
   "resultCount": "{count, number} results",
   "gridView": "Grid view",
   "listView": "List view",
+  "viewMode": "Result view",
   "setPlaceholder": "Search set (e.g. dsk, mh3…)",
   "loadingSets": "Loading sets…",
   "setsLoadFailed": "Failed to load sets",
