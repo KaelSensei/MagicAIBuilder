@@ -116,11 +116,13 @@ an account, and the deck list's sort and grouping preferences are kept in `local
 Every request to `api.scryfall.com`, from the browser or the server, waits its turn in one queue
 per runtime: `scheduleScryfallRequest` in `src/lib/scryfall/request-queue.ts` starts one request
 at a time, at least 100 ms apart. That includes card rulings (`src/lib/scryfall/rulings.ts`) and
-the set list of the set autocomplete (`getAllSets` in `src/lib/scryfall/client.ts`). Scryfall requires a `User-Agent` and an `Accept` header on every
-request ([API documentation](https://scryfall.com/docs/api), read 2026-11-10). The server sends
-the app's one `USER_AGENT` (`src/lib/http.ts`); the browser keeps its own, as Scryfall asks of
-on-page JavaScript. A request that has not answered after 10 seconds is aborted
-(`SCRYFALL_TIMEOUT_MS` in `src/lib/scryfall/client.ts`), so a hung request cannot hold the queue.
+the set list of the set autocomplete (`getAllSets` in `src/lib/scryfall/client.ts`). Scryfall
+requires a `User-Agent` and an `Accept` header on every request
+([API documentation](https://scryfall.com/docs/api), read 2026-11-10). The server sends the app's
+one `USER_AGENT` (`src/lib/http.ts`); the browser keeps its own, as Scryfall asks of on-page
+JavaScript. A request that has not answered after 10 seconds is aborted (`SCRYFALL_TIMEOUT_MS` in
+`src/lib/scryfall/client.ts`; 15 seconds for rulings, `RULINGS_TIMEOUT_MS` in `rulings.ts`), so a
+hung request holds the queue for at most that long.
 
 Scryfall's published hard limits are stricter for card endpoints: 2 requests per second (500 ms)
 on `/cards/search`, `/cards/named`, `/cards/random` and `/cards/collection`, 10 per minute on
