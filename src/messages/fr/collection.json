@@ -71,7 +71,8 @@
   },
   "empty": {
     "title": "Votre collection est vide.",
-    "hint": "Ajoutez des cartes en utilisant le bouton ci-dessus ou depuis la recherche de cartes.",
+    "purpose": "Ajoutez les cartes que vous possédez : vos decks indiqueront celles que vous avez et celles qu’il vous reste à acheter.",
+    "addCards": "Ajouter des cartes",
     "noMatch": "Aucune carte ne correspond à votre recherche."
   },
   "listHeaders": {

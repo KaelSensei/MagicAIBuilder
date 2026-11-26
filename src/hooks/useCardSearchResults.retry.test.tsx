@@ -65,7 +65,9 @@ function SearchPanel({
     collectionOnly,
     sessionStatus: "authenticated",
   });
-  return <SearchResults {...results} />;
+  // These tests are about retries; the builder decides an empty result's next
+  // step, pinned in `page.search-query.test.tsx`.
+  return <SearchResults {...results} nextStep={{ kind: "none" }} />;
 }
 
 /**

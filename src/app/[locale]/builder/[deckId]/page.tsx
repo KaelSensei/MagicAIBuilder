@@ -67,6 +67,9 @@ import {
 } from "@/lib/scryfall/search";
 import { SetAutocomplete } from "@/components/search/SetAutocomplete";
 import type { SearchFilters as Filters } from "@/lib/scryfall/search-types";
+import { NO_SEARCH_FILTERS } from "@/lib/scryfall/search-filters";
+import { emptySearchNextStep } from "@/components/builder/empty-search-next-step";
+import { focusSearchField } from "@/components/builder/focus-search-field";
 import type { DeckCard, CardCategory, DeckZone } from "@/lib/deck/types";
 import { getFormatConfig, type DeckFormat } from "@/lib/deck/formats";
 import type { PairingCard } from "@/lib/deck/partner-abilities";
@@ -267,27 +270,6 @@ function getCategoryFromDropId(overId: string): string | null {
   return null;
 }
 
-const DEFAULT_FILTERS: Filters = {
-  colors: [],
-  colorMode: "or",
-  colorlessFilter: false,
-  landFilter: false,
-  types: [],
-  cmcMode: "range",
-  cmcMin: null,
-  cmcMax: null,
-  cmcExact: null,
-  priceMin: null,
-  priceMax: null,
-  subtype: "",
-  keyword: "",
-  powerMin: null,
-  powerMax: null,
-  toughnessMin: null,
-  toughnessMax: null,
-  interactionType: null,
-};
-
 interface UnavailableBuilderPageProps {
   readonly deckId: string;
   readonly isSyncing: boolean;
@@ -447,7 +429,7 @@ export default function BuilderPage() {
     maxWidth: 520,
     storageKey: "builder-search-panel-width",
   });
-  const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
+  const [filters, setFilters] = useState<Filters>(NO_SEARCH_FILTERS);
   const [showFilters, setShowFilters] = useState(false);
   const [commanderMode, setCommanderMode] = useState(false);
   const [partnerMode, setPartnerMode] = useState(false);
@@ -566,11 +548,30 @@ export default function BuilderPage() {
 
   // Set and colour search show no filters panel, so a "Collection only" left on there must not
   // filter a list whose toggle the player cannot see.
+  const collectionOnly =
+    searchMode === "name" && filters.collectionOnly === true;
   const searchResults = useCardSearchResults(query, {
-    collectionOnly: searchMode === "name" && filters.collectionOnly === true,
+    collectionOnly,
     sessionStatus,
   });
   const searchLoading = searchResults.isLoading;
+  // "Clear filters" removes itself on the press, so focus moves to the search field instead of
+  // falling to <body>.
+  const searchControlsRef = useRef<HTMLDivElement>(null);
+  const clearFilters = useCallback(() => {
+    setFilters(NO_SEARCH_FILTERS);
+    focusSearchField(searchControlsRef.current);
+  }, []);
+  const emptyResultNextStep = emptySearchNextStep(
+    {
+      tab: searchMode,
+      picking: commanderMode || partnerMode || companionMode,
+      pinned: pinnedQuery !== null,
+      filters,
+      collectionOnly,
+    },
+    clearFilters
+  );
 
   const handleSearch = useCallback((text: string) => {
     setSearchText(text);
@@ -1028,7 +1029,10 @@ export default function BuilderPage() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <div className="space-y-3 border-b border-[var(--border)] p-4">
+            <div
+              ref={searchControlsRef}
+              className="space-y-3 border-b border-[var(--border)] p-4"
+            >
               {/* Search mode tabs */}
               <div className="flex gap-1 rounded-[var(--lumen-radius-pill)] bg-[var(--background)] p-1">
                 {(["name", "set", "color"] as const).map((mode) => (
@@ -1153,6 +1157,7 @@ export default function BuilderPage() {
                 onAddToZone={handleAddToZone}
                 draggable={true}
                 executedQuery={pinnedQueryLabel(pinnedQuery)}
+                nextStep={emptyResultNextStep}
               />
             </div>
           </motion.div>
