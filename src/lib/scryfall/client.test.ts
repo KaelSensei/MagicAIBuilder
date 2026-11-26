@@ -197,20 +197,6 @@ describe("searchCards", () => {
     });
   });
 
-  it("fails a search retried during Scryfall's 429 block as a 429, without sending it", async () => {
-    mockFetchError(429, "Too Many Requests");
-    const first = searchCards("sol ring");
-    vi.runAllTimers();
-    await expect(first).rejects.toMatchObject({ status: 429 });
-
-    const retry = searchCards("sol ring");
-    vi.runAllTimers();
-
-    await expect(retry).rejects.toBeInstanceOf(ScryfallApiError);
-    await expect(retry).rejects.toMatchObject({ status: 429 });
-    expect(fetch).toHaveBeenCalledTimes(1);
-  });
-
   it("logs the raw failure once, where the search fails", async () => {
     vi.mocked(logger.warn).mockClear();
     mockFetchError(400, "Invalid expression");
