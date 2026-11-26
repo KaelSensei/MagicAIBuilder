@@ -37,12 +37,17 @@ export interface DrawOddsQuestion {
  *   holds, such as a late turn with a short library.
  * - `more-matching-than-library`: more matching cards than the library holds,
  *   which no real deck can produce.
+ * - `more-wanted-than-drawn`: the minimum is above the cards drawn, such as
+ *   at least 3 in 2 cards. No hand can hold it, so the chance is a certain
+ *   zero, but a player would read 0% as a measured chance; the number is more
+ *   likely a typo than a question (I-97 AC-97-04).
  * - `not-a-card-count`: a count that is negative or not a whole number.
  */
 export type DrawOddsGap =
   | "empty-library"
   | "more-drawn-than-library"
   | "more-matching-than-library"
+  | "more-wanted-than-drawn"
   | "not-a-card-count";
 
 /** The answer to a draw-odds question, or the reason there is none. */
@@ -65,7 +70,8 @@ function isCardCount(count: number): boolean {
 
 /**
  * The reason a question has no answer, checked in the order a player would fix
- * it: an unusable count first, then an empty library, then impossible sizes.
+ * it: an unusable count first, then an empty library, then impossible sizes,
+ * then a minimum no draw of that size can reach.
  *
  * @param question - the question to check
  * @returns the gap, or `null` when the question can be answered
@@ -78,6 +84,7 @@ function findGap(question: DrawOddsQuestion): DrawOddsGap | null {
   if (librarySize === 0) return "empty-library";
   if (drawn > librarySize) return "more-drawn-than-library";
   if (matching > librarySize) return "more-matching-than-library";
+  if (minimum > drawn) return "more-wanted-than-drawn";
   return null;
 }
 
@@ -117,7 +124,8 @@ function shareOfHitHands(question: DrawOddsQuestion): number {
  *
  * @param question - the library, the matching cards, the draw and the minimum
  * @returns the exact chance, or `unknown` with the reason the question cannot
- *   be answered; never a zero standing in for a missing value
+ *   be answered; never a zero standing in for a missing value or for a
+ *   minimum above the cards drawn
  */
 export function chanceOfAtLeast(question: DrawOddsQuestion): DrawOdds {
   const gap = findGap(question);

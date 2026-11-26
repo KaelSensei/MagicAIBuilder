@@ -456,6 +456,16 @@ describe("DrawOddsPanel, when the deck holds nothing to count (AC-97-05)", () =>
     expect(inputValue("Matching cards")).toBe("0");
   });
 
+  it("says no land is counted, rather than naming the minimum, when a deck without lands is asked for more lands than the cards drawn", async () => {
+    const user = userEvent.setup();
+    renderPanel(landlessDeck());
+
+    await typeMinimum(user, "8");
+
+    expect(answer()).toHaveTextContent("No land is counted in the main deck.");
+    expectNoFigure();
+  });
+
   it("still answers a chosen card's question in a deck without lands", async () => {
     const user = userEvent.setup();
     renderPanel(landlessDeck());
