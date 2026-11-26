@@ -27,6 +27,7 @@ import {
 } from "./EmptySearchResult";
 import {
   searchResultsView,
+  type SearchChoice,
   type SearchResultsPhase,
 } from "./search-results-view";
 import { searchFailureMessageKey } from "./search-failure";
@@ -49,6 +50,11 @@ interface SearchResultsProps {
    * decides, since only it knows which filters its query reads.
    */
   readonly nextStep: EmptySearchNextStep;
+  /**
+   * The choice the tab waits for because it sent no search, such as a set on By Set; `null` once
+   * it sent one. Required: only the page knows whether an empty list means "nothing searched".
+   */
+  readonly waitingFor: SearchChoice | null;
 }
 
 /** The box around the status line: centred for a message, a header row above a list. */
@@ -58,6 +64,7 @@ const FRAME_CLASS: Readonly<Record<SearchResultsPhase, string>> = {
   failed: "flex flex-col items-center justify-center h-40 text-red-400 gap-2",
   blocked:
     "flex h-40 flex-col items-center justify-center gap-2 px-6 text-center text-sm text-[var(--text-secondary)]",
+  idle: "flex flex-col items-center justify-center min-h-40 px-6 py-4 text-center text-[var(--text-secondary)] text-sm",
   empty:
     "flex flex-col items-center justify-center min-h-40 py-4 text-[var(--text-secondary)] text-sm",
   listed: "flex items-center justify-between px-3 py-1.5",
@@ -68,6 +75,7 @@ const STATUS_CLASS: Readonly<Record<SearchResultsPhase, string | undefined>> = {
   searching: undefined,
   failed: undefined,
   blocked: "block",
+  idle: "block",
   empty: "block",
   listed: "text-xs text-[var(--text-secondary)]",
 };
@@ -80,6 +88,7 @@ function PhaseIcon({ phase }: { readonly phase: SearchResultsPhase }) {
       return <AlertCircle className="w-5 h-5" />;
     case "blocked":
       return <Package className="h-5 w-5" aria-hidden="true" />;
+    case "idle":
     case "empty":
     case "listed":
       return null;
@@ -93,18 +102,16 @@ function PhaseIcon({ phase }: { readonly phase: SearchResultsPhase }) {
 /**
  * Shows, in this order of precedence: a spinner while loading, why the search failed in the
  * player's words (`search-failure.ts`; never the thrown message), a "Collection only"
- * notice when there was no collection to filter by, an empty state, or the cards with their count.
+ * notice when there was no collection to filter by, what to choose when the tab sent no search,
+ * an empty state, or the cards with their count.
  * The status line between them is one `<output>` that every state keeps mounted.
  */
 export function SearchResults(props: SearchResultsProps) {
   const { cards, error, collectionOnly, executedQuery, nextStep } = props;
   const t = useTranslations("search");
   const { phase, status } = searchResultsView({
-    isLoading: props.isLoading,
-    error,
+    ...props,
     cardCount: cards.length,
-    totalCards: props.totalCards,
-    collectionOnly,
   });
   const statusText = status ? t(status.key, status.values) : "";
   const coverageNote = collectionOnly?.kind === "scanned" && (

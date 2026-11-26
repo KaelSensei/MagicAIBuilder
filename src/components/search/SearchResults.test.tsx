@@ -34,6 +34,7 @@ function renderOwned(
         totalCards={cards.length}
         collectionOnly={collectionOnly}
         nextStep={NO_NEXT_STEP}
+        waitingFor={null}
       />
     </SessionProvider>,
     { locale }
@@ -146,6 +147,7 @@ function searchProps(
     isLoading: false,
     error: null,
     nextStep: NO_NEXT_STEP,
+    waitingFor: null,
     ...overrides,
   };
 }
@@ -392,5 +394,64 @@ describe("SearchResults with no result", () => {
         "Astuce : cherchez par type ou par texte de règles, par exemple t:dragon o:flying."
       )
     ).toBeInTheDocument();
+  });
+});
+
+/*
+ * By Set and By Color send no search until the player chooses a set or colours. The page says
+ * which choice its tab waits for (`components/builder/search-waiting-for.ts`), and the list asks
+ * for it instead of saying that no card was found (I-13).
+ */
+describe("SearchResults before the tab has sent a search", () => {
+  it("asks for a set in the polite status line, with no empty result or next step", () => {
+    renderSearch(
+      searchProps({
+        waitingFor: "set",
+        nextStep: { kind: "clearFilters", onClearFilters: vi.fn() },
+      })
+    );
+
+    const status = screen.getByRole("status");
+    expect(status.textContent).toBe("Choose a set to list its cards.");
+    expect(status).toHaveAttribute("aria-live", "polite");
+    expect(screen.queryByRole("button")).toBeNull();
+  });
+
+  it("asks for colours on By Color", () => {
+    renderSearch(searchProps({ waitingFor: "colors" }));
+
+    expect(screen.getByRole("status").textContent).toBe(
+      "Choose colors to list their cards."
+    );
+  });
+
+  it("keeps the same status region mounted once the chosen set is searched, so the search is announced", () => {
+    const { rerender } = renderSearch(searchProps({ waitingFor: "set" }));
+    const whileWaiting = screen.getByRole("status");
+
+    rerender(<SearchResults {...searchProps({ isLoading: true })} />);
+
+    expect(screen.getByRole("status")).toBe(whileWaiting);
+    expect(whileWaiting.textContent).toBe("Searching…");
+  });
+
+  it("asks a French player, addressing them as « vous »", () => {
+    const { unmount } = renderWithProviders(
+      <SearchResults {...searchProps({ waitingFor: "set" })} />,
+      { session: null, locale: "fr" }
+    );
+    expect(screen.getByRole("status").textContent).toBe(
+      "Choisissez une édition pour en afficher les cartes."
+    );
+    unmount();
+
+    renderWithProviders(
+      <SearchResults {...searchProps({ waitingFor: "colors" })} />,
+      { session: null, locale: "fr" }
+    );
+
+    expect(screen.getByRole("status").textContent).toBe(
+      "Choisissez des couleurs pour en afficher les cartes."
+    );
   });
 });
