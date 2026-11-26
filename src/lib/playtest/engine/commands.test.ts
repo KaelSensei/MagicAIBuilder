@@ -474,6 +474,8 @@ function blockedScenario(
       return { state: { ...base, library: [] }, command: { type: "draw" } };
     case "negative-damage":
       return { state: base, command: { type: "damage", amount: -3 } };
+    case "negative-heal":
+      return { state: base, command: { type: "heal", amount: -3 } };
     case "not-on-battlefield":
       return {
         state: base,
@@ -675,7 +677,8 @@ const PINNED_REASONS: Readonly<
   nextTurn: ["choosing-bottom"],
   shuffleLibrary: ["choosing-bottom"],
   damage: ["choosing-bottom", "negative-damage"],
-  heal: ["choosing-bottom"],
+  // Changed on purpose: a negative heal is refused since the fix for CR 107.1b (I-07).
+  heal: ["choosing-bottom", "negative-heal"],
   commanderDamage: [
     "choosing-bottom",
     "no-commander-damage",
@@ -747,6 +750,34 @@ describe("damage amounts through the reducer", () => {
     expect(
       playtestCommandBlockReason(state, { type: "damage", amount: 0 }, deps)
     ).toBeNull();
+  });
+});
+
+// CR 107.1b: no one gains negative life, so a negative heal must not lower the life total; a
+// heal of 0 is still applied, as damage of 0 is.
+describe("heal amounts through the reducer", () => {
+  it("refuses a negative heal: same life total, same life history, same state", () => {
+    const state = baseState();
+    const negativeHeal: PlaytestCommand = { type: "heal", amount: -3 };
+
+    const result = reducePlaytest(state, negativeHeal, deps);
+
+    expect(result.lifeTotal).toBe(state.lifeTotal);
+    expect(result.lifeHistory).toEqual(state.lifeHistory);
+    expect(result).toBe(state);
+    expect(playtestCommandBlockReason(state, negativeHeal, deps)).toBe(
+      "negative-heal"
+    );
+  });
+
+  it("applies a heal of 0 as the transition always has, as damage of 0 is applied", () => {
+    const state = baseState();
+    const zeroHeal: PlaytestCommand = { type: "heal", amount: 0 };
+
+    const result = reducePlaytest(state, zeroHeal, deps);
+
+    expect(result).toEqual(applyHeal(state, 0, deps));
+    expect(playtestCommandBlockReason(state, zeroHeal, deps)).toBeNull();
   });
 });
 
