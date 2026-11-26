@@ -72,7 +72,8 @@ function useHoldWhile(id: string, held: boolean): void {
 function ToastItem({ toast }: { readonly toast: Toast }) {
   const t = useTranslations("common");
   // A toast raised by a catalog key (`LocalizedToastKey`) is translated here,
-  // the one place with a locale; the keys span namespaces, hence no prefix.
+  // the one place with a locale, with its values (card names, counts); the
+  // keys span namespaces, hence no prefix.
   const translate = useTranslations();
   const remove = useToastStore((state) => state.remove);
   const [hovered, setHovered] = useState(false);
@@ -97,7 +98,7 @@ function ToastItem({ toast }: { readonly toast: Toast }) {
       <span className="flex-1 text-sm leading-tight text-[var(--text-primary)]">
         {typeof toast.message === "string"
           ? toast.message
-          : translate(toast.message.key)}
+          : translate(toast.message.key, toast.message.values)}
       </span>
       <button
         type="button"

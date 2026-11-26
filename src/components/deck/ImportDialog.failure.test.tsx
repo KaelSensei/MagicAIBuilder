@@ -25,6 +25,7 @@ import {
 import { setupMsw } from "@/test/msw";
 import { renderWithProviders } from "@/test/render";
 import { recordToasts } from "@/test/toast-recorder";
+import { recordedToasts } from "@/test/toast-text";
 import { ImportDialog } from "./ImportDialog";
 
 const COLLECTION_URL = `${SCRYFALL_API}/cards/collection`;
@@ -113,10 +114,10 @@ describe("ImportDialog — when Scryfall or the deck API fails", () => {
     );
 
     await vi.waitFor(() => {
-      expect(toastAdd).toHaveBeenCalledWith(
+      expect(recordedToasts(toastAdd)).toContainEqual([
         "error",
-        "Could not add card. Please retry."
-      );
+        "Could not add card. Please retry.",
+      ]);
     });
     // The import settles as finished, not as failed: the confirm button,
     // which an error leaves in place, is gone. The store never rethrows.
