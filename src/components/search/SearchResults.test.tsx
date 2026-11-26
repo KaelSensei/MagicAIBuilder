@@ -455,3 +455,22 @@ describe("SearchResults before the tab has sent a search", () => {
     );
   });
 });
+
+/*
+ * The grid and list switch sits in the header row of a listed result only: there is nothing to
+ * lay out while the search runs. `SearchViewModeToggle.test.tsx` pins the switch itself.
+ */
+describe("SearchResults' result view switch", () => {
+  it("offers the Result view switch above a listed result, and not while searching", () => {
+    const { rerender } = renderSearch(
+      searchProps({ cards: [aScryfallCard()], totalCards: 1 })
+    );
+    expect(
+      screen.getByRole("group", { name: "Result view" })
+    ).toBeInTheDocument();
+
+    rerender(<SearchResults {...searchProps({ isLoading: true })} />);
+
+    expect(screen.queryByRole("group", { name: "Result view" })).toBeNull();
+  });
+});

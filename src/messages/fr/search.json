@@ -15,6 +15,7 @@
   "resultCount": "{count, number} résultats",
   "gridView": "Vue grille",
   "listView": "Vue liste",
+  "viewMode": "Affichage des résultats",
   "setPlaceholder": "Rechercher une édition (ex. dsk, mh3…)",
   "loadingSets": "Chargement des éditions…",
   "setsLoadFailed": "Échec du chargement des éditions",
