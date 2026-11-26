@@ -18,7 +18,17 @@ import { useTranslations } from "next-intl";
 import { UserMenu } from "@/components/auth/UserMenu";
 import type { HeaderDeckActionsUiState } from "@/components/layout/header-deck-actions-state";
 import { HeaderDeckActionsSlot } from "@/components/layout/HeaderDeckActionsSlot";
-import { Link } from "@/i18n/navigation";
+import {
+  ariaCurrentPage,
+  CURRENT_PAGE_LINK_CLASS,
+  currentNavDestination,
+} from "@/components/layout/primary-nav";
+import { Link, usePathname } from "@/i18n/navigation";
+
+const MENU_LINK_CLASS = `rounded-[var(--lumen-radius-md)] px-3 py-2.5 text-sm text-[var(--text-secondary)] hover:bg-[var(--accent-soft)] hover:text-[var(--text-primary)] ${CURRENT_PAGE_LINK_CLASS}`;
+
+/** A menu link led by an icon. */
+const MENU_ICON_LINK_CLASS = `flex items-center gap-1.5 ${MENU_LINK_CLASS}`;
 
 interface HeaderMobileMenuProps {
   readonly open: boolean;
@@ -35,7 +45,8 @@ interface HeaderMobileMenuProps {
 /**
  * Full-width navigation shown under the header on small screens.
  *
- * Every link and action closes the menu as it runs.
+ * Every link and action closes the menu as it runs. The link to the page the
+ * player is on is marked as in the desktop bar (`primary-nav`).
  *
  * @returns the menu, or nothing while it is closed
  */
@@ -47,6 +58,7 @@ export function HeaderMobileMenu({
   onClose,
 }: HeaderMobileMenuProps) {
   const t = useTranslations("common");
+  const current = currentNavDestination(usePathname());
 
   if (!open) return null;
 
@@ -55,23 +67,26 @@ export function HeaderMobileMenu({
       <nav aria-label={t("nav.myDecks")} className="flex flex-col gap-1 p-4">
         <Link
           href="/decks"
+          aria-current={ariaCurrentPage(current, "decks")}
           onClick={onClose}
-          className="rounded-[var(--lumen-radius-md)] px-3 py-2.5 text-sm text-[var(--text-secondary)] hover:bg-[var(--accent-soft)] hover:text-[var(--text-primary)]"
+          className={MENU_LINK_CLASS}
         >
           {t("nav.myDecks")}
         </Link>
         <Link
           href="/collection"
+          aria-current={ariaCurrentPage(current, "collection")}
           onClick={onClose}
-          className="flex items-center gap-1.5 rounded-[var(--lumen-radius-md)] px-3 py-2.5 text-sm text-[var(--text-secondary)] hover:bg-[var(--accent-soft)] hover:text-[var(--text-primary)]"
+          className={MENU_ICON_LINK_CLASS}
         >
           <Package className="h-3.5 w-3.5" />
           {t("nav.collection")}
         </Link>
         <Link
           href="/rules/game-changers"
+          aria-current={ariaCurrentPage(current, "rules")}
           onClick={onClose}
-          className="flex items-center gap-1.5 rounded-[var(--lumen-radius-md)] px-3 py-2.5 text-sm text-[var(--text-secondary)] hover:bg-[var(--accent-soft)] hover:text-[var(--text-primary)]"
+          className={MENU_ICON_LINK_CLASS}
         >
           <Shield className="h-3.5 w-3.5" />
           {t("nav.rules")}
