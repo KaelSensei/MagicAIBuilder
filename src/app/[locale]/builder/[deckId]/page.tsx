@@ -69,6 +69,7 @@ import { SetAutocomplete } from "@/components/search/SetAutocomplete";
 import type { SearchFilters as Filters } from "@/lib/scryfall/search-types";
 import { NO_SEARCH_FILTERS } from "@/lib/scryfall/search-filters";
 import { emptySearchNextStep } from "@/components/builder/empty-search-next-step";
+import { focusSearchField } from "@/components/builder/focus-search-field";
 import type { DeckCard, CardCategory, DeckZone } from "@/lib/deck/types";
 import { getFormatConfig, type DeckFormat } from "@/lib/deck/formats";
 import type { PairingCard } from "@/lib/deck/partner-abilities";
@@ -553,7 +554,13 @@ export default function BuilderPage() {
     sessionStatus,
   });
   const searchLoading = searchResults.isLoading;
-  const clearFilters = useCallback(() => setFilters(NO_SEARCH_FILTERS), []);
+  // "Clear filters" removes itself on the press, so focus moves to the search field instead of
+  // falling to <body>.
+  const searchControlsRef = useRef<HTMLDivElement>(null);
+  const clearFilters = useCallback(() => {
+    setFilters(NO_SEARCH_FILTERS);
+    focusSearchField(searchControlsRef.current);
+  }, []);
   const emptyResultNextStep = emptySearchNextStep(
     {
       tab: searchMode,
@@ -1021,7 +1028,10 @@ export default function BuilderPage() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <div className="space-y-3 border-b border-[var(--border)] p-4">
+            <div
+              ref={searchControlsRef}
+              className="space-y-3 border-b border-[var(--border)] p-4"
+            >
               {/* Search mode tabs */}
               <div className="flex gap-1 rounded-[var(--lumen-radius-pill)] bg-[var(--background)] p-1">
                 {(["name", "set", "color"] as const).map((mode) => (

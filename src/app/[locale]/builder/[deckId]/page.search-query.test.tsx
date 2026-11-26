@@ -659,6 +659,18 @@ describe("the builder's search with no result", () => {
     expect(buttonCount("Clear filters")).toBe(0);
   });
 
+  // The button removes itself on the press; focus used to fall to <body>.
+  it("gives focus to the search field once Clear filters has gone", async () => {
+    const user = await openBuilderWithFilters();
+    await user.click(button("White"));
+    await lastSearchIs("id<=W legal:commander id<=U");
+
+    await user.click(await findButton("Clear filters"));
+
+    expect(buttonCount("Clear filters")).toBe(0);
+    expect(screen.getByPlaceholderText("Search cards…")).toHaveFocus();
+  });
+
   it("suggests the search syntax, and no Clear filters, when no filter narrows it", async () => {
     await openBuilderWithFilters();
 
