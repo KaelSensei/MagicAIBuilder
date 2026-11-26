@@ -128,6 +128,15 @@ on `/cards/search`, `/cards/named`, `/cards/random` and `/cards/collection`, 10 
 request to one of those endpoints from the previous request to the same endpoint
 (`ENDPOINT_SPACING_MS`: 500 ms, or 6 s for the manifest), on top of the 100 ms between any two.
 
+A 429 answer "will result in your access being limited for 30 seconds", and "it is not acceptable
+to ignore HTTP 429 responses" ([rate limits](https://scryfall.com/docs/api/rate-limits), read
+2026-11-26). After any 429, the queue blocks: until the end of the block it sends nothing, and
+every request that reaches it, or already waits in it, fails at once with a `ScryfallApiError` of
+status 429, which the search panel shows as "unavailable". The block lasts 30 seconds, or the
+`Retry-After` delay in seconds when Scryfall sends one, capped at 120 seconds
+(`RATE_LIMIT_BLOCK_MS`, `MAX_RETRY_AFTER_MS`). Each runtime has its own block: a browser tab
+protects itself, and a server function instance protects that instance only.
+
 TanStack Query's deduplication prevents duplicate concurrent requests. `getCardById()` reads the
 shared server cache first (see [Scryfall API Caching](#scryfall-api-caching)).
 
