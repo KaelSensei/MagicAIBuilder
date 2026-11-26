@@ -343,8 +343,9 @@ export default function BuilderPage() {
   // A deck deleted elsewhere: reading it again turns the page into "Deck not found".
   const duplicateDeck = useDeckDuplication({ onMissing: reloadActiveDeck });
   const handleDuplicate = useCallback(() => {
-    void duplicateDeck(deckId);
-  }, [duplicateDeck, deckId]);
+    const open = decks[deckId];
+    if (open) void duplicateDeck(open);
+  }, [duplicateDeck, deckId, decks]);
   const loadError = useDeckStore((s) => s.loadError);
   const deckOpenError = useDeckStore((s) => s.deckOpenError);
   const isSyncing = useDeckStore((s) => s.isSyncing);

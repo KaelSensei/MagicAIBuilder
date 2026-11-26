@@ -1070,6 +1070,9 @@
     "budgetFailed": "Could not save deck budget. Please retry.",
     "cardRemovalFailed": "Could not remove card. Please retry."
   },
+  "undo": {
+    "openOriginalDeck": "Open the original deck before retrying undo."
+  },
   "format": {
     "name": {
       "commander": "Commander",

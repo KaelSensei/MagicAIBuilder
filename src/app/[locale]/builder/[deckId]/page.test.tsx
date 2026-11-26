@@ -525,6 +525,35 @@ describe("characterization: builder page shell", () => {
       ]);
     });
 
+    // The server named every copy « … (Copy) », whatever the player's language (I-04).
+    it("asks for the copy under a name in the player's language", async () => {
+      server.use(
+        http.post("/api/decks/:id/duplicate", async ({ request }) => {
+          await record(request);
+          return HttpResponse.json(
+            savedDeck({ id: "deck-2", name: "Talrand Spells (copie)" }),
+            { status: 201 }
+          );
+        })
+      );
+      const { push } = renderBuilder(DECK_ID, PLAYER, "fr");
+      await screen.findByRole("heading", { level: 1, name: "Talrand Spells" });
+
+      await userEvent.click(screen.getByRole("button", { name: "Dupliquer" }));
+
+      await waitFor(() => expect(push).toHaveBeenCalledWith("/builder/deck-2"));
+      expect(
+        sent.filter(
+          (request) => request.line === `POST /api/decks/${DECK_ID}/duplicate`
+        )
+      ).toEqual([
+        {
+          line: `POST /api/decks/${DECK_ID}/duplicate`,
+          body: { name: "Talrand Spells (copie)" },
+        },
+      ]);
+    });
+
     // The handler had no catch: the rejection went unhandled and the player saw nothing (I-01).
     it("says in the player's language that the copy failed, and stays on the deck, when the server fails", async () => {
       server.use(

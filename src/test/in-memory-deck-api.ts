@@ -395,14 +395,15 @@ export function createInMemoryDeckApi(): InMemoryDeckApi {
         decks.delete(deckId);
       })
     ),
-    duplicateDeck: vi.fn<DuplicateDeck>((deckId: string) =>
+    // Named as the route names a copy: the name sent, else `<name> (Copy)`.
+    duplicateDeck: vi.fn<DuplicateDeck>((deckId: string, name?: string) =>
       prismaQuery(() => {
         const source = readable(deckId);
         const copyId = nextId("deck");
         const copy: ApiDeck = {
           ...structuredClone(source),
           id: copyId,
-          name: `${source.name} (Copy)`,
+          name: name ?? `${source.name} (Copy)`,
           cards: source.cards.map((row) => ({
             ...structuredClone(row),
             id: nextId("row"),

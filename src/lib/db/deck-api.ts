@@ -356,10 +356,24 @@ export async function deleteDeck(id: string): Promise<void> {
   if (!res.ok) await handleApiError(res, "deleteDeck");
 }
 
-export async function duplicateDeck(id: string): Promise<ApiDeck> {
+/**
+ * Asks the server for a private copy of a deck.
+ *
+ * @param id - the deck to copy
+ * @param name - the copy's name, in the player's language; left out, the
+ *   server names it `<name> (Copy)`
+ * @returns the copy, as the server wrote it
+ * @throws DeckApiError when the server refuses or fails the copy
+ */
+export async function duplicateDeck(
+  id: string,
+  name?: string
+): Promise<ApiDeck> {
   const res = await fetch(`/api/decks/${id}/duplicate`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    // JSON drops an undefined name, so a copy without one sends `{}`.
+    body: JSON.stringify({ name }),
   });
   if (!res.ok) await handleApiError(res, "duplicateDeck");
   return res.json();
