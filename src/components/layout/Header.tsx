@@ -61,6 +61,33 @@ function BrandWordmark({ name }: { readonly name: string }) {
 }
 
 /**
+ * The primary navigation on wide screens; `HeaderMobileMenu` holds the same
+ * links on small ones.
+ */
+function HeaderNav() {
+  const t = useTranslations("common");
+
+  return (
+    <nav
+      aria-label={t("nav.myDecks")}
+      className="ml-2 hidden items-center gap-1 md:flex"
+    >
+      <Link href="/decks" className={NAV_LINK_CLASS}>
+        {t("nav.myDecks")}
+      </Link>
+      <Link href="/collection" className={NAV_LINK_CLASS}>
+        <Package className="h-3.5 w-3.5" />
+        {t("nav.collection")}
+      </Link>
+      <Link href="/rules/game-changers" className={NAV_LINK_CLASS}>
+        <Shield className="h-3.5 w-3.5" />
+        {t("nav.rules")}
+      </Link>
+    </nav>
+  );
+}
+
+/**
  * The top bar of every page.
  *
  * On wide screens the deck actions, the language switch and the account menu
@@ -97,22 +124,7 @@ export function Header({
         </span>
       </Link>
 
-      <nav
-        aria-label={t("nav.myDecks")}
-        className="ml-2 hidden items-center gap-1 md:flex"
-      >
-        <Link href="/decks" className={NAV_LINK_CLASS}>
-          {t("nav.myDecks")}
-        </Link>
-        <Link href="/collection" className={NAV_LINK_CLASS}>
-          <Package className="h-3.5 w-3.5" />
-          {t("nav.collection")}
-        </Link>
-        <Link href="/rules/game-changers" className={NAV_LINK_CLASS}>
-          <Shield className="h-3.5 w-3.5" />
-          {t("nav.rules")}
-        </Link>
-      </nav>
+      <HeaderNav />
 
       <div className="ml-auto flex items-center gap-2">
         <ThemeToggle />
