@@ -121,6 +121,10 @@ function useImportProgress(): ImportProgress {
 interface SaveSession {
   /** False once a `reset` came after the save started. */
   readonly isCurrent: () => boolean;
+  /** `change`, made to do nothing once the session is over. */
+  readonly guard: <Args extends readonly unknown[]>(
+    change: (...args: Args) => void
+  ) => (...args: Args) => void;
 }
 
 /** Hands each save the session it starts in; `renew` ends the current one. */
@@ -146,9 +150,40 @@ function useSaveSessions(): SaveSessions {
   }, []);
   const begin = (): SaveSession => {
     const started = latest.current;
-    return { isCurrent: () => latest.current === started };
+    const isCurrent = () => latest.current === started;
+    return {
+      isCurrent,
+      guard:
+        (change) =>
+        (...args) => {
+          if (isCurrent()) change(...args);
+        },
+    };
   };
   return { begin, renew };
+}
+
+/** The deck store's action that creates a deck, and what keeps the built deck when it fails. */
+interface DeckCreation extends Pick<DeckStore, "createDeck"> {
+  /** Keeps the built deck for "Try saving again"; does nothing once the save's session is over. */
+  readonly hold: (attempt: DeckToCreate) => void;
+}
+
+/** The new deck's id, or null when the server refused it and `hold` kept the deck. */
+async function createOrHold(
+  attempt: DeckToCreate,
+  { createDeck, hold }: DeckCreation
+): Promise<string | null> {
+  try {
+    return await createDeck(attempt.deck.name, {
+      isAIGenerated: true,
+      idempotencyKey: attempt.idempotencyKey,
+    });
+  } catch (err) {
+    logger.error("Deck create error", "DeckWizard", err);
+    hold(attempt);
+    return null;
+  }
 }
 
 /** The deck store's actions that fill a created deck, and the counter of its import. */
@@ -218,26 +253,13 @@ export function useBuiltDeckSave(
     null
   );
 
-  /** The new deck's id, or null when the server refused it and the deck is now held. */
-  const createOrHold = async (
-    attempt: DeckToCreate
-  ): Promise<string | null> => {
-    try {
-      return await createDeck(attempt.deck.name, {
-        isAIGenerated: true,
-        idempotencyKey: attempt.idempotencyKey,
-      });
-    } catch (err) {
-      logger.error("Deck create error", "DeckWizard", err);
-      setUnsavedDeck(attempt);
-      return null;
-    }
-  };
-
   const store = async (attempt: DeckToCreate): Promise<void> => {
     const session = sessions.begin();
     setUnsavedDeck(null);
-    const deckId = await createOrHold(attempt);
+    const deckId = await createOrHold(attempt, {
+      createDeck,
+      hold: session.guard(setUnsavedDeck),
+    });
     if (deckId === null) return;
     const { result } = attempt.deck;
     const cardsNotAdded = await fillCreatedDeck(deckId, result, {
@@ -246,7 +268,15 @@ export function useBuiltDeckSave(
       addDeckCard,
       progress,
     });
-    if (!session.isCurrent()) return;
+    if (!session.isCurrent()) {
+      // Nothing reaches the player, so support reads here what became of the deck.
+      logger.info(
+        "Built deck save ended after the wizard was reset",
+        "DeckWizard",
+        { deckId, cardsNotAdded }
+      );
+      return;
+    }
 
     // An incomplete deck says so first, its corrections under it: the player
     // has cards to add by hand.

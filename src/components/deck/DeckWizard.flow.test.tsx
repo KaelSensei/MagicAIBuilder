@@ -1695,6 +1695,8 @@ describe("DeckWizard flow (characterization)", () => {
     const EARLIER_DECK_ID = DECK_ID;
     const NEXT_DECK_ID = "deck-ai-2";
     const BUILDING_HEADING = "AI is building your deck…";
+    /** What the save step logs, at info, when a save ends after the wizard was reset. */
+    const LATE_SAVE_LOG = "Built deck save ended after the wizard was reset";
 
     interface HeldRequest {
       /** Settles once the request reached the server. */
@@ -1748,7 +1750,9 @@ describe("DeckWizard flow (characterization)", () => {
     /** Lets the reopened wizard's build finish, and waits for its deck to open. */
     async function finishTheNextBuild(nextBuild: HeldRequest): Promise<void> {
       nextBuild.answer(ndjson(buildEvents()));
-      await waitFor(() => expect(onComplete).toHaveBeenCalledWith(NEXT_DECK_ID));
+      await waitFor(() =>
+        expect(onComplete).toHaveBeenCalledWith(NEXT_DECK_ID)
+      );
     }
 
     it("keeps the new build on screen, and opens only its deck, when the earlier save's card lookup fails late", async () => {
@@ -1809,6 +1813,56 @@ describe("DeckWizard flow (characterization)", () => {
 
       await finishTheNextBuild(nextBuild);
       expect(onComplete.mock.calls).toEqual([[NEXT_DECK_ID]]);
+    });
+
+    it("logs the earlier save's late end at info, with its deck id and the copies it could not add", async () => {
+      const info = vi.spyOn(logger, "info").mockImplementation(() => undefined);
+      serveDeckCreatesAsTheRoute();
+      const earlierLookup = holdNext("post", `${SCRYFALL}/cards/collection`);
+      await generateDeck();
+      await earlierLookup.asked;
+      await buildAgainInTheReopenedWizard();
+
+      earlierLookup.answer(new HttpResponse(null, { status: 503 }));
+
+      await waitFor(() =>
+        expect(info).toHaveBeenCalledWith(LATE_SAVE_LOG, "DeckWizard", {
+          deckId: EARLIER_DECK_ID,
+          cardsNotAdded: STREAMED_COPIES,
+        })
+      );
+      expect(info).toHaveBeenCalledOnce();
+    });
+
+    it("keeps the new build on screen, with no offer to save the earlier deck again, when the earlier create fails late", async () => {
+      const earlierCreate = holdNext("post", "/api/decks");
+      await generateDeck();
+      await earlierCreate.asked;
+      const nextBuild = await buildAgainInTheReopenedWizard();
+
+      earlierCreate.answer(
+        HttpResponse.json({ error: "Database unavailable" }, { status: 500 })
+      );
+      await waitFor(() =>
+        expect(logger.error).toHaveBeenCalledWith(
+          "Deck create error",
+          "DeckWizard",
+          expect.any(Error)
+        )
+      );
+
+      expect(screen.queryByText(DECK_NOT_SAVED)).toBeNull();
+      expect(
+        screen.queryByRole("button", { name: TRY_SAVING_AGAIN })
+      ).toBeNull();
+      expect(
+        screen.getByRole("heading", { name: BUILDING_HEADING })
+      ).toBeInTheDocument();
+
+      // The earlier create stored nothing, so the new build's deck is the first the server stores.
+      nextBuild.answer(ndjson(buildEvents()));
+      await waitForDeckOpened();
+      expect(onComplete).toHaveBeenCalledOnce();
     });
   });
 });
