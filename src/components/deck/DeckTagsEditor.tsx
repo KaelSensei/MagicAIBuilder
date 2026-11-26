@@ -122,7 +122,7 @@ export function DeckTagsEditor({ deckId, tags }: DeckTagsEditorProps) {
               }}
               placeholder={t("tags.placeholder")}
               maxLength={50}
-              className="bg-[var(--surface)] border border-[var(--accent)] rounded-full px-2 py-0.5 text-[10px] text-[var(--text-primary)] outline-none w-24"
+              className="bg-[var(--surface)] border border-[var(--accent)] rounded-full px-2 py-0.5 text-[10px] text-[var(--text-primary)] w-24"
             />
             {/* Autocomplete suggestions */}
             {suggestions.length > 0 && inputValue.length > 0 && (

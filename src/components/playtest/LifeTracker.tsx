@@ -100,7 +100,7 @@ export function LifeTracker({
           onChange={(e) => setCustomInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleCustomSubmit()}
           placeholder={t("life.customPlaceholder")}
-          className="flex-1 bg-[var(--surface-hover)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none focus:border-[var(--border)]"
+          className="flex-1 bg-[var(--surface-hover)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]"
         />
         <button
           type="button"

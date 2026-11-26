@@ -168,7 +168,7 @@ export function PrintingSelectorModal({
                           onClose();
                         }}
                         onMouseEnter={() => setPreviewedPrintingId(printing.id)}
-                        className="relative rounded-[4.75%] overflow-hidden border-2 transition-all focus:outline-none"
+                        className="relative rounded-[4.75%] overflow-hidden border-2 transition-all"
                         style={{
                           borderColor:
                             previewedPrinting.id === printing.id

@@ -50,6 +50,7 @@ import { GUEST_DECK_ID } from "@/lib/deck/guest-deck";
 import { useDeckStore } from "@/lib/deck/store";
 import { EMPTY_SEARCH_RESPONSE, type ScryfallCard } from "@/lib/scryfall/types";
 import { useUIStore } from "@/lib/ui/store";
+import { HIDES_FOCUS_OUTLINE } from "@/test/focus-outline";
 import { setupMsw } from "@/test/msw";
 import { renderWithProviders, type TestLocale } from "@/test/render";
 import BuilderPage from "./page";
@@ -485,6 +486,16 @@ describe("characterization: builder page shell", () => {
           },
         ])
       );
+    });
+
+    // Design audit S1: the deck-name field hid its outline; only its accent
+    // underline marked it, the same at rest as with focus.
+    it("leaves the app's focus outline visible on the deck-name field", async () => {
+      await userEvent.click(await openSavedDeck());
+
+      expect(
+        screen.getByRole("textbox", { name: "Click to rename" }).className
+      ).not.toMatch(HIDES_FOCUS_OUTLINE);
     });
 
     it("duplicates the deck and opens the copy; currently through next/navigation's router, without the locale prefix (pinned)", async () => {

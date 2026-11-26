@@ -885,7 +885,7 @@ export default function BuilderPage() {
                   }
                   if (event.key === "Escape") setIsEditingName(false);
                 }}
-                className="flex-1 text-sm font-semibold bg-transparent border-b border-[var(--accent)] text-[var(--text-primary)] outline-none min-w-0"
+                className="flex-1 text-sm font-semibold bg-transparent border-b border-[var(--accent)] text-[var(--text-primary)] min-w-0"
                 maxLength={200}
               />
               <button

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { screen, fireEvent } from "@testing-library/react";
+import { HIDES_FOCUS_OUTLINE } from "@/test/focus-outline";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { LifeTracker } from "./LifeTracker";
 
@@ -11,6 +12,14 @@ describe("LifeTracker", () => {
     onHeal: vi.fn(),
     onUndo: vi.fn(),
   };
+
+  // Design audit S1: the field hid its outline and kept its border on focus,
+  // so a keyboard player could not see it had focus.
+  it("leaves the app's focus outline visible on the custom amount field", () => {
+    renderWithIntl(<LifeTracker {...defaultProps} />);
+
+    expect(screen.getByRole("spinbutton").className).not.toMatch(HIDES_FOCUS_OUTLINE);
+  });
 
   it("displays the current life total prominently", () => {
     renderWithIntl(<LifeTracker {...defaultProps} />);
