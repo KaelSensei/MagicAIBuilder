@@ -240,6 +240,10 @@ describe("ShareDeckView header", () => {
       "to-[var(--background)]",
     ]);
     expect(fade).toBeEmptyDOMElement();
+    // In the flow, not laid over the text: document order alone would let an
+    // absolutely placed fade overlap the text block.
+    expect(fade).not.toHaveClass("absolute");
+    expect(fade).not.toHaveClass("fixed");
     // The fork button ends the text block; the fade comes after it.
     expect(
       screen
