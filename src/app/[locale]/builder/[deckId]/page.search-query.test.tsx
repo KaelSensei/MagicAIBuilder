@@ -711,9 +711,9 @@ describe("the builder's search with no result", () => {
      */
     function searchTab(name: "By Set" | "By Color"): HTMLElement {
       const tabRow = button("By Set").parentElement;
-      const matches = Array.from(tabRow?.querySelectorAll("button") ?? []).filter(
-        (candidate) => buttonName(candidate) === name
-      );
+      const matches = Array.from(
+        tabRow?.querySelectorAll("button") ?? []
+      ).filter((candidate) => buttonName(candidate) === name);
       expect(matches, `one search tab named "${name}"`).toHaveLength(1);
       return matches[0];
     }

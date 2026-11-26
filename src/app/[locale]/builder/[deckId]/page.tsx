@@ -548,7 +548,8 @@ export default function BuilderPage() {
 
   // Set and colour search show no filters panel, so a "Collection only" left on there must not
   // filter a list whose toggle the player cannot see.
-  const collectionOnly = searchMode === "name" && filters.collectionOnly === true;
+  const collectionOnly =
+    searchMode === "name" && filters.collectionOnly === true;
   const searchResults = useCardSearchResults(query, {
     collectionOnly,
     sessionStatus,
