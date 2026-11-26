@@ -32,6 +32,7 @@ export type PlaytestGuardReason =
   | "bottom-not-in-hand"
   | "library-empty"
   | "negative-damage"
+  | "negative-heal"
   | "no-commander-damage"
   | "unknown-opponent"
   | "bad-commander-damage"
