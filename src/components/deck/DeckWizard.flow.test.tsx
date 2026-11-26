@@ -34,6 +34,7 @@ import {
 } from "vitest";
 import { z } from "zod";
 import type { BuildEvent, DeckCorrection } from "@/app/api/ai/build/types";
+import type { BuildStep } from "@/lib/ai/build-step";
 import { aiCallDenialBody } from "@/lib/ai/usage/denial";
 import { makeDeckCard } from "@/lib/deck/store-card-faces";
 import { useDeckStore } from "@/lib/deck/store";
@@ -76,6 +77,28 @@ const STREAMED_CARDS: readonly CardEvent[] = [
   { type: "card", name: "Counterspell", category: "counter", quantity: 1 },
 ];
 
+/**
+ * Each status event as the route sends it (`statusEvent`, `src/app/api/ai/build/status-event.ts`):
+ * its step, and the English line a client loaded before steps existed reads instead.
+ */
+const STATUS_EVENTS = {
+  thinking: { type: "status", step: "thinking", message: "Thinking…" },
+  consulting: {
+    type: "status",
+    step: "consulting",
+    message: "Consulting the AI oracle…",
+  },
+  building: {
+    type: "status",
+    step: "building",
+    message: "Building card list…",
+  },
+} as const satisfies Readonly<Record<BuildStep, BuildEvent>>;
+
+/** Any of the English lines the route sends in a status event's `message`. */
+const SERVER_STATUS_LINE =
+  /Thinking…|Consulting the AI oracle…|Building card list…/;
+
 interface StreamShape {
   readonly commander?: string;
   readonly cards?: readonly CardEvent[];
@@ -92,9 +115,9 @@ function buildEvents({
 }: StreamShape = {}): readonly BuildEvent[] {
   const totalCards = cards.reduce((sum, card) => sum + card.quantity, 0);
   return [
-    { type: "status", message: "Thinking…" },
+    STATUS_EVENTS.thinking,
     { type: "commander", name: commander },
-    { type: "status", message: "Building card list…" },
+    STATUS_EVENTS.building,
     ...cards,
     { type: "done", totalCards, source, corrections },
   ];
@@ -864,6 +887,120 @@ describe("DeckWizard flow (characterization)", () => {
     });
   });
 
+  describe("the progress line while the deck builds", () => {
+    const TALRAND_LINE = {
+      en: `Commander: ${TALRAND}`,
+      fr: `Commandant : ${TALRAND}`,
+    };
+
+    /**
+     * Answers the build with a stream the test writes by hand, so it can read the progress
+     * screen between two events. `send` writes events as NDJSON lines; `end` closes the stream.
+     */
+    function holdBuildStream() {
+      const encoder = new TextEncoder();
+      const held: { controller?: ReadableStreamDefaultController<Uint8Array> } =
+        {};
+      const body = new ReadableStream<Uint8Array>({
+        start(controller) {
+          held.controller = controller;
+        },
+      });
+      server.use(
+        http.post(
+          BUILD_URL,
+          () =>
+            new HttpResponse(body, {
+              headers: { "Content-Type": "application/x-ndjson" },
+            })
+        )
+      );
+      return {
+        send(events: readonly unknown[]): void {
+          const lines = events.map((event) => `${JSON.stringify(event)}\n`);
+          held.controller?.enqueue(encoder.encode(lines.join("")));
+        },
+        end(): void {
+          held.controller?.close();
+        },
+      };
+    }
+
+    it("shows each step of the build in French, never the server's English line", async () => {
+      const build = holdBuildStream();
+      await generateDeckInFrench();
+
+      build.send([STATUS_EVENTS.thinking, STATUS_EVENTS.consulting]);
+      expect(
+        await screen.findByText("Consultation de l’oracle IA…")
+      ).toBeInTheDocument();
+      expect(document.body).not.toHaveTextContent(SERVER_STATUS_LINE);
+
+      build.send([
+        { type: "commander", name: TALRAND },
+        STATUS_EVENTS.building,
+      ]);
+      expect(
+        await screen.findByText("Construction de la liste de cartes…")
+      ).toBeInTheDocument();
+      expect(document.body).not.toHaveTextContent(SERVER_STATUS_LINE);
+
+      build.send(buildEvents().slice(3));
+      build.end();
+      await waitForDeckOpened();
+    });
+
+    it("shows each step of the build in English to an English player", async () => {
+      const build = holdBuildStream();
+      await generateDeck();
+
+      build.send([STATUS_EVENTS.thinking, STATUS_EVENTS.consulting]);
+      expect(
+        await screen.findByText("Consulting the AI oracle…")
+      ).toBeInTheDocument();
+
+      build.send([
+        { type: "commander", name: TALRAND },
+        STATUS_EVENTS.building,
+      ]);
+      expect(
+        await screen.findByText("Building card list…")
+      ).toBeInTheDocument();
+      expect(screen.getByText(TALRAND_LINE.en)).toBeInTheDocument();
+
+      build.send(buildEvents().slice(3));
+      build.end();
+      await waitForDeckOpened();
+    });
+
+    it.each([
+      [
+        "a server from before steps sends only its English line",
+        { type: "status", message: "Consulting the AI oracle…" },
+      ],
+      [
+        "the step is one this client does not know",
+        { type: "status", step: "polishing", message: "Polishing the list…" },
+      ],
+    ])(
+      "shows the generic line, not the server's text, when %s",
+      async (_case, event) => {
+        const build = holdBuildStream();
+        await generateDeckInFrench();
+
+        // The commander line shows once the status event before it was read.
+        build.send([event, { type: "commander", name: TALRAND }]);
+        expect(await screen.findByText(TALRAND_LINE.fr)).toBeInTheDocument();
+        expect(screen.getByText("Réflexion…")).toBeInTheDocument();
+        expect(screen.queryByText(event.message)).toBeNull();
+
+        build.send(buildEvents().slice(2));
+        build.end();
+        await waitForDeckOpened();
+      }
+    );
+  });
+
   describe("when something fails", () => {
     it("shows the allowance message when the build is refused, creates no deck, and offers Try again", async () => {
       const denial = aiCallDenialBody({
@@ -924,7 +1061,7 @@ describe("DeckWizard flow (characterization)", () => {
       [
         "carries an error event",
         [
-          { type: "status", message: "Thinking…" },
+          STATUS_EVENTS.thinking,
           { type: "error", message: "AI deck build failed" },
         ] satisfies readonly BuildEvent[],
       ],

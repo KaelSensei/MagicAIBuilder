@@ -769,6 +769,8 @@
     "deckNotSaved": "Your deck was built, but it could not be saved. The build is kept: try saving it again.",
     "trySavingAgain": "Try saving again",
     "addingCards": "正在将卡牌加入你的套牌…",
+    "buildStepConsulting": "Consulting the AI oracle…",
+    "buildStepBuilding": "Building card list…",
     "demoDeckNotice": "演示套牌 — 此部署未配置 AI 服务商，因此这是一份占位牌表。",
     "correctionsTitle": "Checked against card data: {count, plural, one {# correction} other {# corrections}}",
     "correctionsIntro": "The AI's list broke Commander rules. These changes were made before the deck was saved.",

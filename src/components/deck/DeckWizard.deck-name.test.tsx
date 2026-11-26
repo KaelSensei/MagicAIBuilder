@@ -15,7 +15,7 @@ const store = vi.hoisted(() => ({
 // Stable references: the wizard resets the build whenever `reset` changes.
 const aiBuild = vi.hoisted(() => ({
   state: {
-    statusMessages: [],
+    step: null,
     commander: null,
     cards: [],
     totalCards: null,
