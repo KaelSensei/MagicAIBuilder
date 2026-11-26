@@ -30,17 +30,21 @@ const SIGNED_IN: Session = {
   expires: "2099-01-01T00:00:00.000Z",
 };
 
-/** The violet pill of the hero and of the closing call to action. */
+/**
+ * The violet pill of the hero and of the closing call to action. Its focus is
+ * the shared `--focus-ring` outline of the button (design audit S1); it was an
+ * `--accent` ring.
+ */
 const HERO_PILL =
-  "inline-flex items-center gap-2 rounded-[var(--lumen-radius-pill)] bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white shadow-[var(--lumen-shadow-sm)] transition-colors hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]";
+  "inline-flex items-center gap-2 rounded-[var(--lumen-radius-pill)] bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white shadow-[var(--lumen-shadow-sm)] transition-colors hover:bg-[var(--accent-hover)] focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)]";
 
 /** The quiet accent-coloured link next to the hero's pill. */
 const HERO_QUIET_LINK =
   "inline-flex items-center rounded-[var(--lumen-radius-pill)] px-4 py-2.5 text-sm font-medium text-[var(--accent-text)] transition-colors hover:bg-[var(--accent-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]";
 
-/** The violet pill of the landing bar, shorter than the hero's. */
+/** The violet pill of the landing bar, shorter than the hero's, with the same focus outline. */
 const NAVBAR_PILL =
-  "inline-flex items-center rounded-[var(--lumen-radius-pill)] bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white shadow-[var(--lumen-shadow-sm)] transition-colors hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]";
+  "inline-flex items-center rounded-[var(--lumen-radius-pill)] bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white shadow-[var(--lumen-shadow-sm)] transition-colors hover:bg-[var(--accent-hover)] focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)]";
 
 function classesOf(list: string): readonly string[] {
   return list.split(" ");

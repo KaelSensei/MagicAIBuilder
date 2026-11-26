@@ -100,6 +100,29 @@
   --lumen-shadow-lg: 0 24px 48px rgb(28 20 51 / 0.1), 0 8px 16px rgb(124 58 237 / 0.07);
 }
 
+/*
+ * The one keyboard-focus indicator, on every native control: a 2px solid
+ * --focus-ring outline, 2px outside it. In the base layer, so a control needs
+ * no focus class and any utility still outranks it; :where() keeps its
+ * specificity at one pseudo-class. An outline, not a box-shadow ring, because
+ * forced-colors mode keeps outlines and removes shadows. WCAG 2.2 SC 2.4.7 and
+ * 1.4.11 (https://www.w3.org/TR/WCAG22/#focus-visible, read 2026-11-26).
+ */
+@layer base {
+  :where(
+    a,
+    button,
+    input,
+    select,
+    textarea,
+    summary,
+    [tabindex]
+  ):focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+}
+
 * {
   box-sizing: border-box;
 }
