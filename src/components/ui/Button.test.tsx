@@ -13,7 +13,7 @@ import { Button } from "./Button";
  * `--accent` ring, at 2.76:1 on the dark surface.
  */
 const PILL_BASE =
-  "inline-flex items-center justify-center gap-1.5 font-medium transition-colors focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)] disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex items-center justify-center gap-1.5 font-medium transition-colors outline-[var(--focus-ring)] [outline-width:2px] outline-offset-2 focus-visible:outline-solid disabled:cursor-not-allowed disabled:opacity-50";
 
 /** One class list, for the exact form of `toHaveClass`, which takes a single string. */
 function classList(...parts: readonly string[]): string {

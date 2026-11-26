@@ -15,10 +15,10 @@ import { Input, textAreaShellClassName } from "./Input";
 
 /** The shared focus outline, as `focus.ts` spells it. */
 const FOCUS_OUTLINE = [
+  "outline-[var(--focus-ring)]",
+  "[outline-width:2px]",
+  "outline-offset-2",
   "focus-visible:outline-solid",
-  "focus-visible:outline-2",
-  "focus-visible:outline-offset-2",
-  "focus-visible:outline-[var(--focus-ring)]",
 ] as const;
 
 describe("Input", () => {

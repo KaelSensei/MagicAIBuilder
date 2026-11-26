@@ -107,8 +107,19 @@
  * specificity at one pseudo-class. An outline, not a box-shadow ring, because
  * forced-colors mode keeps outlines and removes shadows. WCAG 2.2 SC 2.4.7 and
  * 1.4.11 (https://www.w3.org/TR/WCAG22/#focus-visible, read 2026-11-26).
+ *
+ * The colour, width and offset are set at rest and focus switches only the
+ * style on: a control's `transition-colors` or `transition-all` would
+ * otherwise fade the outline in from its text colour and a 3px width, while a
+ * style change is discrete and never animates.
  */
 @layer base {
+  :where(a, button, input, select, textarea, summary, [tabindex]) {
+    outline-color: var(--focus-ring);
+    outline-width: 2px;
+    outline-offset: 2px;
+  }
+
   :where(
     a,
     button,
@@ -118,8 +129,7 @@
     summary,
     [tabindex]
   ):focus-visible {
-    outline: 2px solid var(--focus-ring);
-    outline-offset: 2px;
+    outline-style: solid;
   }
 }
 

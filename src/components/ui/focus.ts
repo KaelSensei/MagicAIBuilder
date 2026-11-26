@@ -25,9 +25,15 @@
  * any focus of a text field, which browsers always treat as visible. A mouse
  * click on a button draws nothing. `outline-solid` restores the style even
  * when the control also carries `outline-none`.
+ *
+ * The colour, width and offset are set at rest, and focus only switches the
+ * style on. A control's `transition-colors` or `transition-all` would
+ * otherwise fade the outline in from its text colour and a 3px width; a style
+ * change is discrete and never animates. `outline-2` cannot be used at rest:
+ * in Tailwind 4 it also sets the style, which would draw the outline always.
  */
 export const focusRingClassName =
-  "focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)]";
+  "outline-[var(--focus-ring)] [outline-width:2px] outline-offset-2 focus-visible:outline-solid";
 
 /**
  * The same outline on a shell while the field inside it has focus, mouse or
@@ -35,4 +41,4 @@ export const focusRingClassName =
  * around the field and its icons.
  */
 export const focusWithinRingClassName =
-  "focus-within:outline-solid focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[var(--focus-ring)]";
+  "outline-[var(--focus-ring)] [outline-width:2px] outline-offset-2 focus-within:outline-solid";

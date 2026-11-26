@@ -36,7 +36,7 @@ const SIGNED_IN: Session = {
  * `--accent` ring.
  */
 const HERO_PILL =
-  "inline-flex items-center gap-2 rounded-[var(--lumen-radius-pill)] bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white shadow-[var(--lumen-shadow-sm)] transition-colors hover:bg-[var(--accent-hover)] focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)]";
+  "inline-flex items-center gap-2 rounded-[var(--lumen-radius-pill)] bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white shadow-[var(--lumen-shadow-sm)] transition-colors hover:bg-[var(--accent-hover)] outline-[var(--focus-ring)] [outline-width:2px] outline-offset-2 focus-visible:outline-solid";
 
 /**
  * The quiet accent-coloured link next to the hero's pill. Its focus is the
@@ -48,7 +48,7 @@ const HERO_QUIET_LINK =
 
 /** The violet pill of the landing bar, shorter than the hero's, with the same focus outline. */
 const NAVBAR_PILL =
-  "inline-flex items-center rounded-[var(--lumen-radius-pill)] bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white shadow-[var(--lumen-shadow-sm)] transition-colors hover:bg-[var(--accent-hover)] focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)]";
+  "inline-flex items-center rounded-[var(--lumen-radius-pill)] bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white shadow-[var(--lumen-shadow-sm)] transition-colors hover:bg-[var(--accent-hover)] outline-[var(--focus-ring)] [outline-width:2px] outline-offset-2 focus-visible:outline-solid";
 
 function classesOf(list: string): readonly string[] {
   return list.split(" ");
