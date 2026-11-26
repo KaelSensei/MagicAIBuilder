@@ -139,6 +139,7 @@
     "changeCategoryFor": "Change category for {name}",
     "backToDecks": "Back to my decks",
     "rename": "Click to rename",
+    "confirmRename": "Save the name",
     "duplicate": "Duplicate deck",
     "bulkEdit": "Bulk edit",
     "playtest": "Playtest this deck",
