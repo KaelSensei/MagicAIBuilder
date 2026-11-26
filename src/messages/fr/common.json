@@ -44,7 +44,7 @@
   },
   "error": {
     "title": "Une erreur est survenue",
-    "description": "Une erreur inattendue a interrompu cette page. Le problème a été signalé — tu peux réessayer ou revenir à tes decks.",
+    "description": "Une erreur inattendue a interrompu cette page. Le problème a été signalé — vous pouvez réessayer ou revenir à vos decks.",
     "retry": "Réessayer",
     "backToDecks": "Retour à mes decks",
     "reference": "Référence"

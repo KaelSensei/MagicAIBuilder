@@ -122,7 +122,7 @@ describe("PlaytestActionLog", () => {
     fireEvent.click(screen.getByRole("button", { name: "Copier le journal" }));
 
     await waitFor(() => {
-      expect(writeText).toHaveBeenCalledWith("Test — Journal des actions\n\nTour 2\n- Principale 1: Tu as mélangé ta bibliothèque");
+      expect(writeText).toHaveBeenCalledWith("Test — Journal des actions\n\nTour 2\n- Principale 1: Vous avez mélangé votre bibliothèque");
     });
   });
 
@@ -213,7 +213,7 @@ describe("PlaytestActionLog", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Modifier" }));
 
-    expect(screen.getByRole("textbox", { name: "Modifier l’action" })).toHaveValue("Tu as produit 3 mana");
+    expect(screen.getByRole("textbox", { name: "Modifier l’action" })).toHaveValue("Vous avez produit 3 mana");
   });
 
   it("records mana with a number instead of inferring it from free text", () => {
