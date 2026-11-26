@@ -85,18 +85,38 @@ export function collapseEntries(
   return [...byName.values()];
 }
 
+/** What an import could not write into the deck. */
+export interface CardImportReport {
+  /**
+   * Copies left unwritten in the batches whose lookup or save failed: all of a batch whose lookup
+   * failed, or the copies of the cards Scryfall found but the save did not reach. Zero when every
+   * batch went through; a name Scryfall does not know is never counted, it was never a card to add.
+   */
+  readonly copiesNotAdded: number;
+}
+
+/** The copies a batch of entries asks for. */
+function copiesOf(batch: readonly ImportEntry[]): number {
+  return batch.reduce((sum, entry) => sum + entry.quantity, 0);
+}
+
 /**
  * Fetches and imports cards from Scryfall in batches of BATCH_SIZE.
  *
- * A batch whose lookup or save fails is logged and skipped, so the import never throws.
+ * A batch whose lookup or save fails is logged and skipped, so the import never throws; its copies
+ * are counted in the report, so the wizard can tell the player the deck is not complete (I-02).
  */
 export async function importCardsInBatches(
   entries: readonly ImportEntry[],
   addDeckCard: (card: DeckCard) => Promise<void>,
   onProgress: (imported: number) => void
-): Promise<void> {
+): Promise<CardImportReport> {
   const byName = new Map(entries.map((e) => [e.name, e]));
+  // A card Scryfall renamed (a double-faced card's full name) is not in `byName`: one copy.
+  const copiesAskedFor = (sc: ScryfallCard): number =>
+    byName.get(sc.name)?.quantity ?? 1;
   let imported = 0;
+  let copiesNotAdded = 0;
 
   const offsets = Array.from(
     { length: Math.ceil(entries.length / BATCH_SIZE) },
@@ -104,10 +124,14 @@ export async function importCardsInBatches(
   );
   await forEachSequential(offsets, async (i) => {
     const batch = entries.slice(i, i + BATCH_SIZE);
+    // Until Scryfall answers, every copy the batch asks for is left to add. Once it has, only the
+    // copies of the cards it found are: a name it does not know was never a card to add.
+    let copiesLeft = copiesOf(batch);
     try {
       const result = await getCardCollection(
         batch.map((entry) => ({ name: entry.name }))
       );
+      copiesLeft = result.data.reduce((sum, sc) => sum + copiesAskedFor(sc), 0);
       await forEachSequential(result.data, async (sc) => {
         const entry = byName.get(sc.name);
         const deckCard: DeckCard = {
@@ -127,15 +151,18 @@ export async function importCardsInBatches(
           category: isDeckCategory(entry?.category)
             ? entry.category
             : categorizeCard(sc),
-          quantity: entry?.quantity ?? 1,
+          quantity: copiesAskedFor(sc),
           zone: "main",
         };
         await addDeckCard(deckCard);
+        copiesLeft -= deckCard.quantity;
         imported += deckCard.quantity;
         onProgress(imported);
       });
     } catch (err) {
       logger.error("Batch import error", "DeckWizard", err);
+      copiesNotAdded += copiesLeft;
     }
   });
+  return { copiesNotAdded };
 }

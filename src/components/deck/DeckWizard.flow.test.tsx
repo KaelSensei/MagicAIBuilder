@@ -18,6 +18,11 @@
  *
  * A deck the server cannot create is no longer pinned: the wizard keeps the built deck, says it
  * could not be saved, and "Try saving again" creates it without a new build (wizard-save-retry).
+ * Nor is a deck the wizard created but could not finish (I-02): after a failed card lookup, or a
+ * step that throws once the deck exists, it says so in an alert, with the count of copies not
+ * added when known and the build's corrections under it, and offers only "Open the deck". A
+ * commander the store could not save, and a card the server refused (B2-36), still open the deck
+ * in silence; both stay pinned below.
  */
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { MotionGlobalConfig } from "framer-motion";
@@ -456,9 +461,67 @@ const BUILD_FAILED = "The AI could not build your deck. Try again.";
 const BUILD_UNREACHABLE =
   "The server could not be reached to build the deck. Check your connection and try again.";
 const TRY_SAVING_AGAIN = "Try saving again";
+/** What a created deck says when a step failed before any copy was counted (`wizard.deckNotFinished`). */
+const DECK_NOT_FINISHED =
+  "Your deck was created, but some of it could not be added. Open it to finish it.";
+/** What a created deck says when the import counted the copies it could not add (`wizard.deckNotFinishedCards`). */
+function deckNotFinishedWithout(copies: number): string {
+  return `Your deck was created, but ${copies} cards could not be added. Open it to finish it.`;
+}
+/** The copies `STREAMED_CARDS` holds: 30 Islands and four single cards. */
+const STREAMED_COPIES = 34;
+const OPEN_THE_DECK = "Open the deck";
+/** A correction the server's card-data check makes to a build: a banned card taken out. */
+const MANA_CRYPT_REMOVED: DeckCorrection = {
+  action: "removed",
+  name: "Mana Crypt",
+  quantity: 1,
+  reason: "banned",
+};
+
+/**
+ * Names Scryfall's recording does not hold, streamed after `STREAMED_CARDS` so the list needs a
+ * second lookup batch: the first 70 share the first batch of 75 names, the last five fill the
+ * second.
+ */
+const UNRECORDED_CARDS: readonly CardEvent[] = Array.from(
+  { length: 75 },
+  (_, index) => ({
+    type: "card",
+    name: `Unrecorded Card ${index + 1}`,
+    category: "other",
+    quantity: 1,
+  })
+);
 
 describe("DeckWizard flow (characterization)", () => {
   const server = setupMsw(...handlers);
+
+  /** Scryfall fails the collection lookup of every batch, or only of the batch that asks for `batchWith`. */
+  function failCardLookups(
+    options: { readonly batchWith?: string } = {}
+  ): void {
+    server.use(
+      http.post(`${SCRYFALL}/cards/collection`, async ({ request }) => {
+        const names = CollectionBody.parse(
+          await request.json()
+        ).identifiers.map((id) => id.name);
+        const { batchWith } = options;
+        if (batchWith === undefined || names.includes(batchWith)) {
+          return new HttpResponse(null, { status: 503 });
+        }
+        return HttpResponse.json(collectionAnswer(names));
+      })
+    );
+  }
+  /**
+   * The store fails to open the deck it has just created. No answer of the deck API can do it:
+   * `setActiveDeck` already holds the new deck and sends no request (`store.ts`), so this stands
+   * for an error thrown inside the app.
+   */
+  function failOpeningTheCreatedDeck(error: Error): void {
+    useDeckStore.setState({ setActiveDeck: () => Promise.reject(error) });
+  }
 
   /** The deck API refuses to create the deck, every time or only for the first request. */
   function failDeckCreation(options: { readonly once?: boolean } = {}): void {
@@ -1423,17 +1486,25 @@ describe("DeckWizard flow (characterization)", () => {
       expect(storedDeckCards()).toHaveLength(STREAMED_CARDS.length);
     });
 
-    it("currently opens the deck without the cards of a batch Scryfall failed to look up (pinned; see B2-34)", async () => {
-      server.use(
-        http.post(
-          `${SCRYFALL}/cards/collection`,
-          () => new HttpResponse(null, { status: 503 })
-        )
-      );
+    it("says the deck was created but its cards could not be added, and waits for the player, when Scryfall fails to look up a batch", async () => {
+      failCardLookups();
 
       await generateDeck();
 
-      await waitForDeckOpened();
+      expect(
+        await screen.findByText(deckNotFinishedWithout(STREAMED_COPIES))
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: OPEN_THE_DECK })
+      ).toBeInTheDocument();
+      expect(onComplete).not.toHaveBeenCalled();
+      // The deck exists: building or saving again would store a second one.
+      expect(screen.queryByRole("button", { name: "Try again" })).toBeNull();
+      expect(
+        screen.queryByRole("button", { name: TRY_SAVING_AGAIN })
+      ).toBeNull();
+      expect(screen.queryByText(/503|Service Unavailable/)).toBeNull();
+      expect(sent.filter((line) => line === "POST /api/decks")).toHaveLength(1);
       expect(storedDeckCards()).toEqual([]);
       // Only the commander was saved, through the command-zone route.
       expect(
@@ -1450,6 +1521,147 @@ describe("DeckWizard flow (characterization)", () => {
       expect(screen.queryByText("Build was cancelled or failed.")).toBeNull();
       expect(screen.queryByText(BUILD_FAILED)).toBeNull();
     });
+
+    it("opens the created deck, and only that one, when the player presses Open the deck", async () => {
+      failCardLookups();
+      await generateDeck();
+
+      fireEvent.click(
+        await screen.findByRole("button", { name: OPEN_THE_DECK })
+      );
+
+      expect(onComplete).toHaveBeenCalledOnce();
+      expect(onComplete).toHaveBeenCalledWith(DECK_ID);
+      expect(sent.filter((line) => line === "POST /api/decks")).toHaveLength(1);
+      expect(buildBodies).toHaveLength(1);
+    });
+
+    it("counts only the copies of the batch Scryfall failed to look up, and keeps the cards added before", async () => {
+      server.use(
+        http.post(BUILD_URL, () =>
+          ndjson(
+            buildEvents({ cards: [...STREAMED_CARDS, ...UNRECORDED_CARDS] })
+          )
+        )
+      );
+      failCardLookups({ batchWith: "Unrecorded Card 75" });
+
+      await generateDeck();
+
+      // The second batch holds the last five unrecorded names, one copy each.
+      expect(
+        await screen.findByText(deckNotFinishedWithout(5))
+      ).toBeInTheDocument();
+      expect(storedDeckCards()).toHaveLength(STREAMED_CARDS.length);
+      expect(storedCard("Island")?.quantity).toBe(30);
+      expect(onComplete).not.toHaveBeenCalled();
+    });
+
+    it("says the deck was created but not finished, keeps the error out of sight and offers the deck, when opening it fails", async () => {
+      const openFailure = new Error("The deck store could not open deck-ai-1");
+      failOpeningTheCreatedDeck(openFailure);
+
+      await generateDeck();
+
+      expect(await screen.findByText(DECK_NOT_FINISHED)).toBeInTheDocument();
+      expect(screen.queryByText(/could not open deck-ai-1/)).toBeNull();
+      expect(logger.error).toHaveBeenCalledWith(
+        expect.any(String),
+        "DeckWizard",
+        openFailure
+      );
+      // Not back on the plan, whose Generate Deck would build and store a second deck.
+      expect(screen.queryByRole("heading", { name: HEADINGS.plan })).toBeNull();
+      expect(screen.queryByRole("button", { name: "Try again" })).toBeNull();
+      expect(onComplete).not.toHaveBeenCalled();
+
+      fireEvent.click(screen.getByRole("button", { name: OPEN_THE_DECK }));
+
+      expect(onComplete).toHaveBeenCalledWith(DECK_ID);
+      expect(sent).toEqual(["POST /api/ai/build", "POST /api/decks"]);
+    });
+
+    it.each([
+      [
+        "Scryfall fails to look up the cards",
+        () => failCardLookups(),
+        "Votre deck a été créé, mais 34 cartes n’ont pas pu y être ajoutées. Ouvrez-le pour le terminer.",
+      ],
+      [
+        "the created deck cannot be opened",
+        () => failOpeningTheCreatedDeck(new Error("store failure")),
+        "Votre deck a été créé, mais une partie n’a pas pu y être ajoutée. Ouvrez-le pour le terminer.",
+      ],
+    ])(
+      "tells a French player the deck was created but not finished when %s",
+      async (_case, failAfterTheCreate, message) => {
+        failAfterTheCreate();
+
+        await generateDeckInFrench();
+
+        expect(await screen.findByText(message)).toBeInTheDocument();
+        fireEvent.click(screen.getByRole("button", { name: "Ouvrir le deck" }));
+        expect(onComplete).toHaveBeenCalledWith(DECK_ID);
+      }
+    );
+
+    it("announces the unfinished deck as an alert, and lists no correction when the build made none", async () => {
+      failCardLookups();
+
+      await generateDeck();
+
+      expect(await screen.findByRole("alert")).toHaveTextContent(
+        deckNotFinishedWithout(STREAMED_COPIES)
+      );
+      expect(
+        screen.queryByRole("heading", { name: /Checked against card data/ })
+      ).toBeNull();
+    });
+
+    // I-02 2.2 and 5.3: every correction is shown, even when the deck could not be finished.
+    it.each([
+      [
+        "Scryfall fails to look up a batch",
+        () => failCardLookups(),
+        deckNotFinishedWithout(STREAMED_COPIES),
+      ],
+      [
+        "opening the created deck fails",
+        () => failOpeningTheCreatedDeck(new Error("store failure")),
+        DECK_NOT_FINISHED,
+      ],
+    ])(
+      "lists the build's corrections under the notice, with a single Open the deck, when %s",
+      async (_case, failAfterTheCreate, message) => {
+        server.use(
+          http.post(BUILD_URL, () =>
+            ndjson(buildEvents({ corrections: [MANA_CRYPT_REMOVED] }))
+          )
+        );
+        failAfterTheCreate();
+
+        await generateDeck();
+
+        expect(await screen.findByText(message)).toBeInTheDocument();
+        expect(
+          screen.getByRole("heading", {
+            name: "Checked against card data: 1 correction",
+          })
+        ).toBeInTheDocument();
+        expect(
+          screen.getByText("Removed Mana Crypt: banned in Commander")
+        ).toBeInTheDocument();
+        expect(
+          screen.getAllByRole("button", { name: OPEN_THE_DECK })
+        ).toHaveLength(1);
+        expect(onComplete).not.toHaveBeenCalled();
+
+        fireEvent.click(screen.getByRole("button", { name: OPEN_THE_DECK }));
+
+        expect(onComplete).toHaveBeenCalledOnce();
+        expect(onComplete).toHaveBeenCalledWith(DECK_ID);
+      }
+    );
 
     it("currently keeps a card the server refused to save, and still opens the deck (pinned; see B2-36)", async () => {
       server.use(

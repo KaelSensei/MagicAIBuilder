@@ -768,6 +768,8 @@
     "buildFailed": "The AI could not build your deck. Try again.",
     "deckNotSaved": "Your deck was built, but it could not be saved. The build is kept: try saving it again.",
     "trySavingAgain": "Try saving again",
+    "deckNotFinished": "Your deck was created, but some of it could not be added. Open it to finish it.",
+    "deckNotFinishedCards": "Your deck was created, but {count, plural, one {# card} other {# cards}} could not be added. Open it to finish it.",
     "addingCards": "正在将卡牌加入你的套牌…",
     "buildStepConsulting": "Consulting the AI oracle…",
     "buildStepBuilding": "Building card list…",
