@@ -38,6 +38,8 @@
   --accent-hover: #6d28d9;
   --accent-text: #c4b5fd;
   --accent-soft: #342a52;
+  /* Keyboard focus outline: 3:1 (WCAG 2.2 SC 1.4.11) on every surface, 7.18:1 on --surface-hover. */
+  --focus-ring: #c4b5fd;
 
   --lumen-radius-sm: 0.5rem;
   --lumen-radius-md: 0.75rem;
@@ -90,6 +92,8 @@
   /* #7C3AED clears 4.5:1 on the darkest light surface (#efebf8). */
   --accent-text: #7c3aed;
   --accent-soft: #f3eeff;
+  /* Keyboard focus outline: 3:1 (WCAG 2.2 SC 1.4.11) on every surface, 6.06:1 on --surface-hover. */
+  --focus-ring: #6d28d9;
 
   --lumen-shadow-sm: 0 1px 2px rgb(28 20 51 / 0.05), 0 1px 3px rgb(124 58 237 / 0.06);
   --lumen-shadow-md: 0 10px 28px rgb(28 20 51 / 0.07), 0 2px 8px rgb(124 58 237 / 0.06);
