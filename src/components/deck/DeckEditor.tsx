@@ -1,13 +1,13 @@
 "use client";
 // Main deck editor with drag & drop zones, category drag, and grid/list toggle
 import { useDroppable } from "@dnd-kit/core";
-import { LayoutGrid, List, Rows3 } from "lucide-react";
 import React, { useCallback, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { LocalizedDeckTextProvider } from "@/components/card/LocalizedDeckTextContext";
 import { ColorIdentityBanner } from "@/components/deck/ColorIdentityBanner";
 import { CompanionZone } from "@/components/deck/CompanionZone";
 import { DeckCardCount } from "@/components/deck/DeckCardCount";
+import { DeckLayoutControls } from "@/components/deck/DeckLayoutControls";
 import { MainZoneContent } from "@/components/deck/MainZoneContent";
 import { SecondaryZoneContent } from "@/components/deck/SecondaryZoneContent";
 import { DeckZoneTab } from "@/components/deck/DeckZoneTab";
@@ -50,9 +50,7 @@ export function DeckEditor({
 }: DeckEditorProps) {
   const t = useTranslations("builder");
   const viewMode = useDeckStore((s) => s.deckViewMode);
-  const setViewMode = useDeckStore((s) => s.setDeckViewMode);
   const gridCols = useDeckStore((s) => s.deckGridCols);
-  const setGridCols = useDeckStore((s) => s.setDeckGridCols);
   const clearCommander = useDeckStore((s) => s.clearCommander);
   const setPartner = useDeckStore((s) => s.setPartner);
   const setCompanion = useDeckStore((s) => s.setCompanion);
@@ -208,56 +206,7 @@ export function DeckEditor({
               separator="/"
               className="text-xs font-medium mr-1"
             />
-            {/* List view */}
-            <button
-              type="button"
-              onClick={() => setViewMode("list")}
-              aria-pressed={viewMode === "list"}
-              className={`p-1 rounded transition-colors ${
-                viewMode === "list"
-                  ? "text-[var(--accent-text)]"
-                  : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-              }`}
-              title={t("viewMode.listView")}
-            >
-              <List className="w-3 h-3" />
-            </button>
-            {/* Grid view */}
-            <button
-              type="button"
-              onClick={() => setViewMode("grid")}
-              aria-pressed={viewMode === "grid"}
-              className={`p-1 rounded transition-colors ${
-                viewMode === "grid"
-                  ? "text-[var(--accent-text)]"
-                  : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-              }`}
-              title={t("viewMode.gridView")}
-            >
-              <LayoutGrid className="w-3 h-3" />
-            </button>
-            {/* Grid density — only shown in grid mode */}
-            {viewMode === "grid" && (
-              <div className="flex items-center gap-0.5 ml-1 pl-1 border-l border-[var(--border)]">
-                <Rows3 className="w-3 h-3 text-[var(--text-secondary)] mr-0.5" />
-                {([2, 3, 4, 6, 8] as const).map((n) => (
-                  <button
-                    type="button"
-                    key={n}
-                    onClick={() => setGridCols(n)}
-                    className={cn(
-                      "w-5 h-5 rounded text-[10px] font-medium transition-colors",
-                      gridCols === n
-                        ? "bg-[var(--accent)]/20 text-[var(--accent-text)]"
-                        : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-                    )}
-                    title={t("viewMode.cardsPerRow", { count: n })}
-                  >
-                    {n}
-                  </button>
-                ))}
-              </div>
-            )}
+            <DeckLayoutControls />
           </div>
         )}
       </div>

@@ -13,7 +13,13 @@
  * user-event's clipboard. The modal and panels mocked below have tests of their own.
  */
 import type { ComponentProps } from "react";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { PrintingSelectorModal as RealPrintingSelectorModal } from "@/components/card/PrintingSelectorModal";
@@ -500,5 +506,33 @@ describe("printing swap (characterization, COL-01)", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     expect(swapPrinting).not.toHaveBeenCalled();
+  });
+});
+
+// Design audit S3: the view switch is a named group whose chosen view is
+// pressed and marked without colour alone. Names are catalog keys here, since
+// this file stands next-intl in by the key.
+describe("the view switch", () => {
+  it("starts on the list, the one view pressed, and presses the grid once picked", async () => {
+    vi.stubGlobal("fetch", serveCollection(OWNED_ROWS));
+    const user = userEvent.setup();
+
+    render(<CollectionPageClient />);
+    await screen.findByText("Island");
+    const layout = screen.getByRole("group", { name: "viewMode.layout" });
+    expect(within(layout).getAllByRole("button", { pressed: true })).toEqual([
+      within(layout).getByRole("button", { name: "viewMode.listView" }),
+    ]);
+
+    await user.click(
+      within(layout).getByRole("button", { name: "viewMode.gridView" })
+    );
+
+    expect(
+      within(layout).getByRole("button", { name: "viewMode.gridView" })
+    ).toHaveAttribute("aria-pressed", "true");
+    expect(
+      within(layout).getByRole("button", { name: "viewMode.listView" })
+    ).toHaveAttribute("aria-pressed", "false");
   });
 });
