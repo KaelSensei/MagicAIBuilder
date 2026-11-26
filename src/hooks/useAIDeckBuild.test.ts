@@ -1,7 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
+import { aiCallDenialBody } from "@/lib/ai/usage/denial";
+import { logger } from "@/lib/logger";
 import { useAIDeckBuild, countCopies } from "./useAIDeckBuild";
-import type { BuildResult } from "./useAIDeckBuild";
+import type { AIDeckBuildParams, BuildResult } from "./useAIDeckBuild";
 
 function makeStream(lines: string[]) {
   const encoder = new TextEncoder();
@@ -15,15 +17,36 @@ function makeStream(lines: string[]) {
   });
 }
 
+/**
+ * A body that sends `lines`, then breaks when asked for more, as a connection
+ * dropped after the server answered does: the reader rejects with the
+ * browser's network `TypeError`.
+ */
+function makeDroppedStream(lines: readonly string[]) {
+  return new ReadableStream<Uint8Array>({
+    start(controller) {
+      controller.enqueue(
+        new TextEncoder().encode(lines.map((line) => `${line}\n`).join(""))
+      );
+    },
+    pull(controller) {
+      controller.error(new TypeError("network error"));
+    },
+  });
+}
+
 describe("useAIDeckBuild", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+    // A failed build logs its raw error; these tests read the state.
+    vi.spyOn(logger, "error").mockImplementation(() => undefined);
+    vi.spyOn(logger, "warn").mockImplementation(() => undefined);
   });
 
   it("starts with empty state", () => {
     const { result } = renderHook(() => useAIDeckBuild());
     expect(result.current.state.isLoading).toBe(false);
-    expect(result.current.state.error).toBeNull();
+    expect(result.current.state.failure).toBeNull();
     expect(result.current.state.cards).toHaveLength(0);
     expect(result.current.state.commander).toBeNull();
   });
@@ -60,7 +83,7 @@ describe("useAIDeckBuild", () => {
     vi.unstubAllGlobals();
   });
 
-  it("sets error when fetch fails", async () => {
+  it("keeps a build the server answered with 500 as failed", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({ ok: false, status: 500 })
@@ -78,7 +101,7 @@ describe("useAIDeckBuild", () => {
       });
     });
 
-    expect(result.current.state.error).toContain("500");
+    expect(result.current.state.failure).toBe("failed");
     expect(result.current.state.isLoading).toBe(false);
     expect(result.current.state.denial).toBeNull();
     vi.unstubAllGlobals();
@@ -358,7 +381,7 @@ describe("useAIDeckBuild", () => {
     });
 
     expect(built).toBeNull();
-    expect(result.current.state.error).toBe("The AI build ended early");
+    expect(result.current.state.failure).toBe("failed");
     expect(result.current.state.isLoading).toBe(false);
     vi.unstubAllGlobals();
   });
@@ -398,7 +421,7 @@ describe("useAIDeckBuild", () => {
       });
     });
 
-    expect(result.current.state.error).toBeNull();
+    expect(result.current.state.failure).toBeNull();
     expect(built).toEqual(
       expect.objectContaining({
         source: "ai",
@@ -417,6 +440,15 @@ describe("useAIDeckBuild with lines outside the build event contract", () => {
     quantity: 1,
   };
   const DONE = { type: "done", totalCards: 1, source: "ai" };
+
+  beforeEach(() => {
+    vi.spyOn(logger, "error").mockImplementation(() => undefined);
+    vi.spyOn(logger, "warn").mockImplementation(() => undefined);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
 
   /** Streams `lines` as the build response body and runs one build. */
   async function buildFrom(lines: readonly string[]) {
@@ -449,7 +481,7 @@ describe("useAIDeckBuild with lines outside the build event contract", () => {
       JSON.stringify(DONE),
     ]);
 
-    expect(state.error).toBeNull();
+    expect(state.failure).toBeNull();
     expect(built).toEqual(
       expect.objectContaining({
         cards: [{ name: "Sol Ring", category: "ramp", quantity: 1 }],
@@ -489,7 +521,7 @@ describe("useAIDeckBuild with lines outside the build event contract", () => {
     ]);
 
     expect(built).toBeNull();
-    expect(state.error).toBe("The AI build ended early");
+    expect(state.failure).toBe("failed");
   });
 
   it("keeps only the corrections that name a card, a count and a reason it can show", async () => {
@@ -566,10 +598,244 @@ describe("useAIDeckBuild with lines outside the build event contract", () => {
       }),
     ]);
 
-    expect(state.error).toBeNull();
+    expect(state.failure).toBeNull();
     expect(state.totalCards).toBe(3);
     expect(built).toEqual(
       expect.objectContaining({ source: "ai", corrections: [] })
     );
+  });
+});
+
+/**
+ * A failed build is kept as its kind (`lib/ai/build-failure.ts`) and the raw
+ * error goes to the log; a cancelled one leaves neither (I-02).
+ */
+describe("useAIDeckBuild when the build does not finish", () => {
+  const REQUEST: AIDeckBuildParams = {
+    colors: ["U"],
+    strategy: "control",
+    bracket: 2,
+    commanderName: null,
+    budget: null,
+  };
+
+  beforeEach(() => {
+    vi.spyOn(logger, "error").mockImplementation(() => undefined);
+    vi.spyOn(logger, "warn").mockImplementation(() => undefined);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  /** Runs one build against `fetch` and returns what it resolved to and the state after it. */
+  async function buildWith(fetch: typeof globalThis.fetch) {
+    vi.stubGlobal("fetch", fetch);
+    const { result } = renderHook(() => useAIDeckBuild());
+    let built: BuildResult | null = null;
+    await act(async () => {
+      built = await result.current.build(REQUEST);
+    });
+    return { state: result.current.state, built };
+  }
+
+  it("keeps a request the network lost as unreachable, and logs the browser's error as a warning", async () => {
+    const lost = new TypeError("Failed to fetch");
+
+    const { state, built } = await buildWith(vi.fn().mockRejectedValue(lost));
+
+    expect(built).toBeNull();
+    expect(state.failure).toBe("unreachable");
+    expect(state.isLoading).toBe(false);
+    expect(logger.warn).toHaveBeenCalledWith(
+      "AI deck build failed",
+      "useAIDeckBuild",
+      expect.objectContaining({ cause: lost })
+    );
+  });
+
+  it("keeps a stream the connection dropped after the server answered as failed, not unreachable", async () => {
+    const body = makeDroppedStream([
+      JSON.stringify({ type: "status", message: "Thinking…" }),
+      JSON.stringify({ type: "commander", name: "Talrand, Sky Summoner" }),
+    ]);
+
+    const { state, built } = await buildWith(
+      vi.fn().mockResolvedValue({ ok: true, body })
+    );
+
+    expect(built).toBeNull();
+    expect(state.failure).toBe("failed");
+    expect(state.isLoading).toBe(false);
+  });
+
+  it("keeps a TypeError the build's own code throws after the answer as failed", async () => {
+    const bug = new TypeError(
+      "Cannot read properties of undefined (reading 'read')"
+    );
+    const body = {
+      getReader() {
+        throw bug;
+      },
+    };
+
+    const { state, built } = await buildWith(
+      vi.fn().mockResolvedValue({ ok: true, body })
+    );
+
+    expect(built).toBeNull();
+    expect(state.failure).toBe("failed");
+    expect(logger.error).toHaveBeenCalledWith(
+      "AI deck build failed",
+      "useAIDeckBuild",
+      bug
+    );
+  });
+
+  it.each([
+    [401, "signed-out"],
+    [429, "rate-limited"],
+  ])("keeps a %i refusal without a denial as %s", async (status, failure) => {
+    const refusal = Response.json({ error: "Refused" }, { status });
+
+    const { state, built } = await buildWith(
+      vi.fn().mockResolvedValue(refusal)
+    );
+
+    expect(built).toBeNull();
+    expect(state.failure).toBe(failure);
+    expect(state.denial).toBeNull();
+  });
+
+  it("keeps the stream's error event as a failed build, whatever its text", async () => {
+    const body = makeStream([
+      JSON.stringify({ type: "status", message: "Thinking…" }),
+      JSON.stringify({ type: "error", message: "Failed to fetch" }),
+    ]);
+
+    const { state, built } = await buildWith(
+      vi.fn().mockResolvedValue({ ok: true, body })
+    );
+
+    expect(built).toBeNull();
+    expect(state.failure).toBe("failed");
+  });
+
+  // `logger.error` also reports to Sentry (`lib/logger.ts`); a refusal the
+  // product expects, a player offline, and a failure the route has already
+  // reported are warnings.
+  it.each([
+    [
+      "a request the network lost",
+      () => vi.fn().mockRejectedValue(new TypeError("Failed to fetch")),
+    ],
+    [
+      "an ended session (401)",
+      () =>
+        vi
+          .fn()
+          .mockResolvedValue(
+            Response.json({ error: "Unauthorized" }, { status: 401 })
+          ),
+    ],
+    [
+      "the rate limit (429)",
+      () =>
+        vi
+          .fn()
+          .mockResolvedValue(
+            Response.json({ error: "Too many requests." }, { status: 429 })
+          ),
+    ],
+    [
+      "a spent monthly allowance",
+      () =>
+        vi.fn().mockResolvedValue(
+          Response.json(
+            aiCallDenialBody({
+              code: "allowance_exhausted",
+              route: "build",
+              limit: 5,
+              resetsAt: new Date("2026-12-01T00:00:00.000Z"),
+            }),
+            { status: 429 }
+          )
+        ),
+    ],
+    [
+      "the spend ceiling",
+      () =>
+        vi.fn().mockResolvedValue(
+          Response.json(
+            aiCallDenialBody({
+              code: "ai_spend_ceiling_reached",
+              resetsAt: new Date("2026-12-01T00:00:00.000Z"),
+            }),
+            { status: 503 }
+          )
+        ),
+    ],
+    [
+      "the stream's error event, which the route has already reported",
+      () =>
+        vi.fn().mockResolvedValue({
+          ok: true,
+          body: makeStream([
+            JSON.stringify({ type: "error", message: "AI deck build failed" }),
+          ]),
+        }),
+    ],
+  ])("logs %s once as a warning, never as an error", async (_case, fetch) => {
+    await buildWith(fetch());
+
+    expect(logger.warn).toHaveBeenCalledOnce();
+    expect(logger.warn).toHaveBeenCalledWith(
+      "AI deck build failed",
+      "useAIDeckBuild",
+      expect.any(Error)
+    );
+    expect(logger.error).not.toHaveBeenCalled();
+  });
+
+  it("reports a build the server failed once as an error, with the refusal", async () => {
+    const failed = Response.json({ error: "Internal error" }, { status: 500 });
+
+    await buildWith(vi.fn().mockResolvedValue(failed));
+
+    expect(logger.error).toHaveBeenCalledOnce();
+    expect(logger.error).toHaveBeenCalledWith(
+      "AI deck build failed",
+      "useAIDeckBuild",
+      expect.objectContaining({ status: 500 })
+    );
+    expect(logger.warn).not.toHaveBeenCalled();
+  });
+
+  it("resolves a cancelled build to null without a failure or a log line", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        (_url: string, init: RequestInit) =>
+          new Promise<Response>((_resolve, reject) => {
+            init.signal?.addEventListener("abort", () =>
+              reject(new DOMException("The build was cancelled", "AbortError"))
+            );
+          })
+      )
+    );
+    const { result } = renderHook(() => useAIDeckBuild());
+
+    let pending: Promise<BuildResult | null> = Promise.resolve(null);
+    act(() => {
+      pending = result.current.build(REQUEST);
+    });
+    act(() => {
+      result.current.reset();
+    });
+
+    expect(await pending).toBeNull();
+    expect(result.current.state.failure).toBeNull();
+    expect(logger.error).not.toHaveBeenCalled();
   });
 });

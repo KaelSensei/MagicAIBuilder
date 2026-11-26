@@ -50,6 +50,7 @@ import type {
   ScryfallCard,
   ScryfallCollectionResponse,
 } from "@/lib/scryfall/types";
+import type { TestLocale } from "@/test/intl-catalogs";
 import { setupMsw } from "@/test/msw";
 import { renderWithProviders } from "@/test/render";
 import { DeckWizard } from "./DeckWizard";
@@ -107,6 +108,32 @@ function ndjson(events: readonly BuildEvent[]): HttpResponse<string> {
       headers: { "Content-Type": "application/x-ndjson" },
     }
   );
+}
+
+/**
+ * A build response that sends `events`, then breaks while the wizard reads it, as when the
+ * connection drops after the route answered: the body's reader rejects with the `TypeError` a
+ * browser gives a network error mid-body.
+ *
+ * It is a plain `Response`, not an MSW handler: MSW serves a mocked body through an emulated
+ * socket and closes that socket when the body errors, which undici reads as the end of the
+ * body, so the reader never rejects (`@mswjs/interceptors` 0.45.12, the mocked-response writer
+ * in `lib/node/source-*.js`, read 2026-11-26).
+ */
+function ndjsonThenDropped(events: readonly BuildEvent[]): Response {
+  const lines = events.map((event) => `${JSON.stringify(event)}\n`).join("");
+  const body = new ReadableStream<Uint8Array>({
+    start(controller) {
+      controller.enqueue(new TextEncoder().encode(lines));
+    },
+    // Asked for more once the sent lines are read: the connection is gone.
+    pull(controller) {
+      controller.error(new TypeError("network error"));
+    },
+  });
+  return new Response(body, {
+    headers: { "Content-Type": "application/x-ndjson" },
+  });
 }
 
 /**
@@ -270,9 +297,10 @@ const onClose = vi.fn<() => void>();
 /** The rendered wizard, so a test can close and reopen it as the decks page does. */
 let renderedWizard: ReturnType<typeof renderWithProviders> | null = null;
 
-function renderWizard(): void {
+function renderWizard(locale: TestLocale = "en"): void {
   renderedWizard = renderWithProviders(
-    <DeckWizard open onClose={onClose} onComplete={onComplete} />
+    <DeckWizard open onClose={onClose} onComplete={onComplete} />,
+    { locale }
   );
 }
 
@@ -361,6 +389,26 @@ async function generateDeck(answers?: Answers): Promise<void> {
   generate();
 }
 
+/** Clicks a choice of the French wizard, then "Continuer". */
+async function chooseInFrench(choice: string | RegExp): Promise<void> {
+  fireEvent.click(await screen.findByRole("button", { name: choice }));
+  fireEvent.click(screen.getByRole("button", { name: "Continuer" }));
+}
+
+/** Builds a mono-blue Control deck at bracket 3 in the French wizard, the AI choosing the commander. */
+async function generateDeckInFrench(): Promise<void> {
+  renderWizard("fr");
+  await chooseInFrench("Budget < 50 $ par carte");
+  await chooseInFrench("Bleu");
+  await chooseInFrench(/Contrôle Contrer et contrôler/);
+  await chooseInFrench(/Amélioré \(bracket 3\)/);
+  fireEvent.click(
+    await screen.findByRole("button", { name: "Passer — laisser l’IA choisir" })
+  );
+  await screen.findByRole("heading", { name: "Vérifiez le plan du deck" });
+  fireEvent.click(screen.getByRole("button", { name: "Générer le deck" }));
+}
+
 async function waitForDeckOpened(): Promise<void> {
   await waitFor(() => expect(onComplete).toHaveBeenCalledWith(DECK_ID));
 }
@@ -379,6 +427,11 @@ function cardBody(name: string): z.infer<typeof CardBody> | undefined {
 
 const DECK_NOT_SAVED =
   "Your deck was built, but it could not be saved. The build is kept: try saving it again.";
+/** What a build the server failed, or whose stream broke, says (`wizard.buildFailed`). */
+const BUILD_FAILED = "The AI could not build your deck. Try again.";
+/** What a build request that got no answer says (`wizard.buildUnreachable`). */
+const BUILD_UNREACHABLE =
+  "The server could not be reached to build the deck. Check your connection and try again.";
 const TRY_SAVING_AGAIN = "Try saving again";
 
 describe("DeckWizard flow (characterization)", () => {
@@ -456,9 +509,11 @@ describe("DeckWizard flow (characterization)", () => {
     onComplete.mockReset();
     onClose.mockReset();
     vi.spyOn(logger, "error").mockImplementation(() => undefined);
+    vi.spyOn(logger, "warn").mockImplementation(() => undefined);
   });
 
   afterEach(() => {
+    vi.unstubAllGlobals();
     vi.restoreAllMocks();
   });
 
@@ -843,9 +898,8 @@ describe("DeckWizard flow (characterization)", () => {
 
       await generateDeck();
 
-      expect(
-        await screen.findByText("Build was cancelled or failed.")
-      ).toBeInTheDocument();
+      expect(await screen.findByText(BUILD_FAILED)).toBeInTheDocument();
+      expect(screen.queryByText(/AI deck build failed|500/)).toBeNull();
       expect(sent).toEqual(["POST /api/ai/build"]);
 
       server.resetHandlers();
@@ -881,10 +935,148 @@ describe("DeckWizard flow (characterization)", () => {
 
         await generateDeck();
 
+        expect(await screen.findByText(BUILD_FAILED)).toBeInTheDocument();
         expect(
-          await screen.findByText("Build was cancelled or failed.")
+          screen.queryByText(/AI deck build failed|ended early/)
+        ).toBeNull();
+        expect(sent).toEqual(["POST /api/ai/build"]);
+        expect(onComplete).not.toHaveBeenCalled();
+      }
+    );
+
+    it("reports a stream that breaks after the server answered as a failed build, not as a lost connection", async () => {
+      await answerUpToPlan();
+      // The build request is the only one left, so `fetch` itself answers it (see
+      // `ndjsonThenDropped` for why MSW cannot).
+      const buildRequest = vi
+        .fn<typeof fetch>()
+        .mockResolvedValue(ndjsonThenDropped(buildEvents().slice(0, 4)));
+      vi.stubGlobal("fetch", buildRequest);
+      generate();
+
+      expect(await screen.findByText(BUILD_FAILED)).toBeInTheDocument();
+      expect(screen.queryByText(BUILD_UNREACHABLE)).toBeNull();
+      expect(
+        screen.getByRole("button", { name: "Try again" })
+      ).toBeInTheDocument();
+      expect(buildRequest).toHaveBeenCalledOnce();
+      expect(buildRequest).toHaveBeenCalledWith(BUILD_URL, expect.anything());
+      expect(onComplete).not.toHaveBeenCalled();
+    });
+
+    // The bodies are the route's own: its rate limit, and `requireAuth`'s 401.
+    it.each([
+      [
+        "too many builds in a short time (429)",
+        429,
+        "Too many requests. Please wait 42s before retrying.",
+        "Too many builds in a short time. Wait a minute, then try again.",
+      ],
+      [
+        "an ended session (401)",
+        401,
+        "Unauthorized",
+        "Your session has ended. Sign in again to build a deck with AI.",
+      ],
+    ])(
+      "says what to do when the server refuses the build for %s, and offers Try again",
+      async (_case, status, routeError, message) => {
+        server.use(
+          http.post(BUILD_URL, () =>
+            HttpResponse.json({ error: routeError }, { status })
+          )
+        );
+
+        await generateDeck();
+
+        expect(await screen.findByText(message)).toBeInTheDocument();
+        expect(screen.queryByText(routeError)).toBeNull();
+        expect(
+          screen.getByRole("button", { name: "Try again" })
         ).toBeInTheDocument();
         expect(sent).toEqual(["POST /api/ai/build"]);
+      }
+    );
+
+    it("tells a French player to check the connection, never the browser's own error, when the build request fails on the network", async () => {
+      server.use(http.post(BUILD_URL, () => HttpResponse.error()));
+
+      await generateDeckInFrench();
+
+      expect(
+        await screen.findByText(
+          "Impossible de joindre le serveur pour construire le deck. Vérifiez votre connexion et réessayez."
+        )
+      ).toBeInTheDocument();
+      expect(document.body).not.toHaveTextContent(
+        /failed to fetch|fetch failed/i
+      );
+      expect(
+        screen.getByRole("button", { name: "Réessayer" })
+      ).toBeInTheDocument();
+      expect(onComplete).not.toHaveBeenCalled();
+      // The browser's error goes to the log instead, as a warning: a player offline is no
+      // incident for Sentry.
+      expect(logger.warn).toHaveBeenCalledWith(
+        "AI deck build failed",
+        "useAIDeckBuild",
+        expect.objectContaining({ cause: expect.any(TypeError) })
+      );
+      expect(logger.error).not.toHaveBeenCalled();
+    });
+
+    it("tells the player to check the connection when the build request gets no answer", async () => {
+      server.use(http.post(BUILD_URL, () => HttpResponse.error()));
+
+      await generateDeck();
+
+      expect(await screen.findByText(BUILD_UNREACHABLE)).toBeInTheDocument();
+      expect(document.body).not.toHaveTextContent(
+        /failed to fetch|fetch failed/i
+      );
+      expect(
+        screen.getByRole("button", { name: "Try again" })
+      ).toBeInTheDocument();
+      expect(sent).toEqual(["POST /api/ai/build"]);
+      expect(onComplete).not.toHaveBeenCalled();
+    });
+
+    // The bodies are the route's own: its rate limit, `requireAuth`'s 401, and a server failure.
+    it.each([
+      [
+        "too many builds in a short time (429)",
+        429,
+        "Too many requests. Please wait 42s before retrying.",
+        "Trop de constructions en peu de temps. Patientez une minute, puis réessayez.",
+      ],
+      [
+        "an ended session (401)",
+        401,
+        "Unauthorized",
+        "Votre session a expiré. Reconnectez-vous pour construire un deck avec l’IA.",
+      ],
+      [
+        "a server failure (500)",
+        500,
+        "AI deck build failed",
+        "L’IA n’a pas pu construire votre deck. Réessayez.",
+      ],
+    ])(
+      "tells a French player what to do when the server refuses the build for %s",
+      async (_case, status, routeError, message) => {
+        server.use(
+          http.post(BUILD_URL, () =>
+            HttpResponse.json({ error: routeError }, { status })
+          )
+        );
+
+        await generateDeckInFrench();
+
+        expect(await screen.findByText(message)).toBeInTheDocument();
+        expect(screen.queryByText(routeError)).toBeNull();
+        expect(
+          screen.getByRole("button", { name: "Réessayer" })
+        ).toBeInTheDocument();
         expect(onComplete).not.toHaveBeenCalled();
       }
     );
@@ -1119,6 +1311,7 @@ describe("DeckWizard flow (characterization)", () => {
         expect.any(Error)
       );
       expect(screen.queryByText("Build was cancelled or failed.")).toBeNull();
+      expect(screen.queryByText(BUILD_FAILED)).toBeNull();
     });
 
     it("currently keeps a card the server refused to save, and still opens the deck (pinned; see B2-36)", async () => {
