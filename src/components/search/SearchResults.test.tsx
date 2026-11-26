@@ -351,12 +351,20 @@ describe("SearchResults with no result", () => {
       <SearchResults
         {...searchProps({
           error: new Error("down"),
+          nextStep: clearFiltersStep(),
+        })}
+      />
+    );
+    expect(screen.queryByRole("button", { name: "Clear filters" })).toBeNull();
+
+    rerender(
+      <SearchResults
+        {...searchProps({
+          error: new Error("down"),
           nextStep: { kind: "syntaxHint" },
         })}
       />
     );
-
-    expect(screen.queryByRole("button", { name: "Clear filters" })).toBeNull();
     expect(screen.queryByText(SYNTAX_HINT)).toBeNull();
   });
 
