@@ -81,9 +81,10 @@ import {
   KeyboardShortcutsModal,
   KeyboardShortcutsTrigger,
 } from "@/components/layout/KeyboardShortcutsModal";
-import { Link } from "@/i18n/navigation";
 import { motion } from "framer-motion";
 import { cn } from "@/components/ui/utils";
+import { Button } from "@/components/ui/Button";
+import { ButtonLink } from "@/components/ui/ButtonLink";
 import { CombosPanel } from "@/modules/combos/ui/CombosPanel";
 import { useCombos } from "@/modules/combos/client";
 import { ExportModal } from "@/components/deck/ExportModal";
@@ -873,14 +874,20 @@ export default function BuilderPage() {
               announced this as "link" with no name at all. It also left the
               e2e suite unable to target it — `a[href$="/decks"]` matches the
               header's "My Decks" nav link too, and `.first()` picked that one,
-              so the test named "back navigation" never touched this control. */}
-          <Link
+              so the test named "back navigation" never touched this control.
+              `size-6` gives the 16 px arrow the 24 px target of WCAG 2.2
+              SC 2.5.8 (https://www.w3.org/TR/WCAG22/#target-size-minimum,
+              read 2026-11-26), and `-mx-1` takes the 8 px back from the
+              padding and the gap, so nothing after it moves. */}
+          <ButtonLink
             href="/decks"
+            variant="ghost"
+            size="icon"
             aria-label={t("actions.backToDecks")}
-            className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+            className="-mx-1 size-6 shrink-0 p-0"
           >
             <ArrowLeft className="w-4 h-4" />
-          </Link>
+          </ButtonLink>
           {isEditingName ? (
             <div className="flex items-center gap-1.5 flex-1 min-w-0">
               <input
@@ -897,18 +904,26 @@ export default function BuilderPage() {
                   }
                   if (event.key === "Escape") setIsEditingName(false);
                 }}
-                className="flex-1 text-sm font-semibold bg-transparent border-b border-[var(--accent)] text-[var(--text-primary)] min-w-0"
+                className="flex-1 text-sm font-semibold bg-transparent border-b border-[var(--border)] focus-visible:border-[var(--focus-ring)] text-[var(--text-primary)] min-w-0"
                 maxLength={200}
               />
-              <button
-                type="button"
+              {/* Icon-only, so it carries its own name; a screen reader
+                  announced a bare "button" (design audit S10). `size-6` is
+                  the 24 px target of WCAG 2.2 SC 2.5.8
+                  (https://www.w3.org/TR/WCAG22/#target-size-minimum, read
+                  2026-11-26); the field beside it is `flex-1`, so it gives up
+                  the extra width and the bar keeps its height. */}
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label={t("actions.confirmRename")}
                 onClick={() =>
                   commitDeckName(nameInputRef.current?.value ?? nameInput)
                 }
-                className="text-green-400 hover:text-green-300 shrink-0"
+                className="size-6 shrink-0 p-0"
               >
                 <Check className="w-3.5 h-3.5" />
-              </button>
+              </Button>
             </div>
           ) : (
             <button
@@ -920,12 +935,20 @@ export default function BuilderPage() {
               <h1 className="text-sm font-semibold text-[var(--text-primary)] group-hover:text-[var(--accent-text)] transition-colors">
                 {deck.name}
               </h1>
-              <Pencil className="w-3 h-3 text-[var(--text-secondary)] opacity-0 group-hover:opacity-100 transition-opacity" />
+              {/* Shown on keyboard focus too: on hover alone, a keyboard
+                  player never saw the cue (design audit S10). */}
+              <Pencil className="w-3 h-3 text-[var(--text-secondary)] opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity" />
             </button>
           )}
+          {/* The status chip of the theme, `--accent-text` on `--accent-soft`
+              (at least 4.5:1 in both themes, `src/styles/contrast.test.ts`),
+              in place of raw `text-purple-400` (design audit S10). The
+              transparent border keeps the chip's size and draws its edge in
+              forced-colors mode, which drops the fill. */}
           {deck.isAIGenerated && (
-            <span className="text-xs px-1.5 py-0.5 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/30">
-              ✨ {t("badges.ai")}
+            <span className="text-xs px-1.5 py-0.5 rounded-full border border-transparent bg-[var(--accent-soft)] text-[var(--accent-text)]">
+              <span aria-hidden="true">✨ </span>
+              {t("badges.ai")}
             </span>
           )}
           <DeckCardCount
