@@ -31,10 +31,38 @@ describe("chanceOfAtLeast", () => {
     });
   });
 
-  it("answers a known zero when the minimum exceeds the cards drawn", () => {
+  it("names a minimum above the cards drawn, at least 3 in 2 cards, instead of answering zero", () => {
+    expect(
+      chanceOfAtLeast({ librarySize: 99, matching: 36, drawn: 2, minimum: 3 })
+    ).toEqual({ kind: "unknown", reason: "more-wanted-than-drawn" });
+  });
+
+  it("names a minimum one above the opening seven instead of answering a known zero", () => {
     expect(
       chanceOfAtLeast({ librarySize: 99, matching: 36, drawn: 7, minimum: 8 })
-    ).toEqual({ kind: "known", probability: 0 });
+    ).toEqual({ kind: "unknown", reason: "more-wanted-than-drawn" });
+  });
+
+  it("answers a minimum equal to the cards drawn: all seven of 36 lands", () => {
+    // C(36, 7) / C(99, 7) = 8,347,680 / 14,887,031,544
+    expect(
+      chanceOfAtLeast({ librarySize: 99, matching: 36, drawn: 7, minimum: 7 })
+    ).toEqual({
+      kind: "known",
+      probability: expect.closeTo(8_347_680 / 14_887_031_544, 12),
+    });
+  });
+
+  it("names a draw larger than the library before a minimum above the draw, as the player fixes the draw first", () => {
+    expect(
+      chanceOfAtLeast({ librarySize: 5, matching: 2, drawn: 7, minimum: 8 })
+    ).toEqual({ kind: "unknown", reason: "more-drawn-than-library" });
+  });
+
+  it("names more matching cards than the library holds before a minimum above the draw", () => {
+    expect(
+      chanceOfAtLeast({ librarySize: 10, matching: 11, drawn: 2, minimum: 3 })
+    ).toEqual({ kind: "unknown", reason: "more-matching-than-library" });
   });
 
   it("names an empty library instead of answering zero", () => {
