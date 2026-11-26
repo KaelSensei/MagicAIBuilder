@@ -40,4 +40,20 @@ describe("copyDeckName", () => {
       `${"a".repeat(DECK_NAME_MAX_LENGTH - 9)} (copie)`
     );
   });
+
+  it.each([
+    // Two regional indicators, 4 units: half of it would read as a lone 🇫.
+    ["a flag", "🇫🇷"],
+    // "e" and a combining acute accent: half of it would drop the accent.
+    ["an accented letter written with a combining accent", "é"],
+    // Two people joined by a zero-width joiner: half of it would leave a stray joiner.
+    ["a joined emoji", "👩‍👧"],
+  ])("never cuts %s in half", (_kind, character) => {
+    // One unit short of room for the whole character at the cut.
+    const filler = "a".repeat(DECK_NAME_MAX_LENGTH - 8 - character.length + 1);
+
+    expect(copyDeckName(`${filler}${character}`, inFrench)).toBe(
+      `${filler} (copie)`
+    );
+  });
 });

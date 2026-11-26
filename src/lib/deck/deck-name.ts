@@ -11,15 +11,21 @@
  * @module deck/deck-name
  */
 
-/** The longest deck name a rename accepts, in UTF-16 code units, as zod and `maxLength` count. */
+/**
+ * The longest deck name a rename accepts. The builder's `maxLength` counts
+ * UTF-16 code units and zod counts code points, never more than code units,
+ * so a name that fits in this many code units passes both.
+ */
 export const DECK_NAME_MAX_LENGTH = 200;
 
 /**
  * The name of a copy of a deck, fitted to {@link DECK_NAME_MAX_LENGTH}.
  *
  * When the worded name would be too long, the deck's name is shortened, never
- * the wording, so the copy still reads as a copy. The cut never splits a
- * character, and drops the spaces it leaves before the wording.
+ * the wording, so the copy still reads as a copy. The cut falls between two
+ * characters as the player sees them (grapheme clusters: an accented letter,
+ * a flag or a joined emoji stays whole), and drops the spaces it leaves
+ * before the wording.
  *
  * @param deckName - the name of the deck being copied
  * @param wordCopyName - words a copy's name from a deck name, in the player's
@@ -35,13 +41,16 @@ export function copyDeckName(
   return wordCopyName(cutToLength(deckName, room));
 }
 
-/** `text` itself when it fits in `maxLength` code units; otherwise its longest start that does, without trailing spaces. */
+/** Splits text into the characters a reader sees (grapheme clusters). */
+const GRAPHEMES = new Intl.Segmenter(undefined, { granularity: "grapheme" });
+
+/** `text` itself when it fits in `maxLength` code units; otherwise its longest start of whole graphemes that does, without trailing spaces. */
 function cutToLength(text: string, maxLength: number): string {
   if (text.length <= maxLength) return text;
   let cut = "";
-  for (const character of text) {
-    if (cut.length + character.length > maxLength) break;
-    cut += character;
+  for (const { segment } of GRAPHEMES.segment(text)) {
+    if (cut.length + segment.length > maxLength) break;
+    cut += segment;
   }
   return cut.trimEnd();
 }
