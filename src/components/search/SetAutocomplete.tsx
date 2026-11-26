@@ -1,18 +1,13 @@
 "use client";
 // Set code autocomplete for "By Set" search mode
-// Dynamically loads all sets from Scryfall API
+// Loads Scryfall's sets through the client, in their turn in the runtime's
+// Scryfall queue: during a 429 block the request is refused unsent, and the
+// field shows the same load failure as a network error.
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { Search, X, Loader2 } from "lucide-react";
-
-interface SetOption {
-  code: string;
-  name: string;
-  set_type: string;
-  released_at?: string;
-  card_count: number;
-  icon_svg_uri?: string;
-}
+import { getAllSets } from "@/lib/scryfall/client";
+import type { ScryfallSet } from "@/lib/scryfall/types";
 
 // Set types that are relevant for Commander deck building
 const COMMANDER_SET_TYPES = new Set([
@@ -31,22 +26,18 @@ const COMMANDER_SET_TYPES = new Set([
 ]);
 
 // Cache the sets in memory to avoid re-fetching
-let setsCache: SetOption[] | null = null;
+let setsCache: ScryfallSet[] | null = null;
 let setsCacheTime = 0;
 const CACHE_TTL = 1000 * 60 * 60; // 1 hour
 
-async function fetchAllSets(): Promise<SetOption[]> {
+async function fetchAllSets(): Promise<ScryfallSet[]> {
   const now = Date.now();
   if (setsCache && now - setsCacheTime < CACHE_TTL) {
     return setsCache;
   }
 
-  const res = await fetch("https://api.scryfall.com/sets");
-  if (!res.ok) throw new Error("Failed to fetch sets");
-  const data = await res.json();
-
   // Filter to sets that have cards and are relevant for Commander
-  const sets: SetOption[] = (data.data as SetOption[])
+  const sets = (await getAllSets())
     .filter((s) => s.card_count > 0 && COMMANDER_SET_TYPES.has(s.set_type))
     .sort((a, b) => {
       // Sort by release date descending (newest first)
@@ -74,7 +65,7 @@ export function SetAutocomplete({
   const t = useTranslations("search");
   const [input, setInput] = useState("");
   const [open, setOpen] = useState(false);
-  const [allSets, setAllSets] = useState<SetOption[]>([]);
+  const [allSets, setAllSets] = useState<ScryfallSet[]>([]);
   const [loading, setLoading] = useState(false);
   // A flag rather than a message: the copy belongs in the catalog, not in state.
   const [hasError, setHasError] = useState(false);
