@@ -70,6 +70,7 @@ import type { SearchFilters as Filters } from "@/lib/scryfall/search-types";
 import { NO_SEARCH_FILTERS } from "@/lib/scryfall/search-filters";
 import { emptySearchNextStep } from "@/components/builder/empty-search-next-step";
 import { focusSearchField } from "@/components/builder/focus-search-field";
+import { togglePick, type SearchPick } from "@/components/builder/search-pick";
 import type { DeckCard, CardCategory, DeckZone } from "@/lib/deck/types";
 import { getFormatConfig, type DeckFormat } from "@/lib/deck/formats";
 import type { PairingCard } from "@/lib/deck/partner-abilities";
@@ -432,9 +433,10 @@ export default function BuilderPage() {
   });
   const [filters, setFilters] = useState<Filters>(NO_SEARCH_FILTERS);
   const [showFilters, setShowFilters] = useState(false);
-  const [commanderMode, setCommanderMode] = useState(false);
-  const [partnerMode, setPartnerMode] = useState(false);
-  const [companionMode, setCompanionMode] = useState(false);
+  const [searchPick, setSearchPick] = useState<SearchPick | null>(null);
+  const commanderMode = searchPick === "commander";
+  const partnerMode = searchPick === "partner";
+  const companionMode = searchPick === "companion";
 
   // Search mode
   const [searchMode, setSearchMode] = useState<SearchMode>("name");
@@ -1091,21 +1093,15 @@ export default function BuilderPage() {
                         commanderMode={commanderMode}
                         partnerMode={partnerMode}
                         companionMode={companionMode}
-                        onToggleCommander={() => {
-                          setCommanderMode((m) => !m);
-                          setPartnerMode(false);
-                          setCompanionMode(false);
-                        }}
-                        onTogglePartner={() => {
-                          setPartnerMode((m) => !m);
-                          setCommanderMode(false);
-                          setCompanionMode(false);
-                        }}
-                        onToggleCompanion={() => {
-                          setCompanionMode((m) => !m);
-                          setCommanderMode(false);
-                          setPartnerMode(false);
-                        }}
+                        onToggleCommander={() =>
+                          setSearchPick((p) => togglePick(p, "commander"))
+                        }
+                        onTogglePartner={() =>
+                          setSearchPick((p) => togglePick(p, "partner"))
+                        }
+                        onToggleCompanion={() =>
+                          setSearchPick((p) => togglePick(p, "companion"))
+                        }
                       />
                     </div>
                   </div>
