@@ -2,6 +2,7 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 import { waitFor } from "@testing-library/react";
 import { useCardSearch } from "./useCardSearch";
 import * as scryfallClient from "@/lib/scryfall/client";
+import { ScryfallApiError } from "@/lib/scryfall/api-error";
 import { renderHookWithProviders } from "@/test/render";
 
 vi.mock(import("@/lib/scryfall/client"));
@@ -46,8 +47,9 @@ describe("useCardSearch", () => {
 
 describe("useCardSearch retry behavior", () => {
   it("does not retry on 404 error", async () => {
+    // The rule reads the status the client attaches, never the message.
     vi.mocked(scryfallClient.searchCards).mockRejectedValue(
-      new Error("404 Not Found")
+      new ScryfallApiError(404, "Not Found")
     );
 
     const { result } = renderHookWithProviders(() =>
