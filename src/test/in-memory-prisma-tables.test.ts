@@ -5,7 +5,11 @@
  */
 import { PrismaClient } from "@prisma/client";
 import { describe, expect, it } from "vitest";
-import { inMemoryPrisma, type InMemoryTables } from "./in-memory-prisma-tables";
+import {
+  inMemoryPrisma,
+  type InMemoryTables,
+  type TableRead,
+} from "./in-memory-prisma-tables";
 
 const tables: InMemoryTables = new Map([
   [
@@ -33,6 +37,37 @@ describe("the in-memory Prisma tables", () => {
     });
 
     expect(rows.map((row) => row.id)).toEqual(["deck-2", "deck-3"]);
+  });
+
+  it("keeps a row that passes any branch of an OR next to the other columns", async () => {
+    const rows = await prisma.deck.findMany({
+      where: {
+        userId: "player-1",
+        OR: [{ name: "Mine" }, { shareToken: null }],
+      },
+    });
+
+    expect(rows.map((row) => row.id)).toEqual(["deck-1", "deck-3"]);
+  });
+
+  it("reports the table and the rows each read returned", async () => {
+    const reads: TableRead[] = [];
+    const logged = inMemoryPrisma(
+      { prisma: new PrismaClient() },
+      tables,
+      (read) => reads.push(read)
+    ).prisma;
+
+    await logged.deck.findMany({
+      where: { userId: "player-2" },
+      select: { id: true },
+    });
+    await logged.deck.findUnique({ where: { id: "missing" } });
+
+    expect(reads).toEqual([
+      { table: "deck", rows: [{ id: "deck-2" }] },
+      { table: "deck", rows: [] },
+    ]);
   });
 
   it("returns only the selected columns", async () => {
