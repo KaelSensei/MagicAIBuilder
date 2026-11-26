@@ -782,8 +782,9 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
         : commanderName,
   });
 
-  // A build that threw. The save step never throws: it holds a deck it could
-  // not create and stops on a deck it could not fill (`unfinishedDeck`).
+  // A build that threw, or `onComplete` itself. The save step catches its own
+  // failures: it holds a deck it could not create and stops on a deck it
+  // could not fill (`unfinishedDeck`).
   const reportFailure = (err: unknown) => {
     const message = err instanceof Error ? err.message : "Deck build failed";
     logger.error("Generate error", "DeckWizard", err);

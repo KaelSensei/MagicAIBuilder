@@ -18,6 +18,11 @@
  *
  * A deck the server cannot create is no longer pinned: the wizard keeps the built deck, says it
  * could not be saved, and "Try saving again" creates it without a new build (wizard-save-retry).
+ * Nor is a deck the wizard created but could not finish (I-02): after a failed card lookup, or a
+ * step that throws once the deck exists, it says so in an alert, with the count of copies not
+ * added when known and the build's corrections under it, and offers only "Open the deck". A
+ * commander the store could not save, and a card the server refused (B2-36), still open the deck
+ * in silence; both stay pinned below.
  */
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { MotionGlobalConfig } from "framer-motion";
@@ -466,6 +471,13 @@ function deckNotFinishedWithout(copies: number): string {
 /** The copies `STREAMED_CARDS` holds: 30 Islands and four single cards. */
 const STREAMED_COPIES = 34;
 const OPEN_THE_DECK = "Open the deck";
+/** A correction the server's card-data check makes to a build: a banned card taken out. */
+const MANA_CRYPT_REMOVED: DeckCorrection = {
+  action: "removed",
+  name: "Mana Crypt",
+  quantity: 1,
+  reason: "banned",
+};
 
 /**
  * Names Scryfall's recording does not hold, streamed after `STREAMED_CARDS` so the list needs a
@@ -1589,6 +1601,64 @@ describe("DeckWizard flow (characterization)", () => {
 
         expect(await screen.findByText(message)).toBeInTheDocument();
         fireEvent.click(screen.getByRole("button", { name: "Ouvrir le deck" }));
+        expect(onComplete).toHaveBeenCalledWith(DECK_ID);
+      }
+    );
+
+    it("announces the unfinished deck as an alert, and lists no correction when the build made none", async () => {
+      failCardLookups();
+
+      await generateDeck();
+
+      expect(await screen.findByRole("alert")).toHaveTextContent(
+        deckNotFinishedWithout(STREAMED_COPIES)
+      );
+      expect(
+        screen.queryByRole("heading", { name: /Checked against card data/ })
+      ).toBeNull();
+    });
+
+    // I-02 2.2 and 5.3: every correction is shown, even when the deck could not be finished.
+    it.each([
+      [
+        "Scryfall fails to look up a batch",
+        () => failCardLookups(),
+        deckNotFinishedWithout(STREAMED_COPIES),
+      ],
+      [
+        "opening the created deck fails",
+        () => failOpeningTheCreatedDeck(new Error("store failure")),
+        DECK_NOT_FINISHED,
+      ],
+    ])(
+      "lists the build's corrections under the notice, with a single Open the deck, when %s",
+      async (_case, failAfterTheCreate, message) => {
+        server.use(
+          http.post(BUILD_URL, () =>
+            ndjson(buildEvents({ corrections: [MANA_CRYPT_REMOVED] }))
+          )
+        );
+        failAfterTheCreate();
+
+        await generateDeck();
+
+        expect(await screen.findByText(message)).toBeInTheDocument();
+        expect(
+          screen.getByRole("heading", {
+            name: "Checked against card data: 1 correction",
+          })
+        ).toBeInTheDocument();
+        expect(
+          screen.getByText("Removed Mana Crypt: banned in Commander")
+        ).toBeInTheDocument();
+        expect(
+          screen.getAllByRole("button", { name: OPEN_THE_DECK })
+        ).toHaveLength(1);
+        expect(onComplete).not.toHaveBeenCalled();
+
+        fireEvent.click(screen.getByRole("button", { name: OPEN_THE_DECK }));
+
+        expect(onComplete).toHaveBeenCalledOnce();
         expect(onComplete).toHaveBeenCalledWith(DECK_ID);
       }
     );

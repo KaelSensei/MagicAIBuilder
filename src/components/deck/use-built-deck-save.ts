@@ -12,9 +12,11 @@
  * a fresh build would cost another AI build from the player's allowance and another model call.
  * Each built deck gets one idempotency key, and every attempt to create it sends that key: when the
  * server stored the deck but its answer was lost, saving again answers the stored deck instead of
- * creating a second one (#1855). Only the creation is retried. A failure once the deck exists stops
- * on that deck instead (`unfinishedDeck`): the player opens it to finish it by hand, and nothing
- * offers a save that would store a second deck (I-02).
+ * creating a second one (#1855). Only the creation is retried. Once the deck exists, a failed card
+ * lookup, or a step that throws, stops on that deck instead (`unfinishedDeck`), with the build's
+ * corrections: the player opens it to finish it by hand, and nothing offers a save that would store
+ * a second deck (I-02). A commander the store could not save and a card the server refused are
+ * swallowed by the store, so the deck still opens without them (B2-36).
  *
  * @module deck/use-built-deck-save
  */
@@ -49,6 +51,11 @@ export interface UnfinishedDeck {
   readonly deckId: string;
   /** Copies the import could not add, or null when a step threw before they could be counted. */
   readonly cardsNotAdded: number | null;
+  /**
+   * What the server's card-data check changed in the build, empty when nothing. Kept here because
+   * nothing else stores them: every correction is shown (I-02 spec, 2.2 and 5.3).
+   */
+  readonly corrections: BuildResult["corrections"];
 }
 
 /** A built deck and the idempotency key every attempt to create it sends. */
@@ -71,14 +78,14 @@ export interface BuiltDeckSave {
   readonly saveFailed: boolean;
   /**
    * Stores the built deck, then calls `onComplete` with its id, unless it carries corrections or
-   * could not be filled. Never throws. When the server cannot create the deck, it holds the deck
-   * and sets `saveFailed`; when the deck was created but a later step failed, it sets
-   * `unfinishedDeck`.
+   * could not be filled. Throws only what `onComplete` throws. When the server cannot create the
+   * deck, it holds the deck and sets `saveFailed`; when the deck was created but a card lookup
+   * failed or a later step threw, it sets `unfinishedDeck`, with the build's corrections.
    */
   readonly save: (deck: BuiltDeck) => Promise<void>;
   /**
    * Saves the held deck again: the same name, cards, commander and corrections, with no new build.
-   * Does nothing when no deck is held. Never throws, as `save`.
+   * Does nothing when no deck is held. Throws only what `onComplete` throws, as `save`.
    */
   readonly retry: () => Promise<void>;
   /** Forgets the progress and the corrected, unfinished and held decks, for a fresh build. */
@@ -121,30 +128,38 @@ interface DeckFill extends Pick<
 /**
  * Fills a created deck: opens it, sets the build's commander, then imports its cards.
  *
- * @returns the copies the import could not add
- * @throws what a store action throws; a commander that cannot be set and a card batch that fails
- * are caught by `built-deck-import.ts` instead
+ * Never throws. The deck exists, so no failure may reach the wizard's "Try again": a new build
+ * would store a second deck. A step that throws is logged, and the player reads the notice.
+ *
+ * @returns the copies the import could not add, or null when a store action threw before they
+ * were counted. A commander that cannot be set and a card batch that fails do not throw:
+ * `built-deck-import.ts` catches them.
  */
 async function fillCreatedDeck(
   deckId: string,
   result: BuildResult,
   { setActiveDeck, setCommander, addDeckCard, progress }: DeckFill
-): Promise<number> {
-  await setActiveDeck(deckId);
+): Promise<number | null> {
+  try {
+    await setActiveDeck(deckId);
 
-  // Read the commander off the build result, not off the build hook's
-  // state: the caller's closure holds the render-time snapshot.
-  if (result.commander) {
-    await tryResolveCommander(result.commander, setCommander);
+    // Read the commander off the build result, not off the build hook's
+    // state: the caller's closure holds the render-time snapshot.
+    if (result.commander) {
+      await tryResolveCommander(result.commander, setCommander);
+    }
+
+    progress.start(countCopies(result.cards));
+    const { copiesNotAdded } = await importCardsInBatches(
+      collapseEntries(result.cards),
+      addDeckCard,
+      progress.setImportedCount
+    );
+    return copiesNotAdded;
+  } catch (err) {
+    logger.error("Built deck fill error", "DeckWizard", err);
+    return null;
   }
-
-  progress.start(countCopies(result.cards));
-  const { copiesNotAdded } = await importCardsInBatches(
-    collapseEntries(result.cards),
-    addDeckCard,
-    progress.setImportedCount
-  );
-  return copiesNotAdded;
 }
 
 /**
@@ -183,35 +198,27 @@ export function useBuiltDeckSave(
     }
   };
 
-  const fill = async (deckId: string, result: BuildResult): Promise<void> => {
-    const copiesNotAdded = await fillCreatedDeck(deckId, result, {
+  const store = async (attempt: DeckToCreate): Promise<void> => {
+    setUnsavedDeck(null);
+    const deckId = await createOrHold(attempt);
+    if (deckId === null) return;
+    const { result } = attempt.deck;
+    const cardsNotAdded = await fillCreatedDeck(deckId, result, {
       setActiveDeck,
       setCommander,
       addDeckCard,
       progress,
     });
 
-    // An incomplete deck says so before its corrections: the player has cards to add by hand.
-    if (copiesNotAdded > 0) {
-      setUnfinishedDeck({ deckId, cardsNotAdded: copiesNotAdded });
-    } else if (result.corrections.length > 0) {
-      setCorrectedDeck({ deckId, corrections: result.corrections });
+    // An incomplete deck says so first, its corrections under it: the player
+    // has cards to add by hand.
+    const { corrections } = result;
+    if (cardsNotAdded === null || cardsNotAdded > 0) {
+      setUnfinishedDeck({ deckId, cardsNotAdded, corrections });
+    } else if (corrections.length > 0) {
+      setCorrectedDeck({ deckId, corrections });
     } else {
       onComplete(deckId);
-    }
-  };
-
-  const store = async (attempt: DeckToCreate): Promise<void> => {
-    setUnsavedDeck(null);
-    const deckId = await createOrHold(attempt);
-    if (deckId === null) return;
-    // The deck exists from here on, so no failure may reach the wizard's "Try
-    // again": a new build would store a second deck. The error stays in the log.
-    try {
-      await fill(deckId, attempt.deck.result);
-    } catch (err) {
-      logger.error("Built deck fill error", "DeckWizard", err);
-      setUnfinishedDeck({ deckId, cardsNotAdded: null });
     }
   };
 
