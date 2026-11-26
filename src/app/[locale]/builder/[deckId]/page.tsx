@@ -449,6 +449,15 @@ export default function BuilderPage() {
       prev.includes(code) ? prev.filter((x) => x !== code) : [...prev, code]
     );
   }, []);
+  // A tab starts afresh: the picks are toggled only from the Name tab, and a pick left on would
+  // replace By Set's and By Color's query with nothing on screen to say so (I-37).
+  const switchSearchTab = useCallback((mode: SearchMode) => {
+    setSearchMode(mode);
+    setSearchText("");
+    setSelectedSet("");
+    setColorFilter([]);
+    setSearchPick(null);
+  }, []);
 
   // Inline deck name editing
   const [isEditingName, setIsEditingName] = useState(false);
@@ -1042,12 +1051,7 @@ export default function BuilderPage() {
                   <button
                     type="button"
                     key={mode}
-                    onClick={() => {
-                      setSearchMode(mode);
-                      setSearchText("");
-                      setSelectedSet("");
-                      setColorFilter([]);
-                    }}
+                    onClick={() => switchSearchTab(mode)}
                     className={cn(
                       "flex-1 rounded-[var(--lumen-radius-pill)] py-2 text-xs font-medium capitalize transition-all",
                       searchMode === mode

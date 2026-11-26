@@ -789,4 +789,114 @@ describe("the builder's commander, partner and companion picks", () => {
 
     await lastSearchIs("name:/Sole/ legal:commander id<=U");
   });
+
+  /*
+   * The picks are toggled only from the Name tab, yet a pick left on kept replacing By Set's and
+   * By Color's query, and nothing on those tabs said a pick was still on. A tab switch now ends
+   * the pick (I-37).
+   */
+  describe("on a search tab switch", () => {
+    /** Thrasios has partner, so its deck shows the partner toggle beside the other two. */
+    const THRASIOS: ApiDeckCard = {
+      ...commandZoneCard("Thrasios, Triton Hero", ["G", "U"]),
+      oracleText:
+        "{4}: Scry 1. Then reveal the top card of your library. If it's a land card, put it onto the battlefield tapped. Otherwise, draw a card.\nPartner (You can have two commanders if both have partner.)",
+    };
+
+    /** The one set the set list serves. */
+    const DUSKMOURN = {
+      object: "set",
+      code: "dsk",
+      name: "Duskmourn: House of Horror",
+      set_type: "expansion",
+      released_at: "2024-09-27",
+      card_count: 286,
+    };
+
+    interface Pick {
+      /** The name of the pick's toggle in the Name tab. */
+      readonly toggle: string;
+      /** The query the pick runs with no name typed. */
+      readonly query: string;
+    }
+
+    const PICKS: readonly Pick[] = [
+      { toggle: "Commander", query: "is:commander" },
+      // CR 702.124h: a card with partner pairs only with another card that has partner.
+      {
+        toggle: "Partner",
+        query: 'is:commander o:"Partner" -o:"Partner with" -o:"Partner—"',
+      },
+      // CR 702.139a: a companion is a card with the companion keyword ability.
+      { toggle: "Companion", query: "keyword:companion legal:commander" },
+    ];
+
+    beforeEach(() => {
+      server.use(
+        http.get("/api/decks/:id", () =>
+          HttpResponse.json({
+            ...DECK,
+            commanderId: THRASIOS.scryfallId,
+            commanderName: THRASIOS.name,
+            pairingType: "partner",
+            cards: [THRASIOS],
+          })
+        ),
+        http.get("https://api.scryfall.com/sets", () =>
+          HttpResponse.json({
+            object: "list",
+            has_more: false,
+            data: [DUSKMOURN],
+          })
+        )
+      );
+    });
+
+    /** Turns `pick` on and waits for its search. */
+    async function startPick(
+      user: ReturnType<typeof userEvent.setup>,
+      pick: Pick
+    ): Promise<void> {
+      await user.click(await findButton(pick.toggle));
+      await lastSearchIs(pick.query);
+    }
+
+    it.each(PICKS)(
+      "ends the $toggle pick on By Set: choosing a set searches that set",
+      async (pick) => {
+        const { user } = await openBuilder();
+        await startPick(user, pick);
+
+        await user.click(searchTab("By Set"));
+        await user.click(
+          screen.getByPlaceholderText("Search set (e.g. dsk, mh3…)")
+        );
+        await user.click(await screen.findByText(DUSKMOURN.name));
+
+        await lastSearchIs("set:dsk legal:commander");
+      }
+    );
+
+    it("ends the pick on By Color: choosing a colour searches that colour", async () => {
+      const { user } = await openBuilder();
+      await startPick(user, PICKS[0]);
+
+      await user.click(searchTab("By Color"));
+      await user.click(button("White"));
+
+      await lastSearchIs("legal:commander id<=W");
+    });
+
+    it("has no pick on when the player comes back to Name: a typed name runs the name search", async () => {
+      const { user } = await openBuilder();
+      await startPick(user, PICKS[0]);
+      await user.click(searchTab("By Set"));
+
+      await user.click(searchTab("Name"));
+      await user.type(screen.getByPlaceholderText("Search cards…"), "Sol");
+
+      // Thrasios's colour identity, in WUBRG order (CR 903.4).
+      await lastSearchIs("name:/Sol/ legal:commander id<=UG");
+    });
+  });
 });
