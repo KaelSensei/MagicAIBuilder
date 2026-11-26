@@ -210,7 +210,7 @@ describe("characterization: DeckEditor commands", () => {
       await userEvent.click(screen.getByRole("button", { name: "List view" }));
       expect(useDeckStore.getState().deckViewMode).toBe("list");
       expect(
-        screen.queryByRole("button", { name: "4" })
+        screen.queryByRole("button", { name: "4 cards per row" })
       ).not.toBeInTheDocument();
 
       await userEvent.click(screen.getByRole("button", { name: "Grid view" }));
@@ -218,18 +218,61 @@ describe("characterization: DeckEditor commands", () => {
       expect(sent).toEqual([]);
     });
 
-    it("sets the store's grid density; currently each density button is named by its bare number (pinned)", async () => {
+    // Was pinned as "currently each density button is named by its bare
+    // number": a screen reader heard "4", and "4 cards per row" was only a
+    // tooltip. Design audit S3 names the button by the sentence.
+    it("sets the store's grid density from the button named for it", async () => {
       renderEditor(talrandDeck());
       expect(useDeckStore.getState().deckGridCols).toBe(6);
 
       await userEvent.click(
-        screen.getByRole("button", {
-          name: "4",
-          description: "4 cards per row",
-        })
+        screen.getByRole("button", { name: "4 cards per row" })
       );
 
       expect(useDeckStore.getState().deckGridCols).toBe(4);
+    });
+
+    it("presses the chosen density, and only that one", async () => {
+      renderEditor(talrandDeck());
+      const density = screen.getByRole("group", { name: "Cards per row" });
+      expect(
+        within(density).getByRole("button", { pressed: true })
+      ).toHaveAccessibleName("6 cards per row");
+
+      await userEvent.click(
+        within(density).getByRole("button", { name: "4 cards per row" })
+      );
+
+      expect(within(density).getAllByRole("button", { pressed: true })).toEqual(
+        [within(density).getByRole("button", { name: "4 cards per row" })]
+      );
+    });
+
+    it("names the density buttons in the player's language", () => {
+      renderEditor(talrandDeck(), "fr");
+
+      expect(
+        screen.getByRole("button", {
+          name: "4 cartes par ligne",
+          pressed: false,
+        })
+      ).toBeInTheDocument();
+    });
+
+    it("presses the view the player picks and releases the other", async () => {
+      renderEditor(talrandDeck());
+      const layout = screen.getByRole("group", { name: "Layout" });
+
+      await userEvent.click(
+        within(layout).getByRole("button", { name: "List view" })
+      );
+
+      expect(
+        within(layout).getByRole("button", { name: "List view" })
+      ).toHaveAttribute("aria-pressed", "true");
+      expect(
+        within(layout).getByRole("button", { name: "Grid view" })
+      ).toHaveAttribute("aria-pressed", "false");
     });
 
     // The search panel has a "List view" button too, so without a named toolbar a

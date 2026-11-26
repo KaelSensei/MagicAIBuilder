@@ -255,6 +255,7 @@
     "title": "Import Decklist",
     "tabText": "Plain Text",
     "tabUrl": "From URL",
+    "source": "Import source",
     "description": "Paste a decklist in plain text format. Use <code>1 Card Name</code> per line. Add a <code>Commander</code> section header to set your commander.",
     "noDeckSelected": "No deck selected. Create or open a deck first.",
     "parsing": "Parsing decklist...",
