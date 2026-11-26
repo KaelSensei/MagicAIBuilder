@@ -67,7 +67,7 @@ describe("FocusedFeedbackPanel", () => {
     );
 
     fireEvent.click(screen.getByRole("checkbox"));
-    fireEvent.change(screen.getByPlaceholderText("What needs help?"), {
+    fireEvent.change(screen.getByRole("textbox", { name: "Your question" }), {
       target: { value: "  Is the mana base reliable?  " },
     });
     fireEvent.click(screen.getByRole("button", { name: "Save request" }));
