@@ -21,8 +21,9 @@ import type { ScryfallCard } from "@/lib/scryfall/types";
 /**
  * The zoom's add-to-deck state.
  *
- * - `no-open-deck`: no deck is open in this session (a full page load, or a visitor who never
- *   opened one), so there is nothing to add to.
+ * - `no-open-deck`: no deck is open (a visitor who never opened one, a remembered deck that no
+ *   longer opens, or the moment before a full page load reopens the remembered one), so there is
+ *   nothing to add to.
  * - `open-deck`: the open deck's name, the copies of the zoomed card its main deck holds (read
  *   back from the store, so a press that added nothing shows nothing new), whether the last
  *   press on this card raised that count, whether that press is still saving, and the add.
