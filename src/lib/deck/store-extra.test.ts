@@ -406,7 +406,10 @@ describe("useDeckStore — undo", () => {
       expect(useDeckStore.getState().undoStack).toEqual([action]);
       expect(deckApi.addCard).not.toHaveBeenCalled();
       expect(deckApi.removeCard).not.toHaveBeenCalled();
-      expect(toastAdd).toHaveBeenCalledWith("error", expect.any(String));
+      // Raised by its catalog key, not in English (I-04).
+      expect(toastAdd).toHaveBeenCalledWith("error", {
+        key: "deck.undo.openOriginalDeck",
+      });
     }
   );
 

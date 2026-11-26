@@ -20,7 +20,9 @@ export type { ToastType } from "@/lib/ui/toast-policy";
  * deck store's save and load failures are listed in `lib/deck/failure-toasts.ts`.
  */
 export type LocalizedToastKey =
-  "deck.sync.conflictReloaded" | DeckFailureToastKey;
+  | "deck.sync.conflictReloaded"
+  | "deck.undo.openOriginalDeck"
+  | DeckFailureToastKey;
 
 /** A toast's text: the words themselves, or the catalog key the container translates. */
 export type ToastMessage = string | { readonly key: LocalizedToastKey };

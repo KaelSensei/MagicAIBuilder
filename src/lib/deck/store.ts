@@ -399,6 +399,14 @@ const deckWrites = createDeckWriteQueue(
 const CONFLICT_TOAST = { key: "deck.sync.conflictReloaded" } as const;
 
 /**
+ * Why an undo waits: its change belongs to a deck the store no longer holds.
+ * Translated by the toast container in the player's locale (I-04).
+ */
+const UNDO_NEEDS_ITS_DECK_TOAST = {
+  key: "deck.undo.openOriginalDeck",
+} as const;
+
+/**
  * Puts the server's deck back on screen after a write was refused as stale,
  * and tells the player. The reload replaces the whole deck, version included,
  * so the next write carries the version the other tab left. The undo entries
@@ -1307,9 +1315,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     const last = undoStack.at(-1);
     if (!last) return;
     if (!get().decks[last.deckId]) {
-      useToastStore
-        .getState()
-        .add("error", "Open the original deck before retrying undo.");
+      useToastStore.getState().add("error", UNDO_NEEDS_ITS_DECK_TOAST);
       return;
     }
     // Pop the action
