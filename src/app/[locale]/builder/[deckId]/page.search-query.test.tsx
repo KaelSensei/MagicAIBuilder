@@ -602,3 +602,79 @@ describe("the builder's name search inside the commander's colour identity (I-01
     ).toBeDefined();
   });
 });
+
+/*
+ * A search with no result showed the query it ran and nothing else. It now
+ * says what to do next: "Clear filters" while the filters narrow the search,
+ * a syntax hint otherwise (I-13 AC-13-05, design audit S11). Every query but
+ * the translated one finds nothing in this file.
+ */
+describe("the builder's search with no result", () => {
+  const SYNTAX_HINT =
+    "Tip: search by type or rules text, for example t:dragon o:flying.";
+
+  /** How many accessible buttons are named `name`. */
+  function buttonCount(name: string): number {
+    return Array.from(document.querySelectorAll("button")).filter(
+      (candidate) =>
+        buttonName(candidate) === name && !isInaccessible(candidate)
+    ).length;
+  }
+
+  /** Serves Opt for the unfiltered name search; every other query still finds nothing. */
+  function serveOptUnfiltered(): void {
+    server.use(
+      http.get("/api/cache/search", ({ request }) => {
+        const query = new URL(request.url).searchParams.get("query") ?? "";
+        if (query !== "is:gamechanger" && query !== "banned:commander") {
+          searched.push(query);
+        }
+        const data: ScryfallSearchResponse =
+          query === "legal:commander id<=U"
+            ? {
+                object: "list",
+                total_cards: 1,
+                has_more: false,
+                data: [card("opt-dmu", "Opt")],
+              }
+            : EMPTY_SEARCH_RESPONSE;
+        return HttpResponse.json({ hit: true, data });
+      })
+    );
+  }
+
+  // The unfiltered search comes back from the page's search cache, so the
+  // proof is what the player sees again, not a new request.
+  it("offers Clear filters while a filter narrows it, and lists the unfiltered search again", async () => {
+    serveOptUnfiltered();
+    const user = await openBuilderWithFilters();
+    expect(await screen.findByText("Opt")).toBeDefined();
+    await user.click(button("White"));
+    await lastSearchIs("id<=W legal:commander id<=U");
+
+    await user.click(await findButton("Clear filters"));
+
+    expect(await screen.findByText("Opt")).toBeDefined();
+    expect(button("White")).toHaveAttribute("aria-pressed", "false");
+    expect(buttonCount("Clear filters")).toBe(0);
+  });
+
+  it("suggests the search syntax, and no Clear filters, when no filter narrows it", async () => {
+    await openBuilderWithFilters();
+
+    expect(await screen.findByText(SYNTAX_HINT)).toBeDefined();
+    expect(buttonCount("Clear filters")).toBe(0);
+  });
+
+  it("suggests the search syntax under a confirmed plain-language query, which runs without the filters", async () => {
+    const user = await openBuilderWithFilters();
+    await user.click(button("White"));
+    await runPlainLanguageQuery(user);
+    await lastSearchIs(TRANSLATED);
+
+    // The query line shows only once the search has come back empty.
+    expect(await screen.findByText(`Query: ${TRANSLATED}`)).toBeDefined();
+    expect(screen.getByText(SYNTAX_HINT)).toBeDefined();
+    expect(buttonCount("Clear filters")).toBe(0);
+  });
+});

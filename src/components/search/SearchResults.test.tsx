@@ -1,6 +1,7 @@
 import type { ComponentProps } from "react";
 import { screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import userEvent from "@testing-library/user-event";
+import { describe, expect, it, vi } from "vitest";
 import { SessionProvider } from "next-auth/react";
 import { SearchResults } from "./SearchResults";
 import { renderWithIntl } from "@/test/render-with-intl";
@@ -268,5 +269,82 @@ describe("SearchResults announces the search to a screen-reader player", () => {
     );
 
     expect(screen.getByRole("status").textContent).toBe("42 résultats");
+  });
+});
+
+/*
+ * A search with no result showed the query it ran and nothing else. It now
+ * says what to do next: clear the filters that narrow it, or try the search
+ * syntax (I-13 AC-13-05, design audit S11). The builder page decides whether
+ * the filters narrow the search (`page.search-query.test.tsx`).
+ */
+describe("SearchResults with no result", () => {
+  const SYNTAX_HINT =
+    "Tip: search by type or rules text, for example t:dragon o:flying.";
+
+  it("offers Clear filters when the filters narrow the search, and clears them on a press", async () => {
+    const onClearFilters = vi.fn();
+    const user = userEvent.setup();
+    renderSearch(searchProps({ totalCards: 0, onClearFilters }));
+
+    await user.click(screen.getByRole("button", { name: "Clear filters" }));
+
+    expect(onClearFilters).toHaveBeenCalledOnce();
+    expect(screen.queryByText(SYNTAX_HINT)).toBeNull();
+  });
+
+  it("suggests the search syntax, with an example, when no filter narrows the search", () => {
+    renderSearch(searchProps({ totalCards: 0 }));
+
+    expect(screen.getByText(SYNTAX_HINT)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Clear filters" })).toBeNull();
+  });
+
+  it("keeps announcing that nothing matched, apart from the next step", () => {
+    renderSearch(searchProps({ totalCards: 0, onClearFilters: vi.fn() }));
+
+    expect(screen.getByRole("status").textContent).toBe(
+      "No cards found. Try a different search."
+    );
+  });
+
+  it("offers neither while the search runs or after it fails", () => {
+    const { rerender } = renderSearch(
+      searchProps({ isLoading: true, onClearFilters: vi.fn() })
+    );
+    expect(screen.queryByRole("button", { name: "Clear filters" })).toBeNull();
+
+    rerender(
+      <SearchResults
+        {...searchProps({ error: new Error("down"), onClearFilters: vi.fn() })}
+      />
+    );
+
+    expect(screen.queryByRole("button", { name: "Clear filters" })).toBeNull();
+    expect(screen.queryByText(SYNTAX_HINT)).toBeNull();
+  });
+
+  it("speaks French to a French player, addressing them as « vous »", () => {
+    const { unmount } = renderWithProviders(
+      <SearchResults
+        {...searchProps({ totalCards: 0, onClearFilters: vi.fn() })}
+      />,
+      { session: null, locale: "fr" }
+    );
+    expect(
+      screen.getByRole("button", { name: "Effacer les filtres" })
+    ).toBeInTheDocument();
+    unmount();
+
+    renderWithProviders(<SearchResults {...searchProps({ totalCards: 0 })} />, {
+      session: null,
+      locale: "fr",
+    });
+
+    expect(
+      screen.getByText(
+        "Astuce : cherchez par type ou par texte de règles, par exemple t:dragon o:flying."
+      )
+    ).toBeInTheDocument();
   });
 });

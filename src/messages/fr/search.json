@@ -105,6 +105,8 @@
     "ramp": "Ramp"
   },
   "executedQuery": "Requête : {query}",
+  "clearFilters": "Effacer les filtres",
+  "syntaxHint": "Astuce : cherchez par type ou par texte de règles, par exemple t:dragon o:flying.",
   "naturalLanguage": {
     "modeLabel": "Mode de recherche",
     "syntaxMode": "Syntaxe",
