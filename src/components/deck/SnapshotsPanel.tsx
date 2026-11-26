@@ -218,7 +218,7 @@ export function SnapshotsPanel({
                 aria-label={t("snapshots.nameLabel")}
                 placeholder={t("snapshots.placeholder")}
                 maxLength={100}
-                className="w-full text-xs bg-[var(--background)] border border-[var(--border)] rounded px-2 py-1.5 text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] outline-none focus:border-[var(--accent)]"
+                className="w-full text-xs bg-[var(--background)] border border-[var(--border)] rounded px-2 py-1.5 text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]"
               />
               {saveError && (
                 <p role="alert" className="text-[10px] text-red-400">

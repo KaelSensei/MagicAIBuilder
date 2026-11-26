@@ -34,7 +34,7 @@ const OFFERED_TURNS: readonly number[] = Array.from(
 
 /** Shared look of the fields. */
 const FIELD_CLASS =
-  "rounded border border-[var(--border)] bg-[var(--background)] px-2 py-1 text-xs text-[var(--text-primary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)]";
+  "rounded border border-[var(--border)] bg-[var(--background)] px-2 py-1 text-xs text-[var(--text-primary)]";
 
 /** A field's label, on the left of its control. */
 const LABEL_CLASS = "text-xs text-[var(--text-secondary)]";

@@ -38,9 +38,13 @@ const SIGNED_IN: Session = {
 const HERO_PILL =
   "inline-flex items-center gap-2 rounded-[var(--lumen-radius-pill)] bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white shadow-[var(--lumen-shadow-sm)] transition-colors hover:bg-[var(--accent-hover)] focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)]";
 
-/** The quiet accent-coloured link next to the hero's pill. */
+/**
+ * The quiet accent-coloured link next to the hero's pill. Its focus is the
+ * shared outline that globals.css draws on every link; it lost its own
+ * `--accent` ring (design audit S1).
+ */
 const HERO_QUIET_LINK =
-  "inline-flex items-center rounded-[var(--lumen-radius-pill)] px-4 py-2.5 text-sm font-medium text-[var(--accent-text)] transition-colors hover:bg-[var(--accent-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]";
+  "inline-flex items-center rounded-[var(--lumen-radius-pill)] px-4 py-2.5 text-sm font-medium text-[var(--accent-text)] transition-colors hover:bg-[var(--accent-soft)]";
 
 /** The violet pill of the landing bar, shorter than the hero's, with the same focus outline. */
 const NAVBAR_PILL =

@@ -71,7 +71,7 @@ function PrimerSourcePane({
         onKeyDown={handleKeyDown}
         placeholder={t("description.placeholder")}
         maxLength={DESCRIPTION_MAX_LENGTH}
-        className={`w-full resize-none rounded-md border border-[var(--border)] bg-[var(--surface)] px-2.5 py-2 font-mono text-xs text-[var(--text-primary)] outline-none transition-colors placeholder:text-[var(--text-secondary)]/50 focus:border-[var(--accent)] ${PANE_BODY_CLASS}`}
+        className={`w-full resize-none rounded-md border border-[var(--border)] bg-[var(--surface)] px-2.5 py-2 font-mono text-xs text-[var(--text-primary)] transition-colors placeholder:text-[var(--text-secondary)]/50 ${PANE_BODY_CLASS}`}
       />
     </div>
   );

@@ -31,7 +31,7 @@ function InspiredForkLink({ fork }: InspiredForkLinkProps) {
   return (
     <Link
       href={`/deck/${fork.id}`}
-      className="rounded-sm font-medium text-[var(--accent-text)] underline underline-offset-2 hover:decoration-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)]"
+      className="rounded-sm font-medium text-[var(--accent-text)] underline underline-offset-2 hover:decoration-2"
     >
       {fork.author
         ? t("forkSource", { name: fork.name, author: fork.author })

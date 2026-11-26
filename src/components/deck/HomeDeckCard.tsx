@@ -109,10 +109,10 @@ export function HomeDeckCard({
   // The link wraps the deck name only and stretches over the card through its
   // ::after box, so a click anywhere outside the actions still opens the deck;
   // the actions are its siblings (WCAG 4.1.2). The wrapper draws the link's
-  // focus ring around the whole card.
+  // focus outline, the shared --focus-ring one, around the whole card.
   return (
     <div
-      className="group relative h-full min-h-48 overflow-hidden rounded-[var(--lumen-radius-xl)] border border-[var(--border)] shadow-[var(--lumen-shadow-sm)] transition-[border-color,box-shadow,transform] hover:-translate-y-0.5 hover:border-[var(--accent)] hover:shadow-[var(--lumen-shadow-md)] has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-[var(--accent)] has-[a:focus-visible]:ring-offset-2 has-[a:focus-visible]:ring-offset-[var(--background)]"
+      className="group relative h-full min-h-48 overflow-hidden rounded-[var(--lumen-radius-xl)] border border-[var(--border)] shadow-[var(--lumen-shadow-sm)] transition-[border-color,box-shadow,transform] hover:-translate-y-0.5 hover:border-[var(--accent)] hover:shadow-[var(--lumen-shadow-md)] has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-[var(--focus-ring)]"
       style={
         hasArt
           ? {

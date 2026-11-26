@@ -25,8 +25,7 @@ interface AiRefusalNoticeProps {
   readonly refusal: AiCallRefusal;
 }
 
-const LINK_CLASS =
-  "font-semibold underline hover:no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]";
+const LINK_CLASS = "font-semibold underline hover:no-underline";
 
 /**
  * A polite live region holding why the call was refused, in the UI locale.

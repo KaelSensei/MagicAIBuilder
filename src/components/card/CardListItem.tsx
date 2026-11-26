@@ -110,7 +110,7 @@ function CardRoleExplanation({ card }: { readonly card: DeckCard }) {
         aria-label={t("roleExplanation.label")}
         aria-expanded={isOpen}
         onClick={() => setIsOpen((open) => !open)}
-        className="flex h-5 w-5 items-center justify-center rounded text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--accent-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)]"
+        className="flex h-5 w-5 items-center justify-center rounded text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--accent-text)]"
       >
         <CircleHelp className="h-3.5 w-3.5" aria-hidden="true" />
       </button>

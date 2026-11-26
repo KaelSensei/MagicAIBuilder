@@ -97,7 +97,7 @@ function ChipButton({
       aria-pressed={pressed}
       onClick={onSelect}
       className={cn(
-        "shrink-0 rounded-[var(--lumen-radius-pill)] border px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]",
+        "shrink-0 rounded-[var(--lumen-radius-pill)] border px-3 py-1.5 text-sm font-medium transition-colors",
         pressed
           ? "border-[var(--accent)] bg-[var(--accent)] text-white"
           : "border-[var(--border)] bg-[var(--surface)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"

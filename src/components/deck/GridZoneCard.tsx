@@ -154,7 +154,7 @@ export function GridZoneCard({
             );
             if (category) onChangeCategory(card.id, category);
           }}
-          className="mt-1 h-8 w-full min-w-0 rounded border border-[var(--border)] bg-[var(--surface)] px-1 text-xs text-[var(--text-secondary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)]"
+          className="mt-1 h-8 w-full min-w-0 rounded border border-[var(--border)] bg-[var(--surface)] px-1 text-xs text-[var(--text-secondary)]"
         >
           {EDITABLE_CATEGORIES.map((category) => (
             <option key={category} value={category}>

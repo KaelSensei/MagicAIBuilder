@@ -28,7 +28,7 @@ export function DeckListRefreshNotice({ onRetry }: DeckListRefreshNoticeProps) {
       <button
         type="button"
         onClick={onRetry}
-        className="inline-flex items-center gap-2 rounded-md border border-[var(--border)] px-3 py-2 text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--surface)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
+        className="inline-flex items-center gap-2 rounded-md border border-[var(--border)] px-3 py-2 text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--surface)]"
       >
         <RefreshCw aria-hidden="true" className="h-4 w-4" />
         {t("home.retry")}

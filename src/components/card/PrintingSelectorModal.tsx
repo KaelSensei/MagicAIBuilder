@@ -148,7 +148,7 @@ export function PrintingSelectorModal({
                   type="button"
                   aria-pressed={ownedOnly}
                   onClick={() => setOwnedOnly((value) => !value)}
-                  className={`self-start rounded-md border px-3 py-1.5 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--accent) ${ownedOnly ? "border-(--accent) bg-(--surface) text-(--text-primary)" : "border-(--border) text-(--text-secondary) hover:text-(--text-primary)"}`}
+                  className={`self-start rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${ownedOnly ? "border-(--accent) bg-(--surface) text-(--text-primary)" : "border-(--border) text-(--text-secondary) hover:text-(--text-primary)"}`}
                 >
                   {t("ownedPrintingsOnly")}
                 </button>
