@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
@@ -43,6 +43,10 @@ describe("QuickAddPaletteHost", () => {
     searched.length = 0;
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it("opens with Ctrl+K and does not search a one-letter line", async () => {
     const user = userEvent.setup();
     renderWithProviders(<QuickAddPaletteHost scope={SIMIC} onAdd={vi.fn()} />);
@@ -63,31 +67,73 @@ describe("QuickAddPaletteHost", () => {
     await user.click(screen.getByRole("button", { name: "Quick add" }));
     await user.type(screen.getByRole("combobox", { name: "Quick add" }), "Sol");
 
-    expect(await screen.findByRole("button", { name: /Sol Ring/ })).toBeTruthy();
+    expect(
+      await screen.findByRole("button", { name: /Sol Ring/ })
+    ).toBeTruthy();
     expect(searched.at(-1)).toBe("name:/Sol/ legal:commander id<=UG");
 
     await user.keyboard("{Enter}");
-    expect(onAdd).toHaveBeenCalledWith(expect.objectContaining({ name: "Sol Ring" }), "main");
+    expect(onAdd).toHaveBeenCalledWith(
+      expect.objectContaining({ name: "Sol Ring" }),
+      "main"
+    );
     expect(screen.getByRole("dialog", { name: "Quick add" })).toBeTruthy();
+  });
+
+  it("opens with ⌘K on macOS and closes with ⌘K again", async () => {
+    vi.spyOn(window.navigator, "userAgent", "get").mockReturnValue(
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"
+    );
+    const user = userEvent.setup();
+    renderWithProviders(<QuickAddPaletteHost scope={SIMIC} onAdd={vi.fn()} />);
+
+    await user.keyboard("{Meta>}k{/Meta}");
+    expect(screen.getByRole("dialog", { name: "Quick add" })).toBeTruthy();
+
+    await user.keyboard("{Meta>}k{/Meta}");
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("stays closed for Ctrl+K on macOS and for Ctrl+Shift+K elsewhere", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<QuickAddPaletteHost scope={SIMIC} onAdd={vi.fn()} />);
+
+    await user.keyboard("{Control>}{Shift>}k{/Shift}{/Control}");
+    expect(screen.queryByRole("dialog")).toBeNull();
+
+    vi.spyOn(window.navigator, "userAgent", "get").mockReturnValue(
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"
+    );
+    await user.keyboard("{Control>}k{/Control}");
+    expect(screen.queryByRole("dialog")).toBeNull();
   });
 
   it("says when the search fails and does not add a card", async () => {
     server.use(
-      http.get("/api/cache/search", () => new HttpResponse(null, { status: 500 })),
-      http.get("https://api.scryfall.com/cards/search", () => new HttpResponse(null, { status: 500 }))
+      http.get(
+        "/api/cache/search",
+        () => new HttpResponse(null, { status: 500 })
+      ),
+      http.get(
+        "https://api.scryfall.com/cards/search",
+        () => new HttpResponse(null, { status: 500 })
+      )
     );
     const user = userEvent.setup();
     const onAdd = vi.fn();
     renderWithProviders(
-      <QuickAddPaletteHost scope={{ legality: "commander", identityClause: "" }} onAdd={onAdd} />
+      <QuickAddPaletteHost
+        scope={{ legality: "commander", identityClause: "" }}
+        onAdd={onAdd}
+      />
     );
 
     await user.click(screen.getByRole("button", { name: "Quick add" }));
     await user.type(screen.getByRole("combobox", { name: "Quick add" }), "zz");
 
-    expect(await screen.findByRole("alert", {}, { timeout: 8000 })).toHaveTextContent(
-      "The search could not be completed."
-    );
+    expect(
+      await screen.findByRole("alert", {}, { timeout: 8000 })
+    ).toHaveTextContent("The search could not be completed.");
     await user.keyboard("{Enter}");
     expect(onAdd).not.toHaveBeenCalled();
   });
