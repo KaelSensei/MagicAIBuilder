@@ -8,6 +8,7 @@ import { useTranslations } from "next-intl";
 import { Search, X, Loader2 } from "lucide-react";
 import { getAllSets } from "@/lib/scryfall/client";
 import type { ScryfallSet } from "@/lib/scryfall/types";
+import { focusWithinRingClassName } from "@/components/ui/focus";
 
 // Set types that are relevant for Commander deck building
 const COMMANDER_SET_TYPES = new Set([
@@ -131,7 +132,7 @@ export function SetAutocomplete({
 
   return (
     <div ref={ref} className="relative">
-      <div className="flex items-center rounded-lg border border-[var(--border)] bg-[var(--surface)] focus-within:border-[var(--accent)] transition-colors">
+      <div className={`flex items-center rounded-lg border border-[var(--border)] bg-[var(--surface)] focus-within:border-[var(--focus-ring)] transition-colors ${focusWithinRingClassName}`}>
         <span className="pl-3 text-[var(--text-secondary)]">
           <Search className="w-4 h-4" />
         </span>

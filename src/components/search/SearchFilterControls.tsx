@@ -10,7 +10,7 @@ import { cn } from "@/components/ui/utils";
 /** The shared look of every field in the panel: the controls here and the text fields and lists in `SearchFilters.tsx`. */
 export const inputCls =
   "text-xs bg-[var(--surface)] border border-[var(--border)] rounded px-2 py-1 " +
-  "text-[var(--text-primary)] outline-none focus:border-[var(--accent)]";
+  "text-[var(--text-primary)]";
 
 /**
  * A small mode button, highlighted while `active`. Used for the colour match (Any / All / Exact)

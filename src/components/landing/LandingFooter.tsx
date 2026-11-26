@@ -10,7 +10,7 @@ const DISCLAIMER_TAGS = {
       href="https://scryfall.com"
       target="_blank"
       rel="noopener noreferrer"
-      className="font-medium text-[var(--accent-text)] underline decoration-[var(--accent-soft)] underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+      className="font-medium text-[var(--accent-text)] underline decoration-[var(--accent-soft)] underline-offset-4"
     >
       {chunks}
     </a>
@@ -30,7 +30,7 @@ export function LandingFooter() {
       <div className="mx-auto flex max-w-6xl flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <Link
           href="#top"
-          className="font-semibold text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+          className="font-semibold text-[var(--text-primary)]"
         >
           MagicAIBuilder
         </Link>

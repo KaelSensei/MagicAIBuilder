@@ -44,7 +44,7 @@ export function DecksHomeControls({
             type="button"
             onClick={() => onSetViewMode("grid")}
             className={cn(
-              "rounded-[var(--lumen-radius-pill)] px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]",
+              "rounded-[var(--lumen-radius-pill)] px-3 py-1.5 text-sm font-medium transition-colors",
               viewMode === "grid"
                 ? "bg-[var(--accent)] text-white"
                 : "bg-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
@@ -57,7 +57,7 @@ export function DecksHomeControls({
             type="button"
             onClick={() => onSetViewMode("list")}
             className={cn(
-              "rounded-[var(--lumen-radius-pill)] px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]",
+              "rounded-[var(--lumen-radius-pill)] px-3 py-1.5 text-sm font-medium transition-colors",
               viewMode === "list"
                 ? "bg-[var(--accent)] text-white"
                 : "bg-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]"

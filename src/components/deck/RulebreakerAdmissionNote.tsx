@@ -91,7 +91,7 @@ export function RulebreakerAdmissionNote({
       <summary
         aria-describedby={reasonId}
         className={cn(
-          "block cursor-pointer list-none truncate rounded border border-[var(--border)] px-1.5 py-0.5 text-[10px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)] [&::-webkit-details-marker]:hidden",
+          "block cursor-pointer list-none truncate rounded border border-[var(--border)] px-1.5 py-0.5 text-[10px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] [&::-webkit-details-marker]:hidden",
           classes.summary
         )}
       >

@@ -8,7 +8,7 @@ import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 
 const NAV_LINK_CLASS =
-  "inline-flex items-center rounded-[var(--lumen-radius-pill)] px-3 py-2 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--accent-soft)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]";
+  "inline-flex items-center rounded-[var(--lumen-radius-pill)] px-3 py-2 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--accent-soft)] hover:text-[var(--text-primary)]";
 
 /**
  * The bar's pill is px-4 py-2, which no Button size has (sm is px-3.5, md is
@@ -34,7 +34,7 @@ export function LandingNavbar() {
     >
       <Link
         href="#top"
-        className="flex items-center gap-2.5 rounded-[var(--lumen-radius-md)] text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+        className="flex items-center gap-2.5 rounded-[var(--lumen-radius-md)] text-[var(--text-primary)]"
       >
         <span className="flex h-8 w-8 items-center justify-center rounded-[var(--lumen-radius-md)] bg-[var(--accent-soft)] text-[var(--accent-text)]">
           <Sparkles className="h-4 w-4" aria-hidden="true" />

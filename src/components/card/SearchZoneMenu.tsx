@@ -36,7 +36,7 @@ interface SearchZoneMenuProps {
 }
 
 const ICON_BUTTON =
-  "flex h-7 w-7 items-center justify-center rounded-full border border-white/40 bg-black/45 text-white shadow-[var(--lumen-shadow-sm)] backdrop-blur-sm hover:bg-black/65 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]";
+  "flex h-7 w-7 items-center justify-center rounded-full border border-white/40 bg-black/45 text-white shadow-[var(--lumen-shadow-sm)] backdrop-blur-sm hover:bg-black/65";
 
 /**
  * Icon buttons that add a search result without covering the card at rest.

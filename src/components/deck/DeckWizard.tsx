@@ -421,7 +421,6 @@ function StepCommander({
           className="
             w-full px-4 py-3 rounded-xl border border-[var(--border)] bg-[var(--surface)]
             text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]/50
-            focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/30
             transition-all
           "
         />

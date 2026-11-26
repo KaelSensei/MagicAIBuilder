@@ -17,7 +17,7 @@ export interface CapabilityEntry {
 }
 
 const ACTION_CLASS =
-  "text-sm font-medium text-[var(--accent-text)] underline decoration-[var(--accent-soft)] underline-offset-4 hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] rounded-sm";
+  "text-sm font-medium text-[var(--accent-text)] underline decoration-[var(--accent-soft)] underline-offset-4 hover:text-[var(--text-primary)] rounded-sm";
 
 /**
  * Raised card for one landing capability.
