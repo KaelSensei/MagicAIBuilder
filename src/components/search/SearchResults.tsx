@@ -12,7 +12,7 @@
  */
 import { useMemo } from "react";
 import { useTranslations } from "next-intl";
-import { Loader2, AlertCircle, LayoutGrid, List, Package } from "lucide-react";
+import { Loader2, AlertCircle, Package } from "lucide-react";
 import { CardGrid } from "@/components/card/CardGrid";
 import { CardSearchListItem } from "@/components/card/CardSearchListItem";
 import { useDeckStore } from "@/lib/deck/store";
@@ -31,6 +31,7 @@ import {
   type SearchResultsPhase,
 } from "./search-results-view";
 import { searchFailureMessageKey } from "./search-failure";
+import { SearchViewModeToggle } from "./SearchViewModeToggle";
 
 interface SearchResultsProps {
   readonly cards: readonly ScryfallCard[];
@@ -143,7 +144,7 @@ export function SearchResults(props: SearchResultsProps) {
             {coverageNote}
           </EmptySearchResult>
         ) : null}
-        {phase === "listed" ? <ViewModeToggle /> : null}
+        {phase === "listed" ? <SearchViewModeToggle /> : null}
       </div>
       {phase === "listed" ? (
         <>
@@ -151,43 +152,6 @@ export function SearchResults(props: SearchResultsProps) {
           <ResultCards {...props} />
         </>
       ) : null}
-    </div>
-  );
-}
-
-/** Switches the list between card images and compact rows. */
-function ViewModeToggle() {
-  const t = useTranslations("search");
-  const viewMode = useDeckStore((s) => s.searchViewMode);
-  const setViewMode = useDeckStore((s) => s.setSearchViewMode);
-  return (
-    <div className="flex items-center gap-1 ml-auto">
-      <button
-        type="button"
-        onClick={() => setViewMode("grid")}
-        className={`p-1 rounded transition-colors ${
-          viewMode === "grid"
-            ? "text-[var(--accent-text)]"
-            : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-        }`}
-        title={t("gridView")}
-        aria-label={t("gridView")}
-      >
-        <LayoutGrid className="w-3.5 h-3.5" />
-      </button>
-      <button
-        type="button"
-        onClick={() => setViewMode("list")}
-        className={`p-1 rounded transition-colors ${
-          viewMode === "list"
-            ? "text-[var(--accent-text)]"
-            : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-        }`}
-        title={t("listView")}
-        aria-label={t("listView")}
-      >
-        <List className="w-3.5 h-3.5" />
-      </button>
     </div>
   );
 }
