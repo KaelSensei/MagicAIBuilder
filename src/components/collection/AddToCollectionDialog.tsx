@@ -15,22 +15,25 @@ import { Modal, ModalTitle } from "@/components/ui/Modal";
 import { cn } from "@/components/ui/utils";
 
 /**
- * Optional control by the page. The collection page holds the open state so
- * its empty state's "Add cards" opens this same dialog; left out, the dialog
- * keeps its own state and opens from its trigger only.
+ * Optional control by the page, both props or neither, as `ImportDialog`
+ * takes them. The collection page holds the open state so its empty state's
+ * "Add cards" opens this same dialog; left out, the dialog keeps its own state
+ * and opens from its trigger only.
  */
-export interface AddToCollectionDialogProps {
-  readonly open?: boolean;
-  readonly onOpenChange?: (open: boolean) => void;
-}
+export type AddToCollectionDialogProps =
+  | { readonly open?: never; readonly onOpenChange?: never }
+  | {
+      readonly open: boolean;
+      readonly onOpenChange: (open: boolean) => void;
+    };
 
 /** The page's open state when it passes one, else the dialog's own. */
-function useOpenState({
-  open,
-  onOpenChange,
-}: AddToCollectionDialogProps): readonly [boolean, (open: boolean) => void] {
+function useOpenState(
+  props: AddToCollectionDialogProps
+): readonly [boolean, (open: boolean) => void] {
   const [ownOpen, setOwnOpen] = useState(false);
-  return [open ?? ownOpen, onOpenChange ?? setOwnOpen];
+  if (props.open === undefined) return [ownOpen, setOwnOpen];
+  return [props.open, props.onOpenChange];
 }
 
 /**
