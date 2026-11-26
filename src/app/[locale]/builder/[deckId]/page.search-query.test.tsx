@@ -175,6 +175,19 @@ function findButton(name: string): Promise<HTMLElement> {
   return waitFor(() => button(name));
 }
 
+/**
+ * The search tab named `name`. The deck editor's grouping has a "By Color" of its own, so
+ * the match is taken from the row that holds "By Set".
+ */
+function searchTab(name: "Name" | "By Set" | "By Color"): HTMLElement {
+  const tabRow = button("By Set").parentElement;
+  const matches = Array.from(tabRow?.querySelectorAll("button") ?? []).filter(
+    (candidate) => buttonName(candidate) === name
+  );
+  expect(matches, `one search tab named "${name}"`).toHaveLength(1);
+  return matches[0];
+}
+
 /** The builder page at `/en/builder/<deckId>`, inside the router contexts Next gives it. */
 function builderAt(deckId: string) {
   const router = {
@@ -705,19 +718,6 @@ describe("the builder's search with no result", () => {
       expect(await screen.findByText(NO_RESULT)).toBeDefined();
     }
 
-    /**
-     * The search tab named `name`. The deck editor's grouping has a "By Color" of its own, so
-     * the match is taken from the row that holds "By Set".
-     */
-    function searchTab(name: "By Set" | "By Color"): HTMLElement {
-      const tabRow = button("By Set").parentElement;
-      const matches = Array.from(
-        tabRow?.querySelectorAll("button") ?? []
-      ).filter((candidate) => buttonName(candidate) === name);
-      expect(matches, `one search tab named "${name}"`).toHaveLength(1);
-      return matches[0];
-    }
-
     it("suggests nothing on By Set, which has no text box for the syntax", async () => {
       const { user } = await openBuilder();
 
@@ -766,5 +766,27 @@ describe("the builder's search with no result", () => {
       expect(buttonCount("Clear filters")).toBe(0);
       expect(screen.queryByText(SYNTAX_HINT)).toBeNull();
     });
+  });
+});
+
+/*
+ * The Name tab's commander, partner and companion toggles start a pick, whose query replaces the
+ * tab's own (`buildSearchQueryFromMode` in `page.tsx`). Only one pick runs at a time.
+ */
+describe("the builder's commander, partner and companion picks", () => {
+  // The name search's earlier queries come back from the page's search cache, so a new name
+  // proves which search runs once the pick has ended.
+  it("ends a pick when its toggle is pressed again: the name search runs again", async () => {
+    const { user } = await openBuilder();
+    const searchField = screen.getByPlaceholderText("Search cards…");
+    await user.type(searchField, "Sol");
+    await lastSearchIs("name:/Sol/ legal:commander id<=U");
+    await user.click(button("Commander"));
+    await lastSearchIs("is:commander name:/Sol/");
+
+    await user.click(button("Commander"));
+    await user.type(searchField, "e");
+
+    await lastSearchIs("name:/Sole/ legal:commander id<=U");
   });
 });
