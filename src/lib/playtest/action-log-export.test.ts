@@ -83,7 +83,7 @@ describe("action log exports", () => {
     const french = { ...plainEnglishLogFormat(), line: logLineIn("fr") };
 
     expect(exportActionLogText("Forest Test", recorded, french)).toBe(
-      "Forest Test — playtest log\n\nTurn 2\nEvidence: 1 draws, 0 mana, 1 additional cards seen\n- Draw: Tu as pioché une carte\n- Main1: Opponent at 12"
+      "Forest Test — playtest log\n\nTurn 2\nEvidence: 1 draws, 0 mana, 1 additional cards seen\n- Draw: Vous avez pioché une carte\n- Main1: Opponent at 12"
     );
   });
 
@@ -95,7 +95,7 @@ describe("action log exports", () => {
         {
           turn: 2,
           entries: [
-            { id: 1, turn: 2, phase: "Draw", description: "Tu as pioché une carte", kind: "draw" },
+            { id: 1, turn: 2, phase: "Draw", description: "Vous avez pioché une carte", kind: "draw" },
             { id: 2, turn: 2, phase: "Main1", description: "Opponent at 12" },
           ],
           draws: 1,
