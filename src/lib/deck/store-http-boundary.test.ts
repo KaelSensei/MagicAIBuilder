@@ -439,8 +439,9 @@ describe("the raw-fetch deck store actions", () => {
       expect(sent[0]).toMatchObject({
         method: "POST",
         url: `/api/decks/${DECK_ID}/duplicate`,
-        body: {},
       });
+      // `toMatchObject({ body: {} })` would also accept a null body.
+      expect(sent[0]?.body).toEqual({});
     });
 
     // The store used to raise an English toast, `Deck duplicated: "Goblins (Copy)"`;
