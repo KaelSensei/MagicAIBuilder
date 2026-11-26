@@ -60,12 +60,13 @@ export function hasLostOnLife(
 
 // ─── Damage / heal ────────────────────────────────────────────────────────
 /**
- * True for a damage amount the rules cannot deal: below 0. CR 107.1b: you can't "deal
- * negative damage"; CR 120.8: a source that would deal 0 damage deals none, so 0 is lawful.
+ * True for an amount of life the rules cannot change by: below 0. CR 107.1b: "You can't choose
+ * a negative number, deal negative damage, gain negative life, and so on." Zero is lawful: a
+ * source that would deal 0 damage deals none (CR 120.8).
  *
- * Pure; `applyDamage` and the command guard table share it so they cannot disagree.
+ * Pure; the life transitions and the command guard table share it so they cannot disagree.
  */
-export function isNegativeDamage(amount: number): boolean {
+export function isNegativeAmount(amount: number): boolean {
   return amount < 0;
 }
 
@@ -88,7 +89,7 @@ export function applyDamage(
   deps: PlaytestDeps = defaultPlaytestDeps
 ): PlaytestEngine {
   if (isChoosingBottom(state)) return state;
-  if (isNegativeDamage(amount)) return state;
+  if (isNegativeAmount(amount)) return state;
   const newLife = state.lifeTotal - amount;
   const entry = lifeEntry(state, deps.clock, { delta: -amount, description });
 

@@ -15,7 +15,7 @@ import {
   whileChoosingBottom,
   type PlaytestGuardTable,
 } from "@/lib/playtest/engine/guards/shared";
-import { isNegativeDamage } from "@/lib/playtest/engine/life";
+import { isNegativeAmount } from "@/lib/playtest/engine/life";
 
 /** The guards of `damage` and `heal`. */
 export const LIFE_GUARDS: PlaytestGuardTable<"damage" | "heal"> = {
@@ -23,7 +23,7 @@ export const LIFE_GUARDS: PlaytestGuardTable<"damage" | "heal"> = {
     whileChoosingBottom,
     // CR 107.1b: no one deals negative damage, so it must not become a life gain.
     guard("damage", "negative-damage", (_state, { amount }) =>
-      isNegativeDamage(amount)
+      isNegativeAmount(amount)
     ),
   ],
   heal: [whileChoosingBottom],
