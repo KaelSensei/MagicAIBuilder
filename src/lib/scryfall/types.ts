@@ -66,3 +66,6 @@ export interface ScryfallError { object: "error"; code: string; status: number; 
 export interface ScryfallAutocompleteResponse { object: "catalog"; total_values: number; data: string[]; }
 export interface ScryfallCollectionIdentifier { id?: string; name?: string; set?: string; collector_number?: string; }
 export interface ScryfallCollectionResponse { object: "list"; not_found: ScryfallCollectionIdentifier[]; data: ScryfallCard[]; }
+/** A set from Scryfall's `/sets` list, with the fields the app reads (https://scryfall.com/docs/api/sets) */
+export interface ScryfallSet { code: string; name: string; set_type: string; released_at?: string; card_count: number; }
+export interface ScryfallSetList { object: "list"; data: ScryfallSet[]; }

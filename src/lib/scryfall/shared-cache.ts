@@ -152,6 +152,31 @@ function logDbError(
   );
 }
 
+/** A fill that brought no copy back: refused by the queue, or failed. */
+type FailedFill = Extract<
+  UpstreamResult<unknown>,
+  { readonly kind: "failed" | "blocked" }
+>;
+
+/**
+ * Logs a fill that brought no copy back. A fill the Scryfall queue refused
+ * during a 429 block goes to `info`: the queue logged that block once at
+ * `warn`, and a line per refused fill would repeat it. A failure stays a
+ * `warn`, with Scryfall's status.
+ */
+function logFailedFill(cache: SharedCache, upstream: FailedFill): void {
+  if (upstream.kind === "blocked") {
+    logger.info("Scryfall fill not sent during a 429 block", LOG_CONTEXT, {
+      cache: cache.name,
+    });
+    return;
+  }
+  logger.warn("Scryfall fill failed", LOG_CONTEXT, {
+    cache: cache.name,
+    status: upstream.status,
+  });
+}
+
 async function readFresh(
   cache: SharedCache,
   rowKey: string,
@@ -211,11 +236,8 @@ export async function readThrough<T>(
 
   const upstream = await source.fetchOwnCopy();
   if (upstream.kind === "not_found") return { outcome: upstream, dbFailed };
-  if (upstream.kind === "failed") {
-    logger.warn("Scryfall fill failed", LOG_CONTEXT, {
-      cache: cache.name,
-      status: upstream.status,
-    });
+  if (upstream.kind === "failed" || upstream.kind === "blocked") {
+    logFailedFill(cache, upstream);
     return { outcome: { kind: "upstream_failed" }, dbFailed };
   }
 
