@@ -2,6 +2,8 @@
 /**
  * Client side of the AI deck build: posts the request, reads the NDJSON build
  * stream through guarded events, and exposes progress and the finished list.
+ * A failed build is logged and kept as its kind (`lib/ai/build-failure.ts`),
+ * never as the thrown text.
  */
 import { useState, useCallback, useRef } from "react";
 import type {
@@ -12,12 +14,21 @@ import type {
   DeckRemovalReason,
 } from "@/app/api/ai/build/types";
 import {
+  DeckBuildRefusedError,
+  DeckBuildServerError,
+  DeckBuildUnreachableError,
+  deckBuildFailureLogLevel,
+  deckBuildFailureOf,
+  type DeckBuildFailure,
+} from "@/lib/ai/build-failure";
+import {
   readAiCallDenialResponse,
   type AiCallDenial,
 } from "@/lib/ai/usage/denial";
 import { readNdjsonEvents } from "@/lib/async/ndjson-lines";
 import { parseBracketLevel } from "@/lib/constants/brackets";
 import { isRecord } from "@/lib/guards";
+import { logger } from "@/lib/logger";
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -51,7 +62,8 @@ export interface AIDeckBuildState {
   totalCards: number | null;
   source: BuildSource | null;
   isLoading: boolean;
-  error: string | null;
+  /** Why the last build failed; null while it runs, and after a success or a cancellation. */
+  failure: DeckBuildFailure | null;
   /** Why the server refused the build before calling a model, if it did. */
   denial: AiCallDenial | null;
 }
@@ -65,7 +77,7 @@ const EMPTY_STATE: AIDeckBuildState = {
   totalCards: null,
   source: null,
   isLoading: false,
-  error: null,
+  failure: null,
   denial: null,
 };
 
@@ -208,7 +220,7 @@ function applyDone(
  * @param acc - accumulator updated in place
  * @param onUpdate - publishes the accumulator
  * @returns true once the done event has been applied
- * @throws Error with the server's message on an error event
+ * @throws DeckBuildServerError with the server's line on an error event
  */
 function applyBuildEvent(
   event: ReceivedBuildEvent,
@@ -237,7 +249,7 @@ function applyBuildEvent(
       onUpdate(acc);
       return true;
     case "error":
-      throw new Error(event.message);
+      throw new DeckBuildServerError(event.message);
     default: {
       const unhandled: never = event;
       return unhandled;
@@ -276,6 +288,44 @@ async function processBuildStream(
   throw new Error("The AI build ended early");
 }
 
+/**
+ * Posts the build request: the one step where a failure means the server
+ * could not be reached.
+ *
+ * @param params - the player's answers
+ * @param signal - cancels the request
+ * @returns the route's response, whatever its status
+ * @throws DeckBuildUnreachableError when `fetch` rejected without an answer;
+ *   the abort's own error when the build was cancelled, so it stays silent
+ */
+async function postBuildRequest(
+  params: AIDeckBuildParams,
+  signal: AbortSignal
+): Promise<Response> {
+  const body = JSON.stringify(params);
+  try {
+    return await fetch("/api/ai/build", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body,
+      signal,
+    });
+  } catch (error) {
+    if (signal.aborted) throw error;
+    throw new DeckBuildUnreachableError(error);
+  }
+}
+
+/**
+ * Runs one AI deck build at a time.
+ *
+ * `build` resolves to the finished build, or to null when there is none: the
+ * build failed (`state.failure` says why, and `state.denial` too when the
+ * server refused it before a model ran), or `reset` or a newer build cancelled
+ * it, which sets neither and logs nothing.
+ *
+ * @returns the build's progress, `build` and `reset`
+ */
 export function useAIDeckBuild() {
   const [state, setState] = useState<AIDeckBuildState>(EMPTY_STATE);
 
@@ -296,17 +346,12 @@ export function useAIDeckBuild() {
       setState({ ...EMPTY_STATE, isLoading: true });
 
       try {
-        const response = await fetch("/api/ai/build", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(params),
-          signal: abort.signal,
-        });
+        const response = await postBuildRequest(params, abort.signal);
 
         if (!response.ok) {
           const denial = (await readAiCallDenialResponse(response)) ?? null;
           setState((prev) => ({ ...prev, denial }));
-          throw new Error(`Build request failed (${response.status})`);
+          throw new DeckBuildRefusedError(response.status, denial);
         }
         if (!response.body) throw new Error("No response body");
 
@@ -338,8 +383,10 @@ export function useAIDeckBuild() {
         };
       } catch (err) {
         if (err instanceof DOMException && err.name === "AbortError") return null;
-        const message = err instanceof Error ? err.message : "Unknown error";
-        setState((prev) => ({ ...prev, isLoading: false, error: message }));
+        const level = deckBuildFailureLogLevel(err);
+        logger[level]("AI deck build failed", "useAIDeckBuild", err);
+        const failure = deckBuildFailureOf(err);
+        setState((prev) => ({ ...prev, isLoading: false, failure }));
         return null;
       }
     },
