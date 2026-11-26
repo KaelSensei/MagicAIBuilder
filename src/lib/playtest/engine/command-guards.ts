@@ -6,7 +6,8 @@
  * it so the description and the code cannot drift. `playtestCommandBlockReason` is the one walk
  * over the table; a later slice may let the modal disable a button from it. The table also lists
  * the checks the engine does not make today (`PLAYTEST_COMMAND_KNOWN_GAPS`), which a structural
- * change must keep not making until their own fix lands.
+ * change must keep not making until their own fix lands. What a guard is, and the parts the
+ * guards share, live in `guards/shared.ts`.
  * Rules: the London mulligan waits for its bottom cards (CR 103.5) and has a limit (CR 103.5);
  * a card is not moved to the zone it is in (CR 400.7); only a commander enters the command zone
  * (CR 903.9); damage is never negative (CR 107.1b);
@@ -19,7 +20,6 @@
 import {
   nextCopyId,
   nextTokenId,
-  type CommandOf,
   type PlaytestCommand,
   type PlaytestCommandType,
 } from "./commands";
@@ -33,115 +33,26 @@ import {
   isAlreadyDayNight,
   refusesCounterChange,
 } from "./designations";
+import {
+  guard,
+  inLog,
+  isBlank,
+  onBattlefield,
+  whileChoosingBottom,
+  zoneCards,
+  type PlaytestCommandGuard,
+  type PlaytestGuardReason,
+} from "./guards/shared";
 import { isNegativeDamage } from "./life";
-import { isChoosingBottom, maxMulligans } from "./mulligan";
+import { maxMulligans } from "./mulligan";
 import { defaultPlaytestCommandDeps, type PlaytestCommandDeps } from "./ports";
-import type { CardZone, PlaytestEngine } from "./types";
+import type { PlaytestEngine } from "./types";
 import { isSameZoneMove } from "./zones";
 
-// ─── Guards ───────────────────────────────────────────────────────────────
-/** Why a command changes nothing today; one name per condition a transition checks. */
-export type PlaytestGuardReason =
-  | "choosing-bottom"
-  | "mulligan-limit"
-  | "no-bottom-pending"
-  | "bottom-count-mismatch"
-  | "bottom-duplicate"
-  | "bottom-not-in-hand"
-  | "library-empty"
-  | "negative-damage"
-  | "no-commander-damage"
-  | "unknown-opponent"
-  | "bad-commander-damage"
-  | "bad-counter-change"
-  | "has-citys-blessing"
-  | "same-day-night"
-  | "not-on-battlefield"
-  | "id-taken"
-  | "not-a-commander"
-  | "same-zone"
-  | "not-in-zone"
-  | "bad-die"
-  | "blank-note"
-  | "mana-out-of-range"
-  | "unknown-log-entry"
-  | "nothing-to-undo";
-
-/** One condition under which a command is a no-op, written as the transition checks it today. */
-export interface PlaytestCommandGuard {
-  readonly reason: PlaytestGuardReason;
-  /**
-   * True when the transition would return its state unchanged for this reason. `deps` is read
-   * only by the id guards, which ask `newId` for the id the reducer would use.
-   */
-  readonly blocks: (
-    state: PlaytestEngine,
-    command: PlaytestCommand,
-    deps: PlaytestCommandDeps
-  ) => boolean;
-}
-
-function isCommandOf<T extends PlaytestCommandType>(
-  command: PlaytestCommand,
-  type: T
-): command is CommandOf<T> {
-  return command.type === type;
-}
-
-/** A guard for one command variant, so its check reads the variant's own payload. */
-function guard<T extends PlaytestCommandType>(
-  type: T,
-  reason: PlaytestGuardReason,
-  blocks: (
-    state: PlaytestEngine,
-    command: CommandOf<T>,
-    deps: PlaytestCommandDeps
-  ) => boolean
-): PlaytestCommandGuard {
-  return {
-    reason,
-    blocks: (state, command, deps) =>
-      isCommandOf(command, type) && blocks(state, command, deps),
-  };
-}
-
-/**
- * Every move but the bottom choice and undo waits while a mulligan waits for its bottom cards:
- * taking the mulligan is not finished until then (CR 103.5).
- */
-const whileChoosingBottom: PlaytestCommandGuard = {
-  reason: "choosing-bottom",
-  blocks: (state) => isChoosingBottom(state),
-};
-
-const onBattlefield = (state: PlaytestEngine, cardId: string): boolean =>
-  state.battlefield.some((card) => card.id === cardId);
-const inLog = (state: PlaytestEngine, entryId: number): boolean =>
-  state.actionLog.some((entry) => entry.id === entryId);
-const isBlank = (text: string): boolean => text.trim() === "";
-
-/** The state field that holds each zone's cards; the command zone is the only renamed one. */
-const ZONE_FIELD: Readonly<
-  Record<
-    CardZone,
-    "hand" | "library" | "battlefield" | "graveyard" | "exile" | "commandZone"
-  >
-> = {
-  hand: "hand",
-  library: "library",
-  battlefield: "battlefield",
-  graveyard: "graveyard",
-  exile: "exile",
-  command: "commandZone",
-};
-
-/** The cards of one zone, as `applyMoveToZone` looks the moved card up. */
-function zoneCards(
-  state: PlaytestEngine,
-  zone: CardZone
-): readonly { readonly id: string }[] {
-  return state[ZONE_FIELD[zone]];
-}
+export type {
+  PlaytestCommandGuard,
+  PlaytestGuardReason,
+} from "./guards/shared";
 
 // ─── The table ────────────────────────────────────────────────────────────
 /**
