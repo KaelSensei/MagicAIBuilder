@@ -67,6 +67,7 @@ import {
 } from "@/lib/scryfall/search";
 import { SetAutocomplete } from "@/components/search/SetAutocomplete";
 import type { SearchFilters as Filters } from "@/lib/scryfall/search-types";
+import { NO_SEARCH_FILTERS } from "@/lib/scryfall/search-filters";
 import type { DeckCard, CardCategory, DeckZone } from "@/lib/deck/types";
 import { getFormatConfig, type DeckFormat } from "@/lib/deck/formats";
 import type { PairingCard } from "@/lib/deck/partner-abilities";
@@ -267,27 +268,6 @@ function getCategoryFromDropId(overId: string): string | null {
   return null;
 }
 
-const DEFAULT_FILTERS: Filters = {
-  colors: [],
-  colorMode: "or",
-  colorlessFilter: false,
-  landFilter: false,
-  types: [],
-  cmcMode: "range",
-  cmcMin: null,
-  cmcMax: null,
-  cmcExact: null,
-  priceMin: null,
-  priceMax: null,
-  subtype: "",
-  keyword: "",
-  powerMin: null,
-  powerMax: null,
-  toughnessMin: null,
-  toughnessMax: null,
-  interactionType: null,
-};
-
 interface UnavailableBuilderPageProps {
   readonly deckId: string;
   readonly isSyncing: boolean;
@@ -447,7 +427,7 @@ export default function BuilderPage() {
     maxWidth: 520,
     storageKey: "builder-search-panel-width",
   });
-  const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
+  const [filters, setFilters] = useState<Filters>(NO_SEARCH_FILTERS);
   const [showFilters, setShowFilters] = useState(false);
   const [commanderMode, setCommanderMode] = useState(false);
   const [partnerMode, setPartnerMode] = useState(false);
