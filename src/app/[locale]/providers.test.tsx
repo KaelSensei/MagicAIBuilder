@@ -12,12 +12,15 @@
  * page address Next's app router would give it, since no router runs in jsdom;
  * the onboarding provider reads it.
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { afterEach, describe, it, expect, vi, beforeEach } from "vitest";
 import { waitFor } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { setupMsw } from "@/test/msw";
 import { renderWithIntl } from "@/test/render-with-intl";
+import { emptyApiDeck } from "@/test/in-memory-deck-api";
 import { useCollectionStore } from "@/lib/collection/store";
+import { useDeckStore } from "@/lib/deck/store";
+import { OPEN_DECK_STORAGE_KEY } from "@/lib/deck/open-deck-memory";
 import { Providers } from "./providers";
 
 // eslint-disable-next-line no-restricted-syntax -- the one seam left; the header says why and what removes it
@@ -54,8 +57,18 @@ const BOOTSTRAP_PAYLOAD = {
   ],
 };
 
+const REMEMBERED_DECK_ID = "deck-remembered";
+
+/** Puts in browser storage what an earlier page load remembered. */
+function rememberOpenDeck(accountId: string, deckId: string): void {
+  localStorage.setItem(
+    OPEN_DECK_STORAGE_KEY,
+    JSON.stringify({ accountId, deckId })
+  );
+}
+
 describe("Providers", () => {
-  setupMsw(
+  const server = setupMsw(
     http.get("/api/auth/session", () => HttpResponse.json(SIGNED_IN_SESSION)),
     http.get("/api/user/init", () => HttpResponse.json(BOOTSTRAP_PAYLOAD))
   );
@@ -76,6 +89,52 @@ describe("Providers", () => {
 
     await waitFor(() => {
       expect(useCollectionStore.getState().getTotalOwned(SOL_RING_ID)).toBe(2);
+    });
+  });
+
+  describe("the open deck across a full page load (I-37, #1851)", () => {
+    beforeEach(() => {
+      localStorage.clear();
+      useDeckStore.setState({ decks: {}, activeDeckId: null });
+    });
+
+    afterEach(() => {
+      localStorage.clear();
+    });
+
+    it("opens again the deck the signed-in player had open", async () => {
+      rememberOpenDeck(SIGNED_IN_SESSION.user.id, REMEMBERED_DECK_ID);
+      server.use(
+        http.get(`/api/decks/${REMEMBERED_DECK_ID}`, () =>
+          HttpResponse.json(emptyApiDeck(REMEMBERED_DECK_ID, "Remembered"))
+        )
+      );
+
+      renderWithIntl(
+        <Providers>
+          <p>page</p>
+        </Providers>
+      );
+
+      await waitFor(() => {
+        expect(useDeckStore.getState().activeDeckId).toBe(REMEMBERED_DECK_ID);
+      });
+    });
+
+    it("forgets the open deck once the session says nobody is signed in", async () => {
+      rememberOpenDeck(SIGNED_IN_SESSION.user.id, REMEMBERED_DECK_ID);
+      server.use(http.get("/api/auth/session", () => HttpResponse.json({})));
+
+      renderWithIntl(
+        <Providers>
+          <p>page</p>
+        </Providers>
+      );
+
+      await waitFor(() => {
+        expect(localStorage.getItem(OPEN_DECK_STORAGE_KEY)).toBeNull();
+      });
+      expect(useDeckStore.getState().activeDeckId).toBeNull();
     });
   });
 });

@@ -90,6 +90,12 @@ import {
   loadGuestDeck,
   saveGuestDeck,
 } from "./guest-deck";
+import {
+  browserStorage,
+  createOpenDeckMemory,
+  noLongerOpens,
+  withReopenedDeck,
+} from "./open-deck-memory";
 
 // ---------------------------------------------------------------------------
 // Undo stack types
@@ -679,6 +685,18 @@ export interface DeckStore {
    * @param deckId - a deck that is not open; one not held is left as it is
    */
   reloadDeckOnNextOpen: (deckId: string) => void;
+  /**
+   * Tells the store which account is signed in, so the deck that account had
+   * open before a full page load opens again (I-37, issue #1851).
+   *
+   * Signed out (null), the remembered deck is forgotten. A deck already open,
+   * such as the builder's deck from the URL, wins and is remembered instead.
+   * A remembered deck that no longer opens for this player (deleted, or not
+   * theirs) is forgotten silently: no toast, no open deck.
+   *
+   * @param accountId - the signed-in account's id, or null when signed out
+   */
+  syncOpenDeckWithAccount: (accountId: string | null) => Promise<void>;
   loadDecks: () => Promise<void>;
 
   // Deck description & tags
@@ -767,6 +785,9 @@ export interface DeckStore {
 
 let latestDeckListRequest = 0;
 const latestTagSaves = new Map<string, symbol>();
+// Which deck the signed-in account has open, kept in this browser so a full
+// page load opens it again (I-37, issue #1851).
+const openDeckMemory = createOpenDeckMemory(browserStorage);
 
 /** A tag save that may still need to be undone. */
 interface FailedTagSave {
@@ -1004,6 +1025,27 @@ async function saveActiveDeckDetail<Field extends DeckDetailField>(
   const { activeDeckId } = store.get();
   if (!activeDeckId) return;
   await saveDeckDetail(store, { ...edit, deckId: activeDeckId });
+}
+
+/**
+ * Loads the deck the signed-in player had open before a full page load and
+ * opens it, unless a deck was opened while it loaded. A deck that is gone for
+ * this player is forgotten without a toast: the player did not ask to open it.
+ */
+async function reopenRememberedDeck(
+  { set }: StoreAccess,
+  deckId: string
+): Promise<void> {
+  try {
+    const deck = apiDeckToStoreDeck(await deckApi.fetchDeck(deckId));
+    set((state) => withReopenedDeck(state, deck));
+  } catch (err) {
+    if (noLongerOpens(err)) {
+      openDeckMemory.forget(deckId);
+      return;
+    }
+    logger.warn("Remembered deck did not open", "reopenRememberedDeck", err);
+  }
 }
 
 /** A format save: the format written, and the one to restore if it fails. */
@@ -1634,6 +1676,15 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
 
   reloadDeckOnNextOpen: (deckId: string) => {
     set((state) => ({ decks: withDeckToReload(state.decks, deckId) }));
+  },
+
+  syncOpenDeckWithAccount: async (accountId) => {
+    const rememberedDeckId = openDeckMemory.follow(
+      accountId,
+      get().activeDeckId
+    );
+    if (rememberedDeckId)
+      await reopenRememberedDeck({ set, get }, rememberedDeckId);
   },
 
   duplicateDeck: async (id: string) => {
@@ -2786,5 +2837,6 @@ if (typeof window !== "undefined") {
   useDeckStore.subscribe((state) => {
     const guestDeck = state.decks[GUEST_DECK_ID];
     if (guestDeck) saveGuestDeck(guestDeck);
+    openDeckMemory.remember(state.activeDeckId);
   });
 }
