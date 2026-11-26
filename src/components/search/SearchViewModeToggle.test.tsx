@@ -26,7 +26,7 @@ describe("SearchViewModeToggle", () => {
     ]);
   });
 
-  it("lays the results out as rows when List view is pressed, and presses List view instead", async () => {
+  it("sets the store's view mode to list when List view is pressed, and presses List view instead", async () => {
     const user = userEvent.setup();
     renderWithProviders(<SearchViewModeToggle />);
 
@@ -36,6 +36,18 @@ describe("SearchViewModeToggle", () => {
     expect(screen.getAllByRole("button", { pressed: true })).toEqual([
       screen.getByRole("button", { name: "List view" }),
     ]);
+  });
+
+  // The 28 px squares come from SegmentedControl's icon-only options at `sm`: a label shown as
+  // text, or a larger size, would change the header row.
+  it("draws two icon-only 28 px options at the end of the header row", () => {
+    renderWithProviders(<SearchViewModeToggle />);
+
+    const group = screen.getByRole("group", { name: "Result view" });
+    expect(group).toHaveClass("ml-auto");
+    for (const option of within(group).getAllByRole("button")) {
+      expect(option).toHaveClass("min-h-7", "min-w-7", "px-0");
+    }
   });
 
   it("names the group and its options in French for a French player", () => {

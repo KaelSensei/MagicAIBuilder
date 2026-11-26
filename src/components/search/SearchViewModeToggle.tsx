@@ -6,10 +6,9 @@
  * a listed result; the choice lives in the deck store (`searchViewMode`), which `SearchResults`
  * reads to lay the cards out, so it survives a new search.
  *
- * It is a `SegmentedControl` (design audit S3, I-04): the two hand-made icon buttons it replaces
- * were 22 px targets, below the 24 px of WCAG 2.2 SC 2.5.8, exposed no pressed state, and marked
- * the chosen layout by its icon colour alone (SC 1.4.1). The control's `sm` size gives each
- * icon-only option a 28 px square; their `title` tooltips go, as at the other icon-only sites.
+ * A `SegmentedControl` with two icon-only options (design audit S3, I-04): the control owns the
+ * 28 px targets, the pressed state and the chosen option's marker, and cites the WCAG criteria
+ * behind them. The options carry no `title` tooltip, as at the control's other icon-only sites.
  *
  * @module components/search/SearchViewModeToggle
  */
