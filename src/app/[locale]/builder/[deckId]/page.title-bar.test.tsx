@@ -180,6 +180,23 @@ describe("builder page: the title bar for keyboard and screen-reader players", (
     });
   });
 
+  // The page turns its single-key shortcuts off while the deck-name field is open. The field
+  // unmounts when a rename ends, and React fires no blur for it, so every way out has to turn
+  // them back on (I-37).
+  describe("ending a rename", () => {
+    it("turns the shortcuts back on when the player presses Escape: ? opens the shortcuts list", async () => {
+      const user = userEvent.setup();
+      await user.click(await openAtraxa());
+
+      await user.keyboard("{Escape}");
+      await user.keyboard("?");
+
+      expect(
+        await screen.findByRole("dialog", { name: "Keyboard Shortcuts" })
+      ).toBeInTheDocument();
+    });
+  });
+
   describe("the back link", () => {
     it("is named, offers a 24 by 24 px target and keeps the shared focus outline", async () => {
       await openAtraxa();

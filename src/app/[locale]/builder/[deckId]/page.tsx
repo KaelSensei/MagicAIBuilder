@@ -852,10 +852,16 @@ export default function BuilderPage() {
     }, 0);
   };
 
-  const commitDeckName = (rawName: string) => {
-    const trimmed = rawName.trim();
+  // Every way out of a rename comes through here. The field unmounts and React fires no blur for
+  // it, so the flag that holds the shortcuts off has to be cleared with it (I-37).
+  const endDeckRename = () => {
     setIsEditingName(false);
     setIsInputFocused(false);
+  };
+
+  const commitDeckName = (rawName: string) => {
+    const trimmed = rawName.trim();
+    endDeckRename();
     if (!trimmed || trimmed === deck.name) return;
     void renameDeck(deckId, trimmed);
   };
@@ -906,7 +912,7 @@ export default function BuilderPage() {
                     event.preventDefault();
                     commitDeckName(event.currentTarget.value);
                   }
-                  if (event.key === "Escape") setIsEditingName(false);
+                  if (event.key === "Escape") endDeckRename();
                 }}
                 className="flex-1 text-sm font-semibold bg-transparent border-b border-[var(--border)] focus-visible:border-[var(--focus-ring)] text-[var(--text-primary)] min-w-0"
                 maxLength={200}
