@@ -113,6 +113,7 @@
     "changeCategoryFor": "Changer la catégorie de {name}",
     "backToDecks": "Retour à mes decks",
     "rename": "Cliquer pour renommer",
+    "confirmRename": "Enregistrer le nom",
     "duplicate": "Dupliquer le deck",
     "bulkEdit": "Édition groupée",
     "playtest": "Tester ce deck",
