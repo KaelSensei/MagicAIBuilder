@@ -6,6 +6,7 @@ import { renderWithIntl } from "@/test/render-with-intl";
 import { renderWithProviders } from "@/test/render";
 import { aDeck } from "@/test/builders/deck";
 import { aDeckCard } from "@/test/builders/card";
+import { contrastRatio } from "@/lib/a11y/palette";
 import {
   divergenceCard,
   RULE_DIVERGENCE_DECK,
@@ -91,6 +92,182 @@ describe("ShareDeckView images", () => {
       `https://cards.scryfall.io/grid/front/f/c/${SOL_RING}.webp?1599707796`
     );
     expect(html).not.toMatch(/cards\.scryfall\.io\/(art_crop|normal)\//);
+  });
+});
+
+// ─── The header's colours, with and without commander art (I-13) ──────────────
+
+/** An art crop URL in Scryfall's stored shape; the header draws it behind the deck's name. */
+const COMMANDER_ART = `https://cards.scryfall.io/art_crop/front/d/0/${ATRAXA}.jpg?1599707796`;
+
+/**
+ * A Commander deck led by Thrasios with Tymna as partner (both have Partner,
+ * CR 702.124a). `commanderArt` "" is a commander saved without an art crop,
+ * so the header falls back to the plain surface.
+ */
+function partnerDeck(commanderArt: string): Deck {
+  return aDeck({
+    name: "Thrasios Tymna",
+    commander: aDeckCard({
+      id: "thrasios",
+      name: "Thrasios, Triton Hero",
+      category: "commander",
+      artCropUri: commanderArt,
+    }),
+    partner: aDeckCard({
+      id: "tymna",
+      name: "Tymna the Weaver",
+      category: "commander",
+    }),
+    cards: [aDeckCard({ id: "sol-ring", name: "Sol Ring", category: "ramp" })],
+  });
+}
+
+/** WCAG 2.1 SC 1.4.3, text: https://www.w3.org/TR/WCAG21/#contrast-minimum (read 2026-11-26). */
+const MIN_TEXT_CONTRAST = 4.5;
+
+/**
+ * The class lists of the elements in `header` that match `selector`, outside
+ * the fork button: that violet pill keeps its white label, which
+ * `src/styles/contrast.test.ts` holds to 4.5:1 on `--accent`.
+ */
+function classListsIn(
+  header: HTMLElement,
+  selector: string
+): readonly string[] {
+  return [...header.querySelectorAll(selector)]
+    .filter((element) => element.closest("button") === null)
+    .map((element) => element.getAttribute("class") ?? "");
+}
+
+/** The class lists in `header` that paint white text, a white fill or a white border. */
+function whiteChromeIn(header: HTMLElement): readonly string[] {
+  return classListsIn(
+    header,
+    '[class*="text-white"], [class*="bg-white/"], [class*="border-white/"]'
+  );
+}
+
+/** The white text classes in `header`, hover states aside: `text-white`, `text-white/90`. */
+function whiteTextClassesIn(header: HTMLElement): readonly string[] {
+  return classListsIn(header, '[class*="text-white"]')
+    .flatMap((classList) => classList.split(/\s+/))
+    .filter((name) => /^text-white(?:\/\d+)?$/.test(name));
+}
+
+/** The gradient stops among an element's classes, top to bottom: `from-black/75`, `to-black/60`. */
+function gradientStops(element: HTMLElement): readonly string[] {
+  return (element.getAttribute("class") ?? "")
+    .split(/\s+/)
+    .filter((name) => /^(?:from|via|to)-/.test(name));
+}
+
+/** The opacity a colour class sets: 0.6 for `to-black/60`, 1 for `text-white`. */
+function opacityOf(className: string): number {
+  const percent = /\/(\d+)$/.exec(className)?.[1];
+  return percent === undefined ? 1 : Number(percent) / 100;
+}
+
+/** `#rrggbb` grey at a channel level from 0 to 255. */
+function greyAt(level: number): string {
+  return `#${Math.round(level).toString(16).padStart(2, "0").repeat(3)}`;
+}
+
+/**
+ * WCAG contrast of white text at `textOpacity` over an all-white art under a
+ * black scrim at `scrimOpacity`: the lightest backdrop the header can get.
+ */
+function contrastOverWhiteArt(
+  textOpacity: number,
+  scrimOpacity: number
+): number {
+  const backdrop = 255 * (1 - scrimOpacity);
+  const text = 255 * textOpacity + backdrop * (1 - textOpacity);
+  return contrastRatio(greyAt(text), greyAt(backdrop));
+}
+
+describe("ShareDeckView header", () => {
+  it("paints no white text, fill or border in the header of a deck without commander art, so the light theme's white surface does not swallow it", () => {
+    renderSharedPage(partnerDeck(""));
+
+    expect(whiteChromeIn(screen.getByTestId("share-header"))).toEqual([]);
+  });
+
+  it("writes the header of a deck without commander art in the theme's text colours, with the read-only badge as a token chip and no fade", () => {
+    renderSharedPage(partnerDeck(""));
+    const header = within(screen.getByTestId("share-header"));
+
+    expect(
+      header.getByRole("heading", { level: 1, name: "Thrasios Tymna" })
+    ).toHaveClass("text-[var(--text-primary)]");
+    expect(header.getByText("Thrasios, Triton Hero")).toHaveClass(
+      "text-[var(--text-primary)]"
+    );
+    expect(header.getByText("Tymna the Weaver")).toHaveClass(
+      "text-[var(--text-primary)]"
+    );
+    expect(header.getByText("commander", { exact: true })).toHaveClass(
+      "text-[var(--text-secondary)]"
+    );
+    expect(header.getByText("3 cards")).toHaveClass(
+      "text-[var(--text-secondary)]"
+    );
+    expect(header.getByRole("link", { name: "MagicAIBuilder" })).toHaveClass(
+      "text-[var(--text-secondary)]"
+    );
+    expect(header.getByText("Read-only")).toHaveClass(
+      "border-[var(--border)]",
+      "text-[var(--text-secondary)]"
+    );
+    expect(screen.getByTestId("share-header-scrim")).toHaveClass(
+      "bg-[var(--surface)]"
+    );
+    expect(screen.queryByTestId("share-header-fade")).toBeNull();
+  });
+
+  it("lays the header's text on a black scrim of at least 45 %, and fades the commander art into the page below the text, not under it", () => {
+    renderSharedPage(partnerDeck(COMMANDER_ART));
+    const scrim = screen.getByTestId("share-header-scrim");
+
+    // Every stop is black, the lightest at 60 %, so no part of the text
+    // block sits on less than the 45 % the design audit requires.
+    expect(scrim).toHaveClass("absolute", "inset-0", "bg-gradient-to-b");
+    expect(gradientStops(scrim)).toEqual(["from-black/75", "to-black/60"]);
+    const fade = screen.getByTestId("share-header-fade");
+    expect(fade).toHaveClass("bg-gradient-to-b");
+    expect(gradientStops(fade)).toEqual([
+      "from-transparent",
+      "to-[var(--background)]",
+    ]);
+    expect(fade).toBeEmptyDOMElement();
+    // The fork button ends the text block; the fade comes after it.
+    expect(
+      screen
+        .getByRole("button", { name: "Fork this deck" })
+        .compareDocumentPosition(fade)
+    ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+
+  it("keeps every white text of the header at 4.5:1 over the scrim's lightest stop, even on an all-white commander art, with no white fill to lighten it", () => {
+    renderSharedPage(partnerDeck(COMMANDER_ART));
+    const header = screen.getByTestId("share-header");
+    // The test above pins every stop black.
+    const lightestScrim = Math.min(
+      ...gradientStops(screen.getByTestId("share-header-scrim")).map(opacityOf)
+    );
+    const whiteText = whiteTextClassesIn(header);
+
+    const unreadable = whiteText
+      .map((name) => ({
+        name,
+        ratio: contrastOverWhiteArt(opacityOf(name), lightestScrim),
+      }))
+      .filter(({ ratio }) => ratio < MIN_TEXT_CONTRAST)
+      .map(({ name, ratio }) => `${name} at ${ratio.toFixed(2)}:1`);
+
+    expect(whiteText).toContain("text-white");
+    expect(unreadable).toEqual([]);
+    expect(classListsIn(header, '[class*="bg-white/"]')).toEqual([]);
   });
 });
 
