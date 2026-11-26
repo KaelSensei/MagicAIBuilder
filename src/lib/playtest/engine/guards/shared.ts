@@ -63,6 +63,15 @@ export interface PlaytestCommandGuard {
   ) => boolean;
 }
 
+/**
+ * The guards of the commands one concern owns, keyed by command type, each list in the order the
+ * transition checks its conditions. The mapped type requires every key of `T` and refuses any
+ * other, so a concern table names exactly the commands it declares.
+ */
+export type PlaytestGuardTable<T extends PlaytestCommandType> = {
+  readonly [Type in T]: readonly PlaytestCommandGuard[];
+};
+
 function isCommandOf<T extends PlaytestCommandType>(
   command: PlaytestCommand,
   type: T

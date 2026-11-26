@@ -6,48 +6,34 @@
  * it so the description and the code cannot drift. `playtestCommandBlockReason` is the one walk
  * over the table; a later slice may let the modal disable a button from it. The table also lists
  * the checks the engine does not make today (`PLAYTEST_COMMAND_KNOWN_GAPS`), which a structural
- * change must keep not making until their own fix lands. What a guard is, and the parts the
- * guards share, live in `guards/shared.ts`.
- * Rules: the London mulligan waits for its bottom cards (CR 103.5) and has a limit (CR 103.5);
- * a card is not moved to the zone it is in (CR 400.7); only a commander enters the command zone
- * (CR 903.9); damage is never negative (CR 107.1b);
- * only Commander tallies commander damage (CR 903.10a, 903.12h).
- * Not responsible for: applying a command (`commands.ts`).
+ * change must keep not making until their own fix lands.
+ * Collaborators: the table is composed from one table per transition module, in `guards/`
+ * (`guards/zone-guards.ts` holds the guards of `zones.ts`, and so on), built from the parts in
+ * `guards/shared.ts` (#1857). A new command's guards go in the module of its transition's concern.
+ * Rules: each guard cites its Comprehensive Rules number where it is written, in `guards/`.
+ * Not responsible for: applying a command (`commands.ts`), any one command's guards (`guards/`).
  *
  * @module playtest/engine/command-guards
  */
 
-import {
-  nextCopyId,
-  nextTokenId,
-  type PlaytestCommand,
-  type PlaytestCommandType,
-} from "./commands";
-import {
-  isCommanderDamageAmount,
-  isTallySeat,
-  offersCommanderDamage,
-} from "./commander-damage";
-import {
-  hasCitysBlessing,
-  isAlreadyDayNight,
-  refusesCounterChange,
-} from "./designations";
-import {
-  guard,
-  inLog,
-  isBlank,
-  onBattlefield,
-  whileChoosingBottom,
-  zoneCards,
-  type PlaytestCommandGuard,
-  type PlaytestGuardReason,
+import type { PlaytestCommand, PlaytestCommandType } from "./commands";
+import { ACTION_LOG_GUARDS } from "./guards/action-log-guards";
+import { BATTLEFIELD_GUARDS } from "./guards/battlefield-guards";
+import { COMMANDER_DAMAGE_GUARDS } from "./guards/commander-damage-guards";
+import { DESIGNATION_GUARDS } from "./guards/designation-guards";
+import { DICE_GUARDS } from "./guards/dice-guards";
+import { HISTORY_GUARDS } from "./guards/history-guards";
+import { LIFE_GUARDS } from "./guards/life-guards";
+import { MULLIGAN_GUARDS } from "./guards/mulligan-guards";
+import type {
+  PlaytestCommandGuard,
+  PlaytestGuardReason,
 } from "./guards/shared";
-import { isNegativeDamage } from "./life";
-import { maxMulligans } from "./mulligan";
+import { SHUFFLE_LIBRARY_GUARDS } from "./guards/shuffle-library-guards";
+import { TURN_GUARDS } from "./guards/turn-guards";
+import { ZONE_GUARDS } from "./guards/zone-guards";
 import { defaultPlaytestCommandDeps, type PlaytestCommandDeps } from "./ports";
 import type { PlaytestEngine } from "./types";
-import { isSameZoneMove } from "./zones";
 
 export type {
   PlaytestCommandGuard,
@@ -59,197 +45,24 @@ export type {
  * When each command is a no-op today, in the order the transition checks the conditions. A list
  * with only the bottom-choice guard means the command otherwise always applies.
  *
- * `rollDie` also refuses a result outside `[1, sides]` in `applyRollDie`; a lawful random port
- * never produces one, so no row describes it.
+ * The `Record` over `PlaytestCommandType` requires every command type, so a command no concern
+ * table names does not compile. Each concern table names exactly the commands its type declares
+ * (`PlaytestGuardTable`).
  */
 export const PLAYTEST_COMMAND_GUARDS: Readonly<
   Record<PlaytestCommandType, readonly PlaytestCommandGuard[]>
 > = {
-  draw: [
-    whileChoosingBottom,
-    guard("draw", "library-empty", (state) => state.library.length === 0),
-  ],
-  mulligan: [
-    whileChoosingBottom,
-    // CR 103.5: no further mulligan once the opening hand would be zero cards.
-    guard(
-      "mulligan",
-      "mulligan-limit",
-      (state) => state.mulliganCount >= maxMulligans(state)
-    ),
-  ],
-  bottomCards: [
-    guard(
-      "bottomCards",
-      "no-bottom-pending",
-      (state) => state.cardsToBottom === 0
-    ),
-    guard(
-      "bottomCards",
-      "bottom-count-mismatch",
-      (state, { cardIds }) => cardIds.length !== state.cardsToBottom
-    ),
-    guard(
-      "bottomCards",
-      "bottom-duplicate",
-      (_state, { cardIds }) => new Set(cardIds).size !== cardIds.length
-    ),
-    guard("bottomCards", "bottom-not-in-hand", (state, { cardIds }) => {
-      const hand = new Set(state.hand.map((card) => card.id));
-      return cardIds.some((id) => !hand.has(id));
-    }),
-  ],
-  nextPhase: [whileChoosingBottom],
-  nextTurn: [whileChoosingBottom],
-  // CR 701.24c, 701.24d: an empty library is still shuffled, so only the bottom choice blocks.
-  shuffleLibrary: [whileChoosingBottom],
-  damage: [
-    whileChoosingBottom,
-    // CR 107.1b: no one deals negative damage, so it must not become a life gain.
-    guard("damage", "negative-damage", (_state, { amount }) =>
-      isNegativeDamage(amount)
-    ),
-  ],
-  heal: [whileChoosingBottom],
-  commanderDamage: [
-    whileChoosingBottom,
-    // CR 903.12h: Brawl does not use commander damage; only Commander offers the tally.
-    guard(
-      "commanderDamage",
-      "no-commander-damage",
-      (state) => !offersCommanderDamage(state)
-    ),
-    guard(
-      "commanderDamage",
-      "unknown-opponent",
-      (state, { opponent }) => !isTallySeat(state, opponent)
-    ),
-    // CR 903.10a counts combat damage dealt by a commander, so only a commander's is tallied.
-    guard(
-      "commanderDamage",
-      "not-a-commander",
-      (state, { commanderId }) => !state.commanderIds.includes(commanderId)
-    ),
-    guard(
-      "commanderDamage",
-      "bad-commander-damage",
-      (_state, { amount }) => !isCommanderDamageAmount(amount)
-    ),
-  ],
-  playerCounter: [
-    whileChoosingBottom,
-    // CR 122.1: a counter is a marker, so a player never has fewer than none.
-    guard("playerCounter", "bad-counter-change", refusesCounterChange),
-  ],
-  gainCitysBlessing: [
-    whileChoosingBottom,
-    // CR 702.131a: the blessing is kept "for the rest of the game"; getting it twice adds nothing.
-    guard("gainCitysBlessing", "has-citys-blessing", hasCitysBlessing),
-  ],
-  setDayNight: [
-    whileChoosingBottom,
-    // CR 731.1a: only a change of designation is a move; it is already day or night.
-    guard("setDayNight", "same-day-night", isAlreadyDayNight),
-  ],
-  toggleDesignation: [whileChoosingBottom],
-  ringTempts: [whileChoosingBottom],
-  tap: [
-    whileChoosingBottom,
-    guard(
-      "tap",
-      "not-on-battlefield",
-      (state, { cardId }) => !onBattlefield(state, cardId)
-    ),
-  ],
-  untapAll: [whileChoosingBottom],
-  moveToZone: [
-    whileChoosingBottom,
-    // CR 400.7: a zone change goes from one zone to another; the card's own zone is no move.
-    guard("moveToZone", "same-zone", (_state, move) => isSameZoneMove(move)),
-    // CR 903.9: only a commander may enter the command zone.
-    guard(
-      "moveToZone",
-      "not-a-commander",
-      (state, { cardId, to }) =>
-        to === "command" && !state.commanderIds.includes(cardId)
-    ),
-    guard(
-      "moveToZone",
-      "not-in-zone",
-      (state, { cardId, from }) =>
-        !zoneCards(state, from).some((card) => card.id === cardId)
-    ),
-  ],
-  addCounter: [
-    whileChoosingBottom,
-    guard(
-      "addCounter",
-      "not-on-battlefield",
-      (state, { cardId }) => !onBattlefield(state, cardId)
-    ),
-  ],
-  createCardCopy: [
-    whileChoosingBottom,
-    guard("createCardCopy", "id-taken", (state, _command, deps) =>
-      onBattlefield(state, nextCopyId(deps))
-    ),
-    guard(
-      "createCardCopy",
-      "not-on-battlefield",
-      (state, { cardId }) => !onBattlefield(state, cardId)
-    ),
-  ],
-  createToken: [
-    whileChoosingBottom,
-    guard("createToken", "id-taken", (state, _command, deps) =>
-      onBattlefield(state, nextTokenId(deps))
-    ),
-  ],
-  rollDie: [
-    whileChoosingBottom,
-    guard(
-      "rollDie",
-      "bad-die",
-      (_state, { sides }) => !Number.isInteger(sides) || sides < 2
-    ),
-  ],
-  addLogEntry: [
-    whileChoosingBottom,
-    guard("addLogEntry", "blank-note", (_state, { description }) =>
-      isBlank(description)
-    ),
-  ],
-  recordMana: [
-    whileChoosingBottom,
-    guard(
-      "recordMana",
-      "mana-out-of-range",
-      (_state, { amount }) =>
-        !Number.isInteger(amount) || amount < 1 || amount > 100
-    ),
-  ],
-  editLogEntry: [
-    whileChoosingBottom,
-    guard(
-      "editLogEntry",
-      "unknown-log-entry",
-      (state, { entryId }) => !inLog(state, entryId)
-    ),
-    guard("editLogEntry", "blank-note", (_state, { description }) =>
-      isBlank(description)
-    ),
-  ],
-  removeLogEntry: [
-    whileChoosingBottom,
-    guard(
-      "removeLogEntry",
-      "unknown-log-entry",
-      (state, { entryId }) => !inLog(state, entryId)
-    ),
-  ],
-  undo: [
-    guard("undo", "nothing-to-undo", (state) => state.history.length === 0),
-  ],
+  ...MULLIGAN_GUARDS,
+  ...TURN_GUARDS,
+  ...SHUFFLE_LIBRARY_GUARDS,
+  ...LIFE_GUARDS,
+  ...COMMANDER_DAMAGE_GUARDS,
+  ...DESIGNATION_GUARDS,
+  ...BATTLEFIELD_GUARDS,
+  ...ZONE_GUARDS,
+  ...DICE_GUARDS,
+  ...ACTION_LOG_GUARDS,
+  ...HISTORY_GUARDS,
 };
 
 /**
