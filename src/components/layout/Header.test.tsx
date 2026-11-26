@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import React from "react";
 import { useToastStore } from "@/hooks/useToast";
 import { DeckApiError } from "@/lib/db/deck-api-answer";
+import { HIDES_FOCUS_OUTLINE } from "@/test/focus-outline";
 import {
   hydrateWithIntl,
   renderToStringWithIntl,
@@ -32,10 +33,19 @@ const router = vi.hoisted(() => ({
   prefetch: vi.fn(),
 }));
 
+// The page the header renders on, locale-free as next-intl reports it; the home page unless a test moves it.
+const page = vi.hoisted(() => ({ pathname: "/" }));
+
 vi.mock(import("@/i18n/navigation"), async () => ({
   ...(await import("@/test/i18n-navigation-stub")),
   useRouter: () => router,
+  usePathname: () => page.pathname,
 }));
+
+// Every test starts on the home page, so a pathname one test sets never leaks into the next.
+beforeEach(() => {
+  page.pathname = "/";
+});
 
 vi.mock(import("@/hooks/useTheme"), () => ({
   useTheme: () => ({
@@ -295,6 +305,162 @@ describe("Header deck actions and mobile menu (characterization)", () => {
     expect(
       screen.getAllByRole("navigation", { name: "My Decks" })
     ).toHaveLength(1);
+  });
+});
+
+/*
+ * Every navigation link looked the same, so a player could not see which page
+ * they were on, and a screen reader never said "current page" (design audit
+ * S9, 2026-11-25). jsdom applies no CSS: the marker's look is checked through
+ * its classes here and its contrast in `src/styles/contrast.test.ts`.
+ */
+describe("Header current page", () => {
+  /**
+   * The non-colour mark: a 2 px underline in `--accent-text`, applied only
+   * while the link carries `aria-current="page"`.
+   */
+  const CURRENT_PAGE_UNDERLINE = [
+    "aria-[current=page]:underline",
+    "aria-[current=page]:decoration-2",
+    "aria-[current=page]:decoration-[var(--accent-text)]",
+    // The current link's fill would otherwise hide the hover feedback every link has.
+    "aria-[current=page]:hover:bg-[var(--accent-soft)]",
+  ];
+
+  /** Each link of a navigation landmark, with its `aria-current` value. */
+  function ariaCurrentByLink(navigation: HTMLElement) {
+    return within(navigation)
+      .getAllByRole("link")
+      .map((link) => [link.textContent, link.getAttribute("aria-current")]);
+  }
+
+  it("marks My Decks as the current page on the decks page, and no other link", async () => {
+    page.pathname = "/decks";
+    const { Header } = await import("./Header");
+
+    renderWithIntl(React.createElement(Header));
+
+    expect(
+      ariaCurrentByLink(screen.getByRole("navigation", { name: "My Decks" }))
+    ).toEqual([
+      ["My Decks", "page"],
+      ["Collection", null],
+      ["Rules", null],
+    ]);
+  });
+
+  it("marks the same link in the mobile menu", async () => {
+    page.pathname = "/decks";
+    const { Header } = await import("./Header");
+
+    renderWithIntl(React.createElement(Header));
+    await userEvent.click(screen.getByRole("button", { name: "Open menu" }));
+
+    const [, mobileMenu] = screen.getAllByRole("navigation", {
+      name: "My Decks",
+    });
+    expect(ariaCurrentByLink(mobileMenu)).toEqual([
+      ["My Decks", "page"],
+      ["Collection", null],
+      ["Rules", null],
+    ]);
+  });
+
+  it("marks Rules on a rules page its link does not open", async () => {
+    page.pathname = "/rules/comprehensive";
+    const { Header } = await import("./Header");
+
+    renderWithIntl(React.createElement(Header));
+
+    expect(
+      ariaCurrentByLink(screen.getByRole("navigation", { name: "My Decks" }))
+    ).toEqual([
+      ["My Decks", null],
+      ["Collection", null],
+      ["Rules", "page"],
+    ]);
+  });
+
+  it("marks no link in either bar on a page no link points to, such as the builder", async () => {
+    page.pathname = "/builder/deck-1";
+    const { Header } = await import("./Header");
+
+    renderWithIntl(React.createElement(Header));
+    await userEvent.click(screen.getByRole("button", { name: "Open menu" }));
+
+    const navigations = screen.getAllByRole("navigation", { name: "My Decks" });
+    expect(navigations).toHaveLength(2);
+    for (const navigation of navigations) {
+      expect(
+        within(navigation)
+          .getAllByRole("link")
+          .filter((link) => link.hasAttribute("aria-current"))
+      ).toEqual([]);
+    }
+  });
+
+  it("marks the current page in French", async () => {
+    page.pathname = "/decks";
+    const { Header } = await import("./Header");
+
+    renderWithIntl(React.createElement(Header), { locale: "fr" });
+
+    expect(
+      ariaCurrentByLink(screen.getByRole("navigation", { name: "Mes Decks" }))
+    ).toEqual([
+      ["Mes Decks", "page"],
+      ["Collection", null],
+      ["Règles", null],
+    ]);
+  });
+
+  it("puts the mark in the server HTML, so it shows before hydration", async () => {
+    page.pathname = "/collection";
+    const { Header } = await import("./Header");
+
+    const html = renderToStringWithIntl(React.createElement(Header));
+    const parsed = document.createElement("div");
+    parsed.innerHTML = html;
+
+    expect(ariaCurrentByLink(within(parsed).getByRole("navigation"))).toEqual([
+      ["My Decks", null],
+      ["Collection", "page"],
+      ["Rules", null],
+    ]);
+  });
+
+  it("underlines the current link in both bars, a mark that does not rely on colour", async () => {
+    page.pathname = "/decks";
+    const { Header } = await import("./Header");
+
+    renderWithIntl(React.createElement(Header));
+    await userEvent.click(screen.getByRole("button", { name: "Open menu" }));
+
+    const currentLinks = screen
+      .getAllByRole("link", { name: "My Decks" })
+      .filter((link) => link.getAttribute("aria-current") === "page");
+    expect(currentLinks).toHaveLength(2);
+    for (const link of currentLinks) {
+      expect(link.className.split(/\s+/)).toEqual(
+        expect.arrayContaining(CURRENT_PAGE_UNDERLINE)
+      );
+    }
+  });
+
+  it("keeps the shared focus outline on every navigation link in both bars", async () => {
+    page.pathname = "/decks";
+    const { Header } = await import("./Header");
+
+    renderWithIntl(React.createElement(Header));
+    await userEvent.click(screen.getByRole("button", { name: "Open menu" }));
+
+    const links = screen
+      .getAllByRole("navigation", { name: "My Decks" })
+      .flatMap((navigation) => within(navigation).getAllByRole("link"));
+    expect(links).toHaveLength(6);
+    for (const link of links) {
+      expect(link.className).not.toMatch(HIDES_FOCUS_OUTLINE);
+    }
   });
 });
 
