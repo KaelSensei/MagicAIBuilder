@@ -190,8 +190,15 @@ function tally(imported: readonly ImportedCard[]): DeckImportOutcome {
       case "added":
         added += 1;
         break;
-      default:
+      case "at-copy-limit":
+      case "basic-land-held":
+      case "command-zone-unchanged":
         if (!refused.has(name)) refused.set(name, { name, refusal: outcome });
+        break;
+      default: {
+        const exhaustive: never = outcome;
+        return exhaustive;
+      }
     }
   }
   return { kind: "imported", added, refused: [...refused.values()] };

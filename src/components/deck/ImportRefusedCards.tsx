@@ -33,6 +33,10 @@ export function ImportRefusedCards({
         return t("basicLandHeld", { name });
       case "command-zone-unchanged":
         return t("commandZone", { name });
+      default: {
+        const exhaustive: never = refusal;
+        return exhaustive;
+      }
     }
   };
 
