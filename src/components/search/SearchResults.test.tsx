@@ -1,6 +1,7 @@
 import type { ComponentProps } from "react";
 import { screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import userEvent from "@testing-library/user-event";
+import { describe, expect, it, vi } from "vitest";
 import { SessionProvider } from "next-auth/react";
 import { SearchResults } from "./SearchResults";
 import { renderWithIntl } from "@/test/render-with-intl";
@@ -9,10 +10,14 @@ import { aScryfallCard } from "@/test/builders/scryfall";
 import { ScryfallApiError } from "@/lib/scryfall/api-error";
 import type { CollectionOnlyState } from "@/hooks/useCardSearchResults";
 import type { ScryfallCard } from "@/lib/scryfall/types";
+import type { EmptySearchNextStep } from "./EmptySearchResult";
 
 function card(id: string, name: string): ScryfallCard {
   return { id, name, cmc: 1, type_line: "Artifact", color_identity: [] };
 }
+
+/** An empty result that offers nothing more, as the builder's By Set tab does. */
+const NO_NEXT_STEP: EmptySearchNextStep = { kind: "none" };
 
 function renderOwned(
   cards: readonly ScryfallCard[],
@@ -28,6 +33,7 @@ function renderOwned(
         error={null}
         totalCards={cards.length}
         collectionOnly={collectionOnly}
+        nextStep={NO_NEXT_STEP}
       />
     </SessionProvider>,
     { locale }
@@ -135,7 +141,13 @@ describe("SearchResults with Collection only on", () => {
 function searchProps(
   overrides: Partial<ComponentProps<typeof SearchResults>> = {}
 ): ComponentProps<typeof SearchResults> {
-  return { cards: [], isLoading: false, error: null, ...overrides };
+  return {
+    cards: [],
+    isLoading: false,
+    error: null,
+    nextStep: NO_NEXT_STEP,
+    ...overrides,
+  };
 }
 
 /** Renders the results as a guest: a listed card's quick add reads the session. */
@@ -268,5 +280,117 @@ describe("SearchResults announces the search to a screen-reader player", () => {
     );
 
     expect(screen.getByRole("status").textContent).toBe("42 résultats");
+  });
+});
+
+/*
+ * A search with no result showed the query it ran and nothing else. It now
+ * says what to do next: clear the filters that narrow it, or try the search
+ * syntax (I-13 AC-13-05, design audit S11). The page decides which of them
+ * applies (`components/builder/empty-search-next-step.ts`, rendered through the
+ * builder in `page.search-query.test.tsx`); this list renders the step it gets.
+ */
+describe("SearchResults with no result", () => {
+  const SYNTAX_HINT =
+    "Tip: search by type or rules text, for example t:dragon o:flying.";
+
+  /** "Clear filters", calling `onClearFilters`. */
+  function clearFiltersStep(
+    onClearFilters: () => void = vi.fn()
+  ): EmptySearchNextStep {
+    return { kind: "clearFilters", onClearFilters };
+  }
+
+  it("offers Clear filters when it is the step given, and clears them on a press", async () => {
+    const onClearFilters = vi.fn();
+    const user = userEvent.setup();
+    renderSearch(
+      searchProps({ totalCards: 0, nextStep: clearFiltersStep(onClearFilters) })
+    );
+
+    await user.click(screen.getByRole("button", { name: "Clear filters" }));
+
+    expect(onClearFilters).toHaveBeenCalledOnce();
+    expect(screen.queryByText(SYNTAX_HINT)).toBeNull();
+  });
+
+  it("suggests the search syntax, with an example, when it is the step given", () => {
+    renderSearch(
+      searchProps({ totalCards: 0, nextStep: { kind: "syntaxHint" } })
+    );
+
+    expect(screen.getByText(SYNTAX_HINT)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Clear filters" })).toBeNull();
+  });
+
+  it("offers neither when the page gives no next step", () => {
+    renderSearch(searchProps({ totalCards: 0, nextStep: NO_NEXT_STEP }));
+
+    expect(screen.getByRole("status").textContent).toBe(
+      "No cards found. Try a different search."
+    );
+    expect(screen.queryByText(SYNTAX_HINT)).toBeNull();
+    expect(screen.queryByRole("button", { name: "Clear filters" })).toBeNull();
+  });
+
+  it("keeps announcing that nothing matched, apart from the next step", () => {
+    renderSearch(searchProps({ totalCards: 0, nextStep: clearFiltersStep() }));
+
+    expect(screen.getByRole("status").textContent).toBe(
+      "No cards found. Try a different search."
+    );
+  });
+
+  it("offers neither while the search runs or after it fails", () => {
+    const { rerender } = renderSearch(
+      searchProps({ isLoading: true, nextStep: clearFiltersStep() })
+    );
+    expect(screen.queryByRole("button", { name: "Clear filters" })).toBeNull();
+
+    rerender(
+      <SearchResults
+        {...searchProps({
+          error: new Error("down"),
+          nextStep: clearFiltersStep(),
+        })}
+      />
+    );
+    expect(screen.queryByRole("button", { name: "Clear filters" })).toBeNull();
+
+    rerender(
+      <SearchResults
+        {...searchProps({
+          error: new Error("down"),
+          nextStep: { kind: "syntaxHint" },
+        })}
+      />
+    );
+    expect(screen.queryByText(SYNTAX_HINT)).toBeNull();
+  });
+
+  it("speaks French to a French player, addressing them as « vous »", () => {
+    const { unmount } = renderWithProviders(
+      <SearchResults
+        {...searchProps({ totalCards: 0, nextStep: clearFiltersStep() })}
+      />,
+      { session: null, locale: "fr" }
+    );
+    expect(
+      screen.getByRole("button", { name: "Effacer les filtres" })
+    ).toBeInTheDocument();
+    unmount();
+
+    renderWithProviders(
+      <SearchResults
+        {...searchProps({ totalCards: 0, nextStep: { kind: "syntaxHint" } })}
+      />,
+      { session: null, locale: "fr" }
+    );
+
+    expect(
+      screen.getByText(
+        "Astuce : cherchez par type ou par texte de règles, par exemple t:dragon o:flying."
+      )
+    ).toBeInTheDocument();
   });
 });

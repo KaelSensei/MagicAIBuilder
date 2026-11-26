@@ -71,7 +71,8 @@
   },
   "empty": {
     "title": "Your collection is empty.",
-    "hint": "Add cards using the button above or from the card search.",
+    "purpose": "Add the cards you own, and your decks will show which ones you have and which you still need to buy.",
+    "addCards": "Add cards",
     "noMatch": "No cards match your search."
   },
   "listHeaders": {

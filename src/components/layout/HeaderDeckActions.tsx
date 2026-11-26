@@ -25,11 +25,12 @@
  */
 
 import { useCallback, type Dispatch, type SetStateAction } from "react";
-import { useFormatter, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { Loader2, Plus, Upload, type LucideIcon } from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
 import { ImportDialog } from "@/components/deck/ImportDialog";
 import type { HeaderDeckActionsUiState } from "@/components/layout/header-deck-actions-state";
+import { useImportIntoNewDeck } from "@/components/layout/use-import-into-new-deck";
 import { Button } from "@/components/ui/Button";
 import { useDeckCreateFailureReport } from "@/hooks/useDeckFailureReport";
 import { useHasHydrated } from "@/hooks/useHasHydrated";
@@ -102,44 +103,6 @@ function useNewDeck(pending: boolean, onUiStateChange: UiStateChange) {
   }, [createDeck, onUiStateChange, pending, reportFailure, router, t]);
 }
 
-/**
- * Import from a page without a deck: creates a deck named after the date,
- * activates it, then opens the import dialog on it.
- *
- * Same pending and failure rules as `useNewDeck`.
- */
-function useImportFromHome(pending: boolean, onUiStateChange: UiStateChange) {
-  const t = useTranslations("common");
-  const format = useFormatter();
-  const createDeck = useDeckStore((s) => s.createDeck);
-  const setActiveDeck = useDeckStore((s) => s.setActiveDeck);
-  const reportFailure = useDeckCreateFailureReport();
-
-  return useCallback(async () => {
-    if (pending) return;
-    onUiStateChange((s) => ({ ...s, isCreatingImportDeck: true }));
-    try {
-      const id = await createDeck(
-        t("nav.importedDeck", { date: format.dateTime(new Date()) })
-      );
-      await setActiveDeck(id);
-      onUiStateChange((s) => ({ ...s, importOpen: true }));
-    } catch (error) {
-      reportFailure("HeaderDeckActions.importFromHome", error);
-    } finally {
-      onUiStateChange((s) => ({ ...s, isCreatingImportDeck: false }));
-    }
-  }, [
-    createDeck,
-    format,
-    onUiStateChange,
-    pending,
-    reportFailure,
-    setActiveDeck,
-    t,
-  ]);
-}
-
 function ActionIcon({
   pending,
   icon: Icon,
@@ -158,7 +121,7 @@ function ActionIcon({
  * "Import" and "New Deck" for the header.
  *
  * In the builder, "Import" opens the dialog on the current deck. Elsewhere it
- * first creates a deck (see `useImportFromHome`). "New Deck" creates and opens
+ * first creates a deck (see `useImportIntoNewDeck`). "New Deck" creates and opens
  * a deck (see `useNewDeck`). `onAction` runs first on every press, so the
  * mobile menu is gone before the action starts; the dialog survives that
  * because the desktop instance hosts it, and its open state is the shared
@@ -177,7 +140,7 @@ export function HeaderDeckActions({
   const waitingForCode = !useHasHydrated();
   const layoutConfig = LAYOUTS[layout];
   const newDeck = useNewDeck(isCreatingDeck, onUiStateChange);
-  const importFromHome = useImportFromHome(
+  const importFromHome = useImportIntoNewDeck(
     isCreatingImportDeck,
     onUiStateChange
   );

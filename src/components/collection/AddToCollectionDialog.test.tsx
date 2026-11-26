@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { act, cleanup, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
@@ -78,6 +79,73 @@ describe("AddToCollectionDialog", () => {
     ).toHaveFocus();
   });
 });
+
+/*
+ * The collection page holds the open state, so its empty state's "Add cards"
+ * opens this same dialog (I-13 AC-13-05).
+ */
+describe("AddToCollectionDialog opened by its page", () => {
+  it("opens when the page asks, and tells the page when the player closes it", async () => {
+    const onOpenChange = vi.fn();
+    const user = userEvent.setup();
+    renderWithIntl(<AddToCollectionDialog open onOpenChange={onOpenChange} />);
+
+    expect(
+      screen.getByRole("dialog", { name: "Add to Collection" })
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
+
+  it("asks the page to open it from its own trigger", async () => {
+    const onOpenChange = vi.fn();
+    const user = userEvent.setup();
+    renderWithIntl(
+      <AddToCollectionDialog open={false} onOpenChange={onOpenChange} />
+    );
+
+    await user.click(screen.getByRole("button", { name: "Add Card" }));
+
+    expect(onOpenChange).toHaveBeenCalledWith(true);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  // The empty state that opened the dialog leaves once a first card is added,
+  // while the dialog stays open for the next one. Focus used to fall to
+  // <body> on close.
+  it("gives focus to its own Add Card when the empty state that opened it has left", async () => {
+    const user = userEvent.setup();
+    const { rerender } = renderWithIntl(<CollectionPageStandIn empty />);
+    await user.click(screen.getByRole("button", { name: "Add cards" }));
+
+    rerender(<CollectionPageStandIn empty={false} />);
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Add Card" })).toHaveFocus()
+    );
+  });
+});
+
+/**
+ * The collection page's part in the dialog: it holds the open state, and its
+ * empty state's "Add cards" shows until the collection holds a card.
+ */
+function CollectionPageStandIn({ empty }: { readonly empty: boolean }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      {empty ? (
+        <button type="button" onClick={() => setOpen(true)}>
+          Add cards
+        </button>
+      ) : null}
+      <AddToCollectionDialog open={open} onOpenChange={setOpen} />
+    </>
+  );
+}
 
 describe("AddToCollectionDialog add flow", () => {
   // The store's real action posts to /api/collection. The dialog's own job ends
