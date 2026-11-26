@@ -162,6 +162,7 @@
   "controls": {
     "grid": "Grid",
     "list": "List",
+    "viewMode": "Deck view",
     "sortDecks": "Sort decks",
     "sortUpdatedNewest": "Updated (newest)",
     "sortUpdatedOldest": "Updated (oldest)",
