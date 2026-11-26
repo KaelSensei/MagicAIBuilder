@@ -265,7 +265,7 @@
     "refused": {
       "title": "Cards the deck refused ({count}):",
       "atCopyLimit": "{name}: already at its copy limit for {format}",
-      "basicLandHeld": "{name}: this basic land is already in the deck, so its quantity was left as it was",
+      "basicLandHeld": "{name}: this basic land is already in that zone, so its quantity was left as it was",
       "commandZone": "{name}: could not take its place in the command zone"
     },
     "lookupFailed": "The card lookup did not answer. Nothing was imported; try again.",

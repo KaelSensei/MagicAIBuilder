@@ -206,7 +206,7 @@ describe("ImportDialog — cards the deck refuses", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByText(
-        "Island: this basic land is already in the deck, so its quantity was left as it was"
+        "Island: this basic land is already in that zone, so its quantity was left as it was"
       )
     ).toBeInTheDocument();
   });
