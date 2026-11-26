@@ -42,6 +42,11 @@ vi.mock(import("@/i18n/navigation"), async () => ({
   usePathname: () => page.pathname,
 }));
 
+// Every test starts on the home page, so a pathname one test sets never leaks into the next.
+beforeEach(() => {
+  page.pathname = "/";
+});
+
 vi.mock(import("@/hooks/useTheme"), () => ({
   useTheme: () => ({
     theme: "dark",
@@ -318,11 +323,9 @@ describe("Header current page", () => {
     "aria-[current=page]:underline",
     "aria-[current=page]:decoration-2",
     "aria-[current=page]:decoration-[var(--accent-text)]",
+    // The current link's fill would otherwise hide the hover feedback every link has.
+    "aria-[current=page]:hover:bg-[var(--accent-soft)]",
   ];
-
-  beforeEach(() => {
-    page.pathname = "/";
-  });
 
   /** Each link of a navigation landmark, with its `aria-current` value. */
   function ariaCurrentByLink(navigation: HTMLElement) {

@@ -85,7 +85,7 @@ function withoutTrailingSlash(pathname: string): string {
  * `contrastRatio` in `src/styles/contrast.test.ts`.
  */
 export const CURRENT_PAGE_LINK_CLASS =
-  "aria-[current=page]:bg-[var(--surface-hover)] aria-[current=page]:text-[var(--text-primary)] aria-[current=page]:underline aria-[current=page]:decoration-[var(--accent-text)] aria-[current=page]:decoration-2 aria-[current=page]:underline-offset-4";
+  "aria-[current=page]:bg-[var(--surface-hover)] aria-[current=page]:hover:bg-[var(--accent-soft)] aria-[current=page]:text-[var(--text-primary)] aria-[current=page]:underline aria-[current=page]:decoration-[var(--accent-text)] aria-[current=page]:decoration-2 aria-[current=page]:underline-offset-4";
 
 /**
  * The `aria-current` value of one navigation link: `page` on the current
