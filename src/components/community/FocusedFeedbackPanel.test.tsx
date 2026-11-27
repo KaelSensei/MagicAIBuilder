@@ -6,6 +6,7 @@ const labels = {
   title: "Feedback wanted",
   ownerHint: "Ask one focused question.",
   enable: "Show this request",
+  questionLabel: "Your question",
   placeholder: "What needs help?",
   save: "Save request",
   saving: "Saving…",
@@ -66,7 +67,7 @@ describe("FocusedFeedbackPanel", () => {
     );
 
     fireEvent.click(screen.getByRole("checkbox"));
-    fireEvent.change(screen.getByPlaceholderText("What needs help?"), {
+    fireEvent.change(screen.getByRole("textbox", { name: "Your question" }), {
       target: { value: "  Is the mana base reliable?  " },
     });
     fireEvent.click(screen.getByRole("button", { name: "Save request" }));
