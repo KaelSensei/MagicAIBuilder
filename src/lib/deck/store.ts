@@ -625,14 +625,18 @@ export interface DeckStore {
 
   // Deck management
   /**
-   * Creates an account deck and makes it the active deck. A guest opens the
-   * guest deck instead.
+   * Creates an account deck and makes it the active deck, unless
+   * `opts.activate` is false. A guest gets the guest deck instead, under the
+   * same rule.
    *
    * @param name - The deck's name
    * @param opts - `format`, Commander when left out; `isAIGenerated`;
    *   `idempotencyKey`, the same for every attempt at the same deck, so a
-   *   retry after a lost answer opens the deck the server already stored
-   * @returns The id of the deck now active
+   *   retry after a lost answer opens the deck the server already stored;
+   *   `activate`, true when left out: false leaves the active deck as it is,
+   *   for a caller that opens the deck itself once it knows it still should
+   *   (the AI deck wizard's save, I-02)
+   * @returns The id of the new deck, or the guest deck's
    * @throws When the server refuses or fails the creation
    */
   createDeck: (
@@ -641,6 +645,7 @@ export interface DeckStore {
       isAIGenerated?: boolean;
       format?: DeckFormat;
       idempotencyKey?: string;
+      activate?: boolean;
     }
   ) => Promise<string>;
   /**
@@ -1606,8 +1611,9 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
   },
 
   createDeck: async (name, opts) => {
+    const activate = opts?.activate !== false;
     if (isGuestDeckId(get().activeDeckId ?? "")) {
-      await get().setActiveDeck(GUEST_DECK_ID);
+      if (activate) await get().setActiveDeck(GUEST_DECK_ID);
       return GUEST_DECK_ID;
     }
 
@@ -1624,7 +1630,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       deck.isAIGenerated = apiDeck.isAIGenerated ?? false;
       set((state) => ({
         decks: { ...state.decks, [apiDeck.id]: deck },
-        activeDeckId: apiDeck.id,
+        activeDeckId: activate ? apiDeck.id : state.activeDeckId,
       }));
       return apiDeck.id;
     } finally {
