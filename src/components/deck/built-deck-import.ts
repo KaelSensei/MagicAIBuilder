@@ -100,6 +100,14 @@ function copiesOf(batch: readonly ImportEntry[]): number {
   return batch.reduce((sum, entry) => sum + entry.quantity, 0);
 }
 
+/** Where an import writes its cards, and who hears of its progress. */
+export interface ImportTarget {
+  /** The deck store's `addDeckCard`: adds one card to the store's active deck. */
+  readonly addDeckCard: (card: DeckCard) => Promise<void>;
+  /** Told the copies written so far, after each card. */
+  readonly onProgress: (imported: number) => void;
+}
+
 /**
  * Fetches and imports cards from Scryfall in batches of BATCH_SIZE.
  *
@@ -108,8 +116,7 @@ function copiesOf(batch: readonly ImportEntry[]): number {
  */
 export async function importCardsInBatches(
   entries: readonly ImportEntry[],
-  addDeckCard: (card: DeckCard) => Promise<void>,
-  onProgress: (imported: number) => void
+  { addDeckCard, onProgress }: ImportTarget
 ): Promise<CardImportReport> {
   const byName = new Map(entries.map((e) => [e.name, e]));
   // A card Scryfall renamed (a double-faced card's full name) is not in `byName`: one copy.
@@ -161,8 +168,9 @@ export async function importCardsInBatches(
       });
     } catch (err) {
       logger.error("Batch import error", "DeckWizard", err);
-      copiesNotAdded += copiesLeft;
     }
+    // Zero once every card Scryfall found was written.
+    copiesNotAdded += copiesLeft;
   });
   return { copiesNotAdded };
 }

@@ -245,8 +245,7 @@ async function fillCreatedDeck(
     progress.start(countCopies(result.cards));
     const { copiesNotAdded } = await importCardsInBatches(
       collapseEntries(result.cards),
-      addDeckCard,
-      progress.setImportedCount
+      { addDeckCard, onProgress: progress.setImportedCount }
     );
     return copiesNotAdded;
   } catch (err) {

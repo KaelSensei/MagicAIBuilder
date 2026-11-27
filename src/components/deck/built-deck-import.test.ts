@@ -43,7 +43,7 @@ function collectionAnswer(
   };
 }
 
-/** The store's `addDeckCard`, writing every card but `refused`, whose save throws. */
+/** An import target whose `addDeckCard` writes every card but `refused`, whose save throws. */
 function deckRefusing(refused: string) {
   const written: string[] = [];
   const addDeckCard = (card: DeckCard): Promise<void> => {
@@ -53,7 +53,7 @@ function deckRefusing(refused: string) {
     written.push(card.name);
     return Promise.resolve();
   };
-  return { written, addDeckCard };
+  return { written, addDeckCard, onProgress: () => undefined };
 }
 
 function entry(name: string, quantity = 1): ImportEntry {
@@ -86,8 +86,7 @@ describe("importCardsInBatches", () => {
 
     const report = await importCardsInBatches(
       [entry("Sol Ring"), entry("Talrand's Grand Archive")],
-      deck.addDeckCard,
-      () => undefined
+      deck
     );
 
     expect(report).toEqual({ copiesNotAdded: 0 });
@@ -99,8 +98,7 @@ describe("importCardsInBatches", () => {
 
     const report = await importCardsInBatches(
       [entry("Sol Ring"), entry("Island", 30), entry("Counterspell")],
-      deck.addDeckCard,
-      () => undefined
+      deck
     );
 
     // Sol Ring was written; the 30 Islands and Counterspell were not.
@@ -123,8 +121,7 @@ describe("importCardsInBatches", () => {
         entry("Island", 30),
         entry("Counterspell"),
       ],
-      deck.addDeckCard,
-      () => undefined
+      deck
     );
 
     // Scryfall knows no "Talrand's Grand Archive": it was never a card to add, so only the
