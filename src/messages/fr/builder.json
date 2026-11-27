@@ -22,6 +22,7 @@
   "colorIdentityViolation": "Hors identité couleur du commandant",
   "tags": {
     "add": "Ajouter une étiquette",
+    "fieldLabel": "Nouvelle étiquette",
     "placeholder": "nom de l'étiquette…"
   },
   "details": {
