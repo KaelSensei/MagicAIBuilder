@@ -661,6 +661,7 @@
     "alternativeBudget": "Budget",
     "alternativePower": "Power",
     "alternativePlaystyle": "Playstyle",
+    "modelReasoning": "Model reasoning",
     "brief": {
       "title": "Your deck brief",
       "description": "Optional preferences used only for this analysis.",

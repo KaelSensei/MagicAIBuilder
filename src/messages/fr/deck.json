@@ -661,6 +661,7 @@
     "alternativeBudget": "Budget",
     "alternativePower": "Puissance",
     "alternativePlaystyle": "Style de jeu",
+    "modelReasoning": "Raisonnement du modèle",
     "brief": {
       "title": "Votre brief de deck",
       "description": "Préférences facultatives utilisées uniquement pour cette analyse.",
