@@ -20,10 +20,11 @@
  *
  * A save belongs to the session it started in, and `reset` starts a new one. A save still running
  * from an earlier session (the player reopened the wizard, or chose "Try again") changes nothing
- * the wizard shows and opens no deck when it ends. It also writes nothing more: the store adds
- * cards to its active deck, by then the deck the player works on, so the late import stops and
- * its deck keeps what it already received. When its deck was created, its end is logged at info
- * for support (`logLateEnd`); a create that fails late is logged at error only, as in any session
+ * the wizard shows and opens no deck when it ends. Nor does it touch the store's active deck, by
+ * then the deck the player works on: its deck is created without being made the active deck, it
+ * is opened only while its session is current, and its import stops at its next write. The deck
+ * keeps what it already received. When its deck was created, its end is logged at info for
+ * support (`logLateEnd`); a create that fails late is logged at error only, as in any session
  * (I-02, follow-up of #1984). In the current session too, the import writes only while its deck is
  * the store's active deck: when another deck opens during the import, the import stops, and the
  * deck ends as unfinished, which the player opens to finish (`DeckClaim`).
@@ -201,7 +202,13 @@ interface DeckCreation extends Pick<DeckStore, "createDeck"> {
   readonly hold: (attempt: DeckToCreate) => void;
 }
 
-/** The new deck's id, or null when the server refused it and `hold` kept the deck. */
+/**
+ * The new deck's id, or null when the server refused it and `hold` kept the deck.
+ *
+ * The deck is created without being made the active deck: the create can answer after a `reset`,
+ * when another save's deck is open, so the save opens its deck itself, and only while its session
+ * is current (`DeckClaim.open`).
+ */
 async function createOrHold(
   attempt: DeckToCreate,
   { createDeck, hold }: DeckCreation
@@ -210,6 +217,7 @@ async function createOrHold(
     return await createDeck(attempt.deck.name, {
       isAIGenerated: true,
       idempotencyKey: attempt.idempotencyKey,
+      activate: false,
     });
   } catch (err) {
     logger.error("Deck create error", "DeckWizard", err);

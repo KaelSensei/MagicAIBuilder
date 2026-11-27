@@ -1967,6 +1967,89 @@ describe("DeckWizard flow (characterization)", () => {
 
       await finishTheNextBuild(nextBuild);
     });
+
+    describe("when the earlier create answers late", () => {
+      /** The deck the held earlier create stores; the new build's deck is then `DECK_ID`. */
+      const LATE_DECK_ID = "deck-late";
+
+      /** Answers the held earlier create with a stored deck, `LATE_DECK_ID`. */
+      function storeTheEarlierDeck(earlierCreate: HeldRequest): void {
+        earlierCreate.answer(
+          HttpResponse.json(
+            storedDeckRow(LATE_DECK_ID, { name: "AI Deck — Control" }),
+            { status: 201 }
+          )
+        );
+      }
+
+      it("keeps the new build's deck the open deck when the earlier create answers after that deck opened", async () => {
+        const info = vi
+          .spyOn(logger, "info")
+          .mockImplementation(() => undefined);
+        const earlierCreate = holdNext("post", "/api/decks");
+        await generateDeck();
+        await earlierCreate.asked;
+        const nextBuild = await buildAgainInTheReopenedWizard();
+        nextBuild.answer(ndjson(buildEvents()));
+        await waitForDeckOpened();
+
+        storeTheEarlierDeck(earlierCreate);
+        await waitFor(() =>
+          expect(info).toHaveBeenCalledWith(LATE_SAVE_LOG, "DeckWizard", {
+            deckId: LATE_DECK_ID,
+            cardsAdded: 0,
+            cardsNotAdded: STREAMED_COPIES,
+            stoppedBy: "wizardReset",
+          })
+        );
+
+        expect(useDeckStore.getState().activeDeckId).toBe(DECK_ID);
+        expect(onComplete.mock.calls).toEqual([[DECK_ID]]);
+        expect(
+          sent.filter((request) => request.includes(LATE_DECK_ID))
+        ).toEqual([]);
+      });
+
+      it("fills and opens the new build's deck, and leaves the earlier deck closed and empty, when the earlier create answers while the new deck's cards import", async () => {
+        const info = vi
+          .spyOn(logger, "info")
+          .mockImplementation(() => undefined);
+        const earlierCreate = holdNext("post", "/api/decks");
+        await generateDeck();
+        await earlierCreate.asked;
+        const nextBuild = await buildAgainInTheReopenedWizard();
+        const nextLookup = holdNext("post", `${SCRYFALL}/cards/collection`);
+        nextBuild.answer(ndjson(buildEvents()));
+        await nextLookup.asked;
+
+        storeTheEarlierDeck(earlierCreate);
+        await waitFor(() =>
+          expect(info).toHaveBeenCalledWith(
+            LATE_SAVE_LOG,
+            "DeckWizard",
+            expect.objectContaining({ deckId: LATE_DECK_ID })
+          )
+        );
+        expect(useDeckStore.getState().activeDeckId).toBe(DECK_ID);
+
+        nextLookup.answer(
+          HttpResponse.json(
+            collectionAnswer(STREAMED_CARDS.map((card) => card.name))
+          )
+        );
+        await waitForDeckOpened();
+
+        expect(onComplete.mock.calls).toEqual([[DECK_ID]]);
+        expect(savedCardsOf(DECK_ID).map((card) => card.name)).toEqual(
+          STREAMED_CARDS.map((card) => recordedCard(card.name).name)
+        );
+        expect(storedCard("Island")?.quantity).toBe(30);
+        expect(useDeckStore.getState().decks[LATE_DECK_ID]?.cards).toEqual([]);
+        expect(
+          sent.filter((request) => request.includes(LATE_DECK_ID))
+        ).toEqual([]);
+      });
+    });
   });
 
   // The store adds cards to its open deck, so a save writes only while its deck is that deck. When
