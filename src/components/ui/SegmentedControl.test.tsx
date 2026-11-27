@@ -102,6 +102,71 @@ describe("SegmentedControl", () => {
     expect(within(four).getByText("4")).toHaveAttribute("aria-hidden", "true");
   });
 
+  // The tooltip sits on the face, which fills the button: a `title` on the
+  // button itself would become its accessible description (see the next tests).
+  it("shows an icon-only option's label as a tooltip wherever the pointer rests on it", () => {
+    render(
+      <SegmentedControl
+        aria-label="Cards per row"
+        options={[
+          { value: "4", label: "4 cards per row", icon: "4", hideLabel: true },
+          { value: "6", label: "6 cards per row", icon: "6", hideLabel: true },
+        ]}
+        value="6"
+        onChange={vi.fn()}
+      />
+    );
+
+    const four = screen.getByRole("button", { name: "4 cards per row" });
+    const face = within(four).getByTitle("4 cards per row");
+    expect(face).toHaveTextContent("4");
+    expect(face).toHaveClass("flex-1", "self-stretch");
+  });
+
+  // The visible label is the tooltip already.
+  it("gives an option whose label shows no tooltip", () => {
+    render(
+      <SegmentedControl
+        aria-label="Layout"
+        options={[
+          {
+            value: "list",
+            label: "List view",
+            icon: <svg data-testid="list-icon" />,
+          },
+          { value: "grid", label: "Grid view" },
+        ]}
+        value="list"
+        onChange={vi.fn()}
+      />
+    );
+
+    for (const option of screen.getAllByRole("button")) {
+      expect(option).not.toHaveAttribute("title");
+      expect(within(option).queryByTitle(/./)).not.toBeInTheDocument();
+    }
+  });
+
+  // A screen reader reads the name, then the description: a tooltip that
+  // became the description would make it say "4 cards per row" twice.
+  it("names an icon-only option once: the label is its name, and the tooltip adds no description", () => {
+    render(
+      <SegmentedControl
+        aria-label="Cards per row"
+        options={[
+          { value: "4", label: "4 cards per row", icon: "4", hideLabel: true },
+          { value: "6", label: "6 cards per row", icon: "6", hideLabel: true },
+        ]}
+        value="6"
+        onChange={vi.fn()}
+      />
+    );
+
+    const four = screen.getByRole("button", { name: "4 cards per row" });
+    expect(four).toHaveAccessibleName("4 cards per row");
+    expect(four).toHaveAccessibleDescription("");
+  });
+
   it("shows a text option's label and keeps its icon away from screen readers", () => {
     render(
       <SegmentedControl

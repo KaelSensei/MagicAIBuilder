@@ -22,6 +22,8 @@
  *   (https://www.w3.org/TR/WCAG22/#target-size-minimum, read 2026-11-26).
  * - Each option exposes `aria-pressed`, so a screen reader says whether it is
  *   chosen (SC 4.1.2).
+ * - An icon-only option shows its label in a tooltip on hover, set on its
+ *   hidden face so a screen reader hears the label once (`OptionContent`).
  *
  * @module components/ui/SegmentedControl
  */
@@ -41,13 +43,17 @@ type OptionFace =
        * icon, or a short mark such as a number.
        */
       readonly icon: ReactNode;
-      /** Reads the label to screen readers only; the icon stands for it. */
+      /**
+       * Reads the label to screen readers only, and shows it to a mouse
+       * player as a tooltip on hover; the icon stands for it.
+       */
       readonly hideLabel: true;
     };
 
 /**
  * One choice of a segmented control. `label` is the option's accessible name;
- * with `hideLabel`, it is read to screen readers only and `icon` is shown.
+ * with `hideLabel`, it is read to screen readers only, shown as a tooltip on
+ * hover, and `icon` is shown.
  */
 export type SegmentedOption<T extends string> = {
   /** The value reported to `onChange`; unique within the control. */
@@ -123,6 +129,62 @@ function optionPadding(
 }
 
 /**
+ * The face of an icon-only option. It stretches over the whole button, so the
+ * tooltip it carries shows wherever the pointer rests on the option, not only
+ * over the glyph.
+ */
+const ICON_ONLY_FACE_CLASS_NAME =
+  "inline-flex flex-1 items-center justify-center self-stretch";
+
+/**
+ * The face's tooltip and classes. Only an icon-only option has a tooltip,
+ * since a visible label already says what the option is.
+ */
+function faceProps(option: { readonly label: string } & OptionFace): {
+  readonly title?: string;
+  readonly className: string;
+} {
+  if (option.hideLabel) {
+    return { title: option.label, className: ICON_ONLY_FACE_CLASS_NAME };
+  }
+  return { className: "inline-flex" };
+}
+
+/**
+ * What an option shows: its icon, hidden from screen readers, then its label,
+ * read to screen readers only when `hideLabel` is set.
+ *
+ * An icon-only option shows its label in a native tooltip on hover, as the
+ * hand-made buttons this control replaced did. The tooltip is the `title` of
+ * the hidden face, not of the button. A button's `title` that is not its name
+ * becomes its accessible description: "Otherwise use the title attribute if
+ * it wasn't used as the accessible name" (HTML-AAM 1.0, button element,
+ * https://www.w3.org/TR/2022/WD-html-aam-1.0-20220413/, seen 2026-11-26).
+ * The name here comes from the `sr-only` label, so a screen reader would say
+ * "4 cards per row" twice. W3C bug 26085 asked browsers to drop a description
+ * equal to the name and was closed WONTFIX
+ * (https://www.w3.org/Bugs/Public/show_bug.cgi?id=26085, seen 2026-11-26).
+ */
+function OptionContent({
+  option,
+}: {
+  readonly option: { readonly label: string } & OptionFace;
+}) {
+  return (
+    <>
+      {option.icon !== undefined && (
+        <span aria-hidden="true" {...faceProps(option)}>
+          {option.icon}
+        </span>
+      )}
+      <span className={option.hideLabel ? "sr-only" : undefined}>
+        {option.label}
+      </span>
+    </>
+  );
+}
+
+/**
  * A named group of toggle buttons, one of them chosen: a `fieldset`, whose
  * implicit role is `group`, holding one `<button type="button" aria-pressed>`
  * per option.
@@ -174,14 +236,7 @@ export function SegmentedControl<T extends string>({
               fullWidth && "flex-1"
             )}
           >
-            {option.icon !== undefined && (
-              <span aria-hidden="true" className="inline-flex">
-                {option.icon}
-              </span>
-            )}
-            <span className={option.hideLabel ? "sr-only" : undefined}>
-              {option.label}
-            </span>
+            <OptionContent option={option} />
           </button>
         );
       })}
