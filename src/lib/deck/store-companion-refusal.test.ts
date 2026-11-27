@@ -21,6 +21,7 @@ import { aDeck } from "@/test/builders/deck";
 import { aScryfallCard } from "@/test/builders/scryfall";
 import { installFakeDeckClient } from "@/test/fake-deck-client";
 import { recordToasts } from "@/test/toast-recorder";
+import { recordedToasts } from "@/test/toast-text";
 
 const deckApi = installFakeDeckClient();
 const toastAdd = recordToasts();
@@ -87,6 +88,8 @@ beforeEach(() => {
 });
 
 describe("setCompanion — the companions the store refuses today", () => {
+  // CR 702.139b: in Commander, the starting deck a companion's condition reads
+  // includes the commander.
   it("refuses a companion before the deck has a commander, and says so", async () => {
     openDeck({ commander: null, companion: null });
 
@@ -94,7 +97,7 @@ describe("setCompanion — the companions the store refuses today", () => {
 
     expect(companionName()).toBeUndefined();
     expect(deckApi.changeCommandZone).not.toHaveBeenCalled();
-    expect(toastAdd.mock.calls).toEqual([
+    expect(recordedToasts(toastAdd)).toEqual([
       ["warning", "Choose a commander before setting a companion."],
     ]);
   });
@@ -107,7 +110,7 @@ describe("setCompanion — the companions the store refuses today", () => {
 
     expect(companionName()).toBe("Lurrus of the Dream-Den");
     expect(deckApi.changeCommandZone).not.toHaveBeenCalled();
-    expect(toastAdd.mock.calls).toEqual([
+    expect(recordedToasts(toastAdd)).toEqual([
       ["warning", "That card does not have Companion."],
     ]);
   });
@@ -120,7 +123,7 @@ describe("setCompanion — the companions the store refuses today", () => {
 
     expect(companionName()).toBeUndefined();
     expect(deckApi.changeCommandZone).not.toHaveBeenCalled();
-    expect(toastAdd.mock.calls).toEqual([
+    expect(recordedToasts(toastAdd)).toEqual([
       ["warning", "Lutri cannot be your companion in Commander."],
     ]);
   });
@@ -131,7 +134,7 @@ describe("setCompanion — the companions the store refuses today", () => {
     await useDeckStore.getState().setCompanion(LUTRI);
 
     expect(deckApi.changeCommandZone).not.toHaveBeenCalled();
-    expect(toastAdd.mock.calls).toEqual([
+    expect(recordedToasts(toastAdd)).toEqual([
       ["warning", "Choose a commander before setting a companion."],
     ]);
   });

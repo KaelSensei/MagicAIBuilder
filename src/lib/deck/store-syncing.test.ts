@@ -18,9 +18,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type * as StoreModule from "@/lib/deck/store";
 import type { DeckAction, DeckStore } from "@/lib/deck/store";
 import type * as ToastModule from "@/hooks/useToast";
-import type { ToastMessage } from "@/hooks/useToast";
 import type { Deck, DeckCard } from "@/lib/deck/types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
+import { toastText } from "@/test/toast-text";
 
 const DECK_ID = "deck-1";
 const DECK_ROUTE = `/api/decks/${DECK_ID}`;
@@ -300,8 +300,11 @@ function deck(): Deck | undefined {
   return useDeckStore.getState().decks[DECK_ID];
 }
 
-function toastMessages(): ToastMessage[] {
-  return useToastStore.getState().toasts.map((toast) => toast.message);
+/** The toasts on screen, as the English words the player reads. */
+function toastMessages(): string[] {
+  return useToastStore
+    .getState()
+    .toasts.map((toast) => toastText(toast.message));
 }
 
 /**

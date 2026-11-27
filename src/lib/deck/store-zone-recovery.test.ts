@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { installFakeDeckClient } from "@/test/fake-deck-client";
 import { recordToasts } from "@/test/toast-recorder";
+import { recordedToasts } from "@/test/toast-text";
 import type { DeckCard } from "./types";
 import { createEmptyDeck } from "./store-factories";
 import { useDeckStore } from "./store";
@@ -85,7 +86,7 @@ describe("deck zone save recovery", () => {
       { id: "card-2", zone: "main" },
     ]);
     expect(saved.maybeboard.map(({ id }) => id)).toEqual(["card-1"]);
-    expect(mocks.addToast).toHaveBeenCalledWith("error", expect.stringContaining("move"));
+    expect(recordedToasts(mocks.addToast)).toContainEqual(["error", expect.stringContaining("move")]);
   });
 
   it("does not report a failed zone save after its deck is removed", async () => {
@@ -128,7 +129,7 @@ describe("deck zone save recovery", () => {
     expect(deck.cards[0].zone).toBe("main");
     expect(deck.maybeboard).toHaveLength(0);
     expect(useDeckStore.getState().isSyncing).toBe(false);
-    expect(mocks.addToast).toHaveBeenCalledWith("error", expect.stringContaining("move"));
+    expect(recordedToasts(mocks.addToast)).toContainEqual(["error", expect.stringContaining("move")]);
   });
 
   it("restores the last saved zone when two rapid moves both fail", async () => {
