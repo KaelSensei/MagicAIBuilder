@@ -4,6 +4,7 @@ import { Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import type { CardAlternative } from "@/hooks/useAISuggestions";
+import { ModelReasoning } from "./ModelReasoning";
 import { SuggestionEvidenceDetails } from "./SuggestionEvidenceDetails";
 import { getSuggestionLegality } from "@/lib/ai/suggestion-review";
 
@@ -51,9 +52,10 @@ export function SuggestionAlternatives({
                       )}
                     </span>
                   </div>
-                  <p className="mt-0.5 text-[10px] leading-tight text-[var(--text-secondary)]">
-                    {alternative.reason}
-                  </p>
+                  <ModelReasoning
+                    text={alternative.reason}
+                    className="mt-0.5 text-[10px] leading-tight text-[var(--text-secondary)]"
+                  />
                 </div>
                 <button
                   type="button"
