@@ -91,6 +91,15 @@ test.describe("Playtest mode", () => {
 
     await page.getByRole("button", { name: "+1" }).click();
     await expect(page.getByText("36", { exact: true })).toBeVisible();
+
+    // The custom amount field is reached by its name, not its placeholder
+    // (I-04 accessibility bundle 4).
+    const customAmount = page.getByRole("spinbutton", {
+      name: "Life to gain or lose",
+    });
+    await customAmount.fill("-3");
+    await customAmount.press("Enter");
+    await expect(page.getByText("33", { exact: true })).toBeVisible();
   });
 
   test("takes a free Commander mulligan, bottoms a chosen card on the next, and closes off once the turn advances", async ({
