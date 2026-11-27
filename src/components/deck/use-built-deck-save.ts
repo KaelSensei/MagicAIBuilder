@@ -20,8 +20,11 @@
  *
  * A save belongs to the session it started in, and `reset` starts a new one. A save still running
  * from an earlier session (the player reopened the wizard, or chose "Try again") changes nothing
- * the wizard shows and opens no deck when it ends; its deck stays stored, and its end is logged at
- * info for support (I-02, follow-up of #1984).
+ * the wizard shows and opens no deck when it ends. It also writes nothing more: the store adds
+ * cards to its active deck, by then the deck the player works on, so the late import stops and
+ * its deck keeps what it already received. When its deck was created, its end is logged at info
+ * for support (`logLateEnd`); a create that fails late is logged at error only, as in any session
+ * (I-02, follow-up of #1984).
  *
  * @module deck/use-built-deck-save
  */
@@ -34,6 +37,7 @@ import {
   collapseEntries,
   importCardsInBatches,
   tryResolveCommander,
+  type CardImportReport,
 } from "./built-deck-import";
 
 /** A finished build and the name its deck is stored under. */
@@ -85,8 +89,9 @@ export interface BuiltDeckSave {
    * Stores the built deck, then calls `onComplete` with its id, unless it carries corrections or
    * could not be filled. Throws only what `onComplete` throws. When the server cannot create the
    * deck, it holds the deck and sets `saveFailed`; when the deck was created but a card lookup
-   * failed or a later step threw, it sets `unfinishedDeck`, with the build's corrections. When
-   * `reset` came first, it does none of this: it logs what became of the deck and returns.
+   * failed or a later step threw, it sets `unfinishedDeck`, with the build's corrections. When a
+   * `reset` came while it ran, it does none of this: its import writes nothing more, and it logs at
+   * info the deck's id, the copies the import added and did not add, and why it stopped.
    */
   readonly save: (deck: BuiltDeck) => Promise<void>;
   /**
@@ -96,7 +101,8 @@ export interface BuiltDeckSave {
   readonly retry: () => Promise<void>;
   /**
    * Forgets the progress and the corrected, unfinished and held decks, for a fresh build, and ends
-   * the save session: a save started before it shows nothing and opens nothing when it ends.
+   * the save session: a save started before it writes nothing more into any deck, and shows
+   * nothing and opens nothing when it ends.
    */
   readonly reset: () => void;
 }
@@ -210,48 +216,108 @@ async function createOrHold(
   }
 }
 
-/** The deck store's actions that fill a created deck, and the counter of its import. */
-interface DeckFill extends Pick<
-  DeckStore,
-  "setActiveDeck" | "setCommander" | "addDeckCard"
-> {
+/** Why a save stopped writing into the deck it created. */
+type ImportStop = "wizardReset";
+
+/**
+ * A save's claim on the deck it created. The store writes a card or a commander into its active
+ * deck (`addDeckCard` and `setCommander` in `store.ts`), so a save writes only while it owns that
+ * deck: its session is current. Otherwise its cards would land in the deck the player works on
+ * now, such as the new build's deck (I-02, #1984's QA).
+ */
+interface DeckClaim {
+  /** Makes the deck the store's active deck, unless the save's session is over. */
+  readonly open: () => Promise<void>;
+  /** True while the save may write into its deck; false for good from the first check that fails. */
+  readonly owns: () => boolean;
+  /** Why `owns` turned false, or null while it has not. */
+  readonly stoppedBy: () => ImportStop | null;
+}
+
+/** The claim of the save running in `session` on the deck `deckId` it created. */
+function claimDeck(
+  deckId: string,
+  session: SaveSession,
+  setActiveDeck: DeckStore["setActiveDeck"]
+): DeckClaim {
+  let stop: ImportStop | null = null;
+  const reasonToStop = (): ImportStop | null =>
+    session.isCurrent() ? null : "wizardReset";
+  return {
+    open: () =>
+      session.isCurrent() ? setActiveDeck(deckId) : Promise.resolve(),
+    owns: () => {
+      stop ??= reasonToStop();
+      return stop === null;
+    },
+    stoppedBy: () => stop,
+  };
+}
+
+/** The deck store's actions that fill a created deck, the save's claim on it, and its counter. */
+interface DeckFill extends Pick<DeckStore, "setCommander" | "addDeckCard"> {
+  readonly claim: DeckClaim;
   readonly progress: ImportProgress;
 }
 
 /**
- * Fills a created deck: opens it, sets the build's commander, then imports its cards.
+ * Fills a created deck: opens it, sets the build's commander, then imports its cards, each write
+ * only while the save owns the deck (`DeckClaim`).
  *
  * Never throws. The deck exists, so no failure may reach the wizard's "Try again": a new build
  * would store a second deck. A step that throws is logged, and the player reads the notice.
  *
- * @returns the copies the import could not add, or null when a store action threw before they
+ * @returns what the import added and did not add, or null when a store action threw before they
  * were counted. A commander that cannot be set and a card batch that fails do not throw:
- * `built-deck-import.ts` catches them.
+ * `built-deck-import.ts` catches them. A commander left unseated is not counted.
  */
 async function fillCreatedDeck(
-  deckId: string,
   result: BuildResult,
-  { setActiveDeck, setCommander, addDeckCard, progress }: DeckFill
-): Promise<number | null> {
+  { claim, setCommander, addDeckCard, progress }: DeckFill
+): Promise<CardImportReport | null> {
   try {
-    await setActiveDeck(deckId);
+    await claim.open();
 
     // Read the commander off the build result, not off the build hook's
     // state: the caller's closure holds the render-time snapshot.
     if (result.commander) {
-      await tryResolveCommander(result.commander, setCommander);
+      await tryResolveCommander(result.commander, setCommander, claim.owns);
     }
 
     progress.start(countCopies(result.cards));
-    const { copiesNotAdded } = await importCardsInBatches(
-      collapseEntries(result.cards),
-      { addDeckCard, onProgress: progress.setImportedCount }
-    );
-    return copiesNotAdded;
+    return await importCardsInBatches(collapseEntries(result.cards), {
+      addDeckCard,
+      onProgress: progress.setImportedCount,
+      mayWrite: claim.owns,
+    });
   } catch (err) {
     logger.error("Built deck fill error", "DeckWizard", err);
     return null;
   }
+}
+
+/**
+ * Logs, at info, how a save from an earlier session ended: nothing reaches the player, so this
+ * line is support's trail. It holds the deck's id; `cardsAdded`, the copies the import handed to
+ * the store for that deck, and `cardsNotAdded`, the copies it did not (both null when a step threw
+ * before they were counted, and the store may still have dropped an added copy, B2-36); and
+ * `stoppedBy`, why the import stopped writing before its end, or null when it ran to its end.
+ */
+function logLateEnd(
+  deckId: string,
+  report: CardImportReport | null,
+  stoppedBy: ImportStop | null
+): void {
+  logger.info(
+    "Built deck save ended after the wizard was reset",
+    "DeckWizard",
+    {
+      deckId,
+      cardsAdded: report?.copiesAdded ?? null,
+      cardsNotAdded: report?.copiesNotAdded ?? null,
+      stoppedBy,
+    }
+  );
 }
 
 /**
@@ -285,24 +351,21 @@ export function useBuiltDeckSave(
     });
     if (deckId === null) return;
     const { result } = attempt.deck;
-    const cardsNotAdded = await fillCreatedDeck(deckId, result, {
-      setActiveDeck,
+    const claim = claimDeck(deckId, session, setActiveDeck);
+    const report = await fillCreatedDeck(result, {
+      claim,
       setCommander,
       addDeckCard,
       progress: countedWithin(session, progress),
     });
     if (!session.isCurrent()) {
-      // Nothing reaches the player, so support reads here what became of the deck.
-      logger.info(
-        "Built deck save ended after the wizard was reset",
-        "DeckWizard",
-        { deckId, cardsNotAdded }
-      );
+      logLateEnd(deckId, report, claim.stoppedBy());
       return;
     }
 
     // An incomplete deck says so first, its corrections under it: the player
     // has cards to add by hand.
+    const cardsNotAdded = report === null ? null : report.copiesNotAdded;
     const { corrections } = result;
     if (cardsNotAdded === null || cardsNotAdded > 0) {
       setUnfinishedDeck({ deckId, cardsNotAdded, corrections });
