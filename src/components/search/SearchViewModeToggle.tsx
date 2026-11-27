@@ -7,8 +7,8 @@
  * reads to lay the cards out, so it survives a new search.
  *
  * A `SegmentedControl` with two icon-only options (design audit S3, I-04): the control owns the
- * 28 px targets, the pressed state and the chosen option's marker, and cites the WCAG criteria
- * behind them. The options carry no `title` tooltip, as at the control's other icon-only sites.
+ * 28 px targets, the pressed state, the chosen option's marker and the tooltip that names each
+ * icon on hover, and cites the WCAG criteria behind them.
  *
  * @module components/search/SearchViewModeToggle
  */
