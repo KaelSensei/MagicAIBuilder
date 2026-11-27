@@ -80,6 +80,26 @@ describe("LifeTracker", () => {
     expect(onHeal).not.toHaveBeenCalled();
   });
 
+  // WCAG 2.2 SC 1.3.1 and 4.1.2 (I-04 accessibility bundle 4): a placeholder
+  // is not a name, so the custom life amount field carries its own.
+  it("names the custom life amount field for a screen reader and keeps the hint as its placeholder", () => {
+    renderWithIntl(<LifeTracker {...defaultProps} />);
+
+    expect(
+      screen.getByRole("spinbutton", { name: "Life to gain or lose" })
+    ).toHaveAttribute("placeholder", "+/- amount");
+  });
+
+  it("names the custom life amount field in French", () => {
+    renderWithIntl(<LifeTracker {...defaultProps} />, { locale: "fr" });
+
+    expect(
+      screen.getByRole("spinbutton", {
+        name: "Points de vie à gagner ou à perdre",
+      })
+    ).toBeInTheDocument();
+  });
+
   it("shows Game Over when life is 0 or below", () => {
     renderWithIntl(<LifeTracker {...defaultProps} lifeTotal={0} />);
     expect(screen.getByText(/game over/i)).toBeDefined();
