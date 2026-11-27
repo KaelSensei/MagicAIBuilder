@@ -22,9 +22,12 @@
  * step that throws once the deck exists, it says so in an alert, with the count of copies not
  * added when known and the build's corrections under it, and offers only "Open the deck". A
  * commander the store could not save, and a card the server refused (B2-36), still open the deck
- * in silence; both stay pinned below.
+ * in silence; both stay pinned below. A save left running when the player reopens the wizard ends
+ * without a word: its deck stays stored, but its notice, its hold and its import count never reach
+ * the new build's screen, it opens no deck, and it writes no more card into any deck, the new
+ * build's included (I-02, #1984's QA).
  */
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { MotionGlobalConfig } from "framer-motion";
 import { delay, http, HttpResponse } from "msw";
 import {
@@ -57,6 +60,7 @@ import type {
   ScryfallCollectionResponse,
 } from "@/lib/scryfall/types";
 import type { TestLocale } from "@/test/intl-catalogs";
+import { aDeck } from "@/test/builders/deck";
 import { setupMsw } from "@/test/msw";
 import { renderWithProviders } from "@/test/render";
 import { DeckWizard } from "./DeckWizard";
@@ -566,6 +570,30 @@ describe("DeckWizard flow (characterization)", () => {
     );
     return storedIds;
   }
+  interface HeldRequest {
+    /** Settles once the request reached the server. */
+    readonly asked: Promise<void>;
+    /** Sends the held request's answer. */
+    readonly answer: (response: Response) => void;
+  }
+
+  /** Holds the next request `method` `path` receives until the test answers it. */
+  function holdNext(method: "get" | "post", path: string): HeldRequest {
+    const asked = Promise.withResolvers<void>();
+    const held = Promise.withResolvers<Response>();
+    server.use(
+      http[method](
+        path,
+        () => {
+          asked.resolve();
+          return held.promise;
+        },
+        { once: true }
+      )
+    );
+    return { asked: asked.promise, answer: held.resolve };
+  }
+
   server.events.on("request:start", ({ request }) => {
     sent.push(describeRequest(request));
   });
@@ -1685,6 +1713,380 @@ describe("DeckWizard flow (characterization)", () => {
       // Never saved, so it keeps the Scryfall id the wizard gave it instead of a row id.
       expect(storedCard("Sol Ring")?.id).toBe(recordedCard("Sol Ring").id);
       expect(storedCard("Island")?.id).toBe("row-Island");
+    });
+  });
+
+  // A save the player left behind by reopening the wizard still runs: its deck stays stored, but
+  // what it ends with reaches neither the new build's screen nor `onComplete`, and its import
+  // writes nothing after the reset, into its own deck or any other (I-02, #1984's QA).
+  describe("a save left running by an earlier opening of the wizard", () => {
+    /** The deck the earlier save creates; the reopened wizard's build stores `NEXT_DECK_ID`. */
+    const EARLIER_DECK_ID = DECK_ID;
+    const NEXT_DECK_ID = "deck-ai-2";
+    const BUILDING_HEADING = "AI is building your deck…";
+    /** What the save step logs, at info, when a save ends after the wizard was reset. */
+    const LATE_SAVE_LOG = "Built deck save ended after the wizard was reset";
+
+    /**
+     * Reopens the wizard and builds again, as the player does once they left the earlier save,
+     * with a build that waits for the test.
+     *
+     * @returns the held build request
+     */
+    async function buildAgainInTheReopenedWizard(): Promise<HeldRequest> {
+      await reopenWizard();
+      const nextBuild = holdNext("post", BUILD_URL);
+      await answerOpenWizardUpToCommander(CONTROL_BRACKET_3);
+      fireEvent.click(
+        screen.getByRole("button", { name: "Skip — let the AI choose" })
+      );
+      await screen.findByRole("heading", { name: HEADINGS.plan });
+      generate();
+      await nextBuild.asked;
+      return nextBuild;
+    }
+
+    /** The cards of `deckId` the server stored: the store gave them the server's row id. */
+    function savedCardsOf(deckId: string): readonly DeckCard[] {
+      const cards = useDeckStore.getState().decks[deckId]?.cards ?? [];
+      return cards.filter((card) => card.id.startsWith("row-"));
+    }
+
+    /** Lets the reopened wizard's build finish, and waits for its deck to open. */
+    async function finishTheNextBuild(nextBuild: HeldRequest): Promise<void> {
+      nextBuild.answer(ndjson(buildEvents()));
+      await waitFor(() =>
+        expect(onComplete).toHaveBeenCalledWith(NEXT_DECK_ID)
+      );
+    }
+
+    /** The card rows the app asked the server to add to `deckId`. */
+    function cardRequestsTo(deckId: string): readonly string[] {
+      return sent.filter(
+        (request) => request === `POST /api/decks/${deckId}/cards`
+      );
+    }
+
+    /** Two builds with no card in common, so a card in the wrong deck shows. */
+    const EARLIER_BUILD_CARDS = STREAMED_CARDS.slice(0, 2);
+    const NEXT_BUILD_CARDS = STREAMED_CARDS.slice(2);
+    /** The copies of `EARLIER_BUILD_CARDS`: Sol Ring and 30 Islands. */
+    const EARLIER_BUILD_COPIES = 31;
+
+    it("writes none of the earlier build's cards into the new build's deck when its lookup answers after the new deck was created", async () => {
+      const info = vi.spyOn(logger, "info").mockImplementation(() => undefined);
+      serveDeckCreatesAsTheRoute();
+      server.use(
+        http.post(
+          BUILD_URL,
+          () => ndjson(buildEvents({ cards: EARLIER_BUILD_CARDS })),
+          { once: true }
+        )
+      );
+      const earlierLookup = holdNext("post", `${SCRYFALL}/cards/collection`);
+      await generateDeck();
+      await earlierLookup.asked;
+      const nextBuild = await buildAgainInTheReopenedWizard();
+      nextBuild.answer(ndjson(buildEvents({ cards: NEXT_BUILD_CARDS })));
+      // The new save created and opened its deck; its Scryfall lookups queue behind the held one.
+      await waitFor(() =>
+        expect(useDeckStore.getState().activeDeckId).toBe(NEXT_DECK_ID)
+      );
+
+      earlierLookup.answer(
+        HttpResponse.json(
+          collectionAnswer(EARLIER_BUILD_CARDS.map((card) => card.name))
+        )
+      );
+      await waitFor(() =>
+        expect(onComplete).toHaveBeenCalledWith(NEXT_DECK_ID)
+      );
+
+      expect(savedCardsOf(NEXT_DECK_ID).map((card) => card.name)).toEqual(
+        NEXT_BUILD_CARDS.map((card) => recordedCard(card.name).name)
+      );
+      expect(cardRequestsTo(NEXT_DECK_ID)).toHaveLength(
+        NEXT_BUILD_CARDS.length
+      );
+      // The stopgap: the earlier deck keeps what it had, and gets no card it was still owed.
+      expect(savedCardsOf(EARLIER_DECK_ID)).toEqual([]);
+      expect(info).toHaveBeenCalledWith(LATE_SAVE_LOG, "DeckWizard", {
+        deckId: EARLIER_DECK_ID,
+        cardsAdded: 0,
+        cardsNotAdded: EARLIER_BUILD_COPIES,
+        stoppedBy: "wizardReset",
+      });
+    });
+
+    it("keeps the new build on screen, and opens only its deck, when the earlier save's card lookup fails late", async () => {
+      const storedDeckIds = serveDeckCreatesAsTheRoute();
+      const earlierLookup = holdNext("post", `${SCRYFALL}/cards/collection`);
+      await generateDeck();
+      await earlierLookup.asked;
+      const nextBuild = await buildAgainInTheReopenedWizard();
+
+      earlierLookup.answer(new HttpResponse(null, { status: 503 }));
+      await waitFor(() =>
+        expect(logger.error).toHaveBeenCalledWith(
+          "Batch import error",
+          "DeckWizard",
+          expect.any(Error)
+        )
+      );
+
+      expect(
+        screen.queryByText(deckNotFinishedWithout(STREAMED_COPIES))
+      ).toBeNull();
+      expect(screen.queryByRole("button", { name: OPEN_THE_DECK })).toBeNull();
+      expect(
+        screen.getByRole("heading", { name: BUILDING_HEADING })
+      ).toBeInTheDocument();
+
+      await finishTheNextBuild(nextBuild);
+      expect(onComplete.mock.calls).toEqual([[NEXT_DECK_ID]]);
+      expect(storedDeckIds).toEqual([EARLIER_DECK_ID, NEXT_DECK_ID]);
+      expect(
+        screen.queryByText(deckNotFinishedWithout(STREAMED_COPIES))
+      ).toBeNull();
+    });
+
+    it("does not open the earlier deck in the middle of the new build when the earlier save's card lookup succeeds late", async () => {
+      const info = vi.spyOn(logger, "info").mockImplementation(() => undefined);
+      serveDeckCreatesAsTheRoute();
+      const earlierLookup = holdNext("post", `${SCRYFALL}/cards/collection`);
+      await generateDeck();
+      await earlierLookup.asked;
+      const nextBuild = await buildAgainInTheReopenedWizard();
+
+      earlierLookup.answer(
+        HttpResponse.json(
+          collectionAnswer(STREAMED_CARDS.map((card) => card.name))
+        )
+      );
+      // The earlier save has ended once it logged its end.
+      await waitFor(() =>
+        expect(info).toHaveBeenCalledWith(
+          LATE_SAVE_LOG,
+          "DeckWizard",
+          expect.objectContaining({ deckId: EARLIER_DECK_ID })
+        )
+      );
+
+      expect(onComplete).not.toHaveBeenCalled();
+      expect(
+        screen.getByRole("heading", { name: BUILDING_HEADING })
+      ).toBeInTheDocument();
+
+      await finishTheNextBuild(nextBuild);
+      expect(onComplete.mock.calls).toEqual([[NEXT_DECK_ID]]);
+    });
+
+    it("logs the earlier save's late end at info, with its deck id and the copies it added and did not add", async () => {
+      const info = vi.spyOn(logger, "info").mockImplementation(() => undefined);
+      serveDeckCreatesAsTheRoute();
+      const earlierLookup = holdNext("post", `${SCRYFALL}/cards/collection`);
+      await generateDeck();
+      await earlierLookup.asked;
+      const nextBuild = await buildAgainInTheReopenedWizard();
+
+      earlierLookup.answer(new HttpResponse(null, { status: 503 }));
+
+      // Its one lookup was sent before the reset and failed after it: the import ran to its end.
+      await waitFor(() =>
+        expect(info).toHaveBeenCalledWith(LATE_SAVE_LOG, "DeckWizard", {
+          deckId: EARLIER_DECK_ID,
+          cardsAdded: 0,
+          cardsNotAdded: STREAMED_COPIES,
+          stoppedBy: null,
+        })
+      );
+      expect(info).toHaveBeenCalledOnce();
+
+      await finishTheNextBuild(nextBuild);
+    });
+
+    it("keeps the new build on screen, with no offer to save the earlier deck again, when the earlier create fails late", async () => {
+      const earlierCreate = holdNext("post", "/api/decks");
+      await generateDeck();
+      await earlierCreate.asked;
+      const nextBuild = await buildAgainInTheReopenedWizard();
+
+      earlierCreate.answer(
+        HttpResponse.json({ error: "Database unavailable" }, { status: 500 })
+      );
+      await waitFor(() =>
+        expect(logger.error).toHaveBeenCalledWith(
+          "Deck create error",
+          "DeckWizard",
+          expect.any(Error)
+        )
+      );
+
+      expect(screen.queryByText(DECK_NOT_SAVED)).toBeNull();
+      expect(
+        screen.queryByRole("button", { name: TRY_SAVING_AGAIN })
+      ).toBeNull();
+      expect(
+        screen.getByRole("heading", { name: BUILDING_HEADING })
+      ).toBeInTheDocument();
+
+      // The earlier create stored nothing, so the new build's deck is the first the server stores.
+      nextBuild.answer(ndjson(buildEvents()));
+      await waitForDeckOpened();
+      expect(onComplete).toHaveBeenCalledOnce();
+    });
+
+    it("keeps the earlier deck's import progress off the new build's screen", async () => {
+      const info = vi.spyOn(logger, "info").mockImplementation(() => undefined);
+      serveDeckCreatesAsTheRoute();
+      const earlierCommander = holdNext("get", `${SCRYFALL}/cards/named`);
+      await generateDeck();
+      await earlierCommander.asked;
+      const nextBuild = await buildAgainInTheReopenedWizard();
+
+      // The earlier save goes on to its import, which writes nothing and counts nothing on the new
+      // build's screen: the wizard was reset, so neither the commander nor any card goes into a deck.
+      earlierCommander.answer(HttpResponse.json(TALRAND_NAMED_RECORDED));
+      await waitFor(() =>
+        expect(info).toHaveBeenCalledWith(LATE_SAVE_LOG, "DeckWizard", {
+          deckId: EARLIER_DECK_ID,
+          cardsAdded: 0,
+          cardsNotAdded: STREAMED_COPIES,
+          stoppedBy: "wizardReset",
+        })
+      );
+
+      expect(screen.queryByText("Adding cards to your deck…")).toBeNull();
+      expect(
+        screen.queryByText(`${STREAMED_COPIES} / ${STREAMED_COPIES} cards…`)
+      ).toBeNull();
+      expect(screen.getByText("Generating deck…")).toBeInTheDocument();
+      expect(useDeckStore.getState().decks[EARLIER_DECK_ID]?.commander).toBe(
+        null
+      );
+
+      await finishTheNextBuild(nextBuild);
+    });
+
+    describe("when the earlier create answers late", () => {
+      /** The deck the held earlier create stores; the new build's deck is then `DECK_ID`. */
+      const LATE_DECK_ID = "deck-late";
+
+      /** Answers the held earlier create with a stored deck, `LATE_DECK_ID`. */
+      function storeTheEarlierDeck(earlierCreate: HeldRequest): void {
+        earlierCreate.answer(
+          HttpResponse.json(
+            storedDeckRow(LATE_DECK_ID, { name: "AI Deck — Control" }),
+            { status: 201 }
+          )
+        );
+      }
+
+      it("keeps the new build's deck the open deck when the earlier create answers after that deck opened", async () => {
+        const info = vi
+          .spyOn(logger, "info")
+          .mockImplementation(() => undefined);
+        const earlierCreate = holdNext("post", "/api/decks");
+        await generateDeck();
+        await earlierCreate.asked;
+        const nextBuild = await buildAgainInTheReopenedWizard();
+        nextBuild.answer(ndjson(buildEvents()));
+        await waitForDeckOpened();
+
+        storeTheEarlierDeck(earlierCreate);
+        await waitFor(() =>
+          expect(info).toHaveBeenCalledWith(LATE_SAVE_LOG, "DeckWizard", {
+            deckId: LATE_DECK_ID,
+            cardsAdded: 0,
+            cardsNotAdded: STREAMED_COPIES,
+            stoppedBy: "wizardReset",
+          })
+        );
+
+        expect(useDeckStore.getState().activeDeckId).toBe(DECK_ID);
+        expect(onComplete.mock.calls).toEqual([[DECK_ID]]);
+        expect(
+          sent.filter((request) => request.includes(LATE_DECK_ID))
+        ).toEqual([]);
+      });
+
+      it("fills and opens the new build's deck, and leaves the earlier deck closed and empty, when the earlier create answers while the new deck's cards import", async () => {
+        const info = vi
+          .spyOn(logger, "info")
+          .mockImplementation(() => undefined);
+        const earlierCreate = holdNext("post", "/api/decks");
+        await generateDeck();
+        await earlierCreate.asked;
+        const nextBuild = await buildAgainInTheReopenedWizard();
+        const nextLookup = holdNext("post", `${SCRYFALL}/cards/collection`);
+        nextBuild.answer(ndjson(buildEvents()));
+        await nextLookup.asked;
+
+        storeTheEarlierDeck(earlierCreate);
+        await waitFor(() =>
+          expect(info).toHaveBeenCalledWith(
+            LATE_SAVE_LOG,
+            "DeckWizard",
+            expect.objectContaining({ deckId: LATE_DECK_ID })
+          )
+        );
+        expect(useDeckStore.getState().activeDeckId).toBe(DECK_ID);
+
+        nextLookup.answer(
+          HttpResponse.json(
+            collectionAnswer(STREAMED_CARDS.map((card) => card.name))
+          )
+        );
+        await waitForDeckOpened();
+
+        expect(onComplete.mock.calls).toEqual([[DECK_ID]]);
+        expect(savedCardsOf(DECK_ID).map((card) => card.name)).toEqual(
+          STREAMED_CARDS.map((card) => recordedCard(card.name).name)
+        );
+        expect(storedCard("Island")?.quantity).toBe(30);
+        expect(useDeckStore.getState().decks[LATE_DECK_ID]?.cards).toEqual([]);
+        expect(
+          sent.filter((request) => request.includes(LATE_DECK_ID))
+        ).toEqual([]);
+      });
+    });
+  });
+
+  // The store adds cards to its open deck, so a save writes only while its deck is that deck. When
+  // the player opens another deck during the import, the rest of the build would land there (I-02).
+  describe("a save whose deck stops being the open deck", () => {
+    const OTHER_DECK_ID = "deck-other";
+
+    it("stops the import, writes nothing into the other deck, and says its own deck is unfinished, when another deck opens while the cards import", async () => {
+      useDeckStore.setState((state) => ({
+        decks: {
+          ...state.decks,
+          [OTHER_DECK_ID]: aDeck({ id: OTHER_DECK_ID, name: "Other deck" }),
+        },
+      }));
+      const lookup = holdNext("post", `${SCRYFALL}/cards/collection`);
+      await generateDeck();
+      await lookup.asked;
+
+      await act(() => useDeckStore.getState().setActiveDeck(OTHER_DECK_ID));
+      lookup.answer(
+        HttpResponse.json(
+          collectionAnswer(STREAMED_CARDS.map((card) => card.name))
+        )
+      );
+
+      expect(
+        await screen.findByText(deckNotFinishedWithout(STREAMED_COPIES))
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: OPEN_THE_DECK })
+      ).toBeInTheDocument();
+      expect(onComplete).not.toHaveBeenCalled();
+      expect(useDeckStore.getState().decks[OTHER_DECK_ID]?.cards).toEqual([]);
+      expect(sent.filter((request) => request.includes(OTHER_DECK_ID))).toEqual(
+        []
+      );
+      expect(useDeckStore.getState().activeDeckId).toBe(OTHER_DECK_ID);
     });
   });
 });

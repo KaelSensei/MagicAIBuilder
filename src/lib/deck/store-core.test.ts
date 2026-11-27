@@ -32,6 +32,7 @@ import * as scryfallClient from "@/lib/scryfall/client";
 import type { Deck, DeckCard, CardCategory } from "@/lib/deck/types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import { aDeckCard } from "@/test/builders/card";
+import { aDeck } from "@/test/builders/deck";
 import { DeckApiRefusal, installFakeDeckClient } from "@/test/fake-deck-client";
 import { recordToasts } from "@/test/toast-recorder";
 import { recordedToasts } from "@/test/toast-text";
@@ -611,6 +612,40 @@ describe("useDeckStore — createDeck", () => {
   it("sets isSyncing to false after completion", async () => {
     await useDeckStore.getState().createDeck("Test");
     expect(useDeckStore.getState().isSyncing).toBe(false);
+  });
+
+  // The AI deck wizard opens its deck itself, and only while the save still belongs to the open
+  // wizard: a create that answers late must not take the open deck away from the player (I-02).
+  it("keeps the open deck active when asked not to activate the new deck", async () => {
+    useDeckStore.setState({
+      decks: { "deck-open": aDeck({ id: "deck-open" }) },
+      activeDeckId: "deck-open",
+    });
+
+    const id = await useDeckStore
+      .getState()
+      .createDeck("Wizard Deck", { activate: false });
+
+    expect(id).toBe("deck-1");
+    expect(useDeckStore.getState().decks["deck-1"]).toBeDefined();
+    expect(useDeckStore.getState().activeDeckId).toBe("deck-open");
+  });
+
+  it("returns the guest deck without opening it again when asked not to activate the new deck", async () => {
+    const { setActiveDeck: storeSetActiveDeck } = useDeckStore.getState();
+    onTestFinished(() =>
+      useDeckStore.setState({ setActiveDeck: storeSetActiveDeck })
+    );
+    const setActiveDeck = vi.fn(async (_id: string) => undefined);
+    useDeckStore.setState({ activeDeckId: GUEST_DECK_ID, setActiveDeck });
+
+    const id = await useDeckStore
+      .getState()
+      .createDeck("New Deck", { activate: false });
+
+    expect(id).toBe(GUEST_DECK_ID);
+    expect(deckApi.createDeck).not.toHaveBeenCalled();
+    expect(setActiveDeck).not.toHaveBeenCalled();
   });
 });
 

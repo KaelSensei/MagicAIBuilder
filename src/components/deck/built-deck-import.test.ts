@@ -43,7 +43,10 @@ function collectionAnswer(
   };
 }
 
-/** The store's `addDeckCard`, writing every card but `refused`, whose save throws. */
+/**
+ * An import target whose `addDeckCard` writes every card but `refused`, whose save throws. It may
+ * always write.
+ */
 function deckRefusing(refused: string) {
   const written: string[] = [];
   const addDeckCard = (card: DeckCard): Promise<void> => {
@@ -53,12 +56,20 @@ function deckRefusing(refused: string) {
     written.push(card.name);
     return Promise.resolve();
   };
-  return { written, addDeckCard };
+  return {
+    written,
+    addDeckCard,
+    onProgress: () => undefined,
+    mayWrite: () => true,
+  };
 }
 
 function entry(name: string, quantity = 1): ImportEntry {
   return { name, category: "other", quantity };
 }
+
+/** The names of each collection lookup Scryfall received, in order. */
+let lookups: string[][] = [];
 
 describe("importCardsInBatches", () => {
   setupMsw(
@@ -68,12 +79,14 @@ describe("importCardsInBatches", () => {
         const names = CollectionBody.parse(
           await request.json()
         ).identifiers.map((id) => id.name);
+        lookups.push(names);
         return HttpResponse.json(collectionAnswer(names));
       }
     )
   );
 
   beforeEach(() => {
+    lookups = [];
     vi.spyOn(logger, "error").mockImplementation(() => undefined);
   });
 
@@ -86,11 +99,10 @@ describe("importCardsInBatches", () => {
 
     const report = await importCardsInBatches(
       [entry("Sol Ring"), entry("Talrand's Grand Archive")],
-      deck.addDeckCard,
-      () => undefined
+      deck
     );
 
-    expect(report).toEqual({ copiesNotAdded: 0 });
+    expect(report).toEqual({ copiesAdded: 1, copiesNotAdded: 0 });
     expect(deck.written).toEqual(["Sol Ring"]);
   });
 
@@ -99,12 +111,11 @@ describe("importCardsInBatches", () => {
 
     const report = await importCardsInBatches(
       [entry("Sol Ring"), entry("Island", 30), entry("Counterspell")],
-      deck.addDeckCard,
-      () => undefined
+      deck
     );
 
     // Sol Ring was written; the 30 Islands and Counterspell were not.
-    expect(report).toEqual({ copiesNotAdded: 31 });
+    expect(report).toEqual({ copiesAdded: 1, copiesNotAdded: 31 });
     expect(deck.written).toEqual(["Sol Ring"]);
     expect(logger.error).toHaveBeenCalledWith(
       "Batch import error",
@@ -123,13 +134,40 @@ describe("importCardsInBatches", () => {
         entry("Island", 30),
         entry("Counterspell"),
       ],
-      deck.addDeckCard,
-      () => undefined
+      deck
     );
 
     // Scryfall knows no "Talrand's Grand Archive": it was never a card to add, so only the
     // 30 Islands and Counterspell are missing.
-    expect(report).toEqual({ copiesNotAdded: 31 });
+    expect(report).toEqual({ copiesAdded: 1, copiesNotAdded: 31 });
     expect(deck.written).toEqual(["Sol Ring"]);
+  });
+
+  it("writes nothing more once it may no longer write, counts every copy left, and looks no later batch up", async () => {
+    const deck = deckRefusing("none");
+    // The deck stops being the import's to write once Sol Ring is in it.
+    const target = { ...deck, mayWrite: () => deck.written.length === 0 };
+    const unknownNames = Array.from({ length: 73 }, (_, index) =>
+      entry(`Unknown Card ${index + 1}`)
+    );
+
+    const report = await importCardsInBatches(
+      [
+        // The first batch of 75 names.
+        entry("Sol Ring"),
+        entry("Island", 30),
+        ...unknownNames,
+        // The second batch.
+        entry("Counterspell"),
+        entry("Talrand's Grand Archive", 2),
+      ],
+      target
+    );
+
+    // The first batch leaves its 30 Islands; Scryfall answered, so its unknown names are not
+    // counted. The second batch is never looked up, so all 3 of its copies are left.
+    expect(report).toEqual({ copiesAdded: 1, copiesNotAdded: 33 });
+    expect(deck.written).toEqual(["Sol Ring"]);
+    expect(lookups).toHaveLength(1);
   });
 });
