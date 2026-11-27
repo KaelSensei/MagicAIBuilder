@@ -220,6 +220,7 @@ export function PublicDeckView({
           title: t("feedback.title"),
           ownerHint: t("feedback.ownerHint"),
           enable: t("feedback.enable"),
+          questionLabel: t("feedback.questionLabel"),
           placeholder: t("feedback.placeholder"),
           save: t("feedback.save"),
           saving: t("feedback.saving"),
