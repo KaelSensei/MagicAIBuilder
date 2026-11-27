@@ -18,6 +18,8 @@ interface FocusedFeedbackLabels {
   readonly title: string;
   readonly ownerHint: string;
   readonly enable: string;
+  /** The question field's accessible name; the placeholder is only a prompt. */
+  readonly questionLabel: string;
   readonly placeholder: string;
   readonly save: string;
   readonly saving: string;
@@ -82,6 +84,9 @@ export function FocusedFeedbackPanel({
               <textarea
                 value={question}
                 onChange={(event) => setQuestion(event.target.value)}
+                // The heading names the request, not the field, and a
+                // placeholder is no name (WCAG 2.2 SC 1.3.1 and 4.1.2).
+                aria-label={labels.questionLabel}
                 placeholder={labels.placeholder}
                 maxLength={240}
                 rows={2}
