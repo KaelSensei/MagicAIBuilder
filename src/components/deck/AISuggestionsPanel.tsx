@@ -23,6 +23,7 @@ import type { Archetype } from "@/lib/ai/archetypes";
 import type { DeckBrief } from "@/lib/ai/deck-brief";
 import { AIDeckBriefFields } from "./AIDeckBriefFields";
 import { SuggestionEvidenceDetails } from "./SuggestionEvidenceDetails";
+import { ModelReasoning } from "./ModelReasoning";
 import { RecommendationProvenance } from "@/modules/meta-insights/ui/RecommendationProvenance";
 import { SuggestionAlternatives } from "./SuggestionAlternatives";
 import { ExternalRecommendationFreshness } from "@/modules/meta-insights/ui/ExternalRecommendationFreshness";
@@ -473,9 +474,10 @@ export function AISuggestionsPanel({
                                 </span>
                               </div>
                               <RecommendationProvenance kind="ai" />
-                              <p className="text-[11px] text-[var(--text-secondary)] leading-tight">
-                                {s.reason}
-                              </p>
+                              <ModelReasoning
+                                text={s.reason}
+                                className="text-[11px] text-[var(--text-secondary)] leading-tight"
+                              />
                               {s.evidence && (
                                 <SuggestionEvidenceDetails
                                   evidence={s.evidence}
@@ -614,9 +616,10 @@ export function AISuggestionsPanel({
                                 {r.name}
                               </span>
                             </div>
-                            <p className="text-[11px] text-[var(--text-secondary)] leading-tight">
-                              {r.reason}
-                            </p>
+                            <ModelReasoning
+                              text={r.reason}
+                              className="text-[11px] text-[var(--text-secondary)] leading-tight"
+                            />
                           </div>
                           <button
                             type="button"
