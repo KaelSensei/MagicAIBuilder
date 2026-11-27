@@ -6,6 +6,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { installFakeDeckClient } from "@/test/fake-deck-client";
 import { recordToasts } from "@/test/toast-recorder";
+import { recordedToasts } from "@/test/toast-text";
 import { createEmptyDeck } from "./store-factories";
 import { makeDeckCard } from "./store-card-faces";
 import type { PairingCard } from "./partner-abilities";
@@ -112,10 +113,10 @@ describe("setPartner — refuses a second commander CR 702.124 forbids", () => {
       expect(activeDeck().partner).toBeNull();
       expect(activeDeck().pairingType).toBe(pairing);
       expect(deckApi.changeCommandZone).not.toHaveBeenCalled();
-      expect(toastAdd).toHaveBeenCalledWith(
+      expect(recordedToasts(toastAdd)).toContainEqual([
         "warning",
-        `${partner.name} cannot share the command zone with ${commander.name}.`
-      );
+        `${partner.name} cannot share the command zone with ${commander.name}.`,
+      ]);
     }
   );
 });

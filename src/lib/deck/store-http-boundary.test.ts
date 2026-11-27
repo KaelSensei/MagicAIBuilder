@@ -20,7 +20,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { http, HttpResponse, type HttpResponseResolver } from "msw";
 import type { ApiDeck } from "@/lib/db/deck-api";
-import { useToastStore, type ToastMessage } from "@/hooks/useToast";
+import { useToastStore } from "@/hooks/useToast";
 import { useDeckStore } from "@/lib/deck/store";
 import { createEmptyDeck } from "@/lib/deck/store-factories";
 import {
@@ -31,6 +31,7 @@ import {
 import type { Deck, DeckCard } from "@/lib/deck/types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import { setupMsw } from "@/test/msw";
+import { toastText } from "@/test/toast-text";
 
 const DECK_ID = "deck-1";
 const COPY_ID = "deck-2";
@@ -241,10 +242,11 @@ function card(deckId: string, cardId: string): DeckCard | undefined {
     .decks[deckId]?.cards.find((row) => row.id === cardId);
 }
 
-function toasts(): { readonly type: string; readonly message: ToastMessage }[] {
+/** The toasts on screen, each with the English words the player reads. */
+function toasts(): { readonly type: string; readonly message: string }[] {
   return useToastStore
     .getState()
-    .toasts.map(({ type, message }) => ({ type, message }));
+    .toasts.map(({ type, message }) => ({ type, message: toastText(message) }));
 }
 
 describe("the raw-fetch deck store actions", () => {

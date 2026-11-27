@@ -43,6 +43,7 @@ import { deckApiHandlers } from "@/test/fake-deck-client";
 import { setupMsw } from "@/test/msw";
 import { renderWithProviders } from "@/test/render";
 import { recordToasts } from "@/test/toast-recorder";
+import { recordedToasts } from "@/test/toast-text";
 
 const { router, searchParams } = vi.hoisted(() => ({
   router: {
@@ -814,10 +815,10 @@ describe("adding the zoomed card to the open deck", () => {
     );
 
     await waitFor(() =>
-      expect(toasts).toHaveBeenCalledWith(
+      expect(recordedToasts(toasts)).toContainEqual([
         "error",
-        "Could not add card. Please retry."
-      )
+        "Could not add card. Please retry.",
+      ])
     );
     expect(
       within(zoom).getByRole("button", { name: `Add to ${DECK_NAME}` })

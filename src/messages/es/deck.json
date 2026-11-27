@@ -1081,10 +1081,37 @@
     "targetBracketFailed": "Could not save target bracket. Please retry.",
     "manualBracketFailed": "Could not save manual bracket. Please retry.",
     "budgetFailed": "Could not save deck budget. Please retry.",
-    "cardRemovalFailed": "Could not remove card. Please retry."
+    "cardRemovalFailed": "Could not remove card. Please retry.",
+    "commanderFailed": "Could not save commander — try again",
+    "partnerFailed": "Could not save partner — try again",
+    "companionFailed": "Could not save companion — try again",
+    "companionRemovalFailed": "Could not remove companion — try again",
+    "cardAdditionFailed": "Could not add card. Please retry.",
+    "undoAdditionFailed": "Could not undo card addition. Please retry.",
+    "undoRemovalFailed": "Could not undo card removal. Please retry.",
+    "cardCategoryFailed": "Could not save card category. Please retry.",
+    "cardQuantityFailed": "Could not save card quantity — previous quantity restored.",
+    "cardPrintingFailed": "Could not save card printing — try again",
+    "cardNotesFailed": "Could not save card notes. Try again.",
+    "cardMoveFailed": "Could not move card. Try again.",
+    "saved": "✓ Deck saved"
   },
   "undo": {
-    "openOriginalDeck": "Open the original deck before retrying undo."
+    "openOriginalDeck": "Open the original deck before retrying undo.",
+    "applied": "↩ Undo applied",
+    "ambiguousPrinting": "Could not identify the card to undo: multiple printings match."
+  },
+  "gameChangerAdded": {
+    "first": "⚡ {card} is a Game Changer — your deck is now Bracket 3 minimum.",
+    "withinBracket3": "⚡ {card} is a Game Changer ({total}/{limit}). Bracket 3 minimum applies.",
+    "beyondBracket3": "⚡ {card} is a Game Changer — you now have {total, plural, one {# Game Changer} other {# Game Changers}}, pushing the deck to Bracket 4.",
+    "commander": "⚡ {card} is a Game Changer — your deck is automatically Bracket 3 minimum."
+  },
+  "commandZoneRefusal": {
+    "companionNeedsCommander": "Choose a commander before setting a companion.",
+    "notCompanion": "That card does not have Companion.",
+    "bannedCompanion": "Lutri cannot be your companion in Commander.",
+    "unpairable": "{partner} cannot share the command zone with {commander}."
   },
   "format": {
     "name": {

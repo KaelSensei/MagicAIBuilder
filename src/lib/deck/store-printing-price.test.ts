@@ -20,6 +20,7 @@ import {
   installFakeDeckClient,
 } from "@/test/fake-deck-client";
 import { recordToasts } from "@/test/toast-recorder";
+import { recordedToasts } from "@/test/toast-text";
 
 import { useDeckStore } from "./store";
 
@@ -103,9 +104,9 @@ describe("deck store — a printing swap carries the new printing's price (I-57 
 
     expect(heldRow()).toMatchObject({ scryfallId: "sol-ring-c21", price: 2.5 });
     expect(savedRow()).toMatchObject({ scryfallId: "sol-ring-c21", price: 2.5 });
-    expect(toasts).toHaveBeenCalledWith(
+    expect(recordedToasts(toasts)).toContainEqual([
       "error",
-      "Could not save card printing — try again"
-    );
+      "Could not save card printing — try again",
+    ]);
   });
 });

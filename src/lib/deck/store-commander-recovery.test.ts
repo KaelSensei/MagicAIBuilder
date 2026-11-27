@@ -8,6 +8,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import { installFakeDeckClient } from "@/test/fake-deck-client";
 import { recordToasts } from "@/test/toast-recorder";
+import { recordedToasts } from "@/test/toast-text";
 import { createEmptyDeck } from "./store-factories";
 import type { Deck, DeckCard } from "./types";
 import { useDeckStore } from "./store";
@@ -139,10 +140,10 @@ describe("commander save recovery", () => {
       partner: TYMNA,
       pairingType: "partner",
     });
-    expect(mocks.addToast).toHaveBeenCalledWith(
+    expect(recordedToasts(mocks.addToast)).toContainEqual([
       "error",
-      expect.stringContaining("commander")
-    );
+      expect.stringContaining("commander"),
+    ]);
     expect(mocks.changeCommandZone).toHaveBeenCalledTimes(1);
   });
 
@@ -161,10 +162,10 @@ describe("commander save recovery", () => {
     await Promise.all([failedAttempt, newerAttempt]);
 
     expect(commandZone().commander?.scryfallId).toBe("kenrith");
-    expect(mocks.addToast).not.toHaveBeenCalledWith(
+    expect(recordedToasts(mocks.addToast)).not.toContainEqual([
       "error",
-      expect.stringContaining("commander")
-    );
+      expect.stringContaining("commander"),
+    ]);
   });
 
   it("keeps a partner chosen while the failed commander save was pending", async () => {
@@ -178,10 +179,10 @@ describe("commander save recovery", () => {
 
     expect(commandZone().commander).toEqual(THRASIOS);
     expect(commandZone().partner?.scryfallId).toBe("ishai");
-    expect(mocks.addToast).toHaveBeenCalledWith(
+    expect(recordedToasts(mocks.addToast)).toContainEqual([
       "error",
-      expect.stringContaining("commander")
-    );
+      expect.stringContaining("commander"),
+    ]);
   });
 
   it("restores the previous commander when clearing it fails", async () => {
@@ -194,9 +195,9 @@ describe("commander save recovery", () => {
       partner: TYMNA,
       pairingType: "partner",
     });
-    expect(mocks.addToast).toHaveBeenCalledWith(
+    expect(recordedToasts(mocks.addToast)).toContainEqual([
       "error",
-      expect.stringContaining("commander")
-    );
+      expect.stringContaining("commander"),
+    ]);
   });
 });

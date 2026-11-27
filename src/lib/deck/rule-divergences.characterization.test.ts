@@ -14,8 +14,8 @@
  *
  * Already unified since the audit, so not pinned here:
  * - Game Changer limits per bracket: the badge and the bracket floor read
- *   `BRACKET_DEFINITIONS` (#1343); the add-card toast still writes "3" by
- *   hand, which matches Bracket 3 today.
+ *   `BRACKET_DEFINITIONS` (#1343), and so does the add-card toast's "/3"
+ *   (`deck/notice-toasts.ts`, I-04).
  * - The basic-land test: every copy-limit check calls `isBasicLand` (#1349).
  * - The commander pairing rule: the store, bulk edit and the AI path call
  *   `pairCommanders` / `canPairCommanders` (#1352).
@@ -30,7 +30,7 @@ import { renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useDeckPrice } from "@/hooks/useDeckPrice";
 import { useGameChangers } from "@/hooks/useGameChangers";
-import { useToastStore, type ToastMessage } from "@/hooks/useToast";
+import { useToastStore } from "@/hooks/useToast";
 import { previewCardPackage } from "@/lib/community/card-package-preview";
 import {
   analyzeOpeningHandLands,
@@ -38,6 +38,7 @@ import {
 } from "@/lib/playtest/opening-hand-evidence";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import { aTestQueryClient, renderHookWithProviders } from "@/test/render";
+import { toastText } from "@/test/toast-text";
 import {
   getColorIdentityViolations,
   isCardOutsideColorIdentity,
@@ -92,11 +93,12 @@ function storedDeck(deck: Deck): Deck {
   return stored;
 }
 
-function warningToasts(): readonly ToastMessage[] {
+/** The warnings on screen, as the English words the player reads. */
+function warningToasts(): readonly string[] {
   return useToastStore
     .getState()
     .toasts.filter((toast) => toast.type === "warning")
-    .map((toast) => toast.message);
+    .map((toast) => toastText(toast.message));
 }
 
 beforeEach(() => {

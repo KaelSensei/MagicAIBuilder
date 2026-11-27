@@ -34,6 +34,7 @@ import type { ScryfallCard } from "@/lib/scryfall/types";
 import { aDeckCard } from "@/test/builders/card";
 import { DeckApiRefusal, installFakeDeckClient } from "@/test/fake-deck-client";
 import { recordToasts } from "@/test/toast-recorder";
+import { recordedToasts } from "@/test/toast-text";
 
 // Import the store AFTER mocks are set up
 const { useDeckStore } = await import("@/lib/deck/store");
@@ -1054,7 +1055,7 @@ describe("useDeckStore — addCard", () => {
     await useDeckStore.getState().addCard(card);
 
     expect(useDeckStore.getState().decks["deck-1"].cards).toHaveLength(0);
-    expect(toastAdd).toHaveBeenCalledWith("error", "Could not add card. Please retry.");
+    expect(recordedToasts(toastAdd)).toContainEqual(["error", "Could not add card. Please retry."]);
     await useDeckStore.getState().addCard(card);
     expect(useDeckStore.getState().decks["deck-1"].cards).toHaveLength(1);
   });

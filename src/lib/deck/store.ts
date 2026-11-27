@@ -40,6 +40,12 @@ import {
   DECK_FAILURE_TOASTS,
   openFailureToast,
 } from "@/lib/deck/failure-toasts";
+import {
+  DECK_NOTICE_TOASTS,
+  commanderGameChangerToast,
+  gameChangerAddedToast,
+  unpairableToast,
+} from "@/lib/deck/notice-toasts";
 import { useToastStore, type ToastMessage } from "@/hooks/useToast";
 import { logger } from "@/lib/logger";
 import {
@@ -138,26 +144,6 @@ function restoreRemovedCard(cards: DeckCard[], removedCard: DeckCard, followingC
   return [...cards.slice(0, restoreIndex), removedCard, ...cards.slice(restoreIndex)];
 }
 
-function notifyGameChangerAdded(cardName: string, newTotal: number): void {
-  const toast = useToastStore.getState();
-  if (newTotal === 1) {
-    toast.add(
-      "warning",
-      `⚡ ${cardName} is a Game Changer — your deck is now Bracket 3 minimum.`
-    );
-  } else if (newTotal <= 3) {
-    toast.add(
-      "warning",
-      `⚡ ${cardName} is a Game Changer (${newTotal}/3). Bracket 3 minimum applies.`
-    );
-  } else {
-    toast.add(
-      "warning",
-      `⚡ ${cardName} is a Game Changer — you now have ${newTotal} Game Changers, pushing the deck to Bracket 4.`
-    );
-  }
-}
-
 /**
  * Warns, before the save, when the card being added to `deck` is a Game Changer, with the
  * deck's Game Changer total once it joins: the deck list's and the commander's.
@@ -167,7 +153,9 @@ function warnIfGameChangerAdded(deck: Deck, added: DeckCard): void {
   const held =
     deck.cards.filter((card) => card.isGameChanger).length +
     (deck.commander?.isGameChanger ? 1 : 0);
-  notifyGameChangerAdded(added.name, held + 1);
+  useToastStore
+    .getState()
+    .add("warning", gameChangerAddedToast(added.name, held + 1));
 }
 
 function uniqueDeckCards(deck: Pick<Deck, "cards" | "maybeboard">): DeckCard[] {
@@ -536,7 +524,7 @@ async function recoverCommanderSave(
   error: unknown
 ): Promise<void> {
   if (!restoreCommanderAfterFailedSave(set, get(), save)) return;
-  await settleFailedWrite(save.activeDeckId, error, "Could not save commander — try again");
+  await settleFailedWrite(save.activeDeckId, error, DECK_FAILURE_TOASTS.commander);
 }
 
 /**
@@ -1154,10 +1142,7 @@ async function seatCommander(
   if (commander.isGameChanger) {
     useToastStore
       .getState()
-      .add(
-        "warning",
-        `⚡ ${commander.name} is a Game Changer — your deck is automatically Bracket 3 minimum.`
-      );
+      .add("warning", commanderGameChangerToast(commander.name));
   }
 
   // Optimistic: the promoted card leaves the list as the new zone appears.
@@ -1338,10 +1323,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         set((state) => ({ undoStack: [...state.undoStack, last] }));
         useToastStore
           .getState()
-          .add(
-            "error",
-            "Could not identify the card to undo: multiple printings match."
-          );
+          .add("error", DECK_NOTICE_TOASTS.undoAmbiguousPrinting);
         return;
       }
       const card = exactCard ?? nameMatches[0];
@@ -1375,7 +1357,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
             undoStack: [...state.undoStack, last],
           };
         });
-        await settleFailedWrite(activeDeckId, err, "Could not undo card addition. Please retry.");
+        await settleFailedWrite(activeDeckId, err, DECK_FAILURE_TOASTS.undoAddition);
         return;
       }
       return true;
@@ -1433,7 +1415,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
             undoStack: [...state.undoStack, last],
           };
         });
-        await settleFailedWrite(activeDeckId, err, "Could not undo card removal. Please retry.");
+        await settleFailedWrite(activeDeckId, err, DECK_FAILURE_TOASTS.undoRemoval);
         return;
       }
       return true;
@@ -1478,7 +1460,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     }
     if (!applied) return;
     if (!get().decks[last.deckId]) return;
-    useToastStore.getState().add("info", "↩ Undo applied");
+    useToastStore.getState().add("info", DECK_NOTICE_TOASTS.undoApplied);
   },
 
   forceSave: async () => {
@@ -1492,7 +1474,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       set((state) => ({
         decks: { ...state.decks, [activeDeckId]: fullDeck },
       }));
-      useToastStore.getState().add("success", "✓ Deck saved");
+      useToastStore.getState().add("success", DECK_NOTICE_TOASTS.saved);
     } catch (err) {
       logger.error("Unexpected error", "forceSave", err);
       if (!get().decks[activeDeckId]) return;
@@ -1841,10 +1823,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     if (commander && deckCard && !pairing) {
       useToastStore
         .getState()
-        .add(
-          "warning",
-          `${deckCard.name} cannot share the command zone with ${commander.name}.`
-        );
+        .add("warning", unpairableToast(deckCard.name, commander.name));
       return;
     }
     // Without a commander yet, the partner's own pairing opens the slot.
@@ -1878,7 +1857,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         previousPairingType,
       });
       if (restored) {
-        await settleFailedWrite(activeDeckId, err, "Could not save partner — try again");
+        await settleFailedWrite(activeDeckId, err, DECK_FAILURE_TOASTS.partner);
       }
     } finally {
       set({ isSyncing: hasPendingSaves() });
@@ -1911,31 +1890,39 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         }));
       } catch (err) {
         logger.error("Unexpected error", "setCompanion", err);
-        await settleFailedWrite(activeDeckId, err, "Could not remove companion — try again");
+        await settleFailedWrite(activeDeckId, err, DECK_FAILURE_TOASTS.companionRemoval);
       } finally {
         set({ isSyncing: hasPendingSaves() });
       }
       return;
     }
 
+    // CR 702.139b (MagicCompRules-20260807.txt:5024): in Commander, the
+    // starting deck a companion's condition reads includes the commander, so
+    // the companion waits for one.
     if (!deck.commander) {
       useToastStore
         .getState()
-        .add("warning", "Choose a commander before setting a companion.");
+        .add("warning", DECK_NOTICE_TOASTS.companionNeedsCommander);
       return;
     }
 
+    // CR 702.139a (MagicCompRules-20260807.txt:5022): only a card with the
+    // companion ability can be revealed as one.
     if (!isScryfallCompanionCard(card)) {
-      useToastStore
-        .getState()
-        .add("warning", "That card does not have Companion.");
+      useToastStore.getState().add("warning", DECK_NOTICE_TOASTS.notCompanion);
       return;
     }
 
+    // Lutri's condition ("Each nonland card in your starting deck has a
+    // different name") always holds in a singleton deck (CR 903.5b,
+    // MagicCompRules-20260807.txt:6958), so the Commander banned list bans it
+    // as a companion only (https://magic.wizards.com/en/banned-restricted-list,
+    // checked 2026-11-10 in docs/references/banlists.md). No CR rule bans it.
     if (isBannedCompanionInCommander(card)) {
       useToastStore
         .getState()
-        .add("warning", "Lutri cannot be your companion in Commander.");
+        .add("warning", DECK_NOTICE_TOASTS.bannedCompanion);
       return;
     }
 
@@ -1965,7 +1952,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       }));
     } catch (err) {
       logger.error("Unexpected error", "setCompanion", err);
-      await settleFailedWrite(activeDeckId, err, "Could not save companion — try again");
+      await settleFailedWrite(activeDeckId, err, DECK_FAILURE_TOASTS.companion);
     } finally {
       set({ isSyncing: hasPendingSaves() });
     }
@@ -2068,7 +2055,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
             ),
           },
         }));
-        await settleFailedWrite(activeDeckId, err, "Could not add card. Please retry.");
+        await settleFailedWrite(activeDeckId, err, DECK_FAILURE_TOASTS.cardAddition);
       }
     } finally {
       pendingCardAdditionsAndRemovals -= 1;
@@ -2269,7 +2256,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
               },
             };
           });
-          await settleFailedWrite(activeDeckId, err, "Could not save card category. Please retry.");
+          await settleFailedWrite(activeDeckId, err, DECK_FAILURE_TOASTS.cardCategory);
         }
       } finally {
         if (pending.tail === write) {
@@ -2343,11 +2330,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
               },
             };
           });
-          await settleFailedWrite(
-            activeDeckId,
-            err,
-            "Could not save card quantity — previous quantity restored."
-          );
+          await settleFailedWrite(activeDeckId, err, DECK_FAILURE_TOASTS.cardQuantity);
         }
       } finally {
         const nextWrite = pendingQuantityWrites.get(writeKey);
@@ -2423,7 +2406,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
           },
         };
       });
-      await settleFailedWrite(activeDeckId, err, "Could not save card printing — try again");
+      await settleFailedWrite(activeDeckId, err, DECK_FAILURE_TOASTS.cardPrinting);
     } finally {
       set({ isSyncing: hasPendingSaves() });
     }
@@ -2475,7 +2458,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
               },
             };
           });
-          await settleFailedWrite(activeDeckId, err, "Could not save card notes. Try again.");
+          await settleFailedWrite(activeDeckId, err, DECK_FAILURE_TOASTS.cardNotes);
         }
       } finally {
         if (pending.tail === write) {
@@ -2574,7 +2557,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
               },
             };
           });
-          await settleFailedWrite(activeDeckId, err, "Could not move card. Try again.");
+          await settleFailedWrite(activeDeckId, err, DECK_FAILURE_TOASTS.cardMove);
         }
       } finally {
         if (pending.tail === write) {
