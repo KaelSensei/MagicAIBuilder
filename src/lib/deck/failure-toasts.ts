@@ -20,7 +20,19 @@ export type DeckFailureToastKey =
   | "deck.sync.targetBracketFailed"
   | "deck.sync.manualBracketFailed"
   | "deck.sync.budgetFailed"
-  | "deck.sync.cardRemovalFailed";
+  | "deck.sync.cardRemovalFailed"
+  | "deck.sync.commanderFailed"
+  | "deck.sync.partnerFailed"
+  | "deck.sync.companionFailed"
+  | "deck.sync.companionRemovalFailed"
+  | "deck.sync.cardAdditionFailed"
+  | "deck.sync.undoAdditionFailed"
+  | "deck.sync.undoRemovalFailed"
+  | "deck.sync.cardCategoryFailed"
+  | "deck.sync.cardQuantityFailed"
+  | "deck.sync.cardPrintingFailed"
+  | "deck.sync.cardNotesFailed"
+  | "deck.sync.cardMoveFailed";
 
 /** A failure toast, raised by its catalogue key. */
 export interface DeckFailureToast {
@@ -38,6 +50,18 @@ export const DECK_FAILURE_TOASTS = {
   manualBracket: { key: "deck.sync.manualBracketFailed" },
   budget: { key: "deck.sync.budgetFailed" },
   cardRemoval: { key: "deck.sync.cardRemovalFailed" },
+  commander: { key: "deck.sync.commanderFailed" },
+  partner: { key: "deck.sync.partnerFailed" },
+  companion: { key: "deck.sync.companionFailed" },
+  companionRemoval: { key: "deck.sync.companionRemovalFailed" },
+  cardAddition: { key: "deck.sync.cardAdditionFailed" },
+  undoAddition: { key: "deck.sync.undoAdditionFailed" },
+  undoRemoval: { key: "deck.sync.undoRemovalFailed" },
+  cardCategory: { key: "deck.sync.cardCategoryFailed" },
+  cardQuantity: { key: "deck.sync.cardQuantityFailed" },
+  cardPrinting: { key: "deck.sync.cardPrintingFailed" },
+  cardNotes: { key: "deck.sync.cardNotesFailed" },
+  cardMove: { key: "deck.sync.cardMoveFailed" },
 } satisfies Readonly<Record<string, DeckFailureToast>>;
 
 /**

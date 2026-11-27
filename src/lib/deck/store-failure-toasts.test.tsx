@@ -17,29 +17,119 @@ import { ToastContainer } from "@/components/ui/Toast";
 import { useToastStore } from "@/hooks/useToast";
 import { aDeck } from "@/test/builders/deck";
 import { aDeckCard } from "@/test/builders/card";
+import { aScryfallCard } from "@/test/builders/scryfall";
 import { DeckApiRefusal, installFakeDeckClient } from "@/test/fake-deck-client";
 import { renderWithIntl, type TestLocale } from "@/test/render-with-intl";
 
-import { useDeckStore } from "./store";
+import { useDeckStore, type DeckAction } from "./store";
+import type { Deck } from "./types";
 
 const api = installFakeDeckClient();
 
 const DECK_ID = "deck-1";
 const CARD_ID = "row-1";
 const NETWORK_DOWN = new Error("network down");
+const SERVER_ERROR = new DeckApiRefusal(500, "Internal server error");
+
+/** The commander a player picks: Kenrith fits any colour identity (CR 903.5c). */
+const KENRITH = aScryfallCard({
+  id: "00000000-0000-4000-8000-00000000c0de",
+  name: "Kenrith, the Returned King",
+  type_line: "Legendary Creature — Human Noble",
+  color_identity: ["W", "U", "B", "R", "G"],
+});
+
+const SOL_RING = aDeckCard({
+  id: CARD_ID,
+  name: "Sol Ring",
+  typeLine: "Artifact",
+});
+
+/** Basic lands, so the player may add one more (CR 903.5b). */
+const ISLANDS = aDeckCard({
+  id: "row-islands",
+  name: "Island",
+  typeLine: "Basic Land — Island",
+  quantity: 10,
+});
+
+const KENRITH_ROW = aDeckCard({
+  id: "row-kenrith",
+  name: KENRITH.name,
+  typeLine: KENRITH.type_line,
+  colorIdentity: ["W", "U", "B", "R", "G"],
+  category: "commander",
+});
+
+const LURRUS_ROW = aDeckCard({
+  id: "row-lurrus",
+  name: "Lurrus of the Dream-Den",
+  typeLine: "Legendary Creature — Cat Nightmare",
+  colorIdentity: ["W", "B"],
+  category: "companion",
+});
+
+const TYMNA = aScryfallCard({
+  id: "00000000-0000-4000-8000-0000000071a1",
+  name: "Tymna the Weaver",
+  type_line: "Legendary Creature — Human Cleric",
+  oracle_text:
+    "Lifelink\nPartner (You can have two commanders if both have partner.)",
+  keywords: ["Lifelink", "Partner"],
+  color_identity: ["W", "B"],
+});
+
+/** A companion (CR 702.139a) that fits Kenrith's colour identity. */
+const JEGANTHA = aScryfallCard({
+  id: "00000000-0000-4000-8000-00000000e1c0",
+  name: "Jegantha, the Wellspring",
+  type_line: "Legendary Creature — Elemental Elk",
+  oracle_text:
+    "Companion — No card in your starting deck has more than one of the same mana symbol in its mana cost.",
+  keywords: ["Companion"],
+  color_identity: ["R"],
+});
+
+const ARCANE_SIGNET = aScryfallCard({
+  id: "00000000-0000-4000-8000-000000005161",
+  name: "Arcane Signet",
+  type_line: "Artifact",
+});
+
+const ARCANE_SIGNET_ROW = aDeckCard({
+  id: "row-signet",
+  name: ARCANE_SIGNET.name,
+  typeLine: ARCANE_SIGNET.type_line,
+});
+
+/** Another printing of the Sol Ring the deck holds. */
+const SOL_RING_PRINTING = aScryfallCard({
+  id: "00000000-0000-4000-8000-0000000050c2",
+  name: "Sol Ring",
+  type_line: "Artifact",
+  set: "c21",
+  set_name: "Commander 2021",
+});
 
 /** The deck store's actions. */
 function store() {
   return useDeckStore.getState();
 }
 
-/** Holds one saved deck with one card, open in the builder. */
-function holdOpenDeck(): void {
+/** Holds one saved deck with Sol Ring and Islands, open in the builder. */
+function holdOpenDeck(commandZone: Partial<Deck> = {}): void {
   const deck = aDeck({
     id: DECK_ID,
-    cards: [aDeckCard({ id: CARD_ID, name: "Sol Ring" })],
+    cards: [SOL_RING, ISLANDS],
+    ...commandZone,
   });
   useDeckStore.setState({ decks: { [DECK_ID]: deck }, activeDeckId: DECK_ID });
+}
+
+/** Undoes `change`, the last change made to the open deck. */
+function undoChange(change: DeckAction): Promise<void> {
+  useDeckStore.setState({ undoStack: [change] });
+  return store().undo();
 }
 
 /** Opens the deck by its id, as a bookmark does, before the store holds it. */
@@ -156,6 +246,102 @@ const FAILED_REQUESTS: readonly FailedDeckRequest[] = [
     run: () => store().bulkRemoveCards([CARD_ID]),
     en: "Could not remove card. Please retry.",
     fr: "Impossible de retirer la carte. Réessayez.",
+  },
+  {
+    request: "the commander",
+    fail: () => api.changeCommandZone.mockRejectedValueOnce(SERVER_ERROR),
+    run: () => store().setCommander(KENRITH),
+    en: "Could not save commander — try again",
+    fr: "Impossible d’enregistrer le commandant. Réessayez.",
+  },
+  {
+    request: "the partner",
+    fail: () => api.changeCommandZone.mockRejectedValueOnce(SERVER_ERROR),
+    run: () => store().setPartner(TYMNA),
+    en: "Could not save partner — try again",
+    fr: "Impossible d’enregistrer le partenaire. Réessayez.",
+  },
+  {
+    request: "the companion",
+    fail: () => api.changeCommandZone.mockRejectedValueOnce(SERVER_ERROR),
+    run: () => {
+      holdOpenDeck({ commander: KENRITH_ROW });
+      return store().setCompanion(JEGANTHA);
+    },
+    en: "Could not save companion — try again",
+    fr: "Impossible d’enregistrer le compagnon. Réessayez.",
+  },
+  {
+    request: "the companion's removal",
+    fail: () => api.changeCommandZone.mockRejectedValueOnce(SERVER_ERROR),
+    run: () => {
+      holdOpenDeck({ commander: KENRITH_ROW, companion: LURRUS_ROW });
+      return store().setCompanion(null);
+    },
+    en: "Could not remove companion — try again",
+    fr: "Impossible de retirer le compagnon. Réessayez.",
+  },
+  {
+    request: "a card addition",
+    fail: () => api.addCard.mockRejectedValueOnce(SERVER_ERROR),
+    run: () => store().addCard(ARCANE_SIGNET),
+    en: "Could not add card. Please retry.",
+    fr: "Impossible d’ajouter la carte. Réessayez.",
+  },
+  {
+    request: "the undo of a card addition",
+    fail: () => api.removeCard.mockRejectedValueOnce(SERVER_ERROR),
+    run: () =>
+      undoChange({ type: "ADD_CARD", deckId: DECK_ID, card: SOL_RING }),
+    en: "Could not undo card addition. Please retry.",
+    fr: "Impossible d’annuler l’ajout de la carte. Réessayez.",
+  },
+  {
+    request: "the undo of a card removal",
+    fail: () => api.addCard.mockRejectedValueOnce(SERVER_ERROR),
+    run: () =>
+      undoChange({
+        type: "REMOVE_CARD",
+        deckId: DECK_ID,
+        card: ARCANE_SIGNET_ROW,
+      }),
+    en: "Could not undo card removal. Please retry.",
+    fr: "Impossible d’annuler le retrait de la carte. Réessayez.",
+  },
+  {
+    request: "a card's category",
+    fail: () => api.updateCardCategory.mockRejectedValueOnce(SERVER_ERROR),
+    run: () => store().updateCardCategory(CARD_ID, "ramp"),
+    en: "Could not save card category. Please retry.",
+    fr: "Impossible d’enregistrer la catégorie de la carte. Réessayez.",
+  },
+  {
+    request: "a card's quantity",
+    fail: () => api.updateCardQuantity.mockRejectedValueOnce(SERVER_ERROR),
+    run: () => store().updateCardQuantity(ISLANDS.id, 1),
+    en: "Could not save card quantity — previous quantity restored.",
+    fr: "Impossible d’enregistrer la quantité de la carte. La quantité précédente est rétablie.",
+  },
+  {
+    request: "a card's printing",
+    fail: () => api.updateCardPrinting.mockRejectedValueOnce(SERVER_ERROR),
+    run: () => store().swapCardPrinting(CARD_ID, SOL_RING_PRINTING),
+    en: "Could not save card printing — try again",
+    fr: "Impossible d’enregistrer l’édition de la carte. Réessayez.",
+  },
+  {
+    request: "a card's notes",
+    fail: () => api.updateCardNotes.mockRejectedValueOnce(SERVER_ERROR),
+    run: () => store().updateCardNotes(CARD_ID, "Tour un"),
+    en: "Could not save card notes. Try again.",
+    fr: "Impossible d’enregistrer les notes de la carte. Réessayez.",
+  },
+  {
+    request: "a card's move to another zone",
+    fail: () => api.updateCardZone.mockRejectedValueOnce(SERVER_ERROR),
+    run: () => store().moveCardToZone(CARD_ID, "sideboard"),
+    en: "Could not move card. Try again.",
+    fr: "Impossible de déplacer la carte. Réessayez.",
   },
 ];
 
