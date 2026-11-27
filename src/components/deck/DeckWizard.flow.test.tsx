@@ -569,6 +569,30 @@ describe("DeckWizard flow (characterization)", () => {
     );
     return storedIds;
   }
+  interface HeldRequest {
+    /** Settles once the request reached the server. */
+    readonly asked: Promise<void>;
+    /** Sends the held request's answer. */
+    readonly answer: (response: Response) => void;
+  }
+
+  /** Holds the next request `method` `path` receives until the test answers it. */
+  function holdNext(method: "get" | "post", path: string): HeldRequest {
+    const asked = Promise.withResolvers<void>();
+    const held = Promise.withResolvers<Response>();
+    server.use(
+      http[method](
+        path,
+        () => {
+          asked.resolve();
+          return held.promise;
+        },
+        { once: true }
+      )
+    );
+    return { asked: asked.promise, answer: held.resolve };
+  }
+
   server.events.on("request:start", ({ request }) => {
     sent.push(describeRequest(request));
   });
@@ -1701,30 +1725,6 @@ describe("DeckWizard flow (characterization)", () => {
     const BUILDING_HEADING = "AI is building your deck…";
     /** What the save step logs, at info, when a save ends after the wizard was reset. */
     const LATE_SAVE_LOG = "Built deck save ended after the wizard was reset";
-
-    interface HeldRequest {
-      /** Settles once the request reached the server. */
-      readonly asked: Promise<void>;
-      /** Sends the held request's answer. */
-      readonly answer: (response: Response) => void;
-    }
-
-    /** Holds the next request `method` `path` receives until the test answers it. */
-    function holdNext(method: "get" | "post", path: string): HeldRequest {
-      const asked = Promise.withResolvers<void>();
-      const held = Promise.withResolvers<Response>();
-      server.use(
-        http[method](
-          path,
-          () => {
-            asked.resolve();
-            return held.promise;
-          },
-          { once: true }
-        )
-      );
-      return { asked: asked.promise, answer: held.resolve };
-    }
 
     /**
      * Reopens the wizard and builds again, as the player does once they left the earlier save,
