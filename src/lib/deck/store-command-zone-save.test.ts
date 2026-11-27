@@ -20,6 +20,7 @@ import {
   installFakeDeckClient,
 } from "@/test/fake-deck-client";
 import { recordToasts } from "@/test/toast-recorder";
+import { recordedToasts } from "@/test/toast-text";
 import { apiDeckToStoreDeck } from "./store-factories";
 import type { Deck } from "./types";
 import { useDeckStore } from "./store";
@@ -257,10 +258,10 @@ describe("setCommander", () => {
       id: ATRAXA_ROW.id,
       name: ATRAXA.name,
     });
-    expect(addToast).toHaveBeenCalledWith(
+    expect(recordedToasts(addToast)).toContainEqual([
       "error",
-      "Could not save commander — try again"
-    );
+      "Could not save commander — try again",
+    ]);
   });
 });
 
@@ -335,10 +336,10 @@ describe("setPartner", () => {
       id: TYMNA_ROW.id,
       name: TYMNA.name,
     });
-    expect(addToast).toHaveBeenCalledWith(
+    expect(recordedToasts(addToast)).toContainEqual([
       "error",
-      "Could not save partner — try again"
-    );
+      "Could not save partner — try again",
+    ]);
   });
 
   it("removes the partner and its row in one request", async () => {
@@ -389,10 +390,10 @@ describe("setCompanion", () => {
       { name: JEGANTHA.name, role: "companion" },
     ]);
     expect(shownDeck().companion).toMatchObject({ id: JEGANTHA_ROW.id });
-    expect(addToast).toHaveBeenCalledWith(
+    expect(recordedToasts(addToast)).toContainEqual([
       "error",
-      "Could not save companion — try again"
-    );
+      "Could not save companion — try again",
+    ]);
   });
 
   it("removes the companion and its row in one request", async () => {
@@ -412,10 +413,10 @@ describe("setCompanion", () => {
     expect(savedDeck().companionId).toBe(JEGANTHA.id);
     expect(savedRows()).toHaveLength(2);
     expect(shownDeck().companion).toMatchObject({ id: JEGANTHA_ROW.id });
-    expect(addToast).toHaveBeenCalledWith(
+    expect(recordedToasts(addToast)).toContainEqual([
       "error",
-      "Could not remove companion — try again"
-    );
+      "Could not remove companion — try again",
+    ]);
   });
 });
 
@@ -456,9 +457,9 @@ describe("promoteToCommander", () => {
       "Sol Ring",
     ]);
     expect(shownDeck().commander).toMatchObject({ id: ATRAXA_ROW.id });
-    expect(addToast).toHaveBeenCalledWith(
+    expect(recordedToasts(addToast)).toContainEqual([
       "error",
-      "Could not save commander — try again"
-    );
+      "Could not save commander — try again",
+    ]);
   });
 });

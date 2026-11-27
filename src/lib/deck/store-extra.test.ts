@@ -8,8 +8,10 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import type { AddToast } from "@/test/toast-recorder";
+import { recordedToasts } from "@/test/toast-text";
 
-const toastAdd = vi.hoisted(() => vi.fn());
+const toastAdd = vi.hoisted(() => vi.fn<AddToast>());
 
 vi.mock(import("@/lib/db/deck-api"), () => ({
   // The store's own PATCHes read the write budget from the client module.
@@ -360,7 +362,10 @@ describe("useDeckStore — undo", () => {
     expect(useDeckStore.getState().decks["deck-1"].cards).toEqual(cards);
     expect(useDeckStore.getState().undoStack).toEqual([action]);
     expect(deckApi.removeCard).not.toHaveBeenCalled();
-    expect(toastAdd).toHaveBeenCalledWith("error", expect.any(String));
+    expect(recordedToasts(toastAdd)).toContainEqual([
+      "error",
+      expect.any(String),
+    ]);
   });
 
   it("undoes the recorded card rather than an earlier printing with the same name", async () => {
@@ -490,8 +495,14 @@ describe("useDeckStore — undo", () => {
 
     expect(useDeckStore.getState().decks["deck-1"].cards).toHaveLength(0);
     expect(useDeckStore.getState().undoStack).toEqual([action]);
-    expect(toastAdd).toHaveBeenCalledWith("error", expect.any(String));
-    expect(toastAdd).not.toHaveBeenCalledWith("info", expect.any(String));
+    expect(recordedToasts(toastAdd)).toContainEqual([
+      "error",
+      expect.any(String),
+    ]);
+    expect(recordedToasts(toastAdd)).not.toContainEqual([
+      "info",
+      expect.any(String),
+    ]);
   });
 
   it("restores the card and retry action when undoing an addition fails", async () => {
@@ -517,8 +528,14 @@ describe("useDeckStore — undo", () => {
 
     expect(useDeckStore.getState().decks["deck-1"].cards).toEqual([card]);
     expect(useDeckStore.getState().undoStack).toEqual([action]);
-    expect(toastAdd).toHaveBeenCalledWith("error", expect.any(String));
-    expect(toastAdd).not.toHaveBeenCalledWith("info", expect.any(String));
+    expect(recordedToasts(toastAdd)).toContainEqual([
+      "error",
+      expect.any(String),
+    ]);
+    expect(recordedToasts(toastAdd)).not.toContainEqual([
+      "info",
+      expect.any(String),
+    ]);
   });
 
   it.each(["ADD_CARD", "REMOVE_CARD"])(
@@ -755,10 +772,10 @@ describe("useDeckStore — setPartner", () => {
       previousPartner
     );
     expect(deckApi.changeCommandZone).not.toHaveBeenCalled();
-    expect(toastAdd).toHaveBeenCalledWith(
+    expect(recordedToasts(toastAdd)).toContainEqual([
       "warning",
-      "Tymna the Weaver cannot share the command zone with Kratos, Stoic Father."
-    );
+      "Tymna the Weaver cannot share the command zone with Kratos, Stoic Father.",
+    ]);
   });
 
   it("sets partner on the active deck", async () => {
@@ -827,10 +844,10 @@ describe("useDeckStore — setPartner", () => {
     const deck = useDeckStore.getState().decks["deck-1"];
     expect(deck.partner).toEqual(previousPartner);
     expect(deck.pairingType).toBe("partner");
-    expect(toastAdd).toHaveBeenCalledWith(
+    expect(recordedToasts(toastAdd)).toContainEqual([
       "error",
-      expect.stringContaining("partner")
-    );
+      expect.stringContaining("partner"),
+    ]);
   });
 
   it("restores the previous partner when clearing it fails", async () => {
@@ -855,10 +872,10 @@ describe("useDeckStore — setPartner", () => {
     const deck = useDeckStore.getState().decks["deck-1"];
     expect(deck.partner).toEqual(previousPartner);
     expect(deck.pairingType).toBe("partner");
-    expect(toastAdd).toHaveBeenCalledWith(
+    expect(recordedToasts(toastAdd)).toContainEqual([
       "error",
-      expect.stringContaining("partner")
-    );
+      expect.stringContaining("partner"),
+    ]);
   });
 
   it("restores the previous partner when the one request that saves the replacement fails", async () => {
@@ -889,10 +906,10 @@ describe("useDeckStore — setPartner", () => {
     const deck = useDeckStore.getState().decks["deck-1"];
     expect(deck.partner).toEqual(previousPartner);
     expect(deck.pairingType).toBe("partner");
-    expect(toastAdd).toHaveBeenCalledWith(
+    expect(recordedToasts(toastAdd)).toContainEqual([
       "error",
-      expect.stringContaining("partner")
-    );
+      expect.stringContaining("partner"),
+    ]);
   });
 
   it("does not roll back a newer partner when an older save fails", async () => {
@@ -936,10 +953,10 @@ describe("useDeckStore — setPartner", () => {
     const deck = useDeckStore.getState().decks["deck-1"];
     expect(deck.partner?.scryfallId).toBe("newer-partner");
     expect(deck.partner?.name).toBe("Thrasios, Triton Hero");
-    expect(toastAdd).not.toHaveBeenCalledWith(
+    expect(recordedToasts(toastAdd)).not.toContainEqual([
       "error",
-      expect.stringContaining("partner")
-    );
+      expect.stringContaining("partner"),
+    ]);
   });
 
   it("does nothing when no active deck", async () => {
@@ -1183,7 +1200,10 @@ describe("useDeckStore category save recovery", () => {
     expect(useDeckStore.getState().decks["deck-1"].cards[0].category).toBe(
       "instant"
     );
-    expect(toastAdd).toHaveBeenCalledWith("error", expect.any(String));
+    expect(recordedToasts(toastAdd)).toContainEqual([
+      "error",
+      expect.any(String),
+    ]);
     expect(useDeckStore.getState().isSyncing).toBe(false);
   });
 });
@@ -1249,10 +1269,10 @@ describe("useDeckStore — updateCardNotes", () => {
     expect(useDeckStore.getState().decks["deck-1"].cards[0].notes).toBe(
       "Saved note"
     );
-    expect(toastAdd).toHaveBeenCalledWith(
+    expect(recordedToasts(toastAdd)).toContainEqual([
       "error",
-      expect.stringContaining("notes")
-    );
+      expect.stringContaining("notes"),
+    ]);
   });
 
   it("restores the confirmed note after two rapid edits both fail", async () => {
@@ -1738,7 +1758,10 @@ describe("useDeckStore — updateCardQuantity", () => {
     await useDeckStore.getState().updateCardQuantity("card-1", 1);
 
     expect(useDeckStore.getState().decks["deck-1"].cards[0].quantity).toBe(1);
-    expect(toastAdd).toHaveBeenCalledWith("error", expect.any(String));
+    expect(recordedToasts(toastAdd)).toContainEqual([
+      "error",
+      expect.any(String),
+    ]);
     expect(useDeckStore.getState().isSyncing).toBe(false);
   });
 
@@ -1748,7 +1771,10 @@ describe("useDeckStore — updateCardQuantity", () => {
     await useDeckStore.getState().updateCardQuantity("card-1", 1);
 
     expect(useDeckStore.getState().decks["deck-1"].cards[0].quantity).toBe(1);
-    expect(toastAdd).toHaveBeenCalledWith("error", expect.any(String));
+    expect(recordedToasts(toastAdd)).toContainEqual([
+      "error",
+      expect.any(String),
+    ]);
   });
 
   it("restores the last confirmed quantity after two rapid updates", async () => {

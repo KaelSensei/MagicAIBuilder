@@ -5,8 +5,10 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import type { AddToast } from "@/test/toast-recorder";
+import { recordedToasts } from "@/test/toast-text";
 
-const toastAdd = vi.hoisted(() => vi.fn());
+const toastAdd = vi.hoisted(() => vi.fn<AddToast>());
 
 vi.mock(import("@/lib/scryfall/types"), () => ({
   DFC_LAYOUTS: new Set(["modal_dfc", "transform", "reversible_card"]),
@@ -199,7 +201,10 @@ describe("useDeckStore — forceSave", () => {
     expect(useDeckStore.getState().decks["deck-1"]?.name).toBe("Refreshed deck");
     expect(useDeckStore.getState().activeDeckId).toBe("deck-1");
     expect(useDeckStore.getState().isSyncing).toBe(false);
-    expect(toastAdd).toHaveBeenCalledWith("success", "✓ Deck saved");
+    expect(recordedToasts(toastAdd)).toContainEqual([
+      "success",
+      "✓ Deck saved",
+    ]);
   });
 
   it("does nothing when no active deck", async () => {

@@ -1081,10 +1081,37 @@
     "targetBracketFailed": "Impossible d’enregistrer le bracket cible. Réessayez.",
     "manualBracketFailed": "Impossible d’enregistrer le bracket manuel. Réessayez.",
     "budgetFailed": "Impossible d’enregistrer le budget du deck. Réessayez.",
-    "cardRemovalFailed": "Impossible de retirer la carte. Réessayez."
+    "cardRemovalFailed": "Impossible de retirer la carte. Réessayez.",
+    "commanderFailed": "Impossible d’enregistrer le commandant. Réessayez.",
+    "partnerFailed": "Impossible d’enregistrer le partenaire. Réessayez.",
+    "companionFailed": "Impossible d’enregistrer le compagnon. Réessayez.",
+    "companionRemovalFailed": "Impossible de retirer le compagnon. Réessayez.",
+    "cardAdditionFailed": "Impossible d’ajouter la carte. Réessayez.",
+    "undoAdditionFailed": "Impossible d’annuler l’ajout de la carte. Réessayez.",
+    "undoRemovalFailed": "Impossible d’annuler le retrait de la carte. Réessayez.",
+    "cardCategoryFailed": "Impossible d’enregistrer la catégorie de la carte. Réessayez.",
+    "cardQuantityFailed": "Impossible d’enregistrer la quantité de la carte. La quantité précédente est rétablie.",
+    "cardPrintingFailed": "Impossible d’enregistrer l’édition de la carte. Réessayez.",
+    "cardNotesFailed": "Impossible d’enregistrer les notes de la carte. Réessayez.",
+    "cardMoveFailed": "Impossible de déplacer la carte. Réessayez.",
+    "saved": "✓ Deck enregistré"
   },
   "undo": {
-    "openOriginalDeck": "Ouvrez le deck d’origine avant de réessayer d’annuler."
+    "openOriginalDeck": "Ouvrez le deck d’origine avant de réessayer d’annuler.",
+    "applied": "↩ Annulation effectuée",
+    "ambiguousPrinting": "Impossible de savoir quelle carte annuler : plusieurs éditions correspondent."
+  },
+  "gameChangerAdded": {
+    "first": "⚡ {card} est un Game Changer — votre deck est désormais au moins en Bracket 3.",
+    "withinBracket3": "⚡ {card} est un Game Changer ({total}/{limit}). Le deck reste au moins en Bracket 3.",
+    "beyondBracket3": "⚡ {card} est un Game Changer — vous avez désormais {total, plural, one {# Game Changer} other {# Game Changers}}, ce qui place le deck en Bracket 4.",
+    "commander": "⚡ {card} est un Game Changer — votre deck est automatiquement au moins en Bracket 3."
+  },
+  "commandZoneRefusal": {
+    "companionNeedsCommander": "Choisissez un commandant avant de définir un compagnon.",
+    "notCompanion": "Cette carte n’a pas la capacité Compagnon.",
+    "bannedCompanion": "Lutri ne peut pas être votre compagnon en Commander.",
+    "unpairable": "{partner} ne peut pas partager la zone de commandement avec {commander}."
   },
   "format": {
     "name": {

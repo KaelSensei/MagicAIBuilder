@@ -27,6 +27,7 @@ import type { TestLocale } from "@/test/intl-catalogs";
 import { setupMsw } from "@/test/msw";
 import { renderWithProviders } from "@/test/render";
 import { recordToasts } from "@/test/toast-recorder";
+import { recordedToasts } from "@/test/toast-text";
 import { ImportDialog } from "./ImportDialog";
 
 const COLLECTION_URL = `${SCRYFALL_API}/cards/collection`;
@@ -225,10 +226,10 @@ describe("ImportDialog — cards the deck refuses", () => {
         "Thrasios, Triton Hero: could not take its place in the command zone"
       )
     ).toBeInTheDocument();
-    expect(toastAdd).toHaveBeenCalledWith(
+    expect(recordedToasts(toastAdd)).toContainEqual([
       "warning",
-      "Thrasios, Triton Hero cannot share the command zone with Atraxa, Praetors' Voice."
-    );
+      "Thrasios, Triton Hero cannot share the command zone with Atraxa, Praetors' Voice.",
+    ]);
   });
 
   it("lists the names Scryfall did not find beside the cards the deck refused", async () => {
