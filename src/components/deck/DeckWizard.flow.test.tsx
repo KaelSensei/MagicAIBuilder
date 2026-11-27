@@ -1944,8 +1944,8 @@ describe("DeckWizard flow (characterization)", () => {
       await earlierCommander.asked;
       const nextBuild = await buildAgainInTheReopenedWizard();
 
-      // The earlier save goes on to its import, which starts the count but writes nothing: the
-      // wizard was reset, so neither the commander nor any card goes into a deck.
+      // The earlier save goes on to its import, which writes nothing and counts nothing on the new
+      // build's screen: the wizard was reset, so neither the commander nor any card goes into a deck.
       earlierCommander.answer(HttpResponse.json(TALRAND_NAMED_RECORDED));
       await waitFor(() =>
         expect(info).toHaveBeenCalledWith(LATE_SAVE_LOG, "DeckWizard", {

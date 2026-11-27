@@ -93,8 +93,9 @@ export interface BuiltDeckSave {
    * could not be filled. Throws only what `onComplete` throws. When the server cannot create the
    * deck, it holds the deck and sets `saveFailed`; when the deck was created but a card lookup
    * failed or a later step threw, it sets `unfinishedDeck`, with the build's corrections. When a
-   * `reset` came while it ran, it does none of this: its import writes nothing more, and it logs at
-   * info the deck's id, the copies the import added and did not add, and why it stopped.
+   * `reset` came while it ran, it does none of this: its import writes nothing more and, when its
+   * deck was created, it logs at info the deck's id, the copies the import added and did not add,
+   * and why it stopped. A late failed create is logged at error only.
    */
   readonly save: (deck: BuiltDeck) => Promise<void>;
   /**

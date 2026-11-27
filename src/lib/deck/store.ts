@@ -625,8 +625,9 @@ export interface DeckStore {
 
   // Deck management
   /**
-   * Creates an account deck and makes it the active deck. A guest opens the
-   * guest deck instead.
+   * Creates an account deck and makes it the active deck, unless
+   * `opts.activate` is false. A guest gets the guest deck instead, under the
+   * same rule.
    *
    * @param name - The deck's name
    * @param opts - `format`, Commander when left out; `isAIGenerated`;
