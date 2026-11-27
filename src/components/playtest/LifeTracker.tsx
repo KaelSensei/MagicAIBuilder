@@ -99,6 +99,9 @@ export function LifeTracker({
           value={customInput}
           onChange={(e) => setCustomInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleCustomSubmit()}
+          // No caption sits beside this field, and a placeholder is no name
+          // (WCAG 2.2 SC 1.3.1 and 4.1.2).
+          aria-label={t("life.customLabel")}
           placeholder={t("life.customPlaceholder")}
           className="flex-1 bg-[var(--surface-hover)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]"
         />
