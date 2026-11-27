@@ -27,7 +27,7 @@
  * the new build's screen, it opens no deck, and it writes no more card into any deck, the new
  * build's included (I-02, #1984's QA).
  */
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { MotionGlobalConfig } from "framer-motion";
 import { delay, http, HttpResponse } from "msw";
 import {
@@ -60,6 +60,7 @@ import type {
   ScryfallCollectionResponse,
 } from "@/lib/scryfall/types";
 import type { TestLocale } from "@/test/intl-catalogs";
+import { aDeck } from "@/test/builders/deck";
 import { setupMsw } from "@/test/msw";
 import { renderWithProviders } from "@/test/render";
 import { DeckWizard } from "./DeckWizard";
@@ -1965,6 +1966,44 @@ describe("DeckWizard flow (characterization)", () => {
       );
 
       await finishTheNextBuild(nextBuild);
+    });
+  });
+
+  // The store adds cards to its open deck, so a save writes only while its deck is that deck. When
+  // the player opens another deck during the import, the rest of the build would land there (I-02).
+  describe("a save whose deck stops being the open deck", () => {
+    const OTHER_DECK_ID = "deck-other";
+
+    it("stops the import, writes nothing into the other deck, and says its own deck is unfinished, when another deck opens while the cards import", async () => {
+      useDeckStore.setState((state) => ({
+        decks: {
+          ...state.decks,
+          [OTHER_DECK_ID]: aDeck({ id: OTHER_DECK_ID, name: "Other deck" }),
+        },
+      }));
+      const lookup = holdNext("post", `${SCRYFALL}/cards/collection`);
+      await generateDeck();
+      await lookup.asked;
+
+      await act(() => useDeckStore.getState().setActiveDeck(OTHER_DECK_ID));
+      lookup.answer(
+        HttpResponse.json(
+          collectionAnswer(STREAMED_CARDS.map((card) => card.name))
+        )
+      );
+
+      expect(
+        await screen.findByText(deckNotFinishedWithout(STREAMED_COPIES))
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: OPEN_THE_DECK })
+      ).toBeInTheDocument();
+      expect(onComplete).not.toHaveBeenCalled();
+      expect(useDeckStore.getState().decks[OTHER_DECK_ID]?.cards).toEqual([]);
+      expect(sent.filter((request) => request.includes(OTHER_DECK_ID))).toEqual(
+        []
+      );
+      expect(useDeckStore.getState().activeDeckId).toBe(OTHER_DECK_ID);
     });
   });
 });

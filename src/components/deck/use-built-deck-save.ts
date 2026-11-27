@@ -24,7 +24,9 @@
  * cards to its active deck, by then the deck the player works on, so the late import stops and
  * its deck keeps what it already received. When its deck was created, its end is logged at info
  * for support (`logLateEnd`); a create that fails late is logged at error only, as in any session
- * (I-02, follow-up of #1984).
+ * (I-02, follow-up of #1984). In the current session too, the import writes only while its deck is
+ * the store's active deck: when another deck opens during the import, the import stops, and the
+ * deck ends as unfinished, which the player opens to finish (`DeckClaim`).
  *
  * @module deck/use-built-deck-save
  */
@@ -216,14 +218,18 @@ async function createOrHold(
   }
 }
 
-/** Why a save stopped writing into the deck it created. */
-type ImportStop = "wizardReset";
+/**
+ * Why a save stopped writing into the deck it created: the wizard was reset (reopened, or "Try
+ * again"), or another deck became the store's active deck.
+ */
+type ImportStop = "wizardReset" | "activeDeckChanged";
 
 /**
  * A save's claim on the deck it created. The store writes a card or a commander into its active
  * deck (`addDeckCard` and `setCommander` in `store.ts`), so a save writes only while it owns that
- * deck: its session is current. Otherwise its cards would land in the deck the player works on
- * now, such as the new build's deck (I-02, #1984's QA).
+ * deck: its session is current, and its deck is still the active one. Otherwise its cards would
+ * land in the deck the player works on now: the new build's deck, or a deck they opened (I-02,
+ * #1984's QA).
  */
 interface DeckClaim {
   /** Makes the deck the store's active deck, unless the save's session is over. */
@@ -234,15 +240,23 @@ interface DeckClaim {
   readonly stoppedBy: () => ImportStop | null;
 }
 
-/** The claim of the save running in `session` on the deck `deckId` it created. */
+/**
+ * The claim of the save running in `session` on the deck `deckId` it created. It reads the active
+ * deck from the store at each check, not from a render: a write follows the store's state then.
+ */
 function claimDeck(
   deckId: string,
   session: SaveSession,
   setActiveDeck: DeckStore["setActiveDeck"]
 ): DeckClaim {
   let stop: ImportStop | null = null;
-  const reasonToStop = (): ImportStop | null =>
-    session.isCurrent() ? null : "wizardReset";
+  const reasonToStop = (): ImportStop | null => {
+    if (!session.isCurrent()) return "wizardReset";
+    if (useDeckStore.getState().activeDeckId !== deckId) {
+      return "activeDeckChanged";
+    }
+    return null;
+  };
   return {
     open: () =>
       session.isCurrent() ? setActiveDeck(deckId) : Promise.resolve(),
