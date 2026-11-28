@@ -49,7 +49,11 @@
   "dropToMove": "Drop here to move to {label}",
   "noCardsYet": "No cards yet",
   "colorIdentityViolation": "Outside commander color identity",
-  "tags": { "add": "Add tag", "placeholder": "tag name…" },
+  "tags": {
+    "add": "Add tag",
+    "fieldLabel": "New tag",
+    "placeholder": "tag name…"
+  },
   "details": {
     "title": "Deck details",
     "targetBracket": "Target bracket",

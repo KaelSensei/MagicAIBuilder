@@ -120,6 +120,9 @@ export function DeckTagsEditor({ deckId, tags }: DeckTagsEditorProps) {
                   setShowInput(false);
                 }
               }}
+              // A placeholder is no name, and it is gone once the player types
+              // (WCAG 2.2 SC 1.3.1, 3.3.2 and 4.1.2).
+              aria-label={t("tags.fieldLabel")}
               placeholder={t("tags.placeholder")}
               maxLength={50}
               className="bg-[var(--surface)] border border-[var(--accent)] rounded-full px-2 py-0.5 text-[10px] text-[var(--text-primary)] w-24"
