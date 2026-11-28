@@ -5,6 +5,7 @@
     "gameChangers": "Cartes à impact",
     "banlist": "Liste de ban"
   },
+  "searchLabel": "Rechercher dans cette liste par nom de carte",
   "searchPlaceholder": "Rechercher une carte…",
   "loading": "Chargement depuis Scryfall…",
   "error": "Impossible de charger les données depuis Scryfall. Veuillez réessayer dans un instant.",
