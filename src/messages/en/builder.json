@@ -22,6 +22,7 @@
   "colorIdentityViolation": "Outside commander color identity",
   "tags": {
     "add": "Add tag",
+    "fieldLabel": "New tag",
     "placeholder": "tag name…"
   },
   "details": {
