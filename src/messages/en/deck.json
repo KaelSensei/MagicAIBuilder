@@ -35,6 +35,7 @@
     "failed": "Saved decks could not be updated.",
     "retry": "Retry",
     "empty": "No public decks saved yet.",
+    "newFolderLabel": "New folder name",
     "newFolderPlaceholder": "Folder name",
     "createFolder": "Create folder",
     "renamePrompt": "New folder name",
