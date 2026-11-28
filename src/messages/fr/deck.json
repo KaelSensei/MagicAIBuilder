@@ -35,6 +35,7 @@
     "failed": "Les decks enregistrés n’ont pas pu être mis à jour.",
     "retry": "Réessayer",
     "empty": "Aucun deck public enregistré.",
+    "newFolderLabel": "Nom du nouveau dossier",
     "newFolderPlaceholder": "Nom du dossier",
     "createFolder": "Créer le dossier",
     "renamePrompt": "Nouveau nom du dossier",
