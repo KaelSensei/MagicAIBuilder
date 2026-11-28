@@ -5,6 +5,7 @@
     "gameChangers": "Game Changers",
     "banlist": "Banlist"
   },
+  "searchLabel": "Search this list by card name",
   "searchPlaceholder": "Search for a card…",
   "loading": "Loading from Scryfall…",
   "error": "Failed to load data from Scryfall. Please try again in a moment.",
