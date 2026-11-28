@@ -121,6 +121,9 @@ export function SavedDeckLibrary() {
           value={name}
           onChange={(event) => setName(event.target.value)}
           maxLength={80}
+          // No caption names the field, and a placeholder is no name
+          // (WCAG 2.2 SC 1.3.1 and 4.1.2).
+          aria-label={t("newFolderLabel")}
           placeholder={t("newFolderPlaceholder")}
           className="min-w-0 flex-1 rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm"
         />
