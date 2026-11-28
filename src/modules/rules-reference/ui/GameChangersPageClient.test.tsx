@@ -215,6 +215,10 @@ const tab = (name: RegExp) => screen.getByRole("button", { name });
 const GAME_CHANGERS_TAB = /^Game Changers/;
 const BANLIST_TAB = /^Banlist/;
 
+/** The field that filters the active list, found by the name a screen reader announces. */
+const searchField = () =>
+  screen.getByRole("searchbox", { name: "Search this list by card name" });
+
 describe("the two lists", () => {
   it("lists the Game Changers Scryfall's is:gamechanger search returns, with a GC badge on each", async () => {
     await openPage();
@@ -282,9 +286,7 @@ describe("searching", () => {
   it("names the search field, so a screen reader says what it searches instead of an unnamed search box", async () => {
     await openPage();
 
-    expect(
-      screen.getByRole("searchbox", { name: "Search this list by card name" })
-    ).toBeInTheDocument();
+    expect(searchField()).toBeInTheDocument();
   });
 
   it("names the search field in French when the viewer reads the page in French", async () => {
@@ -301,7 +303,7 @@ describe("searching", () => {
   it("keeps only the cards whose name contains the typed text, case-insensitively, and says what was searched", async () => {
     const { user } = await openPage();
 
-    await user.type(screen.getByPlaceholderText("Search for a card…"), "rhys");
+    await user.type(searchField(), "rhys");
 
     expect(visibleCardNames()).toEqual(["Rhystic Study"]);
     expect(screen.getByText('1 card for "rhys"')).toBeInTheDocument();
@@ -322,7 +324,7 @@ describe("searching", () => {
     );
     const { user } = await openPage();
 
-    await user.type(screen.getByPlaceholderText("Search for a card…"), "étude");
+    await user.type(searchField(), "étude");
 
     expect(visibleCardNames()).toEqual(["Étude rhystique"]);
   });
@@ -330,10 +332,7 @@ describe("searching", () => {
   it("shows the empty message when no card matches", async () => {
     const { user } = await openPage();
 
-    await user.type(
-      screen.getByPlaceholderText("Search for a card…"),
-      "nothing here"
-    );
+    await user.type(searchField(), "nothing here");
 
     expect(screen.getByText("No cards found.")).toBeInTheDocument();
     expect(screen.getByText('0 cards for "nothing here"')).toBeInTheDocument();
@@ -483,7 +482,7 @@ describe("pagination", () => {
     await user.click(screen.getByRole("button", { name: "Next page" }));
     router.replace.mockClear();
 
-    await user.type(screen.getByPlaceholderText("Search for a card…"), "Game");
+    await user.type(searchField(), "Game");
 
     expect(visibleCardNames()[0]).toBe("Game Changer 1");
     expect(pageIndicator()).toHaveTextContent("Page 1 / 2");
