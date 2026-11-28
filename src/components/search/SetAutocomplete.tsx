@@ -147,6 +147,9 @@ export function SetAutocomplete({
             setOpen(true);
             void loadSets();
           }}
+          // No room for a visible label, and a placeholder is not one
+          // (WCAG 2.2 SC 1.3.1, 4.1.2): the field names itself.
+          aria-label={t("setFieldLabel")}
           placeholder={t("setPlaceholder")}
           className="flex-1 bg-transparent px-3 py-2.5 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] outline-none"
         />
