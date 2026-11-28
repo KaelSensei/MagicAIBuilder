@@ -17,6 +17,7 @@
   "listView": "List view",
   "viewMode": "Result view",
   "setPlaceholder": "Search set (e.g. dsk, mh3…)",
+  "setFieldLabel": "Search sets",
   "loadingSets": "Loading sets…",
   "setsLoadFailed": "Failed to load sets",
   "noSetsFound": "No sets found for \"{query}\"",
