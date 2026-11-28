@@ -279,6 +279,25 @@ describe("the two lists", () => {
 });
 
 describe("searching", () => {
+  it("names the search field, so a screen reader says what it searches instead of an unnamed search box", async () => {
+    await openPage();
+
+    expect(
+      screen.getByRole("searchbox", { name: "Search this list by card name" })
+    ).toBeInTheDocument();
+  });
+
+  it("names the search field in French when the viewer reads the page in French", async () => {
+    renderWithProviders(<GameChangersPageClient />, { locale: "fr" });
+    await screen.findByText(/cartes?$/);
+
+    expect(
+      screen.getByRole("searchbox", {
+        name: "Rechercher dans cette liste par nom de carte",
+      })
+    ).toBeInTheDocument();
+  });
+
   it("keeps only the cards whose name contains the typed text, case-insensitively, and says what was searched", async () => {
     const { user } = await openPage();
 
