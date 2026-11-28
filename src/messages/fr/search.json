@@ -17,6 +17,7 @@
   "listView": "Vue liste",
   "viewMode": "Affichage des résultats",
   "setPlaceholder": "Rechercher une édition (ex. dsk, mh3…)",
+  "setFieldLabel": "Rechercher une édition",
   "loadingSets": "Chargement des éditions…",
   "setsLoadFailed": "Échec du chargement des éditions",
   "noSetsFound": "Aucune édition trouvée pour « {query} »",
