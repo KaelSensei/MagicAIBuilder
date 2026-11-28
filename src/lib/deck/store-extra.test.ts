@@ -8,8 +8,10 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import type { AddToast } from "@/test/toast-recorder";
+import { recordedToasts } from "@/test/toast-text";
 
-const toastAdd = vi.hoisted(() => vi.fn());
+const toastAdd = vi.hoisted(() => vi.fn<AddToast>());
 
 vi.mock(import("@/lib/db/deck-api"), () => ({
   // The store's own PATCHes read the write budget from the client module.
@@ -40,6 +42,7 @@ vi.mock(import("@/lib/db/deck-api"), () => ({
   }),
   updateDeck: vi.fn().mockResolvedValue({}),
   deleteDeck: vi.fn().mockResolvedValue(undefined),
+  duplicateDeck: vi.fn(),
   addCard: vi.fn().mockResolvedValue({
     id: "saved-db-id",
     deckId: "deck-1",
@@ -93,6 +96,7 @@ vi.mock(import("@/hooks/useToast"), async (importOriginal) => {
 import * as deckApi from "@/lib/db/deck-api";
 import type { Deck, DeckCard } from "@/lib/deck/types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
+import { emptyApiDeck } from "@/test/in-memory-deck-api";
 
 const { useDeckStore } = await import("@/lib/deck/store");
 
@@ -358,7 +362,10 @@ describe("useDeckStore — undo", () => {
     expect(useDeckStore.getState().decks["deck-1"].cards).toEqual(cards);
     expect(useDeckStore.getState().undoStack).toEqual([action]);
     expect(deckApi.removeCard).not.toHaveBeenCalled();
-    expect(toastAdd).toHaveBeenCalledWith("error", expect.any(String));
+    expect(recordedToasts(toastAdd)).toContainEqual([
+      "error",
+      expect.any(String),
+    ]);
   });
 
   it("undoes the recorded card rather than an earlier printing with the same name", async () => {
@@ -404,7 +411,10 @@ describe("useDeckStore — undo", () => {
       expect(useDeckStore.getState().undoStack).toEqual([action]);
       expect(deckApi.addCard).not.toHaveBeenCalled();
       expect(deckApi.removeCard).not.toHaveBeenCalled();
-      expect(toastAdd).toHaveBeenCalledWith("error", expect.any(String));
+      // Raised by its catalog key, not in English (I-04).
+      expect(toastAdd).toHaveBeenCalledWith("error", {
+        key: "deck.undo.openOriginalDeck",
+      });
     }
   );
 
@@ -485,8 +495,14 @@ describe("useDeckStore — undo", () => {
 
     expect(useDeckStore.getState().decks["deck-1"].cards).toHaveLength(0);
     expect(useDeckStore.getState().undoStack).toEqual([action]);
-    expect(toastAdd).toHaveBeenCalledWith("error", expect.any(String));
-    expect(toastAdd).not.toHaveBeenCalledWith("info", expect.any(String));
+    expect(recordedToasts(toastAdd)).toContainEqual([
+      "error",
+      expect.any(String),
+    ]);
+    expect(recordedToasts(toastAdd)).not.toContainEqual([
+      "info",
+      expect.any(String),
+    ]);
   });
 
   it("restores the card and retry action when undoing an addition fails", async () => {
@@ -512,8 +528,14 @@ describe("useDeckStore — undo", () => {
 
     expect(useDeckStore.getState().decks["deck-1"].cards).toEqual([card]);
     expect(useDeckStore.getState().undoStack).toEqual([action]);
-    expect(toastAdd).toHaveBeenCalledWith("error", expect.any(String));
-    expect(toastAdd).not.toHaveBeenCalledWith("info", expect.any(String));
+    expect(recordedToasts(toastAdd)).toContainEqual([
+      "error",
+      expect.any(String),
+    ]);
+    expect(recordedToasts(toastAdd)).not.toContainEqual([
+      "info",
+      expect.any(String),
+    ]);
   });
 
   it.each(["ADD_CARD", "REMOVE_CARD"])(
@@ -750,10 +772,10 @@ describe("useDeckStore — setPartner", () => {
       previousPartner
     );
     expect(deckApi.changeCommandZone).not.toHaveBeenCalled();
-    expect(toastAdd).toHaveBeenCalledWith(
+    expect(recordedToasts(toastAdd)).toContainEqual([
       "warning",
-      "Tymna the Weaver cannot share the command zone with Kratos, Stoic Father."
-    );
+      "Tymna the Weaver cannot share the command zone with Kratos, Stoic Father.",
+    ]);
   });
 
   it("sets partner on the active deck", async () => {
@@ -822,10 +844,10 @@ describe("useDeckStore — setPartner", () => {
     const deck = useDeckStore.getState().decks["deck-1"];
     expect(deck.partner).toEqual(previousPartner);
     expect(deck.pairingType).toBe("partner");
-    expect(toastAdd).toHaveBeenCalledWith(
+    expect(recordedToasts(toastAdd)).toContainEqual([
       "error",
-      expect.stringContaining("partner")
-    );
+      expect.stringContaining("partner"),
+    ]);
   });
 
   it("restores the previous partner when clearing it fails", async () => {
@@ -850,10 +872,10 @@ describe("useDeckStore — setPartner", () => {
     const deck = useDeckStore.getState().decks["deck-1"];
     expect(deck.partner).toEqual(previousPartner);
     expect(deck.pairingType).toBe("partner");
-    expect(toastAdd).toHaveBeenCalledWith(
+    expect(recordedToasts(toastAdd)).toContainEqual([
       "error",
-      expect.stringContaining("partner")
-    );
+      expect.stringContaining("partner"),
+    ]);
   });
 
   it("restores the previous partner when the one request that saves the replacement fails", async () => {
@@ -884,10 +906,10 @@ describe("useDeckStore — setPartner", () => {
     const deck = useDeckStore.getState().decks["deck-1"];
     expect(deck.partner).toEqual(previousPartner);
     expect(deck.pairingType).toBe("partner");
-    expect(toastAdd).toHaveBeenCalledWith(
+    expect(recordedToasts(toastAdd)).toContainEqual([
       "error",
-      expect.stringContaining("partner")
-    );
+      expect.stringContaining("partner"),
+    ]);
   });
 
   it("does not roll back a newer partner when an older save fails", async () => {
@@ -931,10 +953,10 @@ describe("useDeckStore — setPartner", () => {
     const deck = useDeckStore.getState().decks["deck-1"];
     expect(deck.partner?.scryfallId).toBe("newer-partner");
     expect(deck.partner?.name).toBe("Thrasios, Triton Hero");
-    expect(toastAdd).not.toHaveBeenCalledWith(
+    expect(recordedToasts(toastAdd)).not.toContainEqual([
       "error",
-      expect.stringContaining("partner")
-    );
+      expect.stringContaining("partner"),
+    ]);
   });
 
   it("does nothing when no active deck", async () => {
@@ -1102,7 +1124,7 @@ describe("useDeckStore failed removal recovery", () => {
 
     expect(useDeckStore.getState().decks["deck-1"].cards).toEqual([card]);
     expect(useDeckStore.getState().undoStack).toHaveLength(0);
-    expect(toastAdd).toHaveBeenCalledWith("error", expect.any(String));
+    expect(toastAdd).toHaveBeenCalledWith("error", { key: "deck.sync.cardRemovalFailed" });
   });
 });
 
@@ -1178,7 +1200,10 @@ describe("useDeckStore category save recovery", () => {
     expect(useDeckStore.getState().decks["deck-1"].cards[0].category).toBe(
       "instant"
     );
-    expect(toastAdd).toHaveBeenCalledWith("error", expect.any(String));
+    expect(recordedToasts(toastAdd)).toContainEqual([
+      "error",
+      expect.any(String),
+    ]);
     expect(useDeckStore.getState().isSyncing).toBe(false);
   });
 });
@@ -1244,10 +1269,10 @@ describe("useDeckStore — updateCardNotes", () => {
     expect(useDeckStore.getState().decks["deck-1"].cards[0].notes).toBe(
       "Saved note"
     );
-    expect(toastAdd).toHaveBeenCalledWith(
+    expect(recordedToasts(toastAdd)).toContainEqual([
       "error",
-      expect.stringContaining("notes")
-    );
+      expect.stringContaining("notes"),
+    ]);
   });
 
   it("restores the confirmed note after two rapid edits both fail", async () => {
@@ -1602,10 +1627,9 @@ describe("useDeckStore — duplicateDeck", () => {
       page: 0,
       limit: 20,
     });
-    global.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve({ id: "deck-2", name: "Test Deck (copy)" }),
-    }) as unknown as typeof fetch;
+    vi.mocked(deckApi.duplicateDeck).mockResolvedValue(
+      emptyApiDeck("deck-2", "Test Deck (copy)")
+    );
   });
 
   it("sets activeDeckId to the new deck id", async () => {
@@ -1613,11 +1637,14 @@ describe("useDeckStore — duplicateDeck", () => {
     expect(useDeckStore.getState().activeDeckId).toBe("deck-2");
   });
 
-  it("calls /api/decks/:id/duplicate with POST", async () => {
-    await useDeckStore.getState().duplicateDeck("deck-1");
-    expect(global.fetch).toHaveBeenCalledWith("/api/decks/deck-1/duplicate", {
-      method: "POST",
-    });
+  // It used to call `fetch` itself, which hid the answered status (I-01).
+  // The copy's name is the caller's, in the player's language (I-04).
+  it("asks the deck client to copy the deck under the caller's name", async () => {
+    await useDeckStore.getState().duplicateDeck("deck-1", "Test Deck (copie)");
+    expect(deckApi.duplicateDeck).toHaveBeenCalledWith(
+      "deck-1",
+      "Test Deck (copie)"
+    );
   });
 });
 
@@ -1731,7 +1758,10 @@ describe("useDeckStore — updateCardQuantity", () => {
     await useDeckStore.getState().updateCardQuantity("card-1", 1);
 
     expect(useDeckStore.getState().decks["deck-1"].cards[0].quantity).toBe(1);
-    expect(toastAdd).toHaveBeenCalledWith("error", expect.any(String));
+    expect(recordedToasts(toastAdd)).toContainEqual([
+      "error",
+      expect.any(String),
+    ]);
     expect(useDeckStore.getState().isSyncing).toBe(false);
   });
 
@@ -1741,7 +1771,10 @@ describe("useDeckStore — updateCardQuantity", () => {
     await useDeckStore.getState().updateCardQuantity("card-1", 1);
 
     expect(useDeckStore.getState().decks["deck-1"].cards[0].quantity).toBe(1);
-    expect(toastAdd).toHaveBeenCalledWith("error", expect.any(String));
+    expect(recordedToasts(toastAdd)).toContainEqual([
+      "error",
+      expect.any(String),
+    ]);
   });
 
   it("restores the last confirmed quantity after two rapid updates", async () => {

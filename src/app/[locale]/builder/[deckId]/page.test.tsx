@@ -38,6 +38,7 @@ import {
   onTestFinished,
   vi,
 } from "vitest";
+import { useToastStore } from "@/hooks/useToast";
 import { aiCallDenialBody } from "@/lib/ai/usage/denial";
 import { useCollectionStore } from "@/lib/collection/store";
 import type {
@@ -49,6 +50,7 @@ import { GUEST_DECK_ID } from "@/lib/deck/guest-deck";
 import { useDeckStore } from "@/lib/deck/store";
 import { EMPTY_SEARCH_RESPONSE, type ScryfallCard } from "@/lib/scryfall/types";
 import { useUIStore } from "@/lib/ui/store";
+import { HIDES_FOCUS_OUTLINE } from "@/test/focus-outline";
 import { setupMsw } from "@/test/msw";
 import { renderWithProviders, type TestLocale } from "@/test/render";
 import BuilderPage from "./page";
@@ -223,6 +225,15 @@ function deckApiLines(): readonly string[] {
     .filter((line) => line.includes("/api/decks"));
 }
 
+/** The text of every toast on screen, in order; a toast raised by key shows its key. */
+function toastTexts(): readonly string[] {
+  return useToastStore
+    .getState()
+    .toasts.map((toast) =>
+      typeof toast.message === "string" ? toast.message : toast.message.key
+    );
+}
+
 /** A handler for one deck route that waits for the test to let the answer through. */
 function heldUntilReleased(answer: () => Response): {
   readonly release: () => void;
@@ -327,6 +338,7 @@ beforeEach(() => {
   localStorage.clear();
   useDeckStore.setState(useDeckStore.getInitialState(), true);
   useUIStore.setState(useUIStore.getInitialState(), true);
+  useToastStore.setState({ toasts: [] });
   // jsdom does not implement scrollTo; framer-motion calls it while measuring the panels' entry.
   vi.spyOn(window, "scrollTo").mockImplementation(() => undefined);
 });
@@ -440,9 +452,9 @@ describe("characterization: builder page shell", () => {
       expect(
         within(summary).getByText(/^Commander · Bracket [1-5]$/)
       ).toBeInTheDocument();
-      expect(
-        within(summary).getByText(/^USD\s\d+\.\d{2}$/)
-      ).toBeInTheDocument();
+      // No row of the saved deck has a price, so the bar says so rather than "USD 0.00" (I-01).
+      expect(within(summary).getByText("Price unknown")).toBeInTheDocument();
+      expect(within(summary).queryByText(/USD/)).not.toBeInTheDocument();
       expect(hiddenBelowLg(summary)).toBe(false);
     });
 
@@ -476,6 +488,16 @@ describe("characterization: builder page shell", () => {
       );
     });
 
+    // Design audit S1: the deck-name field hid its outline; only its accent
+    // underline marked it, the same at rest as with focus.
+    it("leaves the app's focus outline visible on the deck-name field", async () => {
+      await userEvent.click(await openSavedDeck());
+
+      expect(
+        screen.getByRole("textbox", { name: "Click to rename" }).className
+      ).not.toMatch(HIDES_FOCUS_OUTLINE);
+    });
+
     it("duplicates the deck and opens the copy; currently through next/navigation's router, without the locale prefix (pinned)", async () => {
       server.use(
         http.post("/api/decks/:id/duplicate", async ({ request }) => {
@@ -492,6 +514,106 @@ describe("characterization: builder page shell", () => {
 
       await waitFor(() => expect(push).toHaveBeenCalledWith("/builder/deck-2"));
       expect(deckApiLines()).toContain(`POST /api/decks/${DECK_ID}/duplicate`);
+    });
+
+    it("announces the copy by name in the player's language when it opens it", async () => {
+      server.use(
+        http.post("/api/decks/:id/duplicate", () =>
+          HttpResponse.json(
+            savedDeck({ id: "deck-2", name: "Talrand Spells (Copy)" }),
+            { status: 201 }
+          )
+        )
+      );
+      const { push } = renderBuilder(DECK_ID, PLAYER, "fr");
+      await screen.findByRole("heading", { level: 1, name: "Talrand Spells" });
+
+      await userEvent.click(screen.getByRole("button", { name: "Dupliquer" }));
+
+      await waitFor(() => expect(push).toHaveBeenCalledWith("/builder/deck-2"));
+      expect(toastTexts()).toEqual([
+        "Deck dupliqué : « Talrand Spells (Copy) »",
+      ]);
+    });
+
+    // The server named every copy « … (Copy) », whatever the player's language (I-04).
+    it("asks for the copy under a name in the player's language", async () => {
+      server.use(
+        http.post("/api/decks/:id/duplicate", async ({ request }) => {
+          await record(request);
+          return HttpResponse.json(
+            savedDeck({ id: "deck-2", name: "Talrand Spells (copie)" }),
+            { status: 201 }
+          );
+        })
+      );
+      const { push } = renderBuilder(DECK_ID, PLAYER, "fr");
+      await screen.findByRole("heading", { level: 1, name: "Talrand Spells" });
+
+      await userEvent.click(screen.getByRole("button", { name: "Dupliquer" }));
+
+      await waitFor(() => expect(push).toHaveBeenCalledWith("/builder/deck-2"));
+      expect(
+        sent.filter(
+          (request) => request.line === `POST /api/decks/${DECK_ID}/duplicate`
+        )
+      ).toEqual([
+        {
+          line: `POST /api/decks/${DECK_ID}/duplicate`,
+          body: { name: "Talrand Spells (copie)" },
+        },
+      ]);
+    });
+
+    // The handler had no catch: the rejection went unhandled and the player saw nothing (I-01).
+    it("says in the player's language that the copy failed, and stays on the deck, when the server fails", async () => {
+      server.use(
+        http.post("/api/decks/:id/duplicate", () =>
+          HttpResponse.json(
+            { error: "Failed to duplicate deck" },
+            { status: 500 }
+          )
+        )
+      );
+      const { push } = renderBuilder(DECK_ID, PLAYER, "fr");
+      await screen.findByRole("heading", { level: 1, name: "Talrand Spells" });
+
+      await userEvent.click(screen.getByRole("button", { name: "Dupliquer" }));
+
+      await waitFor(() =>
+        expect(toastTexts()).toEqual([
+          "Impossible de dupliquer le deck. Réessayez.",
+        ])
+      );
+      expect(push).not.toHaveBeenCalled();
+      expect(useDeckStore.getState().activeDeckId).toBe(DECK_ID);
+      expect(useDeckStore.getState().isSyncing).toBe(false);
+    });
+
+    // The toast said the deck was gone while the builder kept showing it (I-01).
+    it("shows 'Deck not found' with the way back to the decks, and only the duplicate's toast, when the deck no longer exists", async () => {
+      server.use(
+        http.post("/api/decks/:id/duplicate", () =>
+          HttpResponse.json({ error: "Deck not found" }, { status: 404 })
+        )
+      );
+      const { push } = renderBuilder(DECK_ID, PLAYER);
+      await screen.findByRole("heading", { level: 1, name: "Talrand Spells" });
+      server.use(...deckAnsweredWith(404, "Deck not found"));
+
+      await userEvent.click(screen.getByRole("button", { name: "Duplicate" }));
+
+      expect(await screen.findByText("Deck not found")).toBeInTheDocument();
+      expect(
+        screen.getByRole("link", { name: "Back to My Decks" })
+      ).toHaveAttribute("href", "/decks");
+      expect(
+        screen.queryByRole("button", { name: "Try again" })
+      ).not.toBeInTheDocument();
+      expect(toastTexts()).toEqual([
+        "This deck no longer exists, so it cannot be duplicated.",
+      ]);
+      expect(push).not.toHaveBeenCalled();
     });
 
     // CR 100.2a: a constructed deck holds at least 60 cards, not Commander's 100.
@@ -573,11 +695,11 @@ describe("characterization: builder page shell", () => {
       ).toBeInTheDocument();
     });
 
-    it("currently names the card search box only by its placeholder (pinned)", async () => {
+    it("names the card search box, not only by its placeholder", async () => {
       await openSavedDeck();
 
       expect(screen.getByPlaceholderText("Search cards…")).toHaveAccessibleName(
-        ""
+        "Search cards"
       );
     });
 
@@ -604,6 +726,81 @@ describe("characterization: builder page shell", () => {
       );
       expect(deckApiLines().filter((line) => !line.startsWith("GET"))).toEqual(
         []
+      );
+    });
+  });
+
+  describe("the deck summary bar's bracket and the combo lookup", () => {
+    /**
+     * The saved deck with five more spells: Talrand and nine main-deck rows reach the ten names
+     * the combo lookup (`useCombos`) waits for before it asks `POST /api/combos`.
+     */
+    function aDeckTheComboLookupChecks(): ApiDeck {
+      const cantrips = ["Ponder", "Preordain", "Brainstorm", "Opt", "Consider"];
+      return savedDeck({
+        cards: [
+          ...savedDeck().cards,
+          ...cantrips.map((name) =>
+            row(name, { manaCost: "{U}", cmc: 1, typeLine: "Sorcery" })
+          ),
+        ],
+      });
+    }
+
+    /** The format and bracket line of the deck summary bar. */
+    function summaryBracket(): HTMLElement {
+      return within(
+        screen.getByRole("region", { name: "Deck summary" })
+      ).getByText(/^Commander · Bracket/);
+    }
+
+    it("says the bracket does not count combos yet while the lookup has not answered, then reads as before", async () => {
+      const comboLookup = heldUntilReleased(() =>
+        HttpResponse.json({ combos: [] })
+      );
+      server.use(
+        http.get("/api/decks/:id", () =>
+          HttpResponse.json(aDeckTheComboLookupChecks())
+        ),
+        http.post("/api/combos", comboLookup.handler)
+      );
+
+      await openSavedDeck();
+      await waitFor(() =>
+        expect(sent.map((request) => request.line)).toContain(
+          "POST /api/combos"
+        )
+      );
+
+      expect(summaryBracket()).toHaveTextContent(
+        /^Commander · Bracket [1-5] \(combos not checked yet\)$/
+      );
+
+      act(() => comboLookup.release());
+
+      await waitFor(() =>
+        expect(summaryBracket()).toHaveTextContent(
+          /^Commander · Bracket [1-5]$/
+        )
+      );
+    });
+
+    it("says the bracket was made without the combo check once the lookup failed", async () => {
+      server.use(
+        http.get("/api/decks/:id", () =>
+          HttpResponse.json(aDeckTheComboLookupChecks())
+        ),
+        http.post("/api/combos", () =>
+          HttpResponse.json({ error: "Spellbook unavailable" }, { status: 502 })
+        )
+      );
+
+      await openSavedDeck();
+
+      await waitFor(() =>
+        expect(summaryBracket()).toHaveTextContent(
+          /^Commander · Bracket [1-5] \(combos not checked\)$/
+        )
       );
     });
   });
@@ -922,12 +1119,22 @@ describe("characterization: builder page shell", () => {
       ]).toEqual([false, true, true]);
     });
 
-    it("currently marks the active mobile tab by colour only, with no pressed or current state (pinned)", async () => {
+    // Was pinned as "currently marks the active mobile tab by colour only, with
+    // no pressed or current state". Design audit S3 presses the active tab
+    // (WCAG 2.2 SC 4.1.2); pressed stays its one state attribute.
+    it("presses the active mobile tab, the deck first, and moves the press with the panel", async () => {
       await openSavedDeck();
+      const tabs = ["Search", "Deck", "Stats"].map((tab) =>
+        screen.getByRole("button", { name: tab })
+      );
+      const pressed = () =>
+        tabs.map((button) => button.getAttribute("aria-pressed"));
+      expect(pressed()).toEqual(["false", "true", "false"]);
 
-      for (const tab of ["Search", "Deck", "Stats"]) {
-        const button = screen.getByRole("button", { name: tab });
-        expect(button).not.toHaveAttribute("aria-pressed");
+      await userEvent.click(screen.getByRole("button", { name: "Stats" }));
+
+      expect(pressed()).toEqual(["false", "false", "true"]);
+      for (const button of tabs) {
         expect(button).not.toHaveAttribute("aria-current");
         expect(button).not.toHaveAttribute("aria-selected");
       }

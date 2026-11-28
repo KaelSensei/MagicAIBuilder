@@ -15,7 +15,7 @@ const store = vi.hoisted(() => ({
 // Stable references: the wizard resets the build whenever `reset` changes.
 const aiBuild = vi.hoisted(() => ({
   state: {
-    statusMessages: [],
+    step: null,
     commander: null,
     cards: [],
     totalCards: null,
@@ -70,6 +70,7 @@ it("names the generated deck in the creator's locale", async () => {
     expect(store.createDeck).toHaveBeenCalledWith("Deck IA — Contrôle", {
       isAIGenerated: true,
       idempotencyKey: expect.any(String),
+      activate: false,
     })
   );
 });

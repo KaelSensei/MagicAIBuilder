@@ -56,7 +56,7 @@ export function ActionLogComposer({
           onKeyDown={(event) => event.key === "Enter" && addEntry()}
           placeholder={t("placeholder")}
           aria-label={t("placeholder")}
-          className="min-w-0 flex-1 rounded-md border border-[var(--border)] bg-[var(--background)] px-3 py-1.5 text-xs text-[var(--text-primary)] outline-none focus:border-purple-400/60"
+          className="min-w-0 flex-1 rounded-md border border-[var(--border)] bg-[var(--background)] px-3 py-1.5 text-xs text-[var(--text-primary)]"
         />
         <button
           type="button"

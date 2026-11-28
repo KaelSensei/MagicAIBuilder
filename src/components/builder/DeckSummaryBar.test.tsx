@@ -12,6 +12,7 @@ import { describe, expect, it } from "vitest";
 import { useBracketScore } from "@/hooks/useBracketScore";
 import type { BracketLevel } from "@/lib/constants/brackets";
 import type { BracketScore } from "@/lib/deck/analysis-types";
+import type { ComboData } from "@/lib/deck/explain-bracket";
 import { useDeckStore } from "@/lib/deck/store";
 import type { Deck, DeckCard } from "@/lib/deck/types";
 import { aDeckCard } from "@/test/builders/card";
@@ -34,6 +35,13 @@ function anEstimate(overall: BracketLevel): BracketScore {
     warnings: [],
   };
 }
+
+/** A combo lookup that answered and found no combo. */
+const FOUND_NO_COMBO: ComboData = {
+  kind: "found",
+  combos: [],
+  fetchedAt: null,
+};
 
 /** `count` distinct one-copy rows of one type line, priced at `price` each. */
 function rows(
@@ -191,6 +199,21 @@ describe("DeckSummaryBar", () => {
     ).toBeInTheDocument();
   });
 
+  it("says the price is unknown, with the cards that have none, when no played card has a price", () => {
+    renderBar(
+      aDeck({
+        commander: { ...TALRAND, price: null },
+        cards: rows(2, "Instant", null),
+      })
+    );
+
+    expect(within(bar()).getByText("Price unknown")).toBeInTheDocument();
+    expect(
+      within(bar()).getByText("3 cards without price data")
+    ).toBeInTheDocument();
+    expect(within(bar()).queryByText(/0\.00/)).not.toBeInTheDocument();
+  });
+
   it("changes the count, the price and the type counts when the player adds a card", async () => {
     openInStore(aFullDeck({ cards: aFullDeck().cards.slice(0, 30) }));
     renderWithProviders(<StoreDeckSummaryBar deckId="deck-1" />);
@@ -275,7 +298,76 @@ describe("DeckSummaryBar", () => {
       within(summary).getByRole("button", { name: "Types" })
     ).toBeInTheDocument();
   });
+
+  describe("while the bracket estimate does not count combos", () => {
+    it("says in French that combos are not checked yet while the combo lookup has not answered", () => {
+      const deck = aFullDeck();
+      openInStore(deck);
+      renderWithProviders(
+        <DeckSummaryBar
+          deck={deck}
+          bracketScore={anEstimate(2)}
+          comboData={{ kind: "pending" }}
+        />,
+        { locale: "fr" }
+      );
+
+      const summary = screen.getByRole("region", { name: "Résumé du deck" });
+      expect(
+        within(summary).getByText(
+          "Commander · Bracket 2 (combos pas encore vérifiés)"
+        )
+      ).toBeInTheDocument();
+    });
+
+    it("says combos were not checked once the combo lookup failed", () => {
+      renderBarWith(aFullDeck(), { kind: "unavailable" });
+
+      expect(
+        within(bar()).getByText("Commander · Bracket 2 (combos not checked)")
+      ).toBeInTheDocument();
+    });
+
+    it.each<[string, ComboData | undefined]>([
+      ["once the combo lookup answered", FOUND_NO_COMBO],
+      ["when the caller passes no combo data", undefined],
+    ])("reads as before, with no caveat, %s", (_when, comboData) => {
+      renderBarWith(aFullDeck(), comboData);
+
+      expect(
+        within(bar()).getByText("Commander · Bracket 2")
+      ).toBeInTheDocument();
+    });
+
+    it.each<ComboData>([
+      { kind: "pending" },
+      { kind: "unavailable" },
+      FOUND_NO_COMBO,
+    ])(
+      "shows the player's own bracket with no caveat while the lookup is $kind",
+      (comboData) => {
+        renderBarWith(aFullDeck({ manualBracket: 4 }), comboData);
+
+        expect(
+          within(bar()).getByText("Commander · Bracket 4, set by you")
+        ).toBeInTheDocument();
+        expect(within(bar()).queryByText(/combos/)).not.toBeInTheDocument();
+      }
+    );
+  });
 });
+
+/** Renders the bar for `deck` with a Bracket 2 estimate and the lookup state `comboData`. */
+function renderBarWith(deck: Deck, comboData: ComboData | undefined) {
+  openInStore(deck);
+  return renderWithProviders(
+    <DeckSummaryBar
+      deck={deck}
+      bracketScore={anEstimate(2)}
+      comboData={comboData}
+    />
+  );
+}
 
 /** The bar as the builder page mounts it: the deck and its estimate read from the store. */
 function StoreDeckSummaryBar({ deckId }: { readonly deckId: string }) {

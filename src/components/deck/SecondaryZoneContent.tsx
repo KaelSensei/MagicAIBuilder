@@ -16,6 +16,7 @@ import { useTranslations } from "next-intl";
 import { CardImage } from "@/components/card/CardImage";
 import { CardListItem } from "@/components/card/CardListItem";
 import { BulkSelectBar } from "@/components/deck/BulkSelectBar";
+import { GridCardOwnershipBadge } from "@/components/deck/GridCardOwnershipBadge";
 import { gridColsClass } from "@/components/deck/grid-cols";
 import { cn } from "@/components/ui/utils";
 import { useDeckStore } from "@/lib/deck/store";
@@ -223,6 +224,8 @@ export function SecondaryZoneContent({
                 cardFaces={card.cardFaces}
                 isFlexibleLand={card.isFlexibleLand}
               />
+              {/* The tile holds nothing under the image, so it positions the badge itself. */}
+              <GridCardOwnershipBadge card={card} />
               <button
                 type="button"
                 onClick={(e) => {
@@ -240,7 +243,7 @@ export function SecondaryZoneContent({
                     type="button"
                     key={targetZone}
                     onClick={() => moveCardToZone(card.id, targetZone)}
-                    className="min-h-8 rounded bg-black/80 px-1.5 py-1 text-[10px] text-white hover:bg-black focus-visible:outline-2 focus-visible:outline-[var(--accent)]"
+                    className="min-h-8 rounded bg-black/80 px-1.5 py-1 text-[10px] text-white hover:bg-black"
                     aria-label={title}
                     title={title}
                   >

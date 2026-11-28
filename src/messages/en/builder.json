@@ -22,6 +22,7 @@
   "colorIdentityViolation": "Outside commander color identity",
   "tags": {
     "add": "Add tag",
+    "fieldLabel": "New tag",
     "placeholder": "tag name…"
   },
   "details": {
@@ -101,7 +102,9 @@
     "listView": "List view",
     "gridView": "Grid view",
     "cardsPerRow": "{count} cards per row",
-    "toolbar": "Deck view"
+    "toolbar": "Deck view",
+    "layout": "Layout",
+    "density": "Cards per row"
   },
   "actions": {
     "removeCommander": "Remove commander",
@@ -113,6 +116,7 @@
     "changeCategoryFor": "Change category for {name}",
     "backToDecks": "Back to my decks",
     "rename": "Click to rename",
+    "confirmRename": "Save the name",
     "duplicate": "Duplicate deck",
     "bulkEdit": "Bulk edit",
     "playtest": "Playtest this deck",
@@ -263,11 +267,11 @@
     "show": "Show filters",
     "hide": "Hide filters"
   },
-  "colorSearchHint": "Select colors to browse cards",
   "searchModes": {
     "name": "Name",
     "set": "By Set",
-    "color": "By Color"
+    "color": "By Color",
+    "label": "Search mode"
   },
   "searchToggles": {
     "commander": "Commander",
@@ -280,6 +284,8 @@
   "summary": {
     "label": "Deck summary",
     "formatWithBracket": "{format} · Bracket {level}",
+    "formatWithBracketCombosPending": "{format} · Bracket {level} (combos not checked yet)",
+    "formatWithBracketCombosNotChecked": "{format} · Bracket {level} (combos not checked)",
     "formatWithManualBracket": "{format} · Bracket {level}, set by you",
     "typesToggle": "Types",
     "typesLabel": "Cards by type",

@@ -91,6 +91,30 @@ describe("POST /api/community/card-packages/[packageId]/apply", () => {
     expect(mockCreateMany).not.toHaveBeenCalled();
   });
 
+  // I-01: another tab that read the deck before the apply must be refused
+  // (409) on its next card write, as after any other card write.
+  it("moves the deck to its next version with the cards it adds", async () => {
+    const response = await POST(request(), context);
+
+    expect(response.status).toBe(200);
+    expect(mockDeckUpdate).toHaveBeenCalledWith({
+      where: { id: "deck-1" },
+      data: { version: { increment: 1 }, updatedAt: expect.any(Date) },
+    });
+  });
+
+  it("leaves the deck's version alone when it adds no card", async () => {
+    const blockedOnly = new Request("http://localhost", {
+      method: "POST",
+      body: JSON.stringify({ deckId: "deck-1", acceptedScryfallIds: ["blocked"] }),
+    });
+
+    const response = await POST(blockedOnly, context);
+
+    expect(await response.json()).toEqual({ addedCount: 0, blockedCount: 1 });
+    expect(mockDeckUpdate).not.toHaveBeenCalled();
+  });
+
   it("does not write a package card that Scryfall cannot verify", async () => {
     mockGetCardCollection.mockResolvedValue({ data: [], not_found: [{ id: "ready" }] });
     const response = await POST(request(), context);
@@ -116,6 +140,28 @@ describe("POST /api/community/card-packages/[packageId]/apply", () => {
     expect(await response.json()).toEqual({ addedCount: 1, blockedCount: 0 });
     expect(mockCreateMany).toHaveBeenCalledWith({ data: [expect.objectContaining({
       name: "Sigarda, Host of Herons", typeLine: "Legendary Creature — Angel", cmc: 5,
+    })] });
+  });
+
+  // Considering is not part of the deck: the package's copy counts against the
+  // main deck, the sideboard and the command zone only (CR 903.5b).
+  it("adds a Sol Ring to the main deck when the deck only holds one in Considering", async () => {
+    mockDeckFindFirst.mockResolvedValue({ format: "commander", cards: [
+      { name: "Blue Commander", quantity: 1, isCommander: true, isPartner: false, typeLine: "Legendary Creature", colorIdentity: ["U"], zone: "main", category: "commander" },
+      { name: "Sol Ring", quantity: 1, isCommander: false, isPartner: false, typeLine: "Artifact", colorIdentity: [], zone: "maybeboard", category: "artifact" },
+    ] });
+    mockPackageFindFirst.mockResolvedValue({ cards: [
+      { scryfallId: "ready", name: "Sol Ring", quantity: 1, colorIdentity: [], isBanned: false, isBasicLand: false, imageUri: "ring.jpg" },
+    ] });
+    mockGetCardCollection.mockResolvedValue({ data: [
+      { id: "ready", name: "Sol Ring", cmc: 1, color_identity: [], type_line: "Artifact", legalities: { commander: "legal" }, image_uris: {} },
+    ], not_found: [] });
+
+    const response = await POST(request(), context);
+
+    expect(await response.json()).toEqual({ addedCount: 1, blockedCount: 0 });
+    expect(mockCreateMany).toHaveBeenCalledWith({ data: [expect.objectContaining({
+      name: "Sol Ring", quantity: 1, zone: "main",
     })] });
   });
 

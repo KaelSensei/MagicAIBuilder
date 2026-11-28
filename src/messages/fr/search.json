@@ -1,30 +1,41 @@
 {
   "placeholder": "Rechercher des cartes…",
+  "fieldLabel": "Rechercher des cartes",
   "clearLabel": "Effacer la recherche",
   "searching": "Recherche…",
-  "noResults": "Aucune carte trouvée. Essaie une autre recherche.",
+  "noResults": "Aucune carte trouvée. Essayez une autre recherche.",
+  "choose": {
+    "set": "Choisissez une édition pour en afficher les cartes.",
+    "colors": "Choisissez des couleurs pour en afficher les cartes."
+  },
+  "failure": {
+    "unavailable": "La recherche de cartes est indisponible pour le moment. Réessayez dans un instant.",
+    "rejectedQuery": "Scryfall n’a pas pu lire cette recherche. Vérifiez sa syntaxe."
+  },
   "resultCount": "{count, number} résultats",
   "gridView": "Vue grille",
   "listView": "Vue liste",
+  "viewMode": "Affichage des résultats",
   "setPlaceholder": "Rechercher une édition (ex. dsk, mh3…)",
+  "setFieldLabel": "Rechercher une édition",
   "loadingSets": "Chargement des éditions…",
   "setsLoadFailed": "Échec du chargement des éditions",
   "noSetsFound": "Aucune édition trouvée pour « {query} »",
   "clearSet": "Retirer l'édition sélectionnée",
-  "setsAvailable": "{count, plural, one {# édition disponible} other {# éditions disponibles}} — tape pour rechercher",
+  "setsAvailable": "{count, plural, one {# édition disponible} other {# éditions disponibles}} — tapez pour rechercher",
   "identityScope": {
-    "scoped": "Seulement les cartes aux couleurs de ton commandant",
+    "scoped": "Seulement les cartes aux couleurs de votre commandant",
     "widened": "Cartes de toutes les couleurs",
     "widen": "Afficher toutes les couleurs",
     "narrow": "Seulement les couleurs de mon commandant"
   },
   "collectionOnly": {
-    "signedOut": "Connecte-toi et ajoute des cartes à ta collection pour ne voir que les cartes que tu possèdes.",
-    "emptyCollection": "Ta collection est vide. Ajoutes-y des cartes : ce filtre n'affichera alors que les cartes que tu possèdes.",
-    "collectionUnavailable": "Ta collection n'a pas pu être chargée, donc les cartes que tu possèdes ne peuvent pas être affichées. Recharge la page pour réessayer.",
-    "noMatch": "Aucune des cartes que tu possèdes ne correspond à cette recherche.",
+    "signedOut": "Connectez-vous et ajoutez des cartes à votre collection pour ne voir que les cartes que vous possédez.",
+    "emptyCollection": "Votre collection est vide. Ajoutez-y des cartes : ce filtre n'affichera alors que les cartes que vous possédez.",
+    "collectionUnavailable": "Votre collection n'a pas pu être chargée, donc les cartes que vous possédez ne peuvent pas être affichées. Rechargez la page pour réessayer.",
+    "noMatch": "Aucune des cartes que vous possédez ne correspond à cette recherche.",
     "ownedCount": "{count, plural, one {# carte possédée} other {# cartes possédées}}",
-    "partialScan": "{scanned, number} cartes les plus jouées vérifiées sur {total, number} correspondances. Affine ta recherche pour vérifier les autres."
+    "partialScan": "{scanned, number} cartes les plus jouées vérifiées sur {total, number} correspondances. Affinez votre recherche pour vérifier les autres."
   },
   "filters": {
     "colors": "Couleurs",
@@ -100,6 +111,8 @@
     "ramp": "Ramp"
   },
   "executedQuery": "Requête : {query}",
+  "clearFilters": "Effacer les filtres",
+  "syntaxHint": "Astuce : cherchez par type ou par texte de règles, par exemple t:dragon o:flying.",
   "naturalLanguage": {
     "modeLabel": "Mode de recherche",
     "syntaxMode": "Syntaxe",
@@ -113,20 +126,20 @@
     "translate": "Afficher la requête Scryfall",
     "translating": "Écriture de la requête…",
     "queryLabel": "Requête Scryfall",
-    "queryHelp": "La recherche exécute ce texte. Modifie-le, puis lance la recherche, ou rejette-le.",
+    "queryHelp": "La recherche exécute ce texte. Modifiez-le, puis lancez la recherche, ou rejetez-le.",
     "widened": "Cette modification cherche hors du format ou des couleurs du deck. Elle sera exécutée telle quelle.",
     "search": "Lancer cette requête",
     "reject": "Rejeter la requête",
     "backToSyntax": "Retour à la recherche par syntaxe",
-    "replaceConfirm": "Traduire à nouveau remplace la requête que tu as modifiée.",
+    "replaceConfirm": "Traduire à nouveau remplace la requête que vous avez modifiée.",
     "replaceEdit": "Remplacer la requête modifiée",
     "keepEdit": "Garder ma modification",
     "unavailable": "La recherche en langage naturel est indisponible. La recherche par syntaxe fonctionne toujours.",
-    "rateLimited": "Trop de descriptions. Attends un instant, ou utilise la syntaxe.",
+    "rateLimited": "Trop de descriptions. Attendez un instant, ou utilisez la syntaxe.",
     "allowanceExhausted": "Les traductions de recherche de ce mois sont épuisées. La recherche par syntaxe fonctionne toujours.",
     "spendCeiling": "La recherche en langage naturel est en pause jusqu'au renouvellement du budget mensuel.",
-    "invalidDescription": "Décris la carte en quelques mots.",
-    "invalidQuery": "Cette description n'a pas produit une requête Scryfall valide. Essaie une formulation plus courte.",
+    "invalidDescription": "Décrivez la carte en quelques mots.",
+    "invalidQuery": "Cette description n'a pas produit une requête Scryfall valide. Essayez une formulation plus courte.",
     "failed": "La requête n'a pas pu être écrite. La recherche par syntaxe fonctionne toujours."
   },
   "quickAdd": {
@@ -137,7 +150,7 @@
     "nameReading": "Nom",
     "oracleReading": "Texte de règles",
     "readingGroup": "Comment lire cette ligne",
-    "idle": "Tape au moins deux lettres.",
+    "idle": "Tapez au moins deux lettres.",
     "searching": "Recherche…",
     "noResults": "Aucune carte pour cette requête.",
     "error": "La recherche n'a pas abouti.",

@@ -276,3 +276,126 @@ describe("computeDeckStats", () => {
     expect(stats.manaCurve[10]).toBeUndefined();
   });
 });
+
+describe("computeDeckStats warning lists (I-03 slice 5)", () => {
+  const banned = [
+    aDeckCard({ id: "b-mana-crypt", name: "Mana Crypt", isBanned: true }),
+    aDeckCard({
+      id: "b-dockside",
+      name: "Dockside Extortionist",
+      isBanned: true,
+    }),
+  ];
+
+  it("lists the banned cards in the same order whatever the order of the deck's rows", () => {
+    const deckOrder = aDeck({ cards: [...banned] });
+    const reordered = aDeck({ cards: banned.toReversed() });
+
+    expect(computeDeckStats(reordered).bannedCards).toEqual(
+      computeDeckStats(deckOrder).bannedCards
+    );
+    expect(computeDeckStats(deckOrder).bannedCards).toEqual([
+      "Dockside Extortionist",
+      "Mana Crypt",
+    ]);
+  });
+
+  it("lists the Game Changers in the same order whatever the order of the deck's rows", () => {
+    const gameChangers = [
+      aDeckCard({
+        id: "g-rhystic",
+        name: "Rhystic Study",
+        isGameChanger: true,
+      }),
+      aDeckCard({
+        id: "g-cyclonic",
+        name: "Cyclonic Rift",
+        isGameChanger: true,
+      }),
+    ];
+    const deckOrder = aDeck({ cards: [...gameChangers] });
+    const reordered = aDeck({ cards: gameChangers.toReversed() });
+
+    expect(computeDeckStats(reordered).gameChangersList).toEqual(
+      computeDeckStats(deckOrder).gameChangersList
+    );
+    expect(computeDeckStats(deckOrder).gameChangersList).toEqual([
+      "Cyclonic Rift",
+      "Rhystic Study",
+    ]);
+  });
+
+  it("lists the over-budget cards in the same order whatever the order of the deck's rows", () => {
+    const expensive = [
+      aDeckCard({ id: "p-gaea", name: "Gaea's Cradle", price: 900 }),
+      aDeckCard({ id: "p-ancient", name: "Ancient Tomb", price: 60 }),
+    ];
+    const deckOrder = aDeck({ budget: 50, cards: [...expensive] });
+    const reordered = aDeck({ budget: 50, cards: expensive.toReversed() });
+
+    expect(computeDeckStats(reordered).overBudgetCards).toEqual(
+      computeDeckStats(deckOrder).overBudgetCards
+    );
+    expect(computeDeckStats(deckOrder).overBudgetCards).toEqual([
+      "Ancient Tomb",
+      "Gaea's Cradle",
+    ]);
+  });
+
+  describe("the inputs of the builder's dismissed banned alert", () => {
+    // The builder keys the dismissal on these three lists (`banlistAlertKey`).
+    function alertInputs(deck: Deck) {
+      const stats = computeDeckStats(deck);
+      return {
+        banned: stats.bannedCards,
+        offIdentity: stats.colorIdentityViolations,
+        ruleIssues: stats.commanderRuleIssues.map((issue) => issue.cardId),
+      };
+    }
+
+    const commander = aDeckCard({
+      id: "cmd",
+      name: "Atraxa, Praetors' Voice",
+      category: "commander",
+      colorIdentity: ["W", "U", "B", "G"],
+    });
+    const filler = aDeckCard({
+      id: "f-sol",
+      name: "Sol Ring",
+      category: "ramp",
+    });
+    const offIdentity = aDeckCard({
+      id: "o-bolt",
+      name: "Lightning Bolt",
+      colorIdentity: ["R"],
+    });
+
+    it("stay the same when the player reorders the cards and moves a banned one to another category", () => {
+      const before = aDeck({
+        commander,
+        cards: [banned[0], filler, offIdentity, banned[1]],
+      });
+      const after = aDeck({
+        commander,
+        cards: [
+          offIdentity,
+          { ...banned[1], category: "ramp" },
+          filler,
+          banned[0],
+        ],
+      });
+
+      expect(alertInputs(after)).toEqual(alertInputs(before));
+    });
+
+    it("change when a card becomes banned, so the alert opens again", () => {
+      const before = aDeck({ commander, cards: [...banned, filler] });
+      const after = aDeck({
+        commander,
+        cards: [...banned, { ...filler, isBanned: true }],
+      });
+
+      expect(alertInputs(after).banned).not.toEqual(alertInputs(before).banned);
+    });
+  });
+});

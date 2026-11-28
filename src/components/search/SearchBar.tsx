@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { Search, X, Loader2 } from "lucide-react";
+import { focusWithinRingClassName } from "@/components/ui/focus";
 import { fieldShellClassName } from "@/components/ui/Input";
 import { cn } from "@/components/ui/utils";
 import { useUIStore } from "@/lib/ui/store";
@@ -79,7 +80,8 @@ export function SearchBar({
     <div
       className={cn(
         fieldShellClassName,
-        "relative flex items-center focus-within:border-[var(--accent)] focus-within:ring-2 focus-within:ring-[var(--accent-soft)]",
+        "relative flex items-center focus-within:border-[var(--focus-ring)]",
+        focusWithinRingClassName,
         className
       )}
     >
@@ -97,6 +99,10 @@ export function SearchBar({
         onChange={(e) => setValue(e.target.value)}
         onFocus={onFocus}
         onBlur={onBlur}
+        // The design has no room for a visible label, and a placeholder is no
+        // name (WCAG 2.2 SC 1.3.1 and 4.1.2). The name stays the same when a
+        // caller swaps the placeholder: the field searches cards either way.
+        aria-label={t("fieldLabel")}
         placeholder={resolvedPlaceholder}
         className="flex-1 bg-transparent px-3 py-2.5 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] outline-none min-w-0"
         data-testid="search-input"

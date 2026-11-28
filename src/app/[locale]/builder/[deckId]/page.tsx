@@ -1,7 +1,16 @@
 "use client";
 // Main builder view — 3-panel layout: Search | DeckEditor | Stats
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FocusEvent,
+  type KeyboardEvent,
+} from "react";
+import { flushSync } from "react-dom";
+import { useParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import {
   DndContext,
@@ -40,11 +49,13 @@ import { useUIStore } from "@/lib/ui/store";
 import { useBracketScore } from "@/hooks/useBracketScore";
 import { useCardSearchResults } from "@/hooks/useCardSearchResults";
 import { useCopyLimitNotice } from "@/hooks/useCopyLimitNotice";
+import { useDeckDuplication } from "@/hooks/useDeckDuplication";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { Header } from "@/components/layout/Header";
 import { SearchBar } from "@/components/search/SearchBar";
 import { SearchFilters } from "@/components/search/SearchFilters";
 import { SearchResults } from "@/components/search/SearchResults";
+import { searchWaitingFor } from "@/components/builder/search-waiting-for";
 import { QuickAddPaletteHost } from "@/components/search/QuickAddPaletteHost";
 import { DeckCardCount } from "@/components/deck/DeckCardCount";
 import { DeckEditor } from "@/components/deck/DeckEditor";
@@ -66,6 +77,10 @@ import {
 } from "@/lib/scryfall/search";
 import { SetAutocomplete } from "@/components/search/SetAutocomplete";
 import type { SearchFilters as Filters } from "@/lib/scryfall/search-types";
+import { NO_SEARCH_FILTERS } from "@/lib/scryfall/search-filters";
+import { emptySearchNextStep } from "@/components/builder/empty-search-next-step";
+import { focusSearchField } from "@/components/builder/focus-search-field";
+import { togglePick, type SearchPick } from "@/components/builder/search-pick";
 import type { DeckCard, CardCategory, DeckZone } from "@/lib/deck/types";
 import { getFormatConfig, type DeckFormat } from "@/lib/deck/formats";
 import type { PairingCard } from "@/lib/deck/partner-abilities";
@@ -75,9 +90,11 @@ import {
   KeyboardShortcutsModal,
   KeyboardShortcutsTrigger,
 } from "@/components/layout/KeyboardShortcutsModal";
-import { Link } from "@/i18n/navigation";
 import { motion } from "framer-motion";
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { cn } from "@/components/ui/utils";
+import { Button } from "@/components/ui/Button";
+import { ButtonLink } from "@/components/ui/ButtonLink";
 import { CombosPanel } from "@/modules/combos/ui/CombosPanel";
 import { useCombos } from "@/modules/combos/client";
 import { ExportModal } from "@/components/deck/ExportModal";
@@ -124,6 +141,9 @@ import { explicitDropZone, preferSmallerDropTarget, searchDropZone } from "@/lib
 import { ExternalCardDropTarget } from "@/components/builder/ExternalCardDropTarget";
 
 type SearchMode = "name" | "set" | "color";
+
+/** The search tabs, in display order. */
+const SEARCH_MODES: readonly SearchMode[] = ["name", "set", "color"];
 
 /** Message key for a search mode tab, resolved by the caller's `t`. */
 function searchModeKey(mode: SearchMode): string {
@@ -266,27 +286,6 @@ function getCategoryFromDropId(overId: string): string | null {
   return null;
 }
 
-const DEFAULT_FILTERS: Filters = {
-  colors: [],
-  colorMode: "or",
-  colorlessFilter: false,
-  landFilter: false,
-  types: [],
-  cmcMode: "range",
-  cmcMin: null,
-  cmcMax: null,
-  cmcExact: null,
-  priceMin: null,
-  priceMax: null,
-  subtype: "",
-  keyword: "",
-  powerMin: null,
-  powerMax: null,
-  toughnessMin: null,
-  toughnessMax: null,
-  interactionType: null,
-};
-
 interface UnavailableBuilderPageProps {
   readonly deckId: string;
   readonly isSyncing: boolean;
@@ -338,7 +337,6 @@ export default function BuilderPage() {
   const t = useTranslations("builder");
   const searchLocale = toSearchLocale(useLocale());
   const params = useParams();
-  const router = useRouter();
   const deckId = params.deckId as string;
   const { data: sessionData, status: sessionStatus } = useSession();
 
@@ -352,17 +350,18 @@ export default function BuilderPage() {
   const updateCardCategory = useDeckStore((s) => s.updateCardCategory);
   const moveCardToZone = useDeckStore((s) => s.moveCardToZone);
   const renameDeck = useDeckStore((s) => s.renameDeck);
-  const duplicateDeck = useDeckStore((s) => s.duplicateDeck);
   const swapCardPrinting = useDeckStore((s) => s.swapCardPrinting);
   const addToMaybeboard = useDeckStore((s) => s.addToMaybeboard);
-  const handleDuplicate = useCallback(async () => {
-    const newId = await duplicateDeck(deckId);
-    router.push(`/builder/${newId}`);
-  }, [duplicateDeck, deckId, router]);
   const setManualBracket = useDeckStore((s) => s.setManualBracket);
   const decks = useDeckStore((s) => s.decks);
   const loadDecks = useDeckStore((s) => s.loadDecks);
   const reloadActiveDeck = useDeckStore((s) => s.reloadActiveDeck);
+  // A deck deleted elsewhere: reading it again turns the page into "Deck not found".
+  const duplicateDeck = useDeckDuplication({ onMissing: reloadActiveDeck });
+  const handleDuplicate = useCallback(() => {
+    const open = decks[deckId];
+    if (open) void duplicateDeck(open);
+  }, [duplicateDeck, deckId, decks]);
   const loadError = useDeckStore((s) => s.loadError);
   const deckOpenError = useDeckStore((s) => s.deckOpenError);
   const isSyncing = useDeckStore((s) => s.isSyncing);
@@ -447,11 +446,12 @@ export default function BuilderPage() {
     maxWidth: 520,
     storageKey: "builder-search-panel-width",
   });
-  const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
+  const [filters, setFilters] = useState<Filters>(NO_SEARCH_FILTERS);
   const [showFilters, setShowFilters] = useState(false);
-  const [commanderMode, setCommanderMode] = useState(false);
-  const [partnerMode, setPartnerMode] = useState(false);
-  const [companionMode, setCompanionMode] = useState(false);
+  const [searchPick, setSearchPick] = useState<SearchPick | null>(null);
+  const commanderMode = searchPick === "commander";
+  const partnerMode = searchPick === "partner";
+  const companionMode = searchPick === "companion";
 
   // Search mode
   const [searchMode, setSearchMode] = useState<SearchMode>("name");
@@ -464,11 +464,22 @@ export default function BuilderPage() {
       prev.includes(code) ? prev.filter((x) => x !== code) : [...prev, code]
     );
   }, []);
+  // A tab starts afresh: the picks are toggled only from the Name tab, and a pick left on would
+  // replace By Set's and By Color's query with nothing on screen to say so (I-37).
+  const switchSearchTab = useCallback((mode: SearchMode) => {
+    setSearchMode(mode);
+    setSearchText("");
+    setSelectedSet("");
+    setColorFilter([]);
+    setSearchPick(null);
+  }, []);
 
   // Inline deck name editing
   const [isEditingName, setIsEditingName] = useState(false);
   const [nameInput, setNameInput] = useState("");
   const nameInputRef = useRef<HTMLInputElement>(null);
+  // The deck-name button that starts a rename; focus comes back to it when one ends.
+  const nameButtonRef = useRef<HTMLButtonElement>(null);
 
   // Track active drag card for overlay
   const [activeDragCard, setActiveDragCard] = useState<ScryfallCard | null>(
@@ -566,11 +577,30 @@ export default function BuilderPage() {
 
   // Set and colour search show no filters panel, so a "Collection only" left on there must not
   // filter a list whose toggle the player cannot see.
+  const collectionOnly =
+    searchMode === "name" && filters.collectionOnly === true;
   const searchResults = useCardSearchResults(query, {
-    collectionOnly: searchMode === "name" && filters.collectionOnly === true,
+    collectionOnly,
     sessionStatus,
   });
   const searchLoading = searchResults.isLoading;
+  // "Clear filters" removes itself on the press, so focus moves to the search field instead of
+  // falling to <body>.
+  const searchControlsRef = useRef<HTMLDivElement>(null);
+  const clearFilters = useCallback(() => {
+    setFilters(NO_SEARCH_FILTERS);
+    focusSearchField(searchControlsRef.current);
+  }, []);
+  const emptyResultNextStep = emptySearchNextStep(
+    {
+      tab: searchMode,
+      picking: commanderMode || partnerMode || companionMode,
+      pinned: pinnedQuery !== null,
+      filters,
+      collectionOnly,
+    },
+    clearFilters
+  );
 
   const handleSearch = useCallback((text: string) => {
     setSearchText(text);
@@ -833,12 +863,43 @@ export default function BuilderPage() {
     }, 0);
   };
 
-  const commitDeckName = (rawName: string) => {
-    const trimmed = rawName.trim();
+  // Every way out of a rename comes through here. The field unmounts and React fires no blur for
+  // it, so the flag that holds the shortcuts off has to be cleared with it (I-37).
+  const endDeckRename = () => {
     setIsEditingName(false);
     setIsInputFocused(false);
+  };
+
+  const commitDeckName = (rawName: string) => {
+    const trimmed = rawName.trim();
+    endDeckRename();
     if (!trimmed || trimmed === deck.name) return;
     void renameDeck(deckId, trimmed);
+  };
+
+  // Enter, Escape and the Save button end a rename from inside the title bar, so focus goes back
+  // to the deck name instead of falling to the top of the page (WCAG 2.2 SC 2.4.3,
+  // https://www.w3.org/TR/WCAG22/#focus-order, read 2026-11-26). `flushSync` mounts the button
+  // before it takes focus.
+  const endDeckRenameOnName = (end: () => void) => {
+    flushSync(end);
+    nameButtonRef.current?.focus();
+  };
+
+  // Escape cancels from the field or the Save button. The key is spent here: the page's own
+  // Escape would clear the search as well.
+  const cancelDeckRenameOnEscape = (event: KeyboardEvent<HTMLElement>) => {
+    if (event.key !== "Escape") return;
+    event.preventDefault();
+    endDeckRenameOnName(endDeckRename);
+  };
+
+  // The field and its Save button are one rename: focus moving between them keeps it open, so a
+  // keyboard player can reach the button. Focus leaving both (Tab, Shift+Tab, a click elsewhere)
+  // saves, and stays where the player put it.
+  const commitDeckNameOnLeave = (event: FocusEvent<HTMLDivElement>) => {
+    if (event.currentTarget.contains(event.relatedTarget)) return;
+    commitDeckName(nameInputRef.current?.value ?? nameInput);
   };
 
   return (
@@ -859,45 +920,71 @@ export default function BuilderPage() {
               announced this as "link" with no name at all. It also left the
               e2e suite unable to target it — `a[href$="/decks"]` matches the
               header's "My Decks" nav link too, and `.first()` picked that one,
-              so the test named "back navigation" never touched this control. */}
-          <Link
+              so the test named "back navigation" never touched this control.
+              `size-6` gives the 16 px arrow the 24 px target of WCAG 2.2
+              SC 2.5.8 (https://www.w3.org/TR/WCAG22/#target-size-minimum,
+              read 2026-11-26), and `-mx-1` takes the 8 px back from the
+              padding and the gap, so nothing after it moves. */}
+          <ButtonLink
             href="/decks"
+            variant="ghost"
+            size="icon"
             aria-label={t("actions.backToDecks")}
-            className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+            className="-mx-1 size-6 shrink-0 p-0"
           >
             <ArrowLeft className="w-4 h-4" />
-          </Link>
+          </ButtonLink>
           {isEditingName ? (
-            <div className="flex items-center gap-1.5 flex-1 min-w-0">
+            <div
+              className="flex items-center gap-1.5 flex-1 min-w-0"
+              onBlur={commitDeckNameOnLeave}
+            >
               <input
                 ref={nameInputRef}
                 aria-label={t("actions.rename")}
                 value={nameInput}
                 onChange={(e) => setNameInput(e.target.value)}
                 onFocus={() => setIsInputFocused(true)}
-                onBlur={(event) => commitDeckName(event.currentTarget.value)}
                 onKeyDown={(event) => {
                   if (event.key === "Enter") {
                     event.preventDefault();
-                    commitDeckName(event.currentTarget.value);
+                    endDeckRenameOnName(() =>
+                      commitDeckName(event.currentTarget.value)
+                    );
                   }
-                  if (event.key === "Escape") setIsEditingName(false);
+                  cancelDeckRenameOnEscape(event);
                 }}
-                className="flex-1 text-sm font-semibold bg-transparent border-b border-[var(--accent)] text-[var(--text-primary)] outline-none min-w-0"
+                className="flex-1 text-sm font-semibold bg-transparent border-b border-[var(--border)] focus-visible:border-[var(--focus-ring)] text-[var(--text-primary)] min-w-0"
                 maxLength={200}
               />
-              <button
-                type="button"
+              {/* Icon-only, so it carries its own name; a screen reader
+                  announced a bare "button" (design audit S10). `size-6` is
+                  the 24 px target of WCAG 2.2 SC 2.5.8
+                  (https://www.w3.org/TR/WCAG22/#target-size-minimum, read
+                  2026-11-26); the field beside it is `flex-1`, so it gives up
+                  the extra width and the bar keeps its height. */}
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label={t("actions.confirmRename")}
                 onClick={() =>
-                  commitDeckName(nameInputRef.current?.value ?? nameInput)
+                  endDeckRenameOnName(() =>
+                    commitDeckName(nameInputRef.current?.value ?? nameInput)
+                  )
                 }
-                className="text-green-400 hover:text-green-300 shrink-0"
+                onKeyDown={cancelDeckRenameOnEscape}
+                // Safari and Firefox on macOS never focus a clicked button, so the field's blur
+                // would save and close the row before this click lands. Keeping focus in the
+                // field lets the click end the rename and return focus to the deck name.
+                onMouseDown={(event) => event.preventDefault()}
+                className="size-6 shrink-0 p-0"
               >
                 <Check className="w-3.5 h-3.5" />
-              </button>
+              </Button>
             </div>
           ) : (
             <button
+              ref={nameButtonRef}
               type="button"
               onClick={handleStartEditName}
               className="group flex items-center gap-1.5"
@@ -906,12 +993,20 @@ export default function BuilderPage() {
               <h1 className="text-sm font-semibold text-[var(--text-primary)] group-hover:text-[var(--accent-text)] transition-colors">
                 {deck.name}
               </h1>
-              <Pencil className="w-3 h-3 text-[var(--text-secondary)] opacity-0 group-hover:opacity-100 transition-opacity" />
+              {/* Shown on keyboard focus too: on hover alone, a keyboard
+                  player never saw the cue (design audit S10). */}
+              <Pencil className="w-3 h-3 text-[var(--text-secondary)] opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity" />
             </button>
           )}
+          {/* The status chip of the theme, `--accent-text` on `--accent-soft`
+              (at least 4.5:1 in both themes, held by `src/components/landing/contrast.test.ts`),
+              in place of raw `text-purple-400` (design audit S10). The
+              transparent border keeps the chip's size and draws its edge in
+              forced-colors mode, which drops the fill. */}
           {deck.isAIGenerated && (
-            <span className="text-xs px-1.5 py-0.5 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/30">
-              ✨ {t("badges.ai")}
+            <span className="text-xs px-1.5 py-0.5 rounded-full border border-transparent bg-[var(--accent-soft)] text-[var(--accent-text)]">
+              <span aria-hidden="true">✨ </span>
+              {t("badges.ai")}
             </span>
           )}
           <DeckCardCount
@@ -1028,30 +1123,22 @@ export default function BuilderPage() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <div className="space-y-3 border-b border-[var(--border)] p-4">
+            <div
+              ref={searchControlsRef}
+              className="space-y-3 border-b border-[var(--border)] p-4"
+            >
               {/* Search mode tabs */}
-              <div className="flex gap-1 rounded-[var(--lumen-radius-pill)] bg-[var(--background)] p-1">
-                {(["name", "set", "color"] as const).map((mode) => (
-                  <button
-                    type="button"
-                    key={mode}
-                    onClick={() => {
-                      setSearchMode(mode);
-                      setSearchText("");
-                      setSelectedSet("");
-                      setColorFilter([]);
-                    }}
-                    className={cn(
-                      "flex-1 rounded-[var(--lumen-radius-pill)] py-2 text-xs font-medium capitalize transition-all",
-                      searchMode === mode
-                        ? "bg-[var(--surface)] text-[var(--text-primary)] shadow-[var(--lumen-shadow-sm)]"
-                        : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-                    )}
-                  >
-                    {t(searchModeKey(mode))}
-                  </button>
-                ))}
-              </div>
+              <SegmentedControl
+                aria-label={t("searchModes.label")}
+                options={SEARCH_MODES.map((mode) => ({
+                  value: mode,
+                  label: t(searchModeKey(mode)),
+                }))}
+                value={searchMode}
+                onChange={switchSearchTab}
+                size="md"
+                fullWidth
+              />
 
               {/* Mode-specific controls */}
               {searchMode === "name" && (
@@ -1086,21 +1173,15 @@ export default function BuilderPage() {
                         commanderMode={commanderMode}
                         partnerMode={partnerMode}
                         companionMode={companionMode}
-                        onToggleCommander={() => {
-                          setCommanderMode((m) => !m);
-                          setPartnerMode(false);
-                          setCompanionMode(false);
-                        }}
-                        onTogglePartner={() => {
-                          setPartnerMode((m) => !m);
-                          setCommanderMode(false);
-                          setCompanionMode(false);
-                        }}
-                        onToggleCompanion={() => {
-                          setCompanionMode((m) => !m);
-                          setCommanderMode(false);
-                          setPartnerMode(false);
-                        }}
+                        onToggleCommander={() =>
+                          setSearchPick((p) => togglePick(p, "commander"))
+                        }
+                        onTogglePartner={() =>
+                          setSearchPick((p) => togglePick(p, "partner"))
+                        }
+                        onToggleCompanion={() =>
+                          setSearchPick((p) => togglePick(p, "companion"))
+                        }
                       />
                     </div>
                   </div>
@@ -1134,7 +1215,6 @@ export default function BuilderPage() {
                   />
                   <BuilderColorSearchPicker
                     selected={colorFilter}
-                    hasNameFilter={searchText !== ""}
                     onToggle={toggleColorFilter}
                   />
                 </div>
@@ -1153,6 +1233,8 @@ export default function BuilderPage() {
                 onAddToZone={handleAddToZone}
                 draggable={true}
                 executedQuery={pinnedQueryLabel(pinnedQuery)}
+                nextStep={emptyResultNextStep}
+                waitingFor={searchWaitingFor(searchMode, query)}
               />
             </div>
           </motion.div>
@@ -1314,7 +1396,11 @@ export default function BuilderPage() {
             onSelect={setMobilePanel}
           />
         </div>
-        <DeckSummaryBar deck={deck} bracketScore={bracketScore} />
+        <DeckSummaryBar
+          deck={deck}
+          bracketScore={bracketScore}
+          comboData={comboData}
+        />
       </div>
 
       {/* Toast notifications */}

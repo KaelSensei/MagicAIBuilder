@@ -1,8 +1,9 @@
 /**
  * Text made safe to place in an HTML document the app builds as a string.
  *
- * Shared kernel, pure. The decklist registration sheet escapes every card and
- * deck name through it, so a name with `&`, `<` or quotes prints as typed.
+ * Shared kernel, pure. The decklist registration sheet and the proxy print
+ * sheet escape every card and deck text through it, so a name with `&`, `<`
+ * or quotes prints as typed.
  * Not responsible for: URLs or script content, which need their own encoding.
  *
  * @module text/escape-html

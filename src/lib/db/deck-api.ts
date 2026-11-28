@@ -14,6 +14,7 @@ import {
   readAnsweredVersion,
   type VersionedAnswer,
 } from "@/lib/db/deck-api-answer";
+import { withRequestDeadline } from "@/lib/async/request-deadline";
 import type { DeckWriteTarget } from "@/lib/deck/deck-repository-port";
 import type {
   Deck,
@@ -206,28 +207,20 @@ export async function fetchDecks(
     page: String(page),
     limit: String(limit),
   });
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 15_000);
-  try {
-    const res = await fetch(`/api/decks?${params}`, { signal: controller.signal });
+  return withRequestDeadline<ApiDeckListResponse>(async (signal) => {
+    const res = await fetch(`/api/decks?${params}`, { signal });
     if (!res.ok) await handleApiError(res, "fetchDecks");
     return await res.json();
-  } finally {
-    clearTimeout(timeout);
-  }
+  });
 }
 
 export async function fetchDeck(id: string): Promise<ApiDeck> {
   if (isGuestDeckId(id)) return getGuestApiDeck();
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 15_000);
-  try {
-    const res = await fetch(`/api/decks/${id}`, { signal: controller.signal });
+  return withRequestDeadline<ApiDeck>(async (signal) => {
+    const res = await fetch(`/api/decks/${id}`, { signal });
     if (!res.ok) await handleApiError(res, "fetchDeck");
     return await res.json();
-  } finally {
-    clearTimeout(timeout);
-  }
+  });
 }
 
 /**
@@ -363,10 +356,24 @@ export async function deleteDeck(id: string): Promise<void> {
   if (!res.ok) await handleApiError(res, "deleteDeck");
 }
 
-export async function duplicateDeck(id: string): Promise<ApiDeck> {
+/**
+ * Asks the server for a private copy of a deck.
+ *
+ * @param id - the deck to copy
+ * @param name - the copy's name, in the player's language; left out, the
+ *   server names it `<name> (Copy)`
+ * @returns the copy, as the server wrote it
+ * @throws DeckApiError when the server refuses or fails the copy
+ */
+export async function duplicateDeck(
+  id: string,
+  name?: string
+): Promise<ApiDeck> {
   const res = await fetch(`/api/decks/${id}/duplicate`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    // JSON drops an undefined name, so a copy without one sends `{}`.
+    body: JSON.stringify({ name }),
   });
   if (!res.ok) await handleApiError(res, "duplicateDeck");
   return res.json();

@@ -140,7 +140,7 @@ export function CardFlip({
             : `Turn over: ${backFace.name}`
         }
         onClick={flip}
-        className="absolute bottom-2 right-2 z-20 w-8 h-8 rounded-full bg-black/60 hover:bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-150 ring-1 ring-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+        className="absolute bottom-2 right-2 z-20 w-8 h-8 rounded-full bg-black/60 hover:bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-150 ring-1 ring-white/20"
       >
         <RefreshCw
           className={cn(

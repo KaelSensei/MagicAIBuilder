@@ -33,14 +33,15 @@
     "refresh": "Refresh plan",
     "noDecks": "Create a deck to start a purchase plan.",
     "complete": "All cards needed for these decks are in your collection.",
+    "nothingToBuyNow": "Nothing to buy now: every missing copy is deferred.",
     "summary": "{count} to acquire across {decks} decks · Known-price subtotal: {cost}",
     "unpriced": "Price unavailable for {count, plural, one {# copy} other {# copies}}",
     "requiredAcrossDecks": "{count, plural, one {# copy} other {# copies}} required across {decks, plural, one {# deck} other {# decks}}",
     "toAcquire": "{count} to acquire",
     "deferredTitle": "Deferred · {count, plural, one {# copy} other {# copies}}",
     "deferredHint": "Copies you chose to proxy or buy later in a deck's shopping list. They are not in the total or the CSV.",
-    "proxyNowFor": "Proxy for now — {deck}",
-    "buyLaterFor": "Buy later — {deck}"
+    "proxyNowFor": "Proxy for now — <link>{deck}</link>",
+    "buyLaterFor": "Buy later — <link>{deck}</link>"
   },
   "loading": "Loading collection…",
   "loadFailed": "Could not refresh your collection. Your saved cards are unchanged.",
@@ -66,11 +67,13 @@
   },
   "viewMode": {
     "gridView": "Grid view",
-    "listView": "List view"
+    "listView": "List view",
+    "layout": "Layout"
   },
   "empty": {
     "title": "Your collection is empty.",
-    "hint": "Add cards using the button above or from the card search.",
+    "purpose": "Add the cards you own, and your decks will show which ones you have and which you still need to buy.",
+    "addCards": "Add cards",
     "noMatch": "No cards match your search."
   },
   "listHeaders": {

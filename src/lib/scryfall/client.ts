@@ -11,13 +11,20 @@ import {
   type ScryfallAutocompleteResponse,
   type ScryfallCollectionIdentifier,
   type ScryfallCollectionResponse,
+  type ScryfallSet,
+  type ScryfallSetList,
 } from "./types";
 import { lookupCardCache, lookupSearchCache } from "./shared-cache-client";
 import { isScryfallCard, isScryfallSearchResponse } from "./guards";
-import { resetScryfallQueue, scheduleScryfallRequest } from "./request-queue";
+import {
+  resetScryfallQueue,
+  scheduleScryfallRequest,
+  ScryfallBlockedError,
+} from "./request-queue";
 import { buildLocalizedNamesQueries } from "./localized";
 import { exactNameTerm } from "./exact-name";
 import { SCRYFALL_API } from "./constants";
+import { ScryfallApiError } from "./api-error";
 import { logger } from "@/lib/logger";
 
 /**
@@ -80,11 +87,30 @@ async function handleResponse<T>(response: Response): Promise<T> {
     const error = await response.json().catch(() => ({
       details: response.statusText,
     }));
-    throw new Error(
-      `Scryfall API error ${response.status}: ${error.details ?? response.statusText}`
+    throw new ScryfallApiError(
+      response.status,
+      error.details ?? response.statusText
     );
   }
   return response.json() as Promise<T>;
+}
+
+/**
+ * Logs a failed search once, where it fails. A search the queue refused during
+ * a 429 block goes to `info`: the queue logged that block once at `warn`, and
+ * a line per refused retry would repeat it. Any other failure keeps its raw
+ * text (Scryfall's details, a network failure) at `warn`, since the search
+ * panel shows the player a translated sentence, never this error.
+ */
+function logSearchFailure(error: unknown): void {
+  if (error instanceof ScryfallBlockedError) {
+    logger.info(
+      "Scryfall search not sent during a 429 block",
+      "Scryfall search"
+    );
+    return;
+  }
+  logger.warn("Scryfall search failed", "Scryfall search", error);
 }
 
 /**
@@ -132,6 +158,9 @@ export async function searchCards(
     }
 
     return await handleResponse<ScryfallSearchResponse>(response);
+  } catch (error) {
+    logSearchFailure(error);
+    throw error;
   } finally {
     logger.info("Scryfall search completed", "Scryfall search", {
       status,
@@ -207,6 +236,19 @@ export async function getCardCollection(
     body: JSON.stringify({ identifiers }),
   });
   return handleResponse<ScryfallCollectionResponse>(response);
+}
+
+/**
+ * Every set Scryfall lists, from `/sets`, asked in its turn in the runtime's
+ * queue.
+ *
+ * @throws {ScryfallApiError} when Scryfall answers a failure status; with
+ *   status 429, unsent, during the queue's 429 block
+ */
+export async function getAllSets(): Promise<readonly ScryfallSet[]> {
+  const response = await rateLimitedFetch(`${SCRYFALL_API}/sets`);
+  const list = await handleResponse<ScryfallSetList>(response);
+  return list.data;
 }
 
 /** Fetch all pages of a Scryfall search query */

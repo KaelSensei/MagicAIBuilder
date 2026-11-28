@@ -8,6 +8,8 @@
  * when its toast is removed, so a dismissed toast leaves no timer running.
  */
 import { create } from "zustand";
+import type { DeckFailureToastKey } from "@/lib/deck/failure-toasts";
+import type { DeckNoticeToastKey } from "@/lib/deck/notice-toasts";
 import { toastLifetime, type ToastType } from "@/lib/ui/toast-policy";
 
 export type { ToastType } from "@/lib/ui/toast-policy";
@@ -15,12 +17,27 @@ export type { ToastType } from "@/lib/ui/toast-policy";
 /**
  * The catalog keys a toast may be raised by, as `useTranslations()` without a
  * namespace reads them. Raised by code that has no locale of its own (the deck
- * store); the toast container translates them in the player's locale.
+ * store); the toast container translates them in the player's locale. The
+ * deck store's save and load failures are listed in `lib/deck/failure-toasts.ts`,
+ * its other notices in `lib/deck/notice-toasts.ts`.
  */
-export type LocalizedToastKey = "deck.sync.conflictReloaded";
+export type LocalizedToastKey =
+  | "deck.sync.conflictReloaded"
+  | "deck.undo.openOriginalDeck"
+  | DeckFailureToastKey
+  | DeckNoticeToastKey;
+
+/** The values a translated toast's message is formatted with: names and counts, never words. */
+export type ToastValues = Readonly<Record<string, string | number>>;
+
+/** A toast raised by its catalog key, with the values its message needs. */
+export interface LocalizedToast {
+  readonly key: LocalizedToastKey;
+  readonly values?: ToastValues;
+}
 
 /** A toast's text: the words themselves, or the catalog key the container translates. */
-export type ToastMessage = string | { readonly key: LocalizedToastKey };
+export type ToastMessage = string | LocalizedToast;
 
 export interface Toast {
   id: string;

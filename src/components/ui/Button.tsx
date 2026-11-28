@@ -12,6 +12,7 @@
  */
 import { cva, type VariantProps } from "class-variance-authority";
 import type { ButtonHTMLAttributes } from "react";
+import { focusRingClassName } from "@/components/ui/focus";
 import { cn } from "@/components/ui/utils";
 
 /**
@@ -21,9 +22,10 @@ import { cn } from "@/components/ui/utils";
  * Sizes: `sm` and `md` are the in-app buttons, `lg` the landing's call to
  * action, `icon` a square pill around one icon. Pass the caller's classes
  * after it through `cn`, so a spacing utility they add replaces the base one.
+ * Keyboard focus is the shared `--focus-ring` outline of `focus.ts`.
  */
 export const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-1.5 font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] disabled:cursor-not-allowed disabled:opacity-50",
+  `inline-flex items-center justify-center gap-1.5 font-medium transition-colors ${focusRingClassName} disabled:cursor-not-allowed disabled:opacity-50`,
   {
     variants: {
       variant: {

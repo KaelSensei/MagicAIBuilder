@@ -42,7 +42,7 @@ export function ShoppingListRow({ item, money, intent, onSetIntent }: ShoppingLi
         onClick={() => onSetIntent(intent === "proxy_now" ? "buy_now" : "proxy_now")}
         aria-pressed={intent === "proxy_now"}
         aria-label={t(intent === "proxy_now" ? "buyList.buyNowNamed" : "buyList.proxyNowNamed", { name: item.name })}
-        className="shrink-0 rounded border border-[var(--border)] px-2 py-1 text-[10px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)]"
+        className="shrink-0 rounded border border-[var(--border)] px-2 py-1 text-[10px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)]"
       >
         {t(intent === "proxy_now" ? "buyList.buyNow" : "buyList.proxyNow")}
       </button>
@@ -51,7 +51,7 @@ export function ShoppingListRow({ item, money, intent, onSetIntent }: ShoppingLi
         onClick={() => onSetIntent(intent === "buy_later" ? "buy_now" : "buy_later")}
         aria-pressed={intent === "buy_later"}
         aria-label={t(intent === "buy_later" ? "buyList.buyNowNamed" : "buyList.buyLaterNamed", { name: item.name })}
-        className="shrink-0 rounded border border-[var(--border)] px-2 py-1 text-[10px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)]"
+        className="shrink-0 rounded border border-[var(--border)] px-2 py-1 text-[10px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)]"
       >
         {t(intent === "buy_later" ? "buyList.buyNow" : "buyList.buyLater")}
       </button>

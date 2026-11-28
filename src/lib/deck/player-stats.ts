@@ -154,8 +154,8 @@ export function countPlayerStats(
 ): PlayerStats {
   const addedDecks = decks.filter((deck) => isAddedIn(deck, window));
   const changedDecks = decks.filter((deck) => isChangedIn(deck, window));
-  const activeDecks = decks.filter((deck) => isAddedIn(deck, window) || isChangedIn(deck, window));
-  const commanderDecks = activeDecks.filter((deck) => FORMAT_CONFIG[deck.format].hasCommander);
+  const activeDecks = decks.filter((deck) => isActiveIn(deck, window));
+  const commanderDecks = decks.filter((deck) => countsDeckCards(deck, window));
   const cards = countCards(commanderDecks);
   const shared = cards.filter((card) => card.deckIds.length >= 2);
   return {
@@ -180,8 +180,35 @@ export function countPlayerStats(
   };
 }
 
+/** What says whether a deck's cards are counted: its format and its dates, no card. */
+export type StatsDeckActivity = Pick<PlayerStatsDeck, "format" | "createdAt" | "updatedAt" | "snapshotDates">;
+
+/**
+ * Whether the counting reads the deck's cards over the window: only for an
+ * active deck in a Commander-family format (requirement 3.2). Every card
+ * figure (colours, colour identities, commanders, cards used most, shared
+ * cards, brackets) counts these decks alone. The deck figures (active, added,
+ * changed, formats) need no card.
+ *
+ * One exception lies outside this rule: whether a commander is new reads the
+ * commanders of every deck created before the window, so a deck this rejects
+ * still needs its commander rows.
+ *
+ * @param deck - the deck's format and dates
+ * @param window - the period counted
+ * @returns true when a card figure counts the deck
+ */
+export function countsDeckCards(deck: StatsDeckActivity, window: StatsWindow): boolean {
+  return FORMAT_CONFIG[deck.format].hasCommander && isActiveIn(deck, window);
+}
+
+/** Whether the deck was added or changed in the window (requirement 3.1). */
+function isActiveIn(deck: StatsDeckActivity, window: StatsWindow): boolean {
+  return isAddedIn(deck, window) || isChangedIn(deck, window);
+}
+
 /** Whether the deck was created in the window (requirement 3.4). */
-function isAddedIn(deck: PlayerStatsDeck, window: StatsWindow): boolean {
+function isAddedIn(deck: StatsDeckActivity, window: StatsWindow): boolean {
   return isInWindow(deck.createdAt, window);
 }
 
@@ -190,7 +217,7 @@ function isAddedIn(deck: PlayerStatsDeck, window: StatsWindow): boolean {
  * in it after the deck's creation. `updatedAt` keeps only the last save, so
  * this is a floor, never an exact count (requirement 3.5).
  */
-function isChangedIn(deck: PlayerStatsDeck, window: StatsWindow): boolean {
+function isChangedIn(deck: StatsDeckActivity, window: StatsWindow): boolean {
   const savedSinceCreation = deck.updatedAt.getTime() > deck.createdAt.getTime();
   return (
     (savedSinceCreation && isInWindow(deck.updatedAt, window)) ||

@@ -271,6 +271,23 @@ describe("ManaCurve", () => {
     expect(within(region).getByText("MV 9")).toBeInTheDocument();
   });
 
+  it("shows the average it is given, not an average of its bars (I-37)", () => {
+    renderWithProviders(
+      <ManaCurve curve={{ 2: 3, 5: 1, 7: 1 }} averageManaValue={4.75} />
+    );
+
+    expect(screen.getByText("Avg CMC: 4.75")).toBeInTheDocument();
+  });
+
+  it("shows no average when its caller gives none, rather than averaging its bars", () => {
+    renderWithProviders(<ManaCurve curve={{ 2: 3, 5: 1, 7: 1 }} />);
+
+    expect(screen.queryByText(/^Avg CMC/)).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "3 cards at CMC 2" })
+    ).toBeInTheDocument();
+  });
+
   it("draws plain bars that open nothing when it is given no cards", () => {
     renderWithProviders(<ManaCurve curve={{ 3: 2 }} />);
 

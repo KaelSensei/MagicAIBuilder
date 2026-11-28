@@ -4,6 +4,10 @@
  * Deck building context. The AI deck wizard streams a decklist of names; these helpers look the
  * names up on Scryfall and add the cards to the deck through the deck store, one at a time.
  *
+ * The store writes into its active deck, not into a deck named by id, so every write first asks
+ * the caller whether it may still write (`mayWrite`). Once it may not, nothing more is written and
+ * nothing more is looked up: the deck already created keeps what it received (I-02, #1984's QA).
+ *
  * @module deck/built-deck-import
  */
 import { forEachSequential } from "@/lib/async/sequential";
@@ -19,14 +23,21 @@ import type { CardCategory, DeckCard } from "@/lib/deck/types";
 /** Max cards per Scryfall collection lookup request */
 const BATCH_SIZE = 75;
 
-/** Tries to resolve a commander name and set it — non-fatal if it fails. */
+/**
+ * Tries to resolve a commander name and set it — non-fatal if it fails.
+ *
+ * @param mayWrite - Asked before the lookup and again before the commander is seated: the lookup
+ *   can take seconds, and the store seats it on whichever deck is active by then
+ */
 export async function tryResolveCommander(
   commanderName: string,
-  setCommander: (card: ScryfallCard) => Promise<void>
+  setCommander: (card: ScryfallCard) => Promise<void>,
+  mayWrite: () => boolean
 ): Promise<void> {
+  if (!mayWrite()) return;
   try {
     const card = await getCardByNameFuzzy(commanderName);
-    await setCommander(card);
+    if (mayWrite()) await setCommander(card);
   } catch {
     // Non-fatal — commander name might not resolve exactly
   }
@@ -85,18 +96,58 @@ export function collapseEntries(
   return [...byName.values()];
 }
 
+/** What an import wrote into the deck, and what it did not. */
+export interface CardImportReport {
+  /**
+   * Copies handed to the store's `addDeckCard`, each while the caller still allowed the write. The
+   * store may still have dropped one: a card the deck had no room for, or one the server refused
+   * (B2-36); neither throws.
+   */
+  readonly copiesAdded: number;
+  /**
+   * Copies left unwritten: all of a batch whose lookup failed, or that was never looked up because
+   * the import could no longer write; the copies of the cards Scryfall found but the save did not
+   * reach. Zero when every batch went through; a name Scryfall does not know is never counted once
+   * Scryfall answered, it was never a card to add.
+   */
+  readonly copiesNotAdded: number;
+}
+
+/** The copies a batch of entries asks for. */
+function copiesOf(batch: readonly ImportEntry[]): number {
+  return batch.reduce((sum, entry) => sum + entry.quantity, 0);
+}
+
+/** Where an import writes its cards, who hears of its progress, and whether it may still write. */
+export interface ImportTarget {
+  /** The deck store's `addDeckCard`: adds one card to the store's active deck. */
+  readonly addDeckCard: (card: DeckCard) => Promise<void>;
+  /** Told the copies written so far, after each card. */
+  readonly onProgress: (imported: number) => void;
+  /**
+   * Asked before each batch's lookup and before each card is written. Once it answers false it must
+   * keep doing so: the import writes nothing more, and counts every copy left as not added.
+   */
+  readonly mayWrite: () => boolean;
+}
+
 /**
  * Fetches and imports cards from Scryfall in batches of BATCH_SIZE.
  *
- * A batch whose lookup or save fails is logged and skipped, so the import never throws.
+ * A batch whose lookup or save fails is logged and skipped, so the import never throws; its copies
+ * are counted in the report, so the wizard can tell the player the deck is not complete (I-02).
+ * Once `mayWrite` answers false, the import stops writing and looking up, and counts the rest.
  */
 export async function importCardsInBatches(
   entries: readonly ImportEntry[],
-  addDeckCard: (card: DeckCard) => Promise<void>,
-  onProgress: (imported: number) => void
-): Promise<void> {
+  { addDeckCard, onProgress, mayWrite }: ImportTarget
+): Promise<CardImportReport> {
   const byName = new Map(entries.map((e) => [e.name, e]));
+  // A card Scryfall renamed (a double-faced card's full name) is not in `byName`: one copy.
+  const copiesAskedFor = (sc: ScryfallCard): number =>
+    byName.get(sc.name)?.quantity ?? 1;
   let imported = 0;
+  let copiesNotAdded = 0;
 
   const offsets = Array.from(
     { length: Math.ceil(entries.length / BATCH_SIZE) },
@@ -104,11 +155,20 @@ export async function importCardsInBatches(
   );
   await forEachSequential(offsets, async (i) => {
     const batch = entries.slice(i, i + BATCH_SIZE);
+    // Until Scryfall answers, every copy the batch asks for is left to add. Once it has, only the
+    // copies of the cards it found are: a name it does not know was never a card to add.
+    let copiesLeft = copiesOf(batch);
+    if (!mayWrite()) {
+      copiesNotAdded += copiesLeft;
+      return;
+    }
     try {
       const result = await getCardCollection(
         batch.map((entry) => ({ name: entry.name }))
       );
+      copiesLeft = result.data.reduce((sum, sc) => sum + copiesAskedFor(sc), 0);
       await forEachSequential(result.data, async (sc) => {
+        if (!mayWrite()) return;
         const entry = byName.get(sc.name);
         const deckCard: DeckCard = {
           id: sc.id,
@@ -127,15 +187,19 @@ export async function importCardsInBatches(
           category: isDeckCategory(entry?.category)
             ? entry.category
             : categorizeCard(sc),
-          quantity: entry?.quantity ?? 1,
+          quantity: copiesAskedFor(sc),
           zone: "main",
         };
         await addDeckCard(deckCard);
+        copiesLeft -= deckCard.quantity;
         imported += deckCard.quantity;
         onProgress(imported);
       });
     } catch (err) {
       logger.error("Batch import error", "DeckWizard", err);
     }
+    // Zero once every card Scryfall found was written.
+    copiesNotAdded += copiesLeft;
   });
+  return { copiesAdded: imported, copiesNotAdded };
 }

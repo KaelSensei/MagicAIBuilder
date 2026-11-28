@@ -3,8 +3,9 @@
  * The portaled zone menu of a search result: main deck, sideboard, considering.
  *
  * Card catalog, search results. Rendered on `document.body` so the result
- * grid's overflow cannot clip it. Arrow keys move between the zones, Enter
- * picks the focused one, and Escape closes the menu.
+ * grid's overflow cannot clip it. Arrow keys move between the zones
+ * (`zone-menu-focus.ts`), Enter picks the focused one, Escape closes the
+ * menu, and Tab closes it and moves on, as a menu does.
  *
  * Not responsible for: the primary "add to the main deck" button. That sits
  * on {@link SearchZoneMenu}.
@@ -22,12 +23,18 @@ import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
 import type { DeckZone } from "@/lib/deck/types";
 import { placeZoneMenu } from "@/components/card/zone-menu-place";
+import {
+  focusTabStopAfter,
+  menuItems,
+  moveZoneFocus,
+  onZoneMenuKeyDown,
+  type ZoneMenuInitialFocus,
+} from "@/components/card/zone-menu-focus";
+
+export type { ZoneMenuInitialFocus } from "@/components/card/zone-menu-focus";
 
 /** Zones a search result can join, in the order the menu reads them. */
 const MENU_ZONES: readonly DeckZone[] = ["main", "sideboard", "maybeboard"];
-
-/** Which zone receives focus when the menu opens. */
-export type ZoneMenuInitialFocus = "first" | "last";
 
 interface ZoneChoiceMenuProps {
   readonly id: string;
@@ -76,83 +83,6 @@ function zoneActionKey(zone: DeckZone): "addToMain" | "addToSideboard" | "addToC
   }
   const _exhaustive: never = zone;
   return _exhaustive;
-}
-
-/**
- * The menu item buttons inside a root, in DOM order.
- *
- * @param root - The menu element, or null before it mounts
- * @returns The item elements
- */
-function menuItems(root: HTMLElement | null): readonly HTMLElement[] {
-  if (!root) return [];
-  const items: HTMLElement[] = [];
-  for (const node of root.querySelectorAll("[role='menuitem']")) {
-    if (node instanceof HTMLElement) items.push(node);
-  }
-  return items;
-}
-
-/**
- * Moves focus among the menu items, wrapping at both ends.
- *
- * @param items - The menu items, in order
- * @param direction - The next item, or an end of the list
- */
-function moveZoneFocus(
-  items: readonly HTMLElement[],
-  direction: 1 | -1 | ZoneMenuInitialFocus
-): void {
-  if (items.length === 0) return;
-  if (direction === "first") {
-    items[0]?.focus();
-    return;
-  }
-  if (direction === "last") {
-    items[items.length - 1]?.focus();
-    return;
-  }
-  const active = document.activeElement;
-  const current = active instanceof HTMLElement ? items.indexOf(active) : -1;
-  const start = current === -1 ? 0 : current;
-  const next = (start + direction + items.length) % items.length;
-  items[next]?.focus();
-}
-
-/**
- * The arrow, Home or End key as a focus move, or null for every other key.
- *
- * @param key - `KeyboardEvent.key`
- * @returns The move, or null when the menu leaves the key alone
- */
-function zoneMenuDirection(key: string): 1 | -1 | ZoneMenuInitialFocus | null {
-  switch (key) {
-    case "ArrowDown":
-      return 1;
-    case "ArrowUp":
-      return -1;
-    case "Home":
-      return "first";
-    case "End":
-      return "last";
-    default:
-      return null;
-  }
-}
-
-/**
- * Arrow keys, Home and End move through the zones. Enter is left to the
- * focused item, which is a button.
- *
- * @param event - The key event bubbling from a menu item
- * @param menu - The menu element
- */
-function onZoneMenuKeyDown(event: ReactKeyboardEvent<HTMLDivElement>, menu: HTMLElement | null): void {
-  const direction = zoneMenuDirection(event.key);
-  if (direction === null) return;
-  event.preventDefault();
-  event.stopPropagation();
-  moveZoneFocus(menuItems(menu), direction);
 }
 
 /** Positions the menu and focuses its first or last zone. */
@@ -208,13 +138,43 @@ function useDismissZoneMenu(
   }, [menuRef, onClose, triggerRef]);
 }
 
+/**
+ * Tab and Shift+Tab move focus out of the menu and close it, as the WAI-ARIA
+ * menu pattern asks (APG, menu and menubar pattern, Keyboard Interaction, "Tab
+ * and Shift + Tab", https://www.w3.org/WAI/ARIA/apg/patterns/menubar/, read
+ * 2026-11-25). For the keyboard the menu sits right after its trigger, so Tab
+ * lands on the tab stop after the trigger and Shift+Tab on the trigger itself,
+ * as in the APG's own menu button example.
+ *
+ * @param event - A key event bubbling from the menu or one of its items
+ * @param trigger - The button that opened the menu
+ * @param onClose - Closes the menu; it puts focus back on the trigger
+ */
+function leaveZoneMenuOnTab(
+  event: ReactKeyboardEvent<HTMLDivElement>,
+  trigger: HTMLElement | null,
+  onClose: () => void
+): void {
+  if (event.key !== "Tab") return;
+  event.preventDefault();
+  event.stopPropagation();
+  // onClose focuses the trigger, so the move on to the next tab stop follows it.
+  onClose();
+  if (!trigger) return;
+  if (event.shiftKey || !focusTabStopAfter(trigger)) trigger.focus();
+}
+
 interface ZoneMenuItemsProps {
   readonly cardName: string;
   readonly zoneCounts?: Readonly<Record<DeckZone, number>>;
   readonly onChoose: (zone: DeckZone) => void;
 }
 
-/** One button per zone. The count is every card already in that zone, not copies of this result. */
+/**
+ * One button per zone. The count is every card already in that zone, not copies of this result.
+ * No zone is a tab stop: the arrow keys move focus among them (roving focus) and Tab leaves the
+ * menu, as the WAI-ARIA menu pattern asks.
+ */
 function ZoneMenuItems({ cardName, zoneCounts, onChoose }: ZoneMenuItemsProps) {
   const t = useTranslations("card");
   return MENU_ZONES.map((zone) => {
@@ -230,7 +190,8 @@ function ZoneMenuItems({ cardName, zoneCounts, onChoose }: ZoneMenuItemsProps) {
         key={zone}
         type="button"
         role="menuitem"
-        className="flex w-full items-center rounded-[var(--lumen-radius-md)] px-3 py-2 text-left text-sm text-[var(--text-primary)] hover:bg-[var(--accent-soft)] focus-visible:bg-[var(--accent-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+        tabIndex={-1}
+        className="flex w-full items-center rounded-[var(--lumen-radius-md)] px-3 py-2 text-left text-sm text-[var(--text-primary)] hover:bg-[var(--accent-soft)] focus-visible:bg-[var(--accent-soft)]"
         aria-label={label}
         onClick={() => onChoose(zone)}
       >
@@ -260,14 +221,20 @@ export function ZoneChoiceMenu({
   usePlaceZoneMenu(menuRef, triggerRef, initialFocus);
   useDismissZoneMenu(menuRef, triggerRef, onClose);
 
+  // tabIndex -1: the menu takes focus from a press on its edge, so the arrow
+  // keys keep working, yet Tab never stops on it, nor on its items: Tab leaves.
   return createPortal(
     <div
       ref={menuRef}
       id={id}
       role="menu"
+      tabIndex={-1}
       aria-label={t("zoneMenu", { name: cardName })}
-      onKeyDown={(event) => onZoneMenuKeyDown(event, menuRef.current)}
-      className="fixed z-[80] min-w-44 rounded-[var(--lumen-radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-1 text-[var(--text-primary)] shadow-[var(--lumen-shadow-lg)]"
+      onKeyDown={(event) => {
+        leaveZoneMenuOnTab(event, triggerRef.current, onClose);
+        onZoneMenuKeyDown(event, menuRef.current);
+      }}
+      className="fixed z-[80] min-w-44 rounded-[var(--lumen-radius-lg)] outline-none border border-[var(--border)] bg-[var(--surface)] p-1 text-[var(--text-primary)] shadow-[var(--lumen-shadow-lg)]"
     >
       <ZoneMenuItems cardName={cardName} zoneCounts={zoneCounts} onChoose={onChoose} />
     </div>,

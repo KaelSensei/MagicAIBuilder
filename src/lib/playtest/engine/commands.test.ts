@@ -474,6 +474,8 @@ function blockedScenario(
       return { state: { ...base, library: [] }, command: { type: "draw" } };
     case "negative-damage":
       return { state: base, command: { type: "damage", amount: -3 } };
+    case "negative-heal":
+      return { state: base, command: { type: "heal", amount: -3 } };
     case "not-on-battlefield":
       return {
         state: base,
@@ -654,6 +656,71 @@ function command_type(type: string): PlaytestCommandType {
   return known.type;
 }
 
+// ─── Each command's reasons, pinned ───────────────────────────────────────
+/**
+ * Every reason each command is refused for today, in the order its transition checks them,
+ * written out by hand. The walk above proves each guard the table holds, but a guard lost from
+ * the table would leave it green; this pin keeps the guard table's split (#1857) honest.
+ */
+const PINNED_REASONS: Readonly<
+  Record<PlaytestCommandType, readonly PlaytestGuardReason[]>
+> = {
+  draw: ["choosing-bottom", "library-empty"],
+  mulligan: ["choosing-bottom", "mulligan-limit"],
+  bottomCards: [
+    "no-bottom-pending",
+    "bottom-count-mismatch",
+    "bottom-duplicate",
+    "bottom-not-in-hand",
+  ],
+  nextPhase: ["choosing-bottom"],
+  nextTurn: ["choosing-bottom"],
+  shuffleLibrary: ["choosing-bottom"],
+  damage: ["choosing-bottom", "negative-damage"],
+  // Changed on purpose: a negative heal is refused since the fix for CR 107.1b (I-07).
+  heal: ["choosing-bottom", "negative-heal"],
+  commanderDamage: [
+    "choosing-bottom",
+    "no-commander-damage",
+    "unknown-opponent",
+    "not-a-commander",
+    "bad-commander-damage",
+  ],
+  playerCounter: ["choosing-bottom", "bad-counter-change"],
+  gainCitysBlessing: ["choosing-bottom", "has-citys-blessing"],
+  setDayNight: ["choosing-bottom", "same-day-night"],
+  toggleDesignation: ["choosing-bottom"],
+  ringTempts: ["choosing-bottom"],
+  tap: ["choosing-bottom", "not-on-battlefield"],
+  untapAll: ["choosing-bottom"],
+  moveToZone: [
+    "choosing-bottom",
+    "same-zone",
+    "not-a-commander",
+    "not-in-zone",
+  ],
+  addCounter: ["choosing-bottom", "not-on-battlefield"],
+  createCardCopy: ["choosing-bottom", "id-taken", "not-on-battlefield"],
+  createToken: ["choosing-bottom", "id-taken"],
+  rollDie: ["choosing-bottom", "bad-die"],
+  addLogEntry: ["choosing-bottom", "blank-note"],
+  recordMana: ["choosing-bottom", "mana-out-of-range"],
+  editLogEntry: ["choosing-bottom", "unknown-log-entry", "blank-note"],
+  removeLogEntry: ["choosing-bottom", "unknown-log-entry"],
+  undo: ["nothing-to-undo"],
+};
+
+describe("each command's refusal reasons (pinned before the split, #1857)", () => {
+  it.each(Object.entries(PINNED_REASONS))(
+    "characterization: %s is refused for exactly the pinned reasons, in its transition's order",
+    (type, reasons) => {
+      const guards = PLAYTEST_COMMAND_GUARDS[command_type(type)];
+
+      expect(guards.map((guard) => guard.reason)).toEqual(reasons);
+    }
+  );
+});
+
 // ─── Known gaps, pinned ───────────────────────────────────────────────────
 describe("known gaps (pinned, not fixed here)", () => {
   it("lists no gap now that negative damage is a guard", () => {
@@ -683,6 +750,34 @@ describe("damage amounts through the reducer", () => {
     expect(
       playtestCommandBlockReason(state, { type: "damage", amount: 0 }, deps)
     ).toBeNull();
+  });
+});
+
+// CR 107.1b: no one gains negative life, so a negative heal must not lower the life total; a
+// heal of 0 is still applied, as damage of 0 is.
+describe("heal amounts through the reducer", () => {
+  it("refuses a negative heal: same life total, same life history, same state", () => {
+    const state = baseState();
+    const negativeHeal: PlaytestCommand = { type: "heal", amount: -3 };
+
+    const result = reducePlaytest(state, negativeHeal, deps);
+
+    expect(result.lifeTotal).toBe(state.lifeTotal);
+    expect(result.lifeHistory).toEqual(state.lifeHistory);
+    expect(result).toBe(state);
+    expect(playtestCommandBlockReason(state, negativeHeal, deps)).toBe(
+      "negative-heal"
+    );
+  });
+
+  it("applies a heal of 0 as the transition always has, as damage of 0 is applied", () => {
+    const state = baseState();
+    const zeroHeal: PlaytestCommand = { type: "heal", amount: 0 };
+
+    const result = reducePlaytest(state, zeroHeal, deps);
+
+    expect(result).toEqual(applyHeal(state, 0, deps));
+    expect(playtestCommandBlockReason(state, zeroHeal, deps)).toBeNull();
   });
 });
 

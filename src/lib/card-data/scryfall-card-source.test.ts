@@ -9,9 +9,13 @@
  */
 import { gzipSync } from "node:zlib";
 import { http, HttpResponse } from "msw";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { USER_AGENT } from "@/lib/http";
 import { DEFAULT_SCRYFALL_API } from "@/lib/scryfall/api-base-url";
+import {
+  RATE_LIMIT_BLOCK_MS,
+  scheduleScryfallRequest,
+} from "@/lib/scryfall/request-queue";
 import { setupMsw } from "@/test/msw";
 import {
   BULK_FILE_TYPES,
@@ -173,6 +177,29 @@ describe("the Scryfall card source", () => {
       reason: { kind: "rate_limited", retryAt: RATE_LIMIT_PAUSE_MS },
     });
     expect(sent).toHaveLength(1);
+  });
+
+  it("a 429 block in the runtime's Scryfall queue fails the listing without sending it", async () => {
+    vi.useFakeTimers({ toFake: ["Date"], now: 2_000_000 });
+    try {
+      // Another caller of the runtime's queue, a cache fill say, was answered 429.
+      await scheduleScryfallRequest(
+        `${DEFAULT_SCRYFALL_API}/cards/search?q=sol`,
+        async () => new Response(null, { status: 429 })
+      );
+      const source = createScryfallCardSource({ clock: manualClock(0) });
+
+      expect(await source.listBulkFiles()).toEqual({
+        status: "failed",
+        reason: {
+          kind: "rate_limited",
+          retryAt: 2_000_000 + RATE_LIMIT_BLOCK_MS,
+        },
+      });
+      expect(sent).toEqual([]);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("sends the app's User-Agent and an Accept header on every request", async () => {

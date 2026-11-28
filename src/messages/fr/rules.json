@@ -5,6 +5,7 @@
     "gameChangers": "Cartes à impact",
     "banlist": "Liste de ban"
   },
+  "searchLabel": "Rechercher dans cette liste par nom de carte",
   "searchPlaceholder": "Rechercher une carte…",
   "loading": "Chargement depuis Scryfall…",
   "error": "Impossible de charger les données depuis Scryfall. Veuillez réessayer dans un instant.",
@@ -28,7 +29,7 @@
     "addedToDeck": "Ajoutée à {deck}",
     "copiesInDeck": "{count} dans {deck}",
     "inDeck": "Dans {deck}",
-    "openDeckHint": "Ouvre un deck dans l'éditeur pour ajouter des cartes depuis cette page."
+    "openDeckHint": "Ouvrez un deck dans l'éditeur pour ajouter des cartes depuis cette page."
   },
   "comprehensive": {
     "tabLabel": "Règles complètes",

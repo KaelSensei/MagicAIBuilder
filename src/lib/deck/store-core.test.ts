@@ -31,8 +31,11 @@ import { GUEST_DECK_ID } from "@/lib/deck/guest-deck";
 import * as scryfallClient from "@/lib/scryfall/client";
 import type { Deck, DeckCard, CardCategory } from "@/lib/deck/types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
-import { installFakeDeckClient } from "@/test/fake-deck-client";
+import { aDeckCard } from "@/test/builders/card";
+import { aDeck } from "@/test/builders/deck";
+import { DeckApiRefusal, installFakeDeckClient } from "@/test/fake-deck-client";
 import { recordToasts } from "@/test/toast-recorder";
+import { recordedToasts } from "@/test/toast-text";
 
 // Import the store AFTER mocks are set up
 const { useDeckStore } = await import("@/lib/deck/store");
@@ -311,7 +314,7 @@ describe("useDeckStore — bulkRemoveCards recovery", () => {
       .mockRejectedValueOnce(new Error("offline"));
     await useDeckStore.getState().bulkRemoveCards(["first", "second"]);
     expect(useDeckStore.getState().decks["deck-1"].cards.map((card) => card.id)).toEqual(["first", "second"]);
-    expect(toastAdd).toHaveBeenCalledExactlyOnceWith("error", "Could not remove card. Please retry.");
+    expect(toastAdd).toHaveBeenCalledExactlyOnceWith("error", { key: "deck.sync.cardRemovalFailed" });
   });
 
   it("preserves original order when the removals are rejected one after the other", async () => {
@@ -364,7 +367,7 @@ describe("useDeckStore — bulkRemoveCards recovery", () => {
     vi.mocked(deckApi.removeCard).mockRejectedValueOnce(new Error("offline"));
     await useDeckStore.getState().bulkRemoveCards(["rejected", "removed"]);
     expect(useDeckStore.getState().decks["deck-1"].cards).toEqual([rejected]);
-    expect(toastAdd).toHaveBeenCalledWith("error", "Could not remove card. Please retry.");
+    expect(toastAdd).toHaveBeenCalledWith("error", { key: "deck.sync.cardRemovalFailed" });
     expect(useDeckStore.getState().isSyncing).toBe(false);
   });
 });
@@ -610,6 +613,40 @@ describe("useDeckStore — createDeck", () => {
     await useDeckStore.getState().createDeck("Test");
     expect(useDeckStore.getState().isSyncing).toBe(false);
   });
+
+  // The AI deck wizard opens its deck itself, and only while the save still belongs to the open
+  // wizard: a create that answers late must not take the open deck away from the player (I-02).
+  it("keeps the open deck active when asked not to activate the new deck", async () => {
+    useDeckStore.setState({
+      decks: { "deck-open": aDeck({ id: "deck-open" }) },
+      activeDeckId: "deck-open",
+    });
+
+    const id = await useDeckStore
+      .getState()
+      .createDeck("Wizard Deck", { activate: false });
+
+    expect(id).toBe("deck-1");
+    expect(useDeckStore.getState().decks["deck-1"]).toBeDefined();
+    expect(useDeckStore.getState().activeDeckId).toBe("deck-open");
+  });
+
+  it("returns the guest deck without opening it again when asked not to activate the new deck", async () => {
+    const { setActiveDeck: storeSetActiveDeck } = useDeckStore.getState();
+    onTestFinished(() =>
+      useDeckStore.setState({ setActiveDeck: storeSetActiveDeck })
+    );
+    const setActiveDeck = vi.fn(async (_id: string) => undefined);
+    useDeckStore.setState({ activeDeckId: GUEST_DECK_ID, setActiveDeck });
+
+    const id = await useDeckStore
+      .getState()
+      .createDeck("New Deck", { activate: false });
+
+    expect(id).toBe(GUEST_DECK_ID);
+    expect(deckApi.createDeck).not.toHaveBeenCalled();
+    expect(setActiveDeck).not.toHaveBeenCalled();
+  });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -649,6 +686,44 @@ describe("useDeckStore — deleteDeck", () => {
     await useDeckStore.getState().deleteDeck("deck-1");
     expect(useDeckStore.getState().isSyncing).toBe(false);
   });
+
+  it("answers that the server deleted the deck", async () => {
+    await expect(useDeckStore.getState().deleteDeck("deck-1")).resolves.toBe(
+      "deleted"
+    );
+  });
+
+  // What the player asked for is already true: the deck is gone.
+  it("counts a deck already deleted elsewhere as deleted, undo history included", async () => {
+    useDeckStore.setState({
+      undoStack: [{ type: "ADD_CARD", deckId: "deck-1", card: aDeckCard() }],
+    });
+    deckApi.deleteDeck.mockRejectedValueOnce(
+      new DeckApiRefusal(404, "Deck not found")
+    );
+
+    await expect(useDeckStore.getState().deleteDeck("deck-1")).resolves.toBe(
+      "alreadyDeleted"
+    );
+
+    expect(useDeckStore.getState().decks["deck-1"]).toBeUndefined();
+    expect(useDeckStore.getState().activeDeckId).toBeNull();
+    expect(useDeckStore.getState().undoStack).toEqual([]);
+    expect(useDeckStore.getState().isSyncing).toBe(false);
+  });
+
+  it("keeps the deck when the server refuses for another reason", async () => {
+    deckApi.deleteDeck.mockRejectedValueOnce(
+      new DeckApiRefusal(403, "Forbidden")
+    );
+
+    await expect(useDeckStore.getState().deleteDeck("deck-1")).rejects.toThrow(
+      "[deleteDeck] HTTP 403: Forbidden"
+    );
+
+    expect(useDeckStore.getState().decks["deck-1"]).toBeDefined();
+    expect(useDeckStore.getState().activeDeckId).toBe("deck-1");
+  });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -674,7 +749,7 @@ describe("useDeckStore — renameDeck", () => {
     await useDeckStore.getState().renameDeck("deck-1", "New Name");
     expect(useDeckStore.getState().decks["deck-1"].name).toBe("Test Deck");
     expect(useDeckStore.getState().isSyncing).toBe(false);
-    expect(toastAdd).toHaveBeenCalledExactlyOnceWith("error", "Could not rename deck. Please retry.");
+    expect(toastAdd).toHaveBeenCalledExactlyOnceWith("error", { key: "deck.sync.renameFailed" });
   });
 
   it("preserves a newer successful name when an older rename fails", async () => {
@@ -760,7 +835,7 @@ describe("useDeckStore — setTargetBracket", () => {
     await useDeckStore.getState().setTargetBracket(4);
     expect(useDeckStore.getState().decks["deck-1"].targetBracket).toBe(2);
     expect(useDeckStore.getState().isSyncing).toBe(false);
-    expect(toastAdd).toHaveBeenCalledExactlyOnceWith("error", "Could not save target bracket. Please retry.");
+    expect(toastAdd).toHaveBeenCalledExactlyOnceWith("error", { key: "deck.sync.targetBracketFailed" });
   });
 
   it("updates targetBracket optimistically", async () => {
@@ -906,7 +981,7 @@ describe("useDeckStore — setManualBracket", () => {
     await useDeckStore.getState().setManualBracket(4);
     expect(useDeckStore.getState().decks["deck-1"].manualBracket).toBeNull();
     expect(useDeckStore.getState().isSyncing).toBe(false);
-    expect(toastAdd).toHaveBeenCalledExactlyOnceWith("error", "Could not save manual bracket. Please retry.");
+    expect(toastAdd).toHaveBeenCalledExactlyOnceWith("error", { key: "deck.sync.manualBracketFailed" });
   });
 
   it("sets manualBracket optimistically", async () => {
@@ -1015,7 +1090,7 @@ describe("useDeckStore — addCard", () => {
     await useDeckStore.getState().addCard(card);
 
     expect(useDeckStore.getState().decks["deck-1"].cards).toHaveLength(0);
-    expect(toastAdd).toHaveBeenCalledWith("error", "Could not add card. Please retry.");
+    expect(recordedToasts(toastAdd)).toContainEqual(["error", "Could not add card. Please retry."]);
     await useDeckStore.getState().addCard(card);
     expect(useDeckStore.getState().decks["deck-1"].cards).toHaveLength(1);
   });

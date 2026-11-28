@@ -44,6 +44,7 @@
   "life": {
     "total": "Life total",
     "customPlaceholder": "+/- amount",
+    "customLabel": "Life to gain or lose",
     "apply": "Apply",
     "undo": "Undo last action",
     "history": "History"
@@ -130,7 +131,7 @@
     "openHint": "Playtest keys (?)",
     "title": "Playtest keys",
     "intro": "Press a key while the focus is not in a text field. Move keys act on the card that has the focus in your hand or on the battlefield. Escape closes this list.",
-    "singleKeysOff": "Single-key shortcuts are off, so only Ctrl+Z and ⌘Z work. Turn them back on from the deck builder's keyboard shortcuts.",
+    "singleKeysOff": "Single-key shortcuts are off, so only Ctrl+Z and ⌘Z work. Turn them back on with the switch below.",
     "actions": {
       "draw": "Draw a card",
       "nextTurn": "Go to the next turn",

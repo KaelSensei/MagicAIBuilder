@@ -39,10 +39,10 @@
   },
   "src/app/[locale]/decks/page.new-deck.test.tsx": {
     "no-restricted-syntax": {
-      "count": 11
+      "count": 10
     },
     "vitest/prefer-import-in-mock": {
-      "count": 2
+      "count": 1
     }
   },
   "src/app/[locale]/decks/page.test.tsx": {
@@ -188,9 +188,6 @@
     }
   },
   "src/app/api/community/card-packages/[packageId]/apply/route.ts": {
-    "max-depth": {
-      "count": 1
-    },
     "max-lines-per-function": {
       "count": 1
     }
@@ -198,11 +195,6 @@
   "src/app/api/community/card-packages/[packageId]/preview/route.test.ts": {
     "no-restricted-syntax": {
       "count": 2
-    }
-  },
-  "src/app/api/community/card-packages/[packageId]/preview/route.ts": {
-    "max-depth": {
-      "count": 1
     }
   },
   "src/app/api/community/card-packages/route.test.ts": {
@@ -651,7 +643,7 @@
   },
   "src/components/deck/CardPackageLibrary.tsx": {
     "@typescript-eslint/consistent-type-assertions": {
-      "count": 2
+      "count": 1
     },
     "max-lines-per-function": {
       "count": 1
@@ -785,11 +777,6 @@
   },
   "src/components/deck/DeckZoneTab.test.tsx": {
     "vitest/prefer-import-in-mock": {
-      "count": 1
-    }
-  },
-  "src/components/deck/DecksHomeControls.tsx": {
-    "max-lines-per-function": {
       "count": 1
     }
   },
@@ -1079,7 +1066,7 @@
   },
   "src/components/profile/PublicDeckView.test.tsx": {
     "no-restricted-syntax": {
-      "count": 7
+      "count": 6
     }
   },
   "src/components/profile/PublicDeckView.tsx": {
@@ -1119,22 +1106,11 @@
       "count": 1
     }
   },
-  "src/components/search/SearchResults.tsx": {
-    "complexity": {
-      "count": 1
-    },
-    "max-lines-per-function": {
-      "count": 1
-    }
-  },
   "src/components/search/SetAutocomplete.tsx": {
     "@typescript-eslint/consistent-type-assertions": {
-      "count": 2
-    },
-    "complexity": {
       "count": 1
     },
-    "max-lines": {
+    "complexity": {
       "count": 1
     },
     "max-lines-per-function": {
@@ -1372,11 +1348,6 @@
       "count": 2
     }
   },
-  "src/lib/db/snapshot-api.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    }
-  },
   "src/lib/deck/batch-fetch.test.ts": {
     "no-restricted-syntax": {
       "count": 1
@@ -1454,9 +1425,6 @@
     }
   },
   "src/lib/deck/stats.ts": {
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 1
-    },
     "max-depth": {
       "count": 1
     }
@@ -1509,9 +1477,6 @@
     }
   },
   "src/lib/deck/store.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    },
     "@typescript-eslint/max-params": {
       "count": 3
     },

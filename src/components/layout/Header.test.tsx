@@ -3,7 +3,18 @@ import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import React from "react";
 import { useToastStore } from "@/hooks/useToast";
+import { DeckApiError } from "@/lib/db/deck-api-answer";
+import { HIDES_FOCUS_OUTLINE } from "@/test/focus-outline";
+import {
+  hydrateWithIntl,
+  renderToStringWithIntl,
+} from "@/test/hydrate-with-intl";
 import { renderWithIntl } from "@/test/render-with-intl";
+import {
+  IDLE_HEADER_DECK_ACTIONS,
+  type HeaderDeckActionsUiState,
+} from "./header-deck-actions-state";
+import type { HeaderDeckActionsLayout } from "./HeaderDeckActions";
 
 let createDeckImpl: (name: string) => Promise<string> = async (_name: string) =>
   "deck-0";
@@ -22,10 +33,19 @@ const router = vi.hoisted(() => ({
   prefetch: vi.fn(),
 }));
 
+// The page the header renders on, locale-free as next-intl reports it; the home page unless a test moves it.
+const page = vi.hoisted(() => ({ pathname: "/" }));
+
 vi.mock(import("@/i18n/navigation"), async () => ({
   ...(await import("@/test/i18n-navigation-stub")),
   useRouter: () => router,
+  usePathname: () => page.pathname,
 }));
+
+// Every test starts on the home page, so a pathname one test sets never leaks into the next.
+beforeEach(() => {
+  page.pathname = "/";
+});
 
 vi.mock(import("@/hooks/useTheme"), () => ({
   useTheme: () => ({
@@ -289,8 +309,166 @@ describe("Header deck actions and mobile menu (characterization)", () => {
 });
 
 /*
+ * Every navigation link looked the same, so a player could not see which page
+ * they were on, and a screen reader never said "current page" (design audit
+ * S9, 2026-11-25). jsdom applies no CSS: the marker's look is checked through
+ * its classes here and its contrast in `src/styles/contrast.test.ts`.
+ */
+describe("Header current page", () => {
+  /**
+   * The non-colour mark: a 2 px underline in `--accent-text`, applied only
+   * while the link carries `aria-current="page"`.
+   */
+  const CURRENT_PAGE_UNDERLINE = [
+    "aria-[current=page]:underline",
+    "aria-[current=page]:decoration-2",
+    "aria-[current=page]:decoration-[var(--accent-text)]",
+    // The current link's fill would otherwise hide the hover feedback every link has.
+    "aria-[current=page]:hover:bg-[var(--accent-soft)]",
+  ];
+
+  /** Each link of a navigation landmark, with its `aria-current` value. */
+  function ariaCurrentByLink(navigation: HTMLElement) {
+    return within(navigation)
+      .getAllByRole("link")
+      .map((link) => [link.textContent, link.getAttribute("aria-current")]);
+  }
+
+  it("marks My Decks as the current page on the decks page, and no other link", async () => {
+    page.pathname = "/decks";
+    const { Header } = await import("./Header");
+
+    renderWithIntl(React.createElement(Header));
+
+    expect(
+      ariaCurrentByLink(screen.getByRole("navigation", { name: "My Decks" }))
+    ).toEqual([
+      ["My Decks", "page"],
+      ["Collection", null],
+      ["Rules", null],
+    ]);
+  });
+
+  it("marks the same link in the mobile menu", async () => {
+    page.pathname = "/decks";
+    const { Header } = await import("./Header");
+
+    renderWithIntl(React.createElement(Header));
+    await userEvent.click(screen.getByRole("button", { name: "Open menu" }));
+
+    const [, mobileMenu] = screen.getAllByRole("navigation", {
+      name: "My Decks",
+    });
+    expect(ariaCurrentByLink(mobileMenu)).toEqual([
+      ["My Decks", "page"],
+      ["Collection", null],
+      ["Rules", null],
+    ]);
+  });
+
+  it("marks Rules on a rules page its link does not open", async () => {
+    page.pathname = "/rules/comprehensive";
+    const { Header } = await import("./Header");
+
+    renderWithIntl(React.createElement(Header));
+
+    expect(
+      ariaCurrentByLink(screen.getByRole("navigation", { name: "My Decks" }))
+    ).toEqual([
+      ["My Decks", null],
+      ["Collection", null],
+      ["Rules", "page"],
+    ]);
+  });
+
+  it("marks no link in either bar on a page no link points to, such as the builder", async () => {
+    page.pathname = "/builder/deck-1";
+    const { Header } = await import("./Header");
+
+    renderWithIntl(React.createElement(Header));
+    await userEvent.click(screen.getByRole("button", { name: "Open menu" }));
+
+    const navigations = screen.getAllByRole("navigation", { name: "My Decks" });
+    expect(navigations).toHaveLength(2);
+    for (const navigation of navigations) {
+      expect(
+        within(navigation)
+          .getAllByRole("link")
+          .filter((link) => link.hasAttribute("aria-current"))
+      ).toEqual([]);
+    }
+  });
+
+  it("marks the current page in French", async () => {
+    page.pathname = "/decks";
+    const { Header } = await import("./Header");
+
+    renderWithIntl(React.createElement(Header), { locale: "fr" });
+
+    expect(
+      ariaCurrentByLink(screen.getByRole("navigation", { name: "Mes Decks" }))
+    ).toEqual([
+      ["Mes Decks", "page"],
+      ["Collection", null],
+      ["Règles", null],
+    ]);
+  });
+
+  it("puts the mark in the server HTML, so it shows before hydration", async () => {
+    page.pathname = "/collection";
+    const { Header } = await import("./Header");
+
+    const html = renderToStringWithIntl(React.createElement(Header));
+    const parsed = document.createElement("div");
+    parsed.innerHTML = html;
+
+    expect(ariaCurrentByLink(within(parsed).getByRole("navigation"))).toEqual([
+      ["My Decks", null],
+      ["Collection", "page"],
+      ["Rules", null],
+    ]);
+  });
+
+  it("underlines the current link in both bars, a mark that does not rely on colour", async () => {
+    page.pathname = "/decks";
+    const { Header } = await import("./Header");
+
+    renderWithIntl(React.createElement(Header));
+    await userEvent.click(screen.getByRole("button", { name: "Open menu" }));
+
+    const currentLinks = screen
+      .getAllByRole("link", { name: "My Decks" })
+      .filter((link) => link.getAttribute("aria-current") === "page");
+    expect(currentLinks).toHaveLength(2);
+    for (const link of currentLinks) {
+      expect(link.className.split(/\s+/)).toEqual(
+        expect.arrayContaining(CURRENT_PAGE_UNDERLINE)
+      );
+    }
+  });
+
+  it("keeps the shared focus outline on every navigation link in both bars", async () => {
+    page.pathname = "/decks";
+    const { Header } = await import("./Header");
+
+    renderWithIntl(React.createElement(Header));
+    await userEvent.click(screen.getByRole("button", { name: "Open menu" }));
+
+    const links = screen
+      .getAllByRole("navigation", { name: "My Decks" })
+      .flatMap((navigation) => within(navigation).getAllByRole("link"));
+    expect(links).toHaveLength(6);
+    for (const link of links) {
+      expect(link.className).not.toMatch(HIDES_FOCUS_OUTLINE);
+    }
+  });
+});
+
+/*
  * A failed creation used to reject unhandled: the button spun, then came back,
- * and the player saw nothing. The header now reports it in a toast.
+ * and the player saw nothing. The header then reported it in a toast that
+ * carried the client's diagnostic text ("— [createDeck] HTTP 500: …"); it now
+ * says so in the player's language, as the decks page does (I-01).
  */
 describe("Header deck creation failures", () => {
   beforeEach(() => {
@@ -298,21 +476,21 @@ describe("Header deck creation failures", () => {
     useToastStore.setState({ toasts: [] });
   });
 
-  it("tells the player why New Deck failed and lets them try again", async () => {
+  it("says New Deck failed in French, with no HTTP status, and lets them try again", async () => {
     createDeckImpl = async () => {
-      throw new Error("HTTP 500");
+      throw new DeckApiError("createDeck", 500, "Failed to create deck");
     };
     const { Header } = await import("./Header");
 
-    renderWithIntl(React.createElement(Header));
-    const newDeck = await screen.findByRole("button", { name: "New Deck" });
+    renderWithIntl(React.createElement(Header), { locale: "fr" });
+    const newDeck = await screen.findByRole("button", { name: "Nouveau deck" });
     await userEvent.click(newDeck);
 
     await waitFor(() =>
       expect(useToastStore.getState().toasts).toEqual([
         expect.objectContaining({
           type: "error",
-          message: "Could not create the deck — HTTP 500",
+          message: "Impossible de créer le deck. Réessayez.",
         }),
       ])
     );
@@ -320,7 +498,28 @@ describe("Header deck creation failures", () => {
     expect(router.push).not.toHaveBeenCalled();
   });
 
-  it("tells the player why Import failed, without activating a deck", async () => {
+  it("asks the player to sign in again when New Deck meets an ended session", async () => {
+    createDeckImpl = async () => {
+      throw new DeckApiError("createDeck", 401, "Unauthorized");
+    };
+    const { Header } = await import("./Header");
+
+    renderWithIntl(React.createElement(Header));
+    await userEvent.click(
+      await screen.findByRole("button", { name: "New Deck" })
+    );
+
+    await waitFor(() =>
+      expect(useToastStore.getState().toasts).toEqual([
+        expect.objectContaining({
+          type: "error",
+          message: "Your session has ended. Sign in again to create a deck.",
+        }),
+      ])
+    );
+  });
+
+  it("says Import failed, without activating a deck", async () => {
     createDeckImpl = async () => {
       throw new Error("HTTP 503");
     };
@@ -336,11 +535,114 @@ describe("Header deck creation failures", () => {
       expect(useToastStore.getState().toasts).toEqual([
         expect.objectContaining({
           type: "error",
-          message: "Could not create the deck — HTTP 503",
+          message: "Could not create the deck. Please try again.",
         }),
       ])
     );
     expect(importButton).toBeEnabled();
     expect(setActiveDeck).not.toHaveBeenCalled();
+  });
+});
+
+/*
+ * The server HTML held both deck buttons enabled, but their click handlers only
+ * exist once the lazy chunk has loaded and hydrated. A press in that window did
+ * nothing: no request, no spinner, no message (I-01; the `openBuilder` E2E
+ * flake of 2026-11-12 and 2026-11-25). The buttons now stay disabled until the
+ * code that answers them is there.
+ */
+describe("Header deck actions before hydration", () => {
+  const LAYOUTS: readonly HeaderDeckActionsLayout[] = ["desktop", "mobile"];
+
+  /** The two deck buttons, by their accessible names, inside `container`. */
+  function deckButtons(container: HTMLElement) {
+    const scope = within(container);
+    return {
+      newDeck: scope.getByRole("button", { name: "New Deck" }),
+      importButton: scope.getByRole("button", { name: "Import" }),
+    };
+  }
+
+  /** The actions as `Header` mounts them, with a fixed UI state. */
+  async function deckActions(
+    layout: HeaderDeckActionsLayout,
+    uiState: HeaderDeckActionsUiState = IDLE_HEADER_DECK_ACTIONS
+  ) {
+    const { HeaderDeckActions } = await import("./HeaderDeckActions");
+    return (
+      <HeaderDeckActions
+        layout={layout}
+        uiState={uiState}
+        onUiStateChange={vi.fn()}
+      />
+    );
+  }
+
+  /** Server HTML parsed into a detached element, as the browser receives it. */
+  function parsed(html: string): HTMLElement {
+    const container = document.createElement("div");
+    container.innerHTML = html;
+    return container;
+  }
+
+  it.each(LAYOUTS)(
+    "server-renders New Deck and Import disabled in the %s layout, so an early press is not lost",
+    async (layout) => {
+      const html = renderToStringWithIntl(await deckActions(layout));
+
+      const { newDeck, importButton } = deckButtons(parsed(html));
+      expect(newDeck).toBeDisabled();
+      expect(importButton).toBeDisabled();
+    }
+  );
+
+  it.each(LAYOUTS)(
+    "enables both once the %s layout has hydrated, with no hydration mismatch",
+    async (layout) => {
+      const ui = await deckActions(layout);
+      const html = renderToStringWithIntl(ui);
+
+      const hydrated = await hydrateWithIntl(html, ui);
+
+      expect(hydrated.mismatches).toEqual([]);
+      const { newDeck, importButton } = deckButtons(hydrated.container);
+      expect(newDeck).toBeEnabled();
+      expect(importButton).toBeEnabled();
+      hydrated.unmount();
+    }
+  );
+
+  it("enables both at once in a render that is not a hydration", async () => {
+    const { container } = renderWithIntl(await deckActions("desktop"));
+
+    const { newDeck, importButton } = deckButtons(container);
+    expect(newDeck).toBeEnabled();
+    expect(importButton).toBeEnabled();
+  });
+
+  it("still disables only New Deck while a deck is being created", async () => {
+    const { container } = renderWithIntl(
+      await deckActions("desktop", {
+        ...IDLE_HEADER_DECK_ACTIONS,
+        isCreatingDeck: true,
+      })
+    );
+
+    const { newDeck, importButton } = deckButtons(container);
+    expect(newDeck).toBeDisabled();
+    expect(importButton).toBeEnabled();
+  });
+
+  it("still disables only Import while it creates the deck to import into", async () => {
+    const { container } = renderWithIntl(
+      await deckActions("desktop", {
+        ...IDLE_HEADER_DECK_ACTIONS,
+        isCreatingImportDeck: true,
+      })
+    );
+
+    const { newDeck, importButton } = deckButtons(container);
+    expect(newDeck).toBeEnabled();
+    expect(importButton).toBeDisabled();
   });
 });

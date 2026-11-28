@@ -137,6 +137,18 @@ function duplicate(deckId = DECK_ID): Promise<Response> {
   );
 }
 
+/** @returns the route's answer to a duplicate request of the deck whose body is `body`, as sent */
+function duplicateWithBody(body: string): Promise<Response> {
+  return POST(
+    new Request(`http://localhost/api/decks/${DECK_ID}/duplicate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body,
+    }),
+    { params: Promise.resolve({ id: DECK_ID }) }
+  );
+}
+
 beforeEach(() => {
   vi.resetAllMocks();
   vi.stubEnv("PLAYWRIGHT_TEST", "0");
@@ -287,5 +299,71 @@ describe("POST /api/decks/[id]/duplicate", () => {
     expect(await response.json()).toEqual({
       error: "Failed to duplicate deck",
     });
+  });
+});
+
+/*
+ * The route named every copy `${name} (Copy)`, in English whatever the
+ * player's language. The page now sends the copy's name, worded in the
+ * player's language; a request without one keeps the English name, so other
+ * API clients keep working (I-04).
+ */
+describe("POST /api/decks/[id]/duplicate — the copy's name", () => {
+  it("names the copy with the name the request sends", async () => {
+    const response = await duplicateWithBody(
+      JSON.stringify({ name: "Atraxa Superfriends (copie)" })
+    );
+
+    expect(response.status).toBe(201);
+    expect(createdData().name).toBe("Atraxa Superfriends (copie)");
+  });
+
+  it("keeps a name of exactly 200 characters, the longest a rename accepts", async () => {
+    const longest = "a".repeat(200);
+
+    const response = await duplicateWithBody(JSON.stringify({ name: longest }));
+
+    expect(response.status).toBe(201);
+    expect(createdData().name).toBe(longest);
+  });
+
+  it("names the copy « (Copy) » when the body sends no name", async () => {
+    const response = await duplicateWithBody("{}");
+
+    expect(response.status).toBe(201);
+    expect(createdData().name).toBe("Atraxa Superfriends (Copy)");
+  });
+
+  // Refused as a rename refuses the same name, rather than replaced: the page
+  // always sends a name that fits, so a bad one is a client fault to surface.
+  it.each([
+    ["an empty name", JSON.stringify({ name: "" })],
+    ["a name over 200 characters", JSON.stringify({ name: "a".repeat(201) })],
+    ["a name that is not text", JSON.stringify({ name: 42 })],
+  ])("refuses %s with 400 and writes no copy", async (_case, body) => {
+    const response = await duplicateWithBody(body);
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({
+      error: "Invalid request body",
+    });
+    expect(fake.deck.create).not.toHaveBeenCalled();
+  });
+
+  it("refuses a body that is not JSON with 400 and writes no copy", async () => {
+    const response = await duplicateWithBody("{name:");
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ error: "Malformed request body" });
+    expect(fake.deck.create).not.toHaveBeenCalled();
+  });
+
+  it("checks the owner before the body, so a stranger is refused with 403", async () => {
+    signInAs(STRANGER_ID);
+
+    const response = await duplicateWithBody(JSON.stringify({ name: "" }));
+
+    expect(response.status).toBe(403);
+    expect(fake.deck.create).not.toHaveBeenCalled();
   });
 });

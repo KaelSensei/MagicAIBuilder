@@ -51,10 +51,13 @@ export function PagedCardList({
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-secondary)]" />
         <input
           type="search"
+          // A placeholder is no name: without this the field is announced as
+          // an unnamed search box (WCAG 2.2 SC 1.3.1 and 4.1.2).
+          aria-label={t("searchLabel")}
           placeholder={t("searchPlaceholder")}
           value={paged.search}
           onChange={(e) => paged.changeSearch(e.target.value)}
-          className="w-full pl-9 pr-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent)] transition-colors"
+          className="w-full pl-9 pr-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] transition-colors"
         />
       </div>
 

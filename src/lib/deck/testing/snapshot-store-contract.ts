@@ -9,7 +9,8 @@
  * snapshot reads back whole; the list is newest first, holds only that
  * deck's snapshots, and carries each one's card list; a snapshot is never found through another deck; a delete
  * removes it; a restore leaves exactly the new rows and the commander
- * fields they name, and the companion when they can name it.
+ * fields they name, and the companion when they can name it, and moves the
+ * deck to its next version.
  * `DeckVersionStore`: the saved rows read back; the recent snapshots are
  * newest first, that deck's only, and at most `limit`; a created snapshot is
  * the newest. Callers: `in-memory-snapshot-store.test.ts` and
@@ -255,6 +256,21 @@ export const SNAPSHOT_STORE_CONTRACT_CASES: readonly SnapshotStoreContractCase[]
         expect(await snapshots.findDeckWithCards(deckId)).toEqual(
           expect.objectContaining({ companionId: LURRUS.scryfallId })
         );
+      },
+    },
+    {
+      name: "moves the deck to its next version, so a tab that read the old one is refused",
+      deckCards: [SOL_RING],
+      run: async ({ deckId, snapshots }) => {
+        const before = await snapshots.findDeckWithCards(deckId);
+
+        await snapshots.restoreDeck(
+          deckId,
+          restoredDeck(deckId, [ARCANE_SIGNET])
+        );
+
+        const after = await snapshots.findDeckWithCards(deckId);
+        expect(after?.version).toBe(Number(before?.version) + 1);
       },
     },
     {

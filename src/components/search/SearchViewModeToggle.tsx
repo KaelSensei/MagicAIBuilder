@@ -1,0 +1,59 @@
+"use client";
+/**
+ * The search results' view switch: card images in a grid, or compact rows.
+ *
+ * Card catalog context, search panel. `SearchResults` shows it at the end of the header row above
+ * a listed result; the choice lives in the deck store (`searchViewMode`), which `SearchResults`
+ * reads to lay the cards out, so it survives a new search.
+ *
+ * A `SegmentedControl` with two icon-only options (design audit S3, I-04): the control owns the
+ * 28 px targets, the pressed state, the chosen option's marker and the tooltip that names each
+ * icon on hover, and cites the WCAG criteria behind them.
+ *
+ * @module components/search/SearchViewModeToggle
+ */
+import { useTranslations } from "next-intl";
+import { LayoutGrid, List } from "lucide-react";
+import {
+  SegmentedControl,
+  type SegmentedOption,
+} from "@/components/ui/SegmentedControl";
+import { useDeckStore, type DeckStore } from "@/lib/deck/store";
+
+type SearchViewMode = DeckStore["searchViewMode"];
+
+/**
+ * Switches the search results between card images and compact rows: a group named "Result view"
+ * whose options are named "Grid view" and "List view" for screen readers and show their icons.
+ */
+export function SearchViewModeToggle() {
+  const t = useTranslations("search");
+  const viewMode = useDeckStore((s) => s.searchViewMode);
+  const setViewMode = useDeckStore((s) => s.setSearchViewMode);
+
+  const options: readonly SegmentedOption<SearchViewMode>[] = [
+    {
+      value: "grid",
+      label: t("gridView"),
+      icon: <LayoutGrid className="w-3.5 h-3.5" />,
+      hideLabel: true,
+    },
+    {
+      value: "list",
+      label: t("listView"),
+      icon: <List className="w-3.5 h-3.5" />,
+      hideLabel: true,
+    },
+  ];
+
+  return (
+    <SegmentedControl
+      aria-label={t("viewMode")}
+      options={options}
+      value={viewMode}
+      onChange={setViewMode}
+      size="sm"
+      className="ml-auto"
+    />
+  );
+}

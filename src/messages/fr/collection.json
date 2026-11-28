@@ -33,14 +33,15 @@
     "refresh": "Actualiser le plan",
     "noDecks": "Créez un deck pour commencer un plan d’achat.",
     "complete": "Toutes les cartes nécessaires pour ces decks sont dans votre collection.",
+    "nothingToBuyNow": "Rien à acheter pour l’instant : tous les exemplaires manquants sont reportés.",
     "summary": "{count} à acquérir pour {decks} decks · Sous-total des prix connus : {cost}",
     "unpriced": "Prix indisponible pour {count, plural, one {# exemplaire} other {# exemplaires}}",
     "requiredAcrossDecks": "{count, plural, one {# exemplaire} other {# exemplaires}} requis pour {decks, plural, one {# deck} other {# decks}}",
     "toAcquire": "{count} à acquérir",
     "deferredTitle": "Reporté · {count, plural, one {# exemplaire} other {# exemplaires}}",
-    "deferredHint": "Exemplaires que tu as choisi de proxy ou d’acheter plus tard dans la liste d’achats d’un deck. Ils ne comptent ni dans le total ni dans le CSV.",
-    "proxyNowFor": "Proxy pour l’instant — {deck}",
-    "buyLaterFor": "Acheter plus tard — {deck}"
+    "deferredHint": "Exemplaires que vous avez choisi de proxy ou d’acheter plus tard dans la liste d’achats d’un deck. Ils ne comptent ni dans le total ni dans le CSV.",
+    "proxyNowFor": "Proxy pour l’instant — <link>{deck}</link>",
+    "buyLaterFor": "Acheter plus tard — <link>{deck}</link>"
   },
   "loading": "Chargement de la collection…",
   "loadFailed": "Impossible d’actualiser votre collection. Vos cartes enregistrées sont inchangées.",
@@ -66,11 +67,13 @@
   },
   "viewMode": {
     "gridView": "Vue grille",
-    "listView": "Vue liste"
+    "listView": "Vue liste",
+    "layout": "Disposition"
   },
   "empty": {
     "title": "Votre collection est vide.",
-    "hint": "Ajoutez des cartes en utilisant le bouton ci-dessus ou depuis la recherche de cartes.",
+    "purpose": "Ajoutez les cartes que vous possédez : vos decks indiqueront celles que vous avez et celles qu’il vous reste à acheter.",
+    "addCards": "Ajouter des cartes",
     "noMatch": "Aucune carte ne correspond à votre recherche."
   },
   "listHeaders": {
@@ -89,14 +92,14 @@
   "quickAdd": {
     "add": "Ajouter à la collection",
     "added": "Ajouté !",
-    "owned": "{count, plural, one {Tu possèdes # exemplaire} other {Tu possèdes # exemplaires}}"
+    "owned": "{count, plural, one {Vous possédez # exemplaire} other {Vous possédez # exemplaires}}"
   },
   "ownership": {
     "owned": "Possédée",
     "ownedCount": "Possédée (×{count})",
     "buy": "Acheter",
-    "ownedDetail": "Possédée : {owned, plural, one {# exemplaire} other {# exemplaires}} de cette édition dans ta collection",
-    "buyDetail": "À acheter : {missing, plural, one {# exemplaire manquant} other {# exemplaires manquants}} de cette édition, {owned} dans ta collection",
+    "ownedDetail": "Possédée : {owned, plural, one {# exemplaire} other {# exemplaires}} de cette édition dans votre collection",
+    "buyDetail": "À acheter : {missing, plural, one {# exemplaire manquant} other {# exemplaires manquants}} de cette édition, {owned} dans votre collection",
     "inCollection": "En collection ×{count}"
   },
   "dialog": {

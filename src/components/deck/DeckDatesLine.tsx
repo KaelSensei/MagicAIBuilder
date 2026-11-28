@@ -24,9 +24,10 @@
  *
  * @module components/deck/DeckDatesLine
  */
-import { useSyncExternalStore, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { useFormatter, useNow, useTranslations } from "next-intl";
 import { cn } from "@/components/ui/utils";
+import { useHasHydrated } from "@/hooks/useHasHydrated";
 
 /** A stored instant: a `Date` from the deck store or an ISO string from JSON. */
 export type DeckInstant = Date | string;
@@ -56,30 +57,6 @@ function toInstant(value: DeckInstant | null | undefined): Date | null {
 function readsAsRelative(updatedAt: Date, now: Date): boolean {
   return (
     now.getTime() - updatedAt.getTime() <= RELATIVE_UPDATE_LIMIT_DAYS * DAY_MS
-  );
-}
-
-/** Nothing to undo: whether the line has hydrated never changes back. */
-function unsubscribeFromNothing(): void {
-  // The store below never changes, so there is no listener to remove.
-}
-
-/** Hydration is the only change the store below has, and React handles it. */
-function subscribeToNothing(): () => void {
-  return unsubscribeFromNothing;
-}
-
-/**
- * False in the server render and in the hydration, true in every render after.
- * React hydrates with the server snapshot, so both sides render the same text,
- * then re-renders at once with the browser snapshot; a render that is not a
- * hydration reads true straight away.
- */
-function useHasHydrated(): boolean {
-  return useSyncExternalStore(
-    subscribeToNothing,
-    () => true,
-    () => false
   );
 }
 

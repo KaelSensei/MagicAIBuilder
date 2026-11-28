@@ -194,17 +194,69 @@ describe("AcquisitionPlanPanel", () => {
       await openPlan();
 
       const group = await screen.findByRole("region", { name: "Deferred · 3 copies" });
-      expect(within(group).getByText("Proxy for now — Artifacts")).toBeInTheDocument();
-      expect(within(group).getByText("Buy later — Spells")).toBeInTheDocument();
+      // The deck's name is a link inside the label, so the label's own text stops before it.
+      expect(within(group).getByText(/^Proxy for now —/)).toHaveTextContent("Proxy for now — Artifacts");
+      expect(within(group).getByText(/^Buy later —/)).toHaveTextContent("Buy later — Spells");
       expect(within(group).getByText("Mana Vault")).toBeInTheDocument();
+    });
+
+    it("links each deferred copy's deck to its builder, as the buy-now list does", async () => {
+      await openPlan();
+
+      const group = await screen.findByRole("region", { name: "Deferred · 3 copies" });
+      expect(within(group).getByRole("link", { name: "Artifacts" })).toHaveAttribute("href", "/builder/a");
+      expect(within(group).getByRole("link", { name: "Spells" })).toHaveAttribute("href", "/builder/b");
     });
 
     it("names the choices in French", async () => {
       await openPlan("fr");
 
       const group = await screen.findByRole("region", { name: "Reporté · 3 exemplaires" });
-      expect(within(group).getByText("Proxy pour l’instant — Artifacts")).toBeInTheDocument();
-      expect(within(group).getByText("Acheter plus tard — Spells")).toBeInTheDocument();
+      expect(within(group).getByText(/^Proxy pour l’instant —/)).toHaveTextContent("Proxy pour l’instant — Artifacts");
+      expect(within(group).getByText(/^Acheter plus tard —/)).toHaveTextContent("Acheter plus tard — Spells");
+    });
+
+    it("keeps the buy-now summary and says nothing about an empty purchase when one copy is still to buy", async () => {
+      await openPlan();
+
+      expect(await screen.findByText("1 to acquire across 2 decks · Known-price subtotal: USD 150.00")).toBeInTheDocument();
+      expect(screen.queryByText("Nothing to buy now: every missing copy is deferred.")).not.toBeInTheDocument();
+    });
+  });
+
+  describe("when every missing copy is deferred", () => {
+    const planWithOnlyDeferredCopies = {
+      deckCount: 1,
+      decks: [{ id: "b", name: "Spells" }],
+      items: [{
+        scryfallId: "vault", name: "Mana Vault", requiredQuantity: 2, ownedQuantity: 0,
+        acquireQuantity: 0, deferredQuantity: 2, price: 40,
+        decks: [{ id: "b", name: "Spells", quantity: 2 }],
+        deferred: [{ id: "b", name: "Spells", mode: "buy_later", quantity: 2 }],
+      }],
+    };
+
+    const openPlan = async (locale: "en" | "fr") => {
+      vi.stubGlobal("fetch", vi.fn().mockResolvedValue(response(planWithOnlyDeferredCopies)));
+      const user = userEvent.setup();
+      renderWithIntl(<AcquisitionPlanPanel />, { locale });
+      await user.click(screen.getByRole("button", { name: locale === "en" ? "Acquisition plan" : "Plan d’acquisition" }));
+    };
+
+    it("says there is nothing to buy now, above the Deferred group", async () => {
+      await openPlan("en");
+
+      const sentence = await screen.findByText("Nothing to buy now: every missing copy is deferred.");
+      const group = screen.getByRole("region", { name: "Deferred · 2 copies" });
+      expect(sentence.compareDocumentPosition(group)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+      expect(screen.queryByText("All cards needed for these decks are in your collection.")).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Acquisition plan CSV" })).not.toBeInTheDocument();
+    });
+
+    it("says it in French", async () => {
+      await openPlan("fr");
+
+      expect(await screen.findByText("Rien à acheter pour l’instant : tous les exemplaires manquants sont reportés.")).toBeInTheDocument();
     });
   });
 

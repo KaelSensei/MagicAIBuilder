@@ -10,8 +10,14 @@
  * (`SharePopover` is unmounted, audit §6.1), so the API is the only way to
  * create one today; that is reported as a follow-up.
  *
+ * The share link is also opened in the light theme, where the header of a
+ * deck without commander art is a white surface: its text must take the
+ * theme's colours, not white (I-13, design audit S5).
+ *
  * @module e2e/deck-share
  */
+import type { APIRequestContext, Page } from "@playwright/test";
+import { THEME_STORAGE_KEY } from "@/lib/theme/preference";
 import { test, expect } from "./fixtures";
 import {
   fixtureCards,
@@ -27,8 +33,54 @@ const SHARE_DECK: DeckSeed = {
   cards: fixtureCards(1),
 };
 
+/**
+ * The light theme's `--text-secondary` (#5c5470 in `src/styles/globals.css`),
+ * as the browser computes it.
+ */
+const LIGHT_THEME_SECONDARY_TEXT = "rgb(92, 84, 112)";
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
+}
+
+/**
+ * Opens a share link for the deck through the API, as its owner.
+ *
+ * @returns the link's token
+ */
+async function shareTokenFor(
+  request: APIRequestContext,
+  deckId: string
+): Promise<string> {
+  const created = await request.post(`/api/decks/${deckId}/share`);
+  expect(created.ok(), await created.text()).toBe(true);
+  const body: unknown = await created.json();
+  const token =
+    isRecord(body) && typeof body.shareToken === "string"
+      ? body.shareToken
+      : "";
+  expect(token).not.toBe("");
+  return token;
+}
+
+/**
+ * Stores an explicit light-theme choice before the page loads, the way the
+ * theme switch persists it, so the boot script paints `data-theme="light"`.
+ */
+async function chooseLightTheme(page: Page): Promise<void> {
+  await page.addInitScript(
+    ([key]) => {
+      try {
+        window.localStorage.setItem(
+          key,
+          JSON.stringify({ state: { theme: "light", preference: "light" } })
+        );
+      } catch {
+        // localStorage may be unavailable — the page stays dark
+      }
+    },
+    [THEME_STORAGE_KEY]
+  );
 }
 
 test.describe("Deck sharing with a signed-out visitor", () => {
@@ -82,14 +134,7 @@ test.describe("Deck sharing with a signed-out visitor", () => {
   }) => {
     const deckId = await seededDeck.create(SHARE_DECK);
 
-    const created = await request.post(`/api/decks/${deckId}/share`);
-    expect(created.ok(), await created.text()).toBe(true);
-    const body: unknown = await created.json();
-    const token =
-      isRecord(body) && typeof body.shareToken === "string"
-        ? body.shareToken
-        : "";
-    expect(token).not.toBe("");
+    const token = await shareTokenFor(request, deckId);
 
     await suppressOnboarding(page);
     await page.goto(`/share/${token}`);
@@ -105,6 +150,30 @@ test.describe("Deck sharing with a signed-out visitor", () => {
     // is what proves the link is closed right away.
     const closed = await getThroughApi(request, `/api/share/${token}`);
     expect(closed.status()).toBe(404);
+  });
+
+  test("a share link reads in the light theme: the header writes the format and the card count in the theme's secondary text colour", async ({
+    page,
+    request,
+    seededDeck,
+  }) => {
+    const deckId = await seededDeck.create(SHARE_DECK);
+    const token = await shareTokenFor(request, deckId);
+
+    await suppressOnboarding(page);
+    await chooseLightTheme(page);
+    await page.goto(`/share/${token}`);
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+
+    // The seeded deck has no commander, so no art: the header is the plain
+    // surface, white in the light theme (I-13, design audit S5).
+    const header = page.getByTestId("share-header");
+    const format = header.getByText("commander", { exact: true });
+    const cardCount = header.getByText("1 card", { exact: true });
+    await expect(format).toBeVisible();
+    await expect(format).toHaveCSS("color", LIGHT_THEME_SECONDARY_TEXT);
+    await expect(cardCount).toBeVisible();
+    await expect(cardCount).toHaveCSS("color", LIGHT_THEME_SECONDARY_TEXT);
   });
 
   test("a token that was never issued is a not-found page", async ({

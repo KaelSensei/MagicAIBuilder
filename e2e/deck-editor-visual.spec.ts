@@ -1,7 +1,8 @@
 /**
  * Visual stability of the deck editor: the commander banner keeps its box while
- * the warnings open and close, and hovering a row opens a fixed preview that
- * does not push the row.
+ * the warnings open and close, hovering a row opens a fixed preview that does
+ * not push the row, and the view and density toggles are targets of 24 px or
+ * more.
  *
  * The banner is found by its group name, the row by its "Remove {name}" button
  * and the preview by its image name (audit TT-11). The row's name text is not
@@ -11,7 +12,13 @@
  * @module e2e/deck-editor-visual
  */
 import { test, expect } from "./fixtures";
-import { deckCardRow, openDeckInListView, type DeckSeed } from "./helpers";
+import {
+  deckCardRow,
+  openDeckInListView,
+  suppressOnboarding,
+  waitForBuilder,
+  type DeckSeed,
+} from "./helpers";
 
 const COMMANDER_ID = "00000000-0000-4000-8000-000000000301";
 const SPELL_ID = "00000000-0000-4000-8000-000000000302";
@@ -99,5 +106,45 @@ test.describe("Deck editor visual stability", () => {
 
     const after = await row.boundingBox();
     expect(after).toEqual(before);
+  });
+
+  // WCAG 2.2 SC 2.5.8 (https://www.w3.org/TR/WCAG22/#target-size-minimum,
+  // read 2026-11-26): each target is at least 24 by 24 px, and 24 px circles
+  // centred on neighbouring targets do not overlap. The toggles were 20 px
+  // (design audit S3); the segmented control makes them 28 px.
+  test("sizes every view and density toggle at 24 px or more, with room between them", async ({
+    page,
+    seededDeck,
+  }) => {
+    const deckId = await seededDeck.create(VISUAL_DECK);
+
+    await suppressOnboarding(page);
+    await page.goto(`/builder/${deckId}`);
+    await waitForBuilder(page);
+    const toolbar = page.getByRole("toolbar", { name: "Deck view" });
+    await toolbar.getByRole("button", { name: "Grid view" }).click();
+    const toggles = [
+      toolbar.getByRole("button", { name: "List view" }),
+      toolbar.getByRole("button", { name: "Grid view" }),
+      ...[2, 3, 4, 6, 8].map((count) =>
+        toolbar.getByRole("button", { name: `${count} cards per row` })
+      ),
+    ];
+    await expect(
+      toolbar.getByRole("button", { name: "8 cards per row" })
+    ).toBeVisible();
+
+    const boxes = await Promise.all(
+      toggles.map((toggle) => toggle.boundingBox())
+    );
+    for (const box of boxes) {
+      expect(box?.width).toBeGreaterThanOrEqual(24);
+      expect(box?.height).toBeGreaterThanOrEqual(24);
+    }
+    const centres = boxes.map((box) => (box ? box.x + box.width / 2 : 0));
+    const gaps = centres
+      .slice(1)
+      .map((centre, index) => centre - (centres[index] ?? 0));
+    expect(Math.min(...gaps)).toBeGreaterThanOrEqual(24);
   });
 });

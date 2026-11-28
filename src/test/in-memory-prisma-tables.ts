@@ -11,9 +11,11 @@
  * column the query does not name (a password hash, a token) never comes back.
  *
  * Supported: `findMany`, `findUnique` and `findFirst`; in a `where`, equality
- * and `{ in: [...] }` per column; a flat `select` of `true` columns. Anything
- * else throws, so a query this fake cannot answer faithfully fails the test
- * instead of passing it. `orderBy` is ignored: rows come back in seeded order.
+ * and `{ in: [...] }` per column, and an `OR` list of such filters; a flat
+ * `select` of `true` columns. Anything else throws, so a query this fake
+ * cannot answer faithfully fails the test instead of passing it. `orderBy` is
+ * ignored: rows come back in seeded order. An optional `onRead` hears every
+ * query, so a test can check which rows a read took, not only what it answered.
  *
  * ```ts
  * vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
@@ -33,6 +35,12 @@ export type TableRow = Readonly<Record<string, unknown>>;
 /** The seeded tables, keyed by Prisma delegate name (`deck`, `userFollow`). */
 export type InMemoryTables = Map<string, readonly TableRow[]>;
 
+/** One query the fake answered: the table and the rows it returned, projected. */
+export interface TableRead {
+  readonly table: string;
+  readonly rows: readonly TableRow[];
+}
+
 /** @returns whether `value` is a plain object whose keys can be read */
 function isRecord(value: unknown): value is TableRow {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -49,14 +57,27 @@ function columnMatches(stored: unknown, filter: unknown): boolean {
   );
 }
 
+/** @returns whether the row passes at least one `where` of an `OR` list */
+function anyBranchMatches(row: TableRow, branches: unknown): boolean {
+  if (!Array.isArray(branches)) {
+    throw new Error("in-memory-prisma-tables: OR must be a list of filters");
+  }
+  return branches.some((branch) => isRecord(branch) && rowMatches(row, branch));
+}
+
+/** @returns whether the row passes every entry of one `where` */
+function rowMatches(row: TableRow, where: TableRow): boolean {
+  return Object.entries(where).every(([column, filter]) =>
+    column === "OR"
+      ? anyBranchMatches(row, filter)
+      : columnMatches(row[column], filter)
+  );
+}
+
 /** @returns the rows that pass every entry of the call's `where` */
 function rowsWhere(rows: readonly TableRow[], args: unknown): TableRow[] {
   const where = isRecord(args) && isRecord(args.where) ? args.where : {};
-  return rows.filter((row) =>
-    Object.entries(where).every(([column, filter]) =>
-      columnMatches(row[column], filter)
-    )
-  );
+  return rows.filter((row) => rowMatches(row, where));
 }
 
 /** @returns the row cut down to the call's `select`, or whole without one */
@@ -78,19 +99,34 @@ function project(row: TableRow, args: unknown): TableRow {
   );
 }
 
-/** A read-only delegate over one table. */
-function tableDelegate(rows: readonly TableRow[]) {
+/** A read-only delegate over one table, reporting each read's rows. */
+function tableDelegate(
+  table: string,
+  rows: readonly TableRow[],
+  onRead: (read: TableRead) => void
+) {
   const first = (args: unknown) =>
     prismaQuery(() => {
       const [row] = rowsWhere(rows, args);
-      return row === undefined ? null : project(row, args);
+      const found = row === undefined ? null : project(row, args);
+      onRead({ table, rows: found === null ? [] : [found] });
+      return found;
     });
   return {
     findMany: (args: unknown) =>
-      prismaQuery(() => rowsWhere(rows, args).map((row) => project(row, args))),
+      prismaQuery(() => {
+        const found = rowsWhere(rows, args).map((row) => project(row, args));
+        onRead({ table, rows: found });
+        return found;
+      }),
     findUnique: first,
     findFirst: first,
   };
+}
+
+/** Ignores a read: the default when a test does not watch them. */
+function ignoreRead(): void {
+  // A test that does not pass `onRead` does not look at the reads.
 }
 
 /**
@@ -101,11 +137,14 @@ function tableDelegate(rows: readonly TableRow[]) {
  * @param tables - The rows each delegate answers. Read on every call, so a
  *   test may reseed the map between calls. A delegate with no entry answers
  *   an empty table; client methods (`$transaction`…) read as `undefined`.
+ * @param onRead - Called once per query with the rows it returned, so a test
+ *   can tell which rows a read took and how many queries it made.
  * @returns The module, whose `prisma` reads only `tables`.
  */
 export function inMemoryPrisma(
   original: { readonly prisma: PrismaClient },
-  tables: InMemoryTables
+  tables: InMemoryTables,
+  onRead: (read: TableRead) => void = ignoreRead
 ): { prisma: PrismaClient } {
   return {
     prisma: new Proxy(original.prisma, {
@@ -113,7 +152,7 @@ export function inMemoryPrisma(
         if (typeof property !== "string" || property.startsWith("$")) {
           return undefined;
         }
-        return tableDelegate(tables.get(property) ?? []);
+        return tableDelegate(property, tables.get(property) ?? [], onRead);
       },
     }),
   };

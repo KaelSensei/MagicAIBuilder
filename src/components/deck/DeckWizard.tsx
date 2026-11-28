@@ -34,8 +34,11 @@ import type { ScryfallCard } from "@/lib/scryfall/types";
 import { getListedImageUri } from "@/lib/scryfall/images";
 import type { BracketLevel } from "@/lib/deck/types";
 import { createDeckPlan } from "@/lib/ai/deck-plan";
+import { deckBuildFailureMessageKey } from "@/lib/ai/build-failure";
+import { buildStepMessageKey, type BuildStep } from "@/lib/ai/build-step";
 import type { BuildRequest } from "@/app/api/ai/build/types";
 import { GeneratedDeckCorrections } from "./GeneratedDeckCorrections";
+import { UnfinishedDeckNotice } from "./UnfinishedDeckNotice";
 import { useBuiltDeckSave } from "./use-built-deck-save";
 
 // ---------------------------------------------------------------------------
@@ -417,11 +420,13 @@ function StepCommander({
           type="text"
           value={query}
           onChange={handleChange}
+          // The step's heading asks a question and is not tied to the field,
+          // and a placeholder is no name (WCAG 2.2 SC 1.3.1 and 4.1.2).
+          aria-label={t("wizard.commanderSearchLabel")}
           placeholder={t("wizard.searchCommander")}
           className="
             w-full px-4 py-3 rounded-xl border border-[var(--border)] bg-[var(--surface)]
             text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]/50
-            focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/30
             transition-all
           "
         />
@@ -556,7 +561,7 @@ function StepPlan({ request }: { readonly request: BuildRequest }) {
 // Loading step (step 5)
 // ---------------------------------------------------------------------------
 function StepLoading({
-  statusMessages,
+  step,
   commander,
   cardCount,
   totalCards,
@@ -565,7 +570,7 @@ function StepLoading({
   importTotal,
   error,
 }: {
-  readonly statusMessages: string[];
+  readonly step: BuildStep | null;
   readonly commander: string | null;
   readonly cardCount: number;
   readonly totalCards: number | null;
@@ -578,7 +583,7 @@ function StepLoading({
   const isImporting = importTotal > 0;
   const lastMsg = isImporting
     ? t("wizard.addingCards")
-    : (statusMessages.at(-1) ?? t("wizard.thinking"));
+    : t(buildStepMessageKey(step));
 
   // While streaming, measure against what the server said it would send; while
   // importing, against the copies actually being written to the deck.
@@ -709,7 +714,7 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
   const { state: buildState, build, reset: resetBuild } = useAIDeckBuild();
   const describeDenial = useAiDenialMessage();
   const builtDeck = useBuiltDeckSave(onComplete);
-  const { correctedDeck, reset: resetSave } = builtDeck;
+  const { correctedDeck, unfinishedDeck, reset: resetSave } = builtDeck;
 
   // Reset wizard on open
   useEffect(() => {
@@ -780,8 +785,9 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
         : commanderName,
   });
 
-  // A failure once the deck exists returns to the plan, as before: saving
-  // again would create a second deck.
+  // A build that threw, or `onComplete` itself. The save step catches its own
+  // failures: it holds a deck it could not create and stops on a deck it
+  // could not fill (`unfinishedDeck`).
   const reportFailure = (err: unknown) => {
     const message = err instanceof Error ? err.message : "Deck build failed";
     logger.error("Generate error", "DeckWizard", err);
@@ -797,6 +803,8 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
     try {
       const result = await build(buildRequest(skipCommander));
 
+      // No deck. A refusal or a failure is in the build state, and
+      // `loadingError` shows it first; otherwise the build was cancelled.
       if (!result) {
         setBuildError(t("wizard.buildCancelled"));
         return;
@@ -830,10 +838,14 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
     resetBuild();
   };
 
-  // The server's own text never reaches the player: a deck the server could
-  // not create gets the wizard's message.
+  // The server's own text never reaches the player: a failed build gets the
+  // sentence of its kind, and a deck the server could not create gets the
+  // wizard's message.
   const loadingError = (): string | null => {
     if (buildState.denial) return describeDenial(buildState.denial);
+    if (buildState.failure) {
+      return t(deckBuildFailureMessageKey(buildState.failure));
+    }
     if (builtDeck.saveFailed) return t("wizard.deckNotSaved");
     return buildError;
   };
@@ -911,20 +923,27 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
               style={{ minHeight: 360 }}
             >
               {isBuilding ? (
-                /* Loading / streaming step, then the card-data corrections */
+                /* Loading / streaming step, then an unfinished deck or the card-data corrections */
                 <div className="flex flex-col items-center justify-center flex-1 py-8">
-                  {correctedDeck ? (
+                  {unfinishedDeck && (
+                    <UnfinishedDeckNotice
+                      deck={unfinishedDeck}
+                      onOpenDeck={onComplete}
+                    />
+                  )}
+                  {correctedDeck && (
                     <GeneratedDeckCorrections
                       corrections={correctedDeck.corrections}
                       onOpenDeck={() => onComplete(correctedDeck.deckId)}
                     />
-                  ) : (
+                  )}
+                  {!unfinishedDeck && !correctedDeck && (
                     <>
                       <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-8">
                         {t("wizard.aiBuilding")}
                       </h2>
                       <StepLoading
-                        statusMessages={buildState.statusMessages}
+                        step={buildState.step}
                         commander={buildState.commander}
                         cardCount={countCopies(buildState.cards)}
                         totalCards={buildState.totalCards}

@@ -13,8 +13,11 @@ import { useTranslations } from "next-intl";
 import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/hooks/useToast";
 import { useRouter } from "@/i18n/navigation";
+import type { DeckDeletion } from "@/lib/deck/deck-deletion";
+import { deckRequestFailureOf } from "@/lib/deck/deck-request-failure";
 import { GUEST_DECK_ID } from "@/lib/deck/guest-deck";
 import { useDeckStore } from "@/lib/deck/store";
+import { logger } from "@/lib/logger";
 import type { DeckDepartureControls } from "@/components/builder/useDeckDeparture";
 
 /** Props of {@link DeleteDeckButton}. */
@@ -34,8 +37,16 @@ const NO_DEPARTURE: DeckDepartureControls = {
   stay: () => undefined,
 };
 
-/** Where the confirmation stands: not sent yet, on its way, or refused by the server. */
-type DeleteStatus = "idle" | "deleting" | "failed";
+/**
+ * Where the confirmation stands: not sent yet, on its way, refused because the session ended, or
+ * refused or failed for any other reason.
+ */
+type DeleteStatus = "idle" | "deleting" | "signedOut" | "failed";
+
+/** The dialog's status after a refused or failed delete, from what the deck store threw. */
+function failedStatus(error: unknown): DeleteStatus {
+  return deckRequestFailureOf(error) === "signed-out" ? "signedOut" : "failed";
+}
 
 /** The confirm button's catalogue key under `builder.deleteDeck`. */
 type ConfirmLabel = "confirm" | "deleting" | "waitingForSave";
@@ -53,14 +64,17 @@ function confirmLabel(status: DeleteStatus, isSaving: boolean): ConfirmLabel {
  * Deletes the open deck after the player confirms, then opens the library and says the deck was
  * deleted. Renders nothing for the guest deck, or before the deck is in the store.
  *
- * A refused or failed delete keeps the dialog open with a message; the store leaves the deck and
- * its undo history as they were.
+ * A refused or failed delete keeps the dialog open with a message, the session-ended one for a
+ * 401, and logs the raw error; the store leaves the deck and its undo history as they were. A deck
+ * already deleted from another tab or device counts as deleted (`deleteOnServer`): the library
+ * opens with an informational toast.
  */
 export function DeleteDeckButton({
   deckId,
   departure = NO_DEPARTURE,
 }: DeleteDeckButtonProps) {
   const t = useTranslations("builder.deleteDeck");
+  const tCommon = useTranslations("common");
   const deckName = useDeckStore((state) => state.decks[deckId]?.name ?? null);
   const isSaving = useDeckStore((state) => state.isSyncing);
   const deleteDeck = useDeckStore((state) => state.deleteDeck);
@@ -89,15 +103,27 @@ export function DeleteDeckButton({
     // The store drops the deck inside `deleteDeck`, before this function can navigate, so the
     // page must know it is leaving first.
     departure.leave();
+    let deletion: DeckDeletion;
     try {
-      await deleteDeck(deckId);
-    } catch {
+      deletion = await deleteDeck(deckId);
+    } catch (error) {
+      // The raw error is diagnostic text; the dialog says what the player can do (I-01).
+      logger.error("Unexpected error", "deleteDeck", error);
       departure.stay();
-      setStatus("failed");
+      setStatus(failedStatus(error));
       return;
     }
     // Leave at once: the builder has no deck to show any more.
     router.push("/decks");
+    announce(deletion);
+  };
+
+  /** Says the deck is gone: deleted now, or already deleted from another tab or device. */
+  const announce = (deletion: DeckDeletion) => {
+    if (deletion === "alreadyDeleted") {
+      toast.info(tCommon("deckDelete.alreadyDeleted"));
+      return;
+    }
     toast.success(t("deleted", { name: deckName }));
   };
 
@@ -121,7 +147,7 @@ export function DeleteDeckButton({
         showClose={false}
       >
         <DeleteDeckDialogBody
-          failed={status === "failed"}
+          failure={failureOf(status)}
           label={confirmLabel(status, isSaving)}
           onCancel={close}
           onConfirm={() => void confirm()}
@@ -131,10 +157,18 @@ export function DeleteDeckButton({
   );
 }
 
+/** Why the last delete was refused or failed, as the dialog tells it. */
+type DeleteFailure = "signedOut" | "failed";
+
+/** The failure the dialog shows for a status, or `null` when the last delete has not failed. */
+function failureOf(status: DeleteStatus): DeleteFailure | null {
+  return status === "signedOut" || status === "failed" ? status : null;
+}
+
 /** Props of {@link DeleteDeckDialogBody}. */
 interface DeleteDeckDialogBodyProps {
-  /** The last delete was refused or failed. */
-  readonly failed: boolean;
+  /** Why the last delete was refused or failed, or `null` when it has not. */
+  readonly failure: DeleteFailure | null;
   /** What the confirm button says; anything but "confirm" holds it back. */
   readonly label: ConfirmLabel;
   readonly onCancel: () => void;
@@ -143,19 +177,23 @@ interface DeleteDeckDialogBodyProps {
 
 /** The dialog's warning, its failure message, and Cancel before Delete. */
 function DeleteDeckDialogBody({
-  failed,
+  failure,
   label,
   onCancel,
   onConfirm,
 }: DeleteDeckDialogBodyProps) {
   const t = useTranslations("builder.deleteDeck");
+  const tCommon = useTranslations("common");
+  // A 401 reads as the decks page's toast does: signing in again helps.
+  const failureMessage =
+    failure === "signedOut" ? tCommon("deckDelete.signedOut") : t("failed");
 
   return (
     <div className="space-y-4 px-5 py-4">
       <p className="text-sm text-[var(--text-secondary)]">{t("description")}</p>
-      {failed && (
+      {failure !== null && (
         <p role="alert" className="text-sm text-red-400">
-          {t("failed")}
+          {failureMessage}
         </p>
       )}
       {/* Cancel comes first, so the dialog opens on it: the delete cannot be undone. */}

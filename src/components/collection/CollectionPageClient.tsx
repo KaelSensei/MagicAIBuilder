@@ -18,12 +18,14 @@ import {
 } from "lucide-react";
 import { useCollectionStore } from "@/lib/collection/store";
 import { AddToCollectionDialog } from "./AddToCollectionDialog";
+import { EmptyCollection } from "./EmptyCollection";
 import { formatCollectionText } from "@/lib/collection/shopping-list";
 import { formatCollectionPrintingCsv } from "@/lib/collection/printing-csv";
 import { downloadTextFile } from "@/lib/download-text-file";
 import { Button } from "@/components/ui/Button";
 import { cardSurfaceClassName } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { cn } from "@/components/ui/utils";
 import type { CollectionCard } from "@/lib/collection/types";
 import { CardImage } from "@/components/card/CardImage";
@@ -65,6 +67,8 @@ export function CollectionPageClient() {
   } = useCollectionStore();
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
   const [searchQuery, setSearchQuery] = useState("");
+  // Held here so the empty state's "Add cards" opens the toolbar's dialog.
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
 
   useEffect(() => {
     void loadCollection();
@@ -215,7 +219,10 @@ export function CollectionPageClient() {
                 </Button>
               </>
             )}
-            <AddToCollectionDialog />
+            <AddToCollectionDialog
+              open={addDialogOpen}
+              onOpenChange={setAddDialogOpen}
+            />
           </div>
         </div>
 
@@ -254,52 +261,37 @@ export function CollectionPageClient() {
               className="w-full pl-10"
             />
           </div>
-          <div className="ml-auto flex items-center gap-1 rounded-[var(--lumen-radius-pill)] border border-[var(--border)] bg-[var(--background)] p-1">
-            <button
-              type="button"
-              onClick={() => setViewMode("grid")}
-              aria-pressed={viewMode === "grid"}
-              className={cn(
-                "rounded-[var(--lumen-radius-pill)] p-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]",
-                viewMode === "grid"
-                  ? "bg-[var(--accent)] text-white"
-                  : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-              )}
-              title={t("viewMode.gridView")}
-              aria-label={t("viewMode.gridView")}
-            >
-              <LayoutGrid className="w-4 h-4" />
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode("list")}
-              aria-pressed={viewMode === "list"}
-              className={cn(
-                "rounded-[var(--lumen-radius-pill)] p-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]",
-                viewMode === "list"
-                  ? "bg-[var(--accent)] text-white"
-                  : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-              )}
-              title={t("viewMode.listView")}
-              aria-label={t("viewMode.listView")}
-            >
-              <List className="w-4 h-4" />
-            </button>
-          </div>
+          <SegmentedControl
+            aria-label={t("viewMode.layout")}
+            options={[
+              {
+                value: "grid",
+                label: t("viewMode.gridView"),
+                icon: <LayoutGrid className="w-4 h-4" />,
+                hideLabel: true,
+              },
+              {
+                value: "list",
+                label: t("viewMode.listView"),
+                icon: <List className="w-4 h-4" />,
+                hideLabel: true,
+              },
+            ]}
+            value={viewMode}
+            onChange={setViewMode}
+            size="md"
+            className="ml-auto border border-[var(--border)]"
+          />
         </div>
 
         {/* Cards */}
-        {filtered.length === 0 && (
+        {allCards.length === 0 && (
+          <EmptyCollection onAddCards={() => setAddDialogOpen(true)} />
+        )}
+        {allCards.length > 0 && filtered.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20 text-[var(--text-secondary)] gap-3">
-            <Package className="w-10 h-10 opacity-40" />
-            {allCards.length === 0 ? (
-              <>
-                <p className="text-sm">{t("empty.title")}</p>
-                <p className="text-xs opacity-70">{t("empty.hint")}</p>
-              </>
-            ) : (
-              <p className="text-sm">{t("empty.noMatch")}</p>
-            )}
+            <Package className="w-10 h-10" aria-hidden="true" />
+            <p className="text-sm">{t("empty.noMatch")}</p>
           </div>
         )}
         {filtered.length > 0 && viewMode === "grid" && (

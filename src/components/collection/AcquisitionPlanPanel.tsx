@@ -7,11 +7,11 @@ import { z } from "zod";
 import { formatAcquisitionCsv } from "@/lib/collection/acquisition-csv";
 import { summarizeAcquisitionPlan } from "@/lib/collection/acquisition-plan-summary";
 import { downloadTextFile } from "@/lib/download-text-file";
-import { Link } from "@/i18n/navigation";
 import { formatUsdPrice } from "@/i18n/number-format";
 import { cardSurfaceClassName } from "@/components/ui/Card";
 import { fieldShellClassName } from "@/components/ui/Input";
 import { cn } from "@/components/ui/utils";
+import { DeckBuilderLink } from "./DeckBuilderLink";
 import { DeferredPlanGroup } from "./DeferredPlanGroup";
 
 // The two deferred fields default to "nothing deferred" so a response from a server
@@ -122,7 +122,7 @@ export function AcquisitionPlanPanel() {
         aria-expanded={open}
         aria-controls="collection-acquisition-plan"
         onClick={() => setOpen((value) => !value)}
-        className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--accent)]"
+        className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-hover)] focus-visible:-outline-offset-2"
       >
         {open ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
         {t("title")}
@@ -174,6 +174,10 @@ export function AcquisitionPlanPanel() {
           {state.status === "ready" && state.plan.deckCount > 0 && allItems.length === 0 && (
             <p className="text-sm text-[var(--text-secondary)]">{t("complete")}</p>
           )}
+          {/* Copies are missing but every one is deferred: say so, or only the Deferred group shows. */}
+          {state.status === "ready" && items.length === 0 && deferred.length > 0 && (
+            <p className="mb-3 text-sm text-[var(--text-secondary)]">{t("nothingToBuyNow")}</p>
+          )}
           {state.status === "ready" && items.length > 0 && (
             <>
               <p className="mb-3 text-sm font-medium text-[var(--text-primary)]">
@@ -204,9 +208,7 @@ export function AcquisitionPlanPanel() {
                         {item.decks.map((deck, index) => (
                           <span key={deck.id}>
                             {index > 0 && " · "}
-                            <Link href={`/builder/${deck.id}`} className="hover:text-[var(--accent-text)] hover:underline focus-visible:underline">
-                              {deck.name}
-                            </Link>
+                            <DeckBuilderLink deckId={deck.id}>{deck.name}</DeckBuilderLink>
                             <span className="ml-1">{usage("copies", { count: deck.quantity })}</span>
                           </span>
                         ))}

@@ -18,6 +18,8 @@ interface FocusedFeedbackLabels {
   readonly title: string;
   readonly ownerHint: string;
   readonly enable: string;
+  /** The question field's accessible name; the placeholder is only a prompt. */
+  readonly questionLabel: string;
   readonly placeholder: string;
   readonly save: string;
   readonly saving: string;
@@ -82,10 +84,13 @@ export function FocusedFeedbackPanel({
               <textarea
                 value={question}
                 onChange={(event) => setQuestion(event.target.value)}
+                // The heading names the request, not the field, and a
+                // placeholder is no name (WCAG 2.2 SC 1.3.1 and 4.1.2).
+                aria-label={labels.questionLabel}
                 placeholder={labels.placeholder}
                 maxLength={240}
                 rows={2}
-                className="w-full resize-y rounded-[var(--lumen-radius-lg)] border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)]"
+                className="w-full resize-y rounded-[var(--lumen-radius-lg)] border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--text-primary)]"
               />
               <div className="flex items-center justify-between gap-3">
                 <span className="text-xs text-[var(--text-secondary)]">
@@ -95,7 +100,7 @@ export function FocusedFeedbackPanel({
                   type="button"
                   onClick={() => void save()}
                   disabled={!canSave}
-                  className="rounded-[var(--lumen-radius-pill)] bg-[var(--accent)] px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:opacity-60"
+                  className="rounded-[var(--lumen-radius-pill)] bg-[var(--accent)] px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-[var(--accent-hover)] disabled:opacity-60"
                 >
                   {saving ? labels.saving : labels.save}
                 </button>

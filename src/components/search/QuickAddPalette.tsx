@@ -9,25 +9,36 @@
  * from a description stays in the search panel (I-14). Enter adds to the main
  * deck, Shift+Enter to the sideboard, Alt+Enter to considering.
  *
+ * This module composes the dialog. The highlight, the "added" line and the
+ * keys live in `useQuickAddPalette`; the reading switch and the status line
+ * are their own components.
+ *
  * Not responsible for: running the search. The host passes the cards.
  *
  * @module search/QuickAddPalette
  */
-import { useId, useState, type KeyboardEvent } from "react";
+import { useId } from "react";
 import { useTranslations } from "next-intl";
 import { Modal } from "@/components/ui/Modal";
 import type { DeckZone } from "@/lib/deck/types";
 import {
   planQuickAddQuery,
-  zoneForQuickAddChord,
   type QuickAddReading,
   type QuickAddScope,
 } from "@/lib/search/quick-add-query";
 import type { ScryfallCard } from "@/lib/scryfall/types";
-import { QuickAddResultList, quickAddOptionId } from "@/components/search/QuickAddResultList";
+import {
+  QuickAddResultList,
+  quickAddOptionId,
+} from "@/components/search/QuickAddResultList";
+import {
+  QuickAddPhaseMessage,
+  type QuickAddPhase,
+} from "@/components/search/QuickAddPhaseMessage";
+import { QuickAddReadingSwitch } from "@/components/search/QuickAddReadingSwitch";
+import { useQuickAddPalette } from "@/components/search/useQuickAddPalette";
 
-/** What the palette shows under the query. */
-export type QuickAddPhase = "idle" | "loading" | "error" | "empty" | "results";
+export type { QuickAddPhase } from "@/components/search/QuickAddPhaseMessage";
 
 interface QuickAddPaletteProps {
   readonly open: boolean;
@@ -50,32 +61,13 @@ interface QuickAddPaletteProps {
  */
 export function QuickAddPalette(props: QuickAddPaletteProps) {
   const t = useTranslations("search");
-  const zones = useTranslations("card");
   const listId = useId();
-  const [index, setIndex] = useState(0);
-  const [notice, setNotice] = useState<string | null>(null);
-  const plan = planQuickAddQuery({ text: props.text, reading: props.reading, scope: props.scope });
-  const activeIndex = props.cards.length === 0 ? -1 : Math.min(index, props.cards.length - 1);
-  const active = activeIndex >= 0 ? props.cards[activeIndex] : undefined;
-
-  function add(card: ScryfallCard, zone: DeckZone) {
-    props.onAdd(card, zone);
-    setNotice(t("quickAdd.added", { name: card.name, zone: zoneName(zone, zones) }));
-  }
-
-  function onKeyDown(event: KeyboardEvent<HTMLInputElement>) {
-    if (handleReadingToggle(event, props.reading, props.onReadingChange)) return;
-    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-      event.preventDefault();
-      const step = event.key === "ArrowDown" ? 1 : -1;
-      setIndex((current) => clampIndex(current + step, props.cards.length));
-      return;
-    }
-    const zone = zoneForQuickAddChord(event);
-    if (!zone || !active) return;
-    event.preventDefault();
-    add(active, zone);
-  }
+  const state = useQuickAddPalette(props);
+  const plan = planQuickAddQuery({
+    text: props.text,
+    reading: props.reading,
+    scope: props.scope,
+  });
 
   return (
     <Modal
@@ -90,155 +82,42 @@ export function QuickAddPalette(props: QuickAddPaletteProps) {
           role="combobox"
           aria-expanded={props.phase === "results"}
           aria-controls={listId}
-          aria-activedescendant={active ? quickAddOptionId(active.id) : undefined}
+          aria-activedescendant={
+            state.active ? quickAddOptionId(state.active.id) : undefined
+          }
           aria-autocomplete="list"
           aria-label={t("quickAdd.title")}
           placeholder={t("quickAdd.placeholder")}
           value={props.text}
-          onChange={(event) => {
-            setIndex(0);
-            setNotice(null);
-            props.onTextChange(event.target.value);
-          }}
-          onKeyDown={onKeyDown}
-          className="w-full rounded-[var(--lumen-radius-lg)] border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+          onChange={(event) => state.onTextChange(event.target.value)}
+          onKeyDown={state.onKeyDown}
+          className="w-full rounded-[var(--lumen-radius-lg)] border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--text-primary)]"
         />
-        <ReadingSwitch reading={props.reading} onChange={props.onReadingChange} />
+        <QuickAddReadingSwitch
+          reading={props.reading}
+          onChange={props.onReadingChange}
+        />
         {plan.kind !== "idle" && (
           <p className="truncate font-mono text-xs text-[var(--text-secondary)]">
             {t("executedQuery", { query: plan.query })}
           </p>
         )}
-        <p className="text-xs text-[var(--text-secondary)]">{t("quickAdd.hint")}</p>
-        <PhaseMessage phase={props.phase} />
-        {notice && (
-          <output className="block text-sm text-[var(--accent-text)]">{notice}</output>
+        <p className="text-xs text-[var(--text-secondary)]">
+          {t("quickAdd.hint")}
+        </p>
+        <QuickAddPhaseMessage phase={props.phase} />
+        {state.notice && (
+          <output className="block text-sm text-[var(--accent-text)]">
+            {state.notice}
+          </output>
         )}
         <QuickAddResultList
           listId={listId}
           cards={props.phase === "results" ? props.cards : []}
-          activeIndex={activeIndex}
-          onAdd={(card) => add(card, "main")}
+          activeIndex={state.activeIndex}
+          onAdd={(card) => state.add(card, "main")}
         />
       </div>
     </Modal>
   );
-}
-
-/** Name or rules text. Alt+R does the same from the combobox. */
-function ReadingSwitch(props: {
-  readonly reading: QuickAddReading;
-  readonly onChange: (reading: QuickAddReading) => void;
-}) {
-  const t = useTranslations("search");
-  return (
-    <fieldset className="m-0 flex min-w-0 gap-1 border-0 p-0">
-      <legend className="sr-only">{t("quickAdd.readingGroup")}</legend>
-      <ReadingButton
-        pressed={props.reading === "name"}
-        label={t("quickAdd.nameReading")}
-        onClick={() => props.onChange("name")}
-      />
-      <ReadingButton
-        pressed={props.reading === "oracle"}
-        label={t("quickAdd.oracleReading")}
-        onClick={() => props.onChange("oracle")}
-      />
-    </fieldset>
-  );
-}
-
-function ReadingButton(props: {
-  readonly pressed: boolean;
-  readonly label: string;
-  readonly onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      aria-pressed={props.pressed}
-      onClick={props.onClick}
-      className={
-        props.pressed
-          ? "rounded-[var(--lumen-radius-pill)] bg-[var(--accent)] px-3 py-1 text-xs text-white"
-          : "rounded-[var(--lumen-radius-pill)] border border-[var(--border)] px-3 py-1 text-xs text-[var(--text-secondary)]"
-      }
-    >
-      {props.label}
-    </button>
-  );
-}
-
-/** The idle, loading, error and empty lines. Results render their own list. */
-function PhaseMessage(props: { readonly phase: QuickAddPhase }) {
-  const t = useTranslations("search");
-  switch (props.phase) {
-    case "idle":
-      return <p className="text-sm text-[var(--text-secondary)]">{t("quickAdd.idle")}</p>;
-    case "loading":
-      return <p className="text-sm text-[var(--text-secondary)]">{t("quickAdd.searching")}</p>;
-    case "error":
-      return <p role="alert" className="text-sm text-red-400">{t("quickAdd.error")}</p>;
-    case "empty":
-      return <p className="text-sm text-[var(--text-secondary)]">{t("quickAdd.noResults")}</p>;
-    case "results":
-      return null;
-  }
-  const _exhaustive: never = props.phase;
-  return _exhaustive;
-}
-
-/**
- * Alt+R toggles the reading. The key is left alone with any other modifier.
- *
- * @param event - The combobox keydown
- * @param reading - The reading in force
- * @param onChange - Receives the other reading
- * @returns True when the key was the toggle
- */
-function handleReadingToggle(
-  event: KeyboardEvent<HTMLInputElement>,
-  reading: QuickAddReading,
-  onChange: (reading: QuickAddReading) => void
-): boolean {
-  if (event.key.toLowerCase() !== "r" || !event.altKey || event.shiftKey || event.ctrlKey || event.metaKey) {
-    return false;
-  }
-  event.preventDefault();
-  onChange(reading === "name" ? "oracle" : "name");
-  return true;
-}
-
-/**
- * Keeps a highlight inside the result list.
- *
- * @param index - The requested index, which may fall outside the list
- * @param count - How many results are shown
- * @returns An index inside the list, or 0 when the list is empty
- */
-function clampIndex(index: number, count: number): number {
-  if (count <= 0) return 0;
-  if (index < 0) return 0;
-  if (index >= count) return count - 1;
-  return index;
-}
-
-/**
- * The short zone name from the card catalogue.
- *
- * @param zone - The zone the card was added to
- * @param t - The `card` catalogue
- * @returns The zone's label
- */
-function zoneName(zone: DeckZone, t: (key: "zoneMain" | "zoneSideboard" | "zoneConsidering") => string): string {
-  switch (zone) {
-    case "main":
-      return t("zoneMain");
-    case "sideboard":
-      return t("zoneSideboard");
-    case "maybeboard":
-      return t("zoneConsidering");
-  }
-  const _exhaustive: never = zone;
-  return _exhaustive;
 }

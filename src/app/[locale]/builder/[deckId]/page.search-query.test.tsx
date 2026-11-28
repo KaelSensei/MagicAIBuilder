@@ -30,10 +30,12 @@ import { useCollectionStore } from "@/lib/collection/store";
 import { isRecord } from "@/lib/guards";
 import type { ApiDeck, ApiDeckCard } from "@/lib/db/deck-api";
 import { useDeckStore } from "@/lib/deck/store";
+import { SCRYFALL_API } from "@/lib/scryfall/constants";
 import {
   EMPTY_SEARCH_RESPONSE,
   type ScryfallCard,
   type ScryfallSearchResponse,
+  type ScryfallSetList,
 } from "@/lib/scryfall/types";
 import { useUIStore } from "@/lib/ui/store";
 import { setupMsw } from "@/test/msw";
@@ -129,6 +131,20 @@ const OWNED_OPT = {
   createdAt: "2026-11-01T00:00:00.000Z",
 };
 
+/** The one set By Set's field offers. No search finds a card in this file, its set included. */
+const SETS: ScryfallSetList = {
+  object: "list",
+  data: [
+    {
+      code: "dsk",
+      name: "Duskmourn: House of Horror",
+      set_type: "expansion",
+      card_count: 286,
+      released_at: "2024-09-27",
+    },
+  ],
+};
+
 /**
  * The accessible name of one of this page's buttons, as `getByRole` computes it: `aria-label`,
  * else the text outside `aria-hidden` children, else `title`. None of them uses `aria-labelledby`
@@ -173,6 +189,19 @@ function button(name: string): HTMLElement {
 /** `button`, once the controls that hold it have rendered. */
 function findButton(name: string): Promise<HTMLElement> {
   return waitFor(() => button(name));
+}
+
+/**
+ * The search tab named `name`. The deck editor's grouping has a "By Color" of its own, so
+ * the match is taken from the row that holds "By Set".
+ */
+function searchTab(name: "Name" | "By Set" | "By Color"): HTMLElement {
+  const tabRow = button("By Set").parentElement;
+  const matches = Array.from(tabRow?.querySelectorAll("button") ?? []).filter(
+    (candidate) => buttonName(candidate) === name
+  );
+  expect(matches, `one search tab named "${name}"`).toHaveLength(1);
+  return matches[0];
 }
 
 /** The builder page at `/en/builder/<deckId>`, inside the router contexts Next gives it. */
@@ -300,7 +329,9 @@ const server = setupMsw(
   ),
   http.get("/api/meta/:slug/history", () =>
     HttpResponse.json({ report: null, snapshotCount: 0, windowDays: 90 })
-  )
+  ),
+  // By Set's field reads the sets from Scryfall itself, not through the search cache.
+  http.get(`${SCRYFALL_API}/sets`, () => HttpResponse.json(SETS))
 );
 
 describe("characterization: the builder's name search with a plain-language query", () => {
@@ -600,5 +631,401 @@ describe("the builder's name search inside the commander's colour identity (I-01
     expect(
       screen.getByText("Only cards in your commander's colors")
     ).toBeDefined();
+  });
+});
+
+/*
+ * A search with no result showed the query it ran and nothing else. It now
+ * says what to do next: "Clear filters" while the filters narrow the search,
+ * a syntax hint otherwise (I-13 AC-13-05, design audit S11). Every query but
+ * the translated one finds nothing in this file.
+ */
+describe("the builder's search with no result", () => {
+  const SYNTAX_HINT =
+    "Tip: search by type or rules text, for example t:dragon o:flying.";
+
+  /** How many accessible buttons are named `name`. */
+  function buttonCount(name: string): number {
+    return Array.from(document.querySelectorAll("button")).filter(
+      (candidate) =>
+        buttonName(candidate) === name && !isInaccessible(candidate)
+    ).length;
+  }
+
+  /** Serves Opt for the unfiltered name search; every other query still finds nothing. */
+  function serveOptUnfiltered(): void {
+    server.use(
+      http.get("/api/cache/search", ({ request }) => {
+        const query = new URL(request.url).searchParams.get("query") ?? "";
+        if (query !== "is:gamechanger" && query !== "banned:commander") {
+          searched.push(query);
+        }
+        const data: ScryfallSearchResponse =
+          query === "legal:commander id<=U"
+            ? {
+                object: "list",
+                total_cards: 1,
+                has_more: false,
+                data: [card("opt-dmu", "Opt")],
+              }
+            : EMPTY_SEARCH_RESPONSE;
+        return HttpResponse.json({ hit: true, data });
+      })
+    );
+  }
+
+  // The unfiltered search comes back from the page's search cache, so the
+  // proof is what the player sees again, not a new request.
+  it("offers Clear filters while a filter narrows it, and lists the unfiltered search again", async () => {
+    serveOptUnfiltered();
+    const user = await openBuilderWithFilters();
+    expect(await screen.findByText("Opt")).toBeDefined();
+    await user.click(button("White"));
+    await lastSearchIs("id<=W legal:commander id<=U");
+
+    await user.click(await findButton("Clear filters"));
+
+    expect(await screen.findByText("Opt")).toBeDefined();
+    expect(button("White")).toHaveAttribute("aria-pressed", "false");
+    expect(buttonCount("Clear filters")).toBe(0);
+  });
+
+  // The button removes itself on the press; focus used to fall to <body>.
+  it("gives focus to the search field once Clear filters has gone", async () => {
+    const user = await openBuilderWithFilters();
+    await user.click(button("White"));
+    await lastSearchIs("id<=W legal:commander id<=U");
+
+    await user.click(await findButton("Clear filters"));
+
+    expect(buttonCount("Clear filters")).toBe(0);
+    expect(screen.getByPlaceholderText("Search cards…")).toHaveFocus();
+  });
+
+  it("suggests the search syntax, and no Clear filters, when no filter narrows it", async () => {
+    await openBuilderWithFilters();
+
+    expect(await screen.findByText(SYNTAX_HINT)).toBeDefined();
+    expect(buttonCount("Clear filters")).toBe(0);
+  });
+
+  it("suggests the search syntax under a confirmed plain-language query, which runs without the filters", async () => {
+    const user = await openBuilderWithFilters();
+    await user.click(button("White"));
+    await runPlainLanguageQuery(user);
+    await lastSearchIs(TRANSLATED);
+
+    // The query line shows only once the search has come back empty.
+    expect(await screen.findByText(`Query: ${TRANSLATED}`)).toBeDefined();
+    expect(screen.getByText(SYNTAX_HINT)).toBeDefined();
+    expect(buttonCount("Clear filters")).toBe(0);
+  });
+
+  /*
+   * The syntax hint helps only where the player types a Scryfall query: the
+   * plain name search. By Set has no text box, By Color and the pickers turn
+   * the text into `name:/…/`, and the pickers read no filter but the colours
+   * and "Collection only" (`lib/scryfall/search.ts`).
+   */
+  describe("outside the plain name search", () => {
+    const NO_RESULT = "No cards found. Try a different search.";
+
+    /** Waits for `query` to be sent and for the panel to say it found nothing. */
+    async function settlesEmpty(query: string): Promise<void> {
+      await lastSearchIs(query);
+      expect(await screen.findByText(NO_RESULT)).toBeDefined();
+    }
+
+    it("suggests nothing on By Set, which has no text box for the syntax", async () => {
+      const { user } = await openBuilder();
+
+      // A set must be chosen first: until then By Set sends no search (the describe below).
+      await user.click(searchTab("By Set"));
+      await user.click(
+        screen.getByPlaceholderText("Search set (e.g. dsk, mh3…)")
+      );
+      await user.click(await screen.findByText("Duskmourn: House of Horror"));
+
+      await settlesEmpty("set:dsk legal:commander");
+      expect(screen.queryByText("Choose a set to list its cards.")).toBeNull();
+      expect(screen.queryByText(SYNTAX_HINT)).toBeNull();
+      expect(buttonCount("Clear filters")).toBe(0);
+    });
+
+    /*
+     * By Set and By Color send no search until the player chooses a set or a colour, yet the
+     * panel said "No cards found" there, and its live region announced it although nothing was
+     * searched. It now says what to choose (I-13, a follow-up of #1967).
+     */
+    describe("before the tab has anything to search", () => {
+      /** The panel's line `text`, once it shows, checked to be the polite live region. */
+      async function liveLine(text: string): Promise<HTMLElement> {
+        const line = await screen.findByText(text);
+        expect(line).toBeInstanceOf(HTMLOutputElement);
+        expect(line).toHaveAttribute("aria-live", "polite");
+        return line;
+      }
+
+      it("asks for a set on By Set instead of saying that no card was found", async () => {
+        const { user } = await openBuilder();
+
+        await user.click(searchTab("By Set"));
+
+        expect(await liveLine("Choose a set to list its cards.")).toBeDefined();
+        expect(screen.queryByText(NO_RESULT)).toBeNull();
+        expect(screen.queryByText(SYNTAX_HINT)).toBeNull();
+      });
+
+      it("asks for colours on By Color instead of saying that no card was found", async () => {
+        const { user } = await openBuilder();
+
+        await user.click(searchTab("By Color"));
+
+        expect(
+          await liveLine("Choose colors to list their cards.")
+        ).toBeDefined();
+        expect(screen.queryByText(NO_RESULT)).toBeNull();
+        expect(screen.queryByText(SYNTAX_HINT)).toBeNull();
+      });
+
+      // The colour picker used to say the same thing in its own words ("Select colors to browse
+      // cards") under the same condition; the panel's line is the one instruction now.
+      it("asks for colours once on By Color, and stops asking once a name narrows the search", async () => {
+        const { user } = await openBuilder();
+        await user.click(searchTab("By Color"));
+        await liveLine("Choose colors to list their cards.");
+        expect(screen.queryByText("Select colors to browse cards")).toBeNull();
+
+        await user.type(
+          screen.getByPlaceholderText("Filter by name (optional)…"),
+          "Sol"
+        );
+
+        await waitFor(() =>
+          expect(
+            screen.queryByText("Choose colors to list their cards.")
+          ).toBeNull()
+        );
+      });
+    });
+
+    it("suggests nothing on By Color when the colours match no card", async () => {
+      const { user } = await openBuilder();
+      await user.click(searchTab("By Color"));
+
+      await user.click(button("White"));
+
+      await settlesEmpty("legal:commander id<=W");
+      expect(
+        screen.queryByText("Choose colors to list their cards.")
+      ).toBeNull();
+      expect(screen.queryByText(SYNTAX_HINT)).toBeNull();
+      expect(buttonCount("Clear filters")).toBe(0);
+    });
+
+    it("offers neither Clear filters nor the hint in the commander picker when only a filter it ignores is set", async () => {
+      const user = await openBuilderWithFilters();
+      await user.click(button("Commander"));
+      await settlesEmpty("is:commander");
+
+      await user.click(button("Land"));
+
+      expect(searched.at(-1)).toBe("is:commander");
+      expect(buttonCount("Clear filters")).toBe(0);
+      expect(screen.queryByText(SYNTAX_HINT)).toBeNull();
+    });
+
+    it("offers Clear filters in the commander picker while a colour narrows it, and clears the colours", async () => {
+      const user = await openBuilderWithFilters();
+      await user.click(button("Commander"));
+      await user.click(button("White"));
+      await settlesEmpty("is:commander id<=W");
+
+      await user.click(await findButton("Clear filters"));
+
+      expect(button("White")).toHaveAttribute("aria-pressed", "false");
+      expect(buttonCount("Clear filters")).toBe(0);
+      expect(screen.queryByText(SYNTAX_HINT)).toBeNull();
+    });
+  });
+});
+
+/*
+ * The Name tab's commander, partner and companion toggles start a pick, whose query replaces the
+ * tab's own (`buildSearchQueryFromMode` in `page.tsx`). Only one pick runs at a time.
+ */
+describe("the builder's commander, partner and companion picks", () => {
+  // The name search's earlier queries come back from the page's search cache, so a new name
+  // proves which search runs once the pick has ended.
+  it("characterization: ends a pick when its toggle is pressed again: the name search runs again", async () => {
+    const { user } = await openBuilder();
+    const searchField = screen.getByPlaceholderText("Search cards…");
+    await user.type(searchField, "Sol");
+    await lastSearchIs("name:/Sol/ legal:commander id<=U");
+    await user.click(button("Commander"));
+    await lastSearchIs("is:commander name:/Sol/");
+
+    await user.click(button("Commander"));
+    await user.type(searchField, "e");
+
+    await lastSearchIs("name:/Sole/ legal:commander id<=U");
+  });
+
+  /*
+   * The picks are toggled only from the Name tab, yet a pick left on kept replacing By Set's and
+   * By Color's query, and nothing on those tabs said a pick was still on. A tab switch now ends
+   * the pick (I-37).
+   */
+  describe("on a search tab switch", () => {
+    /** Thrasios has partner, so its deck shows the partner toggle beside the other two. */
+    const THRASIOS: ApiDeckCard = {
+      ...commandZoneCard("Thrasios, Triton Hero", ["G", "U"]),
+      oracleText:
+        "{4}: Scry 1. Then reveal the top card of your library. If it's a land card, put it onto the battlefield tapped. Otherwise, draw a card.\nPartner (You can have two commanders if both have partner.)",
+    };
+
+    /** The one set the set list serves. */
+    const DUSKMOURN = {
+      object: "set",
+      code: "dsk",
+      name: "Duskmourn: House of Horror",
+      set_type: "expansion",
+      released_at: "2024-09-27",
+      card_count: 286,
+    };
+
+    interface Pick {
+      /** The name of the pick's toggle in the Name tab. */
+      readonly toggle: string;
+      /** The query the pick runs with no name typed. */
+      readonly query: string;
+    }
+
+    const PICKS: readonly Pick[] = [
+      { toggle: "Commander", query: "is:commander" },
+      // CR 702.124h: a card with partner pairs only with another card that has partner.
+      {
+        toggle: "Partner",
+        query: 'is:commander o:"Partner" -o:"Partner with" -o:"Partner—"',
+      },
+      // CR 702.139a: a companion is a card with the companion keyword ability.
+      { toggle: "Companion", query: "keyword:companion legal:commander" },
+    ];
+
+    beforeEach(() => {
+      server.use(
+        http.get("/api/decks/:id", () =>
+          HttpResponse.json({
+            ...DECK,
+            commanderId: THRASIOS.scryfallId,
+            commanderName: THRASIOS.name,
+            pairingType: "partner",
+            cards: [THRASIOS],
+          })
+        ),
+        http.get("https://api.scryfall.com/sets", () =>
+          HttpResponse.json({
+            object: "list",
+            has_more: false,
+            data: [DUSKMOURN],
+          })
+        )
+      );
+    });
+
+    /** Turns `pick` on and waits for its search. */
+    async function startPick(
+      user: ReturnType<typeof userEvent.setup>,
+      pick: Pick
+    ): Promise<void> {
+      await user.click(await findButton(pick.toggle));
+      await lastSearchIs(pick.query);
+    }
+
+    it.each(PICKS)(
+      "ends the $toggle pick on By Set: choosing a set searches that set",
+      async (pick) => {
+        const { user } = await openBuilder();
+        await startPick(user, pick);
+
+        await user.click(searchTab("By Set"));
+        await user.click(
+          screen.getByPlaceholderText("Search set (e.g. dsk, mh3…)")
+        );
+        await user.click(await screen.findByText(DUSKMOURN.name));
+
+        await lastSearchIs("set:dsk legal:commander");
+      }
+    );
+
+    it.each(PICKS)(
+      "ends the $toggle pick on By Color: choosing a colour searches that colour",
+      async (pick) => {
+        const { user } = await openBuilder();
+        await startPick(user, pick);
+
+        await user.click(searchTab("By Color"));
+        await user.click(button("White"));
+
+        await lastSearchIs("legal:commander id<=W");
+      }
+    );
+
+    it("has no pick on when the player comes back to Name: a typed name runs the name search", async () => {
+      const { user } = await openBuilder();
+      await startPick(user, PICKS[0]);
+      await user.click(searchTab("By Set"));
+
+      await user.click(searchTab("Name"));
+      await user.type(screen.getByPlaceholderText("Search cards…"), "Sol");
+
+      // Thrasios's colour identity, in WUBRG order (CR 903.4).
+      await lastSearchIs("name:/Sol/ legal:commander id<=UG");
+    });
+
+    // This PR's choice: pressing the tab that is already open starts it afresh too.
+    it("ends the pick when the Name tab already open is pressed again", async () => {
+      const { user } = await openBuilder();
+      await startPick(user, PICKS[0]);
+
+      await user.click(searchTab("Name"));
+      await user.type(screen.getByPlaceholderText("Search cards…"), "Sol");
+
+      await lastSearchIs("name:/Sol/ legal:commander id<=UG");
+    });
+
+    // By Set's query reads the colours too, so colours left from By Color would narrow it.
+    it("clears the colours chosen on By Color when the player switches to By Set", async () => {
+      const { user } = await openBuilder();
+      await user.click(searchTab("By Color"));
+      await user.click(button("White"));
+      await lastSearchIs("legal:commander id<=W");
+
+      await user.click(searchTab("By Set"));
+      await user.click(
+        screen.getByPlaceholderText("Search set (e.g. dsk, mh3…)")
+      );
+      await user.click(await screen.findByText(DUSKMOURN.name));
+
+      await lastSearchIs("set:dsk legal:commander");
+    });
+  });
+});
+
+/*
+ * Design audit S3 (WCAG 2.2 SC 4.1.2): the search tabs are a named group whose open tab is
+ * pressed. The open tab used to show only through its raised fill.
+ */
+describe("the builder's search tabs", () => {
+  it("presses the open tab: Name at first, By Color once the player picks it", async () => {
+    const { user } = await openBuilder();
+    expect(searchTab("Name").parentElement).toHaveAccessibleName("Search mode");
+    expect(searchTab("Name")).toHaveAttribute("aria-pressed", "true");
+
+    await user.click(searchTab("By Color"));
+
+    expect(searchTab("By Color")).toHaveAttribute("aria-pressed", "true");
+    expect(searchTab("Name")).toHaveAttribute("aria-pressed", "false");
+    expect(searchTab("By Set")).toHaveAttribute("aria-pressed", "false");
   });
 });

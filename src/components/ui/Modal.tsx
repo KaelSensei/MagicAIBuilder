@@ -37,6 +37,12 @@ interface ModalProps {
    * calls `onClose`.
    */
   readonly onEscape?: () => void;
+  /**
+   * Where focus goes on close when the element that opened the modal has left the page, instead
+   * of `<body>`. Keep it stable across renders (a `useCallback`). Left out, focus returns to the
+   * opener only.
+   */
+  readonly returnFocusFallback?: () => HTMLElement | null;
 }
 
 /** Radix's Escape handler for `onEscape`: run it and keep Radix from closing through `onClose`. */
@@ -60,7 +66,8 @@ export const ModalTitle = Dialog.Title;
  * Centered modal dialog on the app's card surface.
  *
  * Focus moves to the first control on open, stays inside while open, and goes
- * back to the element that opened it on close. Escape and a press outside the
+ * back to the element that opened it on close, or to `returnFocusFallback`
+ * when that element has left the page. Escape and a press outside the
  * panel close it; with dialogs stacked, only the top one closes.
  */
 export function Modal({
@@ -73,9 +80,10 @@ export function Modal({
   showClose = true,
   onKeyDown,
   onEscape,
+  returnFocusFallback,
 }: ModalProps) {
   const t = useTranslations("common");
-  const focusReturn = useDialogFocusReturn();
+  const focusReturn = useDialogFocusReturn(returnFocusFallback);
 
   return (
     <Dialog.Root

@@ -1,7 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 import { act, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import type { ReactNode } from "react";
 import { renderWithIntl } from "@/test/render-with-intl";
+import { renderWithProviders } from "@/test/render";
+import { aScryfallCard } from "@/test/builders/scryfall";
 import { SearchZoneMenu } from "./SearchZoneMenu";
 import type { DeckZone } from "@/lib/deck/types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
@@ -113,6 +116,61 @@ describe("SearchZoneMenu", () => {
     expect(onAddToZone).toHaveBeenCalledWith(solRing, "sideboard");
   });
 
+  it("opens on the first zone from a click, jumps to the ends with Home and End, and wraps with the arrows", async () => {
+    const user = userEvent.setup();
+    renderMenu(vi.fn());
+    const main = () => screen.getByRole("menuitem", { name: "Add Sol Ring to the main deck" });
+    const considering = () => screen.getByRole("menuitem", { name: "Add Sol Ring to considering" });
+
+    await user.click(screen.getByRole("button", { name: "More zones for Sol Ring" }));
+    expect(main()).toHaveFocus();
+
+    await user.keyboard("{End}");
+    expect(considering()).toHaveFocus();
+
+    await user.keyboard("{ArrowDown}");
+    expect(main()).toHaveFocus();
+
+    await user.keyboard("{ArrowUp}");
+    expect(considering()).toHaveFocus();
+
+    await user.keyboard("{Home}");
+    expect(main()).toHaveFocus();
+  });
+
+  it("opens on the last zone from ArrowUp on the zone button", async () => {
+    const user = userEvent.setup();
+    renderMenu(vi.fn());
+
+    screen.getByRole("button", { name: "More zones for Sol Ring" }).focus();
+    await user.keyboard("{ArrowUp}");
+
+    expect(screen.getByRole("menuitem", { name: "Add Sol Ring to considering" })).toHaveFocus();
+  });
+
+  it("keeps the keyboard in the menu after a press on its edge, so ArrowDown reaches the first zone", async () => {
+    const user = userEvent.setup();
+    renderMenu(vi.fn());
+    await user.click(screen.getByRole("button", { name: "More zones for Sol Ring" }));
+
+    await user.click(screen.getByRole("menu"));
+    await user.keyboard("{ArrowDown}");
+
+    expect(screen.getByRole("menu")).toBeTruthy();
+    expect(screen.getByRole("menuitem", { name: "Add Sol Ring to the main deck" })).toHaveFocus();
+  });
+
+  it("keeps the keyboard in the menu after a press on its edge, so ArrowUp reaches the last zone", async () => {
+    const user = userEvent.setup();
+    renderMenu(vi.fn());
+    await user.click(screen.getByRole("button", { name: "More zones for Sol Ring" }));
+
+    await user.click(screen.getByRole("menu"));
+    await user.keyboard("{ArrowUp}");
+
+    expect(screen.getByRole("menuitem", { name: "Add Sol Ring to considering" })).toHaveFocus();
+  });
+
   it("closes on Escape without adding, and returns focus to the zone button", async () => {
     const user = userEvent.setup();
     const onAddToZone = vi.fn();
@@ -199,5 +257,116 @@ describe("SearchZoneMenu", () => {
     });
 
     expect(screen.queryByRole("menu")).toBeNull();
+  });
+});
+
+/**
+ * Tab leaves a menu: the items are reached with the arrow keys, and Tab or Shift+Tab moves focus
+ * out of the menu and closes it (WAI-ARIA APG, menu and menubar pattern, "Keyboard Interaction",
+ * https://www.w3.org/WAI/ARIA/apg/patterns/menubar/, read 2026-11-25).
+ */
+describe("SearchZoneMenu, Tab leaves the zone menu", () => {
+  /** A result after another tab stop and before `after`, as on a grid of results. */
+  function renderResultBefore(after: ReactNode) {
+    return renderWithProviders(
+      <>
+        <button type="button">Previous result</button>
+        <SearchZoneMenu
+          card={aScryfallCard({ name: "Sol Ring" })}
+          onAddToZone={vi.fn()}
+        />
+        {after}
+      </>
+    );
+  }
+
+  function renderBetweenTabStops() {
+    return renderResultBefore(<button type="button">Next result</button>);
+  }
+
+  async function openFromTheKeyboard(user: ReturnType<typeof userEvent.setup>) {
+    screen.getByRole("button", { name: "More zones for Sol Ring" }).focus();
+    await user.keyboard("{ArrowDown}");
+  }
+
+  it("closes the menu on Tab and moves on to the tab stop after the zone button", async () => {
+    const user = userEvent.setup();
+    renderBetweenTabStops();
+    await openFromTheKeyboard(user);
+    expect(
+      screen.getByRole("menuitem", { name: "Add Sol Ring to the main deck" })
+    ).toHaveFocus();
+
+    await user.tab();
+
+    expect(screen.queryByRole("menu")).toBeNull();
+    expect(screen.getByRole("button", { name: "Next result" })).toHaveFocus();
+  });
+
+  it("closes the menu on Shift+Tab and moves back to the zone button, the tab stop before the menu", async () => {
+    const user = userEvent.setup();
+    renderBetweenTabStops();
+    await openFromTheKeyboard(user);
+
+    await user.tab({ shift: true });
+
+    expect(screen.queryByRole("menu")).toBeNull();
+    expect(
+      screen.getByRole("button", { name: "More zones for Sol Ring" })
+    ).toHaveFocus();
+  });
+
+  it("keeps every zone out of the tab order, so only the arrow keys move between them", async () => {
+    const user = userEvent.setup();
+    renderBetweenTabStops();
+    await openFromTheKeyboard(user);
+
+    const zones = screen.getAllByRole("menuitem");
+
+    expect(zones.map((zone) => zone.tabIndex)).toEqual([-1, -1, -1]);
+  });
+
+  it("leaves the menu on Tab after a press on its edge took focus", async () => {
+    const user = userEvent.setup();
+    renderBetweenTabStops();
+    await user.click(
+      screen.getByRole("button", { name: "More zones for Sol Ring" })
+    );
+    await user.click(screen.getByRole("menu"));
+
+    await user.tab();
+
+    expect(screen.queryByRole("menu")).toBeNull();
+    expect(screen.getByRole("button", { name: "Next result" })).toHaveFocus();
+  });
+
+  it("skips a disabled control after the zone button, as the browser's Tab does", async () => {
+    const user = userEvent.setup();
+    renderResultBefore(
+      <>
+        <button type="button" disabled>
+          Unavailable
+        </button>
+        <button type="button">Next result</button>
+      </>
+    );
+    await openFromTheKeyboard(user);
+
+    await user.tab();
+
+    expect(screen.getByRole("button", { name: "Next result" })).toHaveFocus();
+  });
+
+  it("closes the menu on Tab and stays on the zone button when nothing after it takes focus", async () => {
+    const user = userEvent.setup();
+    renderResultBefore(null);
+    await openFromTheKeyboard(user);
+
+    await user.tab();
+
+    expect(screen.queryByRole("menu")).toBeNull();
+    expect(
+      screen.getByRole("button", { name: "More zones for Sol Ring" })
+    ).toHaveFocus();
   });
 });

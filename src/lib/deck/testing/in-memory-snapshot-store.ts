@@ -3,9 +3,10 @@
  * a hand-written fake). It passes the contract suite in
  * `snapshot-store-contract.ts`, run by `in-memory-snapshot-store.test.ts`.
  *
- * One deck, its card rows and its snapshots, shared by both ports, so a test
- * can save a snapshot through `snapshots` and see a recorded playtest match
- * it through `versions`. Each new snapshot is stamped one second after the
+ * One deck, its card rows, its version and its snapshots, shared by both
+ * ports, so a test can save a snapshot through `snapshots` and see a
+ * recorded playtest match it through `versions`. A restore steps the
+ * version, as the Prisma adapter does. Each new snapshot is stamped one second after the
  * previous one, so "newest first" is never a tie. A card list is stored as a
  * structured clone, as a JSON column would keep it.
  *
@@ -34,6 +35,8 @@ const ONE_SECOND_MS = 1000;
 export interface InMemoryDeck extends DeckCommanders {
   readonly id: string;
   readonly companionId: string | null;
+  /** The deck's optimistic-lock counter; 1 when the test does not care. */
+  readonly version?: number;
 }
 
 /** Both ports over one in-memory deck, plus the switches a test turns. */
@@ -62,7 +65,7 @@ export function inMemorySnapshotStore(
   deck: InMemoryDeck,
   cards: readonly CapturableCard[]
 ): InMemorySnapshotStore {
-  let savedDeck = deck;
+  let savedDeck = { ...deck, version: deck.version ?? 1 };
   let savedCards = cards;
   let deckExists = true;
   let stored: StoredSnapshot[] = [];
@@ -98,7 +101,11 @@ export function inMemorySnapshotStore(
   const restoreDeck = (deckId: string, restored: RestoredDeck): void => {
     if (deckId !== deck.id) return;
     savedCards = [...restored.cards];
-    savedDeck = { ...savedDeck, ...restoredDeckFields(restored) };
+    savedDeck = {
+      ...savedDeck,
+      ...restoredDeckFields(restored),
+      version: savedDeck.version + 1,
+    };
   };
 
   const snapshots: SnapshotStore = {

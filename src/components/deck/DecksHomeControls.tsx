@@ -1,9 +1,20 @@
 "use client";
 
+/**
+ * The My Decks toolbar: the grid/list view switch and the sort order (from the
+ * `sm` breakpoint up), then the AI wizard and New Deck buttons.
+ *
+ * The view switch is the shared `SegmentedControl`, so it is a named group
+ * whose chosen view is marked without colour alone, like the other segmented
+ * controls of the app (I-04, design audit S3).
+ *
+ * @module components/deck/DecksHomeControls
+ */
 import { useTranslations } from "next-intl";
 import { Plus, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { fieldShellClassName } from "@/components/ui/Input";
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { cn } from "@/components/ui/utils";
 import type {
   DecksSortDir,
@@ -11,6 +22,7 @@ import type {
   DecksViewMode,
 } from "@/lib/deck/deck-listing";
 
+/** The current view and sort of My Decks, and the toolbar's handlers. */
 export type DecksHomeControlsProps = {
   readonly viewMode: DecksViewMode;
   readonly sortKey: DecksSortKey;
@@ -23,6 +35,12 @@ export type DecksHomeControlsProps = {
   readonly isCreating: boolean;
 };
 
+/**
+ * Renders the My Decks toolbar. It holds no state: the page owns the view and
+ * the sort, and each control reports the player's choice through its handler.
+ *
+ * @param props - see {@link DecksHomeControlsProps}
+ */
 export function DecksHomeControls({
   viewMode,
   sortKey,
@@ -39,34 +57,23 @@ export function DecksHomeControls({
   return (
     <div className="flex items-center gap-2">
       <div className="hidden items-center gap-2 sm:flex">
-        <div className="inline-flex gap-1 rounded-[var(--lumen-radius-pill)] border border-[var(--border)] bg-[var(--background)] p-1">
-          <button
-            type="button"
-            onClick={() => onSetViewMode("grid")}
-            className={cn(
-              "rounded-[var(--lumen-radius-pill)] px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]",
-              viewMode === "grid"
-                ? "bg-[var(--accent)] text-white"
-                : "bg-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-            )}
-            aria-pressed={viewMode === "grid"}
-          >
-            {t("controls.grid")}
-          </button>
-          <button
-            type="button"
-            onClick={() => onSetViewMode("list")}
-            className={cn(
-              "rounded-[var(--lumen-radius-pill)] px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]",
-              viewMode === "list"
-                ? "bg-[var(--accent)] text-white"
-                : "bg-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-            )}
-            aria-pressed={viewMode === "list"}
-          >
-            {t("controls.list")}
-          </button>
-        </div>
+        {/*
+         * `md`: 32 px options; with the track's border, a 38 px switch level
+         * with the row's sort select and wizard button. The border keeps the
+         * track visible: its fill is the page's own `--background`, as on the
+         * Collection and import switches.
+         */}
+        <SegmentedControl
+          aria-label={t("controls.viewMode")}
+          size="md"
+          className="border border-[var(--border)]"
+          options={[
+            { value: "grid", label: t("controls.grid") },
+            { value: "list", label: t("controls.list") },
+          ]}
+          value={viewMode}
+          onChange={onSetViewMode}
+        />
 
         <select
           value={`${sortKey}:${sortDir}`}

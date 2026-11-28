@@ -2,6 +2,9 @@
 /**
  * Client side of the AI deck build: posts the request, reads the NDJSON build
  * stream through guarded events, and exposes progress and the finished list.
+ * Progress is kept as the step the server named (`lib/ai/build-step.ts`), and a
+ * failed build as its kind (`lib/ai/build-failure.ts`), never as server or
+ * thrown text, so the wizard words both in the player's language.
  */
 import { useState, useCallback, useRef } from "react";
 import type {
@@ -12,12 +15,22 @@ import type {
   DeckRemovalReason,
 } from "@/app/api/ai/build/types";
 import {
+  DeckBuildRefusedError,
+  DeckBuildServerError,
+  DeckBuildUnreachableError,
+  deckBuildFailureLogLevel,
+  deckBuildFailureOf,
+  type DeckBuildFailure,
+} from "@/lib/ai/build-failure";
+import { isBuildStep, type BuildStep } from "@/lib/ai/build-step";
+import {
   readAiCallDenialResponse,
   type AiCallDenial,
 } from "@/lib/ai/usage/denial";
 import { readNdjsonEvents } from "@/lib/async/ndjson-lines";
 import { parseBracketLevel } from "@/lib/constants/brackets";
 import { isRecord } from "@/lib/guards";
+import { logger } from "@/lib/logger";
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -45,13 +58,15 @@ export interface BuildResult {
 }
 
 export interface AIDeckBuildState {
-  statusMessages: string[];
+  /** The step the build last named; null before its first status event this client can read. */
+  step: BuildStep | null;
   commander: string | null;
   cards: BuildCard[];
   totalCards: number | null;
   source: BuildSource | null;
   isLoading: boolean;
-  error: string | null;
+  /** Why the last build failed; null while it runs, and after a success or a cancellation. */
+  failure: DeckBuildFailure | null;
   /** Why the server refused the build before calling a model, if it did. */
   denial: AiCallDenial | null;
 }
@@ -59,13 +74,13 @@ export interface AIDeckBuildState {
 export type AIDeckBuildParams = BuildRequest;
 
 const EMPTY_STATE: AIDeckBuildState = {
-  statusMessages: [],
+  step: null,
   commander: null,
   cards: [],
   totalCards: null,
   source: null,
   isLoading: false,
-  error: null,
+  failure: null,
   denial: null,
 };
 
@@ -75,7 +90,7 @@ const EMPTY_STATE: AIDeckBuildState = {
 type BuildAcc = {
   commander: string | null;
   cards: BuildCard[];
-  messages: string[];
+  step: BuildStep | null;
   totalCards: number | null;
   source: BuildSource | null;
   corrections: readonly DeckCorrection[];
@@ -94,13 +109,17 @@ type CardEvent = Extract<BuildEvent, { type: "card" }>;
 /**
  * A build event as this client accepts it off the wire.
  *
- * Status, commander and error events need every field they carry. A card's
+ * Commander and error events need every field they carry. A status event
+ * needs a step this client knows, and its English `message` is never read: a
+ * status event from a server that predates steps, or naming a step added
+ * since, is skipped, so the wizard keeps the last step it can word. A card's
  * `quantity` and every field of `done` stay `unknown` here: a server that
  * predates them sends none, and the reader falls back as if a field it cannot
  * read were absent, so a `done` event always completes the build.
  */
 type ReceivedBuildEvent =
-  | Exclude<BuildEvent, { type: "card" | "done" }>
+  | Exclude<BuildEvent, { type: "status" | "card" | "done" }>
+  | { readonly type: "status"; readonly step: BuildStep }
   | (Omit<CardEvent, "quantity"> & { readonly quantity?: unknown })
   | {
       readonly type: "done";
@@ -130,6 +149,7 @@ function isBuildEvent(value: unknown): value is ReceivedBuildEvent {
   if (!isRecord(value)) return false;
   switch (value.type) {
     case "status":
+      return isBuildStep(value.step);
     case "error":
       return typeof value.message === "string";
     case "commander":
@@ -208,7 +228,7 @@ function applyDone(
  * @param acc - accumulator updated in place
  * @param onUpdate - publishes the accumulator
  * @returns true once the done event has been applied
- * @throws Error with the server's message on an error event
+ * @throws DeckBuildServerError with the server's line on an error event
  */
 function applyBuildEvent(
   event: ReceivedBuildEvent,
@@ -217,7 +237,7 @@ function applyBuildEvent(
 ): boolean {
   switch (event.type) {
     case "status":
-      acc.messages.push(event.message);
+      acc.step = event.step;
       onUpdate(acc);
       return false;
     case "commander":
@@ -237,7 +257,7 @@ function applyBuildEvent(
       onUpdate(acc);
       return true;
     case "error":
-      throw new Error(event.message);
+      throw new DeckBuildServerError(event.message);
     default: {
       const unhandled: never = event;
       return unhandled;
@@ -260,7 +280,7 @@ async function processBuildStream(
   const acc: BuildAcc = {
     commander: null,
     cards: [],
-    messages: [],
+    step: null,
     totalCards: null,
     source: null,
     corrections: [],
@@ -276,6 +296,44 @@ async function processBuildStream(
   throw new Error("The AI build ended early");
 }
 
+/**
+ * Posts the build request: the one step where a failure means the server
+ * could not be reached.
+ *
+ * @param params - the player's answers
+ * @param signal - cancels the request
+ * @returns the route's response, whatever its status
+ * @throws DeckBuildUnreachableError when `fetch` rejected without an answer;
+ *   the abort's own error when the build was cancelled, so it stays silent
+ */
+async function postBuildRequest(
+  params: AIDeckBuildParams,
+  signal: AbortSignal
+): Promise<Response> {
+  const body = JSON.stringify(params);
+  try {
+    return await fetch("/api/ai/build", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body,
+      signal,
+    });
+  } catch (error) {
+    if (signal.aborted) throw error;
+    throw new DeckBuildUnreachableError(error);
+  }
+}
+
+/**
+ * Runs one AI deck build at a time.
+ *
+ * `build` resolves to the finished build, or to null when there is none: the
+ * build failed (`state.failure` says why, and `state.denial` too when the
+ * server refused it before a model ran), or `reset` or a newer build cancelled
+ * it, which sets neither and logs nothing.
+ *
+ * @returns the build's progress, `build` and `reset`
+ */
 export function useAIDeckBuild() {
   const [state, setState] = useState<AIDeckBuildState>(EMPTY_STATE);
 
@@ -296,24 +354,19 @@ export function useAIDeckBuild() {
       setState({ ...EMPTY_STATE, isLoading: true });
 
       try {
-        const response = await fetch("/api/ai/build", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(params),
-          signal: abort.signal,
-        });
+        const response = await postBuildRequest(params, abort.signal);
 
         if (!response.ok) {
           const denial = (await readAiCallDenialResponse(response)) ?? null;
           setState((prev) => ({ ...prev, denial }));
-          throw new Error(`Build request failed (${response.status})`);
+          throw new DeckBuildRefusedError(response.status, denial);
         }
         if (!response.body) throw new Error("No response body");
 
         const acc = await processBuildStream(response.body.getReader(), (a) => {
           setState((prev) => ({
             ...prev,
-            statusMessages: [...a.messages],
+            step: a.step,
             commander: a.commander,
             cards: [...a.cards],
             totalCards: a.totalCards,
@@ -338,8 +391,10 @@ export function useAIDeckBuild() {
         };
       } catch (err) {
         if (err instanceof DOMException && err.name === "AbortError") return null;
-        const message = err instanceof Error ? err.message : "Unknown error";
-        setState((prev) => ({ ...prev, isLoading: false, error: message }));
+        const level = deckBuildFailureLogLevel(err);
+        logger[level]("AI deck build failed", "useAIDeckBuild", err);
+        const failure = deckBuildFailureOf(err);
+        setState((prev) => ({ ...prev, isLoading: false, failure }));
         return null;
       }
     },

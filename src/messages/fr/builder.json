@@ -22,6 +22,7 @@
   "colorIdentityViolation": "Hors identité couleur du commandant",
   "tags": {
     "add": "Ajouter une étiquette",
+    "fieldLabel": "Nouvelle étiquette",
     "placeholder": "nom de l'étiquette…"
   },
   "details": {
@@ -100,8 +101,10 @@
   "viewMode": {
     "listView": "Vue liste",
     "gridView": "Vue grille",
-    "cardsPerRow": "{count} cartes par rangée",
-    "toolbar": "Affichage du deck"
+    "cardsPerRow": "{count} cartes par ligne",
+    "toolbar": "Affichage du deck",
+    "layout": "Disposition",
+    "density": "Cartes par ligne"
   },
   "actions": {
     "removeCommander": "Retirer le commandant",
@@ -113,6 +116,7 @@
     "changeCategoryFor": "Changer la catégorie de {name}",
     "backToDecks": "Retour à mes decks",
     "rename": "Cliquer pour renommer",
+    "confirmRename": "Enregistrer le nom",
     "duplicate": "Dupliquer le deck",
     "bulkEdit": "Édition groupée",
     "playtest": "Tester ce deck",
@@ -263,11 +267,11 @@
     "show": "Afficher les filtres",
     "hide": "Masquer les filtres"
   },
-  "colorSearchHint": "Sélectionnez des couleurs pour parcourir les cartes",
   "searchModes": {
     "name": "Nom",
     "set": "Par édition",
-    "color": "Par couleur"
+    "color": "Par couleur",
+    "label": "Mode de recherche"
   },
   "searchToggles": {
     "commander": "Commandant",
@@ -280,6 +284,8 @@
   "summary": {
     "label": "Résumé du deck",
     "formatWithBracket": "{format} · Bracket {level}",
+    "formatWithBracketCombosPending": "{format} · Bracket {level} (combos pas encore vérifiés)",
+    "formatWithBracketCombosNotChecked": "{format} · Bracket {level} (combos non vérifiés)",
     "formatWithManualBracket": "{format} · Bracket {level}, choisi par vous",
     "typesToggle": "Types",
     "typesLabel": "Cartes par type",

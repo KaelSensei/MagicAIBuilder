@@ -19,6 +19,7 @@ import {
   normalizeDeckBrief,
 } from "@/lib/ai/deck-brief";
 import { getCardCollection } from "@/lib/scryfall/client";
+import { logScryfallLookupFailure } from "@/lib/scryfall/log-lookup-failure";
 import {
   attachSuggestionEvidence,
   suggestionLookupNames,
@@ -509,11 +510,10 @@ async function enrichSuggestionEvidence(
     );
     cards = collection.data;
   } catch (error) {
-    logger.error(
-      "Suggestion evidence unavailable",
-      "POST /api/ai/suggest",
-      error
-    );
+    logScryfallLookupFailure(error, "POST /api/ai/suggest", {
+      blocked: "Suggestion evidence not looked up during a Scryfall 429 block",
+      failed: "Suggestion evidence unavailable",
+    });
   }
 
   // CR 903.5e: only the command zone's rulebreaker widens the colour fit.

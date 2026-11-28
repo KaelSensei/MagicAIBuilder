@@ -35,6 +35,7 @@
     "failed": "Les decks enregistrés n’ont pas pu être mis à jour.",
     "retry": "Réessayer",
     "empty": "Aucun deck public enregistré.",
+    "newFolderLabel": "Nom du nouveau dossier",
     "newFolderPlaceholder": "Nom du dossier",
     "createFolder": "Créer le dossier",
     "renamePrompt": "Nouveau nom du dossier",
@@ -92,6 +93,7 @@
     "startBuilding": "Commencez à construire",
     "startBuildingDescription": "Créez votre premier deck Commander avec le scoring de bracket en direct et la détection de Game Changers.",
     "createDeck": "Créer un deck",
+    "importDeck": "Importer une liste de deck",
     "newDeck": "Nouveau deck",
     "newDeckName": "Nouveau deck {index}",
     "newDeckFormat": "Format du nouveau deck",
@@ -103,7 +105,6 @@
     "sessionTimeoutTitle": "La session a pris trop de temps",
     "sessionTimeoutDescription": "La vérification du compte ne s'est pas terminée. Vos decks enregistrés sont inchangés. Réessayez.",
     "profileLoadFailed": "Le profil n'a pas pu être actualisé. Les decks enregistrés restent disponibles.",
-    "createFailed": "Impossible de créer le deck — {reason}",
     "cardFilter": {
       "includeLabel": "Contient la carte",
       "excludeLabel": "Sans la carte",
@@ -162,6 +163,7 @@
   "controls": {
     "grid": "Grille",
     "list": "Liste",
+    "viewMode": "Affichage des decks",
     "sortDecks": "Trier les decks",
     "sortUpdatedNewest": "Modifié (récent)",
     "sortUpdatedOldest": "Modifié (ancien)",
@@ -255,6 +257,7 @@
     "title": "Importer une liste de deck",
     "tabText": "Texte brut",
     "tabUrl": "Depuis une URL",
+    "source": "Source de l’import",
     "description": "Collez une liste de deck en texte brut. Utilisez <code>1 Nom de carte</code> par ligne. Ajoutez un en-tête <code>Commander</code> pour définir votre commandant.",
     "noDeckSelected": "Aucun deck sélectionné. Créez ou ouvrez un deck d’abord.",
     "parsing": "Analyse de la liste...",
@@ -262,11 +265,19 @@
     "validating": "Validation de {count} cartes avec Scryfall...",
     "importSuccess": "{count} cartes importées avec succès.",
     "importFailed": "Échec de l’import des cartes.",
+    "nothingAdded": "Aucune carte n’a été ajoutée au deck.",
+    "refused": {
+      "title": "Cartes refusées par le deck ({count}) :",
+      "atCopyLimit": "{name} : déjà à sa limite d’exemplaires en {format}",
+      "basicLandHeld": "{name} : ce terrain de base est déjà dans cette zone, sa quantité n’a pas changé",
+      "commandZone": "{name} : n’a pas pu prendre place dans la zone de commandement"
+    },
     "lookupFailed": "La recherche des cartes n’a pas répondu. Rien n’a été importé ; réessayez.",
     "close": "Fermer",
     "cancel": "Annuler",
     "import": "Importer",
     "previewDecklist": "Prévisualiser la liste",
+    "fieldLabel": "Liste de deck à importer",
     "moxfieldRefused": "Moxfield a refusé la requête de MagicAIBuilder : ce deck ne peut donc pas être récupéré d’ici. Pour l’importer quand même, ouvrez le deck sur moxfield.com, utilisez Export pour copier la liste en texte, puis collez-la dans l’onglet {tab}.",
     "moxfieldProfiles": {
       "title": "Profils Moxfield",
@@ -316,9 +327,12 @@
     "saved": "{count, plural, one {# carte enregistrée avec succès.} other {# cartes enregistrées avec succès.}}",
     "saveFailed": "Échec de l’enregistrement des modifications.",
     "lookupFailed": "Rien n’a été enregistré — la recherche des cartes n’a pas répondu. Votre liste est conservée ; réessayez l’enregistrement.",
+    "signedOut": "Rien n’a été enregistré — votre session a expiré. Reconnectez-vous pour enregistrer vos modifications.",
+    "conflictReloaded": "Rien n’a été enregistré — ce deck a été modifié ailleurs et a été rechargé. Vérifiez la liste, puis refaites vos modifications.",
     "unknownCards": "Rien n’a été enregistré — aucune carte trouvée pour : {names}",
     "invalidPartner": "Rien n’a été enregistré — {name} ne peut pas être associé à ce commandant.",
     "invalidCompanion": "Rien n’a été enregistré — {name} ne peut pas être le compagnon de ce deck.",
+    "fieldLabel": "Liste de deck",
     "lineCount": "{count, plural, one {# ligne} other {# lignes}}",
     "save": "Enregistrer",
     "savedButton": "Enregistré !"
@@ -391,6 +405,7 @@
     "totalValue": "Valeur totale",
     "missingPrices": "{count, plural, one {# carte sans prix} other {# cartes sans prix}}",
     "withoutBasicLands": "Sans les terrains de base",
+    "priceUnknown": "Prix inconnu",
     "groupSubtotal": "Sous-total {amount}",
     "groupSubtotalWithUnpriced": "{amount} · {count, plural, one {# sans prix} other {# sans prix}}",
     "groupKnownSubtotal": "Sous-total connu {amount}, {count, plural, one {# carte} other {# cartes}} sans prix",
@@ -560,7 +575,7 @@
   "community": {
     "upvote": "Voter pour",
     "downvote": "Voter contre",
-    "signInToVote": "Connecte-toi pour voter",
+    "signInToVote": "Connectez-vous pour voter",
     "commanderDecksTitle": "Decks {commander}",
     "commanderDecksSubtitle": "Decks publics menés par ce commandant, classés par votes de la communauté.",
     "noDecks": "Aucun deck public pour ce commandant pour l'instant.",
@@ -647,6 +662,7 @@
     "alternativeBudget": "Budget",
     "alternativePower": "Puissance",
     "alternativePlaystyle": "Style de jeu",
+    "modelReasoning": "Raisonnement du modèle",
     "brief": {
       "title": "Votre brief de deck",
       "description": "Préférences facultatives utilisées uniquement pour cette analyse.",
@@ -665,7 +681,11 @@
       "incompatible": "hors identité couleur",
       "commanderLegal": "Légal en Commander",
       "commanderIllegal": "Non légal en Commander",
-      "unknown": "Inconnu"
+      "unknown": "Inconnu",
+      "curveBelow": "Valeur de mana {manaValue} · sous la moyenne du deck ({average})",
+      "curveNear": "Valeur de mana {manaValue} · proche de la moyenne du deck ({average})",
+      "curveAbove": "Valeur de mana {manaValue} · au-dessus de la moyenne du deck ({average})",
+      "curveUnknown": "Valeur de mana inconnue"
     }
   },
   "combos": {
@@ -733,6 +753,7 @@
     "save": "Sauvegarder",
     "saveSnapshot": "Sauvegarder un snapshot",
     "placeholder": "ex. « v1 budget »",
+    "nameLabel": "Nom du snapshot",
     "cancel": "Annuler",
     "noSnapshots": "Aucun snapshot. Sauvegardez-en un ci-dessus !",
     "cards": "{count, plural, one {# carte} other {# cartes}}",
@@ -742,7 +763,13 @@
     "deleteConfirm": "Supprimer ?",
     "restoreTooltip": "Restaurer ce snapshot",
     "deleteTooltip": "Supprimer le snapshot",
-    "toggleList": "Liste des snapshots"
+    "toggleList": "Liste des snapshots",
+    "loadFailed": "Impossible de charger l’historique. Réessayez.",
+    "retry": "Réessayer",
+    "saveFailed": "Impossible de sauvegarder le snapshot. Réessayez.",
+    "deleteFailed": "Le snapshot n’a pas été supprimé. Réessayez.",
+    "restoreFailed": "Le deck n’a pas été restauré. Réessayez.",
+    "signedOut": "Votre session a expiré. Reconnectez-vous pour utiliser l’historique."
   },
   "share": {
     "title": "Partager le deck",
@@ -861,6 +888,7 @@
     "bracket5Sub": "cEDH (bracket 5)",
     "bracket5Desc": "Conçu pour le métagame cEDH : la victoire avant tout. Game Changers illimités. La partie peut se terminer à n’importe quel tour",
     "searchCommander": "Rechercher un commandant…",
+    "commanderSearchLabel": "Rechercher un commandant",
     "skipLetAI": "Passer — laisser l’IA choisir",
     "aiBuilding": "L’IA construit votre deck…",
     "thinking": "Réflexion…",
@@ -869,9 +897,17 @@
     "generatingDeck": "Génération du deck…",
     "tryAgain": "Réessayer",
     "buildCancelled": "La construction a été annulée ou a échoué.",
+    "buildUnreachable": "Impossible de joindre le serveur pour construire le deck. Vérifiez votre connexion et réessayez.",
+    "buildRateLimited": "Trop de constructions en peu de temps. Patientez une minute, puis réessayez.",
+    "buildSignedOut": "Votre session a expiré. Reconnectez-vous pour construire un deck avec l’IA.",
+    "buildFailed": "L’IA n’a pas pu construire votre deck. Réessayez.",
     "deckNotSaved": "Votre deck a été construit, mais il n’a pas pu être enregistré. La construction est conservée : réessayez de l’enregistrer.",
     "trySavingAgain": "Réessayer l’enregistrement",
+    "deckNotFinished": "Votre deck a été créé, mais une partie n’a pas pu y être ajoutée. Ouvrez-le pour le terminer.",
+    "deckNotFinishedCards": "Votre deck a été créé, mais {count, plural, one {# carte n’a pas pu y être ajoutée} other {# cartes n’ont pas pu y être ajoutées}}. Ouvrez-le pour le terminer.",
     "addingCards": "Ajout des cartes à votre deck…",
+    "buildStepConsulting": "Consultation de l’oracle IA…",
+    "buildStepBuilding": "Construction de la liste de cartes…",
     "demoDeckNotice": "Deck de démonstration — aucun fournisseur IA n’est configuré sur ce déploiement, cette liste est un simple exemple.",
     "correctionsTitle": "Vérifié avec les données des cartes : {count, plural, one {# correction} other {# corrections}}",
     "correctionsIntro": "La liste de l’IA enfreignait les règles du Commander. Ces changements ont été faits avant l’enregistrement du deck.",
@@ -972,12 +1008,23 @@
     "blocked": "Bloquée",
     "apply": "Ajouter {count, plural, one {# carte} other {# cartes}}",
     "applying": "Ajout…",
-    "loadError": "Cette action a échoué. Réessayez."
+    "loadError": "Cette action a échoué. Réessayez.",
+    "cardLabel": "{name} ({status})",
+    "issues": {
+      "banned": "Bannie dans ce format",
+      "colorIdentity": "Hors de l’identité couleur du commandant",
+      "singleton": "Déjà dans le deck",
+      "copyLimit": "Limite d’exemplaires atteinte",
+      "unknown": "Ne peut pas être ajoutée"
+    },
+    "applied": "{added, plural, one {# carte ajoutée} other {# cartes ajoutées}} au deck principal.",
+    "appliedPartly": "{added, plural, one {# carte ajoutée} other {# cartes ajoutées}} au deck principal. {blocked, plural, one {# carte n’a pas été ajoutée} other {# cartes n’ont pas été ajoutées}}, car votre deck a changé depuis l’aperçu."
   },
   "feedback": {
     "title": "Avis recherchés",
     "ownerHint": "Posez une question précise pour obtenir des réponses plus utiles.",
     "enable": "Afficher cette demande sur le deck public",
+    "questionLabel": "Votre question aux autres joueurs",
     "placeholder": "Sur quel point souhaitez-vous l'aide des autres joueurs ?",
     "save": "Enregistrer la demande",
     "saving": "Enregistrement…",
@@ -1026,7 +1073,46 @@
     "updatedOn": "Mis à jour le <time>{date}</time>"
   },
   "sync": {
-    "conflictReloaded": "Ce deck a été modifié ailleurs (un autre onglet ou appareil). Il a été rechargé ; refaites votre dernière modification si vous la voulez toujours."
+    "conflictReloaded": "Ce deck a été modifié ailleurs (un autre onglet ou appareil). Il a été rechargé ; refaites votre dernière modification si vous la voulez toujours.",
+    "refreshFailed": "Impossible d’actualiser le deck. Réessayez.",
+    "openFailed": "Impossible d’ouvrir le deck. Réessayez.",
+    "renameFailed": "Impossible de renommer le deck. Réessayez.",
+    "descriptionFailed": "Impossible d’enregistrer la description du deck. Réessayez.",
+    "tagsFailed": "Impossible d’enregistrer les étiquettes du deck. Réessayez.",
+    "targetBracketFailed": "Impossible d’enregistrer le bracket cible. Réessayez.",
+    "manualBracketFailed": "Impossible d’enregistrer le bracket manuel. Réessayez.",
+    "budgetFailed": "Impossible d’enregistrer le budget du deck. Réessayez.",
+    "cardRemovalFailed": "Impossible de retirer la carte. Réessayez.",
+    "commanderFailed": "Impossible d’enregistrer le commandant. Réessayez.",
+    "partnerFailed": "Impossible d’enregistrer le partenaire. Réessayez.",
+    "companionFailed": "Impossible d’enregistrer le compagnon. Réessayez.",
+    "companionRemovalFailed": "Impossible de retirer le compagnon. Réessayez.",
+    "cardAdditionFailed": "Impossible d’ajouter la carte. Réessayez.",
+    "undoAdditionFailed": "Impossible d’annuler l’ajout de la carte. Réessayez.",
+    "undoRemovalFailed": "Impossible d’annuler le retrait de la carte. Réessayez.",
+    "cardCategoryFailed": "Impossible d’enregistrer la catégorie de la carte. Réessayez.",
+    "cardQuantityFailed": "Impossible d’enregistrer la quantité de la carte. La quantité précédente est rétablie.",
+    "cardPrintingFailed": "Impossible d’enregistrer l’édition de la carte. Réessayez.",
+    "cardNotesFailed": "Impossible d’enregistrer les notes de la carte. Réessayez.",
+    "cardMoveFailed": "Impossible de déplacer la carte. Réessayez.",
+    "saved": "✓ Deck enregistré"
+  },
+  "undo": {
+    "openOriginalDeck": "Ouvrez le deck d’origine avant de réessayer d’annuler.",
+    "applied": "↩ Annulation effectuée",
+    "ambiguousPrinting": "Impossible de savoir quelle carte annuler : plusieurs éditions correspondent."
+  },
+  "gameChangerAdded": {
+    "first": "⚡ {card} est un Game Changer — votre deck est désormais au moins en Bracket 3.",
+    "withinBracket3": "⚡ {card} est un Game Changer ({total}/{limit}). Le deck reste au moins en Bracket 3.",
+    "beyondBracket3": "⚡ {card} est un Game Changer — vous avez désormais {total, plural, one {# Game Changer} other {# Game Changers}}, ce qui place le deck en Bracket 4.",
+    "commander": "⚡ {card} est un Game Changer — votre deck est automatiquement au moins en Bracket 3."
+  },
+  "commandZoneRefusal": {
+    "companionNeedsCommander": "Choisissez un commandant avant de définir un compagnon.",
+    "notCompanion": "Cette carte n’a pas la capacité Compagnon.",
+    "bannedCompanion": "Lutri ne peut pas être votre compagnon en Commander.",
+    "unpairable": "{partner} ne peut pas partager la zone de commandement avec {commander}."
   },
   "format": {
     "name": {

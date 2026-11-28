@@ -12,14 +12,18 @@ import { useInitContext } from "@/components/providers/InitProvider";
 import { useBoundedSession } from "@/hooks/useBoundedSession";
 import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
-import { AlertTriangle, Layers, Loader2, Plus, RefreshCw, Search } from "lucide-react";
+import { AlertTriangle, Loader2, Plus, RefreshCw, Search } from "lucide-react";
 import { DeckWizard } from "@/components/deck/DeckWizard";
+import { EmptyLibraryPanel } from "@/components/deck/EmptyLibraryPanel";
 import { HomeDeckCard } from "@/components/deck/HomeDeckCard";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
+import { IDLE_HEADER_DECK_ACTIONS } from "@/components/layout/header-deck-actions-state";
+import { useImportIntoNewDeck } from "@/components/layout/use-import-into-new-deck";
 import { useDeckStore } from "@/lib/deck/store";
-import { useToastStore } from "@/hooks/useToast";
-import { logger } from "@/lib/logger";
+import { useDeckCreateFailureReport } from "@/hooks/useDeckFailureReport";
+import { useDeckDeletion } from "@/hooks/useDeckDeletion";
+import { useDeckDuplication } from "@/hooks/useDeckDuplication";
 import { DeckListTable } from "@/components/deck/DeckListTable";
 import { DecksHomeControls } from "@/components/deck/DecksHomeControls";
 import { DeckCardFilterFields } from "@/components/deck/DeckCardFilterFields";
@@ -56,23 +60,24 @@ export default function DecksPage() {
   const { status: sessionStatus, timedOut, retry: retrySession } = useBoundedSession();
   const { initializationStatus, retryInitialization } = useInitContext();
   const router = useRouter();
-  const {
-    decks,
-    createDeck,
-    loadDecks,
-    isSyncing,
-    deleteDeck,
-    duplicateDeck,
-    loadError,
-  } = useDeckStore();
-  // Fine-grained selector: `add` is stable, so it can sit in a useCallback dep.
-  const addToast = useToastStore((state) => state.add);
+  const { decks, createDeck, loadDecks, isSyncing, loadError } = useDeckStore();
+  const deleteDeck = useDeckDeletion();
+  const reportCreateFailure = useDeckCreateFailureReport();
   const [isLoading, setIsLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [newDeckFormat, setNewDeckFormat] = useState<DeckFormat>("commander");
   const [wizardOpen, setWizardOpen] = useState(false);
+  // Shared with the header, so the empty library's "Import a decklist" runs
+  // the header's import and opens the header's one import dialog.
+  const [headerDeckActions, setHeaderDeckActions] = useState(
+    IDLE_HEADER_DECK_ACTIONS
+  );
+  const importIntoNewDeck = useImportIntoNewDeck(
+    headerDeckActions.isCreatingImportDeck,
+    setHeaderDeckActions
+  );
   const [viewMode, setViewMode] = useState<DecksViewMode>("grid");
   const [sortKey, setSortKey] = useState<DecksSortKey>("updatedAt");
   const [sortDir, setSortDir] = useState<DecksSortDir>("desc");
@@ -81,6 +86,12 @@ export default function DecksPage() {
   const [cardFilter, setCardFilter] = useState(NO_CARD_FILTER);
   const { search: cardSearch, refresh: refreshCardSearch } =
     useLibraryCardSearch(cardFilter);
+  // A deck deleted elsewhere leaves the list and the card search's results, as after a delete here.
+  const refreshLibrary = useCallback(async () => {
+    refreshCardSearch();
+    await loadDecks();
+  }, [loadDecks, refreshCardSearch]);
+  const duplicateDeck = useDeckDuplication({ onMissing: refreshLibrary });
   const deckList = Object.values(decks);
   // A found card search replaces the loaded page; folder, name and sort follow.
   const sourceDecks = librarySourceDecks(deckList, cardSearch);
@@ -120,12 +131,9 @@ export default function DecksPage() {
       }
 
       setDeletingId(id);
-      try {
-        await deleteDeck(id);
-        refreshCardSearch();
-      } finally {
-        setDeletingId(null);
-      }
+      // A failed delete is told in a toast; the deck stays listed.
+      if (await deleteDeck(id)) refreshCardSearch();
+      setDeletingId(null);
     },
     [deleteDeck, refreshCardSearch, t]
   );
@@ -134,17 +142,14 @@ export default function DecksPage() {
     async (e: React.MouseEvent, id: string) => {
       e.preventDefault();
       e.stopPropagation();
+      // The shown deck, which a card search may have found beyond the store's page.
+      const shown = sortedDeckList.find((deck) => deck.id === id);
+      if (!shown) return;
       setDuplicatingId(id);
-
-      try {
-        const newId = await duplicateDeck(id);
-        router.push(`/builder/${newId}`);
-      } catch (error) {
-        logger.error("Unexpected error", "handleDuplicateDeck", error);
-        setDuplicatingId(null);
-      }
+      // On success the builder opens on the copy, so the spinner stays.
+      if (!(await duplicateDeck(shown))) setDuplicatingId(null);
     },
-    [duplicateDeck, router]
+    [duplicateDeck, sortedDeckList]
   );
 
   const handleNewDeck = useCallback(async () => {
@@ -159,15 +164,7 @@ export default function DecksPage() {
       const id = await createDeck(name, { format: newDeckFormat });
       router.push(`/builder/${id}`);
     } catch (error) {
-      // Logging alone made the button look inert: it spun, the request 500'd,
-      // and the user was left on the same screen with no explanation.
-      logger.error("Unexpected error", "handleNewDeck", error);
-      addToast(
-        "error",
-        t("home.createFailed", {
-          reason: error instanceof Error ? error.message : "unknown error",
-        })
-      );
+      reportCreateFailure("handleNewDeck", error);
       setIsCreating(false);
     }
   }, [
@@ -177,7 +174,7 @@ export default function DecksPage() {
     newDeckFormat,
     router,
     t,
-    addToast,
+    reportCreateFailure,
   ]);
 
   const handleGuestDeckSaved = useCallback(() => {
@@ -188,6 +185,8 @@ export default function DecksPage() {
     setIsLoading(true);
     void loadDecks().finally(() => setIsLoading(false));
   }, [loadDecks]);
+
+  const openWizard = useCallback(() => setWizardOpen(true), []);
 
   const handleSetViewMode = useCallback((mode: DecksViewMode) => {
     setViewMode(mode);
@@ -252,12 +251,7 @@ export default function DecksPage() {
           </>
         );
       case "loadFailed":
-        return (
-          <LoadFailedPanel
-            error={libraryView.error}
-            onRetry={handleRetryLoad}
-          />
-        );
+        return <LoadFailedPanel onRetry={handleRetryLoad} />;
       case "empty":
         return (
           <>
@@ -265,6 +259,9 @@ export default function DecksPage() {
             <EmptyLibraryPanel
               onCreate={handleNewDeck}
               isCreating={isCreating}
+              onImport={importIntoNewDeck}
+              isImporting={headerDeckActions.isCreatingImportDeck}
+              onOpenWizard={openWizard}
             />
           </>
         );
@@ -347,7 +344,7 @@ export default function DecksPage() {
         <motion.button
           onClick={handleNewDeck}
           disabled={isCreating}
-          className="flex h-40 flex-col items-center justify-center gap-2 rounded-[var(--lumen-radius-xl)] border border-dashed border-[var(--border)] bg-transparent p-5 text-[var(--text-secondary)] transition-all hover:border-[var(--accent)] hover:bg-[var(--surface)] hover:text-[var(--accent-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-60"
+          className="flex h-40 flex-col items-center justify-center gap-2 rounded-[var(--lumen-radius-xl)] border border-dashed border-[var(--border)] bg-transparent p-5 text-[var(--text-secondary)] transition-all hover:border-[var(--accent)] hover:bg-[var(--surface)] hover:text-[var(--accent-text)] disabled:cursor-not-allowed disabled:opacity-60"
           variants={{
             hidden: { opacity: 0, y: 16 },
             show: { opacity: 1, y: 0 },
@@ -366,7 +363,12 @@ export default function DecksPage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <Header />
+      <Header
+        deckActions={{
+          state: headerDeckActions,
+          onChange: setHeaderDeckActions,
+        }}
+      />
 
       <main className="mx-auto flex-1 w-full max-w-5xl px-6 py-10">
         <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
@@ -410,7 +412,7 @@ export default function DecksPage() {
             sortDir={sortDir}
             onSetViewMode={handleSetViewMode}
             onSetSort={handleSetSort}
-            onOpenWizard={() => setWizardOpen(true)}
+            onOpenWizard={openWizard}
             onNewDeck={handleNewDeck}
             disableNewDeck={isCreating || isSyncing}
             isCreating={isCreating}
@@ -479,15 +481,11 @@ function SessionTimeoutPanel({ onRetry }: { readonly onRetry: () => void }) {
 
 /**
  * The listing failed with no deck to fall back on. A failed listing must not
- * read as an empty account, so the raw error is shown with a reload.
+ * read as an empty account, so the failure is told with a reload. The raw
+ * error is diagnostic English text: the store logs it, and the player reads
+ * only the translated message (I-04).
  */
-function LoadFailedPanel({
-  error,
-  onRetry,
-}: {
-  readonly error: string;
-  readonly onRetry: () => void;
-}) {
+function LoadFailedPanel({ onRetry }: { readonly onRetry: () => void }) {
   const t = useTranslations("deck");
   return (
     <motion.div
@@ -499,58 +497,16 @@ function LoadFailedPanel({
       <h2 className="mb-2 text-lg font-semibold text-[var(--text-primary)]">
         {t("home.loadFailedTitle")}
       </h2>
-      <p className="mb-2 max-w-md text-sm text-[var(--text-secondary)]">
+      <p className="mb-6 max-w-md text-sm text-[var(--text-secondary)]">
         {t("home.loadFailedDescription")}
-      </p>
-      <p className="mb-6 max-w-md break-words font-mono text-xs text-[var(--text-secondary)] opacity-70">
-        {error}
       </p>
       <button
         type="button"
         onClick={onRetry}
-        className="flex items-center gap-2 rounded-[var(--lumen-radius-pill)] bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white shadow-[var(--lumen-shadow-sm)] transition-colors hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
+        className="flex items-center gap-2 rounded-[var(--lumen-radius-pill)] bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white shadow-[var(--lumen-shadow-sm)] transition-colors hover:bg-[var(--accent-hover)]"
       >
         <RefreshCw className="h-4 w-4" />
         {t("home.retry")}
-      </button>
-    </motion.div>
-  );
-}
-
-/** The library holds no deck: the first one is one click away. */
-function EmptyLibraryPanel({
-  onCreate,
-  isCreating,
-}: {
-  readonly onCreate: () => void;
-  readonly isCreating: boolean;
-}) {
-  const t = useTranslations("deck");
-  return (
-    <motion.div
-      className="flex flex-col items-center justify-center py-24 text-center"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-    >
-      <Layers className="mb-4 h-12 w-12 text-[var(--accent-text)] opacity-60" />
-      <h2 className="mb-2 text-lg font-semibold text-[var(--text-primary)]">
-        {t("home.startBuilding")}
-      </h2>
-      <p className="mb-6 max-w-sm text-sm text-[var(--text-secondary)]">
-        {t("home.startBuildingDescription")}
-      </p>
-      <button
-        type="button"
-        onClick={onCreate}
-        disabled={isCreating}
-        className="flex items-center gap-2 rounded-[var(--lumen-radius-pill)] bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white shadow-[var(--lumen-shadow-sm)] transition-colors hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
-      >
-        {isCreating ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
-        ) : (
-          <Plus className="h-4 w-4" />
-        )}
-        {t("home.createDeck")}
       </button>
     </motion.div>
   );

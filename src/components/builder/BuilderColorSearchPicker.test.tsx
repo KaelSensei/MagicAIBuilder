@@ -3,16 +3,10 @@ import { fireEvent, screen } from "@testing-library/react";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { BuilderColorSearchPicker } from "./BuilderColorSearchPicker";
 
-const HINT_FR = "Sélectionnez des couleurs pour parcourir les cartes";
-
 describe("BuilderColorSearchPicker", () => {
   it("names each colour toggle in the reader's locale", () => {
     renderWithIntl(
-      <BuilderColorSearchPicker
-        selected={[]}
-        hasNameFilter={false}
-        onToggle={vi.fn()}
-      />,
+      <BuilderColorSearchPicker selected={[]} onToggle={vi.fn()} />,
       { locale: "fr" }
     );
 
@@ -32,11 +26,7 @@ describe("BuilderColorSearchPicker", () => {
   it("toggles the colour of the pressed button", () => {
     const onToggle = vi.fn();
     renderWithIntl(
-      <BuilderColorSearchPicker
-        selected={[]}
-        hasNameFilter={false}
-        onToggle={onToggle}
-      />,
+      <BuilderColorSearchPicker selected={[]} onToggle={onToggle} />,
       { locale: "fr" }
     );
 
@@ -44,36 +34,4 @@ describe("BuilderColorSearchPicker", () => {
 
     expect(onToggle).toHaveBeenCalledWith("R");
   });
-
-  it("hints at picking a colour while nothing narrows the search", () => {
-    renderWithIntl(
-      <BuilderColorSearchPicker
-        selected={[]}
-        hasNameFilter={false}
-        onToggle={vi.fn()}
-      />,
-      { locale: "fr" }
-    );
-
-    expect(screen.getByText(HINT_FR)).toBeDefined();
-  });
-
-  it.each([
-    { narrowedBy: "a colour", selected: ["G"], hasNameFilter: false },
-    { narrowedBy: "a name", selected: [], hasNameFilter: true },
-  ])(
-    "drops the hint once $narrowedBy narrows the search",
-    ({ selected, hasNameFilter }) => {
-      renderWithIntl(
-        <BuilderColorSearchPicker
-          selected={selected}
-          hasNameFilter={hasNameFilter}
-          onToggle={vi.fn()}
-        />,
-        { locale: "fr" }
-      );
-
-      expect(screen.queryByText(HINT_FR)).toBeNull();
-    }
-  );
 });

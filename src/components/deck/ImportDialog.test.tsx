@@ -6,11 +6,13 @@ import { renderWithIntl } from "@/test/render-with-intl";
 import { aScryfallCard } from "@/test/builders/scryfall";
 import { aTextFile } from "@/test/builders/text-file";
 import { useState } from "react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ImportDialog } from "./ImportDialog";
 import { CardLookupError } from "@/lib/deck/card-lookup-error";
+import { logger } from "@/lib/logger";
 
-const addCard = vi.hoisted(() => vi.fn());
+// Answers as the real store does when the deck takes the card.
+const addCard = vi.hoisted(() => vi.fn(async () => ({ kind: "added" })));
 const fetchInBatches = vi.hoisted(() => vi.fn());
 
 vi.mock(import("@/lib/deck/batch-fetch"), () => ({ fetchInBatches }));
@@ -30,6 +32,10 @@ vi.mock(import("@/components/deck/ImportFromUrlTab"), () => ({
 beforeEach(() => {
   addCard.mockClear();
   fetchInBatches.mockReset();
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
 });
 
 it("previews a pasted list before adding cards", async () => {
@@ -91,6 +97,26 @@ it("labels a secondary-zone preview row in French", async () => {
 
   expect(await screen.findByText("Réserve")).toBeInTheDocument();
   expect(screen.getByText("1 × Negate").closest("li")).toHaveTextContent("Réserve");
+});
+
+// WCAG 2.2 SC 1.3.1 and 4.1.2: the placeholder is an English sample list,
+// not a label, so the text box carries its own name from the catalogue.
+it("names the decklist text box for a screen reader", () => {
+  renderWithIntl(<ImportDialog open onOpenChange={vi.fn()} />);
+
+  expect(
+    screen.getByRole("textbox", { name: "Decklist to import" })
+  ).toHaveAttribute("placeholder", expect.stringContaining("Sol Ring"));
+});
+
+it("names the decklist text box in French", () => {
+  renderWithIntl(<ImportDialog open onOpenChange={vi.fn()} />, {
+    locale: "fr",
+  });
+
+  expect(
+    screen.getByRole("textbox", { name: "Liste de deck à importer" })
+  ).toBeInTheDocument();
 });
 
 it("discards a stale preview when the pasted list changes", async () => {
@@ -420,4 +446,50 @@ it("says the card lookup did not answer when Scryfall fails, instead of the brow
     screen.getByRole("button", { name: "Preview decklist" })
   ).toBeEnabled();
   expect(addCard).not.toHaveBeenCalled();
+});
+
+// The real `fetchInBatches` wraps every failure in a CardLookupError, so only
+// a fault in the dialog's own code reaches this; the player still reads no
+// exception text (I-01).
+it("says the card lookup did not answer when the preview throws anything else, in French", async () => {
+  vi.spyOn(logger, "error").mockImplementation(() => undefined);
+  fetchInBatches.mockRejectedValueOnce(new TypeError("Failed to fetch"));
+  renderWithIntl(<ImportDialog open onOpenChange={vi.fn()} />, {
+    locale: "fr",
+  });
+
+  fireEvent.change(screen.getByPlaceholderText(/Atraxa, Praetors' Voice/), {
+    target: { value: "1 Sol Ring" },
+  });
+  fireEvent.click(
+    screen.getByRole("button", { name: "Prévisualiser la liste" })
+  );
+
+  expect(
+    await screen.findByText(
+      "La recherche des cartes n’a pas répondu. Rien n’a été importé ; réessayez."
+    )
+  ).toBeInTheDocument();
+  expect(screen.queryByText(/Failed to fetch/)).not.toBeInTheDocument();
+});
+
+// The real store catches every failed write and raises its own toast
+// (ImportDialog.failure.test.tsx), so only a fault reaches this; the player
+// still reads no exception text (I-01).
+it("says the import failed when adding the cards throws, with none of the thrown text", async () => {
+  vi.spyOn(logger, "error").mockImplementation(() => undefined);
+  fetchInBatches.mockResolvedValueOnce([aScryfallCard({ name: "Sol Ring" })]);
+  addCard.mockRejectedValueOnce(new Error("[addCard] HTTP 500: boom"));
+  renderWithIntl(<ImportDialog open onOpenChange={vi.fn()} />);
+
+  fireEvent.change(screen.getByPlaceholderText(/Atraxa, Praetors' Voice/), {
+    target: { value: "1 Sol Ring" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Preview decklist" }));
+  fireEvent.click(
+    await screen.findByRole("button", { name: "Import this preview" })
+  );
+
+  expect(await screen.findByText("Failed to import cards.")).toBeInTheDocument();
+  expect(screen.queryByText(/HTTP 500|boom/)).not.toBeInTheDocument();
 });

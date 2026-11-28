@@ -8,29 +8,41 @@
  * "New Deck" and "Import" come from `HeaderDeckActionsSlot`, loaded lazily so
  * public pages do not ship the deck store in their first bundle. The header
  * only owns the UI state those actions share between the desktop bar and the
- * mobile menu.
+ * mobile menu, unless the page holds it (`SharedHeaderDeckActions`).
  *
  * @module layout/Header
  */
 
 import { useCallback, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Link } from "@/i18n/navigation";
+import { Link, usePathname } from "@/i18n/navigation";
 import { Menu, Package, Shield, Sparkles, X } from "lucide-react";
 import { UserMenu } from "@/components/auth/UserMenu";
-import { IDLE_HEADER_DECK_ACTIONS } from "@/components/layout/header-deck-actions-state";
+import {
+  IDLE_HEADER_DECK_ACTIONS,
+  type SharedHeaderDeckActions,
+} from "@/components/layout/header-deck-actions-state";
 import { HeaderDeckActionsSlot } from "@/components/layout/HeaderDeckActionsSlot";
 import { HeaderMobileMenu } from "@/components/layout/HeaderMobileMenu";
 import { LocaleSwitcher } from "@/components/layout/LocaleSwitcher";
+import {
+  ariaCurrentPage,
+  CURRENT_PAGE_LINK_CLASS,
+  currentNavDestination,
+} from "@/components/layout/primary-nav";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 
 interface HeaderProps {
   /** The deck open in the builder. Import then fills it instead of a new deck. */
   readonly deckId?: string;
+  /**
+   * The deck actions' state, when the page holds it so its own controls can
+   * start the header's actions; left out, the header keeps its own.
+   */
+  readonly deckActions?: SharedHeaderDeckActions;
 }
 
-const NAV_LINK_CLASS =
-  "inline-flex items-center gap-1.5 rounded-[var(--lumen-radius-pill)] px-3 py-2 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--accent-soft)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]";
+const NAV_LINK_CLASS = `inline-flex items-center gap-1.5 rounded-[var(--lumen-radius-pill)] px-3 py-2 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--accent-soft)] hover:text-[var(--text-primary)] ${CURRENT_PAGE_LINK_CLASS}`;
 
 /**
  * Paints the product name with the Lumen violet on the "AI" syllable.
@@ -53,16 +65,64 @@ function BrandWordmark({ name }: { readonly name: string }) {
 }
 
 /**
+ * The primary navigation on wide screens; `HeaderMobileMenu` holds the same
+ * links on small ones. The link to the page the player is on carries
+ * `aria-current="page"` and the mark of `CURRENT_PAGE_LINK_CLASS`.
+ */
+function HeaderNav() {
+  const t = useTranslations("common");
+  const current = currentNavDestination(usePathname());
+
+  return (
+    <nav
+      aria-label={t("nav.myDecks")}
+      className="ml-2 hidden items-center gap-1 md:flex"
+    >
+      <Link
+        href="/decks"
+        aria-current={ariaCurrentPage(current, "decks")}
+        className={NAV_LINK_CLASS}
+      >
+        {t("nav.myDecks")}
+      </Link>
+      <Link
+        href="/collection"
+        aria-current={ariaCurrentPage(current, "collection")}
+        className={NAV_LINK_CLASS}
+      >
+        <Package className="h-3.5 w-3.5" />
+        {t("nav.collection")}
+      </Link>
+      <Link
+        href="/rules/game-changers"
+        aria-current={ariaCurrentPage(current, "rules")}
+        className={NAV_LINK_CLASS}
+      >
+        <Shield className="h-3.5 w-3.5" />
+        {t("nav.rules")}
+      </Link>
+    </nav>
+  );
+}
+
+/**
  * The top bar of every page.
  *
  * On wide screens the deck actions, the language switch and the account menu
  * sit in the bar; on small screens a toggle opens `HeaderMobileMenu`, which
  * holds the same links and actions.
  */
-export function Header({ deckId }: HeaderProps = {}) {
+export function Header({
+  deckId,
+  deckActions: sharedDeckActions,
+}: HeaderProps = {}) {
   const t = useTranslations("common");
   const [menuOpen, setMenuOpen] = useState(false);
-  const [deckActions, setDeckActions] = useState(IDLE_HEADER_DECK_ACTIONS);
+  const [ownDeckActions, setOwnDeckActions] = useState(
+    IDLE_HEADER_DECK_ACTIONS
+  );
+  const { state: deckActions, onChange: setDeckActions } =
+    sharedDeckActions ?? { state: ownDeckActions, onChange: setOwnDeckActions };
 
   const handleCloseMenu = useCallback(() => {
     setMenuOpen(false);
@@ -72,7 +132,7 @@ export function Header({ deckId }: HeaderProps = {}) {
     <header className="relative z-40 flex h-16 shrink-0 items-center gap-3 border-b border-[var(--border)] bg-[var(--surface)]/90 px-4 shadow-[var(--lumen-shadow-sm)] backdrop-blur-md md:gap-6 md:px-6">
       <Link
         href="/"
-        className="flex items-center gap-2.5 rounded-[var(--lumen-radius-md)] text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+        className="flex items-center gap-2.5 rounded-[var(--lumen-radius-md)] text-[var(--text-primary)]"
       >
         <span className="flex h-8 w-8 items-center justify-center rounded-[var(--lumen-radius-md)] bg-[var(--accent-soft)] text-[var(--accent-text)]">
           <Sparkles className="h-4 w-4" />
@@ -82,22 +142,7 @@ export function Header({ deckId }: HeaderProps = {}) {
         </span>
       </Link>
 
-      <nav
-        aria-label={t("nav.myDecks")}
-        className="ml-2 hidden items-center gap-1 md:flex"
-      >
-        <Link href="/decks" className={NAV_LINK_CLASS}>
-          {t("nav.myDecks")}
-        </Link>
-        <Link href="/collection" className={NAV_LINK_CLASS}>
-          <Package className="h-3.5 w-3.5" />
-          {t("nav.collection")}
-        </Link>
-        <Link href="/rules/game-changers" className={NAV_LINK_CLASS}>
-          <Shield className="h-3.5 w-3.5" />
-          {t("nav.rules")}
-        </Link>
-      </nav>
+      <HeaderNav />
 
       <div className="ml-auto flex items-center gap-2">
         <ThemeToggle />

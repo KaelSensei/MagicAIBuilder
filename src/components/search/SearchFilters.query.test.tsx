@@ -92,6 +92,11 @@ function NameSearch({
         error={results.error}
         totalCards={results.totalCards}
         collectionOnly={results.collectionOnly}
+        // These tests pin the query; the next step of an empty result is
+        // the builder's choice, pinned in `page.search-query.test.tsx`.
+        nextStep={{ kind: "none" }}
+        // The name search always sends its query, so it never waits for a choice.
+        waitingFor={null}
       />
     </>
   );

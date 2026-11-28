@@ -31,6 +31,7 @@
 - Local: Docker PostgreSQL (`localhost:5432`)
 - Production: Supabase Transaction Pooler (`pooler.supabase.com:6543?pgbouncer=true`)
 - Auto-deploy on every push to `main`; `dev` and `staging` deployments are validation environments.
+- Feature, fix and chore branches get no Vercel preview deployment. `vercel.json` turns them off by branch prefix (`git.deploymentEnabled`, glob patterns: <https://vercel.com/docs/project-configuration/git-configuration>, read 2026-11-25). Every preview stores its own serverless functions, and the Hobby plan's 10 GB of function storage filled up on 2026-11-25, after about thirty PRs in one day; over that limit, Vercel deletes older deployments immediately (<https://vercel.com/changelog/hobby-projects-now-retain-fewer-deployments-to-free-up-storage>). A branch prefix missing from the list still deploys, so add new prefixes there. Merging does not depend on Vercel: the PR gate is GitHub Actions (`ci.yml`, `lighthouse.yml`), which builds the app itself.
 
 ---
 

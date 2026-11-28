@@ -24,6 +24,7 @@ import {
   type CopyLimitCard,
 } from "@/lib/deck/multiples";
 import { copiesCountedFor, isCountedZone } from "@/lib/deck/counted-copies";
+import { deleteOnServer, type DeckDeletion } from "@/lib/deck/deck-deletion";
 import * as deckApi from "@/lib/db/deck-api";
 import {
   DeckApiError,
@@ -35,7 +36,17 @@ import {
   deckOpenErrorFrom,
   type DeckOpenError,
 } from "@/lib/deck/deck-open-error";
-import { useToastStore } from "@/hooks/useToast";
+import {
+  DECK_FAILURE_TOASTS,
+  openFailureToast,
+} from "@/lib/deck/failure-toasts";
+import {
+  DECK_NOTICE_TOASTS,
+  commanderGameChangerToast,
+  gameChangerAddedToast,
+  unpairableToast,
+} from "@/lib/deck/notice-toasts";
+import { useToastStore, type ToastMessage } from "@/hooks/useToast";
 import { logger } from "@/lib/logger";
 import {
   isBannedCompanionInCommander,
@@ -59,6 +70,11 @@ import {
 } from "./deck-write-queue";
 import type { BulkEdit } from "./bulk-edit";
 import {
+  createDeckDetailSaves,
+  type DeckDetailField,
+  type DetailSave,
+} from "./deck-detail-saves";
+import {
   commandZoneOf,
   restoreCommanderAfterFailedSave,
   restorePartnerAfterFailedSave,
@@ -80,6 +96,12 @@ import {
   loadGuestDeck,
   saveGuestDeck,
 } from "./guest-deck";
+import {
+  browserStorage,
+  createOpenDeckMemory,
+  noLongerOpens,
+  withReopenedDeck,
+} from "./open-deck-memory";
 
 // ---------------------------------------------------------------------------
 // Undo stack types
@@ -122,26 +144,6 @@ function restoreRemovedCard(cards: DeckCard[], removedCard: DeckCard, followingC
   return [...cards.slice(0, restoreIndex), removedCard, ...cards.slice(restoreIndex)];
 }
 
-function notifyGameChangerAdded(cardName: string, newTotal: number): void {
-  const toast = useToastStore.getState();
-  if (newTotal === 1) {
-    toast.add(
-      "warning",
-      `⚡ ${cardName} is a Game Changer — your deck is now Bracket 3 minimum.`
-    );
-  } else if (newTotal <= 3) {
-    toast.add(
-      "warning",
-      `⚡ ${cardName} is a Game Changer (${newTotal}/3). Bracket 3 minimum applies.`
-    );
-  } else {
-    toast.add(
-      "warning",
-      `⚡ ${cardName} is a Game Changer — you now have ${newTotal} Game Changers, pushing the deck to Bracket 4.`
-    );
-  }
-}
-
 /**
  * Warns, before the save, when the card being added to `deck` is a Game Changer, with the
  * deck's Game Changer total once it joins: the deck list's and the commander's.
@@ -151,7 +153,9 @@ function warnIfGameChangerAdded(deck: Deck, added: DeckCard): void {
   const held =
     deck.cards.filter((card) => card.isGameChanger).length +
     (deck.commander?.isGameChanger ? 1 : 0);
-  notifyGameChangerAdded(added.name, held + 1);
+  useToastStore
+    .getState()
+    .add("warning", gameChangerAddedToast(added.name, held + 1));
 }
 
 function uniqueDeckCards(deck: Pick<Deck, "cards" | "maybeboard">): DeckCard[] {
@@ -342,12 +346,11 @@ interface PendingCategoryWrite {
 
 const pendingCategoryWrites = new Map<string, PendingCategoryWrite>();
 
-let pendingManualBracketWrites = 0;
-let pendingBudgetWrites = 0;
+/** The name, description, brackets and budget saves still running, per deck. */
+const deckDetailSaves = createDeckDetailSaves();
 let pendingFormatWrites = 0;
 let pendingBulkRemovals = 0;
 let pendingCardAdditionsAndRemovals = 0;
-let pendingRenameWrites = 0;
 
 /**
  * The decks map with one deck's version replaced; the map itself when the
@@ -384,6 +387,14 @@ const deckWrites = createDeckWriteQueue(
 const CONFLICT_TOAST = { key: "deck.sync.conflictReloaded" } as const;
 
 /**
+ * Why an undo waits: its change belongs to a deck the store no longer holds.
+ * Translated by the toast container in the player's locale (I-04).
+ */
+const UNDO_NEEDS_ITS_DECK_TOAST = {
+  key: "deck.undo.openOriginalDeck",
+} as const;
+
+/**
  * Puts the server's deck back on screen after a write was refused as stale,
  * and tells the player. The reload replaces the whole deck, version included,
  * so the next write carries the version the other tab left. The undo entries
@@ -404,10 +415,35 @@ async function reloadAfterConflict(deckId: string): Promise<void> {
     useToastStore.getState().add("warning", CONFLICT_TOAST);
   } catch (err) {
     logger.error("Unexpected error", "reloadAfterConflict", err);
-    useToastStore
-      .getState()
-      .add("error", "Could not refresh deck. Please retry.");
+    useToastStore.getState().add("error", DECK_FAILURE_TOASTS.refresh);
   }
+}
+
+/**
+ * The store without a deck the server no longer has, recording why it could
+ * not be read.
+ *
+ * The builder shows "Deck not found", with the way back to the decks, for a
+ * deck it does not hold whose open error is `not-found`: the state a failed
+ * open already leaves (I-01). The undo entries name the deck's rows, so they
+ * go with it.
+ *
+ * @param state - the store now
+ * @param openError - the `not-found` reading of the server's refusal
+ * @returns the slice of the store to set
+ */
+function withoutMissingDeck(
+  state: DeckStore,
+  openError: DeckOpenError
+): Pick<DeckStore, "decks" | "undoStack" | "deckOpenError"> {
+  const { [openError.deckId]: _missing, ...decks } = state.decks;
+  return {
+    decks,
+    undoStack: state.undoStack.filter(
+      (action) => action.deckId !== openError.deckId
+    ),
+    deckOpenError: openError,
+  };
 }
 
 /**
@@ -419,19 +455,29 @@ async function reloadAfterConflict(deckId: string): Promise<void> {
  *
  * @param deckId - the deck written
  * @param error - what the write threw
- * @param message - the failure toast for an ordinary failure; absent when the
- *   write has never reported one
+ * @param message - the failure toast for an ordinary failure, as words or a
+ *   catalogue key; absent when the write has never reported one
  */
 async function settleFailedWrite(
   deckId: string,
   error: unknown,
-  message?: string
+  message?: ToastMessage
 ): Promise<void> {
   if (error instanceof DroppedDeckWriteError) return;
   if (isStaleDeckRefusal(error)) {
     await deckWrites.recover(deckId, () => reloadAfterConflict(deckId));
     return;
   }
+  reportFailure(message);
+}
+
+/**
+ * Raises the error toast of a failure, when it has one.
+ *
+ * @param message - the toast, or `undefined` for a failure the screen already
+ *   reports (a deck the server does not have shows "Deck not found")
+ */
+function reportFailure(message: ToastMessage | undefined): void {
   if (message !== undefined) useToastStore.getState().add("error", message);
 }
 
@@ -478,7 +524,7 @@ async function recoverCommanderSave(
   error: unknown
 ): Promise<void> {
   if (!restoreCommanderAfterFailedSave(set, get(), save)) return;
-  await settleFailedWrite(save.activeDeckId, error, "Could not save commander — try again");
+  await settleFailedWrite(save.activeDeckId, error, DECK_FAILURE_TOASTS.commander);
 }
 
 /**
@@ -495,12 +541,10 @@ function hasPendingSaves(): boolean {
     pendingZoneWrites.size > 0 ||
     pendingNotesWrites.size > 0 ||
     pendingCategoryWrites.size > 0 ||
-    pendingManualBracketWrites > 0 ||
-    pendingBudgetWrites > 0 ||
+    deckDetailSaves.hasPending() ||
     pendingFormatWrites > 0 ||
     pendingBulkRemovals > 0 ||
-    pendingCardAdditionsAndRemovals > 0 ||
-    pendingRenameWrites > 0
+    pendingCardAdditionsAndRemovals > 0
   );
 }
 
@@ -533,6 +577,12 @@ export type CardAdditionResult =
   | { readonly kind: "at-copy-limit"; readonly format: DeckFormat }
   | { readonly kind: "basic-land-held" }
   | { readonly kind: "no-open-deck" };
+
+/** The copy {@link DeckStore.duplicateDeck} made: the deck to open, and the name to announce. */
+export interface DuplicatedDeck {
+  readonly id: string;
+  readonly name: string;
+}
 
 export interface DeckStore {
   // State
@@ -575,14 +625,18 @@ export interface DeckStore {
 
   // Deck management
   /**
-   * Creates an account deck and makes it the active deck. A guest opens the
-   * guest deck instead.
+   * Creates an account deck and makes it the active deck, unless
+   * `opts.activate` is false. A guest gets the guest deck instead, under the
+   * same rule.
    *
    * @param name - The deck's name
    * @param opts - `format`, Commander when left out; `isAIGenerated`;
    *   `idempotencyKey`, the same for every attempt at the same deck, so a
-   *   retry after a lost answer opens the deck the server already stored
-   * @returns The id of the deck now active
+   *   retry after a lost answer opens the deck the server already stored;
+   *   `activate`, true when left out: false leaves the active deck as it is,
+   *   for a caller that opens the deck itself once it knows it still should
+   *   (the AI deck wizard's save, I-02)
+   * @returns The id of the new deck, or the guest deck's
    * @throws When the server refuses or fails the creation
    */
   createDeck: (
@@ -591,10 +645,35 @@ export interface DeckStore {
       isAIGenerated?: boolean;
       format?: DeckFormat;
       idempotencyKey?: string;
+      activate?: boolean;
     }
   ) => Promise<string>;
-  duplicateDeck: (id: string) => Promise<string>;
-  deleteDeck: (id: string) => Promise<void>;
+  /**
+   * Copies a saved deck on the server, makes the copy the active deck and
+   * reloads the listing. Raises no toast and words no name: the store has no
+   * locale, so the caller names the copy and tells the player
+   * (`useDeckDuplication`).
+   *
+   * @param id - the deck to copy
+   * @param copyName - the copy's name, in the player's language; left out,
+   *   the server names it `<name> (Copy)`
+   * @returns the copy's id and its name, as the server set it
+   * @throws DeckApiError when the server refuses or fails the copy, carrying
+   *   its status; the fetch error when the network fails
+   */
+  duplicateDeck: (id: string, copyName?: string) => Promise<DuplicatedDeck>;
+  /**
+   * Deletes a saved deck on the server, then drops it from the store with its
+   * undo history, and clears the active deck if it was this one. A deck the
+   * server no longer has counts as deleted (`deleteOnServer`). Raises no
+   * toast: the caller tells the player (`useDeckDeletion`).
+   *
+   * @returns `deleted`, or `alreadyDeleted` when the server answered 404
+   * @throws DeckApiError when the server refuses or fails the delete for
+   *   another reason, carrying its status; the fetch error when the network
+   *   fails. The deck then stays as it was.
+   */
+  deleteDeck: (id: string) => Promise<DeckDeletion>;
   /**
    * Drops the guest deck from memory and from this browser, once an account
    * holds a copy. Memory goes first: the guest deck is written back to the
@@ -611,6 +690,18 @@ export interface DeckStore {
    * @param deckId - a deck that is not open; one not held is left as it is
    */
   reloadDeckOnNextOpen: (deckId: string) => void;
+  /**
+   * Tells the store which account is signed in, so the deck that account had
+   * open before a full page load opens again (I-37, issue #1851).
+   *
+   * Signed out (null), the remembered deck is forgotten. A deck already open,
+   * such as the builder's deck from the URL, wins and is remembered instead.
+   * A remembered deck that no longer opens for this player (deleted, or not
+   * theirs) is forgotten silently: no toast, no open deck.
+   *
+   * @param accountId - the signed-in account's id, or null when signed out
+   */
+  syncOpenDeckWithAccount: (accountId: string | null) => Promise<void>;
   loadDecks: () => Promise<void>;
 
   // Deck description & tags
@@ -698,8 +789,10 @@ export interface DeckStore {
 }
 
 let latestDeckListRequest = 0;
-const latestRenameRequests = new Map<string, symbol>();
 const latestTagSaves = new Map<string, symbol>();
+// Which deck the signed-in account has open, kept in this browser so a full
+// page load opens it again (I-37, issue #1851).
+const openDeckMemory = createOpenDeckMemory(browserStorage);
 
 /** A tag save that may still need to be undone. */
 interface FailedTagSave {
@@ -746,9 +839,7 @@ function restoreTagsAfterFailedSave(
       [save.deckId]: { ...currentDeck, tags: save.previous },
     },
   });
-  useToastStore
-    .getState()
-    .add("error", "Could not save deck tags. Please retry.");
+  useToastStore.getState().add("error", DECK_FAILURE_TOASTS.tags);
 }
 
 /**
@@ -847,6 +938,121 @@ interface StoreAccess {
   readonly get: () => DeckStore;
 }
 
+/** A save of one deck detail through the whole-deck PATCH. */
+interface DeckDetailEdit<Field extends DeckDetailField> {
+  readonly deckId: string;
+  readonly field: Field;
+  readonly value: Deck[Field];
+  /** The same change, as the request carries it. */
+  readonly patch: deckApi.DeckMetadataPatch;
+  /** What a failure tells the player, while the deck is still held. */
+  readonly failureToast: ToastMessage;
+  /** The store action, for the log. */
+  readonly action: string;
+}
+
+/** The decks map with one detail of one deck set, or the state itself when the deck is gone. */
+function withDeckDetail<Field extends DeckDetailField>(
+  state: Pick<DeckStore, "decks">,
+  edit: Pick<DeckDetailEdit<Field>, "deckId" | "field" | "value">
+): Pick<DeckStore, "decks"> {
+  const deck = state.decks[edit.deckId];
+  if (!deck) return state;
+  return {
+    decks: {
+      ...state.decks,
+      [edit.deckId]: { ...deck, [edit.field]: edit.value },
+    },
+  };
+}
+
+/**
+ * Settles a failed detail save: the detail goes back to the newest value
+ * still being saved, else to its last saved one (`deck-detail-saves.ts`),
+ * unless a newer edit already replaced the failed value.
+ */
+function rollBackDeckDetail<Field extends DeckDetailField>(
+  { set, get }: StoreAccess,
+  edit: DeckDetailEdit<Field>,
+  save: DetailSave<Deck[Field]>
+): void {
+  const deck = get().decks[edit.deckId];
+  const rollback = save.failed(deck ? deck[edit.field] : edit.value);
+  if (rollback.kind === "keep") return;
+  set((state) => withDeckDetail(state, { ...edit, value: rollback.value }));
+}
+
+/**
+ * Saves one deck detail optimistically. A failure rolls the detail back
+ * (`rollBackDeckDetail`) and tells the player while the deck is still held;
+ * the save indicator stays on until every running save has settled.
+ *
+ * @param store - Store update and read
+ * @param edit - The deck, the detail, its new value and what a failure says
+ */
+async function saveDeckDetail<Field extends DeckDetailField>(
+  store: StoreAccess,
+  edit: DeckDetailEdit<Field>
+): Promise<void> {
+  const deck = store.get().decks[edit.deckId];
+  if (!deck) return;
+  const save = deckDetailSaves.begin({ ...edit, shown: deck[edit.field] });
+  store.set((state) => ({
+    decks: {
+      ...state.decks,
+      [edit.deckId]: {
+        ...deck,
+        [edit.field]: edit.value,
+        updatedAt: new Date(),
+      },
+    },
+  }));
+  store.set({ isSyncing: true });
+  try {
+    await deckApi.updateDeck(edit.deckId, edit.patch);
+    save.succeeded();
+  } catch (err) {
+    logger.error("Unexpected error", edit.action, err);
+    rollBackDeckDetail(store, edit, save);
+    if (store.get().decks[edit.deckId]) {
+      useToastStore.getState().add("error", edit.failureToast);
+    }
+  } finally {
+    store.set({ isSyncing: hasPendingSaves() });
+  }
+}
+
+/** {@link saveDeckDetail} on the open deck; nothing when no deck is open. */
+async function saveActiveDeckDetail<Field extends DeckDetailField>(
+  store: StoreAccess,
+  edit: Omit<DeckDetailEdit<Field>, "deckId">
+): Promise<void> {
+  const { activeDeckId } = store.get();
+  if (!activeDeckId) return;
+  await saveDeckDetail(store, { ...edit, deckId: activeDeckId });
+}
+
+/**
+ * Loads the deck the signed-in player had open before a full page load and
+ * opens it, unless a deck was opened while it loaded. A deck that is gone for
+ * this player is forgotten without a toast: the player did not ask to open it.
+ */
+async function reopenRememberedDeck(
+  { set }: StoreAccess,
+  deckId: string
+): Promise<void> {
+  try {
+    const deck = apiDeckToStoreDeck(await deckApi.fetchDeck(deckId));
+    set((state) => withReopenedDeck(state, deck));
+  } catch (err) {
+    if (noLongerOpens(err)) {
+      openDeckMemory.forget(deckId);
+      return;
+    }
+    logger.warn("Remembered deck did not open", "reopenRememberedDeck", err);
+  }
+}
+
 /** A format save: the format written, and the one to restore if it fails. */
 interface FormatChange {
   readonly deckId: string;
@@ -941,10 +1147,7 @@ async function seatCommander(
   if (commander.isGameChanger) {
     useToastStore
       .getState()
-      .add(
-        "warning",
-        `⚡ ${commander.name} is a Game Changer — your deck is automatically Bracket 3 minimum.`
-      );
+      .add("warning", commanderGameChangerToast(commander.name));
   }
 
   // Optimistic: the promoted card leaves the list as the new zone appears.
@@ -1102,9 +1305,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     const last = undoStack.at(-1);
     if (!last) return;
     if (!get().decks[last.deckId]) {
-      useToastStore
-        .getState()
-        .add("error", "Open the original deck before retrying undo.");
+      useToastStore.getState().add("error", UNDO_NEEDS_ITS_DECK_TOAST);
       return;
     }
     // Pop the action
@@ -1127,10 +1328,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         set((state) => ({ undoStack: [...state.undoStack, last] }));
         useToastStore
           .getState()
-          .add(
-            "error",
-            "Could not identify the card to undo: multiple printings match."
-          );
+          .add("error", DECK_NOTICE_TOASTS.undoAmbiguousPrinting);
         return;
       }
       const card = exactCard ?? nameMatches[0];
@@ -1164,7 +1362,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
             undoStack: [...state.undoStack, last],
           };
         });
-        await settleFailedWrite(activeDeckId, err, "Could not undo card addition. Please retry.");
+        await settleFailedWrite(activeDeckId, err, DECK_FAILURE_TOASTS.undoAddition);
         return;
       }
       return true;
@@ -1222,7 +1420,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
             undoStack: [...state.undoStack, last],
           };
         });
-        await settleFailedWrite(activeDeckId, err, "Could not undo card removal. Please retry.");
+        await settleFailedWrite(activeDeckId, err, DECK_FAILURE_TOASTS.undoRemoval);
         return;
       }
       return true;
@@ -1267,7 +1465,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     }
     if (!applied) return;
     if (!get().decks[last.deckId]) return;
-    useToastStore.getState().add("info", "↩ Undo applied");
+    useToastStore.getState().add("info", DECK_NOTICE_TOASTS.undoApplied);
   },
 
   forceSave: async () => {
@@ -1281,13 +1479,11 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       set((state) => ({
         decks: { ...state.decks, [activeDeckId]: fullDeck },
       }));
-      useToastStore.getState().add("success", "✓ Deck saved");
+      useToastStore.getState().add("success", DECK_NOTICE_TOASTS.saved);
     } catch (err) {
       logger.error("Unexpected error", "forceSave", err);
       if (!get().decks[activeDeckId]) return;
-      useToastStore
-        .getState()
-        .add("error", "Could not refresh deck. Please retry.");
+      useToastStore.getState().add("error", DECK_FAILURE_TOASTS.refresh);
     } finally {
       set({ isSyncing: hasPendingSaves() });
     }
@@ -1311,9 +1507,13 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     } catch (err) {
       logger.error("Unexpected error", "reloadActiveDeck", err);
       if (!get().decks[activeDeckId]) return;
-      useToastStore
-        .getState()
-        .add("error", "Could not refresh deck. Please retry.");
+      const openError = deckOpenErrorFrom(activeDeckId, err);
+      if (openError.kind === "not-found") {
+        // Deleted elsewhere: drop the rows held so the builder shows "Deck not found", as on open.
+        set((state) => withoutMissingDeck(state, openError));
+        return;
+      }
+      useToastStore.getState().add("error", DECK_FAILURE_TOASTS.refresh);
     } finally {
       set({ isSyncing: hasPendingSaves() });
     }
@@ -1411,8 +1611,9 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
   },
 
   createDeck: async (name, opts) => {
+    const activate = opts?.activate !== false;
     if (isGuestDeckId(get().activeDeckId ?? "")) {
-      await get().setActiveDeck(GUEST_DECK_ID);
+      if (activate) await get().setActiveDeck(GUEST_DECK_ID);
       return GUEST_DECK_ID;
     }
 
@@ -1429,7 +1630,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       deck.isAIGenerated = apiDeck.isAIGenerated ?? false;
       set((state) => ({
         decks: { ...state.decks, [apiDeck.id]: deck },
-        activeDeckId: apiDeck.id,
+        activeDeckId: activate ? apiDeck.id : state.activeDeckId,
       }));
       return apiDeck.id;
     } finally {
@@ -1440,7 +1641,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
   deleteDeck: async (id: string) => {
     set({ isSyncing: true });
     try {
-      await deckApi.deleteDeck(id);
+      const deletion = await deleteOnServer(() => deckApi.deleteDeck(id));
       set((state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars -- destructuring to omit the deleted deck from state
         const { [id]: _removed, ...rest } = state.decks;
@@ -1450,6 +1651,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
           undoStack: state.undoStack.filter((action) => action.deckId !== id),
         };
       });
+      return deletion;
     } finally {
       set({ isSyncing: hasPendingSaves() });
     }
@@ -1474,66 +1676,37 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     set((state) => ({ decks: withDeckToReload(state.decks, deckId) }));
   },
 
-  duplicateDeck: async (id: string) => {
+  syncOpenDeckWithAccount: async (accountId) => {
+    const rememberedDeckId = openDeckMemory.follow(
+      accountId,
+      get().activeDeckId
+    );
+    if (rememberedDeckId)
+      await reopenRememberedDeck({ set, get }, rememberedDeckId);
+  },
+
+  duplicateDeck: async (id: string, copyName?: string) => {
     set({ isSyncing: true });
     try {
-      const res = await fetch(`/api/decks/${id}/duplicate`, { method: "POST" });
-      if (!res.ok) throw new Error("Failed to duplicate deck");
-      const copy = (await res.json()) as { id: string; name: string };
+      const copy = await deckApi.duplicateDeck(id, copyName);
       // Set new deck as active before reloading
       set({ activeDeckId: copy.id });
       await get().loadDecks();
-      useToastStore
-        .getState()
-        .add("success", `Deck duplicated: "${copy.name}"`);
-      return copy.id;
+      return { id: copy.id, name: copy.name };
     } finally {
       set({ isSyncing: hasPendingSaves() });
     }
   },
 
-  renameDeck: async (id: string, name: string) => {
-    const previousDeck = get().decks[id];
-    if (!previousDeck) return;
-    const request = Symbol();
-    latestRenameRequests.set(id, request);
-    pendingRenameWrites += 1;
-    // Optimistic update
-    set((state) => ({
-      decks: {
-        ...state.decks,
-        [id]: { ...state.decks[id], name, updatedAt: new Date() },
-      },
-    }));
-    set({ isSyncing: true });
-    try {
-      await deckApi.updateDeck(id, { name });
-    } catch (err) {
-      logger.error("Unexpected error", "renameDeck", err);
-      set((state) => {
-        const currentDeck = state.decks[id];
-        if (
-          latestRenameRequests.get(id) !== request ||
-          currentDeck?.name !== name
-        )
-          return state;
-        return {
-          decks: {
-            ...state.decks,
-            [id]: { ...currentDeck, name: previousDeck.name },
-          },
-        };
-      });
-      if (get().decks[id]) {
-        useToastStore
-          .getState()
-          .add("error", "Could not rename deck. Please retry.");
-      }
-    } finally {
-      pendingRenameWrites -= 1;
-      set({ isSyncing: hasPendingSaves() });
-    }
-  },
+  renameDeck: (id: string, name: string) =>
+    saveDeckDetail({ set, get }, {
+      deckId: id,
+      field: "name",
+      value: name,
+      patch: { name },
+      failureToast: DECK_FAILURE_TOASTS.rename,
+      action: "renameDeck",
+    }),
 
   setActiveDeck: async (id: string) => {
     if (isGuestDeckId(id)) {
@@ -1568,51 +1741,21 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       }));
     } catch (err) {
       logger.error("Unexpected error", "setActiveDeck.lazyLoad", err);
-      set({ deckOpenError: deckOpenErrorFrom(id, err) });
-      useToastStore
-        .getState()
-        .add("error", "Could not open deck. Please try again.");
+      const openError = deckOpenErrorFrom(id, err);
+      set({ deckOpenError: openError });
+      reportFailure(openFailureToast(openError));
     }
   },
 
-  updateDeckDescription: async (deckId: string, description: string) => {
-    const previousDeck = get().decks[deckId];
-    if (!previousDeck) return;
-    // Optimistic update
-    set((state) => ({
-      decks: {
-        ...state.decks,
-        [deckId]: {
-          ...state.decks[deckId],
-          description,
-          updatedAt: new Date(),
-        },
-      },
-    }));
-    set({ isSyncing: true });
-    try {
-      await deckApi.updateDeck(deckId, { description });
-    } catch (err) {
-      logger.error("Unexpected error", "updateDeckDescription", err);
-      set((state) => {
-        const currentDeck = state.decks[deckId];
-        if (currentDeck?.description !== description) return state;
-        return {
-          decks: {
-            ...state.decks,
-            [deckId]: { ...currentDeck, description: previousDeck.description },
-          },
-        };
-      });
-      if (get().decks[deckId]) {
-        useToastStore
-          .getState()
-          .add("error", "Could not save deck description. Please retry.");
-      }
-    } finally {
-      set({ isSyncing: hasPendingSaves() });
-    }
-  },
+  updateDeckDescription: (deckId: string, description: string) =>
+    saveDeckDetail({ set, get }, {
+      deckId,
+      field: "description",
+      value: description,
+      patch: { description },
+      failureToast: DECK_FAILURE_TOASTS.description,
+      action: "updateDeckDescription",
+    }),
 
   addTag: async (deckId: string, tag: string) => {
     const current = get().decks[deckId];
@@ -1686,10 +1829,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     if (commander && deckCard && !pairing) {
       useToastStore
         .getState()
-        .add(
-          "warning",
-          `${deckCard.name} cannot share the command zone with ${commander.name}.`
-        );
+        .add("warning", unpairableToast(deckCard.name, commander.name));
       return;
     }
     // Without a commander yet, the partner's own pairing opens the slot.
@@ -1723,7 +1863,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         previousPairingType,
       });
       if (restored) {
-        await settleFailedWrite(activeDeckId, err, "Could not save partner — try again");
+        await settleFailedWrite(activeDeckId, err, DECK_FAILURE_TOASTS.partner);
       }
     } finally {
       set({ isSyncing: hasPendingSaves() });
@@ -1756,31 +1896,39 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         }));
       } catch (err) {
         logger.error("Unexpected error", "setCompanion", err);
-        await settleFailedWrite(activeDeckId, err, "Could not remove companion — try again");
+        await settleFailedWrite(activeDeckId, err, DECK_FAILURE_TOASTS.companionRemoval);
       } finally {
         set({ isSyncing: hasPendingSaves() });
       }
       return;
     }
 
+    // CR 702.139b (MagicCompRules-20260807.txt:5024): in Commander, the
+    // starting deck a companion's condition reads includes the commander, so
+    // the companion waits for one.
     if (!deck.commander) {
       useToastStore
         .getState()
-        .add("warning", "Choose a commander before setting a companion.");
+        .add("warning", DECK_NOTICE_TOASTS.companionNeedsCommander);
       return;
     }
 
+    // CR 702.139a (MagicCompRules-20260807.txt:5022): only a card with the
+    // companion ability can be revealed as one.
     if (!isScryfallCompanionCard(card)) {
-      useToastStore
-        .getState()
-        .add("warning", "That card does not have Companion.");
+      useToastStore.getState().add("warning", DECK_NOTICE_TOASTS.notCompanion);
       return;
     }
 
+    // Lutri's condition ("Each nonland card in your starting deck has a
+    // different name") always holds in a singleton deck (CR 903.5b,
+    // MagicCompRules-20260807.txt:6958), so the Commander banned list bans it
+    // as a companion only (https://magic.wizards.com/en/banned-restricted-list,
+    // checked 2026-11-10 in docs/references/banlists.md). No CR rule bans it.
     if (isBannedCompanionInCommander(card)) {
       useToastStore
         .getState()
-        .add("warning", "Lutri cannot be your companion in Commander.");
+        .add("warning", DECK_NOTICE_TOASTS.bannedCompanion);
       return;
     }
 
@@ -1810,7 +1958,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       }));
     } catch (err) {
       logger.error("Unexpected error", "setCompanion", err);
-      await settleFailedWrite(activeDeckId, err, "Could not save companion — try again");
+      await settleFailedWrite(activeDeckId, err, DECK_FAILURE_TOASTS.companion);
     } finally {
       set({ isSyncing: hasPendingSaves() });
     }
@@ -1913,7 +2061,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
             ),
           },
         }));
-        await settleFailedWrite(activeDeckId, err, "Could not add card. Please retry.");
+        await settleFailedWrite(activeDeckId, err, DECK_FAILURE_TOASTS.cardAddition);
       }
     } finally {
       pendingCardAdditionsAndRemovals -= 1;
@@ -2054,7 +2202,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
           ),
         };
       });
-      await settleFailedWrite(activeDeckId, err, "Could not remove card. Please retry.");
+      await settleFailedWrite(activeDeckId, err, DECK_FAILURE_TOASTS.cardRemoval);
     } finally {
       pendingCardAdditionsAndRemovals -= 1;
       set({ isSyncing: hasPendingSaves() });
@@ -2114,7 +2262,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
               },
             };
           });
-          await settleFailedWrite(activeDeckId, err, "Could not save card category. Please retry.");
+          await settleFailedWrite(activeDeckId, err, DECK_FAILURE_TOASTS.cardCategory);
         }
       } finally {
         if (pending.tail === write) {
@@ -2188,11 +2336,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
               },
             };
           });
-          await settleFailedWrite(
-            activeDeckId,
-            err,
-            "Could not save card quantity — previous quantity restored."
-          );
+          await settleFailedWrite(activeDeckId, err, DECK_FAILURE_TOASTS.cardQuantity);
         }
       } finally {
         const nextWrite = pendingQuantityWrites.get(writeKey);
@@ -2268,7 +2412,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
           },
         };
       });
-      await settleFailedWrite(activeDeckId, err, "Could not save card printing — try again");
+      await settleFailedWrite(activeDeckId, err, DECK_FAILURE_TOASTS.cardPrinting);
     } finally {
       set({ isSyncing: hasPendingSaves() });
     }
@@ -2320,7 +2464,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
               },
             };
           });
-          await settleFailedWrite(activeDeckId, err, "Could not save card notes. Try again.");
+          await settleFailedWrite(activeDeckId, err, DECK_FAILURE_TOASTS.cardNotes);
         }
       } finally {
         if (pending.tail === write) {
@@ -2419,7 +2563,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
               },
             };
           });
-          await settleFailedWrite(activeDeckId, err, "Could not move card. Try again.");
+          await settleFailedWrite(activeDeckId, err, DECK_FAILURE_TOASTS.cardMove);
         }
       } finally {
         if (pending.tail === write) {
@@ -2508,151 +2652,39 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         failures.find(isStaleDeckRefusal) ??
         failures.find((failure) => !(failure instanceof DroppedDeckWriteError));
       if (reported !== undefined && get().decks[activeDeckId]) {
-        await settleFailedWrite(activeDeckId, reported, "Could not remove card. Please retry.");
+        await settleFailedWrite(activeDeckId, reported, DECK_FAILURE_TOASTS.cardRemoval);
       }
       pendingBulkRemovals -= 1;
       set({ isSyncing: hasPendingSaves() });
     }
   },
 
-  setTargetBracket: async (bracket) => {
-    const { activeDeckId } = get();
-    if (!activeDeckId) return;
-    const previousDeck = get().decks[activeDeckId];
-    if (!previousDeck) return;
+  setTargetBracket: (bracket) =>
+    saveActiveDeckDetail({ set, get }, {
+      field: "targetBracket",
+      value: bracket,
+      patch: { targetBracket: bracket },
+      failureToast: DECK_FAILURE_TOASTS.targetBracket,
+      action: "setTargetBracket",
+    }),
 
-    // Optimistic update
-    set((state) => ({
-      decks: {
-        ...state.decks,
-        [activeDeckId]: {
-          ...state.decks[activeDeckId],
-          targetBracket: bracket,
-          updatedAt: new Date(),
-        },
-      },
-    }));
+  setManualBracket: (bracket) =>
+    saveActiveDeckDetail({ set, get }, {
+      field: "manualBracket",
+      value: bracket,
+      patch: { manualBracket: bracket },
+      failureToast: DECK_FAILURE_TOASTS.manualBracket,
+      action: "setManualBracket",
+    }),
 
-    set({ isSyncing: true });
-    try {
-      await deckApi.updateDeck(activeDeckId, { targetBracket: bracket });
-    } catch (err) {
-      logger.error("Unexpected error", "setTargetBracket", err);
-      set((state) => {
-        const currentDeck = state.decks[activeDeckId];
-        if (currentDeck?.targetBracket !== bracket) return state;
-        return {
-          decks: {
-            ...state.decks,
-            [activeDeckId]: {
-              ...currentDeck,
-              targetBracket: previousDeck.targetBracket,
-            },
-          },
-        };
-      });
-      if (get().decks[activeDeckId]) {
-        useToastStore
-          .getState()
-          .add("error", "Could not save target bracket. Please retry.");
-      }
-    } finally {
-      set({ isSyncing: hasPendingSaves() });
-    }
-  },
-
-  setManualBracket: async (bracket) => {
-    const { activeDeckId } = get();
-    if (!activeDeckId) return;
-    const previousDeck = get().decks[activeDeckId];
-    if (!previousDeck) return;
-
-    // Optimistic update
-    set((state) => ({
-      decks: {
-        ...state.decks,
-        [activeDeckId]: {
-          ...state.decks[activeDeckId],
-          manualBracket: bracket,
-          updatedAt: new Date(),
-        },
-      },
-    }));
-
-    set({ isSyncing: true });
-    try {
-      pendingManualBracketWrites += 1;
-      await deckApi.updateDeck(activeDeckId, { manualBracket: bracket });
-    } catch (err) {
-      logger.error("Unexpected error", "setManualBracket", err);
-      set((state) => {
-        const currentDeck = state.decks[activeDeckId];
-        if (currentDeck?.manualBracket !== bracket) return state;
-        return {
-          decks: {
-            ...state.decks,
-            [activeDeckId]: {
-              ...currentDeck,
-              manualBracket: previousDeck.manualBracket,
-            },
-          },
-        };
-      });
-      if (get().decks[activeDeckId]) {
-        useToastStore
-          .getState()
-          .add("error", "Could not save manual bracket. Please retry.");
-      }
-    } finally {
-      pendingManualBracketWrites -= 1;
-      set({ isSyncing: hasPendingSaves() });
-    }
-  },
-
-  setBudget: async (budget) => {
-    const { activeDeckId } = get();
-    if (!activeDeckId) return;
-    const previousDeck = get().decks[activeDeckId];
-    if (!previousDeck) return;
-
-    // Optimistic update
-    set((state) => ({
-      decks: {
-        ...state.decks,
-        [activeDeckId]: {
-          ...state.decks[activeDeckId],
-          budget,
-          updatedAt: new Date(),
-        },
-      },
-    }));
-
-    pendingBudgetWrites += 1;
-    set({ isSyncing: true });
-    try {
-      await deckApi.updateDeck(activeDeckId, { budget });
-    } catch (err) {
-      logger.error("Unexpected error", "setBudget", err);
-      set((state) => {
-        const currentDeck = state.decks[activeDeckId];
-        if (currentDeck?.budget !== budget) return state;
-        return {
-          decks: {
-            ...state.decks,
-            [activeDeckId]: { ...currentDeck, budget: previousDeck.budget },
-          },
-        };
-      });
-      if (get().decks[activeDeckId]) {
-        useToastStore
-          .getState()
-          .add("error", "Could not save deck budget. Please retry.");
-      }
-    } finally {
-      pendingBudgetWrites -= 1;
-      set({ isSyncing: hasPendingSaves() });
-    }
-  },
+  setBudget: (budget) =>
+    saveActiveDeckDetail({ set, get }, {
+      field: "budget",
+      value: budget,
+      patch: { budget },
+      failureToast: DECK_FAILURE_TOASTS.budget,
+      action: "setBudget",
+    }),
 
   setFormat: async (format) => {
     const { activeDeckId } = get();
@@ -2804,5 +2836,6 @@ if (typeof window !== "undefined") {
   useDeckStore.subscribe((state) => {
     const guestDeck = state.decks[GUEST_DECK_ID];
     if (guestDeck) saveGuestDeck(guestDeck);
+    openDeckMemory.remember(state.activeDeckId);
   });
 }

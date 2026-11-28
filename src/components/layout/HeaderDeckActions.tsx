@@ -15,19 +15,26 @@
  * mounted, only hidden by CSS on small screens, and the dialog is a portal, so
  * it shows from there on every viewport.
  *
+ * Both buttons stay disabled until this module has hydrated. The server HTML
+ * holds them, but their click handlers arrive only with this lazy chunk, so a
+ * press before then did nothing at all: no request, no spinner, no message
+ * (I-01). A disabled button tells the player, and Playwright's `click()`, to
+ * wait.
+ *
  * @module layout/HeaderDeckActions
  */
 
 import { useCallback, type Dispatch, type SetStateAction } from "react";
-import { useFormatter, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { Loader2, Plus, Upload, type LucideIcon } from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
 import { ImportDialog } from "@/components/deck/ImportDialog";
 import type { HeaderDeckActionsUiState } from "@/components/layout/header-deck-actions-state";
+import { useImportIntoNewDeck } from "@/components/layout/use-import-into-new-deck";
 import { Button } from "@/components/ui/Button";
-import { useToastStore } from "@/hooks/useToast";
+import { useDeckCreateFailureReport } from "@/hooks/useDeckFailureReport";
+import { useHasHydrated } from "@/hooks/useHasHydrated";
 import { useDeckStore } from "@/lib/deck/store";
-import { logger } from "@/lib/logger";
 
 /** Where the actions sit. The layouts differ only in button spacing. */
 export type HeaderDeckActionsLayout = "desktop" | "mobile";
@@ -69,31 +76,6 @@ const LAYOUTS: Record<HeaderDeckActionsLayout, LayoutConfig> = {
 };
 
 /**
- * Logs a failed deck creation and tells the player why, in a toast.
- *
- * Logging alone made the button look inert: it spun, the request failed, and
- * the player was left on the same screen with no explanation.
- */
-function useCreateFailureReport() {
-  const t = useTranslations("common");
-  const addToast = useToastStore((s) => s.add);
-
-  return useCallback(
-    (operation: string, error: unknown) => {
-      logger.error("Unexpected error", operation, error);
-      addToast(
-        "error",
-        t("nav.createFailed", {
-          reason:
-            error instanceof Error ? error.message : t("nav.unknownError"),
-        })
-      );
-    },
-    [addToast, t]
-  );
-}
-
-/**
  * Creates a deck named in the player's locale and opens it in the builder.
  *
  * Refuses a second press while one creation is pending. On failure the
@@ -103,7 +85,7 @@ function useNewDeck(pending: boolean, onUiStateChange: UiStateChange) {
   const t = useTranslations("common");
   const router = useRouter();
   const createDeck = useDeckStore((s) => s.createDeck);
-  const reportFailure = useCreateFailureReport();
+  const reportFailure = useDeckCreateFailureReport();
 
   return useCallback(async () => {
     if (pending) return;
@@ -119,44 +101,6 @@ function useNewDeck(pending: boolean, onUiStateChange: UiStateChange) {
       onUiStateChange((s) => ({ ...s, isCreatingDeck: false }));
     }
   }, [createDeck, onUiStateChange, pending, reportFailure, router, t]);
-}
-
-/**
- * Import from a page without a deck: creates a deck named after the date,
- * activates it, then opens the import dialog on it.
- *
- * Same pending and failure rules as `useNewDeck`.
- */
-function useImportFromHome(pending: boolean, onUiStateChange: UiStateChange) {
-  const t = useTranslations("common");
-  const format = useFormatter();
-  const createDeck = useDeckStore((s) => s.createDeck);
-  const setActiveDeck = useDeckStore((s) => s.setActiveDeck);
-  const reportFailure = useCreateFailureReport();
-
-  return useCallback(async () => {
-    if (pending) return;
-    onUiStateChange((s) => ({ ...s, isCreatingImportDeck: true }));
-    try {
-      const id = await createDeck(
-        t("nav.importedDeck", { date: format.dateTime(new Date()) })
-      );
-      await setActiveDeck(id);
-      onUiStateChange((s) => ({ ...s, importOpen: true }));
-    } catch (error) {
-      reportFailure("HeaderDeckActions.importFromHome", error);
-    } finally {
-      onUiStateChange((s) => ({ ...s, isCreatingImportDeck: false }));
-    }
-  }, [
-    createDeck,
-    format,
-    onUiStateChange,
-    pending,
-    reportFailure,
-    setActiveDeck,
-    t,
-  ]);
 }
 
 function ActionIcon({
@@ -177,7 +121,7 @@ function ActionIcon({
  * "Import" and "New Deck" for the header.
  *
  * In the builder, "Import" opens the dialog on the current deck. Elsewhere it
- * first creates a deck (see `useImportFromHome`). "New Deck" creates and opens
+ * first creates a deck (see `useImportIntoNewDeck`). "New Deck" creates and opens
  * a deck (see `useNewDeck`). `onAction` runs first on every press, so the
  * mobile menu is gone before the action starts; the dialog survives that
  * because the desktop instance hosts it, and its open state is the shared
@@ -192,9 +136,11 @@ export function HeaderDeckActions({
 }: HeaderDeckActionsProps) {
   const t = useTranslations("common");
   const { importOpen, isCreatingDeck, isCreatingImportDeck } = uiState;
+  // Before the hydration the buttons have no handler yet (see the module header).
+  const waitingForCode = !useHasHydrated();
   const layoutConfig = LAYOUTS[layout];
   const newDeck = useNewDeck(isCreatingDeck, onUiStateChange);
-  const importFromHome = useImportFromHome(
+  const importFromHome = useImportIntoNewDeck(
     isCreatingImportDeck,
     onUiStateChange
   );
@@ -217,7 +163,7 @@ export function HeaderDeckActions({
     <Button
       variant="secondary"
       onClick={press(deckId ? openImport : importFromHome)}
-      disabled={isCreatingImportDeck}
+      disabled={waitingForCode || isCreatingImportDeck}
       className={layoutConfig.importClassName}
     >
       <ActionIcon pending={isCreatingImportDeck} icon={Upload} />
@@ -238,7 +184,7 @@ export function HeaderDeckActions({
       )}
       <Button
         onClick={press(newDeck)}
-        disabled={isCreatingDeck}
+        disabled={waitingForCode || isCreatingDeck}
         className={layoutConfig.newDeckClassName}
       >
         <ActionIcon pending={isCreatingDeck} icon={Plus} />

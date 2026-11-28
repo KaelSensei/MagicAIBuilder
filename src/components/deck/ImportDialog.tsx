@@ -1,5 +1,4 @@
 "use client";
-import { forEachSequential } from "@/lib/async/sequential";
 // Import deck from plain text or URL — Radix Dialog
 // Supports both trigger-based (children) and controlled (open/onOpenChange) usage
 import {
@@ -15,19 +14,26 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { X, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { parseTextDecklist } from "@/lib/deck/import";
 import { fetchInBatches } from "@/lib/deck/batch-fetch";
-import { CardLookupError } from "@/lib/deck/card-lookup-error";
 import { useDeckStore } from "@/lib/deck/store";
+import { logger } from "@/lib/logger";
 import { ImportFromUrlTab } from "@/components/deck/ImportFromUrlTab";
 import { ImportFileButton } from "@/components/deck/ImportFileButton";
+import { ImportRefusedCards } from "@/components/deck/ImportRefusedCards";
+import {
+  importIntoDeck,
+  planTextImport,
+  type DeckImportOutcome,
+  type RefusedCard,
+} from "@/components/deck/deck-import";
 import { Button } from "@/components/ui/Button";
 import { textAreaShellClassName } from "@/components/ui/Input";
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { cn } from "@/components/ui/utils";
 import { getDuplicateImportedNames } from "@/lib/import/import-preview";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import {
   buildScryfallNameIndex,
   getUnmatchedImportedNames,
-  normalizeImportedName,
 } from "@/lib/scryfall/name-index";
 
 type ImportTab = "text" | "url";
@@ -66,8 +72,24 @@ function countPreviewZones(cards: ReturnType<typeof parseTextDecklist>["cards"])
 }
 
 type ParsedImport = ReturnType<typeof parseTextDecklist>;
-type ImportActions = Pick<ReturnType<typeof useDeckStore.getState>,
-  "addCard" | "setCommander" | "setPartner" | "setCompanion">;
+
+/** The open deck as the store holds it now, read after an import's command-zone setter settles. */
+function readOpenDeck() {
+  const { activeDeckId, decks } = useDeckStore.getState();
+  return activeDeckId ? decks[activeDeckId] : undefined;
+}
+
+/**
+ * The dialog's state after an import: a warning when a name went unfound, the deck refused a
+ * card, or nothing was added.
+ */
+function importedStatus(
+  outcome: Extract<DeckImportOutcome, { kind: "imported" }>,
+  missingCount: number
+): ImportStatus {
+  const complete = missingCount === 0 && outcome.refused.length === 0 && outcome.added > 0;
+  return complete ? "done" : "warning";
+}
 
 function importedCardNames(parsed: ParsedImport): { name: string }[] {
   return [
@@ -87,44 +109,6 @@ function getTextImportDuplicateNames(preview: ParsedImport | null, previewCards:
     ...(preview.companion ? [{ name: preview.companion }] : []),
     ...preview.cards,
   ], buildScryfallNameIndex(previewCards));
-}
-
-async function addParsedCards(
-  parsed: ParsedImport,
-  foundCards: ScryfallCard[],
-  actions: ImportActions
-): Promise<number> {
-  const byName = buildScryfallNameIndex(foundCards);
-  let added = 0;
-
-  if (parsed.commander) {
-    const commander = byName.get(normalizeImportedName(parsed.commander));
-    if (commander) {
-      await actions.setCommander(commander);
-      added++;
-    }
-  }
-  if (parsed.partner) {
-    const partner = byName.get(normalizeImportedName(parsed.partner));
-    if (partner) {
-      await actions.setPartner(partner);
-      added++;
-    }
-  }
-  if (parsed.companion) {
-    const companion = byName.get(normalizeImportedName(parsed.companion));
-    if (companion) {
-      await actions.setCompanion(companion);
-      added++;
-    }
-  }
-  await forEachSequential(parsed.cards, async ({ name, quantity, zone }) => {
-    const card = byName.get(normalizeImportedName(name));
-    if (!card) return;
-    await actions.addCard(card, { quantity, zone: zone ?? "main" });
-    added++;
-  });
-  return added;
 }
 
 function TextImportPreview({ preview, duplicateNames }: {
@@ -158,10 +142,11 @@ function TextImportPreview({ preview, duplicateNames }: {
   );
 }
 
-function TextImportFeedback({ status, message, missingNames }: {
+function TextImportFeedback({ status, message, missingNames, refused }: {
   readonly status: ImportStatus;
   readonly message: string;
   readonly missingNames: readonly string[];
+  readonly refused: readonly RefusedCard[];
 }) {
   const t = useTranslations("deck");
   return (
@@ -182,6 +167,7 @@ function TextImportFeedback({ status, message, missingNames }: {
           </ul>
         </div>
       )}
+      <ImportRefusedCards refused={refused} />
     </>
   );
 }
@@ -270,6 +256,7 @@ export function ImportDialog({
   const [status, setStatus] = useState<ImportStatus>("idle");
   const [message, setMessage] = useState("");
   const [missingNames, setMissingNames] = useState<string[]>([]);
+  const [refused, setRefused] = useState<readonly RefusedCard[]>([]);
   const [preview, setPreview] = useState<ReturnType<typeof parseTextDecklist> | null>(null);
   const [previewCards, setPreviewCards] = useState<ScryfallCard[] | null>(null);
   const previewRequest = useRef(0);
@@ -298,23 +285,28 @@ export function ImportDialog({
     setStatus("validating");
     setMessage(t("import.parsing"));
     try {
-      const added = await addParsedCards(preview, previewCards, { addCard, setCommander, setPartner, setCompanion });
-      setStatus(missingNames.length > 0 ? "warning" : "done");
-      setMessage(t("import.importSuccess", { count: added }));
+      const outcome = await importIntoDeck(planTextImport(preview, previewCards), {
+        addCard, setCommander, setPartner, setCompanion, openDeck: readOpenDeck,
+      });
+      if (outcome.kind === "no-open-deck") {
+        setStatus("error");
+        setMessage(t("import.noDeckSelected"));
+        return;
+      }
+      setRefused(outcome.refused);
+      setStatus(importedStatus(outcome, missingNames.length));
+      setMessage(outcome.added > 0
+        ? t("import.importSuccess", { count: outcome.added })
+        : t("import.nothingAdded"));
     } catch (err) {
+      // Unreachable through the store, whose writes catch their own failures
+      // and raise their own toasts; a fault here still shows no thrown text,
+      // which is diagnostic and goes to the log (I-01).
+      logger.error("Unexpected error", "ImportDialog.import", err);
       setStatus("error");
-      setMessage(err instanceof Error ? err.message : t("import.importFailed"));
+      setMessage(t("import.importFailed"));
     }
   };
-
-  /**
-   * Explains a preview that threw: the card lookup's failure in the player's
-   * words, any other error as it reports itself.
-   */
-  function previewFailureMessage(error: unknown): string {
-    if (error instanceof CardLookupError) return t("import.lookupFailed");
-    return error instanceof Error ? error.message : t("import.importFailed");
-  }
 
   const handlePreview = async () => {
     const parsed = parseTextDecklist(text);
@@ -341,8 +333,13 @@ export function ImportDialog({
       setMessage("");
     } catch (err) {
       if (requestId !== previewRequest.current) return;
+      // Only the card lookup can fail here, and `fetchInBatches` reports any
+      // Scryfall failure (timeout, network, 5xx) as a CardLookupError, so the
+      // lookup sentence fits whatever was thrown. The thrown text is
+      // diagnostic and goes to the log (I-01).
+      logger.error("Unexpected error", "ImportDialog.preview", err);
       setStatus("error");
-      setMessage(previewFailureMessage(err));
+      setMessage(t("import.lookupFailed"));
     }
   };
 
@@ -352,6 +349,7 @@ export function ImportDialog({
     setPreview(null);
     setPreviewCards(null);
     setMissingNames([]);
+    setRefused([]);
   };
 
   const resetForm = useCallback(() => {
@@ -359,6 +357,7 @@ export function ImportDialog({
     setStatus("idle");
     setMessage("");
     setMissingNames([]);
+    setRefused([]);
     setPreview(null);
     setPreviewCards(null);
     setActiveTab("text");
@@ -397,38 +396,24 @@ export function ImportDialog({
             </Dialog.Close>
           </div>
 
-          {/* Tab switcher */}
-          <div className="flex w-fit gap-1 rounded-[var(--lumen-radius-pill)] border border-[var(--border)] bg-[var(--background)] p-1">
-            <button
-              type="button"
-              onClick={() => setActiveTab("text")}
-              className={cn(
-                "rounded-[var(--lumen-radius-pill)] px-3 py-1 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]",
-                activeTab === "text"
-                  ? "bg-[var(--accent)] text-white"
-                  : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-              )}
-            >
-              {t("import.tabText")}
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab("url")}
-              className={cn(
-                "rounded-[var(--lumen-radius-pill)] px-3 py-1 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]",
-                activeTab === "url"
-                  ? "bg-[var(--accent)] text-white"
-                  : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-              )}
-            >
-              {t("import.tabUrl")}
-            </button>
-          </div>
+          {/* Source switch */}
+          <SegmentedControl
+            aria-label={t("import.source")}
+            options={[
+              { value: "text", label: t("import.tabText") },
+              { value: "url", label: t("import.tabUrl") },
+            ]}
+            value={activeTab}
+            onChange={setActiveTab}
+            className="w-fit border border-[var(--border)]"
+          />
 
           {/* URL tab */}
           {activeTab === "url" && (
             <>
-              <ImportFromUrlTab onSuccess={() => setOpen(false)} />
+              {/* A successful import closes like any other close, so the
+                  next opening starts on the Plain Text tab with empty fields. */}
+              <ImportFromUrlTab onSuccess={handleClose} />
               <div className="flex justify-end">
                 <Button type="button" variant="secondary" size="sm" onClick={handleClose}>
                   {t("import.close")}
@@ -449,6 +434,8 @@ export function ImportDialog({
                   so a localised example would show input the parser rejects. */}
               <textarea
                 className={cn(textAreaShellClassName, "h-48 resize-none font-mono")}
+                // The sample list is no name (WCAG 2.2 SC 1.3.1, 4.1.2).
+                aria-label={t("import.fieldLabel")}
                 placeholder={`Commander\n1 Atraxa, Praetors' Voice\n\nDeck\n1 Sol Ring\n1 Arcane Signet\n...`}
                 value={text}
                 onChange={(e) => {
@@ -473,7 +460,7 @@ export function ImportDialog({
               />
 
               {preview &&<TextImportPreview preview={preview} duplicateNames={duplicateNames} />}
-              <TextImportFeedback status={status} message={message} missingNames={missingNames} />
+              <TextImportFeedback status={status} message={message} missingNames={missingNames} refused={refused} />
               <TextImportActions
                 status={status}
                 text={text}

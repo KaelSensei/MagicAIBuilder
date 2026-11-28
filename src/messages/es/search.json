@@ -1,12 +1,23 @@
 {
   "placeholder": "Search cards…",
+  "fieldLabel": "Search cards",
   "clearLabel": "Clear search",
   "searching": "Searching…",
   "noResults": "No cards found. Try a different search.",
+  "choose": {
+    "set": "Choose a set to list its cards.",
+    "colors": "Choose colors to list their cards."
+  },
+  "failure": {
+    "unavailable": "Card search is unavailable right now. Try again in a moment.",
+    "rejectedQuery": "Scryfall could not read this search. Check its syntax."
+  },
   "resultCount": "{count, number} results",
   "gridView": "Grid view",
   "listView": "List view",
+  "viewMode": "Result view",
   "setPlaceholder": "Search set (e.g. dsk, mh3…)",
+  "setFieldLabel": "Search sets",
   "loadingSets": "Loading sets…",
   "setsLoadFailed": "Failed to load sets",
   "noSetsFound": "No sets found for \"{query}\"",
@@ -100,6 +111,8 @@
     "ramp": "Ramp"
   },
   "executedQuery": "Query: {query}",
+  "clearFilters": "Clear filters",
+  "syntaxHint": "Tip: search by type or rules text, for example t:dragon o:flying.",
   "naturalLanguage": {
     "modeLabel": "Search language",
     "syntaxMode": "Syntax",

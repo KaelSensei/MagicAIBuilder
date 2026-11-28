@@ -57,10 +57,10 @@ const TALRAND_AND_ISLANDS = anthropicMessage(
   })
 );
 
-/** The status lines every model build streams before the reply arrives. */
+/** The status events every model build streams before the reply arrives. */
 const MODEL_STATUS = [
-  { type: "status", message: "Thinking…" },
-  { type: "status", message: "Consulting the AI oracle…" },
+  { type: "status", step: "thinking", message: "Thinking…" },
+  { type: "status", step: "consulting", message: "Consulting the AI oracle…" },
 ] as const;
 
 let player = 0;

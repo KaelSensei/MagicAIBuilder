@@ -87,6 +87,7 @@ const ACTIONS = [
   "setSortPreference",
   "setTargetBracket",
   "swapCardPrinting",
+  "syncOpenDeckWithAccount",
   "undo",
   "updateCardCategory",
   "updateCardNotes",

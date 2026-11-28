@@ -30,6 +30,12 @@ import { contrastRatio, relativeLuminance } from "@/lib/a11y/palette";
  * #e4dcf2 at 1.33:1 on white (docs/product/specs/i13-visual-direction.md).
  * There is no lighter decorative divider token: every `--border` use is held
  * to 3:1.
+ *
+ * `--focus-ring` draws the keyboard focus outline of every control, so it is
+ * held to the same 3:1 on the same four surfaces (WCAG 2.2 SC 1.4.11 and
+ * 2.4.7). Focus used to be drawn in `--accent`, which measured 2.76:1 on the
+ * dark `--surface` and 2.32:1 on `--surface-hover` (design audit S1,
+ * 2026-11-25).
  */
 
 const GLOBALS_CSS = join(process.cwd(), "src", "styles", "globals.css");
@@ -46,6 +52,17 @@ const SURFACE_TOKENS = [
   "--surface-elevated",
   "--surface-hover",
 ] as const;
+
+/**
+ * Every text token on every surface. `--text-primary` joined `--text-secondary`
+ * with I-13 (design audit S5): the shared deck page's header without
+ * commander art writes its title and commanders in it on `--surface`.
+ */
+const TEXT_ON_SURFACES = (
+  ["--text-primary", "--text-secondary"] as const
+).flatMap((textToken) =>
+  SURFACE_TOKENS.map((surfaceToken) => [textToken, surfaceToken] as const)
+);
 
 const css = readFileSync(GLOBALS_CSS, "utf8");
 
@@ -65,6 +82,24 @@ function readBlock(selector: string): ReadonlyMap<string, string> {
   }
 
   return tokens;
+}
+
+/** The header bar's `bg-[var(--surface)]/90` (`src/components/layout/Header.tsx`). */
+const HEADER_BAR_OPACITY = 0.9;
+
+/**
+ * `top` painted at `opacity` over the opaque `bottom`, per sRGB channel, as a
+ * browser composites a translucent background.
+ */
+function paintedOver(top: string, opacity: number, bottom: string): string {
+  const channels = [1, 3, 5].map((start) => {
+    const upper = Number.parseInt(top.slice(start, start + 2), 16);
+    const lower = Number.parseInt(bottom.slice(start, start + 2), 16);
+    return Math.round(opacity * upper + (1 - opacity) * lower)
+      .toString(16)
+      .padStart(2, "0");
+  });
+  return `#${channels.join("")}`;
 }
 
 const THEMES = [
@@ -110,16 +145,19 @@ describe.each(THEMES)("$name theme tokens", ({ selector }) => {
     expect(colour("--accent-hover")).toBe("#6d28d9");
   });
 
-  it.each(SURFACE_TOKENS)("keeps --text-secondary readable on %s", (surfaceToken) => {
-    const foreground = colour("--text-secondary");
-    const background = colour(surfaceToken);
-    const ratio = contrastRatio(foreground, background);
+  it.each(TEXT_ON_SURFACES)(
+    "keeps %s readable on %s",
+    (textToken, surfaceToken) => {
+      const foreground = colour(textToken);
+      const background = colour(surfaceToken);
+      const ratio = contrastRatio(foreground, background);
 
-    expect(
-      ratio,
-      `--text-secondary (${foreground}) on ${surfaceToken} (${background}) is ${ratio.toFixed(2)}:1`
-    ).toBeGreaterThanOrEqual(MIN_RATIO);
-  });
+      expect(
+        ratio,
+        `${textToken} (${foreground}) on ${surfaceToken} (${background}) is ${ratio.toFixed(2)}:1`
+      ).toBeGreaterThanOrEqual(MIN_RATIO);
+    }
+  );
 
   it.each(SURFACE_TOKENS)("draws component borders at 3:1 against %s", (surfaceToken) => {
     const border = colour("--border");
@@ -132,10 +170,47 @@ describe.each(THEMES)("$name theme tokens", ({ selector }) => {
     ).toBeGreaterThanOrEqual(MIN_BOUNDARY_RATIO);
   });
 
+  it.each(SURFACE_TOKENS)("draws the focus ring at 3:1 against %s", (surfaceToken) => {
+    const ring = colour("--focus-ring");
+    const background = colour(surfaceToken);
+    const ratio = contrastRatio(ring, background);
+
+    expect(
+      ratio,
+      `--focus-ring (${ring}) on ${surfaceToken} (${background}) is ${ratio.toFixed(2)}:1`
+    ).toBeGreaterThanOrEqual(MIN_BOUNDARY_RATIO);
+  });
+
   it("lifts cards above the canvas", () => {
     const background = relativeLuminance(colour("--background"));
     const surface = relativeLuminance(colour("--surface"));
 
     expect(surface).toBeGreaterThan(background);
   });
+
+  /*
+   * The header marks the current page with a 2 px `--accent-text` underline
+   * (design audit S9, `src/components/layout/primary-nav.ts`). Inside the
+   * current link's `--surface-hover` fill it is held by the `--accent-text`
+   * pairs above. The bar around the link is no token: `--surface` at 90 %
+   * over the canvas and the `--accent-soft` glow under the header. The mark
+   * is non-text, so 3:1 (WCAG 2.2 SC 1.4.11) on the bar over either colour.
+   */
+  it.each(["--background", "--accent-soft"])(
+    "draws the header's current-page marker at 3:1 on the bar over %s",
+    (canvasToken) => {
+      const marker = colour("--accent-text");
+      const bar = paintedOver(
+        colour("--surface"),
+        HEADER_BAR_OPACITY,
+        colour(canvasToken)
+      );
+      const ratio = contrastRatio(marker, bar);
+
+      expect(
+        ratio,
+        `--accent-text (${marker}) on the header bar over ${canvasToken} (${bar}) is ${ratio.toFixed(2)}:1`
+      ).toBeGreaterThanOrEqual(MIN_BOUNDARY_RATIO);
+    }
+  );
 });

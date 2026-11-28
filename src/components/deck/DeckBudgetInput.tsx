@@ -123,7 +123,7 @@ export function DeckBudgetInput({ value, onCommit }: DeckBudgetInputProps) {
             }}
             aria-invalid={invalid}
             aria-describedby={invalid ? `${hintId} ${errorId}` : hintId}
-            className="w-20 rounded-md border border-[var(--border)] bg-[var(--background)] px-2 py-1 text-right text-xs text-[var(--text-primary)] outline-none transition-colors focus:border-[var(--accent)]"
+            className="w-20 rounded-md border border-[var(--border)] bg-[var(--background)] px-2 py-1 text-right text-xs text-[var(--text-primary)] transition-colors"
           />
         </div>
       </div>

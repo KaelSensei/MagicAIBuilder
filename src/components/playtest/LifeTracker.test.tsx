@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { screen, fireEvent } from "@testing-library/react";
+import { HIDES_FOCUS_OUTLINE } from "@/test/focus-outline";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { LifeTracker } from "./LifeTracker";
 
@@ -11,6 +12,14 @@ describe("LifeTracker", () => {
     onHeal: vi.fn(),
     onUndo: vi.fn(),
   };
+
+  // Design audit S1: the field hid its outline and kept its border on focus,
+  // so a keyboard player could not see it had focus.
+  it("leaves the app's focus outline visible on the custom amount field", () => {
+    renderWithIntl(<LifeTracker {...defaultProps} />);
+
+    expect(screen.getByRole("spinbutton").className).not.toMatch(HIDES_FOCUS_OUTLINE);
+  });
 
   it("displays the current life total prominently", () => {
     renderWithIntl(<LifeTracker {...defaultProps} />);
@@ -69,6 +78,26 @@ describe("LifeTracker", () => {
 
     expect(onDamage).toHaveBeenCalledWith(4);
     expect(onHeal).not.toHaveBeenCalled();
+  });
+
+  // WCAG 2.2 SC 1.3.1 and 4.1.2 (I-04 accessibility bundle 4): a placeholder
+  // is not a name, so the custom life amount field carries its own.
+  it("names the custom life amount field for a screen reader and keeps the hint as its placeholder", () => {
+    renderWithIntl(<LifeTracker {...defaultProps} />);
+
+    expect(
+      screen.getByRole("spinbutton", { name: "Life to gain or lose" })
+    ).toHaveAttribute("placeholder", "+/- amount");
+  });
+
+  it("names the custom life amount field in French", () => {
+    renderWithIntl(<LifeTracker {...defaultProps} />, { locale: "fr" });
+
+    expect(
+      screen.getByRole("spinbutton", {
+        name: "Points de vie à gagner ou à perdre",
+      })
+    ).toBeInTheDocument();
   });
 
   it("shows Game Over when life is 0 or below", () => {

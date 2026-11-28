@@ -75,7 +75,7 @@ export function DeckUnavailableState({
           <button
             type="button"
             onClick={onRetry}
-            className="rounded-md bg-[var(--accent)] px-4 py-2 text-sm text-white hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
+            className="rounded-md bg-[var(--accent)] px-4 py-2 text-sm text-white hover:opacity-90"
           >
             {retryLabel}
           </button>
