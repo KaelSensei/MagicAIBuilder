@@ -67,3 +67,67 @@ describe("SavedDeckLibrary", () => {
     ).toBeInTheDocument();
   });
 });
+
+// WCAG 2.2 SC 1.3.1 and 4.1.2 (I-04 accessibility bundle 4): the player names
+// a new folder in a text box, and a placeholder is no name.
+describe("SavedDeckLibrary new folder field", () => {
+  const emptyLibrary = () =>
+    new Response(JSON.stringify({ folders: [], unfiled: [] }));
+
+  beforeEach(() => vi.restoreAllMocks());
+
+  it("names the new folder field for a screen reader and keeps the prompt as its placeholder", async () => {
+    vi.spyOn(globalThis, "fetch").mockImplementation(async () =>
+      emptyLibrary()
+    );
+
+    renderWithIntl(<SavedDeckLibrary />);
+
+    expect(
+      await screen.findByRole("textbox", { name: "New folder name" })
+    ).toHaveAttribute("placeholder", "Folder name");
+  });
+
+  it("names the new folder field in French", async () => {
+    vi.spyOn(globalThis, "fetch").mockImplementation(async () =>
+      emptyLibrary()
+    );
+
+    renderWithIntl(<SavedDeckLibrary />, { locale: "fr" });
+
+    expect(
+      await screen.findByRole("textbox", { name: "Nom du nouveau dossier" })
+    ).toBeInTheDocument();
+  });
+
+  it("creates the folder typed in the named field, trimmed, and empties the field", async () => {
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(emptyLibrary())
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ id: "folder-1", name: "Ideas" }), {
+          status: 201,
+        })
+      )
+      .mockResolvedValueOnce(emptyLibrary());
+
+    renderWithIntl(<SavedDeckLibrary />);
+    const field = await screen.findByRole("textbox", {
+      name: "New folder name",
+    });
+    fireEvent.change(field, { target: { value: "  Ideas  " } });
+    fireEvent.click(screen.getByRole("button", { name: "Create folder" }));
+
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenNthCalledWith(
+        2,
+        "/api/community/deck-folders",
+        expect.objectContaining({
+          method: "POST",
+          body: JSON.stringify({ name: "Ideas" }),
+        })
+      )
+    );
+    await waitFor(() => expect(field).toHaveValue(""));
+  });
+});
